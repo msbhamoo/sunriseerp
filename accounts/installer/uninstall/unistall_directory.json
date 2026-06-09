@@ -1,0 +1,15 @@
+{
+   "files": [  
+       "application/config/accounts-config.php",
+       "application/controllers/accounts",
+       "application/core/MY_Addon_AccountsController.php",
+       "application/language/English/app_files/accounts_lang.php",
+       "application/models/Accledger_model.php",
+       "application/models/Accvoucher_model.php",
+       "application/models/Accexpensetype_model.php",
+       "application/models/Accpurchase_model.php",
+       "application/models/Accreport_model.php",
+       "application/views/accounts",
+       "application/libraries/Accounts_integration.php"
+   ]
+}

@@ -1,0 +1,403 @@
+<?php
+if (!defined('BASEPATH')) {
+    exit('No direct script access allowed');
+}
+
+class Accvoucher_model extends MY_Model
+{
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
+     * Generate next voucher number atomically using a sequence table.
+     * Uses SELECT ... FOR UPDATE to prevent race conditions under concurrency.
+     */
+    public function generateVoucherNo($type)
+    {
+        $this->db->trans_start();
+
+        // Lock the sequence row for this voucher type to prevent concurrent duplicates
+        $this->db->query(
+            "SELECT last_number FROM acc_voucher_sequences WHERE voucher_type = "
+            . $this->db->escape($type) . " FOR UPDATE"
+        );
+        $seq = $this->db->where('voucher_type', $type)->get('acc_voucher_sequences')->row();
+
+        if (!$seq) {
+            $this->db->trans_complete();
+            // Fallback: read prefix from settings
+            $setting = $this->db->where('id', 1)->get('acc_settings')->row();
+            $prefix = '';
+            if ($type == 'payment') $prefix = $setting->payment_prefix ?? 'PAY-';
+            elseif ($type == 'receipt') $prefix = $setting->receipt_prefix ?? 'REC-';
+            elseif ($type == 'contra') $prefix = $setting->contra_prefix ?? 'CON-';
+            elseif ($type == 'journal') $prefix = $setting->journal_prefix ?? 'JOU-';
+            elseif ($type == 'purchase') $prefix = 'PUR-';
+            return $prefix . '0001';
+        }
+
+        $next_number = $seq->last_number + 1;
+        $this->db->where('voucher_type', $type)
+                 ->update('acc_voucher_sequences', ['last_number' => $next_number]);
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() === FALSE) {
+            log_message('error', 'Voucher sequence generation failed for type: ' . $type);
+            return false;
+        }
+
+        return $seq->prefix . str_pad($next_number, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Peek at the next voucher number without incrementing the sequence.
+     * Use this for displaying the next expected number on forms.
+     */
+    public function peekVoucherNo($type)
+    {
+        $seq = $this->db->where('voucher_type', $type)->get('acc_voucher_sequences')->row();
+
+        if (!$seq) {
+            $setting = $this->db->where('id', 1)->get('acc_settings')->row();
+            $prefix = '';
+            if ($type == 'payment') $prefix = $setting->payment_prefix ?? 'PAY-';
+            elseif ($type == 'receipt') $prefix = $setting->receipt_prefix ?? 'REC-';
+            elseif ($type == 'contra') $prefix = $setting->contra_prefix ?? 'CON-';
+            elseif ($type == 'journal') $prefix = $setting->journal_prefix ?? 'JOU-';
+            elseif ($type == 'purchase') $prefix = 'PUR-';
+            return $prefix . '0001';
+        }
+
+        $next_number = $seq->last_number + 1;
+        return $seq->prefix . str_pad($next_number, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Validate that total debits equal total credits before saving.
+     * Enforces the fundamental accounting equation at the model level.
+     */
+    private function validateBalance($items)
+    {
+        $total_debit = 0;
+        $total_credit = 0;
+        foreach ($items as $item) {
+            $total_debit += floatval($item['debit_amount'] ?? 0);
+            $total_credit += floatval($item['credit_amount'] ?? 0);
+        }
+        // Allow 1 paisa rounding tolerance
+        return abs($total_debit - $total_credit) < 0.01;
+    }
+
+    /**
+     * Add or update a voucher with full audit trail.
+     * Auto-synced vouchers (with reference_module) are protected from manual edits.
+     */
+    public function addVoucher($data, $items)
+    {
+        // Validate debit/credit balance
+        if (!$this->validateBalance($items)) {
+            $dr = array_sum(array_column($items, 'debit_amount'));
+            $cr = array_sum(array_column($items, 'credit_amount'));
+            log_message('error', "Voucher balance mismatch: Dr={$dr} Cr={$cr}");
+            return false;
+        }
+
+        $this->db->trans_start();
+        $this->db->trans_strict(TRUE);
+
+        $is_edit = (isset($data['id']) && $data['id'] > 0);
+        $old_data_json = null;
+
+        if ($is_edit) {
+            $voucher_id = $data['id'];
+
+            // Capture old data for audit log before modifying
+            $old_voucher = $this->getVoucher($voucher_id);
+            $old_data_json = json_encode($old_voucher);
+
+            // Prevent editing auto-synced vouchers (fee, payroll, expense, income)
+            $existing = $this->db->where('id', $voucher_id)->get('acc_vouchers')->row();
+            if ($existing && !empty($existing->reference_module)) {
+                $this->db->trans_rollback();
+                log_message('error', 'Cannot edit auto-synced voucher ID: ' . $voucher_id);
+                return false;
+            }
+
+            // Prevent editing reversed vouchers
+            if ($existing && $existing->status === 'reversed') {
+                $this->db->trans_rollback();
+                log_message('error', 'Cannot edit reversed voucher ID: ' . $voucher_id);
+                return false;
+            }
+
+            $this->db->where('id', $voucher_id);
+            $this->db->update('acc_vouchers', $data);
+
+            // Delete old items (triggers will reverse current_balance)
+            $this->db->where('voucher_id', $voucher_id);
+            $this->db->delete('acc_voucher_items');
+        } else {
+            // Ensure status is set for new vouchers
+            if (!isset($data['status'])) {
+                $data['status'] = 'posted';
+            }
+            $this->db->insert('acc_vouchers', $data);
+            $voucher_id = $this->db->insert_id();
+        }
+
+        // Insert new items (triggers will update current_balance)
+        if (!empty($items)) {
+            foreach ($items as &$item) {
+                $item['voucher_id'] = $voucher_id;
+            }
+            $this->db->insert_batch('acc_voucher_items', $items);
+        }
+
+        // Write audit log
+        $staff_id = 0;
+        if (method_exists($this, 'customlib') || isset($this->customlib)) {
+            $staff_id = $this->customlib->getStaffID() ?? 0;
+        }
+        $audit = [
+            'voucher_id' => $voucher_id,
+            'action' => $is_edit ? 'edit' : 'create',
+            'old_data' => $old_data_json,
+            'new_data' => json_encode(['voucher' => $data, 'items' => $items]),
+            'performed_by' => $staff_id,
+            'ip_address' => $this->input->ip_address()
+        ];
+        $this->db->insert('acc_voucher_audit_log', $audit);
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() === FALSE) {
+            return false;
+        }
+        return $voucher_id;
+    }
+
+    public function getVoucher($id)
+    {
+        $this->db->select('acc_vouchers.*');
+        $this->db->from('acc_vouchers');
+        $this->db->where('id', $id);
+        $query = $this->db->get();
+        $voucher = $query->row_array();
+
+        if ($voucher) {
+            $this->db->select('acc_voucher_items.*, acc_ledgers.name as ledger_name, acc_expense_types.name as expense_type_name');
+            $this->db->from('acc_voucher_items');
+            $this->db->join('acc_ledgers', 'acc_ledgers.id = acc_voucher_items.ledger_id', 'left');
+            $this->db->join('acc_expense_types', 'acc_expense_types.id = acc_voucher_items.expense_type_id', 'left');
+            $this->db->where('voucher_id', $voucher['id']);
+            $items_query = $this->db->get();
+            $voucher['items'] = $items_query->result_array();
+        }
+        return $voucher;
+    }
+
+    /**
+     * Delete a voucher via Reversal Voucher pattern instead of hard-delete.
+     * Creates a new voucher with swapped Dr/Cr entries and marks the original as 'reversed'.
+     * Auto-synced vouchers cannot be deleted through this method.
+     */
+    public function deleteVoucher($id)
+    {
+        $voucher = $this->getVoucher($id);
+        if (!$voucher) return false;
+
+        // Prevent deleting auto-synced vouchers via UI
+        if (!empty($voucher['reference_module'])) {
+            return false;
+        }
+
+        // Prevent deleting already-reversed vouchers
+        if ($voucher['status'] === 'reversed') {
+            return false;
+        }
+
+        $this->db->trans_start();
+        $this->db->trans_strict(TRUE);
+
+        // Mark original as reversed
+        $this->db->where('id', $id);
+        $this->db->update('acc_vouchers', ['status' => 'reversed']);
+
+        // Generate reversal voucher number
+        $reversal_no = $this->generateVoucherNo($voucher['voucher_type']);
+        if (!$reversal_no) {
+            $this->db->trans_rollback();
+            return false;
+        }
+
+        // Create reversal voucher with opposite entries
+        $staff_id = 0;
+        if (isset($this->customlib)) {
+            $staff_id = $this->customlib->getStaffID() ?? 0;
+        }
+
+        $reversal_data = [
+            'voucher_no' => $reversal_no,
+            'voucher_date' => date('Y-m-d'),
+            'voucher_type' => $voucher['voucher_type'],
+            'status' => 'posted',
+            'narration' => 'REVERSAL of ' . $voucher['voucher_no'] . ': ' . ($voucher['narration'] ?? ''),
+            'reversal_of_voucher_id' => $id,
+            'session_id' => $this->current_session ?? ($voucher['session_id'] ?? 1),
+            'created_by' => $staff_id
+        ];
+        $this->db->insert('acc_vouchers', $reversal_data);
+        $reversal_id = $this->db->insert_id();
+
+        // Update original to point to its reversal
+        $this->db->where('id', $id);
+        $this->db->update('acc_vouchers', ['reversed_by_voucher_id' => $reversal_id]);
+
+        // Insert reversed items (swap debit/credit amounts)
+        $reversed_items = [];
+        if (!empty($voucher['items'])) {
+            foreach ($voucher['items'] as $item) {
+                $reversed_items[] = [
+                    'voucher_id' => $reversal_id,
+                    'ledger_id' => $item['ledger_id'],
+                    'expense_type_id' => $item['expense_type_id'],
+                    'debit_amount' => $item['credit_amount'],   // Swapped
+                    'credit_amount' => $item['debit_amount'],   // Swapped
+                    'narration' => 'Reversal entry'
+                ];
+            }
+            if (!empty($reversed_items)) {
+                $this->db->insert_batch('acc_voucher_items', $reversed_items);
+            }
+        }
+
+        // Audit log
+        $this->db->insert('acc_voucher_audit_log', [
+            'voucher_id' => $id,
+            'action' => 'reverse',
+            'old_data' => json_encode($voucher),
+            'new_data' => json_encode(['reversal_voucher_id' => $reversal_id, 'reversal_voucher_no' => $reversal_no]),
+            'performed_by' => $staff_id,
+            'ip_address' => $this->input->ip_address()
+        ]);
+
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    /**
+     * Reverse a voucher created by auto-sync (fee, payroll, expense, income).
+     * This is called internally by the integration library, not by UI controllers.
+     */
+    public function reverseAutoSyncVoucher($id)
+    {
+        $voucher = $this->getVoucher($id);
+        if (!$voucher || $voucher['status'] === 'reversed') return false;
+
+        $this->db->trans_start();
+        $this->db->trans_strict(TRUE);
+
+        $this->db->where('id', $id);
+        $this->db->update('acc_vouchers', ['status' => 'reversed']);
+
+        $reversal_no = $this->generateVoucherNo($voucher['voucher_type']);
+        if (!$reversal_no) {
+            $this->db->trans_rollback();
+            return false;
+        }
+
+        $staff_id = 0;
+        if (isset($this->customlib)) {
+            $staff_id = $this->customlib->getStaffID() ?? 0;
+        }
+
+        $reversal_data = [
+            'voucher_no' => $reversal_no,
+            'voucher_date' => date('Y-m-d'),
+            'voucher_type' => $voucher['voucher_type'],
+            'status' => 'posted',
+            'narration' => 'AUTO-REVERSAL of ' . $voucher['voucher_no'] . ': ' . ($voucher['narration'] ?? ''),
+            'reference_module' => $voucher['reference_module'],
+            'reference_id' => $voucher['reference_id'] . '_rev',
+            'reversal_of_voucher_id' => $id,
+            'session_id' => $this->current_session ?? ($voucher['session_id'] ?? 1),
+            'created_by' => $staff_id
+        ];
+        $this->db->insert('acc_vouchers', $reversal_data);
+        $reversal_id = $this->db->insert_id();
+
+        $this->db->where('id', $id);
+        $this->db->update('acc_vouchers', ['reversed_by_voucher_id' => $reversal_id]);
+
+        if (!empty($voucher['items'])) {
+            $reversed_items = [];
+            foreach ($voucher['items'] as $item) {
+                $reversed_items[] = [
+                    'voucher_id' => $reversal_id,
+                    'ledger_id' => $item['ledger_id'],
+                    'expense_type_id' => $item['expense_type_id'],
+                    'debit_amount' => $item['credit_amount'],
+                    'credit_amount' => $item['debit_amount'],
+                    'narration' => 'Auto-reversal entry'
+                ];
+            }
+            $this->db->insert_batch('acc_voucher_items', $reversed_items);
+        }
+
+        $this->db->insert('acc_voucher_audit_log', [
+            'voucher_id' => $id,
+            'action' => 'reverse',
+            'old_data' => json_encode($voucher),
+            'new_data' => json_encode(['reversal_voucher_id' => $reversal_id]),
+            'performed_by' => $staff_id,
+            'ip_address' => $this->input->ip_address() ?? '0.0.0.0'
+        ]);
+
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    public function getDatatableVouchers($type)
+    {
+        $this->datatables
+            ->select('acc_vouchers.id, acc_vouchers.voucher_no, acc_vouchers.voucher_date, acc_vouchers.narration, acc_vouchers.status, acc_vouchers.attachment, acc_vouchers.reference_module, acc_vouchers.payment_method, acc_vouchers.cheque_no, acc_vouchers.upi_transaction_id, acc_vouchers.net_banking_ref, acc_vouchers.rejected_reason, SUM(acc_voucher_items.debit_amount) as total_amount')
+            ->from('acc_vouchers')
+            ->join('acc_voucher_items', 'acc_voucher_items.voucher_id = acc_vouchers.id', 'left')
+            ->where('acc_vouchers.voucher_type', $type)
+            ->where('acc_vouchers.session_id', $this->current_session)
+            ->group_by('acc_vouchers.id')
+            ->searchable('acc_vouchers.voucher_no, acc_vouchers.voucher_date')
+            ->orderable('acc_vouchers.voucher_no, acc_vouchers.voucher_date, total_amount')
+            ->sort('acc_vouchers.id', 'desc');
+
+        return $this->datatables->generate('json');
+    }
+
+    /**
+     * Get audit trail for a specific voucher.
+     */
+    public function getVoucherAuditLog($voucher_id)
+    {
+        $this->db->select('acc_voucher_audit_log.*, staff.name as staff_name, staff.surname as staff_surname');
+        $this->db->from('acc_voucher_audit_log');
+        $this->db->join('staff', 'staff.id = acc_voucher_audit_log.performed_by', 'left');
+        $this->db->where('voucher_id', $voucher_id);
+        $this->db->order_by('performed_at', 'desc');
+        return $this->db->get()->result_array();
+    }
+
+    /**
+     * Get pending items from the sync failure queue.
+     */
+    public function getPendingSyncItems($limit = 50)
+    {
+        $this->db->where('status', 'pending');
+        $this->db->where('attempts <', 5);
+        $this->db->order_by('created_at', 'asc');
+        $this->db->limit($limit);
+        return $this->db->get('acc_sync_queue')->result_array();
+    }
+}

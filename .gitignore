@@ -1,0 +1,14 @@
+# Ignore CodeIgniter Cache and Logs
+application/cache/*
+!application/cache/index.html
+application/logs/*
+!application/logs/index.html
+
+# Ignore user uploads (so you don't overwrite live uploads)
+uploads/
+
+# Ignore database config if you have different local/live databases
+application/config/database.php
+
+# Ignore addons
+addons/
