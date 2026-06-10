@@ -428,6 +428,10 @@ class Studentfee extends Admin_Controller
         }
 
         $data['feearray'] = $fees_array;
+        
+        $custom_receipt_settings = $this->db->get('custom_receipt_settings')->row();
+        $data['custom_receipt_settings'] = $custom_receipt_settings;
+        
         $result           = array(
             'view' => $this->load->view('studentfee/getcollectfee', $data, true),
         );
@@ -1031,6 +1035,9 @@ class Studentfee extends Admin_Controller
                   'transport_fees_id'=>$trans_fee_id  ,               
                   'fee_session_group_id'=>$this->input->post('fee_session_group_id')//added               
                 );
+
+            $custom_receipt_settings = $this->db->get('custom_receipt_settings')->row();
+            $array['custom_receipt_settings'] = $custom_receipt_settings;
 
             $page=$this->load->view('studentfee/_getBalanceFee',$array,true);
 

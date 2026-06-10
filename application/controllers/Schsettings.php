@@ -798,13 +798,13 @@ class Schsettings extends Admin_Controller
                 if ($existing_custom_receipt_settings->transport_start != $custom_receipt_data['transport_start']) {
                     $custom_receipt_data['transport_current'] = $custom_receipt_data['transport_start'];
                 }
+                $this->db->where('id', $existing_custom_receipt_settings->id);
+                $this->db->update('custom_receipt_settings', $custom_receipt_data);
             } else {
                 $custom_receipt_data['common_current'] = $custom_receipt_data['common_start'];
                 $custom_receipt_data['transport_current'] = $custom_receipt_data['transport_start'];
+                $this->db->insert('custom_receipt_settings', $custom_receipt_data);
             }
-            
-            $this->db->where('id', 1);
-            $this->db->update('custom_receipt_settings', $custom_receipt_data);
 
             $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('success_message'));
             echo json_encode($array);

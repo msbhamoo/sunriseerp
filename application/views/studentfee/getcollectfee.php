@@ -102,6 +102,41 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 	<div class="col-lg-12">
 		<div class="form-horizontal pr-0-5 pr-rtl-0">
 
+			<?php
+			$has_common_fee = false;
+			$has_transport_fee = false;
+			if (isset($feearray) && !empty($feearray)) {
+				foreach ($feearray as $f) {
+					if ($f->fee_category == 'transport' || $f->fee_category == 'transport_yearly') {
+						$has_transport_fee = true;
+					} else {
+						$has_common_fee = true;
+					}
+				}
+			}
+			?>
+			<?php if (isset($custom_receipt_settings)) { ?>
+			<div class="form-group row">
+				<label class="col-lg-3 col-md-3 col-sm-3 control-label"><?php echo $this->lang->line('receipt_no') ? $this->lang->line('receipt_no') : 'Receipt No.'; ?></label>
+				<div class="col-lg-9 col-md-9 col-sm-9">
+					<p class="form-control-static" style="padding-top: 7px; font-weight: bold; margin-bottom: 0;">
+					<?php 
+					$receipt_texts = [];
+					if ($has_common_fee && $has_transport_fee) {
+						$receipt_texts[] = "Fee: " . $custom_receipt_settings->common_prefix . $custom_receipt_settings->common_current;
+						$receipt_texts[] = "Transport: " . $custom_receipt_settings->transport_prefix . $custom_receipt_settings->transport_current;
+					} elseif ($has_common_fee) {
+						$receipt_texts[] = $custom_receipt_settings->common_prefix . $custom_receipt_settings->common_current;
+					} elseif ($has_transport_fee) {
+						$receipt_texts[] = $custom_receipt_settings->transport_prefix . $custom_receipt_settings->transport_current;
+					}
+					echo implode(" | ", $receipt_texts);
+					?>
+					</p>
+				</div>
+			</div>
+			<?php } ?>
+
 			<div class="form-group row">
 				<label for="inputEmail3" class="col-lg-3 col-md-3 col-sm-3 control-label"><?php echo $this->lang->line('date'); ?> <small class="req"> *</small></label>
 				<div class="col-lg-9 col-md-9 col-sm-9">

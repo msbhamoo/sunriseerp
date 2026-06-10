@@ -35,6 +35,22 @@
                  <span><?php echo $balance; ?></span>
              </div>
          </div>
+		 <?php if (isset($custom_receipt_settings)) { ?>
+         <div class="form-group">
+             <label class="col-sm-3 col-lg-3 col-md-3 control-label"><?php echo $this->lang->line('receipt_no') ? $this->lang->line('receipt_no') : 'Receipt No.'; ?></label>
+             <div class="col-sm-9 col-lg-9 col-md-9 pt-lg-7 pt-md-7">
+                 <span style="font-weight: bold;">
+                 <?php 
+                 if ($fee_category == 'transport' || $fee_category == 'transport_yearly') {
+                     echo $custom_receipt_settings->transport_prefix . $custom_receipt_settings->transport_current;
+                 } else {
+                     echo $custom_receipt_settings->common_prefix . $custom_receipt_settings->common_current;
+                 }
+                 ?>
+                 </span>
+             </div>
+         </div>
+         <?php } ?>
 		 <div class="form-group">
              <label for="inputEmail3" class="col-sm-3 col-lg-3 col-md-3 control-label"><?php echo $this->lang->line('date'); ?><small class="req"> *</small></label>
              <div class="col-sm-9">

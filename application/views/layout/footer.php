@@ -875,8 +875,6 @@ if (isset($title)) {
             autoclose: true,
             language: '<?php echo $language_name; ?>',
             endDate: '+0d',
-            startDate: '<?php if ($feesinbackdate == 0) {echo "-0m";}
-;?>',
             weekStart : start_week,
             todayHighlight: true
         });

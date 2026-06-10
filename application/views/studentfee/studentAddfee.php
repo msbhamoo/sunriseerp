@@ -209,6 +209,7 @@ if ($student['admission_no'] != '') {
                                         <th align="left" class="text text-left"><?php echo $this->lang->line('status'); ?></th>
                                         <th class="text text-right"><?php echo $this->lang->line('amount') ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></th>
                                         <th class="text text-left"><?php echo $this->lang->line('payment_id'); ?></th>
+                                        <th class="text text-left"><?php echo $this->lang->line('receipt_no') ? $this->lang->line('receipt_no') : 'Receipt No.'; ?></th>
                                         <th class="text text-left"><?php echo $this->lang->line('mode'); ?></th>
                                         <th  class="text text-left"><?php echo $this->lang->line('date'); ?></th>
                                         <th class="text text-right" ><?php echo $this->lang->line('discount'); ?> <span><?php echo "(".$currency_symbol . ")"; ?></span></th>
@@ -330,6 +331,7 @@ foreach ($student_due_fee['fees'] as $key => $fee) {
             <td class="text text-left"></td>
             <td class="text text-left"></td>
             <td class="text text-left"></td>
+            <td class="text text-left"></td>
             <td class="text text-right"><?php echo amountFormat($fee_discount); ?> </td>
             <td class="text text-right"><?php echo amountFormat($fee_fine);  ?></td>
             <td class="text text-right"><?php echo amountFormat($fee_paid); ?></td>
@@ -372,6 +374,13 @@ foreach ($student_due_fee['fees'] as $key => $fee) {
                                                                     <p class="text text-info"><?php echo $fee_deposits_value->description; ?></p>
                                                                 <?php }   ?>
                                                             </div>
+                                                        </td>
+                                                        <td class="text text-left">
+                                                            <?php 
+                                                            $CI =& get_instance();
+                                                            $custom_receipt = $CI->db->order_by('id', 'desc')->get_where('custom_receipt_logs', array('student_fees_deposite_id' => $fee_value->student_fees_deposite_id, 'sub_invoice_id' => $fee_deposits_value->inv_no))->row();
+                                                            echo $custom_receipt ? $custom_receipt->receipt_no : '';
+                                                            ?>
                                                         </td>
                                                         <td class="text text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
                                                         <td class="text text-left">
@@ -480,6 +489,7 @@ if (!empty($transport_fees)) {
                 <td class="text text-left"></td>
                 <td class="text text-left"></td>
                 <td class="text text-left"></td>
+                <td class="text text-left"></td>
                 <td class="text text-right"><?php echo amountFormat($fee_discount); ?></td>
                 <td class="text text-right"><?php echo amountFormat($fee_fine);  ?></td>
                 <td class="text text-right"><?php echo amountFormat($fee_paid); ?></td>
@@ -519,6 +529,13 @@ if (!empty($transport_fee_value->amount_detail)) {
                                                                     <p class="text text-info"><?php echo $fee_deposits_value->description; ?></p>
                                                                     <?php }  ?>
                                                             </div>
+                                                        </td>
+                                                        <td class="text text-left">
+                                                            <?php 
+                                                            $CI =& get_instance();
+                                                            $custom_receipt = $CI->db->order_by('id', 'desc')->get_where('custom_receipt_logs', array('student_fees_deposite_id' => $transport_fee_value->student_fees_deposite_id, 'sub_invoice_id' => $fee_deposits_value->inv_no))->row();
+                                                            echo $custom_receipt ? $custom_receipt->receipt_no : '';
+                                                            ?>
                                                         </td>
                                                         <td class="text text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
                                                         <td class="text text-left">
@@ -572,6 +589,7 @@ echo $currency_symbol . (amountFormat($total_amount));
  
 </div>
                                             </td>
+                                        <td class="text text-left"></td>
                                         <td class="text text-left"></td>
                                         <td class="text text-left"></td>
                                         <td class="text text-left"></td>
