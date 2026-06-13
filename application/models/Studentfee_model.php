@@ -79,9 +79,11 @@ class Studentfee_model extends MY_Model {
 		$this->db->trans_start(); # Starting Transaction
         $this->db->trans_strict(false); # See Note 01. If you wish can remove as well
         //=======================Code Start===========================
+        $should_reverse = false;
         $this->db->where('id', $id);
         $q = $this->db->get('student_fees_deposite');
         if ($q->num_rows() > 0) {
+            $should_reverse = true;
             $result = $q->row();
             $a = json_decode($result->amount_detail, true);
             unset($a[$sub_invoice]);
@@ -112,7 +114,13 @@ class Studentfee_model extends MY_Model {
             $this->db->trans_rollback();
             return false;
         } else {
-            //return $return_value;
+            // Sync with Accounts module to reverse the voucher immediately
+            if ($should_reverse && file_exists(APPPATH . 'libraries/Accounts_integration.php')) {
+                $this->load->library('accounts_integration');
+                $this->accounts_integration->reverse_sync('fee_collection', $id . '_' . $sub_invoice);
+                $this->accounts_integration->reverse_sync('fee_discount', $id . '_' . $sub_invoice . '_disc');
+            }
+            return true;
         }
     }
 

@@ -140,7 +140,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 			<div class="form-group row">
 				<label for="inputEmail3" class="col-lg-3 col-md-3 col-sm-3 control-label"><?php echo $this->lang->line('date'); ?> <small class="req"> *</small></label>
 				<div class="col-lg-9 col-md-9 col-sm-9">
-					<input id="date" name="collected_date" placeholder="" type="text" class="form-control date_fee" value="" readonly="readonly" autocomplete="off">
+					<input id="date" name="collected_date" placeholder="" type="text" class="form-control date_fee" value="<?php echo date($this->customlib->getSchoolDateFormat()); ?>" readonly="readonly" autocomplete="off">
 					<span id="form_collection_collected_date_error" class="text text-danger"></span>
 				</div>
 			</div>
@@ -148,7 +148,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 			<div class="form-group row">
 				<label for="inputPassword3" class="col-lg-3 col-md-3 col-sm-3 control-label"> <?php echo $this->lang->line('payment_mode'); ?></label>
 				<div class="col-lg-9 col-md-9 col-sm-9">
-					<div>
+					<div style="margin-bottom: 5px;">
 						<label class="radio-inline"><input type="radio" name="payment_mode_fee" value="Cash" checked="checked"> <?php echo $this->lang->line('cash'); ?></label>
 						<label class="radio-inline"><input type="radio" name="payment_mode_fee" value="Cheque"> <?php echo $this->lang->line('cheque'); ?></label>
 						<label class="radio-inline"><input type="radio" name="payment_mode_fee" value="DD"><?php echo $this->lang->line('dd'); ?></label>
@@ -170,8 +170,31 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 					<span id="form_collection_fee_gupcollected_note_error" class="text text-danger"></span>
 				</div>
 			</div>
+			<div class="form-group row" id="reference_row" style="display: none;">
+				<label for="inputPassword3" class="col-lg-3 col-md-3 col-sm-3 control-label" id="ref_label"> <?php echo $this->lang->line('reference_no') ? $this->lang->line('reference_no') : 'Reference No'; ?></label>
+				<div class="col-lg-9 col-md-9 col-sm-9">
+					<input class="form-control" name="reference_no" id="reference_no" placeholder="">
+					<span id="form_collection_reference_no_error" class="text text-danger"></span>
+				</div>
+			</div>
+			<div class="form-group row" id="date_row" style="display: none;">
+				<label for="inputPassword3" class="col-lg-3 col-md-3 col-sm-3 control-label" id="date_label"> Payment Date</label>
+				<div class="col-lg-9 col-md-9 col-sm-9">
+					<input class="form-control date_fee" name="cheque_date" id="cheque_date" placeholder="" value="<?php echo date($this->customlib->getSchoolDateFormat()); ?>" readonly="readonly" autocomplete="off">
+					<span id="form_collection_cheque_date_error" class="text text-danger"></span>
+				</div>
+			</div>
+			<div class="form-group row">
+				<div class="col-lg-3 col-md-3 col-sm-3"></div>
+				<div class="col-lg-9 col-md-9 col-sm-9">
+					<div id="ledger_info" class="alert alert-info" style="margin-bottom: 0; padding: 10px 15px; border-radius: 4px; font-size: 13px;" data-income="<?php echo $income_ledger_name; ?>" data-category="<?php echo $category_head_name ? $category_head_name : 'Default'; ?>">
+						<i class="fa fa-info-circle"></i> Depositing to Ledger (Dr): <strong><?php echo $cash_ledger_name; ?></strong><br>
+                        <i class="fa fa-credit-card"></i> Income Ledger (Cr): <strong><?php echo $income_ledger_name; ?></strong><br>
+                        <i class="fa fa-tags"></i> Category/Head: <strong><?php echo $category_head_name ? $category_head_name : 'Default'; ?></strong>
+					</div>
+				</div>
+			</div>
 		</div>
-
 
 		<ul class="fees-list fees-list-in-box">
 			<hr>
@@ -207,7 +230,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 							$amount_to_be_pay = $fee_value->amount - $amount_prev_paid;
 						}
 					}
-				} elseif ($fee_value->fee_category == "transport") {
+				} elseif ($fee_value->fee_category == "transport" || $fee_value->fee_category == "transport_yearly") {
 					$amount_to_be_pay = $fee_value->fees;
 					
 					if (is_string(($fee_value->amount_detail)) && is_array(json_decode(($fee_value->amount_detail), true))) {
@@ -310,64 +333,37 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 							<input name="trans_fee_id_<?php echo $row_counter; ?>" type="hidden" value="0">
 							<div class="product-info pb15">
 
-								<div class="row">
-									<a>
-										<div class="col-md-12">
-											<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-												<?php
-												if ($fee_value->is_system) {
-													echo $this->lang->line($fee_value->type) . " (" . $this->lang->line($fee_value->code) . ")";
-												} else {
-													echo $fee_value->type . " (" . $fee_value->code . ")";
-												}
-												?>
-											</div>
-											<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 text text-danger text-right">
-												<?php if ($fine_amount_status && ($fees_fine_amount > 0)) {
-
-													echo  $currency_symbol . amountFormat($fees_fine_amount);
-
-													$total_fine_amount = $total_fine_amount + $fees_fine_amount;
-												} ?>
-											</div>
-											<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 text-right">
-												<?php echo  $currency_symbol . amountFormat($amount_to_be_pay); ?>
-											</div>
-										</div>
-									</a>
-								</div>
-								<div class="row">
+								<div class="row align-items-center">
 									<div class="col-md-12">
-										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-
+										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" style="padding-top: 5px; font-weight: 500; color: #e67e22;">
+											<?php
+											if ($fee_value->is_system) {
+												echo $this->lang->line($fee_value->type) . " (" . $this->lang->line($fee_value->code) . ")";
+											} else {
+												echo $fee_value->type . " (" . $fee_value->code . ")";
+											}
+											?>
 										</div>
-										<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pull-right">
-
-											<input onkeyup="getTotalPaying()" class="pull-right form-control" style="width:80px" name="fee_amount_<?php echo $row_counter; ?>" id="fee_amount_<?php echo $row_counter; ?>" type="text" readonly />										
-											
-
-											<input class="pull-right form-control" name="pay_fee_amount_<?php echo $row_counter; ?>" id="pay_fee_amount_<?php echo $row_counter; ?>" type="hidden" value="<?php echo convertBaseAmountCurrencyFormat($amount_to_be_pay); ?>">										
-											
-
-										</div>
-
-										<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pull-right">
-											<?php if ($fine_amount_status && ($fees_fine_amount > 0)) {    ?>
-
+										<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 text-right">
+											<?php if ($fine_amount_status && ($fees_fine_amount > 0)) {
+												echo '<span class="text-danger">' . $currency_symbol . amountFormat($fees_fine_amount) . '</span><br/>';
+												$total_fine_amount = $total_fine_amount + $fees_fine_amount;
+											?>
 												<input type="hidden" id="actual_fine_amount_<?php echo $row_counter; ?>" value="<?php echo convertBaseAmountCurrencyFormat($fees_fine_amount); ?>">
-
-												<input class="form-control total_fine_paying pull-right" style="width:80px" name="fee_groups_feetype_fine_amount_<?php echo $row_counter; ?>" id="fee_groups_feetype_fine_amount_<?php echo $row_counter; ?>" type="text" value="">
-
-											<?php }   ?>
+												<input class="form-control total_fine_paying pull-right" style="width:100%; margin-top:5px; padding: 6px 12px; height: 30px;" name="fee_groups_feetype_fine_amount_<?php echo $row_counter; ?>" id="fee_groups_feetype_fine_amount_<?php echo $row_counter; ?>" type="text" value="">
+											<?php } ?>
+										</div>
+										<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 text-right">
+											<span><?php echo  $currency_symbol . amountFormat($amount_to_be_pay); ?></span><br/>
+											<input onkeyup="recalculateTotalPaying()" class="pull-right form-control" style="width:100%; margin-top:5px; padding: 6px 12px; height: 30px;" name="fee_amount_<?php echo $row_counter; ?>" id="fee_amount_<?php echo $row_counter; ?>" type="text" value="<?php echo convertBaseAmountCurrencyFormat($amount_to_be_pay); ?>" />										
+											<input class="pull-right form-control" name="pay_fee_amount_<?php echo $row_counter; ?>" id="pay_fee_amount_<?php echo $row_counter; ?>" type="hidden" value="<?php echo convertBaseAmountCurrencyFormat($amount_to_be_pay); ?>">										
 										</div>
 									</div>
 								</div>
-
-
 							</div>
 						</li>
 					<?php  }
-				} elseif ($fee_value->fee_category == "transport") {
+				} elseif ($fee_value->fee_category == "transport" || $fee_value->fee_category == "transport_yearly") {
 
 					$amount_to_be_pay = $fee_value->fees;
 
@@ -402,47 +398,23 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 								<input name="fee_category_<?php echo $row_counter; ?>" type="hidden" value="<?php echo $fee_value->fee_category; ?>">
 								<input name="trans_fee_id_<?php echo $row_counter; ?>" type="hidden" value="<?php echo $fee_value->id; ?>">
 
-								<div class="row pt5">
-									<a>
-										<div class="col-md-12">
-											<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-												<?php echo $this->lang->line("transport_fees") ?>
-											</div>
-											<div class="col-lg-3 col-md-3 col-sm-3 text text-danger text-right">
-												<?php if ($fine_amount_status && ($fees_fine_amount > 0)) { ?>
-												<?php
-												echo $currency_symbol . amountFormat($fees_fine_amount);
-												$total_fine_amount = $total_fine_amount + $fees_fine_amount;
-												?>
-												<?php } ?>
-											</div>
-											<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 text-right">
-												<?php echo  $currency_symbol . amountFormat($amount_to_be_pay); ?>
-											</div>
-										</div>
-									</a>
-								</div>
-
-								<div class="row">
+								<div class="row align-items-center">
 									<div class="col-md-12">
-										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-											
+										<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" style="padding-top: 5px; font-weight: 500; color: #e67e22;">
+											<?php echo $fee_value->fee_category == 'transport_yearly' ? $this->lang->line("transport_fees") . " (Yearly)" : $this->lang->line("transport_fees"); ?>
 										</div>
-										<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pull-right">
-
-											<input onkeyup="getTotalPaying()" class="pull-right form-control" style="width:80px" name="fee_amount_<?php echo $row_counter; ?>" id="fee_amount_<?php echo $row_counter; ?>" type="text" readonly />
-
-											<input class="pull-right" style="width:80px;" name="pay_fee_amount_<?php echo $row_counter; ?>" id="pay_fee_amount_<?php echo $row_counter; ?>" type="hidden" value="<?php echo convertBaseAmountCurrencyFormat($amount_to_be_pay); ?>">
-
-										</div>
-
-										<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pull-right">
+										<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 text-right">
 											<?php if ($fine_amount_status && ($fees_fine_amount > 0)) { ?>
-												
+												<span class="text-danger"><?php echo $currency_symbol . amountFormat($fees_fine_amount); ?></span><br/>
+												<?php $total_fine_amount = $total_fine_amount + $fees_fine_amount; ?>
 												<input type="hidden" id="actual_fine_amount_<?php echo $row_counter; ?>" value="<?php echo convertBaseAmountCurrencyFormat($fees_fine_amount); ?>">
-		   
-												<input class="form-control total_fine_paying pull-right" style="width:80px" name="fee_groups_feetype_fine_amount_<?php echo $row_counter; ?>" id="fee_groups_feetype_fine_amount_<?php echo $row_counter; ?>" type="text" value="">
-											<?php }  ?>
+												<input class="form-control total_fine_paying pull-right" style="width:100%; margin-top:5px; padding: 6px 12px; height: 30px;" name="fee_groups_feetype_fine_amount_<?php echo $row_counter; ?>" id="fee_groups_feetype_fine_amount_<?php echo $row_counter; ?>" type="text" value="">
+											<?php } ?>
+										</div>
+										<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 text-right">
+											<span><?php echo  $currency_symbol . amountFormat($amount_to_be_pay); ?></span><br/>
+											<input onkeyup="recalculateTotalPaying()" class="pull-right form-control" style="width:100%; margin-top:5px; padding: 6px 12px; height: 30px;" name="fee_amount_<?php echo $row_counter; ?>" id="fee_amount_<?php echo $row_counter; ?>" type="text" value="<?php echo convertBaseAmountCurrencyFormat($amount_to_be_pay); ?>" />
+											<input class="pull-right" name="pay_fee_amount_<?php echo $row_counter; ?>" id="pay_fee_amount_<?php echo $row_counter; ?>" type="hidden" value="<?php echo convertBaseAmountCurrencyFormat($amount_to_be_pay); ?>">
 										</div>
 									</div>
 								</div>
@@ -814,4 +786,4 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 		return true;
 	}
 
-</script> 
+</script>

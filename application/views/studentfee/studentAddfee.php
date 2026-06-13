@@ -899,6 +899,8 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
         var transport_fees_id = $('#transport_fees_id').val();
         var fee_category = $('#fee_category').val();
         var payment_mode = $('input[name="payment_mode_fee"]:checked').val();
+        var reference_no = $('#reference_no').val();
+        var cheque_date  = $('#cheque_date').val();
         var selectedDiscounts = [];
         $('input[name="fee_discount_group[]"]:checked').each(function() {
             selectedDiscounts.push($(this).val());
@@ -909,7 +911,7 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
         $.ajax({
             url: '<?php echo site_url("studentfee/addstudentfee") ?>',
             type: 'post',
-            data: {action: action, student_session_id: student_session_id, date: date, type: feetype, amount: amount, amount_discount: amount_discount, amount_fine: amount_fine, description: description, student_fees_master_id: student_fees_master_id, fee_groups_feetype_id: fee_groups_feetype_id,fee_category:fee_category, transport_fees_id:transport_fees_id, payment_mode: payment_mode, guardian_phone: guardian_phone, guardian_email: guardian_email, student_fees_discount_id: student_fees_discount_id, parent_app_key: parent_app_key,discounts: selectedDiscounts,fee_session_group_id:fee_session_group_id},
+            data: {action: action, student_session_id: student_session_id, date: date, type: feetype, amount: amount, amount_discount: amount_discount, amount_fine: amount_fine, description: description, reference_no: reference_no, cheque_date: cheque_date, student_fees_master_id: student_fees_master_id, fee_groups_feetype_id: fee_groups_feetype_id,fee_category:fee_category, transport_fees_id:transport_fees_id, payment_mode: payment_mode, guardian_phone: guardian_phone, guardian_email: guardian_email, student_fees_discount_id: student_fees_discount_id, parent_app_key: parent_app_key,discounts: selectedDiscounts,fee_session_group_id:fee_session_group_id},
             dataType: 'json',
             success: function (response) {
                 $this.button('reset');
@@ -1560,5 +1562,60 @@ $("#myFeesModal").on('shown.bs.modal', function (e) {
 
     $(document).on('click','.chkall',function(){
         $('input:checkbox.check_month').prop('checked', this.checked);
+    });
+
+    $(document).ready(function() {
+        $(document).on('change', 'input[name="payment_mode_fee"]', function() {
+            var cashLedgerName = '<?php echo $cash_ledger_name ?? "Cash Account"; ?>';
+            var bankLedgerName = '<?php echo $bank_ledger_name ?? "Bank Account"; ?>';
+            var mode = $(this).val();
+            
+            var $ledgerInfo = $('#ledger_info');
+            var incomeName = $ledgerInfo.attr('data-income') || 'Income Ledger';
+            var categoryName = $ledgerInfo.attr('data-category') || 'Default';
+            var baseHtml = '<br>Income Ledger (Cr): <strong>' + incomeName + '</strong><br>Category/Head: <strong>' + categoryName + '</strong>';
+
+            if (mode === 'Cash') {
+                $('#reference_row').hide();
+                $('#date_row').hide();
+                $ledgerInfo.html('Depositing to Ledger (Dr): <strong>' + cashLedgerName + '</strong>' + baseHtml);
+            } else {
+                $('#reference_row').show();
+                $('#date_row').show();
+                $ledgerInfo.html('Depositing to Ledger (Dr): <strong>' + bankLedgerName + '</strong>' + baseHtml);
+
+                if (mode === 'Cheque') {
+                    $('#ref_label').html("<?php echo $this->lang->line('cheque_no') ? $this->lang->line('cheque_no') : 'Cheque No'; ?>");
+                } else if (mode === 'DD') {
+                    $('#ref_label').html("<?php echo $this->lang->line('dd') ? $this->lang->line('dd') : 'DD'; ?> <?php echo $this->lang->line('reference_no') ? $this->lang->line('reference_no') : 'Reference No'; ?>");
+                } else if (mode === 'bank_transfer') {
+                    $('#ref_label').html("<?php echo $this->lang->line('net_banking_ref') ? $this->lang->line('net_banking_ref') : 'Net Banking Ref'; ?>");
+                } else if (mode === 'upi') {
+                    $('#ref_label').html("<?php echo $this->lang->line('upi_transaction_id') ? $this->lang->line('upi_transaction_id') : 'UPI Transaction ID'; ?>");
+                } else {
+                    $('#ref_label').html("<?php echo $this->lang->line('reference_no') ? $this->lang->line('reference_no') : 'Reference No'; ?>");
+                }
+            }
+        });
+
+        // Delegate datepicker initialization when modal shows
+        $(document).on('focus', '.date_fee', function() {
+            if (!$(this).hasClass('hasDatepicker')) {
+                $(this).datepicker({
+                    format: "dd-mm-yyyy",
+                    autoclose: true,
+                    todayHighlight: true
+                }).addClass('hasDatepicker');
+            }
+        });
+
+        // Auto-sync the Payment Date when the main Date changes
+        $(document).on('change', '#date', function() {
+            var newDate = $(this).val();
+            $('#cheque_date').val(newDate);
+            if ($('#cheque_date').hasClass('hasDatepicker')) {
+                $('#cheque_date').datepicker('update', newDate);
+            }
+        });
     });
 </script>

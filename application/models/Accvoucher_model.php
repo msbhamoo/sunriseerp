@@ -227,7 +227,7 @@ class Accvoucher_model extends MY_Model
         $this->db->update('acc_vouchers', ['status' => 'reversed']);
 
         // Generate reversal voucher number
-        $reversal_no = $this->generateVoucherNo($voucher['voucher_type']);
+        $reversal_no = $voucher['voucher_no'] . '-REV';
         if (!$reversal_no) {
             $this->db->trans_rollback();
             return false;
@@ -247,7 +247,13 @@ class Accvoucher_model extends MY_Model
             'narration' => 'REVERSAL of ' . $voucher['voucher_no'] . ': ' . ($voucher['narration'] ?? ''),
             'reversal_of_voucher_id' => $id,
             'session_id' => $this->current_session ?? ($voucher['session_id'] ?? 1),
-            'created_by' => $staff_id
+            'created_by' => $staff_id,
+            'payment_method' => $voucher['payment_method'] ?? null,
+            'cheque_no' => $voucher['cheque_no'] ?? null,
+            'cheque_date' => $voucher['cheque_date'] ?? null,
+            'bank_name' => $voucher['bank_name'] ?? null,
+            'upi_transaction_id' => $voucher['upi_transaction_id'] ?? null,
+            'net_banking_ref' => $voucher['net_banking_ref'] ?? null
         ];
         $this->db->insert('acc_vouchers', $reversal_data);
         $reversal_id = $this->db->insert_id();
@@ -303,7 +309,7 @@ class Accvoucher_model extends MY_Model
         $this->db->where('id', $id);
         $this->db->update('acc_vouchers', ['status' => 'reversed']);
 
-        $reversal_no = $this->generateVoucherNo($voucher['voucher_type']);
+        $reversal_no = $voucher['voucher_no'] . '-REV';
         if (!$reversal_no) {
             $this->db->trans_rollback();
             return false;
@@ -324,7 +330,13 @@ class Accvoucher_model extends MY_Model
             'reference_id' => $voucher['reference_id'] . '_rev',
             'reversal_of_voucher_id' => $id,
             'session_id' => $this->current_session ?? ($voucher['session_id'] ?? 1),
-            'created_by' => $staff_id
+            'created_by' => $staff_id,
+            'payment_method' => $voucher['payment_method'] ?? null,
+            'cheque_no' => $voucher['cheque_no'] ?? null,
+            'cheque_date' => $voucher['cheque_date'] ?? null,
+            'bank_name' => $voucher['bank_name'] ?? null,
+            'upi_transaction_id' => $voucher['upi_transaction_id'] ?? null,
+            'net_banking_ref' => $voucher['net_banking_ref'] ?? null
         ];
         $this->db->insert('acc_vouchers', $reversal_data);
         $reversal_id = $this->db->insert_id();

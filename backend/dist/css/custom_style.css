@@ -168,12 +168,15 @@
     padding: 0 !important;
     margin: 0 !important;
     overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
     display: none !important; /* Hidden by default */
 }
 
 /* Secondary Submenu Panel styling when open */
 .sidebar-menu .treeview-menu.is-open {
     display: block !important;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
 }
 
 .submenu-header {

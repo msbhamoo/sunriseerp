@@ -97,7 +97,7 @@
                                             <td><?php echo date($this->customlib->getSchoolDateFormat(), strtotime($row['voucher_date'])); ?></td>
                                             <td><?php echo $row['voucher_no']; ?></td>
                                             <td><?php echo ucfirst($row['voucher_type']); ?></td>
-                                            <td><?php echo $row['narration']; ?></td>
+                                            <td><b><?php echo $row['opposite_ledger_name'] ? $row['opposite_ledger_name'] : 'System'; ?></b><br><small><?php echo $row['narration']; ?></small></td>
                                             <td class="text-right"><?php echo ($dr > 0) ? $currency_symbol . amountFormat($dr) : ''; ?></td>
                                             <td class="text-right"><?php echo ($cr > 0) ? $currency_symbol . amountFormat($cr) : ''; ?></td>
                                             <td class="text-right"><?php echo $currency_symbol . amountFormat(abs($balance)) . ' ' . ($balance >= 0 ? 'Dr' : 'Cr'); ?></td>

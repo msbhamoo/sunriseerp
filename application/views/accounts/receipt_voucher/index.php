@@ -188,7 +188,7 @@
                                                 <select name="dr_ledger_id" id="dr_ledger_id" class="form-control" style="width: 100%;">
                                                     <option value=""><?php echo $this->lang->line('select'); ?></option>
                                                     <?php foreach ($cash_bank_ledgers as $ledger) { ?>
-                                                        <option value="<?php echo $ledger['id'] ?>" <?php echo set_select('dr_ledger_id', $ledger['id'], ($dr_selected == $ledger['id'])); ?>><?php echo $ledger['name'] ?></option>
+                                                        <option value="<?php echo $ledger['id'] ?>" data-system-name="<?php echo isset($ledger['system_name']) ? $ledger['system_name'] : ''; ?>" <?php echo set_select('dr_ledger_id', $ledger['id'], ($dr_selected == $ledger['id'])); ?>><?php echo $ledger['name'] ?></option>
                                                     <?php } ?>
                                                 </select>
                                                 <div class="input-group-addon" style="padding: 6px 10px; cursor: pointer;" onclick="showAddPaymentModeModal()">
@@ -220,7 +220,15 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label id="lbl_ref_no">Reference No</label>
-                                            <input name="reference_no" id="reference_no" type="text" class="form-control" value="<?php echo set_value('reference_no', isset($voucher) ? $voucher['cheque_no'] : ''); ?>" />
+                                            <?php 
+                                            $ref_val = '';
+                                            if(isset($voucher)) {
+                                                if(!empty($voucher['cheque_no'])) $ref_val = $voucher['cheque_no'];
+                                                elseif(!empty($voucher['upi_transaction_id'])) $ref_val = $voucher['upi_transaction_id'];
+                                                elseif(!empty($voucher['net_banking_ref'])) $ref_val = $voucher['net_banking_ref'];
+                                            }
+                                            ?>
+                                            <input name="reference_no" id="reference_no" type="text" class="form-control" value="<?php echo set_value('reference_no', $ref_val); ?>" />
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -476,6 +484,17 @@
         }
         $('#dr_ledger_id').change(function() {
             fetchBalance($(this).val(), $('#dr_ledger_balance'));
+            
+            var selectedText = $(this).find('option:selected').text();
+            if (selectedText !== '' && selectedText.toLowerCase().indexOf('cash') === -1) {
+                $('#payment_method').val('Net Banking').trigger('change');
+                if ($('#bank_name option[value="Punjab National Bank"]').length === 0) {
+                    $('#bank_name').append(new Option('Punjab National Bank', 'Punjab National Bank'));
+                }
+                $('#bank_name').val('Punjab National Bank').trigger('change');
+            } else if (selectedText !== '' && selectedText.toLowerCase().indexOf('cash') !== -1) {
+                $('#payment_method').val('Cash').trigger('change');
+            }
         });
         
         $(document).on('change', '.ledger_select', function() {
@@ -558,6 +577,16 @@
         if ($('#payment_method').val() !== 'Cash') {
             $('#payment_method').trigger('change');
         }
+        
+        $('#dr_ledger_id').change(function() {
+            var sysName = $(this).find('option:selected').data('system-name');
+            if (sysName === 'bank') {
+                $('#payment_method').val('Net Banking').trigger('change');
+                setTimeout(function() {
+                    $('#bank_name').val('Punjab National Bank').trigger('change');
+                }, 100);
+            }
+        });
     });
 
     function showAddPaymentModeModal() {

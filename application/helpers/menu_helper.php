@@ -210,6 +210,7 @@ if (!function_exists('main_menu_array')) {
                 'staff'             => array('index','profile','edit','leaverequest','rating','disablestafflist','create'),             
                 'staffattendance'   => array('index'),                 
                 'payroll'           => array('index','edit','create'),                 
+                'payrollrules'      => array('index','rules','addrule','saverule','simulate','runsimulation','runlogs','runtrace','versions','togglerule','deleterule','applySimulation'),                 
                 'leaverequest'      => array('leaverequest'),  
                 'leavetypes'        => array('index','leaveedit','createleavetype'),  
                 'department'        => array('department','departmentedit'),  

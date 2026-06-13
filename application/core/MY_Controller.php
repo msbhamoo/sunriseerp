@@ -44,6 +44,14 @@ class MY_Controller extends CI_Controller
         }
 
         $this->load->language($lang_array, $language);
+        
+        // Audit Log User Tracking
+        if (isset($this->customlib) && isset($this->db)) {
+            $audit_user_id = $this->customlib->getStaffID();
+            if (!empty($audit_user_id)) {
+                $this->db->query("SET @current_audit_user_id = " . (int)$audit_user_id);
+            }
+        }
     }
 
 }

@@ -179,7 +179,31 @@ if(!empty($discount_not_applied)){
          <div class="form-group">
              <label for="inputPassword3" class="col-sm-3 col-lg-3 col-md-3 control-label"><?php echo $this->lang->line('note'); ?></label>
              <div class="col-sm-9 col-lg-9 col-md-9">
-                 <textarea class="form-control" rows="3" id="description" placeholder=""></textarea>
+                 <textarea class="form-control" rows="2" id="description" placeholder=""></textarea>
+             </div>
+         </div>
+         <div class="form-group" id="reference_row" style="display: none;">
+             <label for="inputPassword3" class="col-sm-3 col-lg-3 col-md-3 control-label" id="ref_label"> <?php echo $this->lang->line('reference_no') ? $this->lang->line('reference_no') : 'Reference No'; ?></label>
+             <div class="col-sm-9 col-lg-9 col-md-9">
+                 <input class="form-control" name="reference_no" id="reference_no" placeholder="">
+                 <span id="form_collection_reference_no_error" class="text text-danger"></span>
+             </div>
+         </div>
+         <div class="form-group" id="date_row" style="display: none;">
+             <label for="inputPassword3" class="col-sm-3 col-lg-3 col-md-3 control-label" id="date_label"> Payment Date</label>
+             <div class="col-sm-9 col-lg-9 col-md-9">
+                 <input class="form-control date_fee" name="cheque_date" id="cheque_date" placeholder="" value="<?php echo date($this->customlib->getSchoolDateFormat()); ?>" readonly="readonly" autocomplete="off">
+                 <span id="form_collection_cheque_date_error" class="text text-danger"></span>
+             </div>
+         </div>
+         <div class="form-group">
+             <div class="col-sm-3 col-lg-3 col-md-3"></div>
+             <div class="col-sm-9 col-lg-9 col-md-9">
+                 <div id="ledger_info" class="alert alert-info" style="margin-bottom: 0; padding: 5px 10px;" data-income="<?php echo $income_ledger_name ?? 'Income Ledger'; ?>" data-category="<?php echo $category_head_name ? $category_head_name : 'Default'; ?>">
+                     Depositing to Ledger (Dr): <strong><?php echo $cash_ledger_name ?? 'Cash Account'; ?></strong><br>
+                     Income Ledger (Cr): <strong><?php echo $income_ledger_name ?? 'Income Ledger'; ?></strong><br>
+                     Category/Head: <strong><?php echo $category_head_name ? $category_head_name : 'Default'; ?></strong>
+                 </div>
              </div>
          </div>
      </div>

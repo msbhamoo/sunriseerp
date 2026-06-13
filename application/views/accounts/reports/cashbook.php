@@ -39,227 +39,213 @@
                 </div>
             </div>
             
-            <?php if (isset($cash_result) || isset($bank_result) || isset($opening_balances)) { ?>
+            <?php if (isset($cash_result) || isset($bank_result) || isset($opening_balances)) { 
+                $cash_ob = isset($opening_balances) ? $opening_balances['cash'] : 0;
+                $bank_ob = isset($opening_balances) ? $opening_balances['bank'] : 0;
+                
+                $all_txns = [];
+                if (!empty($cash_result)) {
+                    foreach ($cash_result as $r) {
+                        $r['account_type'] = 'Cash';
+                        $all_txns[] = $r;
+                    }
+                }
+                if (!empty($bank_result)) {
+                    foreach ($bank_result as $r) {
+                        $r['account_type'] = 'Bank';
+                        $all_txns[] = $r;
+                    }
+                }
+                
+                usort($all_txns, function($a, $b) {
+                    return strtotime($a['voucher_date']) - strtotime($b['voucher_date']);
+                });
+                
+                $income_txns = [];
+                $expense_txns = [];
+                $total_income = 0;
+                $total_expense = 0;
+                
+                $total_receipts_cash = $cash_ob >= 0 ? $cash_ob : 0;
+                $total_receipts_bank = $bank_ob >= 0 ? $bank_ob : 0;
+                $total_payments_cash = $cash_ob < 0 ? abs($cash_ob) : 0;
+                $total_payments_bank = $bank_ob < 0 ? abs($bank_ob) : 0;
+                
+                foreach ($all_txns as $r) {
+                    if ($r['debit_amount'] > 0) {
+                        $income_txns[] = $r;
+                        $total_income += $r['debit_amount'];
+                        if ($r['account_type'] == 'Cash') $total_receipts_cash += $r['debit_amount'];
+                        if ($r['account_type'] == 'Bank') $total_receipts_bank += $r['debit_amount'];
+                    }
+                    if ($r['credit_amount'] > 0) {
+                        $expense_txns[] = $r;
+                        $total_expense += $r['credit_amount'];
+                        if ($r['account_type'] == 'Cash') $total_payments_cash += $r['credit_amount'];
+                        if ($r['account_type'] == 'Bank') $total_payments_bank += $r['credit_amount'];
+                    }
+                }
+                
+                $cb_cash = $total_receipts_cash - $total_payments_cash;
+                $cb_bank = $total_receipts_bank - $total_payments_bank;
+                
+                $date_range_str = '';
+                if(isset($date_from) && isset($date_to) && $date_from != '' && $date_to != '') {
+                    $df_parsed = $this->customlib->dateFormatToYYYYMMDD($date_from);
+                    $dt_parsed = $this->customlib->dateFormatToYYYYMMDD($date_to);
+                    $date_range_str = "<br><small class='text-muted' style='font-size:14px;font-weight:normal;'><i class='fa fa-calendar'></i> " . date('F j, Y', strtotime($df_parsed)) . " to " . date('F j, Y', strtotime($dt_parsed)) . "</small>";
+                }
+            ?>
             <div class="col-md-12">
-                <div class="box box-info">
-                    <div class="box-header ptbnull">
-                        <h3 class="box-title titlefix"><i class="fa fa-users"></i> <?php echo $this->lang->line('cash_book_report'); ?></h3>
-                        <div class="box-tools pull-right"></div>
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <h3 style="margin-top: 0; font-weight: 600; color: #444;">
+                        <?php echo $this->lang->line('cash_book_report'); ?>
+                        <?php echo $date_range_str; ?>
+                    </h3>
+                </div>
+            
+                <!-- Opening Balances -->
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 col-xs-12">
+                        <div class="box box-solid" style="border: 1px solid #d2d6de; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 4px solid #00c0ef;">
+                            <div class="box-body text-center" style="padding: 15px;">
+                                <span style="font-size: 11px; font-weight: 700; color: #777; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo $this->lang->line('opening_balance'); ?> (Cash)</span>
+                                <h3 style="margin: 10px 0 0 0; font-weight: 600; color: #333; font-size: 22px;"><?php echo $this->customlib->getSchoolCurrencyFormat() . ' ' . amountFormat(abs($cash_ob)) . ($cash_ob < 0 ? ' <small class="text-danger">(Cr)</small>' : ''); ?></h3>
+                            </div>
+                        </div>
                     </div>
-                    <div class="box-body table-responsive">
-                        <div class="download_label"><?php echo $this->lang->line('cash_book_report'); ?></div>
-                        <style>
-                            .cashbook-table { border-collapse: separate; border-spacing: 0; width: 100%; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; }
-                            .cashbook-table th, .cashbook-table td { padding: 10px 12px; font-size: 13px; vertical-align: middle; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; }
-                            .cashbook-table th:last-child, .cashbook-table td:last-child { border-right: none; }
-                            .cashbook-table tbody tr:last-child td { border-bottom: none; }
-                            .cashbook-table thead th { text-align: center; font-weight: 600; }
-                            .cashbook-table tbody tr:hover { background-color: #f8fafc; }
-                            .cashbook-table .split-border { border-left: 3px solid #cbd5e1 !important; }
-                            .cashbook-header-dr { background-color: #ecfdf5 !important; font-size: 14px; padding: 12px !important; color:#065f46; border-bottom: 2px solid #a7f3d0 !important;}
-                            .cashbook-header-cr { background-color: #fef2f2 !important; font-size: 14px; padding: 12px !important; border-left: 3px solid #fecaca !important; color:#991b1b; border-bottom: 2px solid #fecaca !important;}
-                            .download_label { font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #334155; }
-                        </style>
-                        <table class="table table-bordered cashbook-table">
-                            <thead>
-                                <tr>
-                                    <th colspan="5" class="text-center cashbook-header-dr">RECEIPTS (Dr.)</th>
-                                    <th colspan="5" class="text-center cashbook-header-cr">PAYMENTS (Cr.)</th>
-                                </tr>
-                                <tr>
-                                    <th width="8%">Date</th>
-                                    <th width="15%">Particulars</th>
-                                    <th width="6%">Vch No.</th>
-                                    <th width="10%" class="text-right">Cash (<?php echo $this->customlib->getSchoolCurrencyFormat(); ?>)</th>
-                                    <th width="10%" class="text-right">Bank (<?php echo $this->customlib->getSchoolCurrencyFormat(); ?>)</th>
-                                    <th width="8%" class="split-border">Date</th>
-                                    <th width="15%">Particulars</th>
-                                    <th width="6%">Vch No.</th>
-                                    <th width="10%" class="text-right">Cash (<?php echo $this->customlib->getSchoolCurrencyFormat(); ?>)</th>
-                                    <th width="10%" class="text-right">Bank (<?php echo $this->customlib->getSchoolCurrencyFormat(); ?>)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                $receipts = [];
-                                $payments = [];
-                                
-                                $total_receipts_cash = 0;
-                                $total_receipts_bank = 0;
-                                $total_payments_cash = 0;
-                                $total_payments_bank = 0;
-
-                                if (isset($opening_balances)) {
-                                    $cash_ob = $opening_balances['cash'];
-                                    $bank_ob = $opening_balances['bank'];
-                                    
-                                    // Opening balances usually go to Receipts if Debit (positive), Payments if Credit (negative)
-                                    // For standard cash book, let's put both OB on the receipt side as "To Balance b/d" if positive
-                                    if ($cash_ob >= 0 || $bank_ob >= 0) {
-                                        $c_amt = $cash_ob >= 0 ? $cash_ob : 0;
-                                        $b_amt = $bank_ob >= 0 ? $bank_ob : 0;
-                                        $total_receipts_cash += $c_amt;
-                                        $total_receipts_bank += $b_amt;
-                                        
-                                        $receipts[] = array(
-                                            'date' => '-',
-                                            'particulars' => '<b>To Balance b/d</b>',
-                                            'vch_no' => '-',
-                                            'cash' => $c_amt >= 0 ? amountFormat($c_amt) : '',
-                                            'bank' => $b_amt >= 0 ? amountFormat($b_amt) : ''
-                                        );
-                                    }
-                                    if ($cash_ob < 0 || $bank_ob < 0) {
-                                        $c_amt = $cash_ob < 0 ? abs($cash_ob) : 0;
-                                        $b_amt = $bank_ob < 0 ? abs($bank_ob) : 0;
-                                        $total_payments_cash += $c_amt;
-                                        $total_payments_bank += $b_amt;
-                                        
-                                        $payments[] = array(
-                                            'date' => '-',
-                                            'particulars' => '<b>By Balance b/d</b> (Overdraft)',
-                                            'vch_no' => '-',
-                                            'cash' => $c_amt > 0 ? amountFormat($c_amt) : '',
-                                            'bank' => $b_amt > 0 ? amountFormat($b_amt) : ''
-                                        );
-                                    }
-                                }
-
-                                // Process transactions
-                                // We combine cash and bank results, separating them into Receipts (Dr to Cash/Bank) and Payments (Cr to Cash/Bank)
-                                $all_txns = [];
-                                if (!empty($cash_result)) {
-                                    foreach ($cash_result as $r) {
-                                        $r['is_cash'] = true;
-                                        $all_txns[] = $r;
-                                    }
-                                }
-                                if (!empty($bank_result)) {
-                                    foreach ($bank_result as $r) {
-                                        $r['is_cash'] = false;
-                                        $all_txns[] = $r;
-                                    }
-                                }
-                                
-                                // Sort by date
-                                usort($all_txns, function($a, $b) {
-                                    return strtotime($a['voucher_date']) - strtotime($b['voucher_date']);
-                                });
-                                
-                                foreach ($all_txns as $r) {
-                                    $date = date($this->customlib->getSchoolDateFormat(), strtotime($r['voucher_date']));
-                                    $particulars = "<b>To {$r['ledger_name']}</b><br><small>{$r['item_narration']}</small>";
-                                    $particulars_cr = "<b>By {$r['ledger_name']}</b><br><small>{$r['item_narration']}</small>";
-                                    
-                                    if ($r['debit_amount'] > 0) {
-                                        // Receipt
-                                        $c_amt = $r['is_cash'] ? $r['debit_amount'] : 0;
-                                        $b_amt = !$r['is_cash'] ? $r['debit_amount'] : 0;
-                                        $total_receipts_cash += $c_amt;
-                                        $total_receipts_bank += $b_amt;
-                                        
-                                        $receipts[] = array(
-                                            'date' => $date,
-                                            'particulars' => $particulars,
-                                            'vch_no' => $r['voucher_no'],
-                                            'cash' => $c_amt > 0 ? amountFormat($c_amt) : '',
-                                            'bank' => $b_amt > 0 ? amountFormat($b_amt) : ''
-                                        );
-                                    }
-                                    if ($r['credit_amount'] > 0) {
-                                        // Payment
-                                        $c_amt = $r['is_cash'] ? $r['credit_amount'] : 0;
-                                        $b_amt = !$r['is_cash'] ? $r['credit_amount'] : 0;
-                                        $total_payments_cash += $c_amt;
-                                        $total_payments_bank += $b_amt;
-                                        
-                                        $payments[] = array(
-                                            'date' => $date,
-                                            'particulars' => $particulars_cr,
-                                            'vch_no' => $r['voucher_no'],
-                                            'cash' => $c_amt > 0 ? amountFormat($c_amt) : '',
-                                            'bank' => $b_amt > 0 ? amountFormat($b_amt) : ''
-                                        );
-                                    }
-                                }
-
-                                // Calculate Closing Balances
-                                $cb_cash = $total_receipts_cash - $total_payments_cash;
-                                $cb_bank = $total_receipts_bank - $total_payments_bank;
-
-                                if ($cb_cash >= 0 || $cb_bank >= 0) {
-                                    $c_amt = $cb_cash >= 0 ? $cb_cash : 0;
-                                    $b_amt = $cb_bank >= 0 ? $cb_bank : 0;
-                                    $total_payments_cash += $c_amt;
-                                    $total_payments_bank += $b_amt;
-                                    
-                                    $payments[] = array(
-                                        'date' => '-',
-                                        'particulars' => '<b class="text-danger">By Balance c/d</b>',
-                                        'vch_no' => '-',
-                                        'cash' => $c_amt >= 0 ? amountFormat($c_amt) : '',
-                                        'bank' => $b_amt >= 0 ? amountFormat($b_amt) : ''
-                                    );
-                                }
-                                
-                                if ($cb_cash < 0 || $cb_bank < 0) {
-                                    $c_amt = $cb_cash < 0 ? abs($cb_cash) : 0;
-                                    $b_amt = $cb_bank < 0 ? abs($cb_bank) : 0;
-                                    $total_receipts_cash += $c_amt;
-                                    $total_receipts_bank += $b_amt;
-                                    
-                                    $receipts[] = array(
-                                        'date' => '-',
-                                        'particulars' => '<b class="text-danger">To Balance c/d</b> (Overdraft)',
-                                        'vch_no' => '-',
-                                        'cash' => $c_amt > 0 ? amountFormat($c_amt) : '',
-                                        'bank' => $b_amt > 0 ? amountFormat($b_amt) : ''
-                                    );
-                                }
-
-                                // Render T-Shape rows
-                                $max_rows = max(count($receipts), count($payments));
-                                
-                                for ($i = 0; $i < $max_rows; $i++) {
-                                    echo "<tr>";
-                                    // Receipts
-                                    if (isset($receipts[$i])) {
-                                        echo "<td>{$receipts[$i]['date']}</td>";
-                                        echo "<td>{$receipts[$i]['particulars']}</td>";
-                                        echo "<td>{$receipts[$i]['vch_no']}</td>";
-                                        echo "<td class='text-right'>{$receipts[$i]['cash']}</td>";
-                                        echo "<td class='text-right'>{$receipts[$i]['bank']}</td>";
-                                    } else {
-                                        echo "<td></td><td></td><td></td><td></td><td></td>";
-                                    }
-                                    
-                                    // Payments
-                                    if (isset($payments[$i])) {
-                                        echo "<td class='split-border'>{$payments[$i]['date']}</td>";
-                                        echo "<td>{$payments[$i]['particulars']}</td>";
-                                        echo "<td>{$payments[$i]['vch_no']}</td>";
-                                        echo "<td class='text-right'>{$payments[$i]['cash']}</td>";
-                                        echo "<td class='text-right'>{$payments[$i]['bank']}</td>";
-                                    } else {
-                                        echo "<td class='split-border'></td><td></td><td></td><td></td><td></td>";
-                                    }
-                                    echo "</tr>";
-                                }
-                                ?>
-                            </tbody>
-                            <tfoot>
-                                <tr style="background-color: #f3f4f6; font-weight: bold;">
-                                    <td colspan="3" class="text-right">TOTAL RECEIPTS:</td>
-                                    <td class="text-right"><?php echo amountFormat($total_receipts_cash); ?></td>
-                                    <td class="text-right"><?php echo amountFormat($total_receipts_bank); ?></td>
-                                    <td colspan="3" class="text-right split-border">TOTAL PAYMENTS:</td>
-                                    <td class="text-right"><?php echo amountFormat($total_payments_cash); ?></td>
-                                    <td class="text-right"><?php echo amountFormat($total_payments_bank); ?></td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                    <div class="col-md-3 col-sm-6 col-xs-12">
+                        <div class="box box-solid" style="border: 1px solid #d2d6de; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 4px solid #00c0ef;">
+                            <div class="box-body text-center" style="padding: 15px;">
+                                <span style="font-size: 11px; font-weight: 700; color: #777; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo $this->lang->line('opening_balance'); ?> (Bank)</span>
+                                <h3 style="margin: 10px 0 0 0; font-weight: 600; color: #333; font-size: 22px;"><?php echo $this->customlib->getSchoolCurrencyFormat() . ' ' . amountFormat(abs($bank_ob)) . ($bank_ob < 0 ? ' <small class="text-danger">(Cr)</small>' : ''); ?></h3>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <div class="row">
+                    <!-- Income Panel -->
+                    <div class="col-md-6">
+                        <div class="box box-success" style="border-top-width: 3px; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">
+                            <div class="box-header with-border" style="padding: 12px 15px;">
+                                <h3 class="box-title" style="font-weight: 600;"><i class="fa fa-arrow-down text-success" style="margin-right: 5px;"></i> Income</h3>
+                                <div class="box-tools pull-right">
+                                    <span class="label label-success" style="font-size: 13px; padding: 5px 10px; border-radius: 4px;">TOTAL: <?php echo $this->customlib->getSchoolCurrencyFormat() . amountFormat($total_income); ?></span>
+                                </div>
+                            </div>
+                            <div class="box-body table-responsive" style="padding: 0;">
+                                <table class="table table-striped table-bordered table-hover" style="margin-bottom: 0; border: none;">
+                                    <thead>
+                                        <tr style="background-color: #f9fafb;">
+                                            <th style="border-top: none; font-size: 12px; color: #555;">SR NO.</th>
+                                            <th style="border-top: none; font-size: 12px; color: #555;">DATE</th>
+                                            <th style="border-top: none; font-size: 12px; color: #555;">LEDGER</th>
+                                            <th style="border-top: none; font-size: 12px; color: #555;">ACCOUNT TYPE</th>
+                                            <th class="text-right" style="border-top: none; font-size: 12px; color: #555;">AMOUNT</th>
+                                            <th style="border-top: none; font-size: 12px; color: #555;">NARRATION</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if(empty($income_txns)) { ?>
+                                            <tr><td colspan="6" class="text-center text-muted" style="padding: 20px;">No Income Transactions</td></tr>
+                                        <?php } else {
+                                            $i = 1;
+                                            foreach($income_txns as $r) {
+                                        ?>
+                                        <tr>
+                                            <td style="font-size: 13px;"><?php echo $i++; ?></td>
+                                            <td style="font-size: 13px;"><?php echo date('F j, Y', strtotime($r['voucher_date'])); ?></td>
+                                            <td style="font-size: 13px;"><strong><?php echo $r['ledger_name']; ?></strong></td>
+                                            <td style="font-size: 13px;"><?php echo $r['account_type']; ?></td>
+                                            <td class="text-right" style="font-size: 13px; font-weight: 600;"><?php echo $this->customlib->getSchoolCurrencyFormat() . amountFormat($r['debit_amount']); ?></td>
+                                            <td style="font-size: 13px;"><?php echo !empty($r['item_narration']) ? $r['item_narration'] : $r['narration']; ?></td>
+                                        </tr>
+                                        <?php } } ?>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr style="background-color: #f4f6f9;">
+                                            <th colspan="4" class="text-right" style="font-size: 14px;">Total Income:</th>
+                                            <th class="text-right text-success" style="font-size: 15px;"><?php echo $this->customlib->getSchoolCurrencyFormat() . amountFormat($total_income); ?></th>
+                                            <th colspan="1"></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expense Panel -->
+                    <div class="col-md-6">
+                        <div class="box box-danger" style="border-top-width: 3px; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">
+                            <div class="box-header with-border" style="padding: 12px 15px;">
+                                <h3 class="box-title" style="font-weight: 600;"><i class="fa fa-arrow-up text-danger" style="margin-right: 5px;"></i> Expense</h3>
+                                <div class="box-tools pull-right">
+                                    <span class="label label-danger" style="font-size: 13px; padding: 5px 10px; border-radius: 4px;">TOTAL: <?php echo $this->customlib->getSchoolCurrencyFormat() . amountFormat($total_expense); ?></span>
+                                </div>
+                            </div>
+                            <div class="box-body table-responsive" style="padding: 0;">
+                                <table class="table table-striped table-bordered table-hover" style="margin-bottom: 0; border: none;">
+                                    <thead>
+                                        <tr style="background-color: #f9fafb;">
+                                            <th style="border-top: none; font-size: 12px; color: #555;">SR NO.</th>
+                                            <th style="border-top: none; font-size: 12px; color: #555;">DATE</th>
+                                            <th style="border-top: none; font-size: 12px; color: #555;">LEDGER</th>
+                                            <th style="border-top: none; font-size: 12px; color: #555;">ACCOUNT TYPE</th>
+                                            <th class="text-right" style="border-top: none; font-size: 12px; color: #555;">AMOUNT</th>
+                                            <th style="border-top: none; font-size: 12px; color: #555;">NARRATION</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if(empty($expense_txns)) { ?>
+                                            <tr><td colspan="6" class="text-center text-muted" style="padding: 20px;">No Expense Transactions</td></tr>
+                                        <?php } else {
+                                            $i = 1;
+                                            foreach($expense_txns as $r) {
+                                        ?>
+                                        <tr>
+                                            <td style="font-size: 13px;"><?php echo $i++; ?></td>
+                                            <td style="font-size: 13px;"><?php echo date('F j, Y', strtotime($r['voucher_date'])); ?></td>
+                                            <td style="font-size: 13px;"><strong><?php echo $r['ledger_name']; ?></strong></td>
+                                            <td style="font-size: 13px;"><?php echo $r['account_type']; ?></td>
+                                            <td class="text-right" style="font-size: 13px; font-weight: 600;"><?php echo $this->customlib->getSchoolCurrencyFormat() . amountFormat($r['credit_amount']); ?></td>
+                                            <td style="font-size: 13px;"><?php echo !empty($r['item_narration']) ? $r['item_narration'] : $r['narration']; ?></td>
+                                        </tr>
+                                        <?php } } ?>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr style="background-color: #f4f6f9;">
+                                            <th colspan="4" class="text-right" style="font-size: 14px;">Total Expense:</th>
+                                            <th class="text-right text-danger" style="font-size: 15px;"><?php echo $this->customlib->getSchoolCurrencyFormat() . amountFormat($total_expense); ?></th>
+                                            <th colspan="1"></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Closing Balances -->
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 col-xs-12">
+                        <div class="box box-solid" style="border: 1px solid #d2d6de; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 4px solid #dd4b39;">
+                            <div class="box-body text-center" style="padding: 15px;">
+                                <span style="font-size: 11px; font-weight: 700; color: #777; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo $this->lang->line('closing_balance'); ?> (Cash)</span>
+                                <h3 style="margin: 10px 0 0 0; font-weight: 600; color: #333; font-size: 22px;"><?php echo $this->customlib->getSchoolCurrencyFormat() . ' ' . amountFormat(abs($cb_cash)) . ($cb_cash < 0 ? ' <small class="text-danger">(Cr)</small>' : ''); ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 col-xs-12">
+                        <div class="box box-solid" style="border: 1px solid #d2d6de; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 4px solid #dd4b39;">
+                            <div class="box-body text-center" style="padding: 15px;">
+                                <span style="font-size: 11px; font-weight: 700; color: #777; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo $this->lang->line('closing_balance'); ?> (Bank)</span>
+                                <h3 style="margin: 10px 0 0 0; font-weight: 600; color: #333; font-size: 22px;"><?php echo $this->customlib->getSchoolCurrencyFormat() . ' ' . amountFormat(abs($cb_bank)) . ($cb_bank < 0 ? ' <small class="text-danger">(Cr)</small>' : ''); ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <?php } ?>
         </div>

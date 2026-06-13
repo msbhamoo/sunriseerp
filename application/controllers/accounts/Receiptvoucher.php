@@ -209,6 +209,12 @@ class Receiptvoucher extends MY_Addon_AccountsController
                     $details .= " <span class='label label-primary' style='font-size:9px; font-weight:800; padding:2px 5px; border-radius:3px; margin-left:4px; background-color: #3b82f6 !important;'>FEE SYNCED</span>";
                 }
                 
+                $voucher_no_display = $value->voucher_no;
+                if (strpos($value->narration, 'AUTO-REVERSAL') !== false || strpos($value->narration, 'REVERSAL') === 0) {
+                    $details .= " <span class='label label-danger' style='font-size:9px; font-weight:800; padding:2px 5px; border-radius:3px; margin-left:4px;'>AUTO-REVERSAL</span>";
+                    $voucher_no_display = "<span style='color:#dc2626; font-weight:bold;'>" . $value->voucher_no . "</span>";
+                }
+                
                 $details .= "<br><small class='text-muted' style='font-size:11px; font-weight:500;'><strong style='color:#dc2626;'>" . htmlspecialchars($cr_names) . "</strong> &rarr; <strong style='color:#10b981;'>" . htmlspecialchars($dr_names) . "</strong></small>";
 
                 $more_info = "<strong>Mode:</strong> " . htmlspecialchars(strtoupper($pm)) . "<br>";
@@ -226,7 +232,7 @@ class Receiptvoucher extends MY_Addon_AccountsController
                 }
 
                 $row[] = date($this->customlib->getSchoolDateFormat(), strtotime($value->voucher_date));
-                $row[] = $value->voucher_no;
+                $row[] = $voucher_no_display;
                 $row[] = $details;
                 $row[] = $currency_symbol . amountFormat($value->total_amount);
                 $row[] = $more_info;

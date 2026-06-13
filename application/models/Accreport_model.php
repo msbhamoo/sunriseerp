@@ -19,7 +19,7 @@ class Accreport_model extends MY_Model
         $this->db->where('v.voucher_date >=', $from_date);
         $this->db->where('v.voucher_date <=', $to_date);
         $this->db->where('v.session_id', $this->current_session);
-        $this->db->where('v.status', 'posted'); // P6 Fix: Filter reversed vouchers
+        $this->db->where_in('v.status', ['posted', 'reversed']); // Fix: Include reversed vouchers to balance with their reversal entries
         $this->db->order_by('v.voucher_date', 'asc');
         $this->db->order_by('v.id', 'asc');
         $query = $this->db->get();
@@ -28,7 +28,9 @@ class Accreport_model extends MY_Model
 
     public function getCashbookData($from_date, $to_date)
     {
-        $this->db->select('v.*, vi.debit_amount, vi.credit_amount, vi.narration as item_narration, l.name as ledger_name');
+        $opposite_ledger_sql = "(SELECT GROUP_CONCAT(l2.name SEPARATOR ', ') FROM acc_voucher_items vi2 JOIN acc_ledgers l2 ON l2.id = vi2.ledger_id WHERE vi2.voucher_id = v.id AND ( (vi.debit_amount > 0 AND vi2.credit_amount > 0) OR (vi.credit_amount > 0 AND vi2.debit_amount > 0) ))";
+        
+        $this->db->select('v.*, vi.debit_amount, vi.credit_amount, vi.narration as item_narration, ' . $opposite_ledger_sql . ' as ledger_name', FALSE);
         $this->db->from('acc_vouchers v');
         $this->db->join('acc_voucher_items vi', 'vi.voucher_id = v.id');
         $this->db->join('acc_ledgers l', 'l.id = vi.ledger_id', 'left');
@@ -37,7 +39,7 @@ class Accreport_model extends MY_Model
         $this->db->where('v.voucher_date >=', $from_date);
         $this->db->where('v.voucher_date <=', $to_date);
         $this->db->where('v.session_id', $this->current_session);
-        $this->db->where('v.status', 'posted'); // P6 Fix
+        $this->db->where_in('v.status', ['posted', 'reversed']); // Fix
         $this->db->order_by('v.voucher_date', 'asc');
         $this->db->order_by('v.id', 'asc');
         $query = $this->db->get();
@@ -46,7 +48,9 @@ class Accreport_model extends MY_Model
 
     public function getBankbookData($from_date, $to_date, $ledger_id = null)
     {
-        $this->db->select('v.*, vi.debit_amount, vi.credit_amount, vi.narration as item_narration, l.name as ledger_name');
+        $opposite_ledger_sql = "(SELECT GROUP_CONCAT(l2.name SEPARATOR ', ') FROM acc_voucher_items vi2 JOIN acc_ledgers l2 ON l2.id = vi2.ledger_id WHERE vi2.voucher_id = v.id AND ( (vi.debit_amount > 0 AND vi2.credit_amount > 0) OR (vi.credit_amount > 0 AND vi2.debit_amount > 0) ))";
+        
+        $this->db->select('v.*, vi.debit_amount, vi.credit_amount, vi.narration as item_narration, ' . $opposite_ledger_sql . ' as ledger_name', FALSE);
         $this->db->from('acc_vouchers v');
         $this->db->join('acc_voucher_items vi', 'vi.voucher_id = v.id');
         $this->db->join('acc_ledgers l', 'l.id = vi.ledger_id', 'left');
@@ -58,7 +62,7 @@ class Accreport_model extends MY_Model
         $this->db->where('v.voucher_date >=', $from_date);
         $this->db->where('v.voucher_date <=', $to_date);
         $this->db->where('v.session_id', $this->current_session);
-        $this->db->where('v.status', 'posted'); // P6 Fix
+        $this->db->where_in('v.status', ['posted', 'reversed']); // Fix
         $this->db->order_by('v.voucher_date', 'asc');
         $this->db->order_by('v.id', 'asc');
         $query = $this->db->get();
@@ -84,7 +88,8 @@ class Accreport_model extends MY_Model
         $this->db->where('vi.ledger_id', $ledger_id);
         $this->db->where('v.voucher_date <', $from_date);
         $this->db->where('v.session_id', $this->current_session);
-        $this->db->where('v.status', 'posted'); // P6 Fix
+        $this->db->where_in('v.status', ['posted', 'reversed']); // Fix
+        $this->db->order_by('v.voucher_date', 'asc');
         $prev_txn = $this->db->get()->row();
         
         if ($prev_txn) {
@@ -92,14 +97,16 @@ class Accreport_model extends MY_Model
         }
 
         // 2. Get Transactions for the period
-        $this->db->select('v.voucher_date, v.voucher_no, v.voucher_type, vi.debit_amount, vi.credit_amount, vi.narration');
+        $opposite_ledger_sql = "(SELECT GROUP_CONCAT(l2.name SEPARATOR ', ') FROM acc_voucher_items vi2 JOIN acc_ledgers l2 ON l2.id = vi2.ledger_id WHERE vi2.voucher_id = v.id AND vi2.ledger_id != vi.ledger_id)";
+
+        $this->db->select('v.voucher_date, v.voucher_no, v.voucher_type, vi.debit_amount, vi.credit_amount, vi.narration, ' . $opposite_ledger_sql . ' as opposite_ledger_name', FALSE);
         $this->db->from('acc_vouchers v');
         $this->db->join('acc_voucher_items vi', 'vi.voucher_id = v.id');
         $this->db->where('vi.ledger_id', $ledger_id);
         $this->db->where('v.voucher_date >=', $from_date);
         $this->db->where('v.voucher_date <=', $to_date);
         $this->db->where('v.session_id', $this->current_session);
-        $this->db->where('v.status', 'posted'); // P6 Fix
+        $this->db->where_in('v.status', ['posted', 'reversed']); // Fix
         $this->db->order_by('v.voucher_date', 'asc');
         $this->db->order_by('v.id', 'asc');
         $transactions = $this->db->get()->result_array();
@@ -146,7 +153,7 @@ class Accreport_model extends MY_Model
         $this->db->where('v.voucher_date >=', $from_date);
         $this->db->where('v.voucher_date <=', $to_date);
         $this->db->where('v.session_id', $this->current_session);
-        $this->db->where('v.status', 'posted'); // P6 Fix
+        $this->db->where_in('v.status', ['posted', 'reversed']); // Fix
         $this->db->group_by('et.id');
         $this->db->order_by('et.name', 'asc');
         
@@ -156,16 +163,15 @@ class Accreport_model extends MY_Model
 
     public function getTrialBalance($to_date = null)
     {
+        $date_cond = $to_date ? ' AND v.voucher_date <= ' . $this->db->escape($to_date) : '';
+        
         $this->db->select('l.id, l.name, l.opening_balance, l.opening_type, g.name as group_name, g.system_name,
-                          SUM(CASE WHEN v.session_id = '.$this->db->escape($this->current_session).' THEN vi.debit_amount ELSE 0 END) as total_debit, 
-                          SUM(CASE WHEN v.session_id = '.$this->db->escape($this->current_session).' THEN vi.credit_amount ELSE 0 END) as total_credit');
+                          SUM(CASE WHEN v.session_id = '.$this->db->escape($this->current_session).$date_cond.' THEN vi.debit_amount ELSE 0 END) as total_debit, 
+                          SUM(CASE WHEN v.session_id = '.$this->db->escape($this->current_session).$date_cond.' THEN vi.credit_amount ELSE 0 END) as total_credit', FALSE);
         $this->db->from('acc_ledgers l');
         $this->db->join('acc_ledger_groups g', 'g.id = l.group_id');
         $this->db->join('acc_voucher_items vi', 'vi.ledger_id = l.id', 'left');
-        $this->db->join('acc_vouchers v', 'v.id = vi.voucher_id AND v.status = \'posted\'', 'left'); // P6 Fix
-        if ($to_date) {
-            $this->db->where('(v.voucher_date <= '.$this->db->escape($to_date).' OR v.voucher_date IS NULL)');
-        }
+        $this->db->join('acc_vouchers v', 'v.id = vi.voucher_id AND v.status IN (\'posted\', \'reversed\')', 'left'); // Fix
         $this->db->group_by('l.id');
         $this->db->order_by('g.name', 'asc');
         $this->db->order_by('l.name', 'asc');

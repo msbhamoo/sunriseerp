@@ -432,6 +432,52 @@ class Studentfee extends Admin_Controller
         $custom_receipt_settings = $this->db->get('custom_receipt_settings')->row();
         $data['custom_receipt_settings'] = $custom_receipt_settings;
         
+        $acc_settings = $this->db->get('acc_settings')->row();
+        if ($acc_settings) {
+            $this->db->select('name');
+            $this->db->where('id', $acc_settings->fee_receipt_ledger_id);
+            $cash_ledger = $this->db->get('acc_ledgers')->row();
+            $data['cash_ledger_name'] = $cash_ledger ? $cash_ledger->name : 'Cash';
+
+            $this->db->select('name');
+            $this->db->where('id', $acc_settings->fee_bank_receipt_ledger_id);
+            $bank_ledger = $this->db->get('acc_ledgers')->row();
+            $data['bank_ledger_name'] = $bank_ledger ? $bank_ledger->name : 'Bank';
+            
+            $this->db->select('name');
+            $this->db->where('id', $acc_settings->fee_income_ledger_id);
+            $income_ledger = $this->db->get('acc_ledgers')->row();
+            $data['income_ledger_name'] = $income_ledger ? $income_ledger->name : 'Income Ledger';
+        } else {
+            $data['cash_ledger_name'] = 'Cash';
+            $data['bank_ledger_name'] = 'Bank';
+            $data['income_ledger_name'] = 'Income Ledger';
+        }
+        
+        $has_transport = false;
+        $has_tuition = false;
+        foreach ($fees_array as $fee) {
+            if ($fee->fee_category == 'transport' || $fee->fee_category == 'transport_yearly') {
+                $has_transport = true;
+            } else {
+                $has_tuition = true;
+            }
+        }
+        
+        $data['category_head_name'] = '';
+        if ($has_transport && $has_tuition) {
+            $data['category_head_name'] = 'Multiple Categories';
+        } else {
+            $expense_type_name_search = $has_transport ? 'Transport' : 'Tuition';
+            if ($this->db->table_exists('acc_expense_types')) {
+                $this->db->like('name', $expense_type_name_search, 'both');
+                $this->db->where('type', 'income');
+                $exp_type = $this->db->get('acc_expense_types')->row();
+                if ($exp_type) {
+                    $data['category_head_name'] = $exp_type->name;
+                }
+            }
+        }
         $result           = array(
             'view' => $this->load->view('studentfee/getcollectfee', $data, true),
         );
@@ -507,6 +553,27 @@ class Studentfee extends Admin_Controller
         foreach ($student_processing_fee as $key => $processing_value) {
             if (!empty($processing_value->fees)) {
                 $data['student_processing_fee'] = true;
+            }
+        }
+
+        // Fetch Settings for Ledgers
+        $acc_settings = $this->db->get('acc_settings')->row_array();
+        $cash_ledger_id = $acc_settings['fee_receipt_ledger_id'] ?? null;
+        $bank_ledger_id = $acc_settings['fee_bank_receipt_ledger_id'] ?? null;
+
+        $data['cash_ledger_name'] = 'Cash Account';
+        $data['bank_ledger_name'] = 'Bank Account';
+
+        if ($cash_ledger_id) {
+            $ledger = $this->db->get_where('acc_ledgers', ['id' => $cash_ledger_id])->row_array();
+            if ($ledger) {
+                $data['cash_ledger_name'] = $ledger['name'];
+            }
+        }
+        if ($bank_ledger_id) {
+            $ledger = $this->db->get_where('acc_ledgers', ['id' => $bank_ledger_id])->row_array();
+            if ($ledger) {
+                $data['bank_ledger_name'] = $ledger['name'];
             }
         }
 
@@ -661,6 +728,8 @@ class Studentfee extends Admin_Controller
                 'amount_fine'     => convertCurrencyFormatToBaseAmount($this->input->post('amount_fine')),
                 'date'            => date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('date'))),
                 'description'     => $this->input->post('description'),
+                'reference_no'    => $this->input->post('reference_no'),
+                'cheque_date'     => $this->input->post('cheque_date') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('cheque_date'))) : null,
                 'collected_by'    => $collected_by,
                 'payment_mode'    => $this->input->post('payment_mode'),
                 'received_by'     => $staff_record['id'],
@@ -1039,6 +1108,39 @@ class Studentfee extends Admin_Controller
             $custom_receipt_settings = $this->db->get('custom_receipt_settings')->row();
             $array['custom_receipt_settings'] = $custom_receipt_settings;
 
+            $acc_settings = $this->db->get('acc_settings')->row();
+            if ($acc_settings) {
+                $this->db->select('name');
+                $this->db->where('id', $acc_settings->fee_receipt_ledger_id);
+                $cash_ledger = $this->db->get('acc_ledgers')->row();
+                $array['cash_ledger_name'] = $cash_ledger ? $cash_ledger->name : 'Cash';
+
+                $this->db->select('name');
+                $this->db->where('id', $acc_settings->fee_bank_receipt_ledger_id);
+                $bank_ledger = $this->db->get('acc_ledgers')->row();
+                $array['bank_ledger_name'] = $bank_ledger ? $bank_ledger->name : 'Bank';
+                
+                $this->db->select('name');
+                $this->db->where('id', $acc_settings->fee_income_ledger_id);
+                $income_ledger = $this->db->get('acc_ledgers')->row();
+                $array['income_ledger_name'] = $income_ledger ? $income_ledger->name : 'Income Ledger';
+            } else {
+                $array['cash_ledger_name'] = 'Cash';
+                $array['bank_ledger_name'] = 'Bank';
+                $array['income_ledger_name'] = 'Income Ledger';
+            }
+
+            $expense_type_name_search = ($fee_category == 'transport' || $fee_category == 'transport_yearly') ? 'Transport' : 'Tuition';
+            $array['category_head_name'] = '';
+            if ($this->db->table_exists('acc_expense_types')) {
+                $this->db->like('name', $expense_type_name_search, 'both');
+                $this->db->where('type', 'income');
+                $exp_type = $this->db->get('acc_expense_types')->row();
+                if ($exp_type) {
+                    $array['category_head_name'] = $exp_type->name;
+                }
+            }
+
             $page=$this->load->view('studentfee/_getBalanceFee',$array,true);
 
             $return_array=['status'=>1,'page'=>$page,'balance'=>convertBaseAmountCurrencyFormat($remain_amount)];
@@ -1257,31 +1359,60 @@ class Studentfee extends Admin_Controller
                         'amount'          => convertCurrencyFormatToBaseAmount($this->input->post('fee_amount_' . $total_row_value)),
                         'date'            => date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('collected_date'))),
                         'description'     => $this->input->post('fee_gupcollected_note'),
+                        'reference_no'    => $this->input->post('reference_no'),
+                        'cheque_date'     => $this->input->post('cheque_date') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('cheque_date'))) : null,
                         'amount_discount' => 0,
                         'collected_by'    => $collected_by,
                         'amount_fine'     => convertCurrencyFormatToBaseAmount($this->input->post('fee_groups_feetype_fine_amount_' . $total_row_value)),
                         'payment_mode'    => $this->input->post('payment_mode_fee'),
                         'received_by'     => $staff_record['id'],
                     );
-                    $collected_array[] = array(
+                    $collected_item = array(
                         'fee_category'             => $fee_category,
-                        'student_transport_fee_id' => $student_transport_fee_id,
                         'student_fees_master_id'   => $this->input->post('student_fees_master_id_' . $total_row_value),
                         'fee_groups_feetype_id'    => $this->input->post('fee_groups_feetype_id_' . $total_row_value),
                         'amount_detail'            => $json_array,
-                    );	
+                    );
+                    
+                    if ($fee_category == 'transport_yearly') {
+                        $collected_item['student_transport_yearly_fee_id'] = $student_transport_fee_id;
+                        $collected_item['student_transport_fee_id'] = NULL;
+                    } else if ($fee_category == 'transport') {
+                        $collected_item['student_transport_fee_id'] = $student_transport_fee_id;
+                        $collected_item['student_transport_yearly_fee_id'] = NULL;
+                    } else {
+                        $collected_item['student_transport_fee_id'] = NULL;
+                        $collected_item['student_transport_yearly_fee_id'] = NULL;
+                    }
+                    
+                    $collected_array[] = $collected_item;
 
                 }
             }
 
             $deposited_fees = $this->studentfeemaster_model->fee_deposit_collections($collected_array);			
-					
-					
+			
+            if (!empty($deposited_fees)) {
+                // Accounts Module Integration
+                if (file_exists(APPPATH . 'libraries/Accounts_integration.php')) {
+                    $this->load->library('accounts_integration');
+                    foreach ($deposited_fees as $dep_fee) {
+                        $this->accounts_integration->sync_fee($dep_fee['invoice_id']);
+                    }
+                }
+                
+                // Custom Receipt Logging
+                foreach ($deposited_fees as $dep_fee) {
+                    $fee_cat = isset($dep_fee['fee_category']) ? $dep_fee['fee_category'] : 'common';
+                    $this->studentfeemaster_model->generate_custom_receipt($dep_fee['invoice_id'], $dep_fee['sub_invoice_id'], $fee_cat);
+                }
+            }
 					 
-					
+
+			$deposited_fee_index = 0;
 			foreach ($total_row as $total_row_key => $total_row_value) {				
 				if($this->input->post('fee_amount_' . $total_row_value) > 0){
-				    $invoice_mail     		= $deposited_fees[$total_row_key]['invoice_id'];   
+				    $invoice_mail     		= $deposited_fees[$deposited_fee_index]['invoice_id'];   
 				
 				    $fee_category           = $this->input->post('fee_category_' . $total_row_value);               
 				 
@@ -1294,6 +1425,8 @@ class Studentfee extends Admin_Controller
 				    $token = encode_receipt_url($invoice_mail, $fee_category, $student_transport_fee_mail, $fee_groups_feetype_mail, $student_fees_master_mail, $fee_session_group_mail, 'staff', $staff_record['id']);
 				
 				    $fee_receipt_pdf_url[] = base_url() . "download-receipt/" . $token;
+                    
+                    $deposited_fee_index++;
                 }
 			}	
 			 

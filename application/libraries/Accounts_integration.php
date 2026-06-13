@@ -256,11 +256,26 @@ class Accounts_integration
                 $debit_ledger_id = $this->resolveDebitLedger($payment_mode, $settings);
                 
                 $fee_type_str = "Fee";
+                $expense_type_name_search = "Tuition"; // default category mapping
                 if (!empty($fee_deposit['student_transport_fee_id'])) {
                     $fee_type_str = "Transport Fee";
+                    $expense_type_name_search = "Transport";
                 } elseif (!empty($fee_deposit['student_transport_yearly_fee_id'])) {
                     $fee_type_str = "Yearly Transport Fee";
+                    $expense_type_name_search = "Transport";
                 }
+                
+                // Fetch dynamic expense_type_id for Category/Head
+                $expense_type_id = null;
+                if ($this->CI->db->table_exists('acc_expense_types')) {
+                    $this->CI->db->like('name', $expense_type_name_search, 'both');
+                    $this->CI->db->where('type', 'income');
+                    $exp_type = $this->CI->db->get('acc_expense_types')->row();
+                    if ($exp_type) {
+                        $expense_type_id = $exp_type->id;
+                    }
+                }
+
                 
                 $narration = "{$fee_type_str} collected from {$student_name}. Inv: {$fee_deposit_id}/{$inv_no}";
                 if ($debit_ledger_id == $settings['gateway_clearing_ledger_id']) {
@@ -281,18 +296,33 @@ class Accounts_integration
                 ];
 
                 $desc = trim($detail['description'] ?? '');
-                if (!empty($desc)) {
-                    $pm_lower = strtolower($payment_mode);
-                    if ($pm_lower == 'cheque' || $pm_lower == 'dd') {
-                        $voucher_data['cheque_no'] = substr($desc, 0, 50);
-                    } elseif ($pm_lower == 'upi') {
-                        $voucher_data['upi_transaction_id'] = substr($desc, 0, 100);
-                    } elseif (in_array($pm_lower, ['bank_transfer', 'bank transfer', 'net banking', 'net_banking'])) {
-                        $voucher_data['net_banking_ref'] = substr($desc, 0, 100);
-                    } else {
-                        // For cash, card, online, append it to narration
-                        $voucher_data['narration'] .= " | Note: " . $desc;
+                $ref_no = trim($detail['reference_no'] ?? '');
+                $c_date = trim($detail['cheque_date'] ?? '');
+                $pm_lower = strtolower($payment_mode);
+                $is_bank_mode = in_array($pm_lower, ['cheque', 'dd', 'upi', 'bank_transfer', 'bank transfer', 'net banking', 'net_banking']);
+
+                if ($is_bank_mode) {
+                    if (!empty($c_date)) {
+                        $voucher_data['cheque_date'] = $c_date;
                     }
+                    
+                    if (empty($ref_no) && !empty($desc)) {
+                        $ref_no = $desc;
+                        $desc = '';
+                    }
+                    if (!empty($ref_no)) {
+                        if ($pm_lower == 'cheque' || $pm_lower == 'dd') {
+                            $voucher_data['cheque_no'] = substr($ref_no, 0, 50);
+                        } elseif ($pm_lower == 'upi') {
+                            $voucher_data['upi_transaction_id'] = substr($ref_no, 0, 100);
+                        } else {
+                            $voucher_data['net_banking_ref'] = substr($ref_no, 0, 100);
+                        }
+                    }
+                }
+                
+                if (!empty($desc)) {
+                    $voucher_data['narration'] .= " | Note: " . $desc;
                 }
 
                 $this->CI->db->insert('acc_vouchers', $voucher_data);
@@ -308,6 +338,7 @@ class Accounts_integration
                     [
                         'voucher_id'    => $voucher_id,
                         'ledger_id'     => $debit_ledger_id,
+                        'expense_type_id' => null,
                         'debit_amount'  => $total_collected,
                         'credit_amount' => 0,
                         'narration'     => ''
@@ -315,6 +346,7 @@ class Accounts_integration
                     [
                         'voucher_id'    => $voucher_id,
                         'ledger_id'     => $settings['fee_income_ledger_id'],
+                        'expense_type_id' => $expense_type_id,
                         'debit_amount'  => 0,
                         'credit_amount' => $total_collected,
                         'narration'     => ''
@@ -730,7 +762,15 @@ class Accounts_integration
             $parts = explode('_', $v['reference_id']);
             $deposit_id = $parts[0] ?? 0;
             $exists = $this->CI->db->where('id', $deposit_id)->get('student_fees_deposite')->row();
-            if (!$exists) {
+            $sub_invoice_exists = false;
+            if ($exists) {
+                $amount_detail = json_decode($exists->amount_detail, true);
+                $sub_invoice_id = $parts[1] ?? 0;
+                if (isset($amount_detail[$sub_invoice_id])) {
+                    $sub_invoice_exists = true;
+                }
+            }
+            if (!$sub_invoice_exists) {
                 $orphans[] = ['voucher_id' => $v['id'], 'module' => 'fee_collection', 'ref_id' => $v['reference_id']];
                 $this->reverse_sync('fee_collection', $v['reference_id']);
                 $this->reverse_sync('fee_discount', $v['reference_id'] . '_disc');

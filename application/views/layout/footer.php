@@ -438,6 +438,7 @@ pdfMake.fonts = jsonData;
             // Toggle submenu on click for the permanent dual-column design
             $(document).on('click', '.sidebar-menu > li.treeview > a', function (e) {
                 e.preventDefault();
+                e.stopPropagation();
                 
                 var $parentLi = $(this).parent();
                 var $submenu = $parentLi.find('.treeview-menu');
