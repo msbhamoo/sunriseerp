@@ -2622,3 +2622,9 @@ $lang['rule_version'] = 'Version';
 $lang['effective_from'] = 'Effective From';
 $lang['effective_to'] = 'Effective To';
 $lang["payroll_run_logs"] = "Payroll Run Logs";
+
+$lang['scholar_register'] = 'Scholar Register';
+$lang['certificate_register'] = 'Certificate Register';
+
+$lang['scholar_register'] = 'Scholar Register';
+$lang['certificate_register'] = 'Certificate Register';

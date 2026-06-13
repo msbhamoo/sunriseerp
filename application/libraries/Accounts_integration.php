@@ -143,7 +143,7 @@ class Accounts_integration
      * - UPI/Cheque/DD/Card/Bank Transfer → Bank Account (fee_bank_receipt_ledger_id)
      * Falls back to fee_receipt_ledger_id if bank ledger is not configured.
      */
-    private function resolveDebitLedger($payment_mode, $settings)
+    private function resolveDebitLedger($payment_mode, $settings, $custom_bank_ledger_id = null)
     {
         $pm = strtolower($payment_mode ?? '');
 
@@ -155,8 +155,13 @@ class Accounts_integration
 
         // Non-cash modes → Bank Account (if configured)
         $bank_modes = ['upi', 'cheque', 'dd', 'card', 'bank_transfer', 'bank transfer', 'net banking', 'net_banking', 'neft', 'rtgs', 'imps'];
-        if (!empty($settings['fee_bank_receipt_ledger_id']) && in_array($pm, $bank_modes)) {
-            return $settings['fee_bank_receipt_ledger_id'];
+        if (in_array($pm, $bank_modes)) {
+            if (!empty($custom_bank_ledger_id)) {
+                return $custom_bank_ledger_id;
+            }
+            if (!empty($settings['fee_bank_receipt_ledger_id'])) {
+                return $settings['fee_bank_receipt_ledger_id'];
+            }
         }
 
         // Cash and fallback → Cash Account
@@ -253,7 +258,8 @@ class Accounts_integration
                 }
 
                 // Determine debit ledger (Cash/Bank vs Gateway Clearing)
-                $debit_ledger_id = $this->resolveDebitLedger($payment_mode, $settings);
+                $custom_bank_ledger_id = $detail['bank_ledger_id'] ?? null;
+                $debit_ledger_id = $this->resolveDebitLedger($payment_mode, $settings, $custom_bank_ledger_id);
                 
                 $fee_type_str = "Fee";
                 $expense_type_name_search = "Tuition"; // default category mapping
@@ -759,6 +765,8 @@ class Accounts_integration
                                       ->where('status', 'posted')
                                       ->get('acc_vouchers')->result_array();
         foreach ($fee_vouchers as $v) {
+            if (strpos($v['reference_id'], '_rev') !== false) { continue; } // Prevent infinite reversal loops
+            
             $parts = explode('_', $v['reference_id']);
             $deposit_id = $parts[0] ?? 0;
             $exists = $this->CI->db->where('id', $deposit_id)->get('student_fees_deposite')->row();
@@ -782,6 +790,8 @@ class Accounts_integration
                                           ->where('status', 'posted')
                                           ->get('acc_vouchers')->result_array();
         foreach ($payroll_vouchers as $v) {
+            if (strpos($v['reference_id'], '_rev') !== false) { continue; } // Prevent infinite reversal loops
+            
             $exists = $this->CI->db->where('id', $v['reference_id'])->where('status', 'paid')->get('staff_payslip')->row();
             if (!$exists) {
                 $orphans[] = ['voucher_id' => $v['id'], 'module' => 'payroll', 'ref_id' => $v['reference_id']];

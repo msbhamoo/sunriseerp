@@ -115,6 +115,30 @@ Register new permissions in:
 - `sidebar_menus`
 - `sidebar_sub_menus`
 
+### 4.1. Permission Group ID Registry & Conflict Prevention
+
+To prevent `id` collisions across different environments (e.g., local vs. live) and addons (like Accounts vs. CBSE Examination), **never hardcode arbitrary IDs** for permission groups without checking the registry.
+
+**Current Known `permission_group` IDs:**
+- `1` to `31`: Core Base Modules (Student Information, Fees Collection, Income, Expense, etc.)
+- `900`: Accounts Addon (`accounts`)
+- `1001`: Payroll Rules Addon (`payroll_rules`)
+- `1002`: CBSE Examination Addon (`cbseexam`)
+
+**Rules for Adding New Permission Groups:**
+1. **Use High IDs:** When creating a completely new permission group for a custom module or addon, assign an ID in the **10000+** range (e.g., 10001, 10002) to avoid future conflicts with official Smart School updates.
+2. **Update Registry:** Always update the registry above when a new group is finalized.
+3. **Safe Inserts:** Use `INSERT IGNORE` or `ON DUPLICATE KEY UPDATE` carefully. Do NOT use `ON DUPLICATE KEY UPDATE name = VALUES(name)` if there's a risk the ID belongs to a completely different module on the live database.
+
+### 4.2. Preventing Missing Permissions in Menus
+
+When adding new sub-menus, they will **fail to appear** in the sidebar unless correctly mapped in all tables:
+1. **`permission_category`**: The sub-menu must have a valid `perm_group_id` linking it to its parent group. If `perm_group_id` is missing or incorrect, it won't appear on the Assign Permissions page.
+2. **`sidebar_sub_menus`**: The `access_permissions` string MUST strictly follow the exact tuple format expected by the RBAC parser.
+   - **Correct:** `('student_dashboard', 'can_view')`
+   - **Incorrect:** `student_dashboard`
+3. If the permissions aren't fully registered in `permission_category` and properly formatted in `sidebar_sub_menus`, the UI will silently hide the menu items.
+
 Sidebar visibility must match route protection. Do not expose a menu link whose controller method uses a different permission.
 
 Super Admin may bypass permissions through existing RBAC behavior, but all other roles must be explicitly granted.

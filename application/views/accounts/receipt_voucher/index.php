@@ -123,6 +123,8 @@
                                     <tr>
                                         <th><?php echo $this->lang->line('date'); ?></th>
                                         <th><?php echo $this->lang->line('voucher_no'); ?></th>
+                                        <th>Student Name</th>
+                                        <th>Fee Type</th>
                                         <th>Description Details</th>
                                         <th><?php echo $this->lang->line('amount'); ?></th>
                                         <th>More Info</th>
@@ -180,6 +182,13 @@
                                                 foreach($voucher['items'] as $it) {
                                                     if($it['debit_amount'] > 0) {
                                                         $dr_selected = $it['ledger_id'];
+                                                    }
+                                                }
+                                            } else {
+                                                foreach ($cash_bank_ledgers as $ledger) {
+                                                    if(strpos(strtolower($ledger['name']), 'cash') !== false) {
+                                                        $dr_selected = $ledger['id'];
+                                                        break;
                                                     }
                                                 }
                                             }

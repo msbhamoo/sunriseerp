@@ -453,6 +453,10 @@ class Studentfee extends Admin_Controller
             $data['bank_ledger_name'] = 'Bank';
             $data['income_ledger_name'] = 'Income Ledger';
         }
+        $this->db->select('acc_ledgers.*');
+        $this->db->join('acc_ledger_groups', 'acc_ledger_groups.id = acc_ledgers.group_id');
+        $this->db->where('acc_ledger_groups.system_name', 'bank');
+        $data['bank_ledgers'] = $this->db->get('acc_ledgers')->result_array();
         
         $has_transport = false;
         $has_tuition = false;
@@ -733,6 +737,7 @@ class Studentfee extends Admin_Controller
                 'collected_by'    => $collected_by,
                 'payment_mode'    => $this->input->post('payment_mode'),
                 'received_by'     => $staff_record['id'],
+                'bank_ledger_id'  => $this->input->post('bank_account_id') ?? null,
             );
 
             $student_fees_master_id = $this->input->post('student_fees_master_id');
@@ -1129,6 +1134,10 @@ class Studentfee extends Admin_Controller
                 $array['bank_ledger_name'] = 'Bank';
                 $array['income_ledger_name'] = 'Income Ledger';
             }
+            $this->db->select('acc_ledgers.*');
+            $this->db->join('acc_ledger_groups', 'acc_ledger_groups.id = acc_ledgers.group_id');
+            $this->db->where('acc_ledger_groups.system_name', 'bank');
+            $array['bank_ledgers'] = $this->db->get('acc_ledgers')->result_array();
 
             $expense_type_name_search = ($fee_category == 'transport' || $fee_category == 'transport_yearly') ? 'Transport' : 'Tuition';
             $array['category_head_name'] = '';
@@ -1366,6 +1375,7 @@ class Studentfee extends Admin_Controller
                         'amount_fine'     => convertCurrencyFormatToBaseAmount($this->input->post('fee_groups_feetype_fine_amount_' . $total_row_value)),
                         'payment_mode'    => $this->input->post('payment_mode_fee'),
                         'received_by'     => $staff_record['id'],
+                        'bank_ledger_id'  => $this->input->post('bank_account_id') ?? null,
                     );
                     $collected_item = array(
                         'fee_category'             => $fee_category,

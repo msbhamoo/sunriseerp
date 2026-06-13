@@ -217,13 +217,25 @@ class Receiptvoucher extends MY_Addon_AccountsController
                 
                 $details .= "<br><small class='text-muted' style='font-size:11px; font-weight:500;'><strong style='color:#dc2626;'>" . htmlspecialchars($cr_names) . "</strong> &rarr; <strong style='color:#10b981;'>" . htmlspecialchars($dr_names) . "</strong></small>";
 
-                $more_info = "<strong>Mode:</strong> " . htmlspecialchars(strtoupper($pm)) . "<br>";
-                if (!empty($value->cheque_no)) {
-                    $more_info .= "<strong>Ref:</strong> " . htmlspecialchars($value->cheque_no);
-                } elseif (!empty($value->upi_transaction_id)) {
-                    $more_info .= "<strong>Ref:</strong> " . htmlspecialchars($value->upi_transaction_id);
-                } elseif (!empty($value->net_banking_ref)) {
-                    $more_info .= "<strong>Ref:</strong> " . htmlspecialchars($value->net_banking_ref);
+                $more_info = '';
+                if ($value->payment_method) {
+                    $more_info .= "<div><b>Mode:</b> " . htmlspecialchars($value->payment_method) . "</div>";
+                }
+                if ($value->cheque_no) {
+                    $more_info .= "<div><b>Ref/Chq:</b> " . htmlspecialchars($value->cheque_no) . "</div>";
+                } elseif ($value->upi_transaction_id) {
+                    $more_info .= "<div><b>UPI Ref:</b> " . htmlspecialchars($value->upi_transaction_id) . "</div>";
+                } elseif ($value->net_banking_ref) {
+                    $more_info .= "<div><b>Net Bank Ref:</b> " . htmlspecialchars($value->net_banking_ref) . "</div>";
+                }
+
+                $fee_type = '';
+                $student_name = '';
+                if ($value->reference_module == 'fee_collection' && !empty($value->narration)) {
+                    if (preg_match('/^(.*?) collected from (.*?)\. Inv:/', $value->narration, $matches)) {
+                        $fee_type = htmlspecialchars($matches[1]);
+                        $student_name = htmlspecialchars($matches[2]);
+                    }
                 }
 
                 $narration_text = "";
@@ -233,6 +245,8 @@ class Receiptvoucher extends MY_Addon_AccountsController
 
                 $row[] = date($this->customlib->getSchoolDateFormat(), strtotime($value->voucher_date));
                 $row[] = $voucher_no_display;
+                $row[] = $student_name;
+                $row[] = $fee_type;
                 $row[] = $details;
                 $row[] = $currency_symbol . amountFormat($value->total_amount);
                 $row[] = $more_info;

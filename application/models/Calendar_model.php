@@ -34,20 +34,20 @@ class Calendar_model extends CI_Model
 
     public function getEvents()
     {
-        return $data = $this->db->query("select null as is_default,null as holiday_type,a.event_title,a.id,a.event_type, a.start_date, a.end_date,a.event_description,a.event_color,a.event_for,a.role_id from events a
+        return $data = $this->db->query("select null as is_default,null as holiday_type, CAST(a.event_title AS CHAR) as event_title,a.id, CAST(a.event_type AS CHAR) as event_type, a.start_date, a.end_date, CAST(a.event_description AS CHAR) as event_description, CAST(a.event_color AS CHAR) as event_color,a.event_for,a.role_id from events a
         UNION ALL
-        select holiday_type.is_default,annual_calendar.holiday_type,type as event_title,annual_calendar.id,annual_calendar.holiday_type as event_type, annual_calendar.from_date as start_date, 
-        annual_calendar.to_date as end_date, annual_calendar.description as event_description, annual_calendar.holiday_color as event_color,0 as event_for,null as role_id from annual_calendar 
+        select holiday_type.is_default,annual_calendar.holiday_type, CAST(type AS CHAR) as event_title,annual_calendar.id, CAST(annual_calendar.holiday_type AS CHAR) as event_type, annual_calendar.from_date as start_date, 
+        annual_calendar.to_date as end_date, CAST(annual_calendar.description AS CHAR) as event_description, CAST(annual_calendar.holiday_color AS CHAR) as event_color,0 as event_for,null as role_id from annual_calendar 
             left join holiday_type on holiday_type.id=annual_calendar.holiday_type
             where annual_calendar.holiday_type!=0")->result_array();
     }
 
     public function getStudentEvents($id = null)
     {
-        return $data = $this->db->query("select null as is_default,null as holiday_type,a.event_title,a.id,a.event_type, a.start_date, a.end_date,a.event_description,a.event_color,a.event_for,a.role_id,null as front_site from events a where a.event_type = 'public' or a.event_type = 'task'
+        return $data = $this->db->query("select null as is_default,null as holiday_type, CAST(a.event_title AS CHAR) as event_title,a.id, CAST(a.event_type AS CHAR) as event_type, a.start_date, a.end_date, CAST(a.event_description AS CHAR) as event_description, CAST(a.event_color AS CHAR) as event_color,a.event_for,a.role_id,null as front_site from events a where a.event_type = 'public' or a.event_type = 'task'
         UNION ALL
-        select holiday_type.is_default,annual_calendar.holiday_type,type as event_title,annual_calendar.id,annual_calendar.holiday_type as event_type, annual_calendar.from_date as start_date, 
-        annual_calendar.to_date as end_date, annual_calendar.description as event_description, annual_calendar.holiday_color as event_color,0 as event_for,null as role_id,annual_calendar.front_site from annual_calendar 
+        select holiday_type.is_default,annual_calendar.holiday_type, CAST(type AS CHAR) as event_title,annual_calendar.id, CAST(annual_calendar.holiday_type AS CHAR) as event_type, annual_calendar.from_date as start_date, 
+        annual_calendar.to_date as end_date, CAST(annual_calendar.description AS CHAR) as event_description, CAST(annual_calendar.holiday_color AS CHAR) as event_color,0 as event_for,null as role_id,annual_calendar.front_site from annual_calendar 
             left join holiday_type on holiday_type.id=annual_calendar.holiday_type
             where annual_calendar.holiday_type!=0 and annual_calendar.front_site=1")->result_array();
     }
@@ -118,11 +118,11 @@ class Calendar_model extends CI_Model
     {
         $limit = (int)$limit;
         $sql = "
-            SELECT event_title, start_date, end_date, event_type, event_color, event_description 
+            SELECT CAST(event_title AS CHAR) as event_title, start_date, end_date, CAST(event_type AS CHAR) as event_type, CAST(event_color AS CHAR) as event_color, CAST(event_description AS CHAR) as event_description 
             FROM events 
             WHERE start_date >= CURDATE()
             UNION ALL 
-            SELECT holiday_type.type as event_title, annual_calendar.from_date as start_date, annual_calendar.to_date as end_date, 'holiday' as event_type, annual_calendar.holiday_color as event_color, annual_calendar.description as event_description 
+            SELECT CAST(holiday_type.type AS CHAR) as event_title, annual_calendar.from_date as start_date, annual_calendar.to_date as end_date, CAST('holiday' AS CHAR) as event_type, CAST(annual_calendar.holiday_color AS CHAR) as event_color, CAST(annual_calendar.description AS CHAR) as event_description 
             FROM annual_calendar 
             LEFT JOIN holiday_type ON holiday_type.id = annual_calendar.holiday_type
             WHERE annual_calendar.from_date >= CURDATE() AND annual_calendar.holiday_type != 0
@@ -136,11 +136,11 @@ class Calendar_model extends CI_Model
     {
         $limit = (int)$limit;
         $sql = "
-            SELECT firstname, lastname, dob, 'Student' as user_type 
+            SELECT CAST(firstname AS CHAR) as firstname, CAST(lastname AS CHAR) as lastname, dob, CAST('Student' AS CHAR) as user_type 
             FROM students 
             WHERE is_active = 'yes' AND dob IS NOT NULL AND dob != '0000-00-00'
             UNION ALL
-            SELECT name as firstname, surname as lastname, dob, 'Staff' as user_type 
+            SELECT CAST(name AS CHAR) as firstname, CAST(surname AS CHAR) as lastname, dob, CAST('Staff' AS CHAR) as user_type 
             FROM staff 
             WHERE is_active = 1 AND dob IS NOT NULL AND dob != '0000-00-00'
             ORDER BY 

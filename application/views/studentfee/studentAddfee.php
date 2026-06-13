@@ -899,6 +899,7 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
         var transport_fees_id = $('#transport_fees_id').val();
         var fee_category = $('#fee_category').val();
         var payment_mode = $('input[name="payment_mode_fee"]:checked').val();
+        var bank_account_id = $('#bank_account_id').length ? $('#bank_account_id').val() : '';
         var reference_no = $('#reference_no').val();
         var cheque_date  = $('#cheque_date').val();
         var selectedDiscounts = [];
@@ -911,7 +912,7 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
         $.ajax({
             url: '<?php echo site_url("studentfee/addstudentfee") ?>',
             type: 'post',
-            data: {action: action, student_session_id: student_session_id, date: date, type: feetype, amount: amount, amount_discount: amount_discount, amount_fine: amount_fine, description: description, reference_no: reference_no, cheque_date: cheque_date, student_fees_master_id: student_fees_master_id, fee_groups_feetype_id: fee_groups_feetype_id,fee_category:fee_category, transport_fees_id:transport_fees_id, payment_mode: payment_mode, guardian_phone: guardian_phone, guardian_email: guardian_email, student_fees_discount_id: student_fees_discount_id, parent_app_key: parent_app_key,discounts: selectedDiscounts,fee_session_group_id:fee_session_group_id},
+            data: {action: action, student_session_id: student_session_id, date: date, type: feetype, amount: amount, amount_discount: amount_discount, amount_fine: amount_fine, description: description, reference_no: reference_no, cheque_date: cheque_date, student_fees_master_id: student_fees_master_id, fee_groups_feetype_id: fee_groups_feetype_id,fee_category:fee_category, transport_fees_id:transport_fees_id, payment_mode: payment_mode, bank_account_id: bank_account_id, guardian_phone: guardian_phone, guardian_email: guardian_email, student_fees_discount_id: student_fees_discount_id, parent_app_key: parent_app_key,discounts: selectedDiscounts,fee_session_group_id:fee_session_group_id},
             dataType: 'json',
             success: function (response) {
                 $this.button('reset');
@@ -1578,11 +1579,14 @@ $("#myFeesModal").on('shown.bs.modal', function (e) {
             if (mode === 'Cash') {
                 $('#reference_row').hide();
                 $('#date_row').hide();
+                $('#bank_account_row').hide();
                 $ledgerInfo.html('Depositing to Ledger (Dr): <strong>' + cashLedgerName + '</strong>' + baseHtml);
             } else {
                 $('#reference_row').show();
                 $('#date_row').show();
-                $ledgerInfo.html('Depositing to Ledger (Dr): <strong>' + bankLedgerName + '</strong>' + baseHtml);
+                $('#bank_account_row').show();
+                var selectedBank = $('#bank_account_id').length ? $('#bank_account_id').find("option:selected").text() : bankLedgerName;
+                $ledgerInfo.html('Depositing to Ledger (Dr): <strong>' + selectedBank + '</strong>' + baseHtml);
 
                 if (mode === 'Cheque') {
                     $('#ref_label').html("<?php echo $this->lang->line('cheque_no') ? $this->lang->line('cheque_no') : 'Cheque No'; ?>");
@@ -1595,6 +1599,17 @@ $("#myFeesModal").on('shown.bs.modal', function (e) {
                 } else {
                     $('#ref_label').html("<?php echo $this->lang->line('reference_no') ? $this->lang->line('reference_no') : 'Reference No'; ?>");
                 }
+            }
+        });
+
+        $(document).on('change', '#bank_account_id', function() {
+            var selectedBank = $(this).find("option:selected").text();
+            var $ledgerInfo = $('#ledger_info');
+            var incomeName = $ledgerInfo.attr('data-income') || 'Income Ledger';
+            var categoryName = $ledgerInfo.attr('data-category') || 'Default';
+            var baseHtml = '<br>Income Ledger (Cr): <strong>' + incomeName + '</strong><br>Category/Head: <strong>' + categoryName + '</strong>';
+            if ($('input[name="payment_mode_fee"]:checked').val() !== 'Cash') {
+                $ledgerInfo.html('Depositing to Ledger (Dr): <strong>' + selectedBank + '</strong>' + baseHtml);
             }
         });
 

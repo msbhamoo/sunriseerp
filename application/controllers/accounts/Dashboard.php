@@ -287,11 +287,11 @@ class Dashboard extends MY_Addon_AccountsController
         $data['suppliers'] = $this->accledger_model->getLedgersBySystemGroup('sundry_creditors');
         
         // Also fetch next voucher numbers for dynamic sidebars
-        $data['next_receipt_no'] = $this->accvoucher_model->generateVoucherNo('receipt');
-        $data['next_payment_no'] = $this->accvoucher_model->generateVoucherNo('payment');
-        $data['next_contra_no'] = $this->accvoucher_model->generateVoucherNo('contra');
-        $data['next_journal_no'] = $this->accvoucher_model->generateVoucherNo('journal');
-        $data['next_purchase_no'] = $this->accvoucher_model->generateVoucherNo('purchase');
+        $data['next_receipt_no'] = $this->accvoucher_model->peekVoucherNo('receipt');
+        $data['next_payment_no'] = $this->accvoucher_model->peekVoucherNo('payment');
+        $data['next_contra_no'] = $this->accvoucher_model->peekVoucherNo('contra');
+        $data['next_journal_no'] = $this->accvoucher_model->peekVoucherNo('journal');
+        $data['next_purchase_no'] = $this->accvoucher_model->peekVoucherNo('purchase');
 
         $this->load->view('layout/header', $data);
         $this->load->view('accounts/dashboard/index', $data);

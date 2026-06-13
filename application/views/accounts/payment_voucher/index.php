@@ -124,6 +124,9 @@
                                         <th><?php echo $this->lang->line('date'); ?></th>
                                         <th><?php echo $this->lang->line('voucher_no'); ?></th>
                                         <th>Transaction Details</th>
+                                        <th>Ledger Account</th>
+                                        <th>Bank Name</th>
+                                        <th>Expense Type</th>
                                         <th><?php echo $this->lang->line('amount'); ?></th>
                                         <th>More Info</th>
                                         <th>Narration</th>
@@ -180,6 +183,13 @@
                                                 foreach($voucher['items'] as $it) {
                                                     if($it['credit_amount'] > 0) {
                                                         $cr_selected = $it['ledger_id'];
+                                                    }
+                                                }
+                                            } else {
+                                                foreach ($cash_bank_ledgers as $ledger) {
+                                                    if(strpos(strtolower($ledger['name']), 'cash') !== false) {
+                                                        $cr_selected = $ledger['id'];
+                                                        break;
                                                     }
                                                 }
                                             }

@@ -162,6 +162,18 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 				</div>
 				<span id="form_collection_payment_mode_fee_error" class="text text-danger"></span>
 			</div>
+			
+			<div class="form-group row" id="bank_account_row" style="display: none;">
+				<label class="col-lg-3 col-md-3 col-sm-3 control-label"> Bank Account</label>
+				<div class="col-lg-9 col-md-9 col-sm-9">
+					<select class="form-control" name="bank_account_id" id="bank_account_id">
+						<?php if(isset($bank_ledgers)) { foreach($bank_ledgers as $bank) { ?>
+							<option value="<?php echo $bank['id']; ?>" <?php if(isset($bank_ledger_name) && $bank['name'] == $bank_ledger_name) echo 'selected'; ?>><?php echo $bank['name']; ?></option>
+						<?php } } ?>
+					</select>
+					<span id="form_collection_bank_account_id_error" class="text text-danger"></span>
+				</div>
+			</div>
 
 			<div class="form-group row">
 				<label for="inputPassword3" class="col-lg-3 col-md-3 col-sm-3 control-label"> <?php echo $this->lang->line('note') ?></label>

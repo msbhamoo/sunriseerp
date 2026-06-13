@@ -34,6 +34,7 @@ class Accvoucher_model extends MY_Model
             elseif ($type == 'receipt') $prefix = $setting->receipt_prefix ?? 'REC-';
             elseif ($type == 'contra') $prefix = $setting->contra_prefix ?? 'CON-';
             elseif ($type == 'journal') $prefix = $setting->journal_prefix ?? 'JOU-';
+            elseif ($type == 'general_receipt') $prefix = $setting->general_receipt_prefix ?? 'GRV-';
             elseif ($type == 'purchase') $prefix = 'PUR-';
             return $prefix . '0001';
         }
@@ -67,6 +68,7 @@ class Accvoucher_model extends MY_Model
             elseif ($type == 'receipt') $prefix = $setting->receipt_prefix ?? 'REC-';
             elseif ($type == 'contra') $prefix = $setting->contra_prefix ?? 'CON-';
             elseif ($type == 'journal') $prefix = $setting->journal_prefix ?? 'JOU-';
+            elseif ($type == 'general_receipt') $prefix = $setting->general_receipt_prefix ?? 'GRV-';
             elseif ($type == 'purchase') $prefix = 'PUR-';
             return $prefix . '0001';
         }
@@ -375,7 +377,7 @@ class Accvoucher_model extends MY_Model
     public function getDatatableVouchers($type)
     {
         $this->datatables
-            ->select('acc_vouchers.id, acc_vouchers.voucher_no, acc_vouchers.voucher_date, acc_vouchers.narration, acc_vouchers.status, acc_vouchers.attachment, acc_vouchers.reference_module, acc_vouchers.payment_method, acc_vouchers.cheque_no, acc_vouchers.upi_transaction_id, acc_vouchers.net_banking_ref, acc_vouchers.rejected_reason, SUM(acc_voucher_items.debit_amount) as total_amount')
+            ->select('acc_vouchers.id, acc_vouchers.voucher_no, acc_vouchers.voucher_date, acc_vouchers.narration, acc_vouchers.status, acc_vouchers.attachment, acc_vouchers.reference_module, acc_vouchers.payment_method, acc_vouchers.cheque_no, acc_vouchers.upi_transaction_id, acc_vouchers.net_banking_ref, acc_vouchers.rejected_reason, acc_vouchers.bank_name, SUM(acc_voucher_items.debit_amount) as total_amount')
             ->from('acc_vouchers')
             ->join('acc_voucher_items', 'acc_voucher_items.voucher_id = acc_vouchers.id', 'left')
             ->where('acc_vouchers.voucher_type', $type)

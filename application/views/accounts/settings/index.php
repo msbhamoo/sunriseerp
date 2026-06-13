@@ -339,14 +339,27 @@
                                 
                                 <div class="col-md-2">
                                     <div class="form-group">
-                                        <label for="receipt_prefix">Receipt Prefix</label>
+                                        <label for="receipt_prefix">Fee Receipt Prefix</label>
                                         <input type="text" id="receipt_prefix" name="receipt_prefix" class="form-control" value="<?php echo set_value('receipt_prefix', isset($sequences['receipt_prefix']) ? $sequences['receipt_prefix'] : 'REC-'); ?>" />
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group">
-                                        <label for="receipt_series">Receipt Series</label>
+                                        <label for="receipt_series">Fee Receipt Series</label>
                                         <input type="number" id="receipt_series" name="receipt_series" class="form-control" value="<?php echo set_value('receipt_series', isset($sequences['receipt_series']) ? $sequences['receipt_series'] : '0'); ?>" />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label for="general_receipt_prefix">Receipt Prefix</label>
+                                        <input type="text" id="general_receipt_prefix" name="general_receipt_prefix" class="form-control" value="<?php echo set_value('general_receipt_prefix', isset($sequences['general_receipt_prefix']) ? $sequences['general_receipt_prefix'] : 'GRV-'); ?>" />
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label for="general_receipt_series">Receipt Series</label>
+                                        <input type="number" id="general_receipt_series" name="general_receipt_series" class="form-control" value="<?php echo set_value('general_receipt_series', isset($sequences['general_receipt_series']) ? $sequences['general_receipt_series'] : '0'); ?>" />
                                     </div>
                                 </div>
                                 

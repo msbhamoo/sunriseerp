@@ -174,6 +174,7 @@ class Customlib
         $dateFormat          = array();
         $dateFormat['d-m-Y'] = 'dd-mm-yyyy';
         $dateFormat['d-M-Y'] = 'dd-mmm-yyyy';
+        $dateFormat['d M Y'] = 'dd mmm yyyy';
         $dateFormat['d/m/Y'] = 'dd/mm/yyyy';
         $dateFormat['d.m.Y'] = 'dd.mm.yyyy';
         $dateFormat['m-d-Y'] = 'mm-dd-yyyy';
@@ -1095,6 +1096,11 @@ class Customlib
             list($year, $month, $day) = explode('/', $date);
         }
 
+        if ($format == 'd M Y') {
+            list($day, $month_str, $year) = explode(' ', $date);
+            $month = date('m', strtotime($month_str));
+        }
+
         $date = $year . "-" . $month . "-" . $day;
 
         return strtotime($date);
@@ -1136,6 +1142,10 @@ class Customlib
         }
 
         if ($format == 'Y/m/d') {
+            list($month, $day, $year) = explode('-', $date);
+        }
+
+        if ($format == 'd M Y') {
             list($month, $day, $year) = explode('-', $date);
         }
 
@@ -1182,6 +1192,10 @@ class Customlib
         }
 
         if ($format == 'm.d.Y') {
+            list($month, $day, $year) = explode('-', $date);
+        }
+
+        if ($format == 'd M Y') {
             list($month, $day, $year) = explode('-', $date);
         }
 
@@ -1270,6 +1284,10 @@ class Customlib
 
         if ($format == 'Y/m/d') {
             $format_date = $year . "/" . $month . "/" . $day;
+        }
+
+        if ($format == 'd M Y') {
+            $format_date = date('d M Y', strtotime($year . "-" . $month . "-" . $day));
         }
 
         return $format_date;
@@ -1379,6 +1397,10 @@ class Customlib
             if ($format == 'Y/m/d') {
                 $format_date = $year . "/" . $month . "/" . $day . " " . $hour . ":" . $minute . ":" . $second;
             }
+
+            if ($format == 'd M Y') {
+                $format_date = date('d M Y', strtotime($year . "-" . $month . "-" . $day)) . " " . $hour . ":" . $minute . ":" . $second;
+            }
         } else {
             if ($format == 'd-m-Y') {
                 $format_date = $day . "-" . $month . "-" . $year . " " . $hour . ":" . $minute . " " . $am_pm;
@@ -1410,6 +1432,10 @@ class Customlib
 
             if ($format == 'Y/m/d') {
                 $format_date = $year . "/" . $month . "/" . $day . " " . $hour . ":" . $minute . " " . $am_pm;
+            }
+
+            if ($format == 'd M Y') {
+                $format_date = date('d M Y', strtotime($year . "-" . $month . "-" . $day)) . " " . $hour . ":" . $minute . " " . $am_pm;
             }
         }
         return $format_date;
@@ -1460,6 +1486,10 @@ class Customlib
 
         if ($format == 'Y/m/d') {
             $format_date = $year . "/" . $month . "/" . $day . " " . $hour . ":" . $minute . ":" . $second;
+        }
+
+        if ($format == 'd M Y') {
+            $format_date = date('d M Y', strtotime($year . "-" . $month . "-" . $day)) . " " . $hour . ":" . $minute . ":" . $second;
         }
 
         return $format_date;

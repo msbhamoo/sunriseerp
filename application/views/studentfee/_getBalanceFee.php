@@ -176,6 +176,17 @@ if(!empty($discount_not_applied)){
                  <span class="text-danger" id="payment_mode_error"></span>
              </div>
          </div>
+         <div class="form-group" id="bank_account_row" style="display: none;">
+             <label class="col-sm-3 col-lg-3 col-md-3 control-label"> Bank Account</label>
+             <div class="col-sm-9 col-lg-9 col-md-9">
+                 <select class="form-control" name="bank_account_id" id="bank_account_id">
+                     <?php if(isset($bank_ledgers)) { foreach($bank_ledgers as $bank) { ?>
+                         <option value="<?php echo $bank['id']; ?>" <?php if(isset($bank_ledger_name) && $bank['name'] == $bank_ledger_name) echo 'selected'; ?>><?php echo $bank['name']; ?></option>
+                     <?php } } ?>
+                 </select>
+                 <span id="form_collection_bank_account_id_error" class="text text-danger"></span>
+             </div>
+         </div>
          <div class="form-group">
              <label for="inputPassword3" class="col-sm-3 col-lg-3 col-md-3 control-label"><?php echo $this->lang->line('note'); ?></label>
              <div class="col-sm-9 col-lg-9 col-md-9">

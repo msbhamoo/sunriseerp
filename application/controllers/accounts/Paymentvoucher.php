@@ -160,17 +160,22 @@ class Paymentvoucher extends MY_Addon_AccountsController
                 $action .= "</div>";
 
                 // Fetch Payment details
-                $this->db->select('vi.debit_amount, vi.credit_amount, l.name as ledger_name');
+                $this->db->select('vi.debit_amount, vi.credit_amount, l.name as ledger_name, et.name as expense_type');
                 $this->db->from('acc_voucher_items vi');
                 $this->db->join('acc_ledgers l', 'l.id = vi.ledger_id');
+                $this->db->join('acc_expense_types et', 'et.id = vi.expense_type_id', 'left');
                 $this->db->where('vi.voucher_id', $value->id);
                 $items = $this->db->get()->result_array();
 
                 $dr_ledgers = array();
                 $cr_ledgers = array();
+                $expense_types = array();
                 foreach ($items as $item) {
                     if ($item['debit_amount'] > 0) {
                         $dr_ledgers[] = $item['ledger_name'];
+                        if (!empty($item['expense_type'])) {
+                            $expense_types[] = $item['expense_type'];
+                        }
                     }
                     if ($item['credit_amount'] > 0) {
                         $cr_ledgers[] = $item['ledger_name'];
@@ -178,6 +183,7 @@ class Paymentvoucher extends MY_Addon_AccountsController
                 }
                 $dr_names = implode(', ', $dr_ledgers);
                 $cr_names = implode(', ', $cr_ledgers);
+                $exp_names = implode(', ', array_unique($expense_types));
 
                 // Determine badge color and label for payment mode
                 $pm = !empty($value->payment_method) ? $value->payment_method : 'Cash';
@@ -227,6 +233,13 @@ class Paymentvoucher extends MY_Addon_AccountsController
                 $row[] = date($this->customlib->getSchoolDateFormat(), strtotime($value->voucher_date));
                 $row[] = $value->voucher_no;
                 $row[] = $details;
+                $row[] = htmlspecialchars($dr_names);
+                if (strtolower($pm) != 'cash') {
+                    $row[] = htmlspecialchars($value->bank_name ?? '');
+                } else {
+                    $row[] = '';
+                }
+                $row[] = htmlspecialchars($exp_names);
                 $row[] = $currency_symbol . amountFormat($value->total_amount);
                 $row[] = $more_info;
                 $row[] = $narration_text;

@@ -24,7 +24,7 @@ class Purchaseentry extends MY_Addon_AccountsController
         $data['expense_types'] = $this->accexpensetype_model->get();
         
         // Generate auto invoice number for new entries
-        $data['next_invoice_no'] = $this->accvoucher_model->generateVoucherNo('purchase');
+        $data['next_invoice_no'] = $this->accvoucher_model->peekVoucherNo('purchase');
 
         $this->form_validation->set_rules('supplier_ledger_id', $this->lang->line('supplier'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('purchase_date', $this->lang->line('voucher_date'), 'trim|required|xss_clean');

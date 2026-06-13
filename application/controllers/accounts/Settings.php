@@ -128,7 +128,7 @@ class Settings extends MY_Addon_AccountsController
             );
 
             // Update sequences
-            $voucher_types = ['payment', 'receipt', 'contra', 'journal', 'purchase'];
+            $voucher_types = ['payment', 'receipt', 'general_receipt', 'contra', 'journal', 'purchase'];
             foreach ($voucher_types as $type) {
                 if ($this->input->post($type . '_prefix') !== null) {
                     $prefix = $this->input->post($type . '_prefix');

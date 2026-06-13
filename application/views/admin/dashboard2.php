@@ -153,21 +153,21 @@
                             <div class="d2-stat-sub">Current Academic Session</div>
                             
                             <div class="row" style="margin-top:20px;">
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <div class="d2-box students">
                                         <div class="d2-box-title">Students</div>
                                         <div class="d2-box-val"><?php echo $total_students; ?></div>
                                         <div class="d2-box-sub">Active Students</div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <div class="d2-box staff">
                                         <div class="d2-box-title">Staff</div>
                                         <div class="d2-box-val"><?php echo $getTotalStaff_data; ?></div>
                                         <div class="d2-box-sub">Teaching and office</div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <div class="d2-box attendance">
                                         <div class="d2-box-title">Attendance Today</div>
                                         <div style="font-size:13px; font-weight:600; margin-top:5px;">
@@ -176,13 +176,6 @@
                                         <div style="font-size:13px; font-weight:600; margin-top:2px;">
                                             Stf: <span style="color:#3b9b65;"><?php echo ($getTotalStaff_data>0) ? round((($Staffattendence_data??0)/$getTotalStaff_data)*100, 1) : 0; ?>%</span>
                                         </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="d2-box feerecovery">
-                                        <div class="d2-box-title">Fee Recovery</div>
-                                        <div class="d2-box-val"><?php echo $fee_recovery; ?>%</div>
-                                        <div class="d2-box-sub">This session</div>
                                     </div>
                                 </div>
                             </div>
@@ -201,48 +194,103 @@
             <div class="col-md-4">
                 <div class="d2-card" style="height: calc(100% - 20px);">
                     <?php 
-                        $month_collection = 0;
-                        if(isset($incomegraph)){
-                            foreach($incomegraph as $ig){
-                                $val = preg_replace('/[^0-9.]/', '', $ig['total']);
-                                $month_collection += (float)$val;
+                        $CI =& get_instance();
+                        $CI->load->model('studentfeemaster_model');
+                        $CI->load->model('module_model');
+                        
+                        // Total Collection
+                        $total_coll = 0;
+                        $all_collections = $CI->studentfeemaster_model->getFeeCollectionReport('1970-01-01', '2099-12-31', null, null, null, null, null);
+                        if(!empty($all_collections)){
+                            foreach($all_collections as $col){
+                                $total_coll += (float)$col['amount'] + (float)$col['amount_fine'];
+                            }
+                        }
+
+                        // Outstanding Calculation
+                        $outstanding = 0;
+                        $all_due = $CI->studentfeemaster_model->getFeesAwaiting('1970-01-01', '2099-12-31');
+                        if(!empty($all_due)){
+                            foreach($all_due as $f){
+                                $amt = isset($f->is_system) && $f->is_system ? $f->amount : $f->fee_amount;
+                                $paid = 0;
+                                $discount = 0;
+                                if(!empty($f->amount_detail)){
+                                    $details = json_decode($f->amount_detail, true);
+                                    if(is_array($details)){
+                                        foreach($details as $d){
+                                            $paid += (float)$d['amount'];
+                                            $discount += (float)$d['amount_discount'];
+                                        }
+                                    }
+                                }
+                                $bal = (float)$amt - ($paid + $discount);
+                                if($bal > 0) $outstanding += $bal;
+                            }
+                        }
+                        if ($CI->module_model->hasModule('transport')) {
+                            $all_transport = $CI->studentfeemaster_model->getTransportFeesByDueDate('1970-01-01', '2099-12-31');
+                            if(!empty($all_transport)){
+                                foreach($all_transport as $f){
+                                    $amt = isset($f->fees) ? $f->fees : (isset($f->fee_amount) ? $f->fee_amount : 0);
+                                    $paid = 0;
+                                    $discount = 0;
+                                    if(!empty($f->amount_detail)){
+                                        $details = json_decode($f->amount_detail, true);
+                                        if(is_array($details)){
+                                            foreach($details as $d){
+                                                $paid += (float)$d['amount'];
+                                                $discount += (float)$d['amount_discount'];
+                                            }
+                                        }
+                                    }
+                                    $bal = (float)$amt - ($paid + $discount);
+                                    if($bal > 0) $outstanding += $bal;
+                                }
+                            }
+                        }
+
+                        // This Month Collection
+                        $this_month_coll = 0;
+                        $month_collections = $CI->studentfeemaster_model->getFeeCollectionReport(date('Y-m-01'), date('Y-m-t'), null, null, null, null, null);
+                        if(!empty($month_collections)){
+                            foreach($month_collections as $col){
+                                $this_month_coll += (float)$col['amount'] + (float)$col['amount_fine'];
+                            }
+                        }
+
+                        // Today Collection
+                        $today_coll = 0;
+                        $today_collections = $CI->studentfeemaster_model->getFeeCollectionReport(date('Y-m-d'), date('Y-m-d'), null, null, null, null, null);
+                        if(!empty($today_collections)){
+                            foreach($today_collections as $col){
+                                $today_coll += (float)$col['amount'] + (float)$col['amount_fine'];
                             }
                         }
                     ?>
                     <div class="d2-title">Fee Summary</div>
-                    <div class="d2-fee-summary-row">
+                    <div class="d2-fee-summary-row" style="background:#f4f6f9; padding:15px; border-radius:6px; border:1px solid #e9ecef; margin-bottom:15px;">
                         <div>
-                            <div class="d2-fee-lbl">This month</div>
+                            <div class="d2-fee-lbl" style="color:#333; font-size:11px; text-transform:uppercase;">Total Collection</div>
+                            <div class="d2-fee-val" style="color:#333; font-size:20px;"><?php echo $currency_symbol . amountFormat($total_coll); ?></div>
                         </div>
-                        <div class="d2-fee-val"><?php echo $currency_symbol . amountFormat($month_collection); ?></div>
+                    </div>
+                    <div class="d2-fee-summary-row" style="background:#fff5f8; padding:15px; border-radius:6px; border:1px solid #fbe0e8; margin-bottom:15px;">
+                        <div>
+                            <div class="d2-fee-lbl" style="color:#d8456a; font-size:11px; text-transform:uppercase;">Outstanding</div>
+                            <div class="d2-fee-val" style="color:#d8456a; font-size:20px;"><?php echo $currency_symbol . amountFormat($outstanding); ?></div>
+                        </div>
+                    </div>
+                    <div class="d2-fee-summary-row" style="margin-bottom:15px;">
+                        <div>
+                            <div class="d2-fee-lbl" style="font-size:11px; text-transform:uppercase;">This month</div>
+                        </div>
+                        <div class="d2-fee-val"><?php echo $currency_symbol . amountFormat($this_month_coll); ?></div>
                     </div>
                     <div class="d2-fee-summary-row" style="background:#f6fffa; padding:15px; border-radius:6px; border:1px solid #dcf2e6;">
                         <div>
                             <div class="d2-fee-lbl" style="color:#3b9b65; font-size:11px; text-transform:uppercase;">Today</div>
-                            <div class="d2-fee-val" style="color:#3b9b65;"><?php 
-                                $today_coll = 0;
-                                if(isset($student_fee_history)){
-                                    foreach($student_fee_history as $sfh){
-                                        $today_coll += (float)$sfh->amount; // Assuming amount is available
-                                    }
-                                }
-                                echo $currency_symbol . amountFormat($today_coll); 
-                            ?></div>
-                        </div>
-                    </div>
-                    <div class="d2-fee-summary-row" style="background:#fff5f8; padding:15px; border-radius:6px; border:1px solid #fbe0e8; margin-top:15px;">
-                        <div>
-                            <div class="d2-fee-lbl" style="color:#d8456a; font-size:11px; text-transform:uppercase;">Outstanding</div>
-                            <div class="d2-fee-val" style="color:#d8456a;"><?php 
-                                $outstanding = 0;
-                                if(isset($fees_awaiting)){
-                                    foreach($fees_awaiting as $f){
-                                        $amt = isset($f->is_system) && $f->is_system ? $f->amount : $f->fee_amount;
-                                        $outstanding += (float)$amt;
-                                    }
-                                }
-                                echo $currency_symbol . amountFormat($outstanding);
-                            ?></div>
+                            <div class="d2-fee-val" style="color:#3b9b65;"><?php echo $currency_symbol . amountFormat($today_coll); ?></div>
                         </div>
                     </div>
                 </div>
@@ -289,10 +337,27 @@
 
             <div class="col-md-4">
                 <div class="d2-card" style="height:100%;">
-                    <div class="d2-title" style="color:#007bff;">Upcoming Exams</div>
-                    <?php if(!empty($upcoming_exams)): ?>
+                    <div class="d2-title" style="color:#007bff;">Upcoming Exams (CBSE)</div>
+                    <?php 
+                        $CI =& get_instance();
+                        $session_id = $CI->setting_model->getCurrentSession();
+                        $today = date('Y-m-d');
+                        $cbse_query = $CI->db->query("
+                            SELECT e.name as exam_title, e.description as exam_description,
+                                   MIN(t.date) as start_date, MAX(t.date) as end_date
+                            FROM cbse_exams e
+                            JOIN cbse_exam_timetable t ON t.cbse_exam_id = e.id
+                            WHERE e.session_id = $session_id
+                            GROUP BY e.id
+                            HAVING MAX(t.date) >= '$today'
+                            ORDER BY MIN(t.date) ASC
+                            LIMIT 5
+                        ");
+                        $upcoming_cbse_exams = $cbse_query->result_array();
+                    ?>
+                    <?php if(!empty($upcoming_cbse_exams)): ?>
                         <ul style="list-style:none; padding:0; margin:0;">
-                        <?php foreach($upcoming_exams as $ex): ?>
+                        <?php foreach($upcoming_cbse_exams as $ex): ?>
                             <li style="margin-bottom:15px; border-bottom:1px solid #e0e7ff; padding-bottom:10px;">
                                 <div style="font-weight:600; font-size:14px; color:#222;"><?php echo $ex['exam_title']; ?></div>
                                 <div style="font-size:12px; color:#888; margin-top:3px;">
@@ -340,6 +405,111 @@
             </div>
         </div>
 
+        <div class="row" style="margin-bottom: 20px;">
+            <!-- Pending Leave Requests -->
+            <div class="col-md-4">
+                <div class="d2-card" style="height:100%;">
+                    <div class="d2-title" style="color:#d8456a;">Pending Leave Requests</div>
+                    <?php 
+                        $CI =& get_instance();
+                        $today = date('Y-m-d');
+                        $pending_leaves = $CI->db->query("
+                            SELECT s.name, s.surname, s.employee_id, lr.leave_from, lr.leave_to, lr.leave_days 
+                            FROM staff_leave_request lr 
+                            JOIN staff s ON lr.staff_id = s.id 
+                            WHERE lr.status = 'pending' 
+                            ORDER BY lr.id DESC 
+                            LIMIT 5
+                        ")->result_array();
+                    ?>
+                    <?php if(!empty($pending_leaves)): ?>
+                        <ul style="list-style:none; padding:0; margin:0;">
+                        <?php foreach($pending_leaves as $leave): ?>
+                            <li style="margin-bottom:15px; border-bottom:1px solid #fbe0e8; padding-bottom:10px;">
+                                <div style="font-weight:600; font-size:14px; color:#222;">
+                                    <?php echo $leave['name'] . ' ' . $leave['surname']; ?>
+                                    <span style="font-size:11px; padding:2px 6px; border-radius:4px; background:#f4f6f9; color:#666; margin-left:5px; font-weight:500;"><?php echo $leave['employee_id']; ?></span>
+                                </div>
+                                <div style="font-size:12px; color:#d8456a; margin-top:3px; font-weight:600;">
+                                    <i class="fa fa-calendar"></i> <?php echo date('d M', strtotime($leave['leave_from'])) . ' - ' . date('d M Y', strtotime($leave['leave_to'])); ?> 
+                                    (<?php echo $leave['leave_days']; ?> Days)
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <div style="font-size:13px; color:#888;">No pending requests</div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Staff on Leave Today -->
+            <div class="col-md-4">
+                <div class="d2-card" style="height:100%;">
+                    <div class="d2-title" style="color:#eab308;">Staff on Leave Today</div>
+                    <?php 
+                        $on_leave_today = $CI->db->query("
+                            SELECT s.name, s.surname, s.employee_id, lr.leave_from, lr.leave_to, lr.leave_days 
+                            FROM staff_leave_request lr 
+                            JOIN staff s ON lr.staff_id = s.id 
+                            WHERE lr.status = 'approve' AND '$today' >= lr.leave_from AND '$today' <= lr.leave_to 
+                            ORDER BY lr.id DESC
+                        ")->result_array();
+                    ?>
+                    <?php if(!empty($on_leave_today)): ?>
+                        <ul style="list-style:none; padding:0; margin:0;">
+                        <?php foreach($on_leave_today as $leave): ?>
+                            <li style="margin-bottom:15px; border-bottom:1px solid #fef08a; padding-bottom:10px;">
+                                <div style="font-weight:600; font-size:14px; color:#222;">
+                                    <?php echo $leave['name'] . ' ' . $leave['surname']; ?>
+                                    <span style="font-size:11px; padding:2px 6px; border-radius:4px; background:#f4f6f9; color:#666; margin-left:5px; font-weight:500;"><?php echo $leave['employee_id']; ?></span>
+                                </div>
+                                <div style="font-size:12px; color:#ca8a04; margin-top:3px;">
+                                    <i class="fa fa-bed"></i> Away until <?php echo date('d M Y', strtotime($leave['leave_to'])); ?>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <div style="font-size:13px; color:#888;">All staff are present today</div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Today's Visitors -->
+            <div class="col-md-4">
+                <div class="d2-card" style="height:100%;">
+                    <div class="d2-title" style="color:#0284c7;">Today's Visitors</div>
+                    <?php 
+                        $today_visitors = $CI->db->query("
+                            SELECT name, purpose, contact, in_time 
+                            FROM visitors_book 
+                            WHERE date = '$today' 
+                            ORDER BY id DESC 
+                            LIMIT 5
+                        ")->result_array();
+                    ?>
+                    <?php if(!empty($today_visitors)): ?>
+                        <ul style="list-style:none; padding:0; margin:0;">
+                        <?php foreach($today_visitors as $v): ?>
+                            <li style="margin-bottom:15px; border-bottom:1px solid #bae6fd; padding-bottom:10px;">
+                                <div style="font-weight:600; font-size:14px; color:#222;">
+                                    <?php echo $v['name']; ?> 
+                                    <span style="font-size:11px; color:#0284c7; float:right;"><i class="fa fa-clock-o"></i> <?php echo $v['in_time']; ?></span>
+                                </div>
+                                <div style="font-size:12px; color:#666; margin-top:3px;">
+                                    <i class="fa fa-id-badge"></i> <?php echo $v['purpose']; ?>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <div style="font-size:13px; color:#888;">No visitors logged today</div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-md-8">
                 <div class="row">
@@ -348,7 +518,7 @@
                         <div class="d2-card" style="height: 100%;">
                             <div class="d2-title">Student Distribution</div>
                             <div style="font-weight:600; margin-bottom:15px; font-size:14px; color:#555;">Class-wise strength</div>
-                            <div style="height: 220px; width: 100%; margin-bottom: 20px;">
+                            <div style="height: 280px; width: 100%; margin-bottom: 20px;">
                                 <canvas id="classStrengthChart"></canvas>
                             </div>
                             <?php if(!empty($class_stats)): ?>
@@ -368,7 +538,7 @@
                         <div class="d2-card" style="height: 100%;">
                             <div class="d2-title" style="color:#9d50ce;">Staff Distribution</div>
                             <div style="font-weight:600; margin-bottom:15px; font-size:14px; color:#555;">Role-wise strength snapshot</div>
-                            <div style="height: 220px; width: 100%; margin-bottom: 20px;">
+                            <div style="height: 280px; width: 100%; margin-bottom: 20px;">
                                 <canvas id="staffRoleChart"></canvas>
                             </div>
                             <?php if(!empty($staff_role_stats)): 
@@ -490,10 +660,11 @@
                     maintainAspectRatio: false,
                     cutoutPercentage: 70,
                     legend: {
-                        position: 'right',
+                        position: 'bottom',
                         labels: {
                             usePointStyle: true,
-                            padding: 20
+                            padding: 10,
+                            fontSize: 11
                         }
                     }
                 }
