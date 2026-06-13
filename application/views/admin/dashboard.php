@@ -8,6 +8,11 @@
 </style>
 <div class="content-wrapper">
     <section class="content">
+        <div class="row">
+            <div class="col-md-12 text-right mb10">
+                <a href="<?php echo site_url('admin/admin/switch_dashboard/2.0'); ?>" class="btn btn-primary btn-sm"><i class="fa fa-dashboard"></i> Switch to Dashboard 2.0</a>
+            </div>
+        </div>
         <div class="">
             <?php if (ENVIRONMENT != 'production') { ?>
                 <div class="alert alert-danger">

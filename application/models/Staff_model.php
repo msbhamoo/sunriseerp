@@ -995,4 +995,17 @@ class Staff_model extends MY_Model
         $query = $this->db->query("select * from staff where staff.id in ($array)");
         return $query->result_array();
     }
+
+    public function getRoleStats()
+    {
+        $sql = "SELECT roles.name as role, COUNT(staff.id) as total 
+                FROM staff 
+                INNER JOIN staff_roles ON staff_roles.staff_id = staff.id 
+                INNER JOIN roles ON staff_roles.role_id = roles.id 
+                WHERE staff.is_active = 1 
+                GROUP BY roles.name 
+                ORDER BY total DESC";
+        $query = $this->db->query($sql);
+        return $query->result_array();
+    }
 }

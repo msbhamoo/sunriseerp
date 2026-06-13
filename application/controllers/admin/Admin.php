@@ -457,9 +457,44 @@ class Admin extends Admin_Controller
             $data['std_graphclass'] = "col-lg-4 col-md-6 col-sm-6";
         }
 
-        $this->load->view('layout/header', $data);
-        $this->load->view('admin/dashboard', $data);
-        $this->load->view('layout/footer', $data);
+        $dash_version = $this->session->userdata('dashboard_version');
+        if (empty($dash_version)) {
+            $dash_version = '2.0';
+        }
+
+        if ($dash_version == '2.0') {
+            $current_session = $this->setting_model->getCurrentSession();
+            
+            $this->load->model('enquiry_model');
+            $data['pending_admissions'] = $this->enquiry_model->getPendingAdmissions();
+            
+            $this->load->model('calendar_model');
+            $data['upcoming_events'] = $this->calendar_model->getUpcomingEvents(5);
+            $data['upcoming_birthdays'] = $this->calendar_model->getUpcomingBirthdays(5);
+            $data['upcoming_exams'] = $this->calendar_model->getUpcomingExams(5);
+            
+            $data['staff_role_stats'] = $this->Staff_model->getRoleStats();
+            
+            $data['gender_stats'] = $this->student_model->getGenderStats($current_session);
+            $data['category_stats'] = $this->student_model->getCategoryStats($current_session);
+            $data['religion_stats'] = $this->student_model->getReligionStats($current_session);
+            $data['accommodation_stats'] = $this->student_model->getAccommodationStats($current_session);
+            $data['class_stats'] = $this->student_model->getClassStats($current_session);
+            
+            // Fee recovery calculation: (Total Paid / Total Fees for the Session) * 100
+            $data['fee_recovery'] = 0;
+            if (isset($total_fess) && $total_fess > 0 && isset($total_paid)) {
+                $data['fee_recovery'] = round(($total_paid / $total_fess) * 100, 2);
+            }
+
+            $this->load->view('layout/header', $data);
+            $this->load->view('admin/dashboard2', $data);
+            $this->load->view('layout/footer', $data);
+        } else {
+            $this->load->view('layout/header', $data);
+            $this->load->view('admin/dashboard', $data);
+            $this->load->view('layout/footer', $data);
+        }
     }
 	
     public function getUserImage()
@@ -1175,6 +1210,11 @@ class Admin extends Admin_Controller
         }
 
         echo json_encode(array('status' => 'success', 'data' => $data));
+    }
+
+    public function switch_dashboard($version = '2.0') {
+        $this->session->set_userdata('dashboard_version', $version);
+        redirect('admin/admin/dashboard');
     }
 
 }

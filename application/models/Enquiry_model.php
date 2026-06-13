@@ -284,4 +284,12 @@ class enquiry_model extends MY_Model
         return $result->row_array();
     }
 
+    public function getPendingAdmissions() {
+        $this->db->select('COUNT(id) as total');
+        $this->db->from('enquiry');
+        $this->db->where('status', 'active');
+        $query = $this->db->get();
+        return $query->row_array()['total'];
+    }
+
 }

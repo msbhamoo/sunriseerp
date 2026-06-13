@@ -3329,4 +3329,55 @@ FROM `students`
             'total_present' => $total_present
         ];
     }
+
+    public function getGenderStats($session_id = null) {
+        if ($session_id == null) {
+            $session_id = $this->current_session;
+        }
+        $query = "SELECT students.gender, COUNT(students.id) as total FROM student_session INNER JOIN students ON student_session.student_id = students.id WHERE student_session.session_id = ? AND students.is_active = 'yes' GROUP BY students.gender";
+        $result = $this->db->query($query, array($session_id));
+        return $result->result_array();
+    }
+
+    public function getCategoryStats($session_id = null) {
+        if ($session_id == null) {
+            $session_id = $this->current_session;
+        }
+        $query = "SELECT categories.category, COUNT(students.id) as total FROM student_session INNER JOIN students ON student_session.student_id = students.id LEFT JOIN categories ON students.category_id = categories.id WHERE student_session.session_id = ? AND students.is_active = 'yes' GROUP BY categories.category";
+        $result = $this->db->query($query, array($session_id));
+        return $result->result_array();
+    }
+
+    public function getReligionStats($session_id = null) {
+        if ($session_id == null) {
+            $session_id = $this->current_session;
+        }
+        $query = "SELECT students.religion, COUNT(students.id) as total FROM student_session INNER JOIN students ON student_session.student_id = students.id WHERE student_session.session_id = ? AND students.is_active = 'yes' GROUP BY students.religion";
+        $result = $this->db->query($query, array($session_id));
+        return $result->result_array();
+    }
+
+    public function getClassStats($session_id = null) {
+        if ($session_id == null) {
+            $session_id = $this->current_session;
+        }
+        $query = "SELECT classes.class, COUNT(students.id) as total FROM student_session INNER JOIN students ON student_session.student_id = students.id INNER JOIN classes ON student_session.class_id = classes.id WHERE student_session.session_id = ? AND students.is_active = 'yes' GROUP BY classes.class ORDER BY total DESC";
+        $result = $this->db->query($query, array($session_id));
+        return $result->result_array();
+    }
+
+    public function getAccommodationStats($session_id = null) {
+        if ($session_id == null) {
+            $session_id = $this->current_session;
+        }
+        $query = "SELECT 
+                    SUM(CASE WHEN students.hostel_room_id > 0 THEN 1 ELSE 0 END) as hostel,
+                    SUM(CASE WHEN (students.hostel_room_id IS NULL OR students.hostel_room_id = 0) AND (student_session.vehroute_id > 0 OR student_session.route_pickup_point_id > 0) THEN 1 ELSE 0 END) as transport,
+                    SUM(CASE WHEN (students.hostel_room_id IS NULL OR students.hostel_room_id = 0) AND (student_session.vehroute_id IS NULL OR student_session.vehroute_id = 0) AND (student_session.route_pickup_point_id IS NULL OR student_session.route_pickup_point_id = 0) THEN 1 ELSE 0 END) as day_scholar
+                  FROM student_session 
+                  INNER JOIN students ON student_session.student_id = students.id 
+                  WHERE student_session.session_id = ? AND students.is_active = 'yes'";
+        $result = $this->db->query($query, array($session_id));
+        return $result->row_array();
+    }
 }

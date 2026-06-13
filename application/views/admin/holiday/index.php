@@ -87,7 +87,16 @@
         <td class="white-space-nowrap">
 			<?php  echo date($this->customlib->getSchoolDateFormat(),strtotime($value['from_date'])). ' '. $this->lang->line('to') .' '. date($this->customlib->getSchoolDateFormat(),strtotime($value['to_date'])); ?></td>
 
-          <td><?php if($value['is_default'] != 1) { echo $value['type']; }else{ echo $this->lang->line(strtolower($value['type'])); } ?></td>
+          <td>
+            <?php 
+                $type_name = ($value['is_default'] != 1) ? $value['type'] : $this->lang->line(strtolower($value['type']));
+                $label_classes = array('label-success', 'label-primary', 'label-warning', 'label-danger', 'label-info', 'label-default');
+                // Use modulo on the holiday_type id to consistently assign a color from the theme
+                $class_index = $value['holiday_type'] % count($label_classes);
+                $label_class = $label_classes[$class_index];
+            ?>
+            <span class="label <?php echo $label_class; ?>"><?php echo $type_name; ?></span>
+          </td>
           <td><?php echo $value['description']; ?></td>
           <td class="white-space-nowrap"> 
 			<?php 				

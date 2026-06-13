@@ -175,6 +175,14 @@
 		#header_search_form {
 			overflow: visible !important;
 		}
+		
+		/* Ensure top nav logo is fully visible and not cut off */
+		.main-header .logo img {
+			max-height: 50px; /* standard navbar height */
+			width: auto;
+			max-width: 100%;
+			object-fit: contain;
+		}
 
 		/* ===== HEADER AJAX SEARCH DROPDOWN ===== */
 		.ajax-search-results {

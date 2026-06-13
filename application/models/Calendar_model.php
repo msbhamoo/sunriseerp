@@ -113,4 +113,57 @@ class Calendar_model extends CI_Model
         $query = $this->db->query($query1 . " UNION " . $query2);
         return $query->result_array();
     }
+
+    public function getUpcomingEvents($limit = 5)
+    {
+        $limit = (int)$limit;
+        $sql = "
+            SELECT event_title, start_date, end_date, event_type, event_color, event_description 
+            FROM events 
+            WHERE start_date >= CURDATE()
+            UNION ALL 
+            SELECT holiday_type.type as event_title, annual_calendar.from_date as start_date, annual_calendar.to_date as end_date, 'holiday' as event_type, annual_calendar.holiday_color as event_color, annual_calendar.description as event_description 
+            FROM annual_calendar 
+            LEFT JOIN holiday_type ON holiday_type.id = annual_calendar.holiday_type
+            WHERE annual_calendar.from_date >= CURDATE() AND annual_calendar.holiday_type != 0
+            ORDER BY start_date ASC 
+            LIMIT $limit
+        ";
+        return $this->db->query($sql)->result_array();
+    }
+
+    public function getUpcomingBirthdays($limit = 5)
+    {
+        $limit = (int)$limit;
+        $sql = "
+            SELECT firstname, lastname, dob, 'Student' as user_type 
+            FROM students 
+            WHERE is_active = 'yes' AND dob IS NOT NULL AND dob != '0000-00-00'
+            UNION ALL
+            SELECT name as firstname, surname as lastname, dob, 'Staff' as user_type 
+            FROM staff 
+            WHERE is_active = 1 AND dob IS NOT NULL AND dob != '0000-00-00'
+            ORDER BY 
+                CASE 
+                    WHEN DATE_FORMAT(dob, '%m-%d') >= DATE_FORMAT(CURDATE(), '%m-%d') THEN 0 
+                    ELSE 1 
+                END, 
+                DATE_FORMAT(dob, '%m-%d') ASC
+            LIMIT $limit
+        ";
+        return $this->db->query($sql)->result_array();
+    }
+
+    public function getUpcomingExams($limit = 5)
+    {
+        $limit = (int)$limit;
+        $sql = "
+            SELECT exam as exam_title, date_from as start_date, date_to as end_date, description as exam_description 
+            FROM exam_group_class_batch_exams 
+            WHERE date_from >= CURDATE() AND session_id = " . $this->db->escape($this->current_session) . "
+            ORDER BY date_from ASC 
+            LIMIT $limit
+        ";
+        return $this->db->query($sql)->result_array();
+    }
 }
