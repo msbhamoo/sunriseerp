@@ -11,4 +11,4 @@ uploads/
 application/config/database.php
 
 # Ignore addons
-addons/
+/addons/
