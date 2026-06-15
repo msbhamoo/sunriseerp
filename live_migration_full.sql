@@ -241,13 +241,14 @@ WHERE `id` = 22 AND `access_permissions` NOT LIKE '%hostel_room_transfer%';
 -- ---------------------------------------------------------
 
 -- 1. Create Follow-up Table
-CREATE TABLE IF NOT EXISTS `student_attendence_followup` (
+CREATE TABLE IF NOT EXISTS `attendance_followup_log` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `student_session_id` INT NOT NULL,
     `date` DATE NOT NULL,
+    `action` VARCHAR(255) NULL,
     `followup_status` VARCHAR(50) NOT NULL,
     `remark` TEXT NULL,
-    `action_by` INT NULL,
+    `created_by` INT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
