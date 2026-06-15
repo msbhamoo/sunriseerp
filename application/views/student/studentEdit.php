@@ -1181,7 +1181,7 @@ echo set_value('rte', $student['rte']) == "No" ? "checked" : "";
                     success: function (data) {
                         $('#fee_groups_container').html(data);
                         
-                        var selected_fees = <?php echo json_encode($this->input->post('fee_groups_id') ? $this->input->post('fee_groups_id') : []); ?>;
+                        var selected_fees = <?php echo json_encode($this->input->post('fee_session_group_id') ? $this->input->post('fee_session_group_id') : []); ?>;
                         if (selected_fees && selected_fees.length > 0) {
                             $.each(selected_fees, function(i, val) {
                                 $('.fee_group_chk[value="' + val + '"]').prop('checked', true);
@@ -1865,32 +1865,35 @@ $(document).on('change','#vehroute_id',function(){
 $(document).ready(function() {
         // Populate sections via AJAX on page load if already submitted
         <?php 
-        
-        foreach ($total_rows as $index => $row){
-           if (!empty($row['class'])){
-   
-             $classId = json_encode($row['class']);
-            $sectionId = json_encode($row['section']);
-            $selector = json_encode("#multiclass_class_$index");
-            ?>
-            getMultiSectionByClass(<?php echo $classId;?>, <?php echo $sectionId;?>,  $(<?php echo $selector;?>));
-            <?php 
-           }
+        if (!empty($total_rows) && (is_array($total_rows) || is_object($total_rows))) {
+            foreach ($total_rows as $index => $row){
+               if (!empty($row['class'])){
+       
+                 $classId = json_encode($row['class']);
+                $sectionId = json_encode($row['section']);
+                $selector = json_encode("#multiclass_class_$index");
+                ?>
+                getMultiSectionByClass(<?php echo $classId;?>, <?php echo $sectionId;?>,  $(<?php echo $selector;?>));
+                <?php 
+               }
+            }
         }
 
-        unset($teacher_data[0]);
-        foreach ($teacher_data as $t_key => $t_value) {
-        
-            $classId = ($t_value->class_id);
-            $sectionId = ($t_value->section_id);
-            $selector = json_encode("#multiclass_class_" . ($t_key + 1));
-        
-            ?>
+        if (!empty($teacher_data) && (is_array($teacher_data) || is_object($teacher_data))) {
+            unset($teacher_data[0]);
+            foreach ($teacher_data as $t_key => $t_value) {
             
-            getMultiSectionByClass(<?php echo $classId;?>, <?php echo $sectionId;?>,  $(<?php echo $selector;?>));
-            <?php 
-
+                $classId = json_encode($t_value->class_id);
+                $sectionId = json_encode($t_value->section_id);
+                $selector = json_encode("#multiclass_class_" . ($t_key + 1));
+            
+                ?>
+                
+                getMultiSectionByClass(<?php echo $classId;?>, <?php echo $sectionId;?>,  $(<?php echo $selector;?>));
+                <?php 
+            }
         }
+
        
         ?>
     });

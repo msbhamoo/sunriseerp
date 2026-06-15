@@ -131,6 +131,11 @@
                 <div class="box box-primary">
                     <div class="box-header ptbnull">
                         <h3 class="box-title titlefix">Yearly Fees List</h3>
+                        <div class="box-tools pull-right">
+                            <?php if ($this->rbac->hasPrivilege('transport_fees_master', 'can_add')) { ?>
+                            <a href="<?php echo base_url(); ?>admin/transportyearlyfee/bulk_assign" class="btn btn-sm btn-primary"><i class="fa fa-upload"></i> Bulk Assign Pickup Point</a>
+                            <?php } ?>
+                        </div>
                     </div>
                     <div class="box-body">
                         <div class="row" style="margin-bottom: 10px;">

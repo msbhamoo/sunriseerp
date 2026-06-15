@@ -31,7 +31,7 @@ if (!empty($feesessiongroup_model)) {
                                                 <?php 
                                                 // Support set_checkbox if needed, but fall back to checking if student_fees_master_id is present
                                                 $is_checked = isset($feesessiongroup_value->student_fees_master_id) && $feesessiongroup_value->student_fees_master_id > 0;
-                                                echo set_checkbox('fee_session_group_id[]', $feesessiongroup_value->id, $is_checked); 
+                                                echo $is_checked ? 'checked="checked"' : ''; 
                                                 ?>>
                                             <a class="display-inline collapsed box-plus-panel"
                                                 data-toggle="collapse"

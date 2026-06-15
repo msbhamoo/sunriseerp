@@ -905,6 +905,67 @@ class Studentfee extends Admin_Controller
         echo json_encode(array('status' => 1, 'page' => $page));
     }
 
+    public function printFeesReceiptPopup()
+    {
+        $invoice_id = $this->input->post('main_invoice');
+        $sub_invoice_id = $this->input->post('sub_invoice');
+        $fee_category = $this->input->post('fee_category');
+        
+        // Fallback for collection_list.php which might pass them under different names
+        if (!$invoice_id) {
+            $invoice_id = $this->input->post('student_fees_deposite_id');
+        }
+        if (!$sub_invoice_id) {
+            $sub_invoice_id = $this->input->post('sub_invoice_id');
+        }
+
+        $data['sub_invoice_id'] = $sub_invoice_id;
+        $setting_result = $this->setting_model->get();
+        $data['settinglist'] = $setting_result;
+        $data['sch_setting'] = $this->sch_setting_detail;
+        
+           // If fee_category not provided, auto-detect by checking which fee type field is populated
+           if (!$fee_category) {
+               $invoice_record = $this->db->select('student_transport_fee_id, student_transport_yearly_fee_id, student_fees_master_id')
+                                           ->from('student_fees_deposite')
+                                           ->where('id', $invoice_id)
+                                           ->get()
+                                           ->row();
+           
+               if ($invoice_record) {
+                   if ($invoice_record->student_transport_yearly_fee_id > 0) {
+                       $fee_category = 'transport_yearly';
+                   } elseif ($invoice_record->student_transport_fee_id > 0) {
+                       $fee_category = 'transport';
+                   } else {
+                       $fee_category = 'fees';
+                   }
+               }
+           }
+       
+           if ($fee_category == "transport") {
+            $fee_record = $this->studentfeemaster_model->getTransportFeeByInvoice($invoice_id, $sub_invoice_id);
+            if ($fee_record) $fee_record->fee_category = $fee_category;
+        } elseif ($fee_category == "transport_yearly") {
+            $fee_record = $this->studentfeemaster_model->getTransportYearlyFeeByInvoice($invoice_id, $sub_invoice_id);
+            if ($fee_record) $fee_record->fee_category = $fee_category;
+        } else {
+            $fee_record = $this->studentfeemaster_model->getFeeByInvoice($invoice_id, $sub_invoice_id);
+            if ($fee_record) $fee_record->fee_category = 'fees';
+        }
+
+        $data['feeList'] = $fee_record;
+
+        if ($fee_record) {
+            $student_session_id = $fee_record->student_session_id;
+            $student = $this->studentsession_model->searchStudentsBySession($student_session_id);
+            $data['student'] = $student;
+        }
+
+        $page = $this->load->view('print/printFeesReceiptCustom', $data, true);
+        echo json_encode(array('status' => 1, 'page' => $page));
+    }
+
     public function printFeesByGroup()
     {
         $fee_category           = $this->input->post('fee_category');
@@ -915,6 +976,11 @@ class Studentfee extends Admin_Controller
 
         if ($fee_category == "transport") {
             $data['feeList'] = $this->studentfeemaster_model->getTransportFeeByID($trans_fee_id);
+            if ($data['feeList']) {
+                $data['feeList']->fee_category = $fee_category;
+                $student_session_id = $data['feeList']->student_session_id;
+                $data['student'] = $this->studentsession_model->searchStudentsBySession($student_session_id);
+            }
             if($this->thermal_print_module == 1 && $this->thermal_print_enable == 1){			
 				$data['thermal_print'] = $this->thermal_print_result;				
 				$page = $this->load->view('print/thermalPrintTransportFeesByGroup', $data, true); 				
@@ -924,6 +990,11 @@ class Studentfee extends Admin_Controller
 
         } elseif ($fee_category == "transport_yearly") {
             $data['feeList'] = $this->studentfeemaster_model->getTransportYearlyFeeByID($trans_fee_id);
+            if ($data['feeList']) {
+                $data['feeList']->fee_category = $fee_category;
+                $student_session_id = $data['feeList']->student_session_id;
+                $data['student'] = $this->studentsession_model->searchStudentsBySession($student_session_id);
+            }
             if($this->thermal_print_module == 1 && $this->thermal_print_enable == 1){			
 				$data['thermal_print'] = $this->thermal_print_result;				
 				$page = $this->load->view('print/thermalPrintTransportFeesByGroup', $data, true); 				
@@ -936,6 +1007,12 @@ class Studentfee extends Admin_Controller
             $fee_master_id         = $this->input->post('fee_master_id');
             $fee_session_group_id  = $this->input->post('fee_session_group_id');
             $data['feeList']       = $this->studentfeemaster_model->getDueFeeByFeeSessionGroupFeetype($fee_session_group_id, $fee_master_id, $fee_groups_feetype_id);
+            
+            if ($data['feeList']) {
+                $student_session_id = $data['feeList']->student_session_id;
+                $data['student'] = $this->studentsession_model->searchStudentsBySession($student_session_id);
+            }
+
             if($this->thermal_print_module == 1 && $this->thermal_print_enable == 1){				
 				$data['thermal_print'] = $this->thermal_print_result;
 				$page  = $this->load->view('print/thermalPrintFeesByGroup', $data, true);
@@ -948,7 +1025,9 @@ class Studentfee extends Admin_Controller
 
     public function printFeesByGroupArray()
     {
-        $data['sch_setting'] = $this->sch_setting_detail;
+        $setting_result         = $this->setting_model->get();
+        $data['settinglist']    = $setting_result;
+        $data['sch_setting']    = $this->sch_setting_detail;
         $record              = $this->input->post('data');
         $record_array        = json_decode($record);
         $fees_array          = array();
@@ -972,6 +1051,12 @@ class Studentfee extends Admin_Controller
             $fees_array[] = $feeList;
         }
         $data['feearray'] = $fees_array;       
+
+        if (!empty($fees_array)) {
+            $student_session_id = $fees_array[0]->student_session_id;
+            $student = $this->studentsession_model->searchStudentsBySession($student_session_id);
+            $data['student'] = $student;
+        }
 		
         if($this->thermal_print_module == 1 && $this->thermal_print_enable == 1){   
 			$data['thermal_print'] = $this->thermal_print_result;			
@@ -1469,18 +1554,29 @@ class Studentfee extends Admin_Controller
 
                         $mailsms_array = $this->feegrouptype_model->getFeeGroupByIDAndStudentSessionID($deposited_fees_value['fee_groups_feetype_id'], $student_session_id);
 
-                        $fee_group_name[]  = $mailsms_array->fee_group_name;
-                        $type[]            = $mailsms_array->type;
-                        $code[]            = $mailsms_array->code;
-                        $fine_type[]       = $mailsms_array->fine_type;
-                        $due_date[]        = $mailsms_array->due_date;
-                        $fine_percentage[] = $mailsms_array->fine_percentage;
-                        $fine_amount[]     = amountFormat($mailsms_array->fine_amount);
+                        if ($mailsms_array) {
+                            $fee_group_name[]  = $mailsms_array->fee_group_name;
+                            $type[]            = $mailsms_array->type;
+                            $code[]            = $mailsms_array->code;
+                            $fine_type[]       = $mailsms_array->fine_type;
+                            $due_date[]        = $mailsms_array->due_date;
+                            $fine_percentage[] = $mailsms_array->fine_percentage;
+                            $fine_amount[]     = amountFormat($mailsms_array->fine_amount);
 
-                        if ($mailsms_array->is_system) {
-                            $amount[] = amountFormat($mailsms_array->balance_fee_master_amount);
+                            if ($mailsms_array->is_system) {
+                                $amount[] = amountFormat($mailsms_array->balance_fee_master_amount);
+                            } else {
+                                $amount[] = amountFormat($mailsms_array->amount);
+                            }
                         } else {
-                            $amount[] = amountFormat($mailsms_array->amount);
+                            $fee_group_name[]  = "-";
+                            $type[]            = "-";
+                            $code[]            = "-";
+                            $fine_type[]       = "";
+                            $due_date[]        = "";
+                            $fine_percentage[] = "";
+                            $fine_amount[]     = "0.00";
+                            $amount[]          = "0.00";
                         }
                     }
 					 

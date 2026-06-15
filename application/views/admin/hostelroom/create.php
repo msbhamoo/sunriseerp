@@ -170,6 +170,11 @@ if ($hostelroom['description'] == "") {
                                                 <td class="mailbox-name"> <?php echo $hostelroom['no_of_bed'] ?></td>
                                                 <td class="mailbox-name text-right"> <?php echo $currency_symbol . amountFormat($hostelroom['cost_per_bed']) ?></td>
                                                 <td class="mailbox-date pull-right no-print">
+                                                    <?php if ($this->rbac->hasPrivilege('hostel_room_assets', 'can_view')) {?>
+                                                        <a href="javascript:void(0);" onclick="manageAssets(<?php echo $hostelroom['id']; ?>)" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('hostel_room_assets'); ?>">
+                                                            <i class="fa fa-cubes"></i>
+                                                        </a>
+                                                    <?php } ?>
                                                     <?php if ($this->rbac->hasPrivilege('hostel_rooms', 'can_edit')) {?>
                                                         <a href="<?php echo base_url(); ?>admin/hostelroom/edit/<?php echo $hostelroom['id'] ?>" class="btn btn-primary btn-xs"  data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>">
                                                             <i class="fa fa-pencil"></i>
@@ -194,14 +199,59 @@ if ($hostelroom['description'] == "") {
             </div><!--/.col (left) -->
             <!-- right column -->
         </div>
-        <div class="row">
-            <div class="col-md-12">
-            </div><!--/.col (right) -->
         </div>   <!-- /.row -->
     </section><!-- /.content -->
 </div><!-- /.content-wrapper -->
 
+<!-- Room Assets Modal -->
+<div id="assetsModal" class="modal fade" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><?php echo $this->lang->line('hostel_room_assets'); ?></h4>
+            </div>
+            <div class="modal-body" id="assetsModalBody">
+                <!-- Content loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="text/javascript">
+    function manageAssets(room_id) {
+        $.ajax({
+            url: "<?php echo site_url('admin/hostelroom/get_room_assets') ?>",
+            type: "POST",
+            data: {room_id: room_id},
+            success: function (data) {
+                $('#assetsModalBody').html(data);
+                $('#assetsModal').modal('show');
+            }
+        });
+    }
+
+    $(document).on('submit', '#roomAssetsForm', function (e) {
+        e.preventDefault();
+        $.ajax({
+            url: "<?php echo site_url('admin/hostelroom/save_room_assets') ?>",
+            type: "POST",
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function (data) {
+                if (data.status == "success") {
+                    successMsg(data.message);
+                    $('#assetsModal').modal('hide');
+                } else {
+                    errorMsg(data.message);
+                }
+            }
+        });
+    });
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
     var base_url = '<?php echo base_url() ?>';
     function printDiv(elem) {
         Popup(jQuery(elem).html());

@@ -110,6 +110,7 @@ class Certificateregister extends Admin_Controller {
                         'issue_date' => date('Y-m-d'),
                         'status' => 'Issued',
                         'remark' => $this->input->post('remark'),
+                        'custom_data' => json_encode($this->input->post('custom_data') ?? []),
                         'generated_by' => $this->customlib->getStaffID()
                     ];
                     
@@ -124,6 +125,15 @@ class Certificateregister extends Admin_Controller {
 
                     $this->session->set_flashdata('msg', '<div class="alert alert-success">Certificate Generated Successfully. <a href="'.base_url('admin/certificateregister/download/'.$cert_id).'" target="_blank">Download PDF</a></div>');
                     redirect('admin/scholarregister/view/'.$student_id);
+                }
+            }
+
+            // Fetch custom fields to prepopulate TC extra inputs if any exist
+            $data['student_custom_fields'] = [];
+            $cf_query = $this->db->query("SELECT cf.name, cfv.field_value FROM custom_fields cf LEFT JOIN custom_field_values cfv ON cf.id = cfv.custom_field_id AND cfv.belong_table_id = ? WHERE cf.belong_to = 'students'", [$student_id]);
+            if ($cf_query->num_rows() > 0) {
+                foreach ($cf_query->result_array() as $row) {
+                    $data['student_custom_fields'][strtolower(trim($row['name']))] = $row['field_value'];
                 }
             }
 
@@ -176,8 +186,12 @@ class Certificateregister extends Admin_Controller {
         $student_id = $cert['student_id'];
         $data['student_data'] = $this->student_model->get($student_id);
         $data['cert'] = $cert;
+        $data['custom_data'] = json_decode($cert['custom_data'] ?? '{}', true) ?? [];
         $data['sch_setting_detail'] = $this->sch_setting_detail;
         $data['general_purpose_header'] = $this->setting_model->get_general_purpose_header();
+
+        $this->load->model('scholarregister_model');
+        $data['academic_history'] = $this->scholarregister_model->get_history_by_student($student_id);
 
         $html = $this->load->view('admin/certificateregister/print_certificate', $data, true);
 
@@ -231,7 +245,6 @@ class Certificateregister extends Admin_Controller {
         $this->db->join('student_session', 'student_session.student_id = students.id');
         $this->db->join('classes', 'classes.id = student_session.class_id');
         $this->db->join('sections', 'sections.id = student_session.section_id');
-        $this->db->where('students.is_active', 'yes');
         $this->db->where('student_session.session_id', $current_session);
         
         $this->db->group_start();
@@ -242,6 +255,14 @@ class Certificateregister extends Admin_Controller {
         
         $this->db->limit(15);
         $result = $this->db->get()->result_array();
+        
+        foreach ($result as &$row) {
+            $this->db->select('student_certificate_type_id');
+            $this->db->where('student_id', $row['student_id']);
+            $certs = $this->db->get('student_certificate_register')->result_array();
+            $row['existing_certs'] = array_column($certs, 'student_certificate_type_id');
+        }
+        
         echo json_encode($result);
     }
 
@@ -293,10 +314,14 @@ class Certificateregister extends Admin_Controller {
         $hostel_collected = 0;
         $hostel_due = 0;
         
+        $this->db->where('student_session_id', $student_session_id);
+        $history = $this->db->get('student_scholar_register_history')->row_array();
+        
         $data = [
             'academic' => ['total' => $academic_total, 'collected' => $academic_collected, 'due' => $academic_due],
             'transport' => ['total' => $transport_total, 'collected' => $transport_collected, 'due' => $transport_due],
-            'hostel' => ['total' => $hostel_total, 'collected' => $hostel_collected, 'due' => $hostel_due]
+            'hostel' => ['total' => $hostel_total, 'collected' => $hostel_collected, 'due' => $hostel_due],
+            'history' => $history
         ];
         
         echo json_encode($data);
@@ -312,6 +337,48 @@ class Certificateregister extends Admin_Controller {
         } else {
             echo json_encode(['status' => 'fail', 'cert_no' => '']);
         }
+    }
+
+    public function save_scholar_history_ajax() {
+        if (!$this->rbac->hasPrivilege('certificate', 'can_add')) {
+            echo json_encode(['status' => 'fail']);
+            return;
+        }
+        
+        $this->load->model('scholarregister_model');
+        $student_session_id = $this->input->post('student_session_id');
+        
+        $working_days = $this->input->post('sr_working_days');
+        $present_days = $this->input->post('sr_present_days');
+        $attendance = $this->input->post('sr_attendance');
+
+        $data = [
+            'student_session_id' => $student_session_id,
+            'working_days' => ($working_days !== '') ? $working_days : null,
+            'present_days' => ($present_days !== '') ? $present_days : null,
+            'attendance_percentage' => ($attendance !== '') ? $attendance : null,
+            'result' => $this->input->post('sr_result'),
+            'conduct' => $this->input->post('sr_conduct'),
+            'remarks' => $this->input->post('sr_remarks'),
+        ];
+        
+        // Ensure student_scholar_register_history exists for this session
+        $this->db->where('student_session_id', $student_session_id);
+        $existing = $this->db->get('student_scholar_register_history')->row_array();
+        if (!empty($existing)) {
+            $this->db->where('id', $existing['id']);
+            $this->db->update('student_scholar_register_history', $data);
+        } else {
+            // Need session_id, class_id, section_id
+            $ss = $this->db->get_where('student_session', ['id' => $student_session_id])->row_array();
+            if ($ss) {
+                $data['session_id'] = $ss['session_id'];
+                $data['class_id'] = $ss['class_id'];
+                $data['section_id'] = $ss['section_id'];
+                $this->db->insert('student_scholar_register_history', $data);
+            }
+        }
+        echo json_encode(['status' => 'success']);
     }
 
     public function generate_cert_ajax() {

@@ -1033,6 +1033,13 @@ $lang['hostel_room_added_successfully'] = "Hostel Room Added Successfully";
 $lang['hostel_room_list'] = "Hostel Room List";	
 $lang['hostel_room_updated_successfully'] = "Hostel Room Updated Successfully";	
 $lang['hostel_rooms'] = "Hostel Rooms";	
+$lang['student_registration'] = "Student Registration";	
+$lang['hostel_settings'] = "Hostel Settings";
+$lang['hostel_fee_summary'] = "Fee Summary";
+$lang['hostel_gate_pass'] = "Gate Pass";
+$lang['hostel_attendance'] = "Hostel Attendance";
+$lang['hostel_room_assets'] = "Room Assets";
+$lang['fee_group_map'] = "Fee Group Map";
 $lang['house'] = "House";	
 $lang['house_id'] = "House ID";	
 $lang['how_to_find_it'] = "How To Find It?";	
@@ -2628,3 +2635,27 @@ $lang['certificate_register'] = 'Certificate Register';
 
 $lang['scholar_register'] = 'Scholar Register';
 $lang['certificate_register'] = 'Certificate Register';
+
+// Absentee Follow-up Keys
+$lang['absentee_followup'] = 'Absentee Follow-up';
+$lang['habitual_absent'] = 'Habitual Absent';
+$lang['consecutive_days'] = 'Consecutive Days';
+$lang['followup_status'] = 'Follow-up Status';
+$lang['not_contacted'] = 'Not Contacted';
+$lang['called_answered'] = 'Called - Answered';
+$lang['not_reachable'] = 'Not Reachable';
+$lang['switched_off'] = 'Switched Off';
+$lang['wrong_number'] = 'Wrong Number';
+$lang['sms_sent'] = 'SMS Sent';
+$lang['email_sent'] = 'Email Sent';
+$lang['informed'] = 'Informed';
+$lang['pending'] = 'Pending';
+$lang['status_update'] = 'Status Update';
+$lang['history'] = 'History';
+$lang['father_name'] = 'Father Name';
+
+// Teacher Compliance & Attendance Analytics
+$lang['teacher_compliance'] = "Teacher Compliance";
+$lang['attendance_analytics'] = "Attendance Analytics";
+$lang['class_wise_absenteeism'] = "Class-wise Absenteeism";
+$lang['select_criteria'] = "Select Criteria";

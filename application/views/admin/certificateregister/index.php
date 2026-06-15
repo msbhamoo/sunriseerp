@@ -45,13 +45,10 @@
                                         <th>SR NO.</th>
                                         <th>STUDENT NAME</th>
                                         <th>FATHER NAME</th>
-                                        <th>CLASS</th>
-                                        <th>STREAM</th>
-                                        <th>SECTION</th>
+                                        <th>CLASS (SECTION)</th>
                                         <th>CONTACT</th>
-                                        <th>TC DATE</th>
-                                        <th>TC NUMBER</th>
-                                        <th>REMARK</th>
+                                        <th>LATEST CERTIFICATE DATE</th>
+                                        <th>CERTIFICATES GENERATED</th>
                                         <th>CERTIFICATE</th>
                                         <th>REVERT</th>
                                     </tr>
@@ -61,6 +58,28 @@
                                         $count = 1;
                                         foreach ($grouped_certs as $cert) { 
                                             $img_url = empty($cert['image']) ? base_url('uploads/student_images/no_image.png') : base_url($cert['image']);
+                                            
+                                            // Get latest issue date
+                                            $latest_date = '';
+                                            $cert_abbrevs = [];
+                                            foreach($cert['all_certs'] as $c) {
+                                                if (empty($latest_date) || strtotime($c['issue_date']) > strtotime($latest_date)) {
+                                                    $latest_date = $c['issue_date'];
+                                                }
+                                                // Create abbreviation (e.g. Transfer Certificate -> TC)
+                                                $name_parts = explode(' ', $c['certificate_name']);
+                                                $abbrev = '';
+                                                foreach($name_parts as $p) {
+                                                    if (!empty($p) && preg_match('/^[A-Za-z]/', $p)) {
+                                                        $abbrev .= strtoupper(substr($p, 0, 1));
+                                                    }
+                                                }
+                                                // If name contains (TC) etc, prefer that
+                                                if (preg_match('/\((.*?)\)/', $c['certificate_name'], $matches)) {
+                                                    $abbrev = strtoupper($matches[1]);
+                                                }
+                                                $cert_abbrevs[] = $abbrev;
+                                            }
                                         ?>
                                             <tr>
                                                 <td><?php echo $count++; ?></td>
@@ -68,13 +87,10 @@
                                                 <td><?php echo $cert['admission_no']; ?></td>
                                                 <td><?php echo strtoupper(($cert['firstname'] ?? '') . ' ' . ($cert['lastname'] ?? '')); ?></td>
                                                 <td><?php echo strtoupper($cert['father_name'] ?? ''); ?></td>
-                                                <td><?php echo $cert['class']; ?></td>
-                                                <td>Common</td>
-                                                <td><?php echo $cert['section']; ?></td>
+                                                <td><?php echo $cert['class'] . ' (' . $cert['section'] . ')'; ?></td>
                                                 <td><?php echo $cert['mobileno']; ?></td>
-                                                <td><?php echo date('m/d/Y', strtotime($cert['issue_date'])); ?></td>
-                                                <td><?php echo $cert['certificate_number']; ?></td>
-                                                <td><?php echo strtoupper($cert['remark'] ?? ''); ?></td>
+                                                <td><?php echo date('m/d/Y', strtotime($latest_date)); ?></td>
+                                                <td><?php echo implode(', ', $cert_abbrevs); ?></td>
                                                 <td>
                                                     <div class="dropdown">
                                                         <button class="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown">
@@ -180,6 +196,49 @@
             <!-- Certificate Generation Form -->
             <form id="form_generate_cert">
                 <input type="hidden" id="gen_student_id" name="student_id">
+                <input type="hidden" id="gen_student_session_id" name="student_session_id">
+                
+                <div id="scholar_register_container" style="background-color: #f4f6f9; padding: 15px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
+                    <h4 style="margin-top: 0; border-bottom: 2px solid <?php echo $theme_color; ?>; padding-bottom: 5px; color: <?php echo $theme_color; ?>;">Current Session Scholar Register Data</h4>
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>Working Days</label>
+                                <input type="number" id="sr_working_days" name="sr_working_days" class="form-control input-sm">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>Present Days</label>
+                                <input type="number" id="sr_present_days" name="sr_present_days" class="form-control input-sm">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>Attnd %</label>
+                                <input type="number" step="0.01" id="sr_attendance" name="sr_attendance" class="form-control input-sm">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>Result</label>
+                                <input type="text" id="sr_result" name="sr_result" class="form-control input-sm">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>Conduct</label>
+                                <input type="text" id="sr_conduct" name="sr_conduct" class="form-control input-sm">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>Remarks</label>
+                                <input type="text" id="sr_remarks" name="sr_remarks" class="form-control input-sm">
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-md-3">
                         <div class="form-group">
@@ -233,6 +292,10 @@ $(document).ready(function() {
         autoclose: true
     });
 
+    $('#gen_cert_type option').each(function() {
+        $(this).data('original-text', $(this).text());
+    });
+
     var searchTimer;
     $('#search_student').on('keyup', function() {
         var term = $(this).val();
@@ -248,7 +311,8 @@ $(document).ready(function() {
                         if (res.length > 0) {
                             var html = '';
                             $.each(res, function(i, row) {
-                                html += '<tr style="cursor:pointer;" class="sel-student-row" data-id="'+row.student_id+'" data-session_id="'+row.student_session_id+'" data-adm="'+row.admission_no+'" data-fname="'+row.firstname+'" data-lname="'+(row.lastname?row.lastname:'')+'" data-father="'+row.father_name+'" data-mother="'+row.mother_name+'" data-class="'+row.class_name+'" data-sec="'+row.section_name+'" data-contact="'+row.mobileno+'" data-img="'+row.image+'">';
+                                var existing = (row.existing_certs && row.existing_certs.length > 0) ? row.existing_certs.join(',') : '';
+                                html += '<tr style="cursor:pointer;" class="sel-student-row" data-id="'+row.student_id+'" data-session_id="'+row.student_session_id+'" data-adm="'+row.admission_no+'" data-fname="'+row.firstname+'" data-lname="'+(row.lastname?row.lastname:'')+'" data-father="'+row.father_name+'" data-mother="'+row.mother_name+'" data-class="'+row.class_name+'" data-sec="'+row.section_name+'" data-contact="'+row.mobileno+'" data-img="'+row.image+'" data-existing="'+existing+'">';
                                 html += '<td>'+row.admission_no+'</td>';
                                 html += '<td>'+row.firstname+' '+(row.lastname?row.lastname:'')+'</td>';
                                 html += '<td>'+row.father_name+'</td>';
@@ -276,6 +340,26 @@ $(document).ready(function() {
         
         var std_id = $(this).data('id');
         var std_session_id = $(this).data('session_id');
+        var existing_str = $(this).data('existing');
+        var existing_certs = [];
+        if (existing_str) {
+            existing_certs = existing_str.toString().split(',').map(Number);
+        }
+        
+        // Disable existing certificates in the dropdown
+        $('#gen_cert_type option').each(function() {
+            if (!$(this).val()) return; // skip 'Select'
+            var type_id = parseInt($(this).val());
+            if (existing_certs.includes(type_id)) {
+                $(this).prop('disabled', true);
+                $(this).text($(this).data('original-text') + ' (Already Issued)');
+            } else {
+                $(this).prop('disabled', false);
+                $(this).text($(this).data('original-text'));
+            }
+        });
+        $('#gen_cert_type').val('');
+        
         var img = $(this).data('img');
         if (!img) img = 'uploads/student_images/no_image.png';
         
@@ -287,10 +371,11 @@ $(document).ready(function() {
         $('#sel_contact').text($(this).data('contact'));
         
         $('#gen_student_id').val(std_id);
+        $('#gen_student_session_id').val(std_session_id);
 
         $('#student_details_container').show();
         
-        // Fetch fee summary
+        // Fetch fee summary and scholar history
         $.ajax({
             url: base_url + 'admin/certificateregister/get_student_fee_summary_ajax',
             type: 'POST',
@@ -311,6 +396,18 @@ $(document).ready(function() {
                 $('#fee_ho_coll').text(res.hostel.collected.toFixed(2));
                 $('#fee_ho_due').text(res.hostel.due.toFixed(2));
                 if(res.hostel.due > 0) $('#fee_ho_due').css('color', 'red'); else $('#fee_ho_due').css('color', 'green');
+                
+                // Populate Scholar Register history
+                if (res.history) {
+                    $('#sr_working_days').val(res.history.working_days);
+                    $('#sr_present_days').val(res.history.present_days);
+                    $('#sr_attendance').val(res.history.attendance_percentage);
+                    $('#sr_result').val(res.history.result);
+                    $('#sr_conduct').val(res.history.conduct);
+                    $('#sr_remarks').val(res.history.remarks);
+                } else {
+                    $('#sr_working_days, #sr_present_days, #sr_attendance, #sr_result, #sr_conduct, #sr_remarks').val('');
+                }
             }
         });
     });
@@ -344,24 +441,51 @@ $(document).ready(function() {
 
     $('#form_generate_cert').submit(function(e) {
         e.preventDefault();
-        $('#btn_submit_cert').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Generating...');
+        $('#btn_submit_cert').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
         
+        var form_data = $(this).serialize();
+        var selected_text = $('#gen_cert_type option:selected').text().toLowerCase();
+        var is_tc = (selected_text.indexOf('transfer') !== -1 || selected_text.indexOf('tc') !== -1);
+        
+        // Step 1: Save Scholar History
         $.ajax({
-            url: base_url + 'admin/certificateregister/generate_cert_ajax',
+            url: base_url + 'admin/certificateregister/save_scholar_history_ajax',
             type: 'POST',
-            data: $(this).serialize(),
+            data: form_data,
             dataType: 'json',
             success: function(res) {
-                if(res.status == 'success') {
-                    alert(res.message);
-                    window.location.reload();
-                } else {
-                    alert(res.message);
-                    $('#btn_submit_cert').prop('disabled', false).html('<i class="fa fa-save"></i> Generate');
+                if (is_tc) {
+                    var std_id = $('#gen_student_id').val();
+                    var type_id = $('#gen_cert_type').val();
+                    var reason = $('#gen_reason').val();
+                    window.location.href = base_url + 'admin/certificateregister/generate/' + std_id + '?type=' + type_id + '&reason=' + encodeURIComponent(reason);
+                    return;
                 }
+                
+                // Step 2: Generate Certificate (Non-TC)
+                $('#btn_submit_cert').html('<i class="fa fa-spinner fa-spin"></i> Generating...');
+                $.ajax({
+                    url: base_url + 'admin/certificateregister/generate_cert_ajax',
+                    type: 'POST',
+                    data: form_data,
+                    dataType: 'json',
+                    success: function(res2) {
+                        if(res2.status == 'success') {
+                            alert(res2.message);
+                            window.location.reload();
+                        } else {
+                            alert(res2.message);
+                            $('#btn_submit_cert').prop('disabled', false).html('<i class="fa fa-save"></i> Generate');
+                        }
+                    },
+                    error: function() {
+                        alert("An error occurred during generation!");
+                        $('#btn_submit_cert').prop('disabled', false).html('<i class="fa fa-save"></i> Generate');
+                    }
+                });
             },
             error: function() {
-                alert("An error occurred!");
+                alert("An error occurred while saving Scholar Register data.");
                 $('#btn_submit_cert').prop('disabled', false).html('<i class="fa fa-save"></i> Generate');
             }
         });

@@ -1,4 +1,7 @@
 <style type="text/css">
+    .fees-table-container {
+        margin-top: 10px;
+    }
     .checkbox-inline+.checkbox-inline, .radio-inline+.radio-inline {
     margin-left: 8px;}
 </style>
@@ -95,11 +98,73 @@ foreach ($studentlistbysection as $stkey => $stvalue) {
                         </div>
                     </div><!--./box-header-->
                     <div class="box-body" style="padding-top:0;">
+<?php
+$hdr_total_fee = 0;
+$hdr_total_paid = 0;
+$hdr_total_balance = 0;
+
+if(!empty($session_fees)){
+    foreach ($session_fees as $session_fee_key => $student_due_fee) {
+        if(!empty($student_due_fee['fees'])){
+            foreach ($student_due_fee['fees'] as $key => $fee) {
+                if(!empty($fee->fees)){
+                    foreach ($fee->fees as $fee_key => $fee_value) {
+                        $fee_paid = 0;
+                        $fee_discount = 0;
+                        if (!empty($fee_value->amount_detail)) {
+                            $fee_deposits = json_decode(($fee_value->amount_detail));
+                            foreach ($fee_deposits as $fee_deposits_key => $fee_deposits_value) {
+                                $fee_paid += $fee_deposits_value->amount;
+                                $fee_discount += $fee_deposits_value->amount_discount;
+                            }
+                        }
+                        $hdr_total_fee += $fee_value->amount;
+                        $hdr_total_paid += $fee_paid;
+                        $feetype_balance = $fee_value->amount - ($fee_paid + $fee_discount);
+                        if ($feetype_balance < 0) { $feetype_balance = 0; }
+                        $hdr_total_balance += $feetype_balance;
+                    }
+                }
+            }
+        }
+    }
+}
+
+if (!empty($transport_fees)) {
+    foreach ($transport_fees as $transport_fee_key => $transport_fee_value) {
+        $fee_paid = 0;
+        $fee_discount = 0;
+        if (!empty($transport_fee_value->amount_detail)) {
+            $fee_deposits = json_decode(($transport_fee_value->amount_detail));
+            foreach ($fee_deposits as $fee_deposits_key => $fee_deposits_value) {
+                $fee_paid += $fee_deposits_value->amount;
+                $fee_discount += $fee_deposits_value->amount_discount;
+            }
+        }
+        $hdr_total_fee += $transport_fee_value->fees;
+        $hdr_total_paid += $fee_paid;
+        $feetype_balance = $transport_fee_value->fees - ($fee_paid + $fee_discount);
+        if ($feetype_balance < 0) { $feetype_balance = 0; }
+        $hdr_total_balance += $feetype_balance;
+    }
+}
+
+$bg_color = '#fbfbfb';
+if ($hdr_total_fee > 0) {
+    if ($hdr_total_balance <= 0) {
+        $bg_color = '#eaffea'; // Pastel green for full paid
+    } elseif ($hdr_total_paid > 0) {
+        $bg_color = '#ffffe0'; // Light yellow for partial
+    }
+}
+?>
                         <div class="row">
                             <div class="col-md-12">
-                                <div class="sfborder-top-border">
-                                    <div class="col-md-2">
-                                        <img width="115" height="115" class="mt5 mb10 sfborder-img-shadow img-responsive img-rounded" src="<?php
+                                <div style="background: <?php echo $bg_color; ?>; border: 1px solid #e8e8e8; border-radius: 4px; padding: 15px 20px; margin-bottom: 15px; display: flex; align-items: stretch; flex-wrap: wrap; transition: background-color 0.3s ease;">
+                                    
+                                    <div style="flex: 1; display: flex; align-items: center; padding-right: 20px; border-right: 1px solid #eaeaea; min-width: 300px; margin-bottom: 10px;">
+                                        <div style="flex: 0 0 110px; text-align: center; margin-right: 25px;">
+                                            <img width="100" height="100" style="border-radius: 50%; border: 2px solid #2e4a4f; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); object-fit: cover;" src="<?php
 if (!empty($student["image"])) {
     echo $this->media_storage->getImageURL($student["image"]);
 } else {
@@ -109,57 +174,63 @@ if (!empty($student["image"])) {
         echo $this->media_storage->getImageURL("uploads/student_images/default_male.jpg");
     }
 }
-?>
-                " alt="No Image">
-                                    </div>
-                                    <div class="col-md-10">
-                                        <div class="row">
-                                            <table class="table table-striped mb0 font13">
-                                                <tbody>
-                                                    <tr>
-                                                        <th class="bozero"><?php echo $this->lang->line('name'); ?></th>
-                                                        <td class="bozero"><?php echo $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?></td>
-                                                        <th class="bozero"><?php echo $this->lang->line('class_section'); ?></th>
-                                                        <td class="bozero"><?php echo $student['class'] . " (" . $student['section'] . ")" ?> </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th><?php echo $this->lang->line('father_name'); ?></th>
-                                                        <td><?php echo $student['father_name']; ?></td>
-                                                        <th><?php echo $this->lang->line('admission_no'); ?></th>
-                                                        <td><?php echo $student['admission_no']; ?></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th><?php echo $this->lang->line('mobile_number'); ?></th>
-                                                        <td><?php echo $student['mobileno']; ?></td>
-                                                        <th><?php echo $this->lang->line('roll_number'); ?></th>
-                                                        <td> <?php echo $student['roll_no']; ?>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th><?php echo $this->lang->line('category'); ?></th>
-                                                        <td>
-                                                            <?php
+?>" alt="No Image">
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <h3 style="margin-top: 0; font-weight: 600; color: #1a2a3a; margin-bottom: 15px; font-size: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                                                <?php echo strtoupper($this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname)); ?>
+                                            </h3>
+                                            <div class="row" style="color: #555; font-size: 14px;">
+                                                <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
+                                                    <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('admission_no'); ?>:</span> <?php echo $student['admission_no']; ?>
+                                                </div>
+                                                <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
+                                                    <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('class_section'); ?>:</span> <?php echo $student['class'] . " (" . $student['section'] . ")" ?>
+                                                </div>
+                                                <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
+                                                    <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('mobile_number'); ?>:</span> <?php echo $student['mobileno']; ?>
+                                                </div>
+                                                <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
+                                                    <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('father_name'); ?>:</span> <?php echo $student['father_name']; ?>
+                                                </div>
+                                                <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
+                                                    <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('roll_number'); ?>:</span> <?php echo $student['roll_no']; ?>
+                                                </div>
+                                                <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
+                                                    <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('category'); ?>:</span> 
+                                                    <?php
 foreach ($categorylist as $value) {
     if ($student['category_id'] == $value['id']) {
         echo $value['category'];
     }
 }
 ?>
-                                                        </td>
-                                                        <?php if ($sch_setting->rte) {?>
-                                                            <th><?php echo $this->lang->line('rte'); ?></th>
-                                                            <td><b class="text-danger"> <?php echo $student['rte']; ?> </b>
-                                                            </td>
-                                                        <?php }?>
-                                                    </tr>
-
-                                                </tbody>
-                                            </table>
+                                                </div>
+                                                <?php if ($sch_setting->rte) {?>
+                                                <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
+                                                    <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('rte'); ?>:</span> <b class="text-danger"><?php echo $student['rte']; ?></b>
+                                                </div>
+                                                <?php }?>
+                                            </div>
                                         </div>
                                     </div>
-                                </div></div>
-                            <div class="col-md-12">
-                                <div class="settinghr"></div>
+
+                                    <div style="flex: 0 0 250px; padding-left: 20px; display: flex; flex-direction: column; justify-content: center; min-width: 200px;">
+                                        <div style="background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px 15px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-weight: 600; color: #555; font-size: 13px; text-transform: uppercase;">Total Fee</span>
+                                            <span style="font-weight: bold; color: #1a2a3a; font-size: 16px;"><?php echo $currency_symbol . amountFormat($hdr_total_fee); ?></span>
+                                        </div>
+                                        <div style="background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px 15px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-weight: 600; color: #555; font-size: 13px; text-transform: uppercase;">Paid</span>
+                                            <span style="font-weight: bold; color: #00a65a; font-size: 16px;"><?php echo $currency_symbol . amountFormat($hdr_total_paid); ?></span>
+                                        </div>
+                                        <div style="background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-weight: 600; color: #555; font-size: 13px; text-transform: uppercase;">Balance</span>
+                                            <span style="font-weight: bold; color: #d9534f; font-size: 16px;"><?php echo $currency_symbol . amountFormat($hdr_total_balance); ?></span>
+                                        </div>
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
                         <div class="row no-print mb10">
@@ -806,12 +877,24 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
             var fee_category = $(this).data('fee-category');
             var student_session_id = '<?php echo $student['student_session_id'] ?>';
             $.ajax({
-                url: '<?php echo site_url("studentfee/printFeesByName") ?>',
+                url: '<?php echo site_url("studentfee/printFeesReceiptPopup") ?>',
                 type: 'post',
                 dataType:"JSON",
                 data: {'fee_category': fee_category,'student_session_id': student_session_id, 'main_invoice': main_invoice, 'sub_invoice': sub_invoice},
                 success: function (response) {
-                    Popup(response.page);
+                    if(response.status == 1) {
+                        $('#receiptPreviewModalBody').html(response.page);
+                        $('#receiptPreviewModal').modal('show');
+                        
+                        // Set default to show both copies
+                        $('.receipt-copy.office-copy').show();
+                        $('.receipt-copy.receiver-copy').show();
+                        
+                        // Auto-print both copies by default after a short delay
+                        setTimeout(function() {
+                            printReceiptCopies();
+                        }, 500);
+                    }
                 }
             });
         });
@@ -1634,3 +1717,45 @@ $("#myFeesModal").on('shown.bs.modal', function (e) {
         });
     });
 </script>
+<script>
+function printReceiptCopies(mode = 'both') {
+    if(mode === 'office') {
+        $('.receipt-copy.office-copy').show();
+        $('.receipt-copy.receiver-copy').hide();
+    } else if(mode === 'receiver') {
+        $('.receipt-copy.office-copy').hide();
+        $('.receipt-copy.receiver-copy').show();
+    } else {
+        $('.receipt-copy.office-copy').show();
+        $('.receipt-copy.receiver-copy').show();
+    }
+    
+    var printContent = document.getElementById('receiptPreviewModalBody').innerHTML;
+    Popup(printContent);
+    
+    // Restore visibility in modal just in case
+    $('.receipt-copy.office-copy').show();
+    $('.receipt-copy.receiver-copy').show();
+}
+</script>
+
+<!-- Receipt Preview Modal -->
+<div class="modal fade" id="receiptPreviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="width: 850px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Receipt Preview</h4>
+            </div>
+            <div class="modal-body" id="receiptPreviewModalBody" style="background: #f3f4f6; padding: 20px;">
+                <!-- Receipt content will be loaded here -->
+            </div>
+            <div class="modal-footer" style="text-align: center;">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="printReceiptCopies('office')"><i class="fa fa-print"></i> Print Office Copy Only</button>
+                <button type="button" class="btn btn-info" onclick="printReceiptCopies('receiver')"><i class="fa fa-print"></i> Print Receiver Copy Only</button>
+                <button type="button" class="btn btn-primary" onclick="printReceiptCopies('both')"><i class="fa fa-print"></i> Print Both Copies</button>
+            </div>
+        </div>
+    </div>
+</div>

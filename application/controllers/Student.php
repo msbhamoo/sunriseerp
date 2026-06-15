@@ -602,6 +602,11 @@ class Student extends Admin_Controller
                     'is_active'         => 'yes',
                 );
 
+                if ($hostel_room_id == 0) {
+                    $data_insert['hostel_bed_no'] = null;
+                    $data_insert['hostel_assign_date'] = null;
+                }
+
                 if ($this->sch_setting_detail->guardian_occupation) {
                     $data_insert['guardian_occupation'] = $this->input->post('guardian_occupation');
                 }
@@ -1113,6 +1118,11 @@ class Student extends Admin_Controller
                 'note'              => $this->input->post('note'),
                 'is_active'         => 'yes',
             );
+
+            if ($hostel_room_id == 0) {
+                $data_insert['hostel_bed_no'] = null;
+                $data_insert['hostel_assign_date'] = null;
+            }
 
             if ($this->sch_setting_detail->guardian_occupation) {
                 $data_insert['guardian_occupation'] = $this->input->post('guardian_occupation');
@@ -2237,6 +2247,11 @@ class Student extends Admin_Controller
                     'note'              => $this->input->post('note'),
                     'is_active'         => 'yes',
                 );
+
+                if ($hostel_room_id == 0) {
+                    $data['hostel_bed_no'] = null;
+                    $data['hostel_assign_date'] = null;
+                }
                 if ($this->sch_setting_detail->guardian_occupation) {
                     $data['guardian_occupation'] = $this->input->post('guardian_occupation');
                 }

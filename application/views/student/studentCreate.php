@@ -1971,7 +1971,9 @@ $(document).ready(function() {
 <script type="text/javascript">
 $(document).ready(function() {
     // Populate sections via AJAX on page load if already submitted
-    <?php foreach ($total_rows as $index => $row){
+    <?php 
+    if (!empty($total_rows) && (is_array($total_rows) || is_object($total_rows))) {
+        foreach ($total_rows as $index => $row){
            if (!empty($row['class'])){
              $classId = json_encode($row['class']);
             $sectionId = json_encode($row['section']);
@@ -1981,8 +1983,8 @@ $(document).ready(function() {
     <?php 
            }
         }
-       
-        ?>
+    }
+    ?>
 });
 
 $(document).on('click', '.remove', function() {

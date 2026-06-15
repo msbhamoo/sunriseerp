@@ -225,4 +225,101 @@ class Hostelroom extends Admin_Controller
 
     }
 
+    public function get_room_assets()
+    {
+        if (!$this->rbac->hasPrivilege('hostel_room_assets', 'can_view')) {
+            echo "Access Denied";
+            return;
+        }
+
+        $room_id = $this->input->post('room_id');
+        
+        $asset_items = $this->db->get('hostel_asset_items')->result_array();
+        $room_assets = $this->db->where('hostel_room_id', $room_id)->get('hostel_room_assets')->result_array();
+        
+        $asset_qty_map = [];
+        foreach ($room_assets as $asset) {
+            $asset_qty_map[$asset['asset_item_id']] = $asset['qty'];
+        }
+
+        $html = '<form id="roomAssetsForm">';
+        $html .= '<input type="hidden" name="room_id" value="'.$room_id.'">';
+        $html .= '<table class="table table-striped table-bordered">';
+        $html .= '<thead><tr><th>Item Name</th><th width="150">Quantity</th></tr></thead>';
+        $html .= '<tbody>';
+        
+        if (empty($asset_items)) {
+            $html .= '<tr><td colspan="2" class="text-danger text-center">No asset items found. Add items from Hostel Settings first.</td></tr>';
+        } else {
+            foreach ($asset_items as $item) {
+                $qty = isset($asset_qty_map[$item['id']]) ? $asset_qty_map[$item['id']] : 0;
+                $html .= '<tr>';
+                $html .= '<td>'.$item['item_name'].'</td>';
+                $html .= '<td><input type="number" name="assets['.$item['id'].']" value="'.$qty.'" min="0" class="form-control"></td>';
+                $html .= '</tr>';
+            }
+        }
+        $html .= '</tbody></table>';
+        
+        if (!empty($asset_items)) {
+            $html .= '<button type="submit" class="btn btn-info pull-right">Save Assets</button>';
+        }
+        
+        $html .= '<div class="clearfix"></div></form>';
+        
+        echo $html;
+    }
+
+    public function save_room_assets()
+    {
+        $room_id = $this->input->post('room_id');
+        $assets = $this->input->post('assets');
+
+        if (!$this->rbac->hasPrivilege('hostel_room_assets', 'can_edit')) {
+            echo json_encode(['status' => 'error', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $this->db->where('hostel_room_id', $room_id)->delete('hostel_room_assets');
+
+        if (!empty($assets)) {
+            $insert_data = [];
+            foreach ($assets as $asset_id => $qty) {
+                if ($qty > 0) {
+                    $insert_data[] = [
+                        'hostel_room_id' => $room_id,
+                        'asset_item_id' => $asset_id,
+                        'qty' => $qty
+                    ];
+                }
+            }
+            if (!empty($insert_data)) {
+                $this->db->insert_batch('hostel_room_assets', $insert_data);
+            }
+        }
+
+        echo json_encode(['status' => 'success', 'message' => 'Assets saved successfully']);
+    }
+
+    public function get_room_assets_list()
+    {
+        $room_id = $this->input->post('room_id');
+        
+        $this->db->select('hostel_asset_items.item_name, hostel_room_assets.qty');
+        $this->db->from('hostel_room_assets');
+        $this->db->join('hostel_asset_items', 'hostel_asset_items.id = hostel_room_assets.asset_item_id');
+        $this->db->where('hostel_room_assets.hostel_room_id', $room_id);
+        $assets = $this->db->get()->result_array();
+
+        if (empty($assets)) {
+            echo '<span class="text-muted">No assets found</span>';
+            return;
+        }
+
+        $html = '';
+        foreach ($assets as $asset) {
+            $html .= '<span class="label label-success" style="margin-right: 5px;">' . $asset['item_name'] . ' (' . $asset['qty'] . ')</span>';
+        }
+        echo $html;
+    }
 }

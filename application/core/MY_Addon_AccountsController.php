@@ -86,6 +86,15 @@ class MY_Addon_AccountsController extends Admin_Controller
             return;
         }
 
+        if (!$this->db->field_exists('approved_by', 'acc_vouchers')) {
+            $this->load->dbforge();
+            $fields = array(
+                'approved_by' => array('type' => 'INT', 'constraint' => 11, 'null' => TRUE),
+                'approved_at' => array('type' => 'DATETIME', 'null' => TRUE)
+            );
+            $this->dbforge->add_column('acc_vouchers', $fields);
+        }
+
         if ($action === 'approve') {
             $this->db->where('id', $id)->update('acc_vouchers', [
                 'status' => 'posted',

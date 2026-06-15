@@ -174,4 +174,37 @@ class Hostelroom_model extends MY_Model
         return $this->datatables->generate('json');
     }
 
+    public function getRoomsWithBedStatus()
+    {
+        $this->db->select('hostel_rooms.*, hostel.hostel_name, room_types.room_type');
+        $this->db->from('hostel_rooms');
+        $this->db->join('hostel', 'hostel_rooms.hostel_id = hostel.id');
+        $this->db->join('room_types', 'hostel_rooms.room_type_id = room_types.id');
+        $query = $this->db->get();
+        $rooms = $query->result_array();
+
+        if (!empty($rooms)) {
+            $this->db->select('students.id as student_id, students.firstname, students.lastname, students.hostel_room_id, students.hostel_bed_no, students.hostel_assign_date, students.image, students.mobileno, students.admission_no, students.father_name, classes.class as class_name, sections.section as section_name');
+            $this->db->from('students');
+            $this->db->join('student_session', 'students.id = student_session.student_id', 'left');
+            $this->db->join('classes', 'student_session.class_id = classes.id', 'left');
+            $this->db->join('sections', 'student_session.section_id = sections.id', 'left');
+            $this->db->where('students.hostel_room_id >', 0);
+            $this->db->where('students.is_active', 'yes');
+            $this->db->where('student_session.session_id', $this->current_session);
+            $query2 = $this->db->get();
+            $students = $query2->result_array();
+
+            $room_students = array();
+            foreach ($students as $student) {
+                $room_students[$student['hostel_room_id']][$student['hostel_bed_no']] = $student;
+            }
+
+            foreach ($rooms as $key => $room) {
+                $rooms[$key]['students'] = isset($room_students[$room['id']]) ? $room_students[$room['id']] : array();
+            }
+        }
+        return $rooms;
+    }
+
 }

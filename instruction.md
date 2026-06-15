@@ -134,10 +134,11 @@ To prevent `id` collisions across different environments (e.g., local vs. live) 
 
 When adding new sub-menus, they will **fail to appear** in the sidebar unless correctly mapped in all tables:
 1. **`permission_category`**: The sub-menu must have a valid `perm_group_id` linking it to its parent group. If `perm_group_id` is missing or incorrect, it won't appear on the Assign Permissions page.
-2. **`sidebar_sub_menus`**: The `access_permissions` string MUST strictly follow the exact tuple format expected by the RBAC parser.
-   - **Correct:** `('student_dashboard', 'can_view')`
-   - **Incorrect:** `student_dashboard`
-3. If the permissions aren't fully registered in `permission_category` and properly formatted in `sidebar_sub_menus`, the UI will silently hide the menu items.
+2. **`sidebar_sub_menus`**: The `access_permissions` string MUST correctly map to the shortcode registered in `permission_category`.
+   - Both tuple format `('student_dashboard', 'can_view')` and plain format `student_dashboard,can_view` are supported by the parser.
+   - **Crucial:** The shortcode must match EXACTLY (e.g., `certificate` not `certificate_register`).
+3. **The `permission_group_id` Trap**: In `sidebar_sub_menus`, if you assign a `permission_group_id`, the sidebar renderer will explicitly check if the parent module is enabled via `$this->module_lib->hasActive()`. If the module is disabled (or the ID doesn't match the live server's ID), the menu will silently disappear regardless of the user's RBAC permissions. **Only set `permission_group_id` if you explicitly want the menu to disappear when a System Settings module is toggled off. Otherwise, set it to `NULL` to strictly follow RBAC.**
+4. If the permissions aren't fully registered in `permission_category` and properly mapped, the UI will silently hide the menu items.
 
 Sidebar visibility must match route protection. Do not expose a menu link whose controller method uses a different permission.
 

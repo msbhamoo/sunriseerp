@@ -178,13 +178,46 @@ if ($search_type == 'period') {
 function printReceipt(invoice_id, sub_invoice_id) {
     var base_url = '<?php echo base_url() ?>';
     $.ajax({
-        url: base_url + 'studentfee/printFeesByGroup',
+        url: base_url + 'studentfee/printFeesReceiptPopup',
         type: 'post',
-        data: {'fee_groups_feetype_id': 0, 'fee_master_id': 0, 'fee_session_group_id': 0, 'student_session_id': 0, 'trans_fee_id': 0, 'student_fees_deposite_id': invoice_id, 'sub_invoice_id': sub_invoice_id},
+        dataType: 'json',
+        data: {'student_fees_deposite_id': invoice_id, 'sub_invoice_id': sub_invoice_id},
         success: function (response) {
-            Popup(response);
+            if(response.status == 1) {
+                $('#receiptPreviewModalBody').html(response.page);
+                $('#receiptPreviewModal').modal('show');
+                
+                // Set default to show both copies
+                $('.receipt-copy.office-copy').show();
+                $('.receipt-copy.receiver-copy').show();
+                
+                // Auto-print both copies by default after a short delay
+                setTimeout(function() {
+                    printReceiptCopies();
+                }, 500);
+            }
         }
     });
+}
+
+function printReceiptCopies(mode = 'both') {
+    if(mode === 'office') {
+        $('.receipt-copy.office-copy').show();
+        $('.receipt-copy.receiver-copy').hide();
+    } else if(mode === 'receiver') {
+        $('.receipt-copy.office-copy').hide();
+        $('.receipt-copy.receiver-copy').show();
+    } else {
+        $('.receipt-copy.office-copy').show();
+        $('.receipt-copy.receiver-copy').show();
+    }
+    
+    var printContent = document.getElementById('receiptPreviewModalBody').innerHTML;
+    Popup(printContent);
+    
+    // Restore visibility in modal just in case
+    $('.receipt-copy.office-copy').show();
+    $('.receipt-copy.receiver-copy').show();
 }
 function Popup(data)
 {
@@ -332,6 +365,27 @@ $(document).ready(function() {
     });
 });
 </script>
+
+<!-- Receipt Preview Modal -->
+<div class="modal fade" id="receiptPreviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="width: 850px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Receipt Preview</h4>
+            </div>
+            <div class="modal-body" id="receiptPreviewModalBody" style="background: #f3f4f6; padding: 20px;">
+                <!-- Receipt content will be loaded here -->
+            </div>
+            <div class="modal-footer" style="text-align: center;">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="printReceiptCopies('office')"><i class="fa fa-print"></i> Print Office Copy Only</button>
+                <button type="button" class="btn btn-info" onclick="printReceiptCopies('receiver')"><i class="fa fa-print"></i> Print Receiver Copy Only</button>
+                <button type="button" class="btn btn-primary" onclick="printReceiptCopies('both')"><i class="fa fa-print"></i> Print Both Copies</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
     .custom-ajax-search-container {

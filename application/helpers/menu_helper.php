@@ -183,8 +183,10 @@ if (!function_exists('main_menu_array')) {
                 'approve_leave'    => array('index'),                   
                 'stuattendence'    => array('index','edit','attendencereport'),    
                 'subjectattendence'    => array('index','reportbydate'),                   
-                                  
-            ), 
+                'absenteefollowup'     => array('index'),
+                'teachercompliance'    => array('index'),
+                'attendanceanalytics'  => array('index'),
+            ),
             
             'online_examinations' => array(                                 
                 'onlineexam'    => array('index','evalution','assign'),                  
@@ -256,9 +258,11 @@ if (!function_exists('main_menu_array')) {
             ), 
             
             'hostel' => array(               
-                'hostelroom'  => array('index','edit'),      
-                'roomtype'    => array('index','edit'),      
-                'hostel'      => array('index','edit'),      
+                'hostelroom'            => array('index','edit'),      
+                'roomtype'              => array('index','edit'),      
+                'hostel'                => array('index','edit'),      
+                'hostelregistration'    => array('index'),      
+                'hostelsettings'        => array('index'),      
             ), 
             
             'certificate' => array(               

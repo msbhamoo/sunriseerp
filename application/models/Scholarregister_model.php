@@ -31,6 +31,18 @@ class Scholarregister_model extends MY_Model {
         return $this->db->get()->result_array();
     }
 
+    public function get_history_by_student($student_id) {
+        $this->db->select('student_scholar_register_history.*, sessions.session, classes.class, sections.section');
+        $this->db->from('student_scholar_register_history');
+        $this->db->join('student_session', 'student_session.id = student_scholar_register_history.student_session_id');
+        $this->db->join('sessions', 'sessions.id = student_scholar_register_history.session_id', 'left');
+        $this->db->join('classes', 'classes.id = student_scholar_register_history.class_id', 'left');
+        $this->db->join('sections', 'sections.id = student_scholar_register_history.section_id', 'left');
+        $this->db->where('student_session.student_id', $student_id);
+        $this->db->order_by('sessions.id', 'desc');
+        return $this->db->get()->result_array();
+    }
+
     public function add_or_update_scholar_register($data) {
         $existing = $this->get_student_scholar_register($data['student_id']);
         if (!empty($existing)) {

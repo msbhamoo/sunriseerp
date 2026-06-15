@@ -1713,4 +1713,63 @@ class Welcome extends Front_Controller
         $this->load_theme('pages/annual_calendar', $this->config->item('front_layout'));
     }
 
+    public function download_receipt($invoice_id, $sub_invoice_id, $hash)
+    {
+        $expected_hash = md5($invoice_id . $sub_invoice_id . 'receipt');
+        if ($hash !== $expected_hash) {
+            show_404();
+        }
+
+        $this->load->model('studentfeemaster_model');
+        $this->load->model('studentsession_model');
+
+        $data['sub_invoice_id'] = $sub_invoice_id;
+        $data['settinglist'] = $this->setting_model->get();
+        $data['sch_setting'] = $this->sch_setting_detail;
+
+        $invoice_record = $this->db->select('student_transport_fee_id, student_transport_yearly_fee_id, student_fees_master_id')
+                                    ->from('student_fees_deposite')
+                                    ->where('id', $invoice_id)
+                                    ->get()
+                                    ->row();
+
+        if (!$invoice_record) {
+            show_404();
+        }
+
+        $fee_category = 'fees';
+        if ($invoice_record->student_transport_yearly_fee_id > 0) {
+            $fee_category = 'transport_yearly';
+        } elseif ($invoice_record->student_transport_fee_id > 0) {
+            $fee_category = 'transport';
+        }
+
+        if ($fee_category == "transport") {
+            $fee_record = $this->studentfeemaster_model->getTransportFeeByInvoice($invoice_id, $sub_invoice_id);
+            if ($fee_record) $fee_record->fee_category = $fee_category;
+        } elseif ($fee_category == "transport_yearly") {
+            $fee_record = $this->studentfeemaster_model->getTransportYearlyFeeByInvoice($invoice_id, $sub_invoice_id);
+            if ($fee_record) $fee_record->fee_category = $fee_category;
+        } else {
+            $fee_record = $this->studentfeemaster_model->getFeeByInvoice($invoice_id, $sub_invoice_id);
+            if ($fee_record) $fee_record->fee_category = 'fees';
+        }
+
+        $data['feeList'] = $fee_record;
+
+        if ($fee_record) {
+            $student_session_id = $fee_record->student_session_id;
+            $student = $this->studentsession_model->searchStudentsBySession($student_session_id);
+            $data['student'] = $student;
+        } else {
+            show_404();
+        }
+
+        $html = $this->load->view('print/printFeesReceiptCustom', $data, true);
+        
+        $this->load->library('m_pdf');
+        $pdf = $this->m_pdf->load();
+        $pdf->WriteHTML($html);
+        $pdf->Output("Receipt_" . $invoice_id . "_" . $sub_invoice_id . ".pdf", "D");
+    }
 }

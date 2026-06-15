@@ -62,4 +62,17 @@ class QR_Code
         echo $qrCode->render($text);
         // exit;
     }
+
+    public function generateBase64($text)
+    {
+        $options = new QROptions([
+            'eccLevel' => QRCode::ECC_L,
+            'scale' => 4,
+            'imageBase64' => true,
+            'outputType' => QRCode::OUTPUT_IMAGE_PNG
+        ]);
+
+        $qrCode = new QRCode($options);
+        return $qrCode->render($text);
+    }
 }

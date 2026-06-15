@@ -47,11 +47,12 @@ class Studentsession_model extends CI_Model
 
     public function searchStudentsBySession($student_session_id = null)
     {
-        $this->db->select('students.admission_no,students.roll_no,student_session.session_id, student_session.class_id, student_session.section_id,student_session.id,student_session.student_id,classes.class,sections.section,
-            students.firstname,students.middlename,students.lastname,students.admission_no,students.mobileno,students.dob,students.guardian_name,students.father_name,students.guardian_phone,students.guardian_email,students.email,students.app_key,students.parent_app_key')->from('student_session');
+        $this->db->select('students.admission_no,students.roll_no,student_session.session_id, sessions.session, student_session.class_id, student_session.section_id,student_session.id,student_session.student_id,classes.class,sections.section,
+            students.firstname,students.middlename,students.lastname,students.admission_no,students.mobileno,students.dob,students.guardian_name,students.father_name,students.mother_name,students.guardian_phone,students.guardian_email,students.email,students.app_key,students.parent_app_key')->from('student_session');
         $this->db->join('classes', 'student_session.class_id = classes.id');
         $this->db->join('sections', 'sections.id = student_session.section_id');
         $this->db->join('students', 'students.id = student_session.student_id');
+        $this->db->join('sessions', 'sessions.id = student_session.session_id');
         $this->db->where('student_session.id', $student_session_id);
         $this->db->order_by('id');
         $query = $this->db->get();

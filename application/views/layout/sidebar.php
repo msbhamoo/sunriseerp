@@ -88,7 +88,7 @@ foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
 
                             ?>
 
-                        <li class="<?php echo activate_submenu($submenu_value->activate_controller, explode(',', $submenu_value->activate_methods)); ?>"><a href="<?php echo site_url($submenu_value->url); ?>"><i class="icon-circle-small"></i><?php echo $this->lang->line($submenu_value->lang_key); ?></a></li>
+                        <li class="<?php echo activate_submenu($submenu_value->activate_controller, explode(',', (string)$submenu_value->activate_methods)); ?>"><a href="<?php echo site_url($submenu_value->url); ?>"><i class="icon-circle-small"></i><?php echo $this->lang->line($submenu_value->lang_key); ?></a></li>
 
                           <?php
 }

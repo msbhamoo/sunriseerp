@@ -70,6 +70,19 @@ class Transportyearlyfee_model extends MY_Model
         return true;
     }
 
+    public function check_payment_exists($transport_yearly_feemaster_id)
+    {
+        $this->db->select('student_fees_deposite.id');
+        $this->db->from('student_transport_yearly_fees');
+        $this->db->join('student_fees_deposite', 'student_fees_deposite.student_transport_yearly_fee_id = student_transport_yearly_fees.id');
+        $this->db->where('student_transport_yearly_fees.transport_yearly_feemaster_id', $transport_yearly_feemaster_id);
+        $query = $this->db->get();
+        if ($query->num_rows() > 0) {
+            return true;
+        }
+        return false;
+    }
+
     public function getApplicableYearlyFees($class_id, $route_pickup_point_id)
     {
         $this->db->select('transport_yearly_feemaster.*, feetype.type, feetype.code');
