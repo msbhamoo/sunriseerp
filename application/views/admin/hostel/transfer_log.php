@@ -27,11 +27,8 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php if (empty($transfer_logs)) { ?>
-                                        <tr>
-                                            <td colspan="7" class="text-danger text-center">No transfer logs found.</td>
-                                        </tr>
-                                    <?php } else {
+                                    <?php 
+                                    if (!empty($transfer_logs)) {
                                         foreach ($transfer_logs as $log) {
                                             $action = "Unknown";
                                             $from = "-";

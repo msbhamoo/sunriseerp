@@ -229,7 +229,7 @@
                                                                  data-student-id="<?php echo $student['student_id']; ?>"
                                                                  data-student-name="<?php echo $student['firstname'] . ' ' . $student['lastname']; ?>"
                                                                  data-student-class="<?php echo $student['class_name'] . ' (' . $student['section_name'] . ')'; ?>"
-                                                                 data-assign-date="<?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['hostel_assign_date'])); ?>"
+                                                                 data-assign-date="<?php echo date($this->customlib->getSchoolDateFormat(), strtotime($student['hostel_assign_date'])); ?>"
                                                                  <?php } ?>
                                                                  onclick="<?php echo $is_occupied ? 'openUnassignModal(this)' : 'openAssignModal(this)'; ?>">
                                                                 
@@ -292,13 +292,13 @@
                                                             <td><?php echo $room['hostel_name']; ?></td>
                                                             <td><?php echo $room['room_no']; ?></td>
                                                             <td><?php echo $student['hostel_bed_no']; ?></td>
-                                                            <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['hostel_assign_date'])); ?></td>
+                                                            <td><?php echo date($this->customlib->getSchoolDateFormat(), strtotime($student['hostel_assign_date'])); ?></td>
                                                             <td class="text-right">
                                                                 <button type="button" class="btn btn-default btn-xs" 
                                                                     data-student-id="<?php echo $student['student_id']; ?>"
                                                                     data-student-name="<?php echo $student['firstname'] . ' ' . $student['lastname']; ?>"
                                                                     data-student-class="<?php echo $student['class_name'] . ' (' . $student['section_name'] . ')'; ?>"
-                                                                    data-assign-date="<?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['hostel_assign_date'])); ?>"
+                                                                    data-assign-date="<?php echo date($this->customlib->getSchoolDateFormat(), strtotime($student['hostel_assign_date'])); ?>"
                                                                     onclick="openUnassignModal(this)"
                                                                     data-toggle="tooltip" title="Unassign Bed">
                                                                     <i class="fa fa-remove"></i>
