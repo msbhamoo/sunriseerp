@@ -379,6 +379,9 @@ if (!function_exists('main_menu_array')) {
                 'setting'       => array('index'),                              
                 'cbsecategory'  => array('index','edit'),                              
                 'cbseadmitcard'  => array('index','admitcard','edit'),                              
+                'cbseadmitcardbulk' => array('generate'),
+                'marks'         => array('index'),
+                'timetable'     => array('index'),
             ),
             
             'qr_code_attendance' => array(                              
