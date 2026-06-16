@@ -2660,3 +2660,5 @@ $lang['attendance_analytics'] = "Attendance Analytics";
 $lang['class_wise_absenteeism'] = "Class-wise Absenteeism";
 $lang['select_criteria'] = "Select Criteria";
 $lang['room_transfer_log'] = 'Room Transfer Logs';
+$lang['generate_admit_card'] = 'Generate Admit Card';
+

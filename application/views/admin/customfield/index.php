@@ -77,6 +77,11 @@ foreach ($custom_fields_list as $custom_fields_list_key => $custom_fields_list_v
                                     <textarea class="form-control" name="field_values"><?php echo set_value('field_values') ?></textarea>
                                     <span class="text-danger"><?php echo form_error('field_values'); ?></span>
                                 </div>
+                                <div class="form-group">
+                                    <label for="default_value">Default Value (Optional)</label>
+                                    <input id="default_value" name="default_value" placeholder="" type="text" class="form-control"  value="<?php echo set_value('default_value'); ?>" />
+                                    <span class="text-danger"><?php echo form_error('default_value'); ?></span>
+                                </div>
                                 <div class="form-group"> <!-- Radio group !-->
                                     <label class="control-label"><?php echo $this->lang->line('validation'); ?></label>
                                     <div class="checkbox">

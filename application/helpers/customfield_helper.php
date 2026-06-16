@@ -29,10 +29,15 @@ if (!function_exists('display_custom_fields')) {
             $input_class = "";
             $value       = "";
             if ($rel_id !== false) {
-
                 $return_value = get_custom_field_value($rel_id, $field['id'], $belongs_to);
                 if (!empty($return_value)) {
                     $value = $return_value->field_value;
+                } elseif (isset($field['default_value']) && $field['default_value'] !== '') {
+                    $value = $field['default_value'];
+                }
+            } else {
+                if (isset($field['default_value']) && $field['default_value'] !== '') {
+                    $value = $field['default_value'];
                 }
             }
 
@@ -54,6 +59,10 @@ if (!function_exists('display_custom_fields')) {
 
                 $options = optionSplit($field['field_values']);
                 $fields_html .= render_checkbox_field($field_name, $options, $field['belong_to'], $field['id'], $field['validation'], $label, $value, $type, $input_class);
+            } elseif ($field['type'] == 'radio') {
+
+                $options = optionSplit($field['field_values']);
+                $fields_html .= render_radio_field($field_name, $options, $field['belong_to'], $field['id'], $field['validation'], $label, $value, $type, $input_class);
             } elseif ($field['type'] == 'date_picker') {
 
                 $type = $field['type'];
@@ -102,10 +111,15 @@ if (!function_exists('display_custom_fields')) {
                 $input_class = "";
                 $value       = "";
                 if ($rel_id !== false) {
-
                     $return_value = get_custom_field_value($rel_id, $field['id'], $belongs_to);
                     if (!empty($return_value)) {
                         $value = $return_value->field_value;
+                    } elseif (isset($field['default_value']) && $field['default_value'] !== '') {
+                        $value = $field['default_value'];
+                    }
+                } else {
+                    if (isset($field['default_value']) && $field['default_value'] !== '') {
+                        $value = $field['default_value'];
                     }
                 }
 
@@ -124,6 +138,9 @@ if (!function_exists('display_custom_fields')) {
                 } elseif ($field['type'] == 'checkbox') {
                     $options = optionSplit($field['field_values']);
                     $fields_html .= render_checkbox_field($field_name, $options, $field['belong_to'], $field['id'], $field['validation'], $label, $value, $type, $input_class);
+                } elseif ($field['type'] == 'radio') {
+                    $options = optionSplit($field['field_values']);
+                    $fields_html .= render_radio_field($field_name, $options, $field['belong_to'], $field['id'], $field['validation'], $label, $value, $type, $input_class);
                 } elseif ($field['type'] == 'date_picker') {
                     $type = $field['type'];
                     $fields_html .= render_date_picker_field($field_name, $field['belong_to'], $field['id'], $field['validation'], $label, $value, $type, $input_class);
@@ -325,6 +342,53 @@ if (!function_exists('display_custom_fields')) {
 
             $input .= '<input type="' . $type . '" id="' . $name . '" name="' . $name . '[]"  value="' . $option_value . '" ' . set_checkbox($name, $option_value, $chk_status) . '>' . $option_value . '</label>';
             $input .= '</label>';
+        }
+
+        $input .= '<span class="text-danger">' . form_error($name) . '</span>';
+        $input .= '</div>';
+        $input .= '</div>';
+        return $input;
+    }
+
+    function render_radio_field($name, $options, $belong_to, $field_id, $validation, $label = '', $value = '', $type = 'text', $input_class = '')
+    {
+        $input            = '';
+        $_form_group_attr = '';
+        $_input_attrs     = '';
+
+        if (!empty($input_class)) {
+            $input_class = ' ' . $input_class;
+        }
+        $input .= '<div class="form-group">';
+
+        if ($label != '') {
+            $input .= '<label for="' . $name . '" class="control-label">' . $label . '</label>';
+        }
+
+        if ($validation) {
+            $input .= "<small class='req'> *</small>";
+        }
+        $input .= '<div class="radio">';
+        foreach ($options as $option_key => $option_value) {
+            $option_value = trim($option_value);
+            $value = trim($value);
+            
+            if ($_SERVER['REQUEST_METHOD'] == "POST") {
+
+                if (isset($_POST['custom_fields'][$belong_to][$field_id]) && trim($_POST['custom_fields'][$belong_to][$field_id]) == $option_value) {
+                    $chk_status = true;
+                } else {
+                    $chk_status = false;
+                }
+
+            } elseif ($value != "" && $value == $option_value) {
+                $chk_status = true;
+            } else {
+                $chk_status = false;
+            }
+            $input .= '<label class="radio-inline">';
+
+            $input .= '<input type="radio" id="' . $name . '_' . $option_key . '" name="' . $name . '"  value="' . $option_value . '" ' . set_radio($name, $option_value, $chk_status) . '>' . $option_value . '</label>';
         }
 
         $input .= '<span class="text-danger">' . form_error($name) . '</span>';
@@ -619,6 +683,12 @@ if (!function_exists('display_custom_fields')) {
                     $return_value = get_onlineadmission_custom_field_value($rel_id, $field['id'], $belongs_to);
                     if (!empty($return_value)) {
                         $value = $return_value->field_value;
+                    } elseif (isset($field['default_value']) && $field['default_value'] !== '') {
+                        $value = $field['default_value'];
+                    }
+                } else {
+                    if (isset($field['default_value']) && $field['default_value'] !== '') {
+                        $value = $field['default_value'];
                     }
                 }
 				 
@@ -638,6 +708,9 @@ if (!function_exists('display_custom_fields')) {
                 } elseif ($field['type'] == 'checkbox') {
                     $options = optionSplit($field['field_values']);
                     $fields_html .= render_checkbox_field($field_name, $options, $field['belong_to'], $field['id'], $field['validation'], $label, $value, $type, $input_class);
+                } elseif ($field['type'] == 'radio') {
+                    $options = optionSplit($field['field_values']);
+                    $fields_html .= render_radio_field($field_name, $options, $field['belong_to'], $field['id'], $field['validation'], $label, $value, $type, $input_class);
                 } elseif ($field['type'] == 'date_picker') {
                     $type = $field['type'];
                     $fields_html .= render_date_picker_field($field_name, $field['belong_to'], $field['id'], $field['validation'], $label, $value, $type, $input_class);
@@ -698,10 +771,15 @@ if (!function_exists('display_custom_fields')) {
             $input_class = "";
             $value       = "";
             if ($rel_id !== false) {
-
                 $return_value = get_custom_field_value($rel_id, $field['id'], $belongs_to);
                 if (!empty($return_value)) {
                     $value = $return_value->field_value;
+                } elseif (isset($field['default_value']) && $field['default_value'] !== '') {
+                    $value = $field['default_value'];
+                }
+            } else {
+                if (isset($field['default_value']) && $field['default_value'] !== '') {
+                    $value = $field['default_value'];
                 }
             }
 
@@ -720,6 +798,9 @@ if (!function_exists('display_custom_fields')) {
             } elseif ($field['type'] == 'checkbox') {
                 $options = optionSplit($field['field_values']);
                 $fields_html .= render_checkbox_field($field_name, $options, $field['belong_to'], $field['id'], $field['validation'], $label, $value, $type, $input_class);
+            } elseif ($field['type'] == 'radio') {
+                $options = optionSplit($field['field_values']);
+                $fields_html .= render_radio_field($field_name, $options, $field['belong_to'], $field['id'], $field['validation'], $label, $value, $type, $input_class);
             } elseif ($field['type'] == 'date_picker') {
                 $type = $field['type'];
                 $fields_html .= render_date_picker_field($field_name, $field['belong_to'], $field['id'], $field['validation'], $label, $value, $type, $input_class);

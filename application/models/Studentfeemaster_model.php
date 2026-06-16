@@ -1860,13 +1860,24 @@ public function getFeeSessionGroupId($student_fees_master_id)
                     }
 
                     $mode = $amt->payment_mode;
-                    if (isset($payment_modes[$mode])) {
-                        $payment_modes[$mode] += $amt->amount;
-                    } else if (strtolower($mode) == 'online' || strtolower($mode) == 'paymentgateway') {
-                        $payment_modes['PaymentGateway'] += $amt->amount;
-                        $gateway_count++;
-                    } else {
-                        $payment_modes['Other'] += $amt->amount;
+                    $mode_lower = strtolower($mode);
+                    
+                    $matched = false;
+                    foreach ($payment_modes as $key => $val) {
+                        if (strtolower($key) == $mode_lower) {
+                            $payment_modes[$key] += $amt->amount;
+                            $matched = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!$matched) {
+                        if ($mode_lower == 'online' || $mode_lower == 'paymentgateway') {
+                            $payment_modes['PaymentGateway'] += $amt->amount;
+                            $gateway_count++;
+                        } else {
+                            $payment_modes['Other'] += $amt->amount;
+                        }
                     }
 
                     $class_wise[$class_name] += $amt->amount;

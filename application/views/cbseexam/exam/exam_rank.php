@@ -36,6 +36,19 @@
                                     <span class="text-danger"  id="error_exam"><?php echo form_error('exam'); ?></span>
                                 </div>
                             </div> 
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Rank Type</label><small class="req"> *</small>
+                                    <div>
+                                        <label class="radio-inline">
+                                            <input type="radio" name="rank_type" value="combined" checked> Combined (All Sections)
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input type="radio" name="rank_type" value="section"> Section-wise
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="col-sm-12">
                                 <div class="form-group">
                                 <button type="submit" name="search" value="search_full" class="btn btn-primary pull-right btn-sm checkbox-toggle"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>

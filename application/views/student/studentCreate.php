@@ -66,7 +66,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                     <input type="hidden" name="sibling_name"
                                         value="<?php echo set_value('sibling_name'); ?>" id="sibling_name_next">
                                     <input type="hidden" name="sibling_id"
-                                        value="<?php echo set_value('sibling_id', 0); ?>" id="sibling_id">
+                                        value="<?php echo set_value('sibling_id', ''); ?>" id="sibling_id">
                                     <div class="row">
                                         <?php if (!$adm_auto_insert) {?>
                                         <div class="col-md-3">
@@ -76,7 +76,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                 <small class="req"> *</small>
                                                 <input autofocus="" id="admission_no" name="admission_no" placeholder=""
                                                     type="text" class="form-control"
-                                                    value="<?php echo set_value('admission_no'); ?>" />
+                                                    value="<?php echo set_value('admission_no', isset($next_admission_no) ? $next_admission_no : ''); ?>" />
                                                 <span
                                                     class="text-danger"><?php echo form_error('admission_no'); ?></span>
                                             </div>
@@ -386,20 +386,44 @@ if ($sch_setting->is_student_house) {
 
                                         <div class="col-md-3 pt25">
                                             <div class="row">
-                                                <div class="col-md-12 col-lg-12">
-                                                    <button type="button" class="btn btn-sm mysiblings anchorbtn pb0 ps-0"><i
+                                                <div class="col-md-12">
+                                                    <button type="button" style="margin-bottom: 5px;" class="btn btn-sm btn-primary mysiblings anchorbtn"><i
                                                             class="fa fa-plus"></i>
                                                         <?php echo $this->lang->line('add_sibling'); ?></button>
                                                 </div>
-                                                <div class="col-md-12 col-lg-12 pb-sm-1">
-                                                    <div id='sibling_id'><span id="sibling_name"
-                                                            class="label label-success "><?php echo set_value('sibling_name'); ?></span>
+                                                <div class="col-md-12">
+                                                    <div id='sibling_name_container'>
+                                                        <?php 
+                                                        $sibling_names_val = set_value('sibling_name');
+                                                        $sibling_ids_val = set_value('sibling_id');
+                                                        if (!empty($sibling_ids_val) && !empty($sibling_names_val)) {
+                                                            $s_ids = explode(',', $sibling_ids_val);
+                                                            $s_names = explode(',', $sibling_names_val);
+                                                            foreach ($s_ids as $k => $sid) {
+                                                                if (isset($s_names[$k]) && $sid != 0) {
+                                                                    echo '<span class="label label-success sibling-badge" style="margin-right:5px; display:inline-block; margin-bottom:5px;" data-id="'.$sid.'" data-name="'.$s_names[$k].'">' . $s_names[$k] . ' <i class="fa fa-times remove-sibling-badge" style="cursor:pointer; margin-left:3px;"></i></span>';
+                                                                }
+                                                            }
+                                                        }
+                                                        ?>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="row">
+                                        <?php if ($sch_setting->rte) { ?>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label><?php echo $this->lang->line('rte'); ?></label>
+                                                <div class="radio" style="margin-top: 2px;">
+                                                    <label><input class="radio-inline" type="radio" name="rte" value="Yes" <?php echo set_value('rte') == "yes" ? "checked" : ""; ?>><?php echo $this->lang->line('yes'); ?></label>
+                                                    <label><input class="radio-inline" checked="checked" type="radio" name="rte" value="No" <?php echo set_value('rte') == "no" ? "checked" : ""; ?>><?php echo $this->lang->line('no'); ?></label>
+                                                </div>
+                                                <span class="text-danger"><?php echo form_error('rte'); ?></span>
+                                            </div>
+                                        </div>
+                                        <?php } ?>
                                         <?php
 echo display_custom_fields('students');
 ?>
@@ -1179,22 +1203,6 @@ if ($sch_setting->guardian_phone) {
                                                         class="text-danger"><?php echo form_error('samagra_id'); ?></span>
                                                 </div>
                                             </div>
-                                            <?php }if ($sch_setting->rte) {
-    ?>
-                                            <div class="col-md-4">
-                                                <label><?php echo $this->lang->line('rte'); ?></label>
-                                                <div class="radio" style="margin-top: 2px;">
-                                                    <label><input class="radio-inline" type="radio" name="rte"
-                                                            value="Yes" <?php
-echo set_value('rte') == "yes" ? "checked" : "";
-    ?>><?php echo $this->lang->line('yes'); ?></label>
-                                                    <label><input class="radio-inline" checked="checked" type="radio"
-                                                            name="rte" value="No" <?php
-echo set_value('rte') == "no" ? "checked" : "";
-    ?>><?php echo $this->lang->line('no'); ?></label>
-                                                </div>
-                                                <span class="text-danger"><?php echo form_error('rte'); ?></span>
-                                            </div>
                                             <?php }if ($sch_setting->previous_school_details) {?>
                                             <div class="col-md-6">
                                                 <div class="form-group">
@@ -1338,6 +1346,45 @@ echo set_value('rte') == "no" ? "checked" : "";
                         <div class="form-group">
                             <div class="sibling_msg">
                             </div>
+                            <!-- Search Sibling Option -->
+                            <div class="col-sm-12" style="margin-bottom: 15px; position: relative;">
+                                <label>Search Student <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" id="search_sibling_input" class="form-control" placeholder="Search by Name, Admission No..." autocomplete="off">
+                                    <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                                </div>
+                                <div id="search_sibling_results" style="position: absolute; width: calc(100% - 30px); background: #fff; border: 1px solid #ccc; border-top: none; z-index: 1000; max-height: 250px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none;"></div>
+                            </div>
+                            
+                            <div class="col-sm-12" id="sibling_details_card" style="display: none; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; padding: 15px; margin-bottom: 15px;">
+                                <table class="table table-condensed table-striped" style="margin-bottom: 0;">
+                                    <tr>
+                                        <th style="width: 120px; color: #555;">Name</th>
+                                        <td id="sib_dtl_name"></td>
+                                    </tr>
+                                    <tr>
+                                        <th style="width: 120px; color: #555;">Admission No</th>
+                                        <td id="sib_dtl_adm_no"></td>
+                                    </tr>
+                                    <tr>
+                                        <th style="width: 120px; color: #555;">Class</th>
+                                        <td id="sib_dtl_class"></td>
+                                    </tr>
+                                    <tr>
+                                        <th style="width: 120px; color: #555;">Guardian</th>
+                                        <td id="sib_dtl_guardian"></td>
+                                    </tr>
+                                    <tr>
+                                        <th style="width: 120px; color: #555;">Mobile</th>
+                                        <td id="sib_dtl_mobile"></td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <div class="col-sm-12" style="text-align: center; margin-bottom: 10px; font-weight: bold; color: #777;">
+                                - OR -
+                            </div>
+                            <!-- End Search Sibling Option -->
                             <label for="inputEmail3"
                                 class="col-sm-2 control-label"><?php echo $this->lang->line('class'); ?></label>
                             <div class="col-sm-10">
@@ -1724,28 +1771,51 @@ $(document).on('click', '.add_sibling', function() {
             },
             dataType: "json",
             success: function(data) {
-                $('#sibling_name').text("<?php echo $this->lang->line('sibling'); ?> : " + data
-                    .full_name);
-                $('#sibling_name_next').val(data.firstname + " " + data.lastname);
-                $('#sibling_id').val(student_id);
-                $('#father_name').val(data.father_name);
-                $('#father_phone').val(data.father_phone);
-                $('#father_occupation').val(data.father_occupation);
-                $('#mother_name').val(data.mother_name);
-                $('#mother_phone').val(data.mother_phone);
-                $('#mother_occupation').val(data.mother_occupation);
-                $('#guardian_name').val(data.guardian_name);
-                $('#guardian_relation').val(data.guardian_relation);
-                $('#guardian_address').val(data.guardian_address);
-                $('#guardian_phone').val(data.guardian_phone);
-                $('#state').val(data.state);
-                $('#city').val(data.city);
-                $('#pincode').val(data.pincode);
-                $('#current_address').val(data.current_address);
-                $('#permanent_address').val(data.permanent_address);
-                $('#guardian_occupation').val(data.guardian_occupation);
-                $("input[name=guardian_is][value='" + data.guardian_is + "']").prop("checked",
-                true);
+                var current_ids = $('#sibling_id').val() ? $('#sibling_id').val().split(',') : [];
+                if (current_ids.includes(student_id.toString())) {
+                    $('#mySiblingModal').modal('hide');
+                    return;
+                }
+                
+                var current_names = $('#sibling_name_next').val() ? $('#sibling_name_next').val().split(',') : [];
+                
+                // If it was exactly "0" originally, clear it out.
+                if(current_ids.length === 1 && current_ids[0] === "0") {
+                    current_ids = [];
+                    current_names = [];
+                }
+
+                current_ids.push(student_id);
+                var s_name = data.firstname + " " + data.lastname;
+                current_names.push(s_name);
+
+                $('#sibling_id').val(current_ids.join(','));
+                $('#sibling_name_next').val(current_names.join(','));
+
+                var badge_html = '<span class="label label-success sibling-badge" style="margin-right:5px; display:inline-block; margin-bottom:5px;" data-id="'+student_id+'" data-name="'+s_name+'">' + s_name + ' <i class="fa fa-times remove-sibling-badge" style="cursor:pointer; margin-left:3px;"></i></span>';
+                $('#sibling_name_container').append(badge_html);
+
+                // Only auto-fill parent info if this is the first sibling added
+                if (current_ids.length === 1) {
+                    $('#father_name').val(data.father_name);
+                    $('#father_phone').val(data.father_phone);
+                    $('#father_occupation').val(data.father_occupation);
+                    $('#mother_name').val(data.mother_name);
+                    $('#mother_phone').val(data.mother_phone);
+                    $('#mother_occupation').val(data.mother_occupation);
+                    $('#guardian_name').val(data.guardian_name);
+                    $('#guardian_relation').val(data.guardian_relation);
+                    $('#guardian_address').val(data.guardian_address);
+                    $('#guardian_phone').val(data.guardian_phone);
+                    $('#state').val(data.state);
+                    $('#city').val(data.city);
+                    $('#pincode').val(data.pincode);
+                    $('#current_address').val(data.current_address);
+                    $('#permanent_address').val(data.permanent_address);
+                    $('#guardian_occupation').val(data.guardian_occupation);
+                    $("input[name=guardian_is][value='" + data.guardian_is + "']").prop("checked", true);
+                }
+                
                 $('#mySiblingModal').modal('hide');
             }
         });
@@ -1754,6 +1824,26 @@ $(document).on('click', '.add_sibling', function() {
             "<div class='alert alert-danger text-center'><?php echo $this->lang->line('no_student_selected') ?></div>"
             );
     }
+});
+
+$(document).on('click', '.remove-sibling-badge', function() {
+    var $badge = $(this).closest('.sibling-badge');
+    var sid = $badge.data('id').toString();
+    var sname = $badge.data('name').toString();
+    
+    var current_ids = $('#sibling_id').val() ? $('#sibling_id').val().split(',') : [];
+    var current_names = $('#sibling_name_next').val() ? $('#sibling_name_next').val().split(',') : [];
+    
+    var index = current_ids.indexOf(sid);
+    if (index !== -1) {
+        current_ids.splice(index, 1);
+        current_names.splice(index, 1);
+    }
+    
+    $('#sibling_id').val(current_ids.join(','));
+    $('#sibling_name_next').val(current_names.join(','));
+    
+    $badge.remove();
 });
 </script>
 
@@ -2014,5 +2104,70 @@ function show_transport_fee() {
     } else {
         $('#pickup_point_fee_display').html('');
     }
+}
+
+$(document).ready(function() {
+    var searchSibTimer;
+    $('#search_sibling_input').on('keyup', function() {
+        var search_text = $(this).val();
+        clearTimeout(searchSibTimer);
+        if(search_text.length >= 2) {
+            searchSibTimer = setTimeout(function() {
+                $.ajax({
+                    url: baseurl + 'admin/hostelregistration/search_student',
+                    type: 'POST',
+                    data: { search_text: search_text },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status == 0) {
+                            return;
+                        }
+                        var html = '';
+                        if(response.data.length > 0) {
+                            $.each(response.data, function(index, student) {
+                                var img = student.image ? baseurl + student.image : baseurl + 'uploads/student_images/no_image.png';
+                                
+                                html += '<div class="search-item" style="padding: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; align-items: center;" onclick=\'selectSibling(' + JSON.stringify(student) + ')\'>';
+                                html += '<img src="' + img + '" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; object-fit: cover;" />';
+                                html += '<div class="search-item-info" style="flex: 1;">';
+                                html += '<div class="search-item-name" style="font-weight: bold; color: #333;">' + student.firstname + ' ' + (student.lastname ? student.lastname : '') + ' (' + student.admission_no + ')</div>';
+                                html += '<div class="search-item-desc" style="font-size: 12px; color: #777;">Class: ' + student.class_name + ' (' + student.section_name + ')</div>';
+                                html += '</div></div>';
+                            });
+                        } else {
+                            html = '<div style="padding: 10px;">No active students found.</div>';
+                        }
+                        $('#search_sibling_results').html(html).show();
+                    }
+                });
+            }, 300);
+        } else {
+            $('#search_sibling_results').hide();
+        }
+    });
+
+    $(document).click(function(e) {
+        if(!$(e.target).closest('#search_sibling_input').length && !$(e.target).closest('#search_sibling_results').length) {
+            if($('#search_sibling_results').is(":visible")) {
+                $('#search_sibling_results').hide();
+            }
+        }
+    });
+});
+
+function selectSibling(student) {
+    $('#search_sibling_input').val(student.firstname + ' ' + (student.lastname ? student.lastname : '') + ' (' + student.admission_no + ')');
+    
+    // Set values for sibling adding logic
+    $('#sibiling_student_id').html('<option value="'+student.id+'" selected>'+student.firstname + ' ' + (student.lastname ? student.lastname : '')+'</option>');
+    
+    $('#sib_dtl_name').text(student.firstname + ' ' + (student.lastname ? student.lastname : ''));
+    $('#sib_dtl_adm_no').text(student.admission_no);
+    $('#sib_dtl_class').text(student.class_name + ' (' + student.section_name + ')');
+    $('#sib_dtl_guardian').text(student.guardian_name);
+    $('#sib_dtl_mobile').text(student.mobileno);
+
+    $('#sibling_details_card').show();
+    $('#search_sibling_results').hide();
 }
 </script>

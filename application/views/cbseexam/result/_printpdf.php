@@ -94,15 +94,26 @@ foreach ($result as $student_key => $student_value) {
   <body>
     <div style="width: 100%; margin: 0 auto;">
       <?php
-
       if ($template['header_image'] != "") {
       ?>
-
         <img width="100%" max-width="100%" src="<?php echo base_url("/uploads/cbseexam/template/header_image/" . $template['header_image']) ?>" />
-
       <?php
-      }
+      } else {
       ?>
+        <table cellpadding="0" cellspacing="0" width="100%" style="border-bottom: 2px solid #000; margin-bottom: 15px; padding-bottom: 10px;">
+            <tr>
+                <td width="15%" valign="middle" align="left">
+                    <img src="<?php echo base_url('uploads/school_content/logo/' . $sch_setting->image); ?>" alt="Logo" style="width: 80px; height: auto;">
+                </td>
+                <td width="70%" valign="middle" align="center">
+                    <h1 style="font-size: 20px; font-weight: bold; margin: 0 0 5px 0;"><?php echo $sch_setting->name; ?></h1>
+                    <div style="font-size: 11px; margin: 0 auto 5px auto; border-bottom: 1px solid #000; padding-bottom: 5px; display: inline-block; width: 80%;"><?php echo $sch_setting->address; ?></div>
+                    <p style="font-size: 10px; margin: 0;">Email: <?php echo $sch_setting->email; ?> Mobile No: <?php echo $sch_setting->phone; ?></p>
+                </td>
+                <td width="15%" valign="middle" align="right"></td>
+            </tr>
+        </table>
+      <?php } ?>
       <table cellpadding="0" cellspacing="0" width="100%">
         <tr>
           <td valign="top">

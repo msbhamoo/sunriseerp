@@ -30,6 +30,22 @@
         color-adjust: exact !important;
     }
 
+    @media print {
+        :root {
+            --border-color: #000000;
+        }
+        .receipt-table th {
+            background-color: var(--primary-color) !important;
+            color: #fff !important;
+        }
+        .receipt-copy {
+            border: 1px solid #000000 !important;
+        }
+        .receipt-table th, .receipt-table td {
+            border: 1px solid #000000 !important;
+        }
+    }
+
     /* Print Base */
     html, body {
         margin: 0;
@@ -211,7 +227,7 @@
 
     /* Ensure exactly 7 rows */
     .receipt-table tr.empty-row td {
-        height: 25px;
+        height: 10px;
         color: transparent;
     }
 
@@ -275,12 +291,13 @@
 @media print {
     @page {
         size: A4 portrait;
-        margin: 5mm;   /* ← safe area for printer margins */
+        margin: 5mm;
     }
-    body {
+    body, html {
         margin: 0;
         padding: 0;
         background: none;
+        height: 100%;
     }
     :root {
         --border-color: #000000;
@@ -293,20 +310,46 @@
         border: 1px solid #000000 !important;
     }
     .print-receipt-wrapper {
+        width: 100%;
         max-width: 100%;
+        margin: 0;
         padding: 0;
-        display: flex;
-        flex-direction: column;
-        height: 287mm;      /* ← 297mm - 10mm */
-        max-height: 287mm;
-        overflow: hidden;
+        display: block;
     }
     .receipt-copy {
-        border-color: #000;
-        flex: 1;
-        max-height: 49.5%;
-        margin-bottom: 10px;
+        border: 1px solid #000000 !important;
+        margin-bottom: 5mm;
+        display: block;
+        height: 135mm;
+        max-height: 135mm;
         page-break-inside: avoid;
+        overflow: hidden;
+    }
+    /* Shrink internal spacings to ensure content fits within the half-page */
+    .receipt-inner {
+        padding: 8px 12px;
+    }
+    .receipt-header {
+        margin-bottom: 8px;
+    }
+    .school-name {
+        font-size: 16px;
+    }
+    .receipt-table td, .receipt-table th {
+        padding: 4px 6px;
+    }
+    .receipt-table tr.empty-row td {
+        height: 10px;
+    }
+    .meta-grid {
+        margin-bottom: 5px;
+        padding-top: 5px;
+    }
+    .footer-info {
+        padding: 5px 0;
+    }
+    .footer-bottom {
+        margin-top: 5px;
     }
 }
 </style>
@@ -430,6 +473,8 @@ if (empty($feearray)) {
 
 $receipt_no = 'N/A';
 $payment_mode = 'N/A';
+$payment_mode_note = '';
+$payment_mode_desc = '';
 $total_deposit = 0;
 
 foreach ($feearray as $feeList) {
@@ -447,16 +492,26 @@ foreach ($feearray as $feeList) {
     $total_deposit += $amount;
     
     // Try to extract payment mode from amount_detail if available
-    if ($payment_mode == 'N/A' && !empty($feeList->amount_detail)) {
+    if (!empty($feeList->amount_detail)) {
         $deposits = json_decode($feeList->amount_detail);
         if (is_object($deposits) || is_array($deposits)) {
             foreach ($deposits as $dep) {
-                if (is_object($dep) && !empty($dep->payment_mode)) {
-                    $payment_mode = $dep->payment_mode;
-                    break;
-                } elseif (is_array($dep) && !empty($dep['payment_mode'])) {
-                    $payment_mode = $dep['payment_mode'];
-                    break;
+                $dep_inv = is_object($dep) ? (isset($dep->inv_no) ? $dep->inv_no : '') : (isset($dep['inv_no']) ? $dep['inv_no'] : '');
+                $match = (!isset($sub_invoice_id) || empty($sub_invoice_id) || $dep_inv == $sub_invoice_id);
+                
+                if ($match || $payment_mode == 'N/A') {
+                    if (is_object($dep) && !empty($dep->payment_mode)) {
+                        $payment_mode = $dep->payment_mode;
+                        if (!empty($dep->payment_mode_note)) $payment_mode_note = $dep->payment_mode_note;
+                        if (!empty($dep->description)) $payment_mode_desc = $dep->description;
+                    } elseif (is_array($dep) && !empty($dep['payment_mode'])) {
+                        $payment_mode = $dep['payment_mode'];
+                        if (!empty($dep['payment_mode_note'])) $payment_mode_note = $dep['payment_mode_note'];
+                        if (!empty($dep['description'])) $payment_mode_desc = $dep['description'];
+                    }
+                    if ($match) {
+                        break;
+                    }
                 }
             }
         }
@@ -464,10 +519,12 @@ foreach ($feearray as $feeList) {
 }
 
 $copies = [
-    'Office-Copy' => 'office-copy',
-    'Candidate-Copy' => 'receiver-copy'
+    $this->lang->line('office_copy') ? $this->lang->line('office_copy') : 'Office Copy' => 'office-copy',
+    $this->lang->line('student_copy') ? $this->lang->line('student_copy') : 'Student Copy' => 'receiver-copy'
 ];
-
+?>
+<div class="print-receipt-wrapper">
+<?php
 foreach ($copies as $copy_title => $copy_class) {
 ?>
 <div class="receipt-copy <?php echo $copy_class; ?>">
@@ -569,6 +626,12 @@ foreach ($copies as $copy_title => $copy_class) {
                 <img src="<?php echo $qr_base64; ?>" alt="QR Code">
             </div>
             <div class="payment-mode">Payment Mode: <?php echo strtoupper($payment_mode); ?></div>
+            <?php if(!empty($payment_mode_note)): ?>
+                <div class="transaction-ref" style="font-size: 11px; color: #555; margin-top: 5px;">Reference: <?php echo htmlspecialchars($payment_mode_note); ?></div>
+            <?php endif; ?>
+            <?php if(!empty($payment_mode_desc)): ?>
+                <div class="transaction-desc" style="font-size: 11px; color: #555; margin-top: 2px;">Note: <?php echo htmlspecialchars($payment_mode_desc); ?></div>
+            <?php endif; ?>
             <div class="amount-words">Amount in Words: <?php echo convert_number_to_words($total_deposit); ?> Only</div>
             <div class="total-deposit">Total Deposit: <?php echo $currency_symbol . amountFormat($total_deposit); ?></div>
         </div>
@@ -585,3 +648,4 @@ foreach ($copies as $copy_title => $copy_class) {
     </div>
 </div>
 <?php } ?>
+</div>

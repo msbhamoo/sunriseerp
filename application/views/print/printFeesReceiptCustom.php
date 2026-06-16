@@ -550,7 +550,15 @@ foreach ($copies as $copy_title => $copy_class) {
                 ?>
                 <img src="<?php echo $qr_base64; ?>" alt="QR Code">
             </div>
-            <div class="payment-mode">Payment Mode: <?php echo strtoupper($payment_mode); ?></div>
+            <div class="payment-mode-wrapper">
+                <div class="payment-mode">Payment Mode: <?php echo strtoupper($payment_mode); ?></div>
+                <?php if(!empty($fee_deposit_record->reference_no)): ?>
+                <div style="font-size: 10px; margin-top: 2px; color: var(--text-muted);">Ref: <?php echo $fee_deposit_record->reference_no; ?></div>
+                <?php endif; ?>
+                <?php if(!empty($fee_deposit_record->description)): ?>
+                <div style="font-size: 10px; margin-top: 2px; color: var(--text-muted);">Note: <?php echo $fee_deposit_record->description; ?></div>
+                <?php endif; ?>
+            </div>
             <div class="amount-words">Amount in Words: <?php echo convert_number_to_words($total_deposit); ?> Only</div>
             <div class="total-deposit">Total Deposit: <?php echo $currency_symbol . amountFormat($total_deposit); ?></div>
         </div>

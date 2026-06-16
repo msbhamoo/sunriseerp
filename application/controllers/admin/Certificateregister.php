@@ -268,29 +268,49 @@ class Certificateregister extends Admin_Controller {
 
     public function get_student_fee_summary_ajax() {
         $student_session_id = $this->input->post('student_session_id');
+        if (empty($student_session_id)) {
+            $student_session_id = $this->input->get('student_session_id');
+        }
         
         $academic_fees = $this->studentfeemaster_model->getStudentFees($student_session_id);
         $academic_total = 0;
         $academic_collected = 0;
         
+        $hostel_total = 0;
+        $hostel_collected = 0;
+
+        $mapped_hostel_fees = $this->db->get('hostel_fee_groups')->result_array();
+        $hostel_fee_group_ids = array_column($mapped_hostel_fees, 'fee_groups_id');
+
         if (!empty($academic_fees)) {
             foreach ($academic_fees as $fee_master) {
                 if (!empty($fee_master->fees)) {
                     foreach ($fee_master->fees as $fee) {
                         $fee_amount = (isset($fee->amount)) ? $fee->amount : 0;
-                        $academic_total += $fee_amount;
-                        
+                        $collected = 0;
                         $amount_detail = json_decode($fee->amount_detail);
                         if (!empty($amount_detail)) {
                             foreach ($amount_detail as $detail) {
-                                $academic_collected += $detail->amount + $detail->amount_discount;
+                                $collected += $detail->amount + $detail->amount_discount;
                             }
+                        }
+                        
+                        if (isset($fee->fee_groups_id) && in_array($fee->fee_groups_id, $hostel_fee_group_ids)) {
+                            $hostel_total += $fee_amount;
+                            $hostel_collected += $collected;
+                        } else {
+                            $academic_total += $fee_amount;
+                            $academic_collected += $collected;
                         }
                     }
                 }
             }
         }
+        
+        file_put_contents('hostel_api_debug.txt', $debug_log);
+
         $academic_due = $academic_total - $academic_collected;
+        $hostel_due = $hostel_total - $hostel_collected;
         
         $student = $this->student_model->getByStudentSession($student_session_id);
         $transport_fees = $this->studentfeemaster_model->getStudentTransportFees($student_session_id, $student['route_pickup_point_id']);
@@ -310,10 +330,6 @@ class Certificateregister extends Admin_Controller {
         }
         $transport_due = $transport_total - $transport_collected;
         
-        $hostel_total = 0;
-        $hostel_collected = 0;
-        $hostel_due = 0;
-        
         $this->db->where('student_session_id', $student_session_id);
         $history = $this->db->get('student_scholar_register_history')->row_array();
         
@@ -323,7 +339,7 @@ class Certificateregister extends Admin_Controller {
             'hostel' => ['total' => $hostel_total, 'collected' => $hostel_collected, 'due' => $hostel_due],
             'history' => $history
         ];
-        
+
         echo json_encode($data);
     }
 

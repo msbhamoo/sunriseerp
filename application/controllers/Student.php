@@ -380,6 +380,15 @@ class Student extends Admin_Controller
         $data['title']                 = 'Add Student';
         $data['title_list']            = 'Recently Added Student';
         $data['adm_auto_insert']       = $this->sch_setting_detail->adm_auto_insert;
+        
+        $admission_no = $this->sch_setting_detail->adm_prefix . $this->sch_setting_detail->adm_start_from;
+        $last_student = $this->student_model->lastRecord();
+        if (!empty($last_student)) {
+            $last_admission_digit = str_replace($this->sch_setting_detail->adm_prefix, "", $last_student->admission_no);
+            $admission_no = $this->sch_setting_detail->adm_prefix . sprintf("%0" . $this->sch_setting_detail->adm_no_digit . "d", $last_admission_digit + 1);
+        }
+        $data['next_admission_no']     = $admission_no;
+        
         $data["student_categorize"]    = 'class';
         $session                       = $this->setting_model->getCurrentSession();
         $data['feesessiongroup_model'] = $this->feesessiongroup_model->getFeesByGroup();
@@ -470,7 +479,10 @@ class Student extends Admin_Controller
             }
         }
 
-        $sibling_id = $this->input->post('sibling_id');
+        $sibling_id_post = $this->input->post('sibling_id');
+        $sibling_ids_val = !empty($sibling_id_post) ? explode(',', $sibling_id_post) : [];
+        $sibling_id      = (!empty($sibling_ids_val) && $sibling_ids_val[0] != 0) ? $sibling_ids_val[0] : 0;
+        
         if ($sibling_id > 0) {
         } else {
             $this->form_validation->set_rules(
@@ -758,7 +770,9 @@ class Student extends Admin_Controller
                     );
                     $fees_discounts = $this->input->post('discount_id');
                     $transport_feemaster = $this->input->post('transport_feemaster_id');
-                    $sibling_id         = $this->input->post('sibling_id');
+                    $sibling_id_post    = $this->input->post('sibling_id');
+                    $sibling_ids        = !empty($sibling_id_post) ? explode(',', $sibling_id_post) : [];
+                    $first_sibling_id   = (!empty($sibling_ids) && $sibling_ids[0] != 0) ? $sibling_ids[0] : 0;
 
                     if ($this->sch_setting_detail->student_form_multi_class == 'enabled') {
                         $multiclass_data = $this->input->post('multiclass');
@@ -778,7 +792,7 @@ class Student extends Admin_Controller
                     }
 
 
-                    $response_json = $this->student_model->addNewMethod($data_insert, $data_setting, $custom_value_array, $student_session, $fee_session_group_id, $fees_discounts, $trns_data_insert, $sibling_id, $multiclass_data);
+                    $response_json = $this->student_model->addNewMethod($data_insert, $data_setting, $custom_value_array, $student_session, $fee_session_group_id, $fees_discounts, $trns_data_insert, $first_sibling_id, $multiclass_data);
 
                     $response = json_decode($response_json, true);
 
@@ -883,7 +897,17 @@ class Student extends Admin_Controller
 
                         $this->mailsmsconf->mailsms('student_login_credential', $student_login_detail);
 
-                        if ($sibling_id > 0) {
+                        if ($first_sibling_id > 0) {
+                            if (count($sibling_ids) > 1) {
+                                $new_student_data = $this->student_model->get($insert_id);
+                                $parent_id = $new_student_data['parent_id'];
+                                for ($i = 1; $i < count($sibling_ids); $i++) {
+                                    $sid = $sibling_ids[$i];
+                                    if ($sid > 0) {
+                                        $this->student_model->add(array('id' => $sid, 'parent_id' => $parent_id));
+                                    }
+                                }
+                            }
                         } else {
                             $parent_login_detail = array('id' => $insert_id, 'credential_for' => 'parent', 'username' => $this->parent_login_prefix . $insert_id, 'password' => $parent_password, 'contact_no' => $this->input->post('guardian_phone'), 'email' => $this->input->post('guardian_email'), 'admission_no' => $data_insert['admission_no'], 'student_session_id' => $student_session_id);
                             $this->mailsmsconf->mailsms('student_login_credential', $parent_login_detail);
@@ -1017,7 +1041,10 @@ class Student extends Admin_Controller
             }
         }
 
-        $sibling_id = $this->input->post('sibling_id');
+        $sibling_id_post = $this->input->post('sibling_id');
+        $sibling_ids_val = !empty($sibling_id_post) ? explode(',', $sibling_id_post) : [];
+        $sibling_id      = (!empty($sibling_ids_val) && $sibling_ids_val[0] != 0) ? $sibling_ids_val[0] : 0;
+
         if ($sibling_id > 0) {
         } else {
             $this->form_validation->set_rules(
@@ -2199,7 +2226,9 @@ class Student extends Admin_Controller
                 $student_id = $this->input->post('student_id');
                 $student    = $this->student_model->get($student_id);
 
-                $sibling_id            = $this->input->post('sibling_id');
+                $sibling_id_post       = $this->input->post('sibling_id');
+                $sibling_ids           = !empty($sibling_id_post) ? explode(',', $sibling_id_post) : [];
+                $first_sibling_id      = (!empty($sibling_ids) && $sibling_ids[0] != 0) ? $sibling_ids[0] : 0;
                 $siblings_counts       = $this->input->post('siblings_counts');
                 $siblings              = $this->student_model->getMySiblings($student['parent_id'], $student_id);
                 $total_siblings        = count($siblings);
@@ -2488,9 +2517,9 @@ class Student extends Admin_Controller
                     }
                 }
 
-                if (isset($siblings_counts) && ($total_siblings == $siblings_counts)) {
+                if (isset($siblings_counts) && ($total_siblings == $siblings_counts) && $first_sibling_id == 0) {
                     //if there is no change in sibling
-                } else if (!isset($siblings_counts) && $sibling_id == 0 && $total_siblings > 0) {
+                } else if (!isset($siblings_counts) && $first_sibling_id == 0 && $total_siblings > 0) {
                     // add for new parent
                     $parent_password = $this->role->get_random_password($chars_min = 6, $chars_max = 6, $use_upper_case = false, $include_numbers = true, $include_special_chars = false);
 
@@ -2505,15 +2534,24 @@ class Student extends Admin_Controller
                         'id'        => $student_id,
                         'parent_id' => 0,
                     );
-                    // $ins_id = $this->user_model->addNewParent($data_parent_login, $update_student);
-                } else if ($sibling_id != 0) {
+                    $ins_id = $this->user_model->addNewParent($data_parent_login, $update_student);
+                } else if ($first_sibling_id != 0) {
                     //join to student with new parent
-                    $student_sibling = $this->student_model->get($sibling_id);
+                    $student_sibling = $this->student_model->get($first_sibling_id);
                     $update_student  = array(
                         'id'        => $student_id,
                         'parent_id' => $student_sibling['parent_id'],
                     );
-                    $student_sibling = $this->student_model->add($update_student);
+                    $this->student_model->add($update_student);
+                    
+                    if (count($sibling_ids) > 1) {
+                        for ($i = 1; $i < count($sibling_ids); $i++) {
+                            $sid = $sibling_ids[$i];
+                            if ($sid > 0) {
+                                $this->student_model->add(array('id' => $sid, 'parent_id' => $student_sibling['parent_id']));
+                            }
+                        }
+                    }
                 } else {
                 }
 

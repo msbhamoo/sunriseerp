@@ -1,19 +1,37 @@
 <?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
-<div class="content-wrapper">
-    <section class="content-header"></section>
+<style type="text/css">
+    .dashboard2-wrapper { background-color: #f4f6f9; font-family: 'Inter', sans-serif; }
+    .d2-card { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #eaeaea; }
+    .d2-title { font-size: 14px; font-weight: 600; color: #8a8a8a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; border-bottom: 1px solid #f4f4f4; padding-bottom: 10px; }
+    .d2-pill { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
+    .pill-success { background: #e6f4ea; color: #1e8e3e; border: 1px solid #ceead6; }
+    .pill-danger { background: #fce8e6; color: #d93025; border: 1px solid #fad2cf; }
+    .btn-sleek { border-radius: 4px; box-shadow: none; border: none; padding: 6px 12px; font-weight: 600; }
+    .action-btn { width: 28px; height: 28px; line-height: 28px; text-align: center; padding: 0; border-radius: 50%; display: inline-block; margin: 0 2px; color: #fff; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: all 0.2s ease; }
+    .action-btn:hover { transform: translateY(-2px); box-shadow: 0 3px 6px rgba(0,0,0,0.15); color: #fff; }
+    .btn-print { background: #3b82f6; }
+    .table>thead>tr>th { border-bottom: 2px solid #eaeaea; color: #666; font-size: 12px; text-transform: uppercase; }
+    .table>tbody>tr>td { vertical-align: middle; border-top: 1px solid #f4f4f4; }
+</style>
+<div class="content-wrapper dashboard2-wrapper">
+    <section class="content-header">
+        <div class="row" style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px;">
+            <div class="col-md-6">
+                <h1 style="margin:0; font-size: 24px; font-weight:700;">Fee Collection List</h1>
+                <small style="color:#888;">Finance Reports / Collection List</small>
+            </div>
+        </div>
+    </section>
     <!-- Main content -->
     <section class="content">
         <div class="row">
             <div class="col-md-12">
-                <div class="box removeboxmius">
-                    <div class="box-header ptbnull"></div>
-                    <div class="box-header ">
-                        <h3 class="box-title"><i class="fa fa-search"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
-                    </div>
+                <div class="d2-card">
+                    <div class="d2-title"><i class="fa fa-search"></i> <?php echo $this->lang->line('select_criteria'); ?></div>
                     <form role="form" action="<?php echo site_url('financereports/collection_list') ?>" method="post" class="">
-                        <div class="box-body row">
+                        <div class="row" style="padding: 10px 0;">
                             <?php echo $this->customlib->getCSRF(); ?>
                             
                             <div class="col-sm-4 col-lg-4 col-md-4">
@@ -45,25 +63,25 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                             </div>
 
                             <div class="form-group">
-                                <div class="col-sm-12">
-                                    <button type="submit" name="search" value="search_filter" id="search_btn" class="btn btn-primary btn-sm checkbox-toggle pull-right"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                                <div class="col-sm-12" style="padding-top: 10px; text-align: right;">
+                                    <button type="submit" name="search" value="search_filter" id="search_btn" class="btn btn-primary btn-sleek"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
                                 </div>
                             </div>
                         </div>
                     </form>
+                </div>
                     <?php if (empty($results)) { ?>
-                        <div class="box-header ptbnull">
-                            <div class="alert alert-info">
+                        <div class="d2-card">
+                            <div class="alert alert-info" style="margin-bottom:0;">
                                <?php echo $this->lang->line('no_record_found'); ?>
                             </div>
                         </div>
                     <?php } else { ?>
-                        <div class="">
-                            <div class="box-header ptbnull"></div>
-                            <div class="box-header ptbnull">
-                                <h3 class="box-title titlefix"><i class="fa fa-money"></i> Fee Collection List</h3>
-                                <div class="box-tools pull-right" style="margin-top: 5px;">
-                                    <input type="text" id="table_filter" class="form-control input-sm" placeholder="Search in list...">
+                        <div class="d2-card">
+                            <div class="d2-title" style="display:flex; justify-content:space-between; align-items:center;">
+                                <span><i class="fa fa-money"></i> Fee Collection List</span>
+                                <div class="box-tools">
+                                    <input type="text" id="table_filter" class="form-control input-sm" placeholder="Search in list..." style="width: 200px; display: inline-block;">
                                 </div>
                             </div>
                             
@@ -74,7 +92,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                 <a class="btn btn-default btn-xs pull-right" id="print" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('print'); ?>" onclick="printDiv()" ><i class="fa fa-print"></i></a>
                                 <a class="btn btn-default btn-xs pull-right" id="btnExport" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('download_excel'); ?>"  onclick="fnExcelReport();"> <i class="fa fa-file-excel-o"></i> </a>
 
-                                <table class="table table-striped table-bordered table-hover " id="headerTable">
+                                <table class="table table-striped table-hover example" style="border: none;" id="headerTable">
                                     <thead class="header">
                                         <tr>
                                             <th>Sr. No.</th>
@@ -87,6 +105,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                             <th>Fees Type</th>
                                             <th style="mso-number-format:'\@'" class="text text-right"><?php echo $this->lang->line('amount'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></th>
                                             <th><?php echo $this->lang->line('mode'); ?></th>
+                                            <th>Transaction Details</th>
                                             <th>Status</th>
                                             <th>Action</th>
                                         </tr>
@@ -125,21 +144,34 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                 </td>                              
                                                 <td><?php echo $this->lang->line(strtolower($collect['payment_mode'])); ?></td>
                                                 <td>
+                                                    <?php 
+                                                        $tx_details = [];
+                                                        if (!empty($collect['reference_no'])) {
+                                                            $tx_details[] = "<strong>Ref:</strong> " . $collect['reference_no'];
+                                                        }
+                                                        if (!empty($collect['description'])) {
+                                                            $tx_details[] = "<strong>Desc:</strong> " . $collect['description'];
+                                                        }
+                                                        echo implode("<br>", $tx_details);
+                                                    ?>
+                                                </td>
+                                                <td>
                                                     <?php if($collect['custom_receipt_status'] == 'Reversed') { ?>
-                                                        <span class="label label-danger">Reverted</span>
+                                                        <span class="d2-pill pill-danger">Reverted</span>
                                                     <?php } else { ?>
-                                                        <span class="label label-success">Received</span>
+                                                        <span class="d2-pill pill-success">Received</span>
                                                     <?php } ?>
                                                 </td>
                                                 <td>
                                                     <?php if($collect['custom_receipt_status'] == 'Collected') { ?>
-                                                        <button class="btn btn-default btn-xs" onclick="printReceipt('<?php echo $collect['id']; ?>', '<?php echo $collect['inv_no']; ?>')" data-toggle="tooltip" title="Print"><i class="fa fa-print"></i></button>
+                                                        <button class="action-btn btn-print" onclick="printReceipt('<?php echo $collect['id']; ?>', '<?php echo $collect['inv_no']; ?>')" data-toggle="tooltip" title="Print"><i class="fa fa-print"></i></button>
                                                     <?php } ?>
                                                 </td>
                                             </tr>                    
                                         <?php } ?>                            
                                         
                                         <tr>
+                                            <td></td>
                                             <td></td>
                                             <td></td>
                                             <td></td>

@@ -17,6 +17,10 @@
             <li class="<?php echo set_SubSubmenu('cbseexam/term'); ?>">
                 <a class="<?php echo set_SubSubmenu('cbseexam/term'); ?>" href="<?php echo site_url('cbseexam/term/index') ?>"><?php echo $this->lang->line('term'); ?></a>
             </li>
+			<?php } if ($this->rbac->hasPrivilege('cbse_exam_design_admit_card', 'can_view')) {  ?>
+            <li class="<?php echo set_SubSubmenu('cbseexam/cbseadmitcard'); ?>">
+                <a class="<?php echo set_SubSubmenu('cbseexam/cbseadmitcard'); ?>" href="<?php echo site_url('cbseexam/cbseadmitcard') ?>">Design Admit Card</a>
+            </li>
 			<?php } ?>
 			
         </ul>

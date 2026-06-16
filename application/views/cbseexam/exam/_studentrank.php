@@ -5,6 +5,7 @@
            ?>
                         <form method="post" action="<?php echo base_url('cbseexam/exam/examrankgenerate') ?>" id="rankgenerate">
                             <input type="hidden" name="exam_id" value="<?php echo set_value('exam_id',$exam_id); ?>">
+                            <input type="hidden" name="rank_type" value="<?php echo isset($rank_type) ? $rank_type : 'combined'; ?>">
 
                             <div class="box-header ptbnull"></div>  
                        

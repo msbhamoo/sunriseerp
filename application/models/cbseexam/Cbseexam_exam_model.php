@@ -91,7 +91,91 @@ class Cbseexam_exam_model extends MY_Model
                 //return $return_value;
             }
         }
-        return $insert_id;
+    }
+
+    public function wizard_save_exam($exam_data, $classes, $sections, $subjects, $assessments, $dates, $start_times, $durations, $room_nos)
+    {
+        $this->db->trans_start();
+        $this->db->trans_strict(false);
+        
+        // Insert exam
+        $this->db->insert('cbse_exams', $exam_data);
+        $exam_id = $this->db->insert_id();
+        
+        // Insert class sections and collect student session ids
+        $all_student_session_ids = [];
+        if (!empty($classes)) {
+            foreach ($classes as $class_id) {
+                if (isset($sections[$class_id])) {
+                    foreach ($sections[$class_id] as $section_id) {
+                        // Find class_section_id
+                        $this->db->select('id');
+                        $this->db->where('class_id', $class_id);
+                        $this->db->where('section_id', $section_id);
+                        $cs_row = $this->db->get('class_sections')->row();
+                        
+                        if ($cs_row) {
+                            $this->db->insert('cbse_exam_class_sections', [
+                                'cbse_exam_id' => $exam_id,
+                                'class_section_id' => $cs_row->id
+                            ]);
+                            
+                            // Get students for this class section
+                            $this->db->select('id');
+                            $this->db->where('session_id', $exam_data['session_id']);
+                            $this->db->where('class_id', $class_id);
+                            $this->db->where('section_id', $section_id);
+                            $students = $this->db->get('student_session')->result();
+                            
+                            foreach ($students as $stu) {
+                                $all_student_session_ids[] = $stu->id;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Auto assign all students from selected class sections
+        if (!empty($all_student_session_ids)) {
+            foreach ($all_student_session_ids as $session_id) {
+                $this->db->insert('cbse_exam_students', [
+                    'cbse_exam_id' => $exam_id,
+                    'student_session_id' => $session_id
+                ]);
+            }
+        }
+        
+        // Insert Subjects and Timetable
+        if (!empty($subjects)) {
+            foreach ($subjects as $key => $subject_id) {
+                if (!empty($subject_id)) {
+                    $assessment_ids = explode(',', $assessments[$key]);
+                    
+                    $this->db->insert('cbse_exam_timetable', [
+                        'cbse_exam_id' => $exam_id,
+                        'subject_id' => $subject_id,
+                        'date' => date('Y-m-d', strtotime($dates[$key])),
+                        'time_from' => $start_times[$key],
+                        'duration' => $durations[$key],
+                        'room_no' => $room_nos[$key]
+                    ]);
+                    $timetable_id = $this->db->insert_id();
+                    
+                    foreach ($assessment_ids as $assess_id) {
+                        if (!empty($assess_id)) {
+                            $this->db->insert('cbse_exam_timetable_assessment_types', [
+                                'cbse_exam_timetable_id' => $timetable_id,
+                                'cbse_exam_assessment_type_id' => $assess_id
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+        
+        $this->db->trans_complete();
+        return $this->db->trans_status();
     }
 
     /*
@@ -234,7 +318,7 @@ class Cbseexam_exam_model extends MY_Model
             return sprintf("'%s'", $val);
         }, $students));
 
-        $sql   = "SELECT  `cbse_exams`.*,cbse_exam_student_subject_rank.rank as subject_rank ,cbse_student_template_rank.rank,cbse_student_template_rank.rank_percentage,cbse_template.gradeexam_id,cbse_template.remarkexam_id,cbse_template.subjectnoteexam_id,cbse_terms.name as cbse_term_name,cbse_terms.term_code as cbse_term_code,cbse_exam_timetable.subject_id,cbse_exam_students.id as cbse_exam_student_id,cbse_exam_students.total_present_days,cbse_exam_students.remark,cbse_exam_assessment_types.name as cbse_exam_assessment_type_name,cbse_exam_assessment_types.id as `cbse_exam_assessment_type_id`,cbse_template_term_exams.weightage,cbse_exam_assessment_types.code as cbse_exam_assessment_type_code,cbse_exam_assessment_types.maximum_marks,cbse_student_subject_marks.id as `cbse_student_subject_marks_id`,cbse_student_subject_marks.marks,cbse_student_subject_marks.is_absent,cbse_student_subject_marks.note,cbse_student_subject_marks.cbse_exam_timetable_id,students.id as `student_id`,students.firstname, students.middlename, students.lastname,students.image,    students.mobileno, students.email ,students.state ,   students.city , students.pincode , students.note, students.religion, students.cast,  students.dob ,students.current_address, students.previous_school,students.roll_no,
+        $sql   = "SELECT  `cbse_exams`.*,cbse_exam_student_subject_rank.rank as subject_rank ,cbse_student_template_rank.rank,cbse_student_template_rank.rank_percentage,cbse_template.gradeexam_id,cbse_template.remarkexam_id,cbse_terms.name as cbse_term_name,cbse_terms.term_code as cbse_term_code,cbse_exam_timetable.subject_id,cbse_exam_students.id as cbse_exam_student_id,cbse_exam_students.total_present_days,cbse_exam_students.remark,cbse_exam_assessment_types.name as cbse_exam_assessment_type_name,cbse_exam_assessment_types.id as `cbse_exam_assessment_type_id`,cbse_template_term_exams.weightage,cbse_exam_assessment_types.code as cbse_exam_assessment_type_code,cbse_exam_assessment_types.maximum_marks,cbse_student_subject_marks.id as `cbse_student_subject_marks_id`,cbse_student_subject_marks.marks,cbse_student_subject_marks.is_absent,cbse_student_subject_marks.note,cbse_student_subject_marks.cbse_exam_timetable_id,students.id as `student_id`,students.firstname, students.middlename, students.lastname,students.image,    students.mobileno, students.email ,students.state ,   students.city , students.pincode , students.note, students.religion, students.cast,  students.dob ,students.current_address, students.previous_school,students.roll_no,
         students.guardian_is,students.parent_id,students.admission_no,
         students.permanent_address,students.category_id,students.adhar_no,students.samagra_id,students.bank_account_no,students.bank_name, students.ifsc_code , students.guardian_name , students.father_pic ,students.height ,students.weight,students.measurement_date, students.mother_pic , students.guardian_pic , students.guardian_relation,students.guardian_phone,students.guardian_address,students.is_active ,students.created_at ,students.updated_at,students.father_name,students.father_phone,students.blood_group,students.school_house_id,students.father_occupation,students.mother_name,students.mother_phone,students.mother_occupation,students.guardian_occupation,students.gender,students.guardian_is,students.rte,students.guardian_email,subjects.name as subject_name,subjects.code as `subject_code`,classes.id AS `class_id`,classes.class,sections.id AS `section_id`,sections.section,student_session.id as `student_session_id` FROM `cbse_template` INNER JOIN cbse_template_term_exams on cbse_template_term_exams.cbse_template_id=cbse_template.id INNER JOIN `cbse_exams` on cbse_exams.id=cbse_template_term_exams.cbse_exam_id INNER JOIN cbse_exam_timetable on cbse_exam_timetable.cbse_exam_id=cbse_exams.id INNER JOIN cbse_exam_students on cbse_exam_students.cbse_exam_id=cbse_exams.id INNER JOIN cbse_exam_assessment_types on cbse_exam_assessment_types.cbse_exam_assessment_id=cbse_exams.cbse_exam_assessment_id INNER JOIN cbse_terms on cbse_terms.id=cbse_exams.cbse_term_id left join cbse_student_subject_marks on cbse_student_subject_marks.cbse_exam_timetable_id =cbse_exam_timetable.id and cbse_student_subject_marks.cbse_exam_student_id= cbse_exam_students.id and cbse_student_subject_marks.cbse_exam_assessment_type_id=cbse_exam_assessment_types.id  INNER JOIN student_session on student_session.id=cbse_exam_students.student_session_id INNER join students on students.id =student_session.student_id  INNER JOIN subjects on subjects.id=cbse_exam_timetable.subject_id INNER join  classes on student_session.class_id = classes.id INNER join  sections on sections.id = student_session.section_id left join cbse_student_template_rank on cbse_student_template_rank.cbse_template_id=cbse_template.id and cbse_student_template_rank.student_session_id=student_session.id LEFT JOIN cbse_exam_student_subject_rank on cbse_exam_student_subject_rank.cbse_template_id=cbse_template.id and cbse_exam_student_subject_rank.student_session_id=student_session.id and cbse_exam_student_subject_rank.subject_id=subjects.id WHERE cbse_template.id=" . $this->db->escape($cbse_template_id) . " and cbse_exams.`id` = " . $this->db->escape($cbse_exam_id) . " and cbse_exams.session_id=" . $this->current_session . " and student_session.id in (" . $students . ")";
 
@@ -272,7 +356,7 @@ class Cbseexam_exam_model extends MY_Model
         $students = implode(', ', array_map(function ($val) {
             return sprintf("'%s'", $val);
         }, $students));
-        $sql   = "SELECT  `cbse_exams`.*,cbse_exam_student_subject_rank.rank as subject_rank ,cbse_student_template_rank.rank,cbse_student_template_rank.rank_percentage,cbse_template.gradeexam_id,cbse_template.remarkexam_id,cbse_template.subjectnoteexam_id,cbse_terms.name as cbse_term_name,cbse_terms.term_code as cbse_term_code,cbse_exam_timetable.subject_id,cbse_exam_students.id as cbse_exam_student_id,cbse_exam_students.total_present_days,cbse_exam_students.remark,cbse_exam_assessment_types.name as cbse_exam_assessment_type_name,cbse_exam_assessment_types.id as `cbse_exam_assessment_type_id`,cbse_template_term_exams.weightage,cbse_exam_assessment_types.code as cbse_exam_assessment_type_code,cbse_exam_assessment_types.maximum_marks,cbse_student_subject_marks.id as `cbse_student_subject_marks_id`,cbse_student_subject_marks.marks,cbse_student_subject_marks.is_absent,cbse_student_subject_marks.note,cbse_student_subject_marks.cbse_exam_timetable_id,students.id as `student_id`,students.firstname, students.middlename, students.lastname,students.image,    students.mobileno, students.email ,students.state ,   students.city , students.pincode , students.note, students.religion, students.cast,  students.dob ,students.current_address, students.previous_school,students.roll_no,
+        $sql   = "SELECT  `cbse_exams`.*,cbse_exam_student_subject_rank.rank as subject_rank ,cbse_student_template_rank.rank,cbse_student_template_rank.rank_percentage,cbse_template.gradeexam_id,cbse_template.remarkexam_id,cbse_terms.name as cbse_term_name,cbse_terms.term_code as cbse_term_code,cbse_exam_timetable.subject_id,cbse_exam_students.id as cbse_exam_student_id,cbse_exam_students.total_present_days,cbse_exam_students.remark,cbse_exam_assessment_types.name as cbse_exam_assessment_type_name,cbse_exam_assessment_types.id as `cbse_exam_assessment_type_id`,cbse_template_term_exams.weightage,cbse_exam_assessment_types.code as cbse_exam_assessment_type_code,cbse_exam_assessment_types.maximum_marks,cbse_student_subject_marks.id as `cbse_student_subject_marks_id`,cbse_student_subject_marks.marks,cbse_student_subject_marks.is_absent,cbse_student_subject_marks.note,cbse_student_subject_marks.cbse_exam_timetable_id,students.id as `student_id`,students.firstname, students.middlename, students.lastname,students.image,    students.mobileno, students.email ,students.state ,   students.city , students.pincode , students.note, students.religion, students.cast,  students.dob ,students.current_address, students.previous_school,students.roll_no,
             students.guardian_is,students.parent_id,students.admission_no,
             students.permanent_address,students.category_id,students.adhar_no,students.samagra_id,students.bank_account_no,students.bank_name, students.ifsc_code , students.guardian_name , students.father_pic ,students.height ,students.weight,students.measurement_date, students.mother_pic , students.guardian_pic , students.guardian_relation,students.guardian_phone,students.guardian_address,students.is_active ,students.created_at ,students.updated_at,students.father_name,students.father_phone,students.blood_group,students.school_house_id,students.father_occupation,students.mother_name,students.mother_phone,students.mother_occupation,students.guardian_occupation,students.gender,students.guardian_is,students.rte,students.guardian_email,subjects.name as subject_name,subjects.code as `subject_code`,classes.id AS `class_id`,classes.class,sections.id AS `section_id`,sections.section,student_session.id as `student_session_id`,cbse_exam_timetable_assessment_types.id as cbse_exam_timetable_assessment_type_id FROM `cbse_template` INNER JOIN cbse_template_term_exams on cbse_template_term_exams.cbse_template_id=cbse_template.id INNER JOIN `cbse_exams` on cbse_exams.id=cbse_template_term_exams.cbse_exam_id INNER JOIN cbse_exam_timetable on cbse_exam_timetable.cbse_exam_id=cbse_exams.id INNER JOIN cbse_exam_students on cbse_exam_students.cbse_exam_id=cbse_exams.id INNER JOIN cbse_exam_assessment_types on cbse_exam_assessment_types.cbse_exam_assessment_id=cbse_exams.cbse_exam_assessment_id INNER JOIN cbse_terms on cbse_terms.id=cbse_exams.cbse_term_id left join cbse_student_subject_marks on cbse_student_subject_marks.cbse_exam_timetable_id =cbse_exam_timetable.id and cbse_student_subject_marks.cbse_exam_student_id= cbse_exam_students.id and cbse_student_subject_marks.cbse_exam_assessment_type_id=cbse_exam_assessment_types.id  INNER JOIN student_session on student_session.id=cbse_exam_students.student_session_id INNER join students on students.id =student_session.student_id  INNER JOIN subjects on subjects.id=cbse_exam_timetable.subject_id INNER join  classes on student_session.class_id = classes.id INNER join  sections on sections.id = student_session.section_id left join cbse_student_template_rank on cbse_student_template_rank.cbse_template_id=cbse_template.id and cbse_student_template_rank.student_session_id=student_session.id LEFT JOIN cbse_exam_student_subject_rank on cbse_exam_student_subject_rank.cbse_template_id=cbse_template.id and cbse_exam_student_subject_rank.student_session_id=student_session.id and cbse_exam_student_subject_rank.subject_id=subjects.id LEFT join cbse_exam_timetable_assessment_types on cbse_exam_timetable_assessment_types.cbse_exam_timetable_id= cbse_exam_timetable.id and cbse_exam_timetable_assessment_types.cbse_exam_assessment_type_id=cbse_exam_assessment_types.id WHERE cbse_template.id=" . $this->db->escape($cbse_template_id) . " and student_session.id in (" . $students . ") order by id asc";
 
@@ -308,7 +392,7 @@ class Cbseexam_exam_model extends MY_Model
             return sprintf("'%s'", $val);
         }, $students));
 
-        $sql   = "SELECT  `cbse_exams`.*,cbse_student_template_rank.rank,cbse_student_template_rank.rank_percentage,cbse_template.id as `cbse_template_id`,cbse_template.gradeexam_id,cbse_template.remarkexam_id,cbse_template.subjectnoteexam_id,cbse_template_terms.weightage as `cbse_template_terms_weightage`,cbse_terms.name as cbse_term_name,cbse_terms.term_code as cbse_term_code,cbse_exam_timetable.subject_id,cbse_exam_students.id as cbse_exam_student_id,cbse_exam_students.total_present_days,cbse_exam_students.remark,cbse_exam_assessment_types.name as cbse_exam_assessment_type_name,cbse_exam_assessment_types.id as `cbse_exam_assessment_type_id`,cbse_exam_assessment_types.code as cbse_exam_assessment_type_code,cbse_exam_assessment_types.maximum_marks,cbse_exam_assessment_types.maximum_marks,cbse_student_subject_marks.id as `cbse_student_subject_marks_id`,cbse_student_subject_marks.marks,cbse_student_subject_marks.is_absent,cbse_student_subject_marks.note,cbse_student_subject_marks.cbse_exam_timetable_id,students.id as `student_id`,students.firstname, students.middlename, students.lastname,students.image,    students.mobileno, students.email ,students.state ,   students.city , students.pincode , students.note as student_note, students.religion, students.cast,  students.dob ,students.current_address, students.previous_school,students.roll_no,
+        $sql   = "SELECT  `cbse_exams`.*,cbse_student_template_rank.rank,cbse_student_template_rank.rank_percentage,cbse_template.id as `cbse_template_id`,cbse_template.gradeexam_id,cbse_template.remarkexam_id,cbse_template_terms.weightage as `cbse_template_terms_weightage`,cbse_terms.name as cbse_term_name,cbse_terms.term_code as cbse_term_code,cbse_exam_timetable.subject_id,cbse_exam_students.id as cbse_exam_student_id,cbse_exam_students.total_present_days,cbse_exam_students.remark,cbse_exam_assessment_types.name as cbse_exam_assessment_type_name,cbse_exam_assessment_types.id as `cbse_exam_assessment_type_id`,cbse_exam_assessment_types.code as cbse_exam_assessment_type_code,cbse_exam_assessment_types.maximum_marks,cbse_exam_assessment_types.maximum_marks,cbse_student_subject_marks.id as `cbse_student_subject_marks_id`,cbse_student_subject_marks.marks,cbse_student_subject_marks.is_absent,cbse_student_subject_marks.note,cbse_student_subject_marks.cbse_exam_timetable_id,students.id as `student_id`,students.firstname, students.middlename, students.lastname,students.image,    students.mobileno, students.email ,students.state ,   students.city , students.pincode , students.note as student_note, students.religion, students.cast,  students.dob ,students.current_address, students.previous_school,students.roll_no,
             students.guardian_is,students.parent_id,students.admission_no,
             students.permanent_address,students.category_id,students.adhar_no,students.samagra_id,students.bank_account_no,students.bank_name, students.ifsc_code , students.guardian_name , students.father_pic ,students.height ,students.weight,students.measurement_date, students.mother_pic , students.guardian_pic , students.guardian_relation,students.guardian_phone,students.guardian_address,students.is_active ,students.created_at ,students.updated_at,students.father_name,students.father_phone,students.blood_group,students.school_house_id,students.father_occupation,students.mother_name,students.mother_phone,students.mother_occupation,students.guardian_occupation,students.gender,students.guardian_is,students.rte,students.guardian_email,subjects.name as subject_name,subjects.code as `subject_code`,classes.id AS `class_id`,classes.class,sections.id AS `section_id`,sections.section,student_session.id as `student_session_id`,cbse_template_terms.weightage,cbse_exam_student_subject_rank.rank as subject_rank,cbse_exam_timetable_assessment_types.id as cbse_exam_timetable_assessment_type_id FROM `cbse_template` 
             INNER JOIN cbse_template_terms on cbse_template_terms.cbse_template_id=cbse_template.id 
@@ -530,7 +614,6 @@ class Cbseexam_exam_model extends MY_Model
         $this->db->join('cbse_student_exam_ranks', 'cbse_student_exam_ranks.student_session_id = student_session.id and cbse_student_exam_ranks.cbse_exam_id=' . $exam_id, 'left');
         $this->db->where('student_session.session_id', $this->current_session);
         $this->db->where('students.is_active', 'yes');
-        $this->db->order_by('cbse_student_exam_ranks.rank');
         $query = $this->db->get();
         return $query->result();
     }
@@ -908,18 +991,66 @@ class Cbseexam_exam_model extends MY_Model
            return $this->db->group_by('cbse_exam_students.id')->get()->result_array();
     }
 
-    public function get_markexamstudents($timetable_id)
+    public function get_markexamstudents($timetable_id, $class_id = null, $section_id = null)
     {
         $result = array();
-        $student_data = $this->db->select('students.*,cbse_exam_students.id as exam_student_id,cbse_exam_timetable.id as cbse_exam_timetable_id,cbse_exam_students.roll_no as `exam_roll_no`,classes.class as class_name,sections.section as section_name')
+        
+        $this->db->select('students.*,cbse_exam_students.id as exam_student_id,cbse_exam_timetable.id as cbse_exam_timetable_id,cbse_exam_students.roll_no as `exam_roll_no`,classes.class as class_name,sections.section as section_name')
             ->from('cbse_exam_students')
             ->join('student_session', 'student_session.id=cbse_exam_students.student_session_id')
             ->join('classes', 'student_session.class_id = classes.id')
             ->join('sections', 'sections.id = student_session.section_id')
             ->join('students', 'students.id=student_session.student_id')
             ->join('cbse_exam_timetable', 'cbse_exam_timetable.cbse_exam_id=cbse_exam_students.cbse_exam_id')
-            ->where('cbse_exam_timetable.id', $timetable_id)
-            ->get()->result_array();
+            ->where('cbse_exam_timetable.id', $timetable_id);
+
+        if ($class_id) {
+            $this->db->where('classes.id', $class_id);
+        }
+        if ($section_id) {
+            $this->db->where('sections.id', $section_id);
+        }
+
+        $student_data = $this->db->get()->result_array();
+
+        foreach ($student_data as $key => $value) {
+            $cbse_student_subject_marks = $this->db->select('cbse_student_subject_marks.*')
+                ->from('cbse_student_subject_marks')
+                ->where(array('cbse_student_subject_marks.cbse_exam_timetable_id' => $value['cbse_exam_timetable_id'], ' `cbse_student_subject_marks`.`cbse_exam_student_id` ' => $value['exam_student_id']))
+                ->get()
+                ->result_array();
+            $student_subject_marks = array();
+
+            foreach ($cbse_student_subject_marks as $mkey => $mvalue) {
+                $student_subject_marks[$mvalue['cbse_exam_assessment_type_id']] = $mvalue;
+            }
+            $result[$value['id']] = $value;
+            $result[$value['id']]['marks'] = $student_subject_marks;
+        }
+        return $result;
+    }
+
+    public function get_markexamstudents_multi($timetable_id, $class_ids = array(), $section_ids = array())
+    {
+        $result = array();
+        
+        $this->db->select('students.*,cbse_exam_students.id as exam_student_id,cbse_exam_timetable.id as cbse_exam_timetable_id,cbse_exam_students.roll_no as `exam_roll_no`,classes.class as class_name,sections.section as section_name')
+            ->from('cbse_exam_students')
+            ->join('student_session', 'student_session.id=cbse_exam_students.student_session_id')
+            ->join('classes', 'student_session.class_id = classes.id')
+            ->join('sections', 'sections.id = student_session.section_id')
+            ->join('students', 'students.id=student_session.student_id')
+            ->join('cbse_exam_timetable', 'cbse_exam_timetable.cbse_exam_id=cbse_exam_students.cbse_exam_id')
+            ->where('cbse_exam_timetable.id', $timetable_id);
+
+        if (!empty($class_ids)) {
+            $this->db->where_in('classes.id', $class_ids);
+        }
+        if (!empty($section_ids)) {
+            $this->db->where_in('sections.id', $section_ids);
+        }
+
+        $student_data = $this->db->get()->result_array();
 
         foreach ($student_data as $key => $value) {
             $cbse_student_subject_marks = $this->db->select('cbse_student_subject_marks.*')
@@ -1018,8 +1149,12 @@ class Cbseexam_exam_model extends MY_Model
                 $insert_id = $this->db->insert_id();
                 $insert_ids[] = $insert_id;
             }
-            if (!empty($insert_ids)) {
+            
+            $submitted_student_ids = array_unique(array_column($result_mark, 'cbse_exam_student_id'));
+            
+            if (!empty($insert_ids) && !empty($submitted_student_ids)) {
                 $this->db->where('cbse_exam_timetable_id', $cbse_exam_timetable_id);
+                $this->db->where_in('cbse_exam_student_id', $submitted_student_ids);
                 $this->db->where_not_in('id', $insert_ids);
                 $this->db->delete('cbse_student_subject_marks');
             }

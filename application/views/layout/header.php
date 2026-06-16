@@ -381,16 +381,7 @@
                     <div class="col-lg-8 col-md-9 col-sm-10 col-xs-8">
                         <div class="pull-right">
                             <?php if ($this->rbac->hasPrivilege('student', 'can_view')) {?>
-                                <form id="header_search_form" class="navbar-form navbar-left search-form" role="search"  action="<?php echo site_url('admin/admin/search'); ?>" method="POST" style="position:relative;">
-                                    <?php echo $this->customlib->getCSRF(); ?>
-                                    <div class="input-group">
-                                        <input type="text" value="<?php echo set_value('search_text1'); ?>" name="search_text1" id="search_text1" class="form-control search-form search-form3" placeholder="<?php echo $this->lang->line('search_by_student_name'); ?>" autocomplete="off">
-                                        <span class="input-group-btn">
-                                            <button type="submit" name="search" id="search-btn" onclick="getstudentlist()" style="" class="btn btn-flat topsidesearchbtn"><i class="fa fa-search"></i></button>
-                                        </span>
-                                    </div>
-                                    <div id="ajax_search_results_container" class="ajax-search-results"></div>
-                                </form>
+
                             <?php }?>
                             <div class="navbar-custom-menu">
                                 <?php if ($this->rbac->hasPrivilege('currency_switcher', 'can_view')) {
@@ -421,18 +412,24 @@
                                 <ul class="nav navbar-nav headertopmenu">
  <!-- Dark/Light Mode Toggle Button -->                             
 	
+                                    <?php if ($this->rbac->hasPrivilege('student', 'can_view')) {?>
+                                        <li class="cal15" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('search'); ?>">
+                                            <a href="#" data-toggle="modal" data-target="#globalSearchModal"><i class="icon-search" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i></a>
+                                        </li>
+                                    <?php }?>
+                                    
                                     <?php                                      
 									if ($this->rbac->hasPrivilege('multi_branch_switch_branch', 'can_view')) {								
                                         if (($this->module_lib->hasModule('multi_branch') && $this->module_lib->hasActive('multi_branch')) || $this->db->multi_branch) { ?>
                                     
-                                            <li class="cal15" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('switch_branch'); ?>"><a href="#" data-toggle="modal" data-target="#multiBranchSwitchModal"><i class="fa fa-exchange" aria-hidden="true"></i></a></li>
+                                            <li class="cal15" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('switch_branch'); ?>"><a href="#" data-toggle="modal" data-target="#multiBranchSwitchModal"><i class="icon-arrow-right-left" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;" aria-hidden="true"></i></a></li>
                                     
                                     <?php } 
                                     }?>
                                     
                                     <?php if ($this->rbac->hasPrivilege('quick_session_change', 'can_view')) { ?>
                                             <li class="cal15" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('current_session') . ": " . $this->setting_model->getCurrentSessionName(); ?>">
-                                                <a href="#" data-toggle="modal" data-target="#sessionModal"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+                                                <a href="#" data-toggle="modal" data-target="#sessionModal"><i class="icon-pencil" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;" aria-hidden="true"></i></a>
                                             </li>
                                     <?php } ?>
  
@@ -441,7 +438,7 @@
 if ($this->module_lib->hasActive('calendar_to_do_list')) {
     if ($this->rbac->hasPrivilege('calendar_to_do_list', 'can_view')) {
         ?>
-                                            <li class="cal15 d-sm-none"><a data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('calendar') ?>" href="<?php echo base_url() ?>admin/calendar/events" ><i class="fa fa-calendar"></i></a>
+                                            <li class="cal15 d-sm-none"><a data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('calendar') ?>" href="<?php echo base_url() ?>admin/calendar/events" ><i class="icon-calendar" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i></a>
 
                                             </li>
                                             <?php
@@ -454,7 +451,7 @@ if ($this->module_lib->hasActive('calendar_to_do_list')) {
         ?>
                                             <li class="dropdown" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('task') ?>">
                                                 <a href="#"  class="dropdown-toggle todoicon" data-toggle="dropdown">
-                                                    <i class="fa fa-check-square-o"></i>
+                                                    <i class="icon-check-square" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i>
                                                     <?php
 $userdata = $this->customlib->getUserData();
         $count    = $this->customlib->countincompleteTask($userdata["id"],$userdata["role_id"]);
@@ -482,14 +479,14 @@ $tasklist = $this->customlib->getincompleteTask($userdata["id"],$userdata["role_
                                                 </ul>
                                             </li>
                                         <li class="dropdown d-lg-none d-sm-block ellipsis-px-3">
-                                        <a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-ellipsis-v"></i>
+                                        <a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="icon-more-vertical" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i>
                                         </a>
                                         <ul class="dropdown-menu min-w-full sm-drop-down">
-                                          <li><a href="<?php echo base_url() ?>admin/calendar/events"><i class="fa fa-calendar"></i></a></li>
+                                          <li><a href="<?php echo base_url() ?>admin/calendar/events"><i class="icon-calendar" style="margin-right: 5px;"></i></a></li>
                                           <?php 
                                           if ($this->module_lib->hasActive('chat')) {
                                             if ($this->rbac->hasPrivilege('chat', 'can_view')) { ?>
-                                          <li><a href="<?php echo base_url() ?>admin/chat"><i class="fa fa-comment-o"></i></a></li>
+                                          <li><a href="<?php echo base_url() ?>admin/chat"><i class="icon-message-circle" style="margin-right: 5px;"></i></a></li>
                                       <?php } } ?>
                                          
 
@@ -542,7 +539,7 @@ if ($this->module_lib->hasActive('chat')) {
         ?>
     <li class="cal15 d-sm-none">
 
-        <a data-placement="bottom" data-toggle="tooltip" title="" href="<?php echo base_url() ?>admin/chat" data-original-title="<?php echo $this->lang->line('chat') ?>" class="todoicon"><i class="fa fa-comment-o"> <span class="total_chat_msg text-white badge bg-red topbadges"><?php
+        <a data-placement="bottom" data-toggle="tooltip" title="" href="<?php echo base_url() ?>admin/chat" data-original-title="<?php echo $this->lang->line('chat') ?>" class="todoicon"><i class="icon-message-circle" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"> <span class="total_chat_msg text-white badge bg-red topbadges"><?php
         $msg_count=$this->customlib->get_chat_msg_count();
         echo  count($msg_count);
     ?></span></i></a>
@@ -626,21 +623,21 @@ if (!empty($image)) {
                                                     <div class="sstopuser-test">
                                                         <h4 class="text-capitalize mb0"><a href="<?php echo base_url() . "admin/staff/profile/" . $id ?>"><?php echo $this->customlib->getAdminSessionUserName(); ?></a></h4>
                                                         <h5 class="mt0"><?php echo $role; ?></h5>
-                                                        <a href="<?php echo base_url(); ?>admin/admin/changepass"><i class="fa fa-key"></i> <?php echo $this->lang->line('password'); ?></a>
+                                                        <a href="<?php echo base_url(); ?>admin/admin/changepass"><i class="icon-key" style="margin-right: 5px;"></i> <?php echo $this->lang->line('password'); ?></a>
                                                     </div>
                                                     <div class="divider"></div>
                                                     <div class="sspass">
                                                         <?php
                                                         $getfrontcmssetting =$this->customlib->getfrontcmssetting();
                                                         if($getfrontcmssetting->is_active_front_cms){  ?>
-                                                        <a style="" href="<?php echo base_url(); ?>" target="_blank" class="forgot"> <i class="fa fa-empire"></i>
+                                                        <a style="" href="<?php echo base_url(); ?>" target="_blank" class="forgot"> <i class="icon-globe" style="margin-right: 5px;"></i>
                                                         <?php echo $this->lang->line('front_site'); ?>
                                                         </a>
 
                                                         <?php } ?>
                                                     
 
-                                                        <a href="<?php echo base_url(); ?>site/logout"><i class="fa fa-sign-out fa-fw"></i><?php echo $this->lang->line('logout'); ?></a>
+                                                        <a href="<?php echo base_url(); ?>site/logout"><i class="icon-log-out" style="margin-right: 5px;"></i><?php echo $this->lang->line('logout'); ?></a>
                                                     </div>
                                                 </div><!--./sstopuser--></li>
                                         </ul>
@@ -666,15 +663,301 @@ if (!empty($image)) {
         });
     }
 </script>
+<!-- Global Search Modal -->
+<style>
+.global-search-modal .modal-content {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.15);
+    font-family: 'Inter', sans-serif;
+}
+.global-search-modal .modal-header {
+    background-color: var(--bs-primary, #f0852e);
+    border-bottom: 1px solid #eaeaea;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.global-search-modal .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+}
+.global-search-modal .close {
+    color: #fff;
+    opacity: 0.9;
+    font-size: 22px;
+    font-weight: 400;
+    margin-top: -2px;
+    text-shadow: none;
+}
+.global-search-modal .close:hover {
+    color: #fff;
+    opacity: 1;
+}
+.global-search-modal .modal-body {
+    background: #f4f6f9;
+    padding: 25px 20px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+.gs-input-group {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border-radius: 6px;
+    display: flex;
+    width: 100%;
+}
+.gs-input {
+    border: 1px solid #eaeaea;
+    height: 46px;
+    border-radius: 6px 0 0 6px !important;
+    font-size: 15px;
+    box-shadow: none !important;
+    flex: 1;
+    padding: 10px 15px;
+}
+.gs-input:focus {
+    border-color: var(--bs-primary, #f0852e);
+    outline: none;
+}
+.gs-btn {
+    background-color: var(--bs-primary, #f0852e);
+    color: #fff;
+    border: none;
+    height: 46px;
+    width: 50px;
+    border-radius: 0 6px 6px 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: background 0.2s;
+}
+.gs-btn:hover {
+    opacity: 0.9;
+    color: #fff;
+}
+.gs-results {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    border: 1px solid #eaeaea;
+    margin-top: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+    position: absolute;
+    width: 100%;
+    z-index: 1050;
+    display: none;
+}
+.gs-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #eaeaea;
+    margin-top: 25px;
+    display: none;
+}
+.gs-card-img-wrapper {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 3px solid #f4f6f9;
+    overflow: hidden;
+    margin: 0 auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.gs-card-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.gs-table {
+    width: 100%;
+    margin-bottom: 0;
+}
+.gs-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.gs-table tr:last-child td {
+    border-bottom: none;
+}
+.gs-card-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8a8a8a;
+    text-transform: uppercase;
+    width: 35%;
+}
+.gs-card-val {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2c2c2c;
+}
+.gs-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
+}
+.gs-action-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #ccc;
+    background: #fff;
+    color: #333;
+    transition: all 0.2s;
+    text-decoration: none !important;
+}
+.gs-action-btn:hover { 
+    background: #f5f5f5; 
+    color: #333;
+}
+.gs-action-btn.primary { 
+    background-color: var(--bs-primary, #f0852e);
+    color: #fff; 
+    border: none;
+}
+.gs-action-btn.primary:hover { 
+    opacity: 0.9;
+    color: #fff;
+}
+.modal-search-item {
+    display: flex;
+    padding: 12px 15px;
+    border-bottom: 1px solid #eaeaea;
+    color: #333;
+    text-decoration: none !important;
+    align-items: center;
+    transition: background 0.2s;
+}
+.modal-search-item:hover {
+    background: #f8f9fa;
+    color: var(--bs-primary, #f0852e);
+}
+.modal-search-item:last-child {
+    border-bottom: none;
+}
+</style>
+
+<div class="modal fade global-search-modal" id="globalSearchModal" tabindex="-1" role="dialog" aria-labelledby="globalSearchModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="globalSearchModalLabel">Search Student</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <form id="global_search_form" action="<?php echo site_url('admin/admin/search'); ?>" method="POST" style="margin:0;">
+            <?php echo $this->customlib->getCSRF(); ?>
+            <div style="position:relative;">
+                <div class="gs-input-group">
+                    <input type="text" value="" name="search_text1" id="modal_search_text" class="gs-input" placeholder="Search by Name, Admission No, etc." autocomplete="off" autofocus>
+                    <button type="submit" name="search" class="gs-btn btn-primary"><i class="fa fa-search"></i></button>
+                </div>
+                <div id="modal_ajax_search_results_container" class="gs-results"></div>
+            </div>
+        </form>
+
+        <div id="modal_student_details" class="gs-card">
+            <div class="row" style="margin:0; display:flex; align-items:center;">
+                <div class="col-sm-4 text-center" style="padding: 15px;">
+                    <div class="gs-card-img-wrapper">
+                        <img id="detail_student_image" src="">
+                    </div>
+                </div>
+                <div class="col-sm-8" style="padding: 15px;">
+                    <table class="gs-table">
+                        <tbody>
+                            <tr>
+                                <td class="gs-card-label">Name</td>
+                                <td id="detail_student_name" class="gs-card-val"></td>
+                            </tr>
+                            <tr>
+                                <td class="gs-card-label">Admission No</td>
+                                <td id="detail_student_admission" class="gs-card-val"></td>
+                            </tr>
+                            <tr>
+                                <td class="gs-card-label">Class</td>
+                                <td id="detail_student_class" class="gs-card-val"></td>
+                            </tr>
+                            <tr>
+                                <td class="gs-card-label">Father Name</td>
+                                <td id="detail_student_father" class="gs-card-val" style="font-weight: 500;"></td>
+                            </tr>
+                            <tr>
+                                <td class="gs-card-label">Mother Name</td>
+                                <td id="detail_student_mother" class="gs-card-val" style="font-weight: 500;"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="gs-fee-summary" style="margin-top: 20px; border-top: 1px solid #f0f0f0; padding-top: 15px;">
+                <h5 style="font-weight: 600; color: #2c2c2c; margin-bottom: 15px; font-size: 14px;">Fees Summary</h5>
+                <table class="gs-table" style="font-size: 13px;">
+                    <thead>
+                        <tr>
+                            <th style="color: #8a8a8a; text-transform: uppercase; font-size: 11px; padding: 8px; border-bottom: 1px solid #eaeaea;">Fee Head</th>
+                            <th style="color: #8a8a8a; text-transform: uppercase; font-size: 11px; padding: 8px; border-bottom: 1px solid #eaeaea;">Total Fees</th>
+                            <th style="color: #8a8a8a; text-transform: uppercase; font-size: 11px; padding: 8px; border-bottom: 1px solid #eaeaea;">Collected</th>
+                            <th style="color: #8a8a8a; text-transform: uppercase; font-size: 11px; padding: 8px; border-bottom: 1px solid #eaeaea;">Due</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detail_student_fees_body">
+                        <tr><td colspan="4" class="text-center" style="padding: 15px;"><i class="fa fa-spinner fa-spin"></i> Loading fees...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="gs-actions">
+                <a id="btn_view_profile" href="#" class="gs-action-btn"><i class="fa fa-user"></i> View Profile</a>
+                <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_add')) { ?>
+                <a id="btn_collect_fee" href="#" class="gs-action-btn btn-primary primary"><i class="fa fa-money"></i> Collect Fee</a>
+                <?php } ?>
+            </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 $(document).ready(function() {
     let searchTimeout;
-    const searchInput = $('#search_text1');
-    const resultsContainer = $('#ajax_search_results_container');
+    const searchInput = $('#modal_search_text');
+    const resultsContainer = $('#modal_ajax_search_results_container');
+    const studentDetailsContainer = $('#modal_student_details');
+    let searchDataCache = {};
+
+    // Focus input when modal opens
+    $('#globalSearchModal').on('shown.bs.modal', function () {
+        $('#modal_search_text').focus();
+    });
+
+    // Reset when modal closes
+    $('#globalSearchModal').on('hidden.bs.modal', function () {
+        searchInput.val('');
+        resultsContainer.empty().hide();
+        studentDetailsContainer.hide();
+    });
 
     searchInput.on('keyup', function() {
         clearTimeout(searchTimeout);
         const query = $(this).val().trim();
+        studentDetailsContainer.hide(); // Hide details when typing again
 
         if (query.length >= 2) {
             searchTimeout = setTimeout(function() {
@@ -682,8 +965,7 @@ $(document).ready(function() {
                     search_text: query
                 };
                 
-                // Automatically capture CSRF from the form if present
-                var csrfInput = $('#header_search_form input[type="hidden"]');
+                var csrfInput = $('#global_search_form input[type="hidden"]');
                 if (csrfInput.length > 0) {
                     var csrfName = csrfInput.attr('name');
                     var csrfHash = csrfInput.val();
@@ -700,7 +982,10 @@ $(document).ready(function() {
                     success: function(response) {
                         resultsContainer.empty().show();
                         if (response.status === 'success' && response.data && response.data.length > 0) {
+                            searchDataCache = {}; // Reset cache
                             response.data.forEach(function(student) {
+                                searchDataCache[student.id] = student; // Store for later use
+                                
                                 const fatherName = student.father_name ? student.father_name : 'N/A';
                                 const motherName = student.mother_name ? student.mother_name : 'N/A';
                                 const className = student.class ? student.class : '';
@@ -708,7 +993,7 @@ $(document).ready(function() {
                                 const admNo = student.admission_no ? student.admission_no : '';
 
                                 const html = `
-                                    <a href="${baseurl}student/view/${student.id}" class="ajax-search-item">
+                                    <a href="#" data-student-id="${student.id}" class="ajax-search-item modal-search-item">
                                         <img src="${student.image}" alt="Student" class="ajax-search-avatar">
                                         <div class="ajax-search-details">
                                             <div class="ajax-search-col">
@@ -720,7 +1005,7 @@ $(document).ready(function() {
                                                 <span style="display:flex; align-items:center;"><span class="parent-badge badge-mother">M</span> ${motherName}</span>
                                             </div>
                                         </div>
-                                        <i class="fa fa-share ajax-search-icon"></i>
+                                        <i class="fa fa-chevron-right ajax-search-icon"></i>
                                     </a>
                                 `;
                                 resultsContainer.append(html);
@@ -736,16 +1021,96 @@ $(document).ready(function() {
         }
     });
 
+    // Handle click on a student result
+    $(document).on('click', '.modal-search-item', function(e) {
+        e.preventDefault();
+        const studentId = $(this).data('student-id');
+        const student = searchDataCache[studentId];
+        
+        if (student) {
+            resultsContainer.hide();
+            
+            // Populate Details
+            $('#detail_student_image').attr('src', student.image);
+            $('#detail_student_name').text(student.full_name);
+            $('#detail_student_admission').text(student.admission_no);
+            $('#detail_student_class').text((student.class ? student.class : '') + (student.section ? ' (' + student.section + ')' : ''));
+            $('#detail_student_father').text(student.father_name ? student.father_name : 'N/A');
+            $('#detail_student_mother').text(student.mother_name ? student.mother_name : 'N/A');
+            
+            // Set CTA Links
+            $('#btn_view_profile').attr('href', baseurl + 'student/view/' + student.id);
+            if ($('#btn_collect_fee').length) {
+                $('#btn_collect_fee').attr('href', baseurl + 'studentfee/addfee/' + student.student_session_id);
+            }
+            
+            // Show loading for fees
+            $('.gs-fee-summary').show();
+            $('#detail_student_fees_body').html('<tr><td colspan="4" class="text-center" style="padding: 15px;"><i class="fa fa-spinner fa-spin"></i> Loading fees...</td></tr>');
+            
+            studentDetailsContainer.fadeIn(200);
+
+            // Fetch Fee Summary
+            var feePostData = {
+                student_session_id: student.student_session_id
+            };
+            var csrfInput = $('#global_search_form input[type="hidden"]');
+            if (csrfInput.length > 0) {
+                var csrfName = csrfInput.attr('name');
+                var csrfHash = csrfInput.val();
+                if (csrfName && csrfHash) {
+                    feePostData[csrfName] = csrfHash;
+                }
+            }
+
+            $.ajax({
+                url: baseurl + 'admin/certificateregister/get_student_fee_summary_ajax',
+                type: 'POST',
+                data: feePostData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response) {
+                        var html = '';
+                        var feeCount = 0;
+                        if (response.academic && parseFloat(response.academic.total) > 0) {
+                            html += '<tr><td style="padding: 8px; color: #4b5563; font-weight: 600;">Academic Fees</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.academic.total).toFixed(2) + '</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.academic.collected).toFixed(2) + '</td><td style="padding: 8px; color: #1f2937; font-weight: 700;">' + parseFloat(response.academic.due).toFixed(2) + '</td></tr>';
+                            feeCount++;
+                        }
+                        if (response.transport && parseFloat(response.transport.total) > 0) {
+                            html += '<tr><td style="padding: 8px; color: #4b5563; font-weight: 600;">Transport Fees</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.transport.total).toFixed(2) + '</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.transport.collected).toFixed(2) + '</td><td style="padding: 8px; color: #1f2937; font-weight: 700;">' + parseFloat(response.transport.due).toFixed(2) + '</td></tr>';
+                            feeCount++;
+                        }
+                        if (response.hostel && parseFloat(response.hostel.total) > 0) {
+                            html += '<tr><td style="padding: 8px; color: #4b5563; font-weight: 600;">Hostel Fees</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.hostel.total).toFixed(2) + '</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.hostel.collected).toFixed(2) + '</td><td style="padding: 8px; color: #1f2937; font-weight: 700;">' + parseFloat(response.hostel.due).toFixed(2) + '</td></tr>';
+                            feeCount++;
+                        }
+
+                        if (feeCount > 0) {
+                            $('#detail_student_fees_body').html(html);
+                        } else {
+                            $('.gs-fee-summary').hide();
+                        }
+                    } else {
+                        $('#detail_student_fees_body').html('<tr><td colspan="4" class="text-center text-danger" style="padding: 15px;">Failed to load fees.</td></tr>');
+                    }
+                },
+                error: function() {
+                    $('#detail_student_fees_body').html('<tr><td colspan="4" class="text-center text-danger" style="padding: 15px;">Failed to load fees.</td></tr>');
+                }
+            });
+        }
+    });
+
     // Close dropdown when clicking outside
     $(document).on('click', function(e) {
-        if (!$(e.target).closest('#header_search_form').length) {
+        if (!$(e.target).closest('#global_search_form').length && !$(e.target).closest('.modal-search-item').length) {
             resultsContainer.hide();
         }
     });
 
-    // Show dropdown again if clicking back on input and it has value
+    // Show dropdown again if clicking back on input and it has value, but only if details aren't shown
     searchInput.on('focus', function() {
-        if ($(this).val().trim().length >= 2 && resultsContainer.children().length > 0) {
+        if ($(this).val().trim().length >= 2 && resultsContainer.children().length > 0 && !studentDetailsContainer.is(':visible')) {
             resultsContainer.show();
         }
     });

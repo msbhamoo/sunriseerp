@@ -4,6 +4,50 @@
     }
     .checkbox-inline+.checkbox-inline, .radio-inline+.radio-inline {
     margin-left: 8px;}
+	
+	/* Right Panel Modal Styles */
+	.modal-right-panel .modal-dialog {
+		position: fixed;
+		margin: 0;
+		width: 500px;
+		height: 100%;
+		right: 0px;
+		top: 0px;
+	}
+
+	@media (max-width: 768px) {
+		.modal-right-panel .modal-dialog {
+			width: 100%;
+		}
+	}
+
+	.modal-right-panel form {
+		height: 100%;
+	}
+
+	.modal-right-panel .modal-content {
+		height: 100%;
+		overflow-y: auto;
+		border-radius: 0;
+		border: none;
+		box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+	}
+
+	.modal-right-panel.fade .modal-dialog {
+		right: -500px;
+		-webkit-transition: right 0.3s ease-out;
+		-moz-transition: right 0.3s ease-out;
+		-o-transition: right 0.3s ease-out;
+		transition: right 0.3s ease-out;
+		-webkit-transform: none;
+		-ms-transform: none;
+		-o-transform: none;
+		transform: none;
+	}
+
+	.modal-right-panel.fade.in .modal-dialog {
+		right: 0;
+	}
 </style>
 <?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
@@ -83,6 +127,135 @@ foreach ($studentlistbysection as $stkey => $stvalue) {
         <div class="row">
             <!-- left column -->
             <div class="col-md-12">
+                <!-- Quick Search -->
+                <div style="margin-bottom: 15px;">
+                    <form id="quick_student_search_form" action="" method="POST" style="margin:0; position: relative;">
+                        <?php echo $this->customlib->getCSRF(); ?>
+                        <div class="gs-input-group" style="background: #fff; border: 1px solid #dce1e5; border-radius: 4px; display: flex; width: 100%; transition: border-color 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                            <div style="display: flex; align-items: center; justify-content: center; width: 45px; color: #7f8c8d; border-right: 1px solid #eaeaea;">
+                                <i class="fa fa-search" style="font-size: 15px;"></i>
+                            </div>
+                            <input type="text" value="" name="search_text" id="quick_search_text" class="form-control" style="border: none; height: 42px; box-shadow: none; font-size: 14px; flex: 1; padding-left: 15px; background: transparent; color: #495057;" placeholder="Quick Search Student (Name, Admission No, etc.) to collect fee..." autocomplete="off">
+                        </div>
+                        <div id="quick_ajax_search_results_container" class="ajax-search-results" style="width: 100% !important; max-height: 400px; overflow-y: auto; display: none; position: absolute; z-index: 9999; background: #fff; border: 1px solid #e0e3e8; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); top: 100%; left: 0; right: 0; margin-top: 5px; padding: 8px;"></div>
+                    </form>
+                </div>
+
+                <style>
+                    /* Specific hover styling for quick search items */
+                    #quick_ajax_search_results_container .ajax-search-item:hover,
+                    #quick_ajax_search_results_container .ajax-search-item:focus {
+                        background-color: var(--primary-theme-color, #2eab66) !important;
+                        color: #fff !important;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                        border-color: var(--primary-theme-color, #2eab66) !important;
+                    }
+                    #quick_ajax_search_results_container .ajax-search-item:hover .ajax-search-name,
+                    #quick_ajax_search_results_container .ajax-search-item:hover .ajax-search-meta,
+                    #quick_ajax_search_results_container .ajax-search-item:hover .ajax-search-parents,
+                    #quick_ajax_search_results_container .ajax-search-item:hover .ajax-search-icon {
+                        color: #fff !important;
+                        opacity: 1 !important;
+                    }
+                    /* Custom scrollbar for quick search */
+                    #quick_ajax_search_results_container::-webkit-scrollbar { width: 5px; }
+                    #quick_ajax_search_results_container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+                    #quick_ajax_search_results_container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+                    #quick_ajax_search_results_container::-webkit-scrollbar-thumb:hover { background: #999; }
+                </style>
+
+                <script>
+                $(document).ready(function() {
+                    let quickSearchTimeout;
+                    const quickSearchInput = $('#quick_search_text');
+                    const quickResultsContainer = $('#quick_ajax_search_results_container');
+
+                    // Focus styling
+                    quickSearchInput.on('focus', function() {
+                        $(this).parent('.gs-input-group').css('border-color', 'var(--primary-theme-color, #00c0ef)');
+                    }).on('blur', function() {
+                        $(this).parent('.gs-input-group').css('border-color', '#eaeaea');
+                    });
+
+                    quickSearchInput.on('keyup', function() {
+                        clearTimeout(quickSearchTimeout);
+                        const query = $(this).val().trim();
+
+                        if (query.length >= 2) {
+                            quickSearchTimeout = setTimeout(function() {
+                                var postData = {
+                                    search_text: query
+                                };
+                                
+                                var csrfInput = $('#quick_student_search_form input[type="hidden"]');
+                                if (csrfInput.length > 0) {
+                                    var csrfName = csrfInput.attr('name');
+                                    var csrfHash = csrfInput.val();
+                                    if (csrfName && csrfHash) {
+                                        postData[csrfName] = csrfHash;
+                                    }
+                                }
+
+                                $.ajax({
+                                    url: baseurl + 'admin/admin/ajax_search',
+                                    type: 'POST',
+                                    data: postData,
+                                    dataType: 'json',
+                                    success: function(response) {
+                                        quickResultsContainer.empty().show();
+                                        if (response.status === 'success' && response.data && response.data.length > 0) {
+                                            response.data.forEach(function(student) {
+                                                const fatherName = student.father_name ? student.father_name : 'N/A';
+                                                const motherName = student.mother_name ? student.mother_name : 'N/A';
+                                                const className = student.class ? student.class : '';
+                                                const sectionName = student.section ? student.section : '';
+                                                const admNo = student.admission_no ? student.admission_no : '';
+
+                                                const html = `
+                                                    <a href="${baseurl}studentfee/addfee/${student.student_session_id}" class="ajax-search-item" style="display: flex !important; flex-direction: row !important; align-items: center !important; padding: 10px 12px !important; margin-bottom: 6px; background-color: #ffffff; border: 1px solid #eef0f3; border-radius: 8px; text-decoration: none !important; color: #333 !important; transition: all 0.2s ease-in-out;">
+                                                        <img src="${student.image}" alt="Student" class="ajax-search-avatar" style="width: 40px !important; height: 40px !important; min-width: 40px !important; border-radius: 50% !important; object-fit: cover; margin-right: 12px !important; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background: #f0f0f0;">
+                                                        <div class="ajax-search-details" style="flex: 1 1 auto !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; gap: 12px;">
+                                                            <div class="ajax-search-col" style="display: flex !important; flex-direction: column !important; flex: 0 0 200px !important; width: 200px !important;">
+                                                                <span class="ajax-search-name" style="font-weight: 600; font-size: 13px; margin-bottom: 2px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: inherit;">${student.full_name}</span>
+                                                                <span class="ajax-search-meta" style="font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: inherit; opacity: 0.8;">${className} - ${sectionName} &nbsp;&nbsp; ${admNo}</span>
+                                                            </div>
+                                                            <div class="ajax-search-parents" style="display: flex !important; flex-direction: column !important; font-size: 11px; text-transform: uppercase; font-weight: 500; color: inherit; opacity: 0.9;">
+                                                                <span style="margin-bottom: 2px; display: flex !important; align-items: center !important;"><span class="parent-badge badge-father" style="color: #fff !important; border-radius: 50%; width: 16px; height: 16px; min-width: 16px; display: inline-flex !important; align-items: center !important; justify-content: center !important; font-size: 9px; margin-right: 5px; font-weight: bold; background-color: #007bff !important;">F</span> ${fatherName}</span>
+                                                                <span style="display: flex !important; align-items: center !important;"><span class="parent-badge badge-mother" style="color: #fff !important; border-radius: 50%; width: 16px; height: 16px; min-width: 16px; display: inline-flex !important; align-items: center !important; justify-content: center !important; font-size: 9px; margin-right: 5px; font-weight: bold; background-color: #e83e8c !important;">M</span> ${motherName}</span>
+                                                            </div>
+                                                        </div>
+                                                        <i class="fa fa-chevron-right ajax-search-icon" style="margin-left: 10px; font-size: 15px; color: inherit; opacity: 0.5;"></i>
+                                                    </a>
+                                                `;
+                                                quickResultsContainer.append(html);
+                                            });
+                                        } else {
+                                            quickResultsContainer.html('<div style="padding: 18px; text-align: center; color: #7f8c8d; font-size: 13px;">No students found</div>');
+                                        }
+                                    }
+                                });
+                            }, 300);
+                        } else {
+                            quickResultsContainer.empty().hide();
+                        }
+                    });
+
+                    // Close dropdown when clicking outside
+                    $(document).on('click', function(e) {
+                        if (!$(e.target).closest('#quick_student_search_form').length) {
+                            quickResultsContainer.hide();
+                        }
+                    });
+
+                    // Show dropdown again if clicking back on input and it has value
+                    quickSearchInput.on('focus', function() {
+                        if ($(this).val().trim().length >= 2 && quickResultsContainer.children().length > 0) {
+                            quickResultsContainer.show();
+                        }
+                    });
+                });
+                </script>
+
                 <div class="box box-primary">
                     <div class="box-header">
                         <div class="row">
@@ -710,7 +883,7 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
     </div>
 </div>
 
-<div class="modal fade" id="myFeesModal" role="dialog">
+<div class="modal fade modal-right-panel" id="myFeesModal" role="dialog">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -825,7 +998,7 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
     </div>
 </div>
 
-<div id="listCollectionModal" class="modal fade">
+<div id="listCollectionModal" class="modal fade modal-right-panel">
     <div class="modal-dialog">
         <form action="<?php echo site_url('studentfee/addfeegrp'); ?>"   method="POST" id="collect_fee_group">
             <div class="modal-content">
@@ -863,9 +1036,14 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
 
 <script type="text/javascript">
     $(document).ready(function () {
-        $('#listCollectionModal,#processing_fess_modal,#confirm-norecord,#myFeesModal').modal({
+        $('#processing_fess_modal,#confirm-norecord').modal({
             backdrop: 'static',
             keyboard: false,
+            show: false
+        });
+        $('#listCollectionModal,#myFeesModal').modal({
+            backdrop: true,
+            keyboard: true,
             show: false
         });
     });
@@ -1060,8 +1238,8 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
             show: false
         });
         $('#listCollectionModal').modal({
-            backdrop: 'static',
-            keyboard: false,
+            backdrop: true,
+            keyboard: true,
             show: false
         });
 

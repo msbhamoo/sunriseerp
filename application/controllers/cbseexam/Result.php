@@ -211,6 +211,7 @@ class Result extends MY_Addon_CBSEController
         $gradeexam_id = "";
         $remarkexam_id = "";
 
+        $subjectnoteexam_id = "";
         $data['subject_array'] = $subject_array;
         $data['exam_term_exam_assessment'] = $exam_term_exam_assessment;
 
@@ -218,7 +219,7 @@ class Result extends MY_Addon_CBSEController
 
         foreach ($cbse_exam_result as $student_key => $student_value) {
             $gradeexam_id = $student_value->gradeexam_id;
-            $subjectnoteexam_id = $student_value->subjectnoteexam_id;
+            // $subjectnoteexam_id = $student_value->subjectnoteexam_id;
             $remarkexam_id = $student_value->remarkexam_id;
 
             if (array_key_exists($student_value->student_id, $students)) {
@@ -432,6 +433,23 @@ class Result extends MY_Addon_CBSEController
                 }
             }
         }
+
+        // ================= SAFETY TEST: Start =================
+        $this->load->library('CbseExamResultService');
+        $new_students = $this->cbseexamresultservice->buildStudentResultTermWise($cbse_exam_result, $remarkexam_id, 'student_id');
+
+        $old_json = json_encode($students);
+        $new_json = json_encode($new_students);
+        
+        if ($old_json !== $new_json) {
+            log_message('error', 'CbseExamResultService mismatch in test_multi');
+            // file_put_contents('old.json', $old_json);
+            // file_put_contents('new.json', $new_json);
+        } else {
+            // Perfect match, switch to new service array
+            $students = $new_students;
+        }
+        // ================= SAFETY TEST: End =================
 
         $data['result'] = $students;
         $data['gradeexam_id'] = $gradeexam_id;
@@ -829,6 +847,21 @@ class Result extends MY_Addon_CBSEController
             }
         }
 
+        // ================= SAFETY TEST: Start =================
+        $this->load->library('CbseExamResultService');
+        $new_students = $this->cbseexamresultservice->buildStudentResultTermWise($cbse_exam_result, $remarkexam_id, 'student_id');
+
+        $old_json = json_encode($students);
+        $new_json = json_encode($new_students);
+        
+        if ($old_json !== $new_json) {
+            log_message('error', 'CbseExamResultService mismatch in test_multi1');
+        } else {
+            // Perfect match, switch to new service array
+            $students = $new_students;
+        }
+        // ================= SAFETY TEST: End =================
+
         $data['result'] = $students;
         $data['gradeexam_id'] = $gradeexam_id;
         $data['remarkexam_id'] = $remarkexam_id;
@@ -979,7 +1012,7 @@ class Result extends MY_Addon_CBSEController
 
             $gradeexam_id = $student_value->gradeexam_id;
             $remarkexam_id = $student_value->remarkexam_id;
-            $subjectnoteexam_id = $student_value->subjectnoteexam_id;
+            // // $subjectnoteexam_id = $student_value->subjectnoteexam_id;
 
             if (array_key_exists($student_value->student_id, $students)) {
                 if (!array_key_exists($student_value->cbse_term_id, $students[$student_value->student_id]['terms'])) {
@@ -1637,7 +1670,7 @@ class Result extends MY_Addon_CBSEController
 
             $gradeexam_id = $student_value->gradeexam_id;
             $remarkexam_id = $student_value->remarkexam_id;
-            $subjectnoteexam_id = $student_value->subjectnoteexam_id;
+            // // $subjectnoteexam_id = $student_value->subjectnoteexam_id;
 
             if (array_key_exists($student_value->student_id, $students)) {
 
@@ -2004,7 +2037,7 @@ class Result extends MY_Addon_CBSEController
 
         foreach ($cbse_exam_result as $student_key => $student_value) {
 
-            $subjectnoteexam_id = $student_value->subjectnoteexam_id;
+            // $subjectnoteexam_id = $student_value->subjectnoteexam_id;
 
             $exam_assessments[$student_value->cbse_exam_assessment_type_id] = $student_value->cbse_exam_assessment_type_id;
             if (array_key_exists($student_value->student_id, $students)) {
@@ -2333,7 +2366,7 @@ class Result extends MY_Addon_CBSEController
                 $this->cbse_mail_sms->mailSmsMarksheet('cbse_email_pdf_exam_marksheet', $sender_details, '', '', $content);
 
             } elseif ($type == "download") {
-
+                if (ob_get_length()) { ob_end_clean(); }
                 $content = $mpdf->Output(random_string() . '.pdf', 'I');
                 return $content;
             }

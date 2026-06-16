@@ -508,6 +508,20 @@ class Report extends MY_Addon_CBSEController
             }
         }
 
+        // ================= SAFETY TEST: Start =================
+        $this->load->library('CbseExamResultService');
+        $new_students = $this->cbseexamresultservice->buildStudentResultTermWise($cbse_exam_result, $remarkexam_id, 'student_session_id');
+
+        $old_json = json_encode($students);
+        $new_json = json_encode($new_students);
+        
+        if ($old_json !== $new_json) {
+            log_message('error', 'CbseExamResultService mismatch in Report::getSinglTerm');
+        } else {
+            // Perfect match, switch to new service array
+            $students = $new_students;
+        }
+        // ================= SAFETY TEST: End =================
 
         $data['result']        = $students;
         $data['gradeexam_id']  = $gradeexam_id;
@@ -795,6 +809,21 @@ class Report extends MY_Addon_CBSEController
                 }
             }
         }
+
+        // ================= SAFETY TEST: Start =================
+        $this->load->library('CbseExamResultService');
+        $new_students = $this->cbseexamresultservice->buildStudentResultTermWise($cbse_exam_result, $remarkexam_id, 'student_session_id');
+
+        $old_json = json_encode($students);
+        $new_json = json_encode($new_students);
+        
+        if ($old_json !== $new_json) {
+            log_message('error', 'CbseExamResultService mismatch in Report::getMultiTerm');
+        } else {
+            // Perfect match, switch to new service array
+            $students = $new_students;
+        }
+        // ================= SAFETY TEST: End =================
 
         $data['result']        = $students;
         $data['gradeexam_id']  = $gradeexam_id;

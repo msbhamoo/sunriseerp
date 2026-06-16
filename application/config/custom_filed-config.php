@@ -10,6 +10,7 @@ $config['custom_fields'] = array(
     "select" => "Dropdown",
     "multiselect" => "Multi Select",
     "checkbox" => "Checkbox",
+    "radio" => "Radio Button",
     "date_picker" => "Date Picker",
     "date_picker_time" => "Datetime Picker",
     "colorpicker" => "Color Picker",

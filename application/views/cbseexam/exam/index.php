@@ -11,7 +11,7 @@
                         <div class="box-tools pull-right">
                             <?php
                               if ($this->rbac->hasPrivilege('cbse_exam', 'can_add')) { ?>
-                            <button type="button" class="btn btn-sm btn-primary"  data-toggle="modal" data-target="#addExamModal" autocomplete="off"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add')?></button> 
+                            <a href="<?php echo site_url('cbseexam/exam/wizard'); ?>" class="btn btn-sm btn-primary"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add')?></a> 
                             <?php 
                              } 
                            ?>                                       
@@ -89,7 +89,7 @@
                                                 
                                                 <?php } if ($this->rbac->hasPrivilege('cbse_exam_marks', 'can_view')) { ?>
                                                 
-                                                <button  class="btn btn-primary btn-xs examMarksSubject" data-toggle="tooltip" data-recordid="<?php echo $value['id']; ?>" title="<?php echo $this->lang->line('exam_marks'); ?>" ><i class="fa fa-newspaper-o"></i></button>
+                                                <a href="<?php echo site_url('cbseexam/exam/marks/'.$value['id']) ?>" class="btn btn-primary btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('exam_marks'); ?>" ><i class="fa fa-newspaper-o"></i></a>
                                                 
                                                 <?php } if ($this->rbac->hasPrivilege('cbse_exam_attendance', 'can_view')) { ?>
                                                 

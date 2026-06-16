@@ -43,6 +43,7 @@ class Customfield extends Admin_Controller
                 'bs_column'        => $this->input->post('column'),
                 'name'             => $this->input->post('name'),
                 'field_values'     => $this->input->post('field_values'),
+                'default_value'    => $this->input->post('default_value'),
                 'validation'       => isset($_POST['validation']) ? $_POST['validation'] : "",
                 'visible_on_table' => isset($_POST['display_tbl']) ? $_POST['display_tbl'] : "",
             );
@@ -62,7 +63,7 @@ class Customfield extends Admin_Controller
 
     public function validate_type()
     {
-        if (isset($_POST['type']) and ($_POST['type'] == "select" || $_POST['type'] == "multiselect" || $_POST['type'] == "checkbox" || $_POST['type'] == "link")) {
+        if (isset($_POST['type']) and ($_POST['type'] == "select" || $_POST['type'] == "multiselect" || $_POST['type'] == "checkbox" || $_POST['type'] == "radio" || $_POST['type'] == "link")) {
             if ($this->input->post('field_values') == "") {
                 $this->form_validation->set_message('validate_type', $this->lang->line("fields_values_required"));
                 return false;
@@ -97,6 +98,7 @@ class Customfield extends Admin_Controller
                 'type'             => $this->input->post('type'),
                 'name'             => $this->input->post('name'),
                 'field_values'     => $this->input->post('field_values'),
+                'default_value'    => $this->input->post('default_value'),
                 'validation'       => isset($_POST['validation']) ? $_POST['validation'] : "",
                 'visible_on_table' => isset($_POST['display_tbl']) ? $_POST['display_tbl'] : "",
             );

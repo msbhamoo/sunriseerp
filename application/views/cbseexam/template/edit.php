@@ -7,19 +7,16 @@
     <div class="col-md-4">
         <div class="form-group">
     <label><?php echo $this->lang->line('class'); ?></label><small class="req"> *</small>
-    <select autofocus="" id="editclassid" name="class_id" onchange="getSectionByClassedit(this.value, 0, 'edit_sections')"  class="form-control" >
-        <option value=""><?php echo $this->lang->line('select'); ?></option>
+    <select autofocus="" id="editclassid" name="class_id[]" onchange="getSectionByClasseditMultiple()" class="form-control select2" multiple="multiple">
         <?php
         foreach ($classlist as $class) {
             $selected = '';
-            if($selected_class_id == $class['id']){
+            if(in_array($class['id'], $selected_class_id)){
                 $selected = 'selected';
             }
         ?>
             <option value="<?php echo $class['id'] ?>" <?php echo $selected; ?>><?php echo $class['class'] ?></option>
-                <?php
-        }
-        ?>
+        <?php } ?>
     </select>
     <span class="text-danger" id="error_class_id"></span>
 </div>    
@@ -291,67 +288,47 @@
     "use strict"; 
     
     $(document).ready(function(){
-        var class_id = $('#editclassid').val();
-        getSectionByClassedit(class_id, 0, 'edit_sections');
+        $('.select2').select2();
+        getSectionByClasseditMultiple();
     });
     
     $('.filestyle').dropify();
     
 })(jQuery); 
 
-    function getSectionByClassedit(class_id,section_id, select_control) {
+    function getSectionByClasseditMultiple() {
+        var class_ids = $('#editclassid').val();
         var sections_id = '<?php echo $selected_section_id; ?>';
-        if (class_id != "") {
-            $('#' + select_control).html("");
+        
+        if (class_ids != null && class_ids.length > 0) {
             var base_url = '<?php echo base_url() ?>';
-            var div_data = '';
             $.ajax({
-                type: "GET",
-                url: base_url + "sections/getByClass",
-                data: {'class_id': class_id},
+                type: "POST",
+                url: base_url + "cbseexam/template/get_sections_by_multiple_classes",
+                data: {'class_ids': class_ids},
                 dataType: "json",
                 beforeSend: function () {
                     $('#editModal .custom-select-option-box').closest('div').find("input[name='select_all']").attr('checked', false);
                     $('#editModal .custom-select-option-box').children().not(':first').remove();
                 },
                 success: function (data) {
-                    $.each(data, function (i, obj)
-                    {
+                    $.each(data, function (i, obj) {
                         var checked = false;
-
-                        $.each(JSON.parse(sections_id), function (index, val)
-                        {
-                            if(obj.id == val.class_section_id){
+                        $.each(JSON.parse(sections_id), function (index, val) {
+                            if(obj.section_id == val.section_id){
                                 checked = true;
                             }
                         });
 
-                    var s=  $('<div>', {   
-                        class: 'custom-select-option checkbox'
-                    }).append($('<label>', {   
-                        class: 'vertical-middle line-h-18',
-
-                    }).append($('<input />', {   
-                        class: 'custom-select-option-checkbox',
-                        type: 'checkbox',
-                        name:"section[]",
-                        val:obj.id,
-                        checked:checked
-                    })).append(obj.section));
-
-                    $('.custom-select-option-box',$('#editModal .modal-body')).append(s);      
-                        
+                        var html = '<div class="custom-select-option checkbox"><label class="vertical-middle line-h-18"><input class="custom-select-option-checkbox" type="checkbox" name="section_id[]" value="' + obj.section_id + '" '+(checked?'checked':'')+'> ' + obj.section + '</label></div>';
+                        $('#editModal .custom-select-option-box').append(html);
                     });
-                   
-                },
-                complete: function () {
-                   
                 }
             });
         }else{
-            $('#edit_sections').html('');
+            $('#editModal .custom-select-option-box').children().not(':first').remove();
         }
-    }  
+    }
     
     
     
@@ -362,4 +339,9 @@
         shiftEnterMode: CKEDITOR.ENTER_P,
         customConfig: baseurl + '/backend/js/ckeditor_config.js'
     });   
+    
+    $(document).ready(function() {
+        $('#editclassid').select2();
+        getSectionByClasseditMultiple();
+    });
 </script>

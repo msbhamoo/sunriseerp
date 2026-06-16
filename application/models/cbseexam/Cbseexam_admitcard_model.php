@@ -17,7 +17,7 @@ class Cbseexam_admitcard_model extends MY_model
 
     public function get($id = null)
     {
-        $this->db->select()->from('cbse_template_admitcards');
+        $this->db->select()->from('template_admitcards');
         if ($id != null) {
             $this->db->where('id', $id);
         } else {
@@ -34,7 +34,7 @@ class Cbseexam_admitcard_model extends MY_model
     public function getidcardbyid($idcard)
     {
         $this->db->select('*');
-        $this->db->from('cbse_template_admitcards');
+        $this->db->from('template_admitcards');
         $this->db->where('id', $idcard);
         $query = $this->db->get();
         return $query->result();
@@ -47,13 +47,13 @@ class Cbseexam_admitcard_model extends MY_model
         //=======================Code Start===========================
         if (isset($data['id'])) {
             $this->db->where('id', $data['id']);
-            $this->db->update('cbse_template_admitcards', $data);
+            $this->db->update('template_admitcards', $data);
             $message   = UPDATE_RECORD_CONSTANT . " On  admit cards id " . $data['id'];
             $action    = "Update";
             $record_id = $id = $data['id'];
             $this->log($message, $record_id, $action);
         } else {
-            $this->db->insert('cbse_template_admitcards', $data);
+            $this->db->insert('template_admitcards', $data);
 
             $id        = $this->db->insert_id();
             $message   = INSERT_RECORD_CONSTANT . " On admit cards id " . $id;
@@ -81,7 +81,7 @@ class Cbseexam_admitcard_model extends MY_model
         $this->db->trans_strict(false); # See Note 01. If you wish can remove as well
         //=======================Code Start===========================
         $this->db->where('id', $id);
-        $this->db->delete('cbse_template_admitcards');
+        $this->db->delete('template_admitcards');
         $message   = DELETE_RECORD_CONSTANT . " On admit cards id " . $id;
         $action    = "Delete";
         $record_id = $id;
@@ -96,17 +96,17 @@ class Cbseexam_admitcard_model extends MY_model
 
     public function save_active_status($value){
         $this->db->set('is_active',0); 
-        $this->db->update('cbse_template_admitcards');
+        $this->db->update('template_admitcards');
 
         $this->db->set('is_active',1); 
         $this->db->where('id',$value);
-        $this->db->update('cbse_template_admitcards');
+        $this->db->update('template_admitcards');
     }
 
     public function get_active_admitcard()
     {
         $this->db->select('*');
-        $this->db->from('cbse_template_admitcards');
+        $this->db->from('template_admitcards');
         $this->db->where('is_active', 1);
         $query = $this->db->get();
          return $query->row();

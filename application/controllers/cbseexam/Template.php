@@ -35,8 +35,51 @@ class Template extends MY_Addon_CBSEController
         $class = $this->class_model->get();
         $data['classlist'] = $class;
         $data['marksheet'] = $this->cbseexam_result_model->marksheet_type();
+        $data['setting'] = $this->setting_model->getSetting();
         $this->load->view('layout/header', $data);
         $this->load->view('cbseexam/template/index', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    public function create()
+    {
+        if (!$this->rbac->hasPrivilege('cbse_exam_template', 'can_add')) {
+            access_denied();
+        }
+        $this->session->set_userdata('top_menu', 'cbse_exam');
+        $this->session->set_userdata('sub_menu', 'cbse_exam/template');
+        $data['title'] = 'Add Template';
+        $data['classlist'] = $this->class_model->get();
+        $data['setting'] = $this->setting_model->getSetting();
+        $this->load->view('layout/header', $data);
+        $this->load->view('cbseexam/template/create', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    public function edit_page($template_id)
+    {
+        if (!$this->rbac->hasPrivilege('cbse_exam_template', 'can_edit')) {
+            access_denied();
+        }
+        $this->session->set_userdata('top_menu', 'cbse_exam');
+        $this->session->set_userdata('sub_menu', 'cbse_exam/template');
+        $data['title'] = 'Edit Template';
+        
+        $result = $this->cbseexam_template_model->get($template_id);
+        $data['classlist'] = $this->class_model->get();
+        $data['result'] = $result;
+        $data['sections'] = $this->cbseexam_template_model->getclasssection($template_id);
+        $selected_class_ids = array();
+        foreach($data['sections'] as $sec) {
+            if(!in_array($sec['class_id'], $selected_class_ids)){
+                $selected_class_ids[] = $sec['class_id'];
+            }
+        }
+        $data['selected_class_id'] = $selected_class_ids;
+        $data['selected_section_id'] = json_encode($data['sections']);
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('cbseexam/template/edit_page', $data);
         $this->load->view('layout/footer', $data);
     }
 
@@ -46,7 +89,7 @@ class Template extends MY_Addon_CBSEController
             access_denied();
         }
         $this->form_validation->set_rules('name', $this->lang->line('template'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('class_id[]', $this->lang->line('class'), 'required');
         $this->form_validation->set_rules('left_logo', $this->lang->line('left_logo'), 'callback_handle_upload[left_logo]');
         $this->form_validation->set_rules('right_logo', $this->lang->line('right_logo'), 'callback_handle_upload[right_logo]');
         $this->form_validation->set_rules('background_img', $this->lang->line('sign_image'), 'callback_handle_upload[background_img]');
@@ -156,12 +199,13 @@ class Template extends MY_Addon_CBSEController
                 'is_section' => $is_section,
                 'is_dob' => $is_dob,
                 'is_remark' => $is_remark,
-                'is_subject_note' => $is_subject_note,
                 'session_id' => $this->setting_model->getCurrentSession(),
                 'content' => $this->input->post('content'),
                 'content_footer' => $this->input->post('content_footer'),
                 'exam_session' => $exam_session,
                 'orientation' => $this->input->post('orientation'),
+                'marksheet_type' => '',
+                'is_weightage' => '0',
             );
 
             $total_documents_failed_size = 0;
@@ -212,14 +256,19 @@ class Template extends MY_Addon_CBSEController
                  $this->saasvalidation->deleteResouceQuota('storage', $total_documents_failed_size);
             }   
 
-            if (!empty($_POST['section'])) {
-                $template_id = $this->cbseexam_template_model->add($data);
-                foreach ($_POST['section'] as $key => $value) {
-                    $template_class_section = array(
-                        'cbse_template_id' => $template_id,
-                        'class_section_id' => $value
-                    );
-                    $this->cbseexam_template_model->add_class_section($template_class_section);
+            if (!empty($_POST['class_id']) && !empty($_POST['section_id'])) {
+                $insert_id = $this->cbseexam_template_model->add($data);
+                foreach ($_POST['class_id'] as $cls_key => $cls_value) {
+                    foreach ($_POST['section_id'] as $sec_key => $sec_value) {
+                        $check = $this->db->get_where('class_sections', array('class_id' => $cls_value, 'section_id' => $sec_value))->row();
+                        if ($check) {
+                            $section_array = array(
+                                'cbse_template_id' => $insert_id,
+                                'class_section_id' => $check->id,
+                            );
+                            $this->cbseexam_template_model->add_class_section($section_array);
+                        }
+                    }
                 }
                 $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('success_message'));
             } else {
@@ -241,7 +290,7 @@ class Template extends MY_Addon_CBSEController
         }
 
         $this->form_validation->set_rules('name', $this->lang->line('template'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('class_id[]', $this->lang->line('class'), 'required');
         $this->form_validation->set_rules('left_logo', $this->lang->line('left_logo'), 'callback_handle_upload[left_logo]');
         $this->form_validation->set_rules('right_logo', $this->lang->line('right_logo'), 'callback_handle_upload[right_logo]');
         $this->form_validation->set_rules('background_img', $this->lang->line('background_image'), 'callback_handle_upload[background_img]');
@@ -350,7 +399,6 @@ class Template extends MY_Addon_CBSEController
                 'is_section' => $is_section,
                 'is_dob' => $is_dob,
                 'is_remark' => $is_remark,
-                'is_subject_note' => $is_subject_note,
                 'content' => $this->input->post('content'),
                 'content_footer' => $this->input->post('content_footer'),
                 'exam_session' => $exam_session,
@@ -453,17 +501,22 @@ class Template extends MY_Addon_CBSEController
             }
             //===========
 
-            if (!empty($_POST['section'])) {
+            if (!empty($_POST['section_id'])) {
                 $this->cbseexam_template_model->add($data);
                 $this->cbseexam_template_model->deleteclasssectionbytemplateid($this->input->post('templateid'));
-
-                foreach ($_POST['section'] as $key => $value) {
-
-                    $template_class_section = array(
-                        'cbse_template_id' => $this->input->post('templateid'),
-                        'class_section_id' => $value
-                    );
-                    $this->cbseexam_template_model->add_class_section($template_class_section);
+                if (isset($_POST['class_id']) && isset($_POST['section_id'])) {
+                    foreach ($_POST['class_id'] as $cls_key => $cls_value) {
+                        foreach ($_POST['section_id'] as $sec_key => $sec_value) {
+                            $check = $this->db->get_where('class_sections', array('class_id' => $cls_value, 'section_id' => $sec_value))->row();
+                            if ($check) {
+                                $section_array = array(
+                                    'cbse_template_id' => $data['id'],
+                                    'class_section_id' => $check->id,
+                                );
+                                $this->cbseexam_template_model->add_class_section($section_array);
+                            }
+                        }
+                    }
                 }
 
                 $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('record_updated_successfully'));
@@ -486,7 +539,13 @@ class Template extends MY_Addon_CBSEController
         $data['classlist'] = $this->class_model->get();
         $data['result'] = $result;
         $data['sections'] = $this->cbseexam_template_model->getclasssection($template_id);
-        $data['selected_class_id'] = $data['sections'][0]['class_id'];
+        $selected_class_ids = array();
+        foreach($data['sections'] as $sec) {
+            if(!in_array($sec['class_id'], $selected_class_ids)){
+                $selected_class_ids[] = $sec['class_id'];
+            }
+        }
+        $data['selected_class_id'] = $selected_class_ids;
         $data['selected_section_id'] = json_encode($data['sections']);
         $page = $this->load->view('cbseexam/template/edit', $data, true);
         echo json_encode(array('status' => 1, 'page' => $page));
@@ -520,36 +579,6 @@ class Template extends MY_Addon_CBSEController
 		
 		$result = $this->cbseexam_template_model->get($templateid);	
 		$delete_file_size = 0;
-		
-		// if ($result['background_img'] != '') {
-			// $delete_file_size += $this->media_storage->getUploadedFileSize($result['background_img'], 'uploads/cbseexam/template/background_img');
-																											 
-            // $this->media_storage->filedelete($result['background_img'], "uploads/cbseexam/template/background_img/");
-        // }
-		
-		// if ($result['header_image'] != '') {
-			// $delete_file_size += $this->media_storage->getUploadedFileSize($result['header_image'], 'uploads/cbseexam/template/header_image');
-			 																								 
-            // $this->media_storage->filedelete($result['header_image'], "uploads/cbseexam/template/header_image/");
-        // }
-		
-		// if ($result['left_sign'] != '') {
-			// $delete_file_size += $this->media_storage->getUploadedFileSize($result['left_sign'], 'uploads/cbseexam/template/left_sign');
-			 																								 
-            // $this->media_storage->filedelete($result['left_sign'], "uploads/cbseexam/template/left_sign/");
-        // }
-		
-		// if ($result['middle_sign'] != '') {
-			// $delete_file_size += $this->media_storage->getUploadedFileSize($result['middle_sign'], 'uploads/cbseexam/template/middle_sign');
-			 																							 
-            // $this->media_storage->filedelete($result['middle_sign'], "uploads/cbseexam/template/middle_sign/");
-        // }
-		
-		// if ($result['right_sign'] != '') {
-			// $delete_file_size += $this->media_storage->getUploadedFileSize($result['right_sign'], 'uploads/cbseexam/template/right_sign');
-			 																								 
-            // $this->media_storage->filedelete($result['right_sign'], "uploads/cbseexam/template/right_sign/");
-        // }
 		
 		$files = [
 			'background_img' => 'uploads/cbseexam/template/background_img',
@@ -777,7 +806,7 @@ class Template extends MY_Addon_CBSEController
                 'id' => $_POST['template_id'],
             );
             if (isset($_POST['subject_note'])) {
-                $templatedata['subjectnoteexam_id'] = $_POST['subject_note'];
+                // $templatedata['subjectnoteexam_id'] = $_POST['subject_note'];
             }
             if (isset($_POST['grading'])) {
                 $templatedata['gradeexam_id'] = $_POST['grading'];
@@ -789,7 +818,7 @@ class Template extends MY_Addon_CBSEController
                 $exam_first = $this->input->post('exam');
                 $templatedata['gradeexam_id'] = $exam_first[0];
                 $templatedata['remarkexam_id'] = $exam_first[0];
-                $templatedata['subjectnoteexam_id'] = $exam_first[0];
+                // $templatedata['subjectnoteexam_id'] = $exam_first[0];
             }
             $template_id = $this->cbseexam_template_model->add($templatedata);
             $this->cbseexam_template_model->delete_template_record($_POST['template_id']);
@@ -986,5 +1015,21 @@ class Template extends MY_Addon_CBSEController
         $this->load->view('layout/header', $data);
         $this->load->view('cbseexam/template/templatewiserank', $data);
         $this->load->view('layout/footer', $data);
+    }
+    public function get_sections_by_multiple_classes()
+    {
+        $class_ids = $this->input->post('class_ids');
+        if(!empty($class_ids)) {
+            $this->db->select('sections.id as section_id, sections.section');
+            $this->db->from('class_sections');
+            $this->db->join('sections', 'sections.id = class_sections.section_id');
+            $this->db->where_in('class_sections.class_id', $class_ids);
+            $this->db->group_by('sections.id');
+            $this->db->order_by('sections.id');
+            $result = $this->db->get()->result_array();
+            echo json_encode($result);
+        } else {
+            echo json_encode(array());
+        }
     }
 }
