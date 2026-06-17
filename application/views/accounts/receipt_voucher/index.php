@@ -377,8 +377,10 @@
                                     </div>
                                 </div>
                         </div>
+                        <input type="hidden" name="save_and_print" id="save_and_print" value="0">
                         <div class="box-footer" style="background:#f8f9fa;">
                             <button type="submit" class="btn btn-info pull-right"><i class="fa fa-save"></i> <?php echo $this->lang->line('save'); ?></button>
+                            <button type="button" class="btn btn-success pull-right" style="margin-right: 5px;" onclick="document.getElementById('save_and_print').value='1'; this.closest('form').submit();"><i class="fa fa-print"></i> Save &amp; Print</button>
                             <button type="button" class="btn btn-default pull-right" style="margin-right: 5px;" onclick="<?php echo isset($id) ? "window.location.href='".site_url("accounts/receiptvoucher")."'" : "toggleOffcanvas()"; ?>"><?php echo $this->lang->line('cancel'); ?></button>
                         </div>
                     </form>
@@ -464,6 +466,34 @@
         $(document).ready(function() {
             showAccToast("<?php echo htmlspecialchars($this->session->flashdata('msg_toast_error')); ?>", 'error');
         });
+    <?php } ?>
+
+    <?php if ($this->session->flashdata('print_voucher_id')) { ?>
+    $(document).ready(function() {
+        var printUrl = '<?php echo site_url("accounts/receiptvoucher/print_voucher/" . $this->session->flashdata("print_voucher_id")); ?>';
+        var printWin = window.open(printUrl, '_blank');
+
+        if (!printWin || printWin.closed || typeof printWin.closed === 'undefined') {
+            showAccToast('<a href="' + printUrl + '" target="_blank" style="color:#fff;text-decoration:underline;">Popup blocked. Click here to open print page.</a>', 'warning');
+        } else {
+            var pollInterval = setInterval(function() {
+                if (localStorage.getItem('pv_print_done') === '1') {
+                    localStorage.removeItem('pv_print_done');
+                    clearInterval(pollInterval);
+                    if ($.fn.DataTable.isDataTable('.receipt-voucher-list')) {
+                        $('.receipt-voucher-list').DataTable().ajax.reload(null, false);
+                    }
+                    return;
+                }
+                if (printWin.closed) {
+                    clearInterval(pollInterval);
+                    if ($.fn.DataTable.isDataTable('.receipt-voucher-list')) {
+                        $('.receipt-voucher-list').DataTable().ajax.reload(null, false);
+                    }
+                }
+            }, 800);
+        }
+    });
     <?php } ?>
 
     function fetchBalance(ledgerId, el) {

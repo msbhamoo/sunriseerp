@@ -133,8 +133,12 @@
                 <small style="color:#888;">Dashboard / School Admin Dashboard</small>
             </div>
             <div class="col-md-6 text-right d2-header-actions" style="justify-content: flex-end;">
+                <?php if($this->rbac->hasPrivilege('collect_fees', 'can_view')): ?>
                 <a href="<?php echo site_url('studentfee') ?>" class="d2-btn"><i class="fa fa-bolt" style="color:#28a745;"></i> Collect</a>
+                <?php endif; ?>
+                <?php if($this->rbac->hasPrivilege('expense', 'can_view')): ?>
                 <a href="<?php echo site_url('admin/expense') ?>" class="d2-btn"><i class="fa fa-plus" style="color:#dc3545;"></i> Expense</a>
+                <?php endif; ?>
                 <a href="#" class="d2-btn"><i class="fa fa-external-link"></i> Public Form</a>
                 <a href="<?php echo site_url('admin/admin/switch_dashboard/1.0') ?>" class="d2-btn primary"><i class="fa fa-arrow-left"></i> Old Dashboard</a>
             </div>
@@ -144,6 +148,7 @@
     <section class="content">
         <div class="row">
             <!-- Session Overview -->
+            <?php if($this->rbac->hasPrivilege('student', 'can_view') || $this->rbac->hasPrivilege('staff', 'can_view') || $this->rbac->hasPrivilege('student_attendance', 'can_view')): ?>
             <div class="col-md-8">
                 <div class="d2-card">
                     <div class="d2-title">Session Overview</div>
@@ -189,8 +194,10 @@
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
             <!-- Fee Summary -->
+            <?php if($this->rbac->hasPrivilege('fees_overview_widegts', 'can_view')): ?>
             <div class="col-md-4">
                 <div class="d2-card" style="height: calc(100% - 20px);">
                     <?php 
@@ -295,6 +302,7 @@
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
 
         <div class="row">
@@ -335,6 +343,7 @@
                 </div>
             </div>
 
+            <?php if($this->rbac->hasPrivilege('cbse_exam', 'can_view')): ?>
             <div class="col-md-4">
                 <div class="d2-card" style="height:100%;">
                     <div class="d2-title" style="color:#007bff;">Upcoming Exams (CBSE)</div>
@@ -377,7 +386,9 @@
                     <?php endif; ?>
                 </div>
             </div>
+            <?php endif; ?>
 
+            <?php if($this->rbac->hasPrivilege('events', 'can_view')): ?>
             <div class="col-md-4">
                 <div class="d2-card" style="height:100%;">
                     <div class="d2-title" style="color:#d09435;">Upcoming Events</div>
@@ -403,10 +414,12 @@
                     <?php endif; ?>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
 
         <div class="row" style="margin-bottom: 20px;">
             <!-- Pending Leave Requests -->
+            <?php if($this->rbac->hasPrivilege('approve_leave', 'can_view')): ?>
             <div class="col-md-4">
                 <div class="d2-card" style="height:100%;">
                     <div class="d2-title" style="color:#d8456a;">Pending Leave Requests</div>
@@ -442,8 +455,10 @@
                     <?php endif; ?>
                 </div>
             </div>
+            <?php endif; ?>
 
             <!-- Staff on Leave Today -->
+            <?php if($this->rbac->hasPrivilege('approve_leave', 'can_view')): ?>
             <div class="col-md-4">
                 <div class="d2-card" style="height:100%;">
                     <div class="d2-title" style="color:#eab308;">Staff on Leave Today</div>
@@ -475,8 +490,10 @@
                     <?php endif; ?>
                 </div>
             </div>
+            <?php endif; ?>
 
             <!-- Today's Visitors -->
+            <?php if($this->rbac->hasPrivilege('visitor_book', 'can_view')): ?>
             <div class="col-md-4">
                 <div class="d2-card" style="height:100%;">
                     <div class="d2-title" style="color:#0284c7;">Today's Visitors</div>
@@ -508,12 +525,14 @@
                     <?php endif; ?>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
 
         <div class="row">
             <div class="col-md-8">
                 <div class="row">
                     <!-- Class Distribution -->
+                    <?php if($this->rbac->hasPrivilege('student', 'can_view')): ?>
                     <div class="col-md-6">
                         <div class="d2-card" style="height: 100%;">
                             <div class="d2-title">Student Distribution</div>
@@ -532,8 +551,10 @@
                             <?php endif; ?>
                         </div>
                     </div>
+                    <?php endif; ?>
                     
                     <!-- Staff Distribution -->
+                    <?php if($this->rbac->hasPrivilege('staff', 'can_view')): ?>
                     <div class="col-md-6">
                         <div class="d2-card" style="height: 100%;">
                             <div class="d2-title" style="color:#9d50ce;">Staff Distribution</div>
@@ -554,9 +575,11 @@
                             <?php endif; ?>
                         </div>
                     </div>
+                    <?php endif; ?>
                 </div>
             </div>
                 
+            <?php if($this->rbac->hasPrivilege('student', 'can_view')): ?>
             <div class="col-md-4">
                 <div class="d2-card" style="margin-bottom:20px;">
                     <div class="d2-title" style="color:#d09435;">Student Demography</div>
@@ -624,6 +647,7 @@
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
 
     </section>

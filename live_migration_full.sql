@@ -348,11 +348,11 @@ WHERE NOT EXISTS (SELECT 1 FROM `roles_permissions` WHERE `role_id` = 7 AND `per
 
 -- 5. Sub-Menus for CBSE Admit Cards
 INSERT INTO `sidebar_sub_menus` (`sidebar_menu_id`, `menu`, `key`, `lang_key`, `url`, `level`, `access_permissions`, `permission_group_id`, `activate_controller`, `activate_methods`, `is_active`, `addon_permission`, `created_at`) 
-SELECT (SELECT `id` FROM `sidebar_menus` WHERE `menu` = 'cbse_examination' LIMIT 1), 'Design Admit Card', 'design_admit_card', 'design_admit_card', 'cbseexam/cbseadmitcard/index', 1, '(\'cbse_exam_design_admit_card\', \'can_view\')', (SELECT `id` FROM `permission_group` WHERE `short_code` = 'cbse_exam_design_admit_card' LIMIT 1), 'cbseadmitcard', 'index', 1, 'sscbse', NOW() 
+SELECT (SELECT `id` FROM `sidebar_menus` WHERE `menu` = 'cbse_examination' LIMIT 1), 'Design Admit Card', 'design_admit_card', 'design_admit_card', 'cbseexam/cbseadmitcard/index', 1, 'cbse_exam_design_admit_card,can_view', (SELECT `id` FROM `permission_group` WHERE `short_code` = 'cbse_exam_design_admit_card' LIMIT 1), 'cbseadmitcard', 'index', 1, '', NOW() 
 WHERE NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `lang_key` = 'design_admit_card');
 
 INSERT INTO `sidebar_sub_menus` (`sidebar_menu_id`, `menu`, `key`, `lang_key`, `url`, `level`, `access_permissions`, `permission_group_id`, `activate_controller`, `activate_methods`, `is_active`, `addon_permission`, `created_at`) 
-SELECT (SELECT `id` FROM `sidebar_menus` WHERE `menu` = 'cbse_examination' LIMIT 1), 'Generate Admit Card', 'generate_admit_card', 'generate_admit_card', 'cbseexam/cbseadmitcardbulk/generate', 1, '(\'cbse_exam_admit_card\', \'can_view\')', (SELECT `id` FROM `permission_group` WHERE `short_code` = 'cbse_exam_admit_card' LIMIT 1), 'cbseadmitcardbulk', 'generate', 1, 'sscbse', NOW() 
+SELECT (SELECT `id` FROM `sidebar_menus` WHERE `menu` = 'cbse_examination' LIMIT 1), 'Generate Admit Card', 'generate_admit_card', 'generate_admit_card', 'cbseexam/cbseadmitcardbulk/generate', 1, 'cbse_exam_admit_card,can_view', (SELECT `id` FROM `permission_group` WHERE `short_code` = 'cbse_exam_admit_card' LIMIT 1), 'cbseadmitcardbulk', 'generate', 1, '', NOW() 
 WHERE NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `lang_key` = 'generate_admit_card');
 
 -- 6. Update Parent Menu (CBSE Examination) to include new permissions
@@ -393,13 +393,13 @@ INSERT INTO `roles_permissions` (`role_id`, `perm_cat_id`, `can_view`, `can_add`
 SELECT 7, (SELECT `id` FROM `permission_category` WHERE `short_code` = 'cbse_exam_timetable' LIMIT 1), 1, 1, 1, 1, NOW() 
 WHERE NOT EXISTS (SELECT 1 FROM `roles_permissions` WHERE `role_id` = 7 AND `perm_cat_id` = (SELECT `id` FROM `permission_category` WHERE `short_code` = 'cbse_exam_timetable' LIMIT 1));
 
--- 4. Sub-Menus for CBSE Marks and Timetable
+-- 8. Sub-Menus for Marks Register and Timetable Viewer
 INSERT INTO `sidebar_sub_menus` (`sidebar_menu_id`, `menu`, `key`, `lang_key`, `url`, `level`, `access_permissions`, `permission_group_id`, `activate_controller`, `activate_methods`, `is_active`, `addon_permission`, `created_at`) 
-SELECT (SELECT `id` FROM `sidebar_menus` WHERE `menu` = 'cbse_examination' LIMIT 1), 'Marks Register', 'cbse_exam_marks', 'cbse_exam_marks', 'cbseexam/marks/index', 1, '(\'cbse_exam_marks\', \'can_view\')', (SELECT `id` FROM `permission_group` WHERE `short_code` = 'cbse_exam_marks' LIMIT 1), 'marks', 'index', 1, 'sscbse', NOW() 
+SELECT (SELECT `id` FROM `sidebar_menus` WHERE `menu` = 'cbse_examination' LIMIT 1), 'Marks Register', 'cbse_exam_marks', 'cbse_exam_marks', 'cbseexam/marks/index', 1, 'cbse_exam_marks,can_view', (SELECT `id` FROM `permission_group` WHERE `short_code` = 'cbse_exam_marks' LIMIT 1), 'marks', 'index', 1, '', NOW() 
 WHERE NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `lang_key` = 'cbse_exam_marks');
 
 INSERT INTO `sidebar_sub_menus` (`sidebar_menu_id`, `menu`, `key`, `lang_key`, `url`, `level`, `access_permissions`, `permission_group_id`, `activate_controller`, `activate_methods`, `is_active`, `addon_permission`, `created_at`) 
-SELECT (SELECT `id` FROM `sidebar_menus` WHERE `menu` = 'cbse_examination' LIMIT 1), 'Timetable Viewer', 'cbse_exam_timetable', 'cbse_exam_timetable', 'cbseexam/timetable/index', 1, '(\'cbse_exam_timetable\', \'can_view\')', (SELECT `id` FROM `permission_group` WHERE `short_code` = 'cbse_exam_timetable' LIMIT 1), 'timetable', 'index', 1, 'sscbse', NOW() 
+SELECT (SELECT `id` FROM `sidebar_menus` WHERE `menu` = 'cbse_examination' LIMIT 1), 'Timetable Viewer', 'cbse_exam_timetable', 'cbse_exam_timetable', 'cbseexam/timetable/index', 1, 'cbse_exam_timetable,can_view', (SELECT `id` FROM `permission_group` WHERE `short_code` = 'cbse_exam_timetable' LIMIT 1), 'timetable', 'index', 1, '', NOW() 
 WHERE NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `lang_key` = 'cbse_exam_timetable');
 
 -- 5. Update Parent Menu (CBSE Examination) to include new permissions
@@ -410,3 +410,17 @@ WHERE `menu` = 'cbse_examination' AND `access_permissions` NOT LIKE '%cbse_exam_
 UPDATE `sidebar_menus` 
 SET `access_permissions` = CONCAT(`access_permissions`, ' || (\'cbse_exam_timetable\', \'can_view\')') 
 WHERE `menu` = 'cbse_examination' AND `access_permissions` NOT LIKE '%cbse_exam_timetable%';
+
+CREATE TABLE IF NOT EXISTS `whatsapp_config` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `api_engine` varchar(50) DEFAULT 'waha',
+          `api_url` varchar(255) DEFAULT NULL,
+          `api_key` varchar(255) DEFAULT NULL,
+          `instance_name` varchar(255) DEFAULT 'default',
+          `is_active` varchar(10) DEFAULT 'yes',
+          `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+
+ UPDATE notification_setting SET display_whatsapp = 1

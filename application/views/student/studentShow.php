@@ -2,9 +2,1116 @@
 $status          = 'documents';
 $admin_session   = $this->session->userdata('admin');
 $currency_symbol = $admin_session['currency_symbol'];
+$theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_session['theme']['theme_color'] : '#4f46e5';
+// Generate a slightly darker/lighter version for gradients if needed, or just use the primary theme color.
+// For simplicity, we use $theme_color for primary accents and a fallback blue for secondary gradient stop.
 ?>
 
-<div class="content-wrapper">
+<style type="text/css">
+/* ============================================================
+   STUDENT PROFILE 2.0 — Scoped Design System
+   Matches dashboard2.php design language
+   All classes namespaced under .sp2-wrapper
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+.sp2-wrapper {
+    background: #f4f6f9;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+}
+
+
+
+/* ---------- Cards ---------- */
+.sp2-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #eaeaea;
+}
+.sp2-card-sm {
+    padding: 14px 18px;
+}
+
+/* ---------- Section Title ---------- */
+.sp2-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #8a8a8a;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.sp2-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #f0f0f0;
+}
+
+/* ---------- Hero Header ---------- */
+.sp2-hero {
+    background: linear-gradient(135deg, <?php echo $theme_color; ?> 0%, #3026ad 100%);
+    border-radius: 12px;
+    padding: 24px 24px 0 24px;
+    margin-bottom: 18px;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(79,70,229,0.25);
+}
+.sp2-hero-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    z-index: 0;
+}
+.sp2-hero-bg::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 160px;
+    height: 160px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+}
+.sp2-hero-bg::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 30%;
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+}
+.sp2-hero-body {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+}
+.sp2-hero-avatar-wrap {
+    flex-shrink: 0;
+}
+.sp2-hero-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.8);
+    object-fit: cover;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    display: block;
+    margin-bottom: 0;
+}
+.sp2-hero-avatar-placeholder {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 0;
+}
+.sp2-hero-info {
+    flex: 1;
+    padding-bottom: 20px;
+}
+.sp2-hero-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.sp2-hero-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 10px;
+}
+.sp2-hero-pill {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.95);
+    border: 1px solid rgba(255,255,255,0.25);
+    backdrop-filter: blur(4px);
+}
+.sp2-hero-pill.disabled-pill {
+    background: rgba(216,69,106,0.6);
+    border-color: rgba(216,69,106,0.8);
+}
+.sp2-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+}
+.sp2-btn {
+    padding: 6px 13px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+}
+.sp2-btn:hover {
+    background: rgba(255,255,255,0.3);
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+.sp2-btn.sp2-btn-danger {
+    background: rgba(216,69,106,0.3);
+    border-color: rgba(216,69,106,0.6);
+}
+.sp2-btn.sp2-btn-success {
+    background: rgba(59,155,101,0.35);
+    border-color: rgba(59,155,101,0.6);
+}
+.sp2-btn.sp2-btn-solid {
+    background: rgba(255,255,255,0.9);
+    color: <?php echo $theme_color; ?>;
+    border-color: transparent;
+}
+.sp2-btn.sp2-btn-solid:hover {
+    background: #fff;
+    color: <?php echo $theme_color; ?>;
+}
+
+/* Disabled student banner */
+.sp2-disabled-banner {
+    background: #fff5f8;
+    border-left: 4px solid #d8456a;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    color: #d8456a;
+    font-weight: 600;
+}
+.sp2-disabled-banner strong { color: #222; }
+
+/* ---------- Sidebar Info ---------- */
+.sp2-info-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 1px solid #f4f6f9;
+    gap: 8px;
+}
+.sp2-info-row:last-child { border-bottom: none; }
+.sp2-info-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #8a8a8a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.sp2-info-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #222;
+    text-align: right;
+    word-break: break-word;
+}
+.sp2-info-value a { color: #222; }
+
+/* ---------- Pills / Badges ---------- */
+.sp2-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.sp2-pill-blue { background: #eef2ff; color: #4f46e5; }
+.sp2-pill-teal { background: #e6fcf5; color: #0ca678; }
+.sp2-pill-amber { background: #fff8e6; color: #f59f00; }
+.sp2-pill-purple { background: #f3f0ff; color: #7950f2; }
+
+/* ---------- Profile Tab Clean Tables ---------- */
+.sp2-profile-table {
+    width: 100%;
+    margin-bottom: 0;
+}
+.sp2-profile-table td {
+    padding: 10px 0;
+    border-bottom: 1px solid #f4f6f9 !important;
+    border-top: none !important;
+    vertical-align: top;
+}
+.sp2-profile-table tr:last-child td {
+    border-bottom: none !important;
+}
+.sp2-profile-table td:first-child {
+    font-size: 11px;
+    font-weight: 600;
+    color: #8a8a8a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: 35%;
+}
+.sp2-profile-table td:last-child {
+    font-size: 13px;
+    font-weight: 600;
+    color: #222;
+    text-align: right;
+    word-break: break-word;
+}
+.sp2-profile-table td a { color: <?php echo $theme_color; ?>; }
+}
+.sp2-pill-blue   { background: #e0e7ff; color: <?php echo $theme_color; ?>; }
+.sp2-pill-green  { background: #dcf2e6; color: #3b9b65; }
+.sp2-pill-red    { background: #fff0f3; color: #d8456a; }
+.sp2-pill-amber  { background: #fbedcf; color: #d09435; }
+.sp2-pill-purple { background: #f4e8fb; color: #9d50ce; }
+.sp2-pill-gray   { background: #f3f4f6; color: #4b5563; }
+.sp2-pill-teal   { background: #e0fdf4; color: #0f766e; }
+
+/* ---------- Siblings ---------- */
+.sp2-sibling-card {
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+}
+.sp2-sibling-card:hover {
+    background: #f4f6f9;
+    border-color: #e0e7ff;
+    box-shadow: 0 2px 8px rgba(79,70,229,0.08);
+}
+.sp2-sibling-img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e0e7ff;
+    flex-shrink: 0;
+}
+.sp2-sibling-info { flex: 1; min-width: 0; }
+.sp2-sibling-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #222;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sp2-sibling-name a { color: #222; }
+.sp2-sibling-name a:hover { color: <?php echo $theme_color; ?>; }
+.sp2-sibling-meta { font-size: 11px; color: #888; margin-top: 2px; }
+
+/* ---------- Parent/Guardian ---------- */
+.sp2-parent-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+.sp2-parent-item:last-child { border-bottom: none; padding-bottom: 0; }
+.sp2-parent-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid #eaeaea;
+    background: #f9fafb;
+    flex-shrink: 0;
+}
+.sp2-parent-details {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 8px;
+    column-gap: 16px;
+}
+.sp2-parent-title {
+    width: 100%;
+    font-size: 11px;
+    font-weight: 700;
+    color: <?php echo $theme_color; ?>;
+    text-transform: uppercase;
+    margin-bottom: 0px;
+    letter-spacing: 0.5px;
+}
+.sp2-parent-row {
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    min-width: 80px;
+}
+.sp2-parent-label {
+    color: #888;
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+.sp2-parent-val {
+    color: #111827;
+    font-weight: 500;
+}
+
+/* ---------- Enhanced Tab Navigation (Light Pill Liquid Glass) ---------- */
+.sp2-tabs-nav {
+    border-bottom: none;
+    display: inline-flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 8px;
+    border-radius: 50px;
+    margin-bottom: 32px !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    list-style: none;
+    max-width: 100%;
+}
+.sp2-tabs-nav::-webkit-scrollbar { display: none; }
+.sp2-tabs-nav > li { margin: 0; }
+.sp2-tabs-nav > li > a {
+    border: none !important;
+    border-radius: 40px !important;
+    padding: 10px 24px;
+    font-weight: 600;
+    color: #6b7280;
+    background: transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: block;
+    white-space: nowrap;
+}
+.sp2-tabs-nav > li > a:hover {
+    color: #111827;
+    background: rgba(255, 255, 255, 0.5);
+}
+.sp2-tabs-nav > li.active > a, 
+.sp2-tabs-nav > li.active > a:hover, 
+.sp2-tabs-nav > li.active > a:focus {
+    background: #fff;
+    color: #111827;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.sp2-tab-content {
+    /* Container for the tab content, removing old borders */
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    margin-bottom: 18px;
+}
+/* ---------- Profile Data Grid (Replaces Tables) ---------- */
+.sp2-data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+@media (max-width: 991px) {
+    .sp2-data-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 575px) {
+    .sp2-data-grid { grid-template-columns: 1fr; }
+}
+.sp2-data-box {
+    background: #f9fafb;
+    border: 1px solid #f0f0f0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.sp2-data-box:hover {
+    background: #fff;
+    border-color: #e5e7eb;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    transform: translateY(-1px);
+}
+.sp2-data-box-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+.sp2-data-box-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+    word-break: break-word;
+}
+.sp2-data-box-value a { color: <?php echo $theme_color; ?>; text-decoration: none; }
+.sp2-data-box-value a:hover { text-decoration: underline; }
+
+/* ---------- Fees Invoice List ---------- */
+.sp2-invoice-wrapper {
+    background: transparent;
+    margin-bottom: 24px;
+}
+.sp2-invoice-table { display: block; }
+.sp2-invoice-thead {
+    display: flex;
+    padding: 0 16px 8px 16px;
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #eaeaea;
+    margin-bottom: 8px;
+}
+.sp2-invoice-thead .sp2-invoice-row {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+}
+.sp2-invoice-tbody { display: flex; flex-direction: column; gap: 12px; }
+
+/* ---------- Attendance Top Cards ---------- */
+.fee-deposits-wrapper {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+}
+.fee-deposits-wrapper.open {
+    display: flex;
+}
+.sp2-att-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.sp2-att-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    border: 1px solid #eaeaea;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.sp2-att-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+}
+.sp2-att-box-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+.sp2-att-box-val {
+    font-size: 24px;
+    font-weight: 700;
+}
+.ab-present .sp2-att-box-val { color: #10b981; }
+.ab-absent .sp2-att-box-val { color: #ef4444; }
+.ab-late .sp2-att-box-val { color: #f59e0b; }
+.ab-halfday .sp2-att-box-val { color: #8b5cf6; }
+.ab-holiday .sp2-att-box-val { color: #3b82f6; }
+
+/* ---------- Timeline Modernization ---------- */
+.timeline.timeline-inverse {
+    position: relative;
+    padding-left: 30px;
+}
+.timeline.timeline-inverse::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 14px;
+    width: 2px;
+    background: repeating-linear-gradient(to bottom, #d1d5db, #d1d5db 6px, transparent 6px, transparent 12px);
+}
+.timeline.timeline-inverse > li {
+    margin-bottom: 24px;
+    position: relative;
+}
+.timeline.timeline-inverse > li.time-label {
+    margin-bottom: 16px;
+}
+.timeline.timeline-inverse > li.time-label > span {
+    background-color: <?php echo $theme_color; ?> !important;
+    color: #fff;
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.timeline.timeline-inverse > li > i {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    line-height: 32px;
+    left: -30px;
+    background-color: #fff !important;
+    color: <?php echo $theme_color; ?> !important;
+    border: 2px solid <?php echo $theme_color; ?>;
+    box-shadow: 0 0 0 4px #fff;
+    border-radius: 50%;
+    z-index: 2;
+}
+.timeline.timeline-inverse > li > .timeline-item {
+    background: #fff;
+    border: 1px solid #eaeaea;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    border-radius: 12px;
+    margin-left: 20px;
+    padding: 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.timeline.timeline-inverse > li > .timeline-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+    border-color: <?php echo $theme_color; ?>;
+}
+.timeline.timeline-inverse > li > .timeline-item > .time {
+    color: #9ca3af;
+    font-size: 12px;
+}
+.timeline.timeline-inverse > li > .timeline-item > .timeline-header {
+    border-bottom: none;
+    padding: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 8px;
+}
+.timeline.timeline-inverse > li > .timeline-item > .timeline-body {
+    padding: 0;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.sp2-invoice-row {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    border: 1px solid #eaeaea;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    align-items: center;
+    gap: 12px;
+}
+.sp2-invoice-main-row {
+    border-left: 4px solid <?php echo $theme_color; ?>;
+}
+.sp2-invoice-main-row:has(.label-danger) {
+    background-color: #fef2f2;
+    border-left: 4px solid #ef4444;
+}
+.sp2-invoice-main-row:has(.label-success) {
+    background-color: #f0fdf4;
+    border-left: 4px solid #10b981;
+}
+.sp2-invoice-main-row:has(.label-warning) {
+    background-color: #fffbeb;
+    border-left: 4px solid #f59e0b;
+}
+
+.sp2-invoice-sub-row {
+    background: #fdfdfd;
+    margin-left: 24px;
+    margin-top: -8px;
+    padding: 12px 16px;
+    border-left: 2px dashed #d1d5db;
+    box-shadow: none;
+    border-radius: 0 12px 12px 0;
+}
+.sp2-invoice-total-row {
+    background: #f4f5f7;
+    border: none;
+    font-weight: bold;
+    justify-content: flex-end;
+}
+.sp2-invoice-col {
+    flex: 1 1 80px;
+    font-size: 13px;
+    color: #4b5563;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.sp2-invoice-col:first-child {
+    flex: 2 1 180px;
+    font-weight: 600;
+    color: #111827;
+    font-size: 15px;
+}
+.sp2-invoice-col.text-right {
+    text-align: right;
+    font-weight: 600;
+}
+.sp2-invoice-col .label {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+.sp2-invoice-col .label-success { background-color: #10b981 !important; }
+.sp2-invoice-col .label-danger { background-color: #ef4444 !important; }
+.sp2-invoice-col .label-warning { background-color: #f59e0b !important; }
+
+/* ---------- Profile Data Rows ---------- */
+.sp2-data-section {
+    margin-bottom: 20px;
+}
+.sp2-data-section:last-child { margin-bottom: 0; }
+.sp2-data-row {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid #f4f6f9;
+    gap: 12px;
+}
+.sp2-data-row:last-child { border-bottom: none; }
+.sp2-data-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8a8a8a;
+    width: 38%;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding-top: 1px;
+}
+.sp2-data-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #222;
+    flex: 1;
+    word-break: break-word;
+}
+.sp2-data-value img {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #eaeaea;
+}
+.sp2-parent-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f4f6f9;
+}
+.sp2-parent-row:last-child { border-bottom: none; }
+.sp2-parent-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #eaeaea;
+    flex-shrink: 0;
+}
+
+/* ---------- Fees Tab ---------- */
+.sp2-fee-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.sp2-fee-stat {
+    border-radius: 8px;
+    padding: 14px;
+    border: 1px solid #f0f0f0;
+}
+.sp2-fee-stat-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+}
+.sp2-fee-stat-val {
+    font-size: 18px;
+    font-weight: 800;
+    color: #222;
+}
+.sp2-fee-stat.fs-total   { background: #f4f6f9; border-color: #e9ecef; }
+.sp2-fee-stat.fs-total .sp2-fee-stat-label { color: #555; }
+.sp2-fee-stat.fs-paid    { background: #f6fffa; border-color: #dcf2e6; }
+.sp2-fee-stat.fs-paid .sp2-fee-stat-label { color: #3b9b65; }
+.sp2-fee-stat.fs-paid .sp2-fee-stat-val { color: #3b9b65; }
+.sp2-fee-stat.fs-balance { background: #fff5f8; border-color: #fbe0e8; }
+.sp2-fee-stat.fs-balance .sp2-fee-stat-label { color: #d8456a; }
+.sp2-fee-stat.fs-balance .sp2-fee-stat-val { color: #d8456a; }
+.sp2-fee-stat.fs-fine    { background: #fffcf5; border-color: #fbedcf; }
+.sp2-fee-stat.fs-fine .sp2-fee-stat-label { color: #d09435; }
+.sp2-fee-stat.fs-fine .sp2-fee-stat-val { color: #d09435; }
+
+.sp2-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-bottom: 0;
+}
+.sp2-table thead th {
+    background: #f4f6f9;
+    color: #555;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 10px 12px;
+    border-bottom: 2px solid #eaeaea;
+    white-space: nowrap;
+}
+.sp2-table tbody tr {
+    border-bottom: 1px solid #f4f6f9;
+    transition: background 0.15s;
+}
+.sp2-table tbody tr:hover { background: #fafbff; }
+.sp2-table tbody tr.sp2-row-danger { background: #fff5f8 !important; }
+.sp2-table tbody tr.sp2-row-sub { background: #fafafa; }
+.sp2-table tbody td {
+    padding: 9px 12px;
+    color: #333;
+    vertical-align: middle;
+}
+.sp2-table tfoot td {
+    padding: 11px 12px;
+    font-weight: 700;
+    font-size: 13px;
+    background: #f4f6f9;
+    border-top: 2px solid #eaeaea;
+    color: #222;
+}
+.sp2-table-wrap {
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* ---------- Attendance Stat Boxes ---------- */
+.sp2-att-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.sp2-att-box {
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+    border: 1px solid;
+}
+.sp2-att-box-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+}
+.sp2-att-box-val {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1;
+}
+.sp2-att-box.ab-present  { background: #f6fffa; border-color: #dcf2e6; }
+.sp2-att-box.ab-present .sp2-att-box-label { color: #3b9b65; }
+.sp2-att-box.ab-present .sp2-att-box-val   { color: #3b9b65; }
+.sp2-att-box.ab-absent   { background: #fff5f8; border-color: #fbe0e8; }
+.sp2-att-box.ab-absent .sp2-att-box-label  { color: #d8456a; }
+.sp2-att-box.ab-absent .sp2-att-box-val    { color: #d8456a; }
+.sp2-att-box.ab-late     { background: #fffcf5; border-color: #fbedcf; }
+.sp2-att-box.ab-late .sp2-att-box-label    { color: #d09435; }
+.sp2-att-box.ab-late .sp2-att-box-val      { color: #d09435; }
+.sp2-att-box.ab-halfday  { background: #fdfaff; border-color: #f4e8fb; }
+.sp2-att-box.ab-halfday .sp2-att-box-label { color: #9d50ce; }
+.sp2-att-box.ab-halfday .sp2-att-box-val   { color: #9d50ce; }
+.sp2-att-box.ab-holiday  { background: #f0f4ff; border-color: #c7d7fd; }
+.sp2-att-box.ab-holiday .sp2-att-box-label { color: #4f46e5; }
+.sp2-att-box.ab-holiday .sp2-att-box-val   { color: <?php echo $theme_color; ?>; }
+
+/* ---------- Timeline Overhaul ---------- */
+.sp2-timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: relative;
+}
+.sp2-timeline::before {
+    content: '';
+    position: absolute;
+    left: 16px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, <?php echo $theme_color; ?>, #007bff, #eaeaea);
+}
+.sp2-timeline-item {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 18px;
+    position: relative;
+}
+.sp2-timeline-dot {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: <?php echo $theme_color; ?>;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 13px;
+    flex-shrink: 0;
+    z-index: 1;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-top: 2px;
+}
+.sp2-timeline-body {
+    flex: 1;
+    background: #f9fafb;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    padding: 12px 16px;
+}
+.sp2-timeline-date {
+    font-size: 11px;
+    font-weight: 600;
+    color: <?php echo $theme_color; ?>;
+    background: #e0e7ff;
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: inline-block;
+    margin-bottom: 6px;
+}
+.sp2-timeline-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 4px;
+}
+.sp2-timeline-desc {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.5;
+}
+.sp2-timeline-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+/* ---------- Documents Tab ---------- */
+.sp2-doc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.sp2-doc-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    background: <?php echo $theme_color; ?>;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+}
+.sp2-doc-btn:hover { background: #333; color: #fff; }
+
+/* ---------- Exam Tab ---------- */
+.sp2-exam-card {
+    background: #fff;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 18px;
+}
+.sp2-exam-header {
+    background: linear-gradient(135deg, #f0f4ff, #e0e7ff);
+    padding: 12px 16px;
+    border-bottom: 1px solid #c7d7fd;
+}
+.sp2-exam-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: <?php echo $theme_color; ?>;
+    margin: 0;
+}
+.sp2-exam-table thead th {
+    background: <?php echo $theme_color; ?>;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 9px 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.sp2-exam-table tbody td {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-bottom: 1px solid #f4f6f9;
+    color: #333;
+}
+.sp2-exam-table tbody tr:hover { background: #f9faff; }
+.sp2-exam-summary {
+    background: linear-gradient(135deg, #f0f4ff, #e8edff);
+    border-top: 2px solid #c7d7fd;
+    padding: 12px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.sp2-exam-summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.sp2-exam-summary-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.sp2-exam-summary-val {
+    font-size: 16px;
+    font-weight: 800;
+    color: <?php echo $theme_color; ?>;
+}
+
+/* ---------- Behaviour Tab ---------- */
+.sp2-behaviour-table thead th {
+    background: #fdfaff;
+    border-bottom: 2px solid #f4e8fb;
+    color: #9d50ce;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 9px 12px;
+}
+.sp2-behaviour-table tbody td {
+    padding: 9px 12px;
+    font-size: 12px;
+    border-bottom: 1px solid #f9f0ff;
+    vertical-align: middle;
+}
+.sp2-behaviour-table tbody tr.danger { background: #fff5f8; }
+
+/* ---------- Misc Tweaks ---------- */
+.sp2-add-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    background: <?php echo $theme_color; ?>;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    float: right;
+}
+.sp2-add-btn:hover { background: #333; color: #fff; }
+.sp2-no-record {
+    text-align: center;
+    padding: 30px;
+    color: #999;
+    font-size: 13px;
+}
+.sp2-no-record i {
+    font-size: 28px;
+    margin-bottom: 10px;
+    display: block;
+    opacity: 0.4;
+}
+.sp2-dropdown-menu {
+    background: #fff;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    min-width: 180px;
+}
+.sp2-dropdown-menu li a {
+    font-size: 13px;
+    padding: 8px 16px;
+    color: #333;
+}
+.sp2-dropdown-menu li a:hover { background: #f4f6f9; color: <?php echo $theme_color; ?>; }
+
+/* Responsive for sidebar layout */
+@media (max-width: 768px) {
+    .sp2-hero-body { flex-wrap: wrap; }
+    .sp2-hero-actions { justify-content: flex-start; }
+    .sp2-fee-stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .sp2-att-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+
+<div class="content-wrapper sp2-wrapper">
     <div class="row">
         <div>
             <a id="sidebarCollapse" class="studentsideopen"><i class="fa fa-navicon"></i></a>
@@ -74,273 +1181,181 @@ $currency_symbol = $admin_session['currency_symbol'];
 
     <section class="content">
         <div class="row">
-            <div class="col-lg-3 col-md-4 col-sm-12">
-                <div class="box box-primary transparent_bg" <?php
-                                                if ($student["is_active"] == "no") {
-                                                    echo "style='background-color:#f0dddd;'";
-                                                }
-                                                ?>>
-                    <div class="box box-widget widget-user-2 mb0">
-                        <div class="widget-user-header bg-gray-light overflow-hidden">
-                            <div class="widget-user-image">
-                                <?php if ($sch_setting->student_photo) {
-
-
-                                    if (!empty($student["image"])) {
-
-                                        $image_url = $this->media_storage->getImageURL($student["image"]);
+            <div class="col-lg-3 col-md-4 col-sm-12" style="padding-top:6px;">
+                <!-- ===== SP2 HERO CARD ===== -->
+                <div class="sp2-hero" style="margin-bottom:14px;">
+                    <div class="sp2-hero-bg"></div>
+                    <div class="sp2-hero-body">
+                        <div class="sp2-hero-avatar-wrap" style="padding-bottom:20px;">
+                            <?php if ($sch_setting->student_photo) {
+                                if (!empty($student["image"])) {
+                                    $image_url = $this->media_storage->getImageURL($student["image"]);
+                                } else {
+                                    if ($student['gender'] == 'Female') {
+                                        $image_url = $this->media_storage->getImageURL("uploads/student_images/default_female.jpg");
                                     } else {
-
-                                        if ($student['gender'] == 'Female') {
-                                            $image_url = $this->media_storage->getImageURL("uploads/student_images/default_female.jpg");
-                                        } else {
-                                            $image_url = $this->media_storage->getImageURL("uploads/student_images/default_male.jpg");
-                                        }
+                                        $image_url = $this->media_storage->getImageURL("uploads/student_images/default_male.jpg");
                                     }
-
-                                ?>
-                                    <img class="profile-user-img img-responsive img-rounded" src="<?php echo $image_url; ?>" alt="User profile picture">
+                                }
+                            ?>
+                                <img class="sp2-hero-avatar" src="<?php echo $image_url; ?>" alt="Student photo">
+                            <?php } else { ?>
+                                <div class="sp2-hero-avatar-placeholder"><i class="fa fa-user"></i></div>
+                            <?php } ?>
+                        </div>
+                        <div class="sp2-hero-info">
+                            <div class="sp2-hero-name"><?php echo $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?></div>
+                            <div class="sp2-hero-pills">
+                                <span class="sp2-hero-pill"><i class="fa fa-id-card-o"></i> <?php echo $this->lang->line('admission_no'); ?>: <?php echo $student['admission_no']; ?></span>
+                                <?php if ($sch_setting->roll_no && !empty($student['roll_no'])) { ?>
+                                <span class="sp2-hero-pill"><i class="fa fa-hashtag"></i> <?php echo $this->lang->line('roll_number'); ?>: <?php echo $student['roll_no']; ?></span>
+                                <?php } ?>
+                                <span class="sp2-hero-pill"><?php echo $student['class']; ?> &bull; <?php echo $student['section']; ?></span>
+                                <?php if ($student["is_active"] == "no") { ?>
+                                <span class="sp2-hero-pill disabled-pill"><i class="fa fa-ban"></i> Disabled</span>
                                 <?php } ?>
                             </div>
-                            <h3 class="widget-user-username"><?php echo $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?></h3>
-                            <h5 class="widget-user-desc mb5"><?php echo $this->lang->line('admission_no'); ?> <span class="text-aqua"><?php echo $student['admission_no']; ?></span></h5>
-							 <?php if ($sch_setting->roll_no) { ?>
-                            <h5 class="widget-user-desc"><?php echo $this->lang->line('roll_number'); ?> <span class="text-aqua"><?php echo $student['roll_no']; ?></h5>
-							 <?php } ?>
                         </div>
                     </div>
-
-                    <ul class="nav nav-tabs theme-shadow iconnav">
-<?php if ($student["is_active"] == "yes") {
-                        ?>
-                            <?php
-                            if ($this->rbac->hasPrivilege('disable_student', 'can_view')) {
-                            ?>
-                                <li class="pull-right dropdown rtl-dropdown">
-                                    <a href="#" class="dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-ellipsis-v"></i></a>
-                                    <ul class="dropdown-menu">
-                                        <li><a style="cursor: pointer;" onclick="send_password()"><?php echo $this->lang->line('send_student_password'); ?></a></li>
-                                        <li><a style="cursor: pointer;" onclick="send_parent_password()"> <?php echo $this->lang->line('send_parent_password'); ?></a></li>					
-                                    </ul>
-                                </li>
-                                <li class="">
-                                    <a style="cursor: pointer;" onclick="disable_student('<?php echo $student["id"] ?>')" class="text-red" data-toggle="tooltip" data-placement="bottom" title="<?php echo $this->lang->line("student_logout_and_disable"); ?>">
-                                        <i class="fa fa-thumbs-o-down"></i>
-                                    </a>
-                                </li>
-                            <?php
-                            }
-                            if ($this->rbac->hasPrivilege('student_login_credential_report', 'can_view')) {
-                            ?>
-                                <li class="">
-                                    <a href="#" class="schedule_modal" data-toggle="tooltip" data-placement="bottom" title="<?php echo $this->lang->line('login_details'); ?>"><i class="fa fa-key"></i>
-                                    </a>
-                                </li>
-                            <?php
-                            }
-                            ?>
-
+                    <!-- Action Buttons Row -->
+                    <div style="display:flex; flex-wrap:wrap; gap:8px; padding:12px 0 16px 0; border-top:1px solid rgba(255,255,255,0.15); margin-top:4px; position:relative; z-index:2;">
+                        <?php if ($student["is_active"] == "yes") { ?>
+                            <?php if ($this->rbac->hasPrivilege('student', 'can_edit')) { ?>
+                            <a href="<?php echo base_url() . 'student/edit/' . $student['id'] ?>" class="sp2-btn" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>"><i class="fa fa-pencil"></i> <?php echo $this->lang->line('edit'); ?></a>
+                            <?php } ?>
                             <?php if ($this->module_lib->hasActive('fees_collection')) { ?>
-                                <li class="">
-                                    <a href="<?php echo site_url('studentfee/addfee/' . $student["student_session_id"]) ?>" data-toggle="tooltip" data-placement="bottom" title="<?php echo $this->lang->line('collect_fees'); ?>"><b><?php echo $currency_symbol; ?> </b>
-                                    </a>
-                                </li>
-
+                            <a href="<?php echo site_url('studentfee/addfee/' . $student['student_session_id']) ?>" class="sp2-btn sp2-btn-success" data-toggle="tooltip" title="<?php echo $this->lang->line('collect_fees'); ?>"><i class="fa fa-money"></i> <?php echo $this->lang->line('collect_fees'); ?></a>
                             <?php } ?>
-                            <?php
-                            if ($this->rbac->hasPrivilege('student', 'can_edit')) {
-                            ?>
-                                <li class="">
-                                    <a href="<?php echo base_url() . "student/edit/" . $student["id"] ?>" class="" data-toggle="tooltip" data-placement="bottom" title="<?php echo $this->lang->line('edit'); ?>"><i class="fa fa-pencil"></i>
-
-                                    </a>
-                                </li>
-                            <?php
-                            }
-                        } else {
-                            ?>
-                            <li class="">
-                                <a href="#" onclick="enable('<?php echo $student["id"] ?>')" class="text-green" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('enable'); ?>">
-                                    <i class="fa fa-thumbs-o-up"></i><?php ?>
-                                </a>
-                            </li>
+                            <?php if ($this->rbac->hasPrivilege('disable_student', 'can_view')) { ?>
+                            <a style="cursor:pointer;" onclick="disable_student('<?php echo $student['id'] ?>')" class="sp2-btn sp2-btn-danger" data-toggle="tooltip" title="<?php echo $this->lang->line('student_logout_and_disable'); ?>"><i class="fa fa-ban"></i> <?php echo $this->lang->line('student_logout_and_disable'); ?></a>
+                            <div class="dropdown" style="display:inline-block;">
+                                <a href="#" class="sp2-btn dropdown-toggle" data-toggle="dropdown"><i class="fa fa-ellipsis-v"></i></a>
+                                <ul class="dropdown-menu sp2-dropdown-menu">
+                                    <li><a style="cursor:pointer;" onclick="send_password()"><?php echo $this->lang->line('send_student_password'); ?></a></li>
+                                    <li><a style="cursor:pointer;" onclick="send_parent_password()"><?php echo $this->lang->line('send_parent_password'); ?></a></li>
+                                </ul>
+                            </div>
+                            <?php } ?>
+                            <?php if ($this->rbac->hasPrivilege('student_login_credential_report', 'can_view')) { ?>
+                            <a href="#" class="sp2-btn schedule_modal" data-toggle="tooltip" title="<?php echo $this->lang->line('login_details'); ?>"><i class="fa fa-key"></i></a>
+                            <?php } ?>
+                        <?php } else { ?>
+                            <a href="#" onclick="enable('<?php echo $student['id'] ?>')" class="sp2-btn sp2-btn-success" data-toggle="tooltip" title="<?php echo $this->lang->line('enable'); ?>"><i class="fa fa-thumbs-o-up"></i> <?php echo $this->lang->line('enable'); ?></a>
                         <?php } ?>
-                        
-                            <li class="">
-                                <a type="button" class="btn btn-xs print_student_details shadow-none" data-student_id="<?php echo $student['id'] ?>" data-student_name="<?php echo $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?>" data-admission_no="<?php echo $student['admission_no']; ?>" data-action="download" data-placement="bottom" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('print'); ?>" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>" autocomplete="off"><i class="fa fa-print"></i></a>
-                            </li>
-   
-                        
-                    </ul>
+                        <a type="button" class="sp2-btn print_student_details" data-student_id="<?php echo $student['id'] ?>" data-student_name="<?php echo $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?>" data-admission_no="<?php echo $student['admission_no']; ?>" data-action="download" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('print'); ?>" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>" autocomplete="off"><i class="fa fa-print"></i> <?php echo $this->lang->line('print'); ?></a>
+                    </div>
+                </div><!-- /.sp2-hero -->
 
-                    <div class="box-body box-profile pt0 bg-white">
-                        <ul class="list-group list-group-unbordered">
+                <!-- ===== SP2 SIDEBAR INFO CARD ===== -->
+                <div class="sp2-card sp2-card-sm">
+                    <?php if ($student['is_active'] == 'no') { ?>
+                    <div class="sp2-disabled-banner">
+                        <i class="fa fa-exclamation-circle"></i> <strong><?php echo $this->lang->line('disable_reason'); ?>:</strong> <?php if(!empty($reason_data['reason'])){ echo $reason_data['reason']; } ?>
+                        <br><strong><?php echo $this->lang->line('disable_note'); ?>:</strong> <?php echo $student['dis_note'] ?>
+                        <br><strong><?php echo $this->lang->line('disable_date'); ?>:</strong> <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['disable_at'])); ?>
+                    </div>
+                    <?php } ?>
+
+                    <div class="sp2-section-title" style="color:#d68940;">Quick Info</div>
+
+                    <div class="sp2-info-row">
+                        <span class="sp2-info-label"><?php echo $this->lang->line('class'); ?></span>
+                        <span class="sp2-info-value"><span class="sp2-pill sp2-pill-blue"><?php echo $student['class'] . ' (' . $session . ')'; ?></span></span>
+                    </div>
+                    <div class="sp2-info-row">
+                        <span class="sp2-info-label"><?php echo $this->lang->line('section'); ?></span>
+                        <span class="sp2-info-value"><span class="sp2-pill sp2-pill-teal"><?php echo $student['section']; ?></span></span>
+                    </div>
+                    <div class="sp2-info-row">
+                        <span class="sp2-info-label"><?php echo $this->lang->line('gender'); ?></span>
+                        <span class="sp2-info-value">
                             <?php
-                            if ($student['is_active'] == 'no') {
+                            $g = strtolower((string)$student['gender']);
+                            $gpill = ($g == 'female') ? 'sp2-pill-purple' : 'sp2-pill-amber';
                             ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('disable_reason'); ?></b> <span class="pull-right text-aqua"><?php if(!empty($reason_data['reason'])){ echo $reason_data['reason']; } ?></span>
-                                </li>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('disable_note'); ?></b> <span class="pull-right text-aqua"><?php echo $student['dis_note'] ?></span>
-                                </li>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('disable_date'); ?></b> <span class="pull-right text-aqua"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['disable_at'])); ?></span>
-                                </li>
+                            <span class="sp2-pill <?php echo $gpill; ?>"><?php echo $this->lang->line($g); ?></span>
+                        </span>
+                    </div>
+                    <?php if ($sch_setting->rte) { ?>
+                    <div class="sp2-info-row">
+                        <span class="sp2-info-label"><?php echo $this->lang->line('rte'); ?></span>
+                        <span class="sp2-info-value"><?php if($student['rte']){ echo $this->lang->line(strtolower($student['rte'])); } ?></span>
+                    </div>
+                    <?php } ?>
+                    <?php if ($sch_setting->student_barcode == 1) { ?>
+                    <div class="sp2-info-row">
+                        <span class="sp2-info-label"><?php echo $this->lang->line('barcode'); ?></span>
+                        <span class="sp2-info-value">
+                            <?php if (file_exists("uploads/student_id_card/barcodes/" . $student['id'] . ".png")) { ?>
+                            <a href="<?php echo $this->media_storage->getImageURL('uploads/student_id_card/barcodes/' . $student['id'] . '.png'); ?>" target="_blank">
+                                <img class="h-36" src="<?php echo $this->media_storage->getImageURL('uploads/student_id_card/barcodes/' . $student['id'] . '.png'); ?>" width="auto" height="36" style="border-radius:4px;" /></a>
                             <?php } ?>
-
-                            <?php
-                            if ($sch_setting->roll_no) {
-                            ?>
-                            <?php
-                            } ?>
-							
-							
-							
-                            <li class="list-group-item listnoback border0">
-                                <b><?php echo $this->lang->line('class'); ?></b> <a class="pull-right text-aqua"><?php echo $student['class'] . " (" . $session . ")"; ?></a>
-                            </li>
-                            <li class="list-group-item listnoback">
-                                <b><?php echo $this->lang->line('section'); ?></b> <a class="pull-right text-aqua"><?php echo $student['section']; ?></a>
-                            </li>
-							<li class="list-group-item listnoback">
-                                <b><?php echo $this->lang->line('gender'); ?></b> <a class="pull-right text-aqua"><?php echo $this->lang->line(strtolower((string) $student['gender'])); ?></a>
-                            </li>
-                            <?php if ($sch_setting->rte) { ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('rte'); ?></b> <a class="pull-right text-aqua"><?php if($student['rte']){ echo $this->lang->line(strtolower($student['rte'])); } ?></a>
-                                </li>
-                            <?php } ?>                            
-                            <?php if ($sch_setting->student_barcode == 1) { ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('barcode'); ?></b>
-                                    <?php if (file_exists("uploads/student_id_card/barcodes/" . $student['id'] . ".png")) { ?>
-                                        <a class="pull-right text-aqua" href="<?php echo $this->media_storage->getImageURL('uploads/student_id_card/barcodes/' . $student['id'] . '.png'); ?>" target="_blank">
-                                            <img class="h-36" src="<?php echo $this->media_storage->getImageURL('uploads/student_id_card/barcodes/' . $student['id'] . '.png'); ?>" width="auto" height="auto" /></a>
-                                    <?php } ?>
-                                </li>
+                        </span>
+                    </div>
+                    <div class="sp2-info-row">
+                        <span class="sp2-info-label"><?php echo $this->lang->line('qrcode'); ?></span>
+                        <span class="sp2-info-value">
+                            <?php if (file_exists("./uploads/student_id_card/qrcode/" . $student['id'] . ".png")) { ?>
+                            <a href="<?php echo $this->media_storage->getImageURL('uploads/student_id_card/qrcode/' . $student['id'] . '.png'); ?>" target="_blank">
+                                <img class="h-50 qrcodeimg" src="<?php echo $this->media_storage->getImageURL('uploads/student_id_card/qrcode/' . $student['id'] . '.png'); ?>" width="50" height="50" style="border-radius:4px;" /></a>
                             <?php } ?>
-                            <?php if ($sch_setting->student_barcode == 1) { ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('qrcode'); ?></b>
-                                    <?php if (file_exists("./uploads/student_id_card/qrcode/" . $student['id'] . ".png")) { ?>
-                                        <a class="pull-right text-aqua" href="<?php echo $this->media_storage->getImageURL('uploads/student_id_card/qrcode/' . $student['id'] . '.png'); ?>" target="_blank">
-                                            <img class="h-50 qrcodeimg" src="<?php echo $this->media_storage->getImageURL('uploads/student_id_card/qrcode/' . $student['id'] . '.png'); ?>" width="auto" height="auto" /></a>
-                                    <?php } ?>
-                                </li>
-                            <?php } ?>
+                        </span>
+                    </div>
+                    <?php } ?>
+                    <!------- Behaviour Report Start-------->
+                    <?php
+                    if ($this->module_lib->hasModule('behaviour_records')) {
+                        if ($this->rbac->hasPrivilege('behaviour_records_assign_incident', 'can_view')) {
+                    ?>
+                    <div class="sp2-info-row">
+                        <span class="sp2-info-label"><?php echo $this->lang->line('behaviour_score'); ?></span>
+                        <span class="sp2-info-value">
+                            <span class="sp2-pill <?php echo ($student['total_points'] >= 0) ? 'sp2-pill-green' : 'sp2-pill-red'; ?>"><?php echo $student['total_points']; ?></span>
+                        </span>
+                    </div>
+                    <?php
+                        }
+                    }
+                    ?>
+                    <!------- Behaviour Report End--------->
+                </div><!-- /.sp2-card -->
 
-                            <!------- Behaviour Report Start-------->
-                            <?php
-                            if ($this->module_lib->hasModule('behaviour_records')) {
-                                if ($this->rbac->hasPrivilege('behaviour_records_assign_incident', 'can_view')) {
-
-                            ?>
-                                    <li class="list-group-item listnoback">
-                                        <b><?php echo $this->lang->line('behaviour_score'); ?></b> <a class="pull-right text-aqua"><?php echo $student['total_points']; ?></a>
-                                    </li>
-                            <?php
-
+                <!-- ===== SP2 SIBLINGS CARD ===== -->
+                <?php if (!empty($siblings)) { ?>
+                <div class="sp2-card sp2-card-sm" style="margin-top:0;">
+                    <div class="sp2-section-title" style="color:#9d50ce;"><i class="fa fa-users"></i> <?php echo $this->lang->line('sibling'); ?></div>
+                    <?php foreach ($siblings as $sibling_key => $sibling_value) { ?>
+                    <div class="sp2-sibling-card">
+                        <img class="sp2-sibling-img" src="<?php
+                            if (!empty($sibling_value->image)) {
+                                echo $this->media_storage->getImageURL($sibling_value->image);
+                            } else {
+                                if ($sibling_value->gender == 'Female') {
+                                    echo $this->media_storage->getImageURL("uploads/student_images/default_female.jpg");
+                                } else {
+                                    echo $this->media_storage->getImageURL("uploads/student_images/default_male.jpg");
                                 }
                             }
-                            ?>
-                            <!------- Behaviour Report End--------->
-
-                        </ul>
-                    </div>
-                </div>
-                <?php
-                if (!empty($siblings)) {
-                ?>
-                    <div class="box box-primary">
-                        <div class="box-header with-border">
-                            <h3 class="box-title"><?php echo $this->lang->line('sibling'); ?></h3>
-                        </div>
-                        <!-- /.box-header -->
-                        <?php
-                        foreach ($siblings as $sibling_key => $sibling_value) {
-                        ?>
-                            <div class="box-widget widget-user-2">
-                                <!-- Add the bg color to the header using any of the bg-* classes -->
-                                <div class="widget-user-header bg-gray-light overflow-hidden">
-                                    <div class="widget-user-image">
-                                        <img class="profile-user-img img-responsive img-rounded" src="<?php
-                                                                                                        if (!empty($sibling_value->image)) {
-                                                                                                            echo $this->media_storage->getImageURL($sibling_value->image);
-                                                                                                        } else {
-                                                                                                            if ($sibling_value->gender == 'Female') {
-                                                                                                                echo $this->media_storage->getImageURL("uploads/student_images/default_female.jpg");
-                                                                                                            } else {
-                                                                                                                echo $this->media_storage->getImageURL("uploads/student_images/default_male.jpg");
-                                                                                                            }
-                                                                                                        }
-                                                                                                        ?>" alt="<?php echo $this->lang->line('user_avatar'); ?>">
-                                    </div>
-                                    <h4 class="widget-user-username"><a href="<?php echo site_url('student/view/' . $sibling_value->id) ?>"><?php echo $this->customlib->getFullName($sibling_value->firstname, $sibling_value->middlename, $sibling_value->lastname, $sch_setting->middlename, $sch_setting->lastname); ?></a></h4>
-                                    <h5 class="widget-user-desc mb5"><?php echo $this->lang->line('admission_no'); ?> <span class="text-aqua"><?php echo $sibling_value->admission_no; ?></span></h5>
-									
-									<?php if ($sch_setting->roll_no) { ?>
-                                    <h5 class="widget-user-desc"><?php echo $this->lang->line('roll_number'); ?> <span class="text-aqua"><?php echo $sibling_value->roll_no; ?></h5>
-									<?php } ?>
-                                </div>
-                                <div class="box-body pt0">
-                                    <div class="no-padding">
-                                        <ul class="list-group list-group-unbordered">
-                                            <li class="list-group-item">
-                                                <b><?php echo $this->lang->line('class'); ?></b> <a class="pull-right text-aqua"><?php echo $sibling_value->class; ?></a>
-                                            </li>
-                                            <li class="list-group-item">
-                                                <b><?php echo $this->lang->line('section'); ?></b> <a class="pull-right text-aqua"><?php echo $sibling_value->section; ?></a>
-                                            </li>
-											<li class="list-group-item listnoback">
-                                                <b><?php echo $this->lang->line('gender'); ?></b> <a class="pull-right text-aqua"><?php echo $this->lang->line(strtolower($sibling_value->gender)); ?></a>
-                                            </li>
-                                            <?php if ($sibling_value->rte) { ?>
-                                                <li class="list-group-item listnoback">
-                                                    <b><?php echo $this->lang->line('rte'); ?></b> <a class="pull-right text-aqua">
-                                                    <?php echo $this->lang->line(strtolower($sibling_value->rte)); ?></a>
-                                                </li>
-                                            <?php } ?>                                            
-                                            <?php 
-                                            if ($sch_setting->student_barcode == 1) { 
-                                                
-                                                ?>
-                                                <li class="list-group-item listnoback">
-                                                    <b><?php echo $this->lang->line('barcode'); ?></b>
-                                                    <?php if (file_exists("./uploads/student_id_card/barcodes/" . $sibling_value->id . ".png")) { ?>
-                                                        <a class="pull-right text-aqua">
-                                                            <img class="h-36" src="<?php echo $this->media_storage->getImageURL('uploads/student_id_card/barcodes/' . $sibling_value->id.".png"); ?>" width="auto" height="auto" /></a>
-                                                    <?php } ?>
-                                                </li>
-                                            <?php }
-                                             if ($sch_setting->student_barcode == 1) { ?>
-                                                <li class="list-group-item listnoback">
-                                                    <b><?php echo $this->lang->line('qrcode'); ?></b>
-                                                    <?php if (file_exists("./uploads/student_id_card/qrcode/" . $sibling_value->id . ".png")) { ?>
-                                                        <a class="pull-right text-aqua" href="<?php echo $this->media_storage->getImageURL('uploads/student_id_card/qrcode/' . $sibling_value->id. '.png'); ?>" target="_blank">
-                                            <img class="h-50 qrcodeimg" src="<?php echo $this->media_storage->getImageURL('uploads/student_id_card/qrcode/' . $sibling_value->id.".png"); ?>" width="auto" height="auto" /></a>
-                                                    <?php } ?>
-                                                </li>							
-								
-                                            <?php }
-                                             ?>
-                                        </ul>
-                                    </div>
-                                </div>
+                        ?>" alt="<?php echo $this->lang->line('user_avatar'); ?>">
+                        <div class="sp2-sibling-info">
+                            <div class="sp2-sibling-name"><a href="<?php echo site_url('student/view/' . $sibling_value->id) ?>"><?php echo $this->customlib->getFullName($sibling_value->firstname, $sibling_value->middlename, $sibling_value->lastname, $sch_setting->middlename, $sch_setting->lastname); ?></a></div>
+                            <div class="sp2-sibling-meta">
+                                <?php echo $sibling_value->class; ?> &bull; <?php echo $sibling_value->section; ?>
+                                &bull; <span class="sp2-pill sp2-pill-gray" style="font-size:10px; padding:1px 7px;"><?php echo $sibling_value->admission_no; ?></span>
+                                <?php if ($sch_setting->roll_no && !empty($sibling_value->roll_no)) { ?>
+                                &bull; Roll: <?php echo $sibling_value->roll_no; ?>
+                                <?php } ?>
                             </div>
-                        <?php
-                        }
-                        ?>
-                        <!-- /.box-body -->
+                        </div>
                     </div>
-                <?php
-                }
-                ?>
+                    <?php } ?>
+                </div><!-- /.sp2-card siblings -->
+                <?php } ?>
             </div>
-            <div class="col-lg-9 col-md-8 col-sm-12">
-                <div class="nav-tabs-custom theme-shadow">
-                    <ul class="nav nav-tabs">
-                        <li class="active"><a href="#activity" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('profile'); ?></a></li>
+            <div class="col-lg-9 col-md-8 col-sm-12" style="padding-top:6px;">
+                <!-- ===== SP2 TAB NAVIGATION ===== -->
+                <ul class="sp2-tabs-nav nav nav-tabs" style="margin-bottom:0;">
+                    <li class="active"><a href="#activity" data-toggle="tab"><?php echo $this->lang->line('profile'); ?></a></li>
 
                         <?php
                         if ($this->module_lib->hasActive('fees_collection')) {
@@ -419,70 +1434,68 @@ $currency_symbol = $admin_session['currency_symbol'];
 
                     <div class="tab-content">
                         <div class="tab-pane active" id="activity">
-                            <div class="tshadow mb25 bozero">
-                                <div class="table-responsive around10 pt0">
-                                    <table class="table3 table-hover table-striped tmb0">
-                                        <tbody>
+                            <div class="row">
+                                <div class="col-md-6 col-sm-12">
+                                    <div class="sp2-card">
+                                        <div class="sp2-section-title"><i class="fa fa-user"></i> <?php echo $this->lang->line('personal_details'); ?></div>
+                                        <div class="sp2-data-grid">
                                             <?php if ($sch_setting->admission_date) {
                                             ?>
-                                                <tr>
-                                                    <td width="35%"><?php echo $this->lang->line('admission_date'); ?></td>
-                                                    <td class="col-md-5">
-                                                        <?php
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('admission_date'); ?></div>
+    <div class="sp2-data-box-value"><?php
                                                         if (!empty($student['admission_date'])) {
                                                             echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date("Y-m-d", strtotime($student['admission_date']))));
                                                         }
-                                                        ?></td>
-                                                </tr>
+                                                        ?></div>
+</div>
                                             <?php } ?>
-                                            <tr>
-                                                <td><?php echo $this->lang->line('date_of_birth'); ?></td>
-                                                <td><?php
+                                            <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('date_of_birth'); ?></div>
+    <div class="sp2-data-box-value"><?php
                                                     if (!empty($student['dob']) && $student['dob'] != '0000-00-00') {
                                                         echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob']));
                                                     }
-                                                    ?></td>
-                                            </tr>
+                                                    ?></div>
+</div>
                                             <?php if ($sch_setting->category) {
                                             ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('category'); ?></td>
-                                                    <td>
-                                                        <?php
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('category'); ?></div>
+    <div class="sp2-data-box-value"><?php
                                                         foreach ($category_list as $value) {
                                                             if ($student['category_id'] == $value['id']) {
                                                                 echo $value['category'];
                                                             }
                                                         }
-                                                        ?>
-                                                    </td>
-                                                </tr>
+                                                        ?></div>
+</div>
                                             <?php }
                                             if ($sch_setting->mobile_no) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('mobile_number'); ?></td>
-                                                    <td><?php echo $student['mobileno']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('mobile_number'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['mobileno']; ?></div>
+</div>
                                             <?php }
                                             if ($sch_setting->cast) {
                                             ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('caste'); ?></td>
-                                                    <td><?php echo $student['cast']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('caste'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['cast']; ?></div>
+</div>
                                             <?php
                                             }
                                             if ($sch_setting->religion) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('religion'); ?></td>
-                                                    <td><?php echo $student['religion']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('religion'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['religion']; ?></div>
+</div>
                                             <?php }
                                             if ($sch_setting->student_email) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('email'); ?></td>
-                                                    <td><?php echo $student['email']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('email'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['email']; ?></div>
+</div>
                                             <?php }
 
                                             ?>
@@ -491,10 +1504,9 @@ $currency_symbol = $admin_session['currency_symbol'];
                                             if (!empty($cutom_fields_data)) {
                                                 foreach ($cutom_fields_data as $field_key => $field_value) {
                                             ?>
-                                                    <tr>
-                                                        <td><?php echo $field_value->name; ?></td>
-                                                        <td>
-                                                            <?php
+                                                    <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $field_value->name; ?></div>
+    <div class="sp2-data-box-value"><?php
                                                             if (is_string($field_value->field_value) && is_array(json_decode($field_value->field_value, true)) && (json_last_error() == JSON_ERROR_NONE)) {
                                                                 $field_array = json_decode($field_value->field_value);
                                                                 echo "<ul class='student_custom_field'>";
@@ -510,155 +1522,175 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                                 }
                                                                 echo $display_field;
                                                             }
-                                                            ?>
-                                                        </td>
-                                                    </tr>
+                                                            ?></div>
+</div>
                                                 <?php
                                                 }
                                             }
 
                                             if ($sch_setting->student_note) {
                                                 ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('note'); ?></td>
-                                                    <td><?php echo $student['note']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('note'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['note']; ?></div>
+</div>
                                             <?php
                                             }
                                             ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        </div>
                             </div>
-                            <div class="tshadow mb25 bozero">
-                                <h3 class="pagetitleh2"><?php echo $this->lang->line('address'); ?></h3>
-                                <div class="table-responsive around10 pt0">
-                                    <table class="table3 table-hover table-striped tmb0">
-                                        <tbody>
+                            <div class="sp2-card">
+                                <div class="sp2-section-title"><i class="fa fa-map-marker"></i> <?php echo $this->lang->line('address'); ?></div>
+                                <div class="sp2-data-grid">
                                             <?php if ($sch_setting->current_address) { ?>
-                                                <tr>
-                                                    <td width="35%"><?php echo $this->lang->line('current_address'); ?></td>
-                                                    <td class="col-md-5"><?php echo $student['current_address']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('current_address'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['current_address']; ?></div>
+</div>
                                             <?php }
                                             if ($sch_setting->permanent_address) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('permanent_address'); ?></td>
-                                                    <td><?php echo $student['permanent_address']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('permanent_address'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['permanent_address']; ?></div>
+</div>
                                             <?php } ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        </div>
                             </div>
+<div class="sp2-card">
+                                <div class="sp2-section-title"><i class="fa fa-info-circle"></i> <?php echo $this->lang->line('miscellaneous_details'); ?></div>
+                                <div class="sp2-data-grid">
+                                            <?php if ($sch_setting->is_blood_group) { ?>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('blood_group'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['blood_group']; ?></div>
+</div>
+                            
+                                            <?php }
+                                            if ($sch_setting->is_student_house) { ?>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('house'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['house_name']; ?></div>
+</div>
+                                            <?php }
+                                            if ($sch_setting->student_height) { ?>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('height'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['height']; ?></div>
+</div>
+                                            <?php }
+                                            if ($sch_setting->student_weight) { ?>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('weight'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['weight']; ?></div>
+</div>
+                                            <?php }
+                                            if ($sch_setting->measurement_date) {
+                                            ?>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('measurement_date'); ?></div>
+    <div class="sp2-data-box-value"><?php
+                                                        if (!empty($student['measurement_date']) && $student['measurement_date'] != '0000-00-00') {
+                                                            echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['measurement_date']));
+                                                        }
+                                                        ?></div>
+</div>
+                                            <?php }
+                                            if ($sch_setting->previous_school_details) { ?>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('previous_school_details'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['previous_school']; ?></div>
+</div>
+                                            <?php }
+                                            if ($sch_setting->national_identification_no) { ?>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('national_identification_number'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['adhar_no']; ?></div>
+</div>
+                                            <?php }
+                                            if ($sch_setting->local_identification_no) { ?>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('local_identification_number'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['samagra_id']; ?></div>
+</div>
+                                            <?php }
+                                            if ($sch_setting->bank_account_no) { ?>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('bank_account_number'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['bank_account_no']; ?></div>
+</div>
+                                            <?php }
+                                            if ($sch_setting->ifsc_code) { ?>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('bank_name'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['bank_name']; ?></div>
+</div>
+                                            <?php }
+                                            if ($sch_setting->ifsc_code) { ?>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('ifsc_code'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['ifsc_code']; ?></div>
+</div>
+                                            <?php } ?>
+                                         </div>
+                            </div>
+                            </div><!-- /.col-md-6 -->
 
-                            <div class="tshadow mb25 bozero">
+
+                            <div class="col-md-6 col-sm-12">
+                            <div class="sp2-card">
                                 <?php if (($sch_setting->father_name) || ($sch_setting->father_phone) || ($sch_setting->father_occupation) || ($sch_setting->father_pic) || ($sch_setting->mother_name) || ($sch_setting->mother_phone) || ($sch_setting->mother_occupation) || ($sch_setting->mother_pic) || ($sch_setting->guardian_name) || ($sch_setting->guardian_occupation) || ($sch_setting->guardian_relation) || ($sch_setting->guardian_phone) || ($sch_setting->guardian_email) || ($sch_setting->guardian_pic) || ($sch_setting->guardian_address)) {
                                 ?>
-                                    <h3 class="pagetitleh2"><?php echo $this->lang->line('parent_guardian_detail'); ?> </h3>
-                                    <div class="table-responsive around10 pt10">
-                                        <table class="table3 table-hover table-striped tmb0">
-                                            <?php if ($sch_setting->father_name) {
-                                            ?>
-                                                <tr>
-                                                    <td width="35%"><?php echo $this->lang->line('father_name'); ?></td>
-                                                    <td class="col-md-5"><?php echo $student['father_name']; ?></td>
-                                                    <td rowspan="3"><img class="profile-user-img img-responsive img-rounded" src="<?php
-                                                                                                                                    if (!empty($student["father_pic"])) {
-                                                                                                                                        echo $this->media_storage->getImageURL($student["father_pic"]);
-                                                                                                                                    } else {
-                                                                                                                                        echo $this->media_storage->getImageURL("uploads/student_images/no_image.png");
-                                                                                                                                    }
-                                                                                                                                    ?>"></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->father_phone) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('father_phone'); ?></td>
-                                                    <td><?php echo $student['father_phone']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->father_occupation) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('father_occupation'); ?></td>
-                                                    <td><?php echo $student['father_occupation']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->mother_name) {
-                                            ?>
-                                                <tr class="bordertop">
-                                                    <td><?php echo $this->lang->line('mother_name'); ?></td>
-                                                    <td><?php echo $student['mother_name']; ?></td>
-                                                    <td rowspan="3"><img class="profile-user-img img-responsive img-rounded" src="<?php
-                                                                                                                                    if (!empty($student["mother_pic"])) {
-                                                                                                                                        echo $this->media_storage->getImageURL($student["mother_pic"]);
-                                                                                                                                    } else {
-                                                                                                                                        echo $this->media_storage->getImageURL("uploads/student_images/no_image.png");
-                                                                                                                                    }
-                                                                                                                                    ?>"></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->mother_phone) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('mother_phone'); ?></td>
-                                                    <td><?php echo $student['mother_phone']; ?></td>
+                                    <div class="sp2-section-title"><i class="fa fa-users"></i> <?php echo $this->lang->line('parent_guardian_detail'); ?> </div>                                        <div class="sp2-parent-list">
+                                            <?php if ($sch_setting->father_name || $sch_setting->father_phone || $sch_setting->father_occupation) { ?>
+                                            <div class="sp2-parent-item">
+                                                <img class="sp2-parent-avatar" src="<?php
+                                                    if (!empty($student["father_pic"])) {
+                                                        echo $this->media_storage->getImageURL($student["father_pic"]);
+                                                    } else {
+                                                        echo $this->media_storage->getImageURL("uploads/student_images/no_image.png");
+                                                    }
+                                                ?>">
+                                                <div class="sp2-parent-details">
+                                                    <div class="sp2-parent-title"><?php echo $this->lang->line('father'); ?></div>
+                                                    <?php if ($sch_setting->father_name) { ?>
+                                                    <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('name'); ?></span><span class="sp2-parent-val"><?php echo $student['father_name']; ?></span></div>
+                                                    <?php } ?>
+                                                    <?php if ($sch_setting->father_phone) { ?>
+                                                    <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('phone'); ?></span><span class="sp2-parent-val"><?php echo $student['father_phone']; ?></span></div>
+                                                    <?php } ?>
+                                                    <?php if ($sch_setting->father_occupation) { ?>
+                                                    <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('occupation'); ?></span><span class="sp2-parent-val"><?php echo $student['father_occupation']; ?></span></div>
+                                                    <?php } ?>
+                                                </div>
+                                            </div>
+                                            <?php } ?>
+                                            
+                                            <?php if ($sch_setting->mother_name || $sch_setting->mother_phone || $sch_setting->mother_occupation) { ?>
+                                            <div class="sp2-parent-item">
+                                                <img class="sp2-parent-avatar" src="<?php
+                                                    if (!empty($student["mother_pic"])) {
+                                                        echo $this->media_storage->getImageURL($student["mother_pic"]);
+                                                    } else {
+                                                        echo $this->media_storage->getImageURL("uploads/student_images/no_image.png");
+                                                    }
+                                                ?>">
+                                                <div class="sp2-parent-details">
+                                                    <div class="sp2-parent-title"><?php echo $this->lang->line('mother'); ?></div>
+                                                    <?php if ($sch_setting->mother_name) { ?>
+                                                    <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('name'); ?></span><span class="sp2-parent-val"><?php echo $student['mother_name']; ?></span></div>
+                                                    <?php } ?>
+                                                    <?php if ($sch_setting->mother_phone) { ?>
+                                                    <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('phone'); ?></span><span class="sp2-parent-val"><?php echo $student['mother_phone']; ?></span></div>
+                                                    <?php } ?>
+                                                    <?php if ($sch_setting->mother_occupation) { ?>
+                                                    <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('occupation'); ?></span><span class="sp2-parent-val"><?php echo $student['mother_occupation']; ?></span></div>
+                                                    <?php } ?>
+                                                </div>
+                                            </div>
+                                            <?php } ?>
 
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->mother_occupation) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('mother_occupation'); ?></td>
-                                                    <td><?php echo $student['mother_occupation']; ?></td>
-                                                </tr>
-                                            <?php } ?>
-                                            <tr class="bordertop">
-                                                <td><?php if ($sch_setting->guardian_name) { ?><?php echo $this->lang->line('guardian_name');
-                                                                                            } ?></td>
-                                                <td><?php if ($sch_setting->guardian_name) { ?><?php echo $student['guardian_name'];
-                                                                                            } ?></td>
-                                                <td rowspan="3">
-                                                    <?php if ($sch_setting->guardian_pic) {
-                                                    ?><img class="profile-user-img img-responsive img-rounded" src="<?php
-                                                                        if (!empty($student["guardian_pic"])) {
-                                                                            echo $this->media_storage->getImageURL($student["guardian_pic"]);
-                                                                        } else {
-                                                                            echo $this->media_storage->getImageURL("uploads/student_images/no_image.png");
-                                                                        }
-                                                                        ?>"> <?php } ?></td>
-                                            </tr>
-                                            <?php if ($sch_setting->guardian_email) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('guardian_email'); ?></td>
-                                                    <td><?php echo $student['guardian_email']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->guardian_relation) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('guardian_relation'); ?></td>
-                                                    <td><?php echo $student['guardian_relation']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->guardian_phone) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('guardian_phone'); ?></td>
-                                                    <td><?php echo $student['guardian_phone']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->guardian_occupation) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('guardian_occupation'); ?></td>
-                                                    <td><?php echo $student['guardian_occupation']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->guardian_address) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('guardian_address'); ?></td>
-                                                    <td><?php echo $student['guardian_address']; ?></td>
-                                                </tr>
-                                            <?php } ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
+
+                                          </div>
                                 <?php } ?>
                             </div>
                             <?php if ($sch_setting->route_list) {
@@ -668,34 +1700,30 @@ $currency_symbol = $admin_session['currency_symbol'];
 
                                     if ($student['pickup_point_name'] != '') {
                                 ?>
-                                        <div class="tshadow mb25  bozero">
-                                            <h3 class="pagetitleh2"><?php echo $this->lang->line('route_details'); ?></h3>
-                                            <div class="table-responsive around10 pt0">
-                                                <table class="table3 table-hover table-striped tmb0">
-                                                    <tbody>
-                                                        <tr>
-                                                            <td width="35%"><?php echo $this->lang->line('pick_up_point'); ?></td>
-                                                            <td class="col-md-5"><?php echo $student['pickup_point_name']; ?></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><?php echo $this->lang->line('route'); ?></td>
-                                                            <td><?php echo $student['route_title']; ?></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><?php echo $this->lang->line('vehicle_number'); ?></td>
-                                                            <td><?php echo $student['vehicle_no']; ?></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><?php echo $this->lang->line('driver_name'); ?></td>
-                                                            <td><?php echo $student['driver_name']; ?></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><?php echo $this->lang->line('driver_contact'); ?></td>
-                                                            <td><?php echo $student['driver_contact']; ?></td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                                        <div class="sp2-card">
+                                            <div class="sp2-section-title"><i class="fa fa-bus"></i> <?php echo $this->lang->line('route_details'); ?></div>
+                                            <div class="sp2-data-grid">
+                                                        <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('pick_up_point'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['pickup_point_name']; ?></div>
+</div>
+                                                        <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('route'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['route_title']; ?></div>
+</div>
+                                                        <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('vehicle_number'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['vehicle_no']; ?></div>
+</div>
+                                                        <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('driver_name'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['driver_name']; ?></div>
+</div>
+                                                        <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('driver_contact'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['driver_contact']; ?></div>
+</div>
+                                                    </div>
                                         </div>
                             <?php
                                     }
@@ -707,112 +1735,30 @@ $currency_symbol = $admin_session['currency_symbol'];
 
                                     if ($student['hostel_room_id'] != 0) {
                             ?>
-                                        <div class="tshadow mb25  bozero">
-                                            <h3 class="pagetitleh2"><?php echo $this->lang->line('hostel_details'); ?></h3>
-                                            <div class="table-responsive around10 pt0">
-                                                <table class="table3 table-hover table-striped tmb0">
-                                                    <tbody>
-                                                        <tr>
-                                                            <td width="35%"><?php echo $this->lang->line('hostel'); ?></td>
-                                                            <td><?php echo $student['hostel_name']; ?></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><?php echo $this->lang->line('room_no'); ?></td>
-                                                            <td><?php echo $student['room_no']; ?></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><?php echo $this->lang->line('room_type'); ?></td>
-                                                            <td><?php echo $student['room_type']; ?></td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                                        <div class="sp2-card">
+                                            <div class="sp2-section-title"><i class="fa fa-building"></i> <?php echo $this->lang->line('hostel_details'); ?></div>
+                                            <div class="sp2-data-grid">
+                                                        <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('hostel'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['hostel_name']; ?></div>
+</div>
+                                                        <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('room_no'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['room_no']; ?></div>
+</div>
+                                                        <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('room_type'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $student['room_type']; ?></div>
+</div>
+                                                    </div>
                                         </div>
                             <?php
                                     }
                                 }
                             }
                             ?>
-                            <div class="tshadow mb25  bozero">
-                                <h3 class="pagetitleh2"><?php echo $this->lang->line('miscellaneous_details'); ?></h3>
-                                <div class="table-responsive around10 pt0">
-                                    <table class="table3 table-hover table-striped tmb0">
-                                        <tbody>
-                                            <?php if ($sch_setting->is_blood_group) { ?>
-                                                <tr>
-                                                    <td width="35%"><?php echo $this->lang->line('blood_group'); ?></td>
-                                                    <td class="col-md-5"><?php echo $student['blood_group']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->is_student_house) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('house'); ?></td>
-                                                    <td><?php echo $student['house_name']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->student_height) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('height'); ?></td>
-                                                    <td><?php echo $student['height']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->student_weight) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('weight'); ?></td>
-                                                    <td><?php echo $student['weight']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->measurement_date) {
-                                            ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('measurement_date'); ?></td>
-                                                    <td><?php
-                                                        if (!empty($student['measurement_date']) && $student['measurement_date'] != '0000-00-00') {
-                                                            echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['measurement_date']));
-                                                        }
-                                                        ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->previous_school_details) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('previous_school_details'); ?></td>
-                                                    <td><?php echo $student['previous_school']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->national_identification_no) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('national_identification_number'); ?></td>
-                                                    <td class="col-md-5"><?php echo $student['adhar_no']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->local_identification_no) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('local_identification_number'); ?></td>
-                                                    <td><?php echo $student['samagra_id']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->bank_account_no) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('bank_account_number'); ?></td>
-                                                    <td><?php echo $student['bank_account_no']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->ifsc_code) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('bank_name'); ?></td>
-                                                    <td><?php echo $student['bank_name']; ?></td>
-                                                </tr>
-                                            <?php }
-                                            if ($sch_setting->ifsc_code) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('ifsc_code'); ?></td>
-                                                    <td><?php echo $student['ifsc_code']; ?></td>
-                                                </tr>
-                                            <?php } ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                            </div><!-- /.col-md-6 -->
+                            </div><!-- /.row -->
                         </div>
 
                         <?php if ($this->module_lib->hasModule('behaviour_records')) {
@@ -907,16 +1853,18 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                 $total_max_marks = 0;
                                         ?>
 
-                                                <div class="shadow-sm mb30">
-                                                    <h3 class="pagetitleh2 mt10 border-b-none pl-5"><?php echo  $exam_value->name; ?></h3>
-                                                    <div class="table-responsive">
+                                                <div class="sp2-card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
+                                                    <div class="sp2-section-title" style="padding: 16px 20px; border-bottom: 1px solid #eaeaea; background: #fdfdfd; margin: 0; display: flex; align-items: center; gap: 8px;">
+                                                        <i class="fa fa-graduation-cap" style="color: <?php echo $theme_color; ?>; font-size: 16px;"></i> <?php echo  $exam_value->name; ?>
+                                                    </div>
+                                                    <div class="table-responsive" style="padding: 20px;">
                                                         <?php
                                                         if (!empty($exam_value->subjects)) {
                                                         ?>
-                                                            <table class="table table-bordered table-b mb0">
+                                                            <table class="table table-bordered sp2-exam-table mb0">
                                                                 <tbody>
                                                                     <tr>
-                                                                        <td class="bolds">
+                                                                        <td class="bolds" style="background: #f9fafb; color: #4b5563; font-size: 12px; text-transform: uppercase;">
                                                                             <?php echo $this->lang->line('subject'); ?>
                                                                         </td>
                                                                         <?php
@@ -998,12 +1946,12 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                         }
                                                         ?>
 
-                                                        <table class="table table-bordered table-b mb0 bg-gray-light">
+                                                        <table class="table table-bordered sp2-exam-summary-table mb0" style="margin-top: 16px; border: 2px solid #eaeaea;">
                                                             <tr>
-                                                                <td class="bolds"><?php echo $this->lang->line('total_marks'); ?> : <?php echo $total_marks . "/" . $total_max_marks; ?></td>
-                                                                <td class="bolds"><?php echo $this->lang->line('percentage'); ?> (%) : <?php echo $exam_percentage; ?></td>
-                                                                <td class="bolds"><?php echo $this->lang->line('grade'); ?> : <?php echo getGrade($exam_value->grades, $exam_percentage); ?></td>
-                                                                <td class="bolds"><?php echo $this->lang->line('rank'); ?> : <?php echo $exam_value->rank; ?></td>
+                                                                <td class="bolds" style="background: #fdfdfd;"><?php echo $this->lang->line('total_marks'); ?> <div style="font-size: 16px; color: <?php echo $theme_color; ?>;"><?php echo $total_marks . " / " . $total_max_marks; ?></div></td>
+                                                                <td class="bolds" style="background: #fdfdfd;"><?php echo $this->lang->line('percentage'); ?> (%) <div style="font-size: 16px; color: <?php echo $theme_color; ?>;"><?php echo $exam_percentage; ?>%</div></td>
+                                                                <td class="bolds" style="background: #fdfdfd;"><?php echo $this->lang->line('grade'); ?> <div style="font-size: 16px; color: #10b981;"><?php echo getGrade($exam_value->grades, $exam_percentage); ?></div></td>
+                                                                <td class="bolds" style="background: #fdfdfd;"><?php echo $this->lang->line('rank'); ?> <div style="font-size: 16px; color: #f59e0b;"><?php echo $exam_value->rank; ?></div></td>
                                                             </tr>
                                                         </table>
                                                     </div>
@@ -1041,26 +1989,26 @@ $currency_symbol = $admin_session['currency_symbol'];
                             <?php
                             } else {
                             ?>
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th><?php echo $this->lang->line('fees'); ?></th>
-                                                <!-- <th><?php //echo $this->lang->line('fees_group'); ?></th> -->
-                                                <!-- <th><?php //echo $this->lang->line('fees_code'); ?></th> -->
-                                                <th class="text text-left"><?php echo $this->lang->line('due_date'); ?></th>
-                                                <th class="text text-left"><?php echo $this->lang->line('status'); ?></th>
-                                                <th class="text text-right"><?php echo $this->lang->line('amount'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></th>
-                                                <th class="text text-left"><?php echo $this->lang->line('payment_id'); ?></th>
-                                                <th class="text text-left"><?php echo $this->lang->line('mode'); ?></th>
-                                                <th class="text text-left"><?php echo $this->lang->line('date'); ?></th>
-                                                <th class="text text-right"><?php echo $this->lang->line('discount'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></th>
-                                                <th class="text text-right"><?php echo $this->lang->line('fine'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></th>
-                                                <th class="text text-right"><?php echo $this->lang->line('paid'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></th>
-                                                <th class="text text-right"><?php echo $this->lang->line('balance'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
+                                <div class="sp2-invoice-wrapper">
+                                    <div class="sp2-invoice-table">
+                                        <div class="sp2-invoice-thead">
+                                            <div class="sp2-invoice-row header-row">
+                                                <div class="sp2-invoice-col"><?php echo $this->lang->line('fees'); ?></div>
+                                                <!-- <div class="sp2-invoice-col"><?php //echo $this->lang->line('fees_group'); ?></div> -->
+                                                <!-- <div class="sp2-invoice-col"><?php //echo $this->lang->line('fees_code'); ?></div> -->
+                                                <div class="sp2-invoice-col" class="text text-left"><?php echo $this->lang->line('due_date'); ?></div>
+                                                <div class="sp2-invoice-col" class="text text-left"><?php echo $this->lang->line('status'); ?></div>
+                                                <div class="sp2-invoice-col" class="text text-right"><?php echo $this->lang->line('amount'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
+                                                <div class="sp2-invoice-col" class="text text-left"><?php echo $this->lang->line('payment_id'); ?></div>
+                                                <div class="sp2-invoice-col" class="text text-left"><?php echo $this->lang->line('mode'); ?></div>
+                                                <div class="sp2-invoice-col" class="text text-left"><?php echo $this->lang->line('date'); ?></div>
+                                                <div class="sp2-invoice-col" class="text text-right"><?php echo $this->lang->line('discount'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
+                                                <div class="sp2-invoice-col" class="text text-right"><?php echo $this->lang->line('fine'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
+                                                <div class="sp2-invoice-col" class="text text-right"><?php echo $this->lang->line('paid'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
+                                                <div class="sp2-invoice-col" class="text text-right"><?php echo $this->lang->line('balance'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
+                                            </div>
+                                        </div>
+                                        <div class="sp2-invoice-tbody">
                                             <?php
                                             $total_amount           = 0;
                                             $total_deposite_amount  = 0;
@@ -1108,17 +2056,23 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                     <?php if($fee_value->due_date){
                                                     if ($feetype_balance > 0 && strtotime($fee_value->due_date) < strtotime(date('Y-m-d'))) {
                                                     ?>
-                                                        <tr class="danger font12">
+                                                        <div class="sp2-invoice-row sp2-invoice-main-row danger font12">
                                                         <?php
                                                     } else {
                                                         ?>
-                                                        <tr class="dark-gray">
+                                                        <div class="sp2-invoice-row sp2-invoice-main-row dark-gray">
                                                         <?php
                                                     }}
                                                         ?>
                                                     
 
-                                                        <td>
+                                                        <div class="sp2-invoice-col" style="display: flex; align-items: center; gap: 8px;">
+                                                            <?php if (!empty($fee_value->amount_detail)) { ?>
+                                                                <a href="javascript:void(0)" onclick="$('.fee_deposits_<?php echo $fee_value->id; ?>').toggleClass('open'); $(this).find('i').toggleClass('fa-chevron-right fa-chevron-down');" style="color: #6b7280; font-size: 12px; width: 16px; text-align: center;"><i class="fa fa-chevron-right"></i></a>
+                                                            <?php } else { ?>
+                                                                <span style="width: 16px;"></span>
+                                                            <?php } ?>
+                                                            <span>
                                                             <?php
                                                             if ($fee_value->is_system) {
                                                                 echo $this->lang->line($fee_value->type) . " (" . $this->lang->line($fee_value->code) . ")";
@@ -1126,11 +2080,12 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                                 echo $fee_value->type . " (" . $fee_value->code . ")";
                                                             }
                                                             ?>
-                                                        </td>
+                                                            </span>
+                                                        </div>
 
 
 
-                                                        <td class="text text-left">
+                                                        <div class="sp2-invoice-col" class="text text-left">
                                                             <?php
                                                             if ($fee_value->due_date == "0000-00-00") {
                                                             } else {
@@ -1139,8 +2094,8 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                                 }
                                                             }
                                                             ?>
-                                                        </td>
-                                                        <td class="text text-left">
+                                                        </div>
+                                                        <div class="sp2-invoice-col" class="text text-left">
                                                             <?php
                                                             if ($feetype_balance == 0) {
                                                             ?><span class="label label-success"><?php echo $this->lang->line('paid'); ?></span><?php
@@ -1150,8 +2105,8 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                                                                         ?><span class="label label-danger"><?php echo $this->lang->line('unpaid'); ?></span><?php
                                                                                                     }
                                                                                                     ?>
-                                                        </td>
-                                                        <td class="text text-right"><?php echo amountFormat($fee_value->amount);
+                                                        </div>
+                                                        <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($fee_value->amount);
                                                                                     if (($fee_value->due_date != "0000-00-00" && $fee_value->due_date != null) && (strtotime($fee_value->due_date) < strtotime(date('Y-m-d')))) {
 																										
                                                                 // get cumulative fine amount as delay days 
@@ -1192,42 +2147,43 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                             <?php
                                                                                     }
                                                             ?>
-                                                        </td>
-                                                        <td class="text text-left"></td>
-                                                        <td class="text text-left"></td>
-                                                        <td class="text text-left"></td>
-                                                        <td class="text text-right"><?php
+                                                        </div>
+                                                        <div class="sp2-invoice-col" class="text text-left"></div>
+                                                        <div class="sp2-invoice-col" class="text text-left"></div>
+                                                        <div class="sp2-invoice-col" class="text text-left"></div>
+                                                        <div class="sp2-invoice-col" class="text text-right"><?php
                                                                                     echo amountFormat($fee_discount);
-                                                                                    ?></td>
-                                                        <td class="text text-right"><?php
+                                                                                    ?></div>
+                                                        <div class="sp2-invoice-col" class="text text-right"><?php
                                                                                     echo amountFormat($fee_fine);
-                                                                                    ?></td>
-                                                        <td class="text text-right"><?php
+                                                                                    ?></div>
+                                                        <div class="sp2-invoice-col" class="text text-right"><?php
                                                                                     echo amountFormat($fee_paid);
-                                                                                    ?></td>
-                                                        <td class="text text-right"><?php
+                                                                                    ?></div>
+                                                        <div class="sp2-invoice-col" class="text text-right"><?php
                                                                                     $display_none = "ss-none";
                                                                                     if ($feetype_balance > 0) {
                                                                                         $display_none = "";
                                                                                         echo amountFormat($feetype_balance);
                                                                                     }
                                                                                     ?>
-                                                        </td>
-                                                        </tr>
+                                                        </div>
+                                                        </div>
                                                         <?php
                                                         if (!empty($fee_value->amount_detail)) {
+                                                            echo '<div class="fee-deposits-wrapper fee_deposits_' . $fee_value->id . '">';
 
                                                             $fee_deposits = json_decode(($fee_value->amount_detail));
 
                                                             foreach ($fee_deposits as $fee_deposits_key => $fee_deposits_value) {
                                                         ?>
-                                                                <tr class="white-td">
-                                                                    <!-- <td class="text-left"></td> -->
-                                                                    <td class="text-left"></td>
-                                                                    <td class="text-left"></td>
-                                                                    <td class="text-left"></td>
-                                                                    <td class="text-right"><img src="<?php echo base_url(); ?>backend/images/table-arrow.png" alt="" /></td>
-                                                                    <td class="text text-left">
+                                                                <div class="sp2-invoice-row sp2-invoice-sub-row white-td">
+                                                                    <!-- <div class="sp2-invoice-col" class="text-left"></div> -->
+                                                                    <div class="sp2-invoice-col" class="text-left"></div>
+                                                                    <div class="sp2-invoice-col" class="text-left"></div>
+                                                                    <div class="sp2-invoice-col" class="text-left"></div>
+                                                                    <div class="sp2-invoice-col" class="text-right"><img src="<?php echo base_url(); ?>backend/images/table-arrow.png" alt="" /></div>
+                                                                    <div class="sp2-invoice-col" class="text text-left">
 
                                                                         <a href="#" data-toggle="popover" class="detail_popover"> <?php echo $fee_value->student_fees_deposite_id . "/" . $fee_deposits_value->inv_no; ?></a>
                                                                         <div class="fee_detail_popover" style="display: none">
@@ -1243,22 +2199,23 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                                             }
                                                                             ?>
                                                                         </div>
-                                                                    </td>
-                                                                    <td class="text text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
-                                                                    <td class="text text-center">
+                                                                    </div>
+                                                                    <div class="sp2-invoice-col" class="text text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></div>
+                                                                    <div class="sp2-invoice-col" class="text text-center">
                                                                         <?php 
 																			if (($fee_deposits_value->date != "0000-00-00" && $fee_deposits_value->date != null)) {
 																				echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); 
 																			}
 																		?>
-                                                                    </td>
-                                                                    <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_discount); ?></td>
-                                                                    <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_fine); ?></td>
-                                                                    <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount); ?></td>
-                                                                    <td></td>
-                                                                </tr>
+                                                                    </div>
+                                                                    <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_discount); ?></div>
+                                                                    <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_fine); ?></div>
+                                                                    <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($fee_deposits_value->amount); ?></div>
+                                                                    <div class="sp2-invoice-col"></div>
+                                                                </div>
                                                         <?php
                                                             }
+                                                            echo '</div>';
                                                         }
                                                         ?>
                                                 <?php
@@ -1302,20 +2259,27 @@ $currency_symbol = $admin_session['currency_symbol'];
 
                                                         if (strtotime($transport_fee_value->due_date) < strtotime(date('Y-m-d'))) {
                                                 ?>
-                                                            <tr class="danger font12">
+                                                            <div class="sp2-invoice-row sp2-invoice-main-row danger font12">
                                                             <?php
                                                         } else {
                                                             ?>
-                                                            <tr class="dark-gray">
+                                                            <div class="sp2-invoice-row sp2-invoice-main-row dark-gray">
                                                             <?php
                                                         }
                                                             ?>
                                                           
-                                                            <td align="left"><?php echo $this->lang->line('transport_fees')." (".$this->lang->line(strtolower($transport_fee_value->month)).")"; ?></td>
+                                                            <div class="sp2-invoice-col" align="left" style="display: flex; align-items: center; gap: 8px;">
+                                                                <?php if (!empty($transport_fee_value->amount_detail)) { ?>
+                                                                    <a href="javascript:void(0)" onclick="$('.fee_deposits_tr_<?php echo $transport_fee_value->id; ?>').toggleClass('open'); $(this).find('i').toggleClass('fa-chevron-right fa-chevron-down');" style="color: #6b7280; font-size: 12px; width: 16px; text-align: center;"><i class="fa fa-chevron-right"></i></a>
+                                                                <?php } else { ?>
+                                                                    <span style="width: 16px;"></span>
+                                                                <?php } ?>
+                                                                <span><?php echo $this->lang->line('transport_fees')." (".$this->lang->line(strtolower($transport_fee_value->month)).")"; ?></span>
+                                                            </div>
 
-                                                            <td align="left" class="text text-left">
-                                                                <?php echo $this->customlib->dateformat($transport_fee_value->due_date); ?> </td>
-                                                            <td align="left" class="text text-left width85">
+                                                            <div class="sp2-invoice-col" align="left" class="text text-left">
+                                                                <?php echo $this->customlib->dateformat($transport_fee_value->due_date); ?> </div>
+                                                            <div class="sp2-invoice-col" align="left" class="text text-left width85">
                                                                 <?php
                                                                 if ($feetype_balance == 0) {
                                                                 ?><span class="label label-success"><?php echo $this->lang->line('paid'); ?></span><?php
@@ -1325,8 +2289,8 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                                                                         ?><span class="label label-danger"><?php echo $this->lang->line('unpaid'); ?></span><?php
                                                                                                     }
                                                                                                     ?>
-                                                            </td>
-                                                            <td class="text text-right"><?php echo amountFormat($transport_fee_value->fees);
+                                                            </div>
+                                                            <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($transport_fee_value->fees);
 
                                                                                         if (($transport_fee_value->due_date != "0000-00-00" && $transport_fee_value->due_date != null) && (strtotime($transport_fee_value->due_date) < strtotime(date('Y-m-d')))) {
                                                                                             $tr_fine_amount = $transport_fee_value->fine_amount;
@@ -1342,20 +2306,20 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                                 <?php
                                                                                         }
                                                                 ?>
-                                                            </td>
-                                                            <td class="text text-left"></td>
-                                                            <td class="text text-left"></td>
-                                                            <td class="text text-left"></td>
-                                                            <td class="text text-right"><?php
+                                                            </div>
+                                                            <div class="sp2-invoice-col" class="text text-left"></div>
+                                                            <div class="sp2-invoice-col" class="text text-left"></div>
+                                                            <div class="sp2-invoice-col" class="text text-left"></div>
+                                                            <div class="sp2-invoice-col" class="text text-right"><?php
                                                                                         echo amountFormat($fee_discount);
-                                                                                        ?></td>
-                                                            <td class="text text-right"><?php
+                                                                                        ?></div>
+                                                            <div class="sp2-invoice-col" class="text text-right"><?php
                                                                                         echo amountFormat($fee_fine);
-                                                                                        ?></td>
-                                                            <td class="text text-right"><?php
+                                                                                        ?></div>
+                                                            <div class="sp2-invoice-col" class="text text-right"><?php
                                                                                         echo amountFormat($fee_paid);
-                                                                                        ?></td>
-                                                            <td class="text text-right"><?php
+                                                                                        ?></div>
+                                                            <div class="sp2-invoice-col" class="text text-right"><?php
                                                                                         $display_none = "ss-none";
                                                                                         if ($feetype_balance > 0) {
                                                                                             $display_none = "";
@@ -1363,22 +2327,23 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                                                             echo amountFormat($feetype_balance);
                                                                                         }
                                                                                         ?>
-                                                            </td>
-                                                            </tr>
+                                                            </div>
+                                                            </div>
                                                             <?php
                                                             if (!empty($transport_fee_value->amount_detail)) {
+                                                                echo '<div class="fee-deposits-wrapper fee_deposits_tr_' . $transport_fee_value->id . '">';
 
                                                                 $fee_deposits = json_decode(($transport_fee_value->amount_detail));
 
                                                                 foreach ($fee_deposits as $fee_deposits_key => $fee_deposits_value) {
                                                             ?>
-                                                                    <tr class="white-td">
-                                                                        <!-- <td align="left"></td> -->
-                                                                        <td align="left"></td>
-                                                                        <td align="left"></td>
-                                                                        <td align="left"></td>
-                                                                        <td class="text-right"><img src="<?php echo base_url(); ?>backend/images/table-arrow.png" alt="" /></td>
-                                                                        <td class="text text-left">
+                                                                    <div class="sp2-invoice-row sp2-invoice-sub-row white-td">
+                                                                        <!-- <div class="sp2-invoice-col" align="left"></div> -->
+                                                                        <div class="sp2-invoice-col" align="left"></div>
+                                                                        <div class="sp2-invoice-col" align="left"></div>
+                                                                        <div class="sp2-invoice-col" align="left"></div>
+                                                                        <div class="sp2-invoice-col" class="text-right"><img src="<?php echo base_url(); ?>backend/images/table-arrow.png" alt="" /></div>
+                                                                        <div class="sp2-invoice-col" class="text text-left">
 
                                                                             <a href="#" data-toggle="popover" class="detail_popover"> <?php echo $transport_fee_value->student_fees_deposite_id . "/" . $fee_deposits_value->inv_no; ?></a>
                                                                             <div class="fee_detail_popover" style="display: none">
@@ -1394,22 +2359,23 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                                                 }
                                                                                 ?>
                                                                             </div>
-                                                                        </td>
-                                                                        <td class="text text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></td>
-                                                                        <td class="text text-left">
+                                                                        </div>
+                                                                        <div class="sp2-invoice-col" class="text text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></div>
+                                                                        <div class="sp2-invoice-col" class="text text-left">
                                                                             <?php 
 																				if (($fee_deposits_value->date != "0000-00-00" && $fee_deposits_value->date != null)) {
 																					echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); 
 																				}
 																			?>
-                                                                        </td>
-                                                                        <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_discount); ?></td>
-                                                                        <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_fine); ?></td>
-                                                                        <td class="text text-right"><?php echo amountFormat($fee_deposits_value->amount); ?></td>
-                                                                        <td></td>
-                                                                    </tr>
+                                                                        </div>
+                                                                        <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_discount); ?></div>
+                                                                        <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_fine); ?></div>
+                                                                        <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($fee_deposits_value->amount); ?></div>
+                                                                        <div class="sp2-invoice-col"></div>
+                                                                    </div>
                                                             <?php
                                                                 }
+                                                                echo '</div>';
                                                             }
                                                             ?>
 
@@ -1419,11 +2385,11 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                 ?>
                                                 
                                             
-                                                    <tr class="box box-solid total-bg">
-                                                        <td></td>
-                                                        <!-- <td></td> -->
-                                                        <td class="text text-right" colspan="2">Grand Total </td>
-                                                        <td class="text text-right">
+                                                    <div class="sp2-invoice-row sp2-invoice-total-row box box-solid total-bg">
+                                                        <div class="sp2-invoice-col"></div>
+                                                        <!-- <div class="sp2-invoice-col"></div> -->
+                                                        <div class="sp2-invoice-col" class="text text-right" colspan="2">Grand Total </div>
+                                                        <div class="sp2-invoice-col" class="text text-right">
                                                             <?php echo $currency_symbol . amountFormat($total_amount) . "<span data-toggle='popover' class='text text-danger detail_popover'>+" . amountFormat($total_fees_fine_amount) . "</span>";
                                                             ?>
                                                             <div class="fee_detail_popover" style="display: none">
@@ -1435,27 +2401,27 @@ $currency_symbol = $admin_session['currency_symbol'];
                                                                 }
                                                                 ?>
                                                             </div>
-                                                        </td>
-                                                        <td></td>
-                                                        <td></td>
-                                                        <td></td>
-                                                        <td class="text text-right"><?php
+                                                        </div>
+                                                        <div class="sp2-invoice-col"></div>
+                                                        <div class="sp2-invoice-col"></div>
+                                                        <div class="sp2-invoice-col"></div>
+                                                        <div class="sp2-invoice-col" class="text text-right"><?php
                                                                                     echo ($currency_symbol . amountFormat($total_discount_amount + $alot_fee_discount));
-                                                                                    ?></td>
-                                                        <td class="text text-right"><?php
+                                                                                    ?></div>
+                                                        <div class="sp2-invoice-col" class="text text-right"><?php
                                                                                     echo ($currency_symbol . amountFormat($total_fine_amount));
-                                                                                    ?></td>
-                                                        <td class="text text-right"><?php
+                                                                                    ?></div>
+                                                        <div class="sp2-invoice-col" class="text text-right"><?php
                                                                                     echo ($currency_symbol . amountFormat($total_deposite_amount));
-                                                                                    ?></td>
+                                                                                    ?></div>
 
-                                                        <td class="text text-right"><?php
+                                                        <div class="sp2-invoice-col" class="text text-right"><?php
                                                                                     echo ($currency_symbol . amountFormat($total_balance_amount - $alot_fee_discount));
-                                                                                    ?></td>
+                                                                                    ?></div>
 
-                                                    </tr>
-                                        </tbody>
-                                    </table>
+                                                    </div>
+                                        </div>
+                                    </div>
                                 </div>
                             <?php
                             }
@@ -1613,82 +2579,27 @@ $currency_symbol = $admin_session['currency_symbol'];
                         if (!$sch_setting->attendence_type) {
                         ?>
                             <div class="tab-pane" id="attendance">
-                                <div class="row">
-                                    <div class="col-lg-3 col-md-4 col-sm-6 col20per">
-                                        <div class="staffprofile">
-                                            <h5><?php echo $this->lang->line('total_present'); ?></h5>
-                                            <h4><?php
-                                                if (!empty($countAttendance[1])) {
-                                                    echo $countAttendance[1];
-                                                } else {
-                                                    echo "0";
-                                                }
-                                                ?></h4>
-                                            <div class="icon">
-                                                <i class="fa fa-check-square-o"></i>
-                                            </div>
-                                        </div>
-                                    </div><!--./col-md-3-->
-                                    <div class="col-lg-3 col-md-4 col-sm-6 col20per">
-                                        <div class="staffprofile">
-                                            <h5><?php echo $this->lang->line('total_late'); ?></h5>
-                                            <h4><?php
-                                                if (!empty($countAttendance[3])) {
-                                                    echo $countAttendance[3];
-                                                } else {
-                                                    echo "0";
-                                                }
-                                                ?></h4>
-                                            <div class="icon">
-                                                <i class="fa  fa-check-square-o"></i>
-                                            </div>
-                                        </div>
-                                    </div><!--./col-md-3-->
-                                    <div class="col-lg-3 col-md-4 col-sm-6 col20per">
-                                        <div class="staffprofile">
-                                            <h5><?php echo $this->lang->line('total_absent'); ?></h5>
-                                            <h4><?php
-                                                if (!empty($countAttendance[4])) {
-                                                    echo $countAttendance[4];
-                                                } else {
-                                                    echo "0";
-                                                }
-                                                ?></h4>
-                                            <div class="icon">
-                                                <i class="fa  fa-check-square-o"></i>
-                                            </div>
-                                        </div>
-                                    </div><!--./col-md-3-->
-                                    <div class="col-lg-3 col-md-4 col-sm-6 col20per">
-                                        <div class="staffprofile">
-                                            <h5><?php echo $this->lang->line('total_half_day'); ?></h5>
-                                            <h4><?php
-                                                if (!empty($countAttendance[6])) {
-                                                    echo $countAttendance[6];
-                                                } else {
-                                                    echo "0";
-                                                }
-                                                ?></h4>
-                                            <div class="icon">
-                                                <i class="fa  fa-check-square-o"></i>
-                                            </div>
-                                        </div>
-                                    </div><!--./col-md-3-->
-                                    <div class="col-lg-3 col-md-4 col-sm-6 col20per">
-                                        <div class="staffprofile">
-                                            <h5><?php echo $this->lang->line('total_holiday'); ?></h5>
-                                            <h4><?php
-                                                if (!empty($countAttendance[5])) {
-                                                    echo $countAttendance[5];
-                                                } else {
-                                                    echo "0";
-                                                }
-                                                ?></h4>
-                                            <div class="icon">
-                                                <i class="fa  fa-check-square-o"></i>
-                                            </div>
-                                        </div>
-                                    </div><!--./col-md-3-->
+                                <div class="sp2-att-grid">
+                                    <div class="sp2-att-box ab-present">
+                                        <div class="sp2-att-box-label"><?php echo $this->lang->line('total_present'); ?></div>
+                                        <div class="sp2-att-box-val"><?php echo (!empty($countAttendance[1])) ? $countAttendance[1] : "0"; ?></div>
+                                    </div>
+                                    <div class="sp2-att-box ab-late">
+                                        <div class="sp2-att-box-label"><?php echo $this->lang->line('total_late'); ?></div>
+                                        <div class="sp2-att-box-val"><?php echo (!empty($countAttendance[3])) ? $countAttendance[3] : "0"; ?></div>
+                                    </div>
+                                    <div class="sp2-att-box ab-absent">
+                                        <div class="sp2-att-box-label"><?php echo $this->lang->line('total_absent'); ?></div>
+                                        <div class="sp2-att-box-val"><?php echo (!empty($countAttendance[4])) ? $countAttendance[4] : "0"; ?></div>
+                                    </div>
+                                    <div class="sp2-att-box ab-halfday">
+                                        <div class="sp2-att-box-label"><?php echo $this->lang->line('total_half_day'); ?></div>
+                                        <div class="sp2-att-box-val"><?php echo (!empty($countAttendance[6])) ? $countAttendance[6] : "0"; ?></div>
+                                    </div>
+                                    <div class="sp2-att-box ab-holiday">
+                                        <div class="sp2-att-box-label"><?php echo $this->lang->line('total_holiday'); ?></div>
+                                        <div class="sp2-att-box-val"><?php echo (!empty($countAttendance[5])) ? $countAttendance[5] : "0"; ?></div>
+                                    </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12 col-sm-12">
@@ -1816,7 +2727,7 @@ $currency_symbol = $admin_session['currency_symbol'];
                                     <?php
                                     foreach ($exam_result as $exam_key => $exam_value) {
                                     ?>
-                                        <div class="tshadow mb25">
+                                        <div class="sp2-card">
                                             <h4 class="pagetitleh">
                                                 <?php
                                                 echo $exam_value->exam;
@@ -2421,7 +3332,7 @@ $currency_symbol = $admin_session['currency_symbol'];
                                             </div>
                                         </div>
 
-                                        <div class="tshadow mb25">
+                                        <div class="sp2-card">
                                             <h4 class="pagetitleh">
                                                 <?php echo $this->lang->line('consolidated_result'); ?>
                                             </h4>

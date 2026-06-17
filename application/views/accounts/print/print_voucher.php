@@ -658,6 +658,17 @@ $voucher_html = ob_get_clean();
             // Auto-print Office Copy by default on page load
             setTimeout(function() { printVoucher('office'); }, 500);
         }
+
+        // Signal to the parent tab to refresh the list after printing is done
+        // afterprint fires when the user closes/completes the print dialog
+        window.addEventListener('afterprint', function() {
+            try { localStorage.setItem('pv_print_done', '1'); } catch(e) {}
+        });
+        // pagehide fires when the tab is closed or navigated away
+        window.addEventListener('pagehide', function() {
+            try { localStorage.setItem('pv_print_done', '1'); } catch(e) {}
+        });
+
     </script>
 </body>
 </html>

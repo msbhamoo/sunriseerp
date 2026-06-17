@@ -214,10 +214,16 @@ foreach ($class_value['sections'] as $section_key => $section_value) {
 								<div class="box-body">
 								<?php
 									if (!empty($list_attendance)){  ?>
+									<form method="POST" action="<?php echo site_url('schsettings/savestaffsetting'); ?>" class="update" id="staff_attendance_form">
 										<div class="row">
+											<div class="col-md-12">
+												<div class="checkbox mb0 mt0">
+												<label for="copy_staff_attendance">
+													<input class="copy_staff_attendance" id="copy_staff_attendance" value="1" type="checkbox" > <?php echo $this->lang->line('copy_first_detail_for_all'); ?>
+												</label></div>
+											</div>
 											<?php  foreach ($list_attendance as $list_key => $list_value){ ?>
-												<div class="col-md-12">
-													<form method="POST" action="<?php echo site_url('schsettings/savestaffsetting'); ?>" class="update">
+												<div class="col-md-12 staff_attendance_row">
 														<div class="panel panel-info">
 														<div class="panel-footer panel-fo border-0">
 															<div class="row d-flex align-items-center justify-content-between">
@@ -225,9 +231,6 @@ foreach ($class_value['sections'] as $section_key => $section_value) {
 																		<strong>                                                                
 																			<?php echo $this->lang->line('role'); ?>: <?php  echo $list_value['role'];  ?>
 																		</strong>
-																	</div>
-																	<div class="col-lg-4 col-md-8 col-sm-6">
-																			<button type="submit" class="btn btn-primary btn-sm pull-right" data-loading-text="<i class='fa fa-spinner fa-spin '></i><?php echo $this->lang->line('update'); ?>"><?php echo $this->lang->line('update'); ?></button>
 																	</div>
 																</div>
 															</div>
@@ -264,7 +267,7 @@ foreach ($class_value['sections'] as $section_key => $section_value) {
 																				<?php
 																				if (!empty($attendance_type)) {
 																					foreach ($attendance_type as $att_type_key => $att_type_value) {
-																						$return_value = get_input_value($list_value['schedule'], $att_type_value->id);
+																						$return_value = get_input_value($list_value['schedule'], $att_type_value->id, $att_type_value->key_value);
 																					
 																				?>
 																						<input type="hidden" name="row[]" value="<?php echo $row; ?>">
@@ -323,12 +326,14 @@ foreach ($class_value['sections'] as $section_key => $section_value) {
 																	<?php  $count++;   }  ?>
 																</div>
 															</div>
-														
 														</div>
-													</form>
 												</div>
 											<?php   }      ?>
 										</div>
+										<div class="box-footer">
+											<button type="submit" class="btn btn-primary pull-right" data-loading-text="<i class='fa fa-spinner fa-spin '></i><?php echo $this->lang->line('update'); ?>"><?php echo $this->lang->line('save'); ?></button>
+										</div>
+									</form>
 									<?php   }    ?>
 								</div>
 							</div>
@@ -358,12 +363,18 @@ foreach ($class_value['sections'] as $section_key => $section_value) {
                         <?php
                         if (!empty($student_list_attendance)) {
                         ?>
+							<form method="POST" action="<?php echo site_url('admin/stuattendence/savestudentsetting'); ?>" class="student_update" id="student_attendance_form">
                             <div class="row">
+								<div class="col-md-12">
+									<div class="checkbox mb0 mt0">
+									<label for="copy_student_attendance">
+										<input class="copy_student_attendance" id="copy_student_attendance" value="1" type="checkbox" > <?php echo $this->lang->line('copy_first_detail_for_all'); ?>
+									</label></div>
+								</div>
                                 <?php
                                 foreach ($student_list_attendance as $list_key => $list_value) {
                                 ?>
-                                    <div class="col-md-12">
-                                        <form method="POST" action="<?php echo site_url('admin/stuattendence/savestudentsetting'); ?>" class="student_update">
+                                    <div class="col-md-12 student_attendance_row">
                                             <div class="panel panel-info">
 												<div class="panel-footer panel-fo border-0">
 															<div class="row d-flex align-items-center justify-content-between">
@@ -372,10 +383,6 @@ foreach ($class_value['sections'] as $section_key => $section_value) {
 																			<?php echo $this->lang->line('class'); ?>: <?php  echo $list_value['class'];  ?>
 																		</strong>
 																</div>
-																	<div class="col-lg-4 col-md-8 col-sm-6">																	<?php if ($this->rbac->hasPrivilege('multi_class_student', 'can_edit')) { ?>
-																		<button type="submit" class="btn btn-primary btn-sm pull-right" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('update'); ?>"><?php echo $this->lang->line('update'); ?></button>
-																		<?php } ?>													
-																	</div>
 																</div>
 															</div>
 															
@@ -413,7 +420,7 @@ foreach ($class_value['sections'] as $section_key => $section_value) {
                                                                         <?php
                                                                         if (!empty($student_attendance_type)) {
                                                                             foreach ($student_attendance_type as $att_type_key => $att_type_value) {
-                                                                                $return_value = get_student_input_value($student_session_value['student_schedule'], $att_type_value->id);?>
+                                                                                $return_value = get_student_input_value($student_session_value['student_schedule'], $att_type_value->id, $att_type_value->key_value);?>
                                                                                 <input type="hidden" name="row[]" value="<?php echo $row; ?>">
                                                                                 <input type="hidden" name="attendance_type_id_<?php echo $row; ?>" value="<?php echo $att_type_value->id; ?>">
                                                                                 <input type="hidden" name="class_section_id_<?php echo $row; ?>" value="<?php echo $student_session_value['class_section_id']; ?>">
@@ -480,7 +487,6 @@ foreach ($class_value['sections'] as $section_key => $section_value) {
                                                     </div>
                                                 </div> 
                                             </div>
-                                        </form>
 
                                     </div>
 
@@ -489,6 +495,12 @@ foreach ($class_value['sections'] as $section_key => $section_value) {
 
                                 ?>
                             </div>
+							<?php if ($this->rbac->hasPrivilege('multi_class_student', 'can_edit')) { ?>
+							<div class="box-footer">
+								<button type="submit" class="btn btn-primary pull-right" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('update'); ?>"><?php echo $this->lang->line('save'); ?></button>
+							</div>
+							<?php } ?>
+							</form>
                         <?php
                         }
                         ?>
@@ -513,7 +525,7 @@ foreach ($class_value['sections'] as $section_key => $section_value) {
 
 
 <?php
-function get_input_value($array, $find_time){
+function get_input_value($array, $find_time, $key_value = ''){
     if (!empty($array)) {
         foreach ($array as $array_key => $array_value) {
             if ($array_value->staff_attendence_type_id == $find_time) {
@@ -524,17 +536,36 @@ function get_input_value($array, $find_time){
                 ];
             }
         }
-        return [
-            'entry_time_from' => '',
-            'entry_time_to' => '',
-            'total_institute_hour' => '',          
-        ];
     }
+
+    $default_from = '';
+    $default_to = '';
+    $default_total = '';
+    
+    if (strtolower($key_value) == 'p') {
+        $default_from = '06:00:00';
+        $default_to = '08:30:00';
+        $default_total = '08:30:00';
+    } elseif (strtolower($key_value) == 'l') {
+        $default_from = '08:30:01';
+        $default_to = '11:00:00';
+        $default_total = '07:30:00';
+    } elseif (strtolower($key_value) == 'f' || strtolower($key_value) == 'sh') {
+        $default_from = '11:00:01';
+        $default_to = '16:00:00';
+        $default_total = '04:15:00';
+    }
+
+    return [
+        'entry_time_from' => $default_from,
+        'entry_time_to' => $default_to,
+        'total_institute_hour' => $default_total,          
+    ];
 } ?>
 
 <?php
 
-function get_student_input_value($array, $find_time)
+function get_student_input_value($array, $find_time, $key_value = '')
 {
     if (!empty($array)) {
         foreach ($array as $array_key => $array_value) {
@@ -547,23 +578,41 @@ function get_student_input_value($array, $find_time)
                 ];
             }
         }
-        return [
-            'entry_time_from' => '',
-            'entry_time_to' => '',
-            'total_institute_hour' => ''
-
-        ];
     }
+
+    $default_from = '';
+    $default_to = '';
+    $default_total = '';
+    
+    if (strtolower($key_value) == 'p') {
+        $default_from = '06:00:00';
+        $default_to = '08:30:00';
+        $default_total = '07:00:00';
+    } elseif (strtolower($key_value) == 'l') {
+        $default_from = '08:30:01';
+        $default_to = '11:00:00';
+        $default_total = '06:00:00';
+    } elseif (strtolower($key_value) == 'f' || strtolower($key_value) == 'sh') {
+        $default_from = '11:00:01';
+        $default_to = '14:30:00';
+        $default_total = '03:30:00';
+    }
+
+    return [
+        'entry_time_from' => $default_from,
+        'entry_time_to' => $default_to,
+        'total_institute_hour' => $default_total
+
+    ];
 }
 ?>
 
 
 <script type="text/javascript">
-     $('input[type=radio][name=biometric]').change(function() {
-        if (this.value == '1') {
+     $('#biometric').change(function() {
+        if ($(this).is(':checked')) {
             $('#save_class_time_hide_show').removeClass('hide'); 
-        }
-        else if (this.value == '0') {
+        } else {
              $('#save_class_time_hide_show').addClass('hide');   
         }
     }); 
@@ -765,4 +814,29 @@ $(document).on('submit','#form_timetable',function(e){
         });
     });
 
+    $(document).on('change', '.copy_staff_attendance', function() {
+        if (this.checked) {
+            var N = <?php echo count($attendance_type); ?>;
+            var from_times = $('#staff_attendance_form').find('.entry_time_from').slice(0, N).map(function() { return $(this).val(); }).get();
+            var to_times = $('#staff_attendance_form').find('.entry_time_to').slice(0, N).map(function() { return $(this).val(); }).get();
+            var total_hours = $('#staff_attendance_form').find('.total_institute_hour').slice(0, N).map(function() { return $(this).val(); }).get();
+
+            $('#staff_attendance_form').find('.entry_time_from').each(function(i) { $(this).val(from_times[i % N]); });
+            $('#staff_attendance_form').find('.entry_time_to').each(function(i) { $(this).val(to_times[i % N]); });
+            $('#staff_attendance_form').find('.total_institute_hour').each(function(i) { $(this).val(total_hours[i % N]); });
+        }
+    });
+
+    $(document).on('change', '.copy_student_attendance', function() {
+        if (this.checked) {
+            var N = <?php echo count($student_attendance_type); ?>;
+            var from_times = $('#student_attendance_form').find('.entry_time_from').slice(0, N).map(function() { return $(this).val(); }).get();
+            var to_times = $('#student_attendance_form').find('.entry_time_to').slice(0, N).map(function() { return $(this).val(); }).get();
+            var total_hours = $('#student_attendance_form').find('.total_institute_hour').slice(0, N).map(function() { return $(this).val(); }).get();
+
+            $('#student_attendance_form').find('.entry_time_from').each(function(i) { $(this).val(from_times[i % N]); });
+            $('#student_attendance_form').find('.entry_time_to').each(function(i) { $(this).val(to_times[i % N]); });
+            $('#student_attendance_form').find('.total_institute_hour').each(function(i) { $(this).val(total_hours[i % N]); });
+        }
+    });
 </script>

@@ -1,7 +1,1201 @@
 <?php
+$theme_setting = $this->customlib->getCurrentThemeSetting();
+$theme_color = isset($theme_setting['theme_color']) ? $theme_setting['theme_color'] : '#4f46e5';
+?>
+<?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
-<div class="content-wrapper">
+<style type="text/css">
+/* ============================================================
+   STUDENT PROFILE 2.0 — Scoped Design System
+   Matches dashboard2.php design language
+   All classes namespaced under .sp2-wrapper
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+.sp2-wrapper {
+    background: #f4f6f9;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+}
+
+
+
+/* ---------- Cards ---------- */
+.sp2-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #eaeaea;
+}
+.sp2-card-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid #eaeaea;
+    background: #fcfcfc;
+    font-weight: 700;
+    font-size: 14px;
+    color: #222;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.sp2-card-header i { color: <?php echo $theme_color; ?>; }
+.sp2-card-body {
+    padding: 18px;
+}
+.sp2-data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+.sp2-data-box {
+    background: #f9fafb;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+}
+.sp2-data-box-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #8a8a8a;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+}
+.sp2-data-box-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: #222;
+    word-break: break-word;
+}
+.sp2-card-sm {
+    padding: 14px 18px;
+}
+
+/* ---------- Section Title ---------- */
+.sp2-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #8a8a8a;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.sp2-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #f0f0f0;
+}
+
+/* ---------- Hero Header ---------- */
+.sp2-hero {
+    background: linear-gradient(135deg, <?php echo $theme_color; ?> 0%, #3026ad 100%);
+    border-radius: 12px;
+    padding: 24px 24px 0 24px;
+    margin-bottom: 18px;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(79,70,229,0.25);
+}
+.sp2-hero-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    z-index: 0;
+}
+.sp2-hero-bg::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 160px;
+    height: 160px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+}
+.sp2-hero-bg::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 30%;
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+}
+.sp2-hero-body {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+}
+.sp2-hero-avatar-wrap {
+    flex-shrink: 0;
+}
+.sp2-hero-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.8);
+    object-fit: cover;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    display: block;
+    margin-bottom: 0;
+}
+.sp2-hero-avatar-placeholder {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 0;
+}
+.sp2-hero-info {
+    flex: 1;
+    padding-bottom: 20px;
+}
+.sp2-hero-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.sp2-hero-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 10px;
+}
+.sp2-hero-pill {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.95);
+    border: 1px solid rgba(255,255,255,0.25);
+    backdrop-filter: blur(4px);
+}
+.sp2-hero-pill.disabled-pill {
+    background: rgba(216,69,106,0.6);
+    border-color: rgba(216,69,106,0.8);
+}
+.sp2-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+}
+.sp2-btn {
+    padding: 6px 13px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+}
+.sp2-btn:hover {
+    background: rgba(255,255,255,0.3);
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+.sp2-btn.sp2-btn-danger {
+    background: rgba(216,69,106,0.3);
+    border-color: rgba(216,69,106,0.6);
+}
+.sp2-btn.sp2-btn-success {
+    background: rgba(59,155,101,0.35);
+    border-color: rgba(59,155,101,0.6);
+}
+.sp2-btn.sp2-btn-solid {
+    background: rgba(255,255,255,0.9);
+    color: <?php echo $theme_color; ?>;
+    border-color: transparent;
+}
+.sp2-btn.sp2-btn-solid:hover {
+    background: #fff;
+    color: <?php echo $theme_color; ?>;
+}
+
+/* Disabled student banner */
+.sp2-disabled-banner {
+    background: #fff5f8;
+    border-left: 4px solid #d8456a;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    color: #d8456a;
+    font-weight: 600;
+}
+.sp2-disabled-banner strong { color: #222; }
+
+/* ---------- Sidebar Info ---------- */
+.sp2-info-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 1px solid #f4f6f9;
+    gap: 8px;
+}
+.sp2-info-row:last-child { border-bottom: none; }
+.sp2-info-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #8a8a8a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.sp2-info-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #222;
+    text-align: right;
+    word-break: break-word;
+}
+.sp2-info-value a { color: #222; }
+
+/* ---------- Pills / Badges ---------- */
+.sp2-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.sp2-pill-blue { background: #eef2ff; color: #4f46e5; }
+.sp2-pill-teal { background: #e6fcf5; color: #0ca678; }
+.sp2-pill-amber { background: #fff8e6; color: #f59f00; }
+.sp2-pill-purple { background: #f3f0ff; color: #7950f2; }
+
+/* ---------- Profile Tab Clean Tables ---------- */
+.sp2-profile-table {
+    width: 100%;
+    margin-bottom: 0;
+}
+.sp2-profile-table td {
+    padding: 10px 0;
+    border-bottom: 1px solid #f4f6f9 !important;
+    border-top: none !important;
+    vertical-align: top;
+}
+.sp2-profile-table tr:last-child td {
+    border-bottom: none !important;
+}
+.sp2-profile-table td:first-child {
+    font-size: 11px;
+    font-weight: 600;
+    color: #8a8a8a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: 35%;
+}
+.sp2-profile-table td:last-child {
+    font-size: 13px;
+    font-weight: 600;
+    color: #222;
+    text-align: right;
+    word-break: break-word;
+}
+.sp2-profile-table td a { color: <?php echo $theme_color; ?>; }
+}
+.sp2-pill-blue   { background: #e0e7ff; color: <?php echo $theme_color; ?>; }
+.sp2-pill-green  { background: #dcf2e6; color: #3b9b65; }
+.sp2-pill-red    { background: #fff0f3; color: #d8456a; }
+.sp2-pill-amber  { background: #fbedcf; color: #d09435; }
+.sp2-pill-purple { background: #f4e8fb; color: #9d50ce; }
+.sp2-pill-gray   { background: #f3f4f6; color: #4b5563; }
+.sp2-pill-teal   { background: #e0fdf4; color: #0f766e; }
+
+/* ---------- Siblings ---------- */
+.sp2-sibling-card {
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+}
+.sp2-sibling-card:hover {
+    background: #f4f6f9;
+    border-color: #e0e7ff;
+    box-shadow: 0 2px 8px rgba(79,70,229,0.08);
+}
+.sp2-sibling-img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e0e7ff;
+    flex-shrink: 0;
+}
+.sp2-sibling-info { flex: 1; min-width: 0; }
+.sp2-sibling-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #222;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sp2-sibling-name a { color: #222; }
+.sp2-sibling-name a:hover { color: <?php echo $theme_color; ?>; }
+.sp2-sibling-meta { font-size: 11px; color: #888; margin-top: 2px; }
+
+/* ---------- Parent/Guardian ---------- */
+.sp2-parent-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+.sp2-parent-item:last-child { border-bottom: none; padding-bottom: 0; }
+.sp2-parent-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid #eaeaea;
+    background: #f9fafb;
+    flex-shrink: 0;
+}
+.sp2-parent-details {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 8px;
+    column-gap: 16px;
+}
+.sp2-parent-title {
+    width: 100%;
+    font-size: 11px;
+    font-weight: 700;
+    color: <?php echo $theme_color; ?>;
+    text-transform: uppercase;
+    margin-bottom: 0px;
+    letter-spacing: 0.5px;
+}
+.sp2-parent-row {
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    min-width: 80px;
+}
+.sp2-parent-label {
+    color: #888;
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+.sp2-parent-val {
+    color: #111827;
+    font-weight: 500;
+}
+
+/* ---------- Enhanced Tab Navigation (Light Pill Liquid Glass) ---------- */
+.sp2-tabs-nav {
+    border-bottom: none;
+    display: inline-flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 8px;
+    border-radius: 50px;
+    margin-bottom: 32px !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    list-style: none;
+    max-width: 100%;
+}
+.sp2-tabs-nav::-webkit-scrollbar { display: none; }
+.sp2-tabs-nav > li { margin: 0; }
+.sp2-tabs-nav > li > a {
+    border: none !important;
+    border-radius: 40px !important;
+    padding: 10px 24px;
+    font-weight: 600;
+    color: #6b7280;
+    background: transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: block;
+    white-space: nowrap;
+}
+.sp2-tabs-nav > li > a:hover {
+    color: #111827;
+    background: rgba(255, 255, 255, 0.5);
+}
+.sp2-tabs-nav > li.active > a, 
+.sp2-tabs-nav > li.active > a:hover, 
+.sp2-tabs-nav > li.active > a:focus {
+    background: #fff;
+    color: #111827;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.sp2-tab-content {
+    /* Container for the tab content, removing old borders */
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    margin-bottom: 18px;
+}
+/* ---------- Profile Data Grid (Replaces Tables) ---------- */
+.sp2-data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+@media (max-width: 991px) {
+    .sp2-data-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 575px) {
+    .sp2-data-grid { grid-template-columns: 1fr; }
+}
+.sp2-data-box {
+    background: #f9fafb;
+    border: 1px solid #f0f0f0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.sp2-data-box:hover {
+    background: #fff;
+    border-color: #e5e7eb;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    transform: translateY(-1px);
+}
+.sp2-data-box-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+.sp2-data-box-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+    word-break: break-word;
+}
+.sp2-data-box-value a { color: <?php echo $theme_color; ?>; text-decoration: none; }
+.sp2-data-box-value a:hover { text-decoration: underline; }
+
+/* ---------- Fees Invoice List ---------- */
+.sp2-invoice-wrapper {
+    background: transparent;
+    margin-bottom: 24px;
+}
+.sp2-invoice-table { display: block; }
+.sp2-invoice-thead {
+    display: flex;
+    padding: 0 16px 8px 16px;
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #eaeaea;
+    margin-bottom: 8px;
+}
+.sp2-invoice-thead .sp2-invoice-row {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+}
+.sp2-invoice-tbody { display: flex; flex-direction: column; gap: 12px; }
+
+/* ---------- Attendance Top Cards ---------- */
+.fee-deposits-wrapper {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+}
+.fee-deposits-wrapper.open {
+    display: flex;
+}
+.sp2-att-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.sp2-att-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    border: 1px solid #eaeaea;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.sp2-att-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+}
+.sp2-att-box-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+.sp2-att-box-val {
+    font-size: 24px;
+    font-weight: 700;
+}
+.ab-present .sp2-att-box-val { color: #10b981; }
+.ab-absent .sp2-att-box-val { color: #ef4444; }
+.ab-late .sp2-att-box-val { color: #f59e0b; }
+.ab-halfday .sp2-att-box-val { color: #8b5cf6; }
+.ab-holiday .sp2-att-box-val { color: #3b82f6; }
+
+/* ---------- Timeline Modernization ---------- */
+.timeline.timeline-inverse {
+    position: relative;
+    padding-left: 30px;
+}
+.timeline.timeline-inverse::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 14px;
+    width: 2px;
+    background: repeating-linear-gradient(to bottom, #d1d5db, #d1d5db 6px, transparent 6px, transparent 12px);
+}
+.timeline.timeline-inverse > li {
+    margin-bottom: 24px;
+    position: relative;
+}
+.timeline.timeline-inverse > li.time-label {
+    margin-bottom: 16px;
+}
+.timeline.timeline-inverse > li.time-label > span {
+    background-color: <?php echo $theme_color; ?> !important;
+    color: #fff;
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.timeline.timeline-inverse > li > i {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    line-height: 32px;
+    left: -30px;
+    background-color: #fff !important;
+    color: <?php echo $theme_color; ?> !important;
+    border: 2px solid <?php echo $theme_color; ?>;
+    box-shadow: 0 0 0 4px #fff;
+    border-radius: 50%;
+    z-index: 2;
+}
+.timeline.timeline-inverse > li > .timeline-item {
+    background: #fff;
+    border: 1px solid #eaeaea;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    border-radius: 12px;
+    margin-left: 20px;
+    padding: 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.timeline.timeline-inverse > li > .timeline-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+    border-color: <?php echo $theme_color; ?>;
+}
+.timeline.timeline-inverse > li > .timeline-item > .time {
+    color: #9ca3af;
+    font-size: 12px;
+}
+.timeline.timeline-inverse > li > .timeline-item > .timeline-header {
+    border-bottom: none;
+    padding: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 8px;
+}
+.timeline.timeline-inverse > li > .timeline-item > .timeline-body {
+    padding: 0;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.sp2-invoice-row {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    border: 1px solid #eaeaea;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    align-items: center;
+    gap: 12px;
+}
+.sp2-invoice-main-row {
+    border-left: 4px solid <?php echo $theme_color; ?>;
+}
+.sp2-invoice-main-row:has(.label-danger) {
+    background-color: #fef2f2;
+    border-left: 4px solid #ef4444;
+}
+.sp2-invoice-main-row:has(.label-success) {
+    background-color: #f0fdf4;
+    border-left: 4px solid #10b981;
+}
+.sp2-invoice-main-row:has(.label-warning) {
+    background-color: #fffbeb;
+    border-left: 4px solid #f59e0b;
+}
+
+.sp2-invoice-sub-row {
+    background: #fdfdfd;
+    margin-left: 24px;
+    margin-top: -8px;
+    padding: 12px 16px;
+    border-left: 2px dashed #d1d5db;
+    box-shadow: none;
+    border-radius: 0 12px 12px 0;
+}
+.sp2-invoice-total-row {
+    background: #f4f5f7;
+    border: none;
+    font-weight: bold;
+    justify-content: flex-end;
+}
+.sp2-invoice-col {
+    flex: 1 1 80px;
+    font-size: 13px;
+    color: #4b5563;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.sp2-invoice-col:first-child {
+    flex: 2 1 180px;
+    font-weight: 600;
+    color: #111827;
+    font-size: 15px;
+}
+.sp2-invoice-col.text-right {
+    text-align: right;
+    font-weight: 600;
+}
+.sp2-invoice-col .label {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+.sp2-invoice-col .label-success { background-color: #10b981 !important; }
+.sp2-invoice-col .label-danger { background-color: #ef4444 !important; }
+.sp2-invoice-col .label-warning { background-color: #f59e0b !important; }
+
+/* ---------- Profile Data Rows ---------- */
+.sp2-data-section {
+    margin-bottom: 20px;
+}
+.sp2-data-section:last-child { margin-bottom: 0; }
+.sp2-data-row {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid #f4f6f9;
+    gap: 12px;
+}
+.sp2-data-row:last-child { border-bottom: none; }
+.sp2-data-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8a8a8a;
+    width: 38%;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding-top: 1px;
+}
+.sp2-data-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #222;
+    flex: 1;
+    word-break: break-word;
+}
+.sp2-data-value img {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #eaeaea;
+}
+.sp2-parent-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f4f6f9;
+}
+.sp2-parent-row:last-child { border-bottom: none; }
+.sp2-parent-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #eaeaea;
+    flex-shrink: 0;
+}
+
+/* ---------- Fees Tab ---------- */
+.sp2-fee-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.sp2-fee-stat {
+    border-radius: 8px;
+    padding: 14px;
+    border: 1px solid #f0f0f0;
+}
+.sp2-fee-stat-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+}
+.sp2-fee-stat-val {
+    font-size: 18px;
+    font-weight: 800;
+    color: #222;
+}
+.sp2-fee-stat.fs-total   { background: #f4f6f9; border-color: #e9ecef; }
+.sp2-fee-stat.fs-total .sp2-fee-stat-label { color: #555; }
+.sp2-fee-stat.fs-paid    { background: #f6fffa; border-color: #dcf2e6; }
+.sp2-fee-stat.fs-paid .sp2-fee-stat-label { color: #3b9b65; }
+.sp2-fee-stat.fs-paid .sp2-fee-stat-val { color: #3b9b65; }
+.sp2-fee-stat.fs-balance { background: #fff5f8; border-color: #fbe0e8; }
+.sp2-fee-stat.fs-balance .sp2-fee-stat-label { color: #d8456a; }
+.sp2-fee-stat.fs-balance .sp2-fee-stat-val { color: #d8456a; }
+.sp2-fee-stat.fs-fine    { background: #fffcf5; border-color: #fbedcf; }
+.sp2-fee-stat.fs-fine .sp2-fee-stat-label { color: #d09435; }
+.sp2-fee-stat.fs-fine .sp2-fee-stat-val { color: #d09435; }
+
+.sp2-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-bottom: 0;
+}
+.sp2-table thead th {
+    background: #f4f6f9;
+    color: #555;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 10px 12px;
+    border-bottom: 2px solid #eaeaea;
+    white-space: nowrap;
+}
+.sp2-table tbody tr {
+    border-bottom: 1px solid #f4f6f9;
+    transition: background 0.15s;
+}
+.sp2-table tbody tr:hover { background: #fafbff; }
+.sp2-table tbody tr.sp2-row-danger { background: #fff5f8 !important; }
+.sp2-table tbody tr.sp2-row-sub { background: #fafafa; }
+.sp2-table tbody td {
+    padding: 9px 12px;
+    color: #333;
+    vertical-align: middle;
+}
+.sp2-table tfoot td {
+    padding: 11px 12px;
+    font-weight: 700;
+    font-size: 13px;
+    background: #f4f6f9;
+    border-top: 2px solid #eaeaea;
+    color: #222;
+}
+.sp2-table-wrap {
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* ---------- Attendance Stat Boxes ---------- */
+.sp2-att-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.sp2-att-box {
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+    border: 1px solid;
+}
+.sp2-att-box-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+}
+.sp2-att-box-val {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1;
+}
+.sp2-att-box.ab-present  { background: #f6fffa; border-color: #dcf2e6; }
+.sp2-att-box.ab-present .sp2-att-box-label { color: #3b9b65; }
+.sp2-att-box.ab-present .sp2-att-box-val   { color: #3b9b65; }
+.sp2-att-box.ab-absent   { background: #fff5f8; border-color: #fbe0e8; }
+.sp2-att-box.ab-absent .sp2-att-box-label  { color: #d8456a; }
+.sp2-att-box.ab-absent .sp2-att-box-val    { color: #d8456a; }
+.sp2-att-box.ab-late     { background: #fffcf5; border-color: #fbedcf; }
+.sp2-att-box.ab-late .sp2-att-box-label    { color: #d09435; }
+.sp2-att-box.ab-late .sp2-att-box-val      { color: #d09435; }
+.sp2-att-box.ab-halfday  { background: #fdfaff; border-color: #f4e8fb; }
+.sp2-att-box.ab-halfday .sp2-att-box-label { color: #9d50ce; }
+.sp2-att-box.ab-halfday .sp2-att-box-val   { color: #9d50ce; }
+.sp2-att-box.ab-holiday  { background: #f0f4ff; border-color: #c7d7fd; }
+.sp2-att-box.ab-holiday .sp2-att-box-label { color: #4f46e5; }
+.sp2-att-box.ab-holiday .sp2-att-box-val   { color: <?php echo $theme_color; ?>; }
+
+/* ---------- Timeline Overhaul ---------- */
+.sp2-timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: relative;
+}
+.sp2-timeline::before {
+    content: '';
+    position: absolute;
+    left: 16px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, <?php echo $theme_color; ?>, #007bff, #eaeaea);
+}
+.sp2-timeline-item {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 18px;
+    position: relative;
+}
+.sp2-timeline-dot {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: <?php echo $theme_color; ?>;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 13px;
+    flex-shrink: 0;
+    z-index: 1;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-top: 2px;
+}
+.sp2-timeline-body {
+    flex: 1;
+    background: #f9fafb;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    padding: 12px 16px;
+}
+.sp2-timeline-date {
+    font-size: 11px;
+    font-weight: 600;
+    color: <?php echo $theme_color; ?>;
+    background: #e0e7ff;
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: inline-block;
+    margin-bottom: 6px;
+}
+.sp2-timeline-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 4px;
+}
+.sp2-timeline-desc {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.5;
+}
+.sp2-timeline-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+/* ---------- Documents Tab ---------- */
+.sp2-doc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.sp2-doc-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    background: <?php echo $theme_color; ?>;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+}
+.sp2-doc-btn:hover { background: #333; color: #fff; }
+
+/* ---------- Exam Tab ---------- */
+.sp2-exam-card {
+    background: #fff;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 18px;
+}
+.sp2-exam-header {
+    background: linear-gradient(135deg, #f0f4ff, #e0e7ff);
+    padding: 12px 16px;
+    border-bottom: 1px solid #c7d7fd;
+}
+.sp2-exam-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: <?php echo $theme_color; ?>;
+    margin: 0;
+}
+.sp2-exam-table thead th {
+    background: <?php echo $theme_color; ?>;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 9px 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.sp2-exam-table tbody td {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-bottom: 1px solid #f4f6f9;
+    color: #333;
+}
+.sp2-exam-table tbody tr:hover { background: #f9faff; }
+.sp2-exam-summary {
+    background: linear-gradient(135deg, #f0f4ff, #e8edff);
+    border-top: 2px solid #c7d7fd;
+    padding: 12px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.sp2-exam-summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.sp2-exam-summary-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.sp2-exam-summary-val {
+    font-size: 16px;
+    font-weight: 800;
+    color: <?php echo $theme_color; ?>;
+}
+
+/* ---------- Behaviour Tab ---------- */
+.sp2-behaviour-table thead th {
+    background: #fdfaff;
+    border-bottom: 2px solid #f4e8fb;
+    color: #9d50ce;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 9px 12px;
+}
+.sp2-behaviour-table tbody td {
+    padding: 9px 12px;
+    font-size: 12px;
+    border-bottom: 1px solid #f9f0ff;
+    vertical-align: middle;
+}
+.sp2-behaviour-table tbody tr.danger { background: #fff5f8; }
+
+/* ---------- Misc Tweaks ---------- */
+.sp2-add-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    background: <?php echo $theme_color; ?>;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    float: right;
+}
+.sp2-add-btn:hover { background: #333; color: #fff; }
+.sp2-no-record {
+    text-align: center;
+    padding: 30px;
+    color: #999;
+    font-size: 13px;
+}
+.sp2-no-record i {
+    font-size: 28px;
+    margin-bottom: 10px;
+    display: block;
+    opacity: 0.4;
+}
+.sp2-dropdown-menu {
+    background: #fff;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    min-width: 180px;
+}
+.sp2-dropdown-menu li a {
+    font-size: 13px;
+    padding: 8px 16px;
+    color: #333;
+}
+.sp2-dropdown-menu li a:hover { background: #f4f6f9; color: <?php echo $theme_color; ?>; }
+
+/* Responsive for sidebar layout */
+@media (max-width: 768px) {
+    .sp2-hero-body { flex-wrap: wrap; }
+    .sp2-hero-actions { justify-content: flex-start; }
+    .sp2-fee-stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .sp2-att-grid { grid-template-columns: repeat(2, 1fr); }
+}
+/* ---------- Tab Navigation (Pill Glass UI) ---------- */
+.nav-tabs-custom > .nav-tabs { border-bottom-color: transparent !important; }
+.nav-tabs-custom { box-shadow: none !important; background: transparent !important; }
+.sp2-tabs-nav {
+    display: flex;
+    gap: 8px;
+    background: #fff;
+    padding: 10px 14px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    border: 0px solid #f0f0f0;
+    border-bottom: none;
+    overflow-x: auto;
+    margin-bottom: 20px !important;
+}
+.sp2-tabs-nav > li {
+    float: none;
+    margin: 0;
+    border: none !important;
+}
+.sp2-tabs-nav > li > a {
+    border: none !important;
+    background: transparent !important;
+    color: #6b7280 !important;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 20px !important;
+    transition: all 0.2s;
+    margin-right: 0;
+}
+.sp2-tabs-nav > li > a:hover {
+    color: #222 !important;
+    background: #f3f4f6 !important;
+}
+.sp2-tabs-nav > li.active > a,
+.sp2-tabs-nav > li.active > a:hover,
+.sp2-tabs-nav > li.active > a:focus {
+    background: linear-gradient(135deg, <?php echo $theme_color; ?> 0%, #3026ad 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 10px rgba(79,70,229,0.25);
+    border: none !important;
+}
+.sp2-tabs-nav > li.active {
+    border: none !important;
+}
+</style>
+<div class="sp2-wrapper content-wrapper">
     <div class="row">
         <div class="col-md-12">
             <section class="content-header">
@@ -83,162 +1277,147 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
     <section class="content">
         <div class="row">
             <div class="col-md-3">
-                <div class="box box-primary transparent_bg" <?php
-                                                if ($staff["is_active"] == 0) {
-                                                    echo "style='background-color:#f0dddd;'";
-                                                }
-                                                ?>>
-                    <div class="box-body box-profile">
-                        <?php
+<div class="sp2-hero" style="margin-bottom:14px;">
+    <div class="sp2-hero-bg"></div>
+    <div class="sp2-hero-body" style="flex-direction: column; align-items: center; text-align: center; gap: 10px; padding-bottom: 20px;">
+        <div class="sp2-hero-avatar-wrap">
+            <?php
+            $image = $staff['image'];
+            if (!empty($image)) {
+                $file = $staff['image'];
+            } else {
+                if ($staff['gender'] == 'Male') {
+                    $file = "default_male.jpg";
+                } else {
+                    $file = "default_female.jpg";
+                }
+            }
+            ?>
+            <img class="sp2-hero-avatar" src="<?php echo $this->media_storage->getImageURL("uploads/staff_images/" . $file); ?>" alt="User profile picture">
+        </div>
+        <div class="sp2-hero-info" style="padding-bottom: 0;">
+            <h3 class="sp2-hero-name" style="font-size: 18px;"><?php echo $staff['name'] . " " . $staff['surname']; ?></h3>
+            <div class="sp2-hero-pills" style="justify-content: center;">
+                <span class="sp2-hero-pill"><?php echo $staff['user_type']; ?></span>
+            </div>
+            <?php if ($staff['user_type'] == 'Teacher') {
+            ?>
 
-                        $image = $staff['image'];
-                        if (!empty($image)) {
-
-                            $file = $staff['image'];
-                        } else {
-                            if ($staff['gender'] == 'Male') {
-                                $file = "default_male.jpg";
-                            } else {
-                                $file = "default_female.jpg";
+                <?php if ($rate_canview == 1) { ?><center>
+                        <h3><?php
+                            $stage     = (int) ($rate);
+                            $stagehalf = "";
+                            $half      = fmod($rate, 1);
+                            if ($half != 0) {
+                                $stagehalf = $stage + 1;
                             }
-                        }
-                        ?>
-                        <img class="profile-user-img img-responsive img-circle" src="<?php echo $this->media_storage->getImageURL("uploads/staff_images/" . $file); ?>" alt="User profile picture">
-                        <h3 class="profile-username text-center"><?php echo $staff['name'] . " " . $staff['surname']; ?></h3>
-                        <?php if ($staff['user_type'] == 'Teacher') {
-                        ?>
 
-                            <?php if ($rate_canview == 1) { ?><center>
-                                    <h3><?php
-                                        $stage     = (int) ($rate);
-                                        $stagehalf = "";
-                                        $half      = fmod($rate, 1);
-                                        if ($half != 0) {
-                                            $stagehalf = $stage + 1;
-                                        }
-
-                                        for ($i = 1; $i <= 5; $i++) {
-                                        ?>
-                                            <span class="fa fa-star<?php
-                                                                    if ($i == $stagehalf && ($half > 0 && $half < 1)) {
-                                                                        echo '-half-o checked';
-                                                                    }
-                                                                    ?> " <?php if ($stage >= $i) { ?> style="color:orange;" <?php } ?>></span>
-                                        <?php
-                                        }
-                                        ?>
-                                    </h3>
-                                </center>
-                                <center>
-                                    <h5><?php echo substr($rate, 0, 3); ?> average based on <?php echo $reviews; ?> <?php echo $this->lang->line('reviews'); ?>.</h5>
-                                </center> <?php }
-                                    } ?>
-                        <ul class="list-group ">
-
-                            <li class="list-group-item listnoback">
-                                <b><?php echo $this->lang->line('staff_id'); ?></b> <a class="pull-right text-aqua"><?php echo $staff['employee_id']; ?></a>
-                            </li>
-                            <li class="list-group-item listnoback">
-                                <b><?php echo $this->lang->line('role'); ?></b> <a class="pull-right text-aqua"><?php echo $staff['user_type']; ?></a>
-                            </li>
-                            <?php if ($sch_setting->staff_designation) { ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('designation'); ?></b> <a class="pull-right text-aqua"><?php echo $staff['designation']; ?></a>
-                                </li>
-                            <?php }
-                            if ($sch_setting->staff_department) { ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('department'); ?></b> <a class="pull-right text-aqua"><?php echo $staff['department']; ?></a>
-                                </li>
-                            <?php }
-                            if ($sch_setting->staff_epf_no) { ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('epf_no'); ?></b> <a class="pull-right text-aqua"><?php echo $staff['epf_no']; ?></a>
-                                </li>
-                            <?php } ?>
-                            <li class="list-group-item listnoback">
-                                <b><?php echo $this->lang->line('basic_salary'); ?></b> <a class="pull-right text-aqua"><?php if (!empty($staff['basic_salary'])) {
-                                                                                                                            echo amountFormat($staff['basic_salary']);
-                                                                                                                        } ?></a>
-                            </li>
-                            <?php if ($sch_setting->staff_contract_type) {
+                            for ($i = 1; $i <= 5; $i++) {
                             ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('contract_type'); ?></b> <a class="pull-right text-aqua"><?php
+                                <span class="fa fa-star<?php
+                                                        if ($i == $stagehalf && ($half > 0 && $half < 1)) {
+                                                            echo '-half-o checked';
+                                                        }
+                                                        ?> " <?php if ($stage >= $i) { ?> style="color:orange;" <?php } ?>></span>
+                            <?php
+                            }
+                            ?>
+                        </h3>
+                    </center>
+                    <center>
+                        <h5><?php echo substr($rate, 0, 3); ?> average based on <?php echo $reviews; ?> <?php echo $this->lang->line('reviews'); ?>.</h5>
+                    </center> <?php }
+                        } ?>
+        </div>
+    </div>
+</div>
+<div class="sp2-card sp2-card-sm">
+    <div class="sp2-info-row">
+    <div class="sp2-info-label"><?php echo $this->lang->line('staff_id'); ?></div>
+    <div class="sp2-info-value"><?php echo $staff['employee_id']; ?></div>
+</div>
+<div class="sp2-info-row">
+    <div class="sp2-info-label"><?php echo $this->lang->line('role'); ?></div>
+    <div class="sp2-info-value"><?php echo $staff['user_type']; ?></div>
+</div>
+<div class="sp2-info-row">
+    <div class="sp2-info-label"><?php echo $this->lang->line('designation'); ?></div>
+    <div class="sp2-info-value"><?php echo $staff['designation']; ?></div>
+</div>
+<div class="sp2-info-row">
+    <div class="sp2-info-label"><?php echo $this->lang->line('department'); ?></div>
+    <div class="sp2-info-value"><?php echo $staff['department']; ?></div>
+</div>
+<div class="sp2-info-row">
+    <div class="sp2-info-label"><?php echo $this->lang->line('epf_no'); ?></div>
+    <div class="sp2-info-value"><?php echo $staff['epf_no']; ?></div>
+</div>
+<div class="sp2-info-row">
+    <div class="sp2-info-label"><?php echo $this->lang->line('basic_salary'); ?></div>
+    <div class="sp2-info-value"><?php if (!empty($staff['basic_salary'])) {
+                                                                                                                            echo amountFormat($staff['basic_salary']);
+                                                                                                                        } ?></div>
+</div>
+<div class="sp2-info-row">
+    <div class="sp2-info-label"><?php echo $this->lang->line('contract_type'); ?></div>
+    <div class="sp2-info-value"><?php
                                                                                                                                 if (array_key_exists($staff['contract_type'], $contract_type)) {
                                                                                                                                     echo $contract_type[$staff['contract_type']];
                                                                                                                                 }
-                                                                                                                                ?></a>
-                                </li>
-                            <?php }
-                            if ($sch_setting->staff_work_shift) { ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('work_shift'); ?></b> <a class="pull-right text-aqua"><?php echo $staff['shift']; ?></a>
-                                </li>
-                            <?php }
-                            if ($sch_setting->staff_work_location) { ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('work_location'); ?></b> <a class="pull-right text-aqua"><?php echo $staff['location']; ?></a>
-                                </li>
-                            <?php }
-                            if ($sch_setting->staff_date_of_joining) {
-                            ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('date_of_joining'); ?></b> <a class="pull-right text-aqua"><?php
+                                                                                                                                ?></div>
+</div>
+<div class="sp2-info-row">
+    <div class="sp2-info-label"><?php echo $this->lang->line('work_shift'); ?></div>
+    <div class="sp2-info-value"><?php echo $staff['shift']; ?></div>
+</div>
+<div class="sp2-info-row">
+    <div class="sp2-info-label"><?php echo $this->lang->line('work_location'); ?></div>
+    <div class="sp2-info-value"><?php echo $staff['location']; ?></div>
+</div>
+<div class="sp2-info-row">
+    <div class="sp2-info-label"><?php echo $this->lang->line('date_of_joining'); ?></div>
+    <div class="sp2-info-value"><?php
                                                                                                                                 if (!empty($staff["date_of_joining"]) && $staff["date_of_joining"] != '0000-00-00') {
                                                                                                                                     echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($staff['date_of_joining']));
                                                                                                                                 }
-                                                                                                                                ?></a>
-                                </li>
-                            <?php }
-
-                            if ($sch_setting->staff_barcode) { ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('barcode'); ?></b>
-                                    <?php if (file_exists("./uploads/staff_id_card/barcodes/" . $staff['id'] . ".png")) { ?>
+                                                                                                                                ?></div>
+</div>
+<div class="sp2-info-row">
+    <div class="sp2-info-label"><?php echo $this->lang->line('barcode'); ?></div>
+    <div class="sp2-info-value"><?php if (file_exists("./uploads/staff_id_card/barcodes/" . $staff['id'] . ".png")) { ?>
                                         <a class="pull-right text-aqua" href="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/barcodes/' . $staff['id'] . '.png'); ?>" target="_blank">
                                             <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/barcodes/' . $staff['id'] . '.png'); ?>" width="auto" height="auto" /></a>
-                                    <?php } ?>
-                                </li>
-                            <?php }
-                              if ($sch_setting->staff_barcode) { ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('qrcode'); ?></b>
-                                    <?php if (file_exists("./uploads/staff_id_card/qrcode/" . $staff['id'] . ".png")) { ?>
+                                    <?php } ?></div>
+</div>
+<div class="sp2-info-row">
+    <div class="sp2-info-label"><?php echo $this->lang->line('qrcode'); ?></div>
+    <div class="sp2-info-value"><?php if (file_exists("./uploads/staff_id_card/qrcode/" . $staff['id'] . ".png")) { ?>
                                         <a class="pull-right text-aqua" href="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/qrcode/' . $staff['id'] . '.png'); ?>" target="_blank">
                                             <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/qrcode/' . $staff['id'] . '.png'); ?>" width="auto" height="auto" class="h-50 qrcodeimg" /></a>
-                                    <?php } ?>
-                                </li>
-                            <?php }
-
-                            if (($staff["is_active"] == 0)) {
-                            ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('date_of_leaving'); ?></b> <a class="pull-right text-aqua"><?php
+                                    <?php } ?></div>
+</div>
+<div class="sp2-info-row">
+    <div class="sp2-info-label"><?php echo $this->lang->line('date_of_leaving'); ?></div>
+    <div class="sp2-info-value"><?php
 
                                                                                                                                 echo $this->customlib->dateformat($staff['date_of_leaving']);
 
-                                                                                                                                ?></a>
-                                </li>
-                            <?php }
-                            if (($staff["is_active"] == 0)) {
-                            ?>
-                                <li class="list-group-item listnoback">
-                                    <b><?php echo $this->lang->line('disable_date'); ?></b> <a class="pull-right text-aqua"><?php
+                                                                                                                                ?></div>
+</div>
+<div class="sp2-info-row">
+    <div class="sp2-info-label"><?php echo $this->lang->line('disable_date'); ?></div>
+    <div class="sp2-info-value"><?php
 
                                                                                                                             echo $this->customlib->dateformat($staff['disable_at']);
 
-                                                                                                                            ?></a>
-                                </li>
-                            <?php } ?>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+                                                                                                                            ?></div>
+</div>
+</div>
+</div>
 
             <div class="col-md-9">
                 <div class="nav-tabs-custom theme-shadow">
-                    <ul class="nav nav-tabs">
+                    <ul class="sp2-tabs-nav nav nav-tabs" style="margin-bottom:0;">
                         <li class="active"><a href="#activity" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('profile'); ?></a></li>
                         <li class=""><a href="#payroll" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('payroll'); ?></a></li>
                         <li class=""><a href="#leaves" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('leaves'); ?></a></li>
@@ -348,82 +1527,81 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane active" id="activity">
-                            <div class="tshadow mb25 bozero">
-                                <div class="table-responsive around10 pt0">
-                                    <table class="table table-hover table-striped tmb0">
-                                        <tbody>
+                            <div class="sp2-card">
+    <div class="sp2-card-header"><i class="fa fa-info-circle"></i> <?php echo $this->lang->line('contact_details'); ?></div>
+    <div class="sp2-card-body">
+                                <div class="sp2-data-grid">
                                             <?php if ($sch_setting->staff_phone) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('phone'); ?></td>
-                                                    <td><?php echo $staff['contact_no']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('phone'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['contact_no']; ?></div>
+</div>
                                             <?php }
                                             if ($sch_setting->staff_emergency_contact) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('emergency_contact_number'); ?></td>
-                                                    <td><?php echo $staff['emergency_contact_no']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('emergency_contact_number'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['emergency_contact_no']; ?></div>
+</div>
                                             <?php } ?>
-                                            <tr>
-                                                <td><?php echo $this->lang->line('email'); ?></td>
-                                                <td><?php echo $staff['email']; ?></td>
-                                            </tr>
-                                            <tr>
-                                                <td><?php echo $this->lang->line('gender'); ?></td>
-                                                <td><?php echo $this->lang->line(strtolower($staff['gender'])); ?></td>
-                                            </tr>
-                                            <tr>
-                                                <td><?php echo $this->lang->line('date_of_birth'); ?></td>
-                                                <td><?php
+                                            <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('email'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['email']; ?></div>
+</div>
+                                            <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('gender'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $this->lang->line(strtolower($staff['gender'])); ?></div>
+</div>
+                                            <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('date_of_birth'); ?></div>
+    <div class="sp2-data-box-value"><?php
                                                     if (!empty($staff["dob"]) && $staff["dob"] != '0000-00-00') {
                                                         echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($staff['dob']));
                                                     }
-                                                    ?></td>
-                                            </tr>
+                                                    ?></div>
+</div>
                                             <?php if ($sch_setting->staff_marital_status) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('marital_status'); ?></td>
-                                                    <td><?php echo $staff['marital_status']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('marital_status'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['marital_status']; ?></div>
+</div>
                                             <?php }
                                             if ($sch_setting->staff_father_name) { ?>
-                                                <tr>
-                                                    <td class="col-md-4"><?php echo $this->lang->line('father_name'); ?></td>
-                                                    <td class="col-md-5"><?php echo $staff['father_name']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('father_name'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['father_name']; ?></div>
+</div>
                                             <?php }
                                             if ($sch_setting->staff_mother_name) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('mother_name'); ?></td>
-                                                    <td><?php echo $staff['mother_name']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('mother_name'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['mother_name']; ?></div>
+</div>
                                             <?php }
                                             if ($sch_setting->staff_qualification) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('qualification'); ?></td>
-                                                    <td><?php echo $staff['qualification']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('qualification'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['qualification']; ?></div>
+</div>
                                             <?php }
                                             if ($sch_setting->staff_work_experience) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('work_experience'); ?></td>
-                                                    <td><?php echo $staff['work_exp']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('work_experience'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['work_exp']; ?></div>
+</div>
                                             <?php }
                                             if ($sch_setting->staff_note) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('note'); ?></td>
-                                                    <td><?php echo $staff['note']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('note'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['note']; ?></div>
+</div>
                                                 <?php }
                                             $cutom_fields_data = get_custom_table_values($staff['id'], 'staff');
                                             if (!empty($cutom_fields_data)) {
                                                 foreach ($cutom_fields_data as $field_key => $field_value) {
                                                 ?>
-                                                    <tr>
-                                                        <td><?php echo $field_value->name; ?></td>
-                                                        <td>
-                                                            <?php
+                                                    <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $field_value->name; ?></div>
+    <div class="sp2-data-box-value"><?php
                                                             if (is_string($field_value->field_value) && is_array(json_decode($field_value->field_value, true)) && (json_last_error() == JSON_ERROR_NONE)) {
                                                                 $field_array = json_decode($field_value->field_value);
                                                                 echo "<ul class='student_custom_field'>";
@@ -439,163 +1617,137 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                                 }
                                                                 echo $display_field;
                                                             }
-                                                            ?>
-                                                        </td>
-                                                    </tr>
+                                                            ?></div>
+</div>
                                             <?php
                                                 }
                                             }
                                             ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        </div>
                             </div>
-                            <div class="tshadow mb25 bozero">
-                                <h3 class="pagetitleh2"><?php echo $this->lang->line('address_details'); ?></h3>
-                                <div class="table-responsive around10 pt0">
-                                    <table class="table table-hover table-striped tmb0">
-                                        <tbody>
+</div>
+                            <div class="sp2-card">
+    <div class="sp2-card-header"><i class="fa fa-info-circle"></i> <?php echo $this->lang->line('address_details'); ?></div>
+    <div class="sp2-card-body">
+                                <div class="sp2-data-grid">
                                             <?php if ($sch_setting->staff_current_address) { ?>
-                                                <tr>
-                                                    <td class="col-md-4"><?php echo $this->lang->line('current_address'); ?></td>
-                                                    <td class="col-md-5"><?php echo $staff['local_address']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('current_address'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['local_address']; ?></div>
+</div>
                                             <?php }
                                             if ($sch_setting->staff_permanent_address) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('permanent_address'); ?></td>
-                                                    <td><?php echo $staff['permanent_address']; ?></td>
-                                                </tr>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('permanent_address'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['permanent_address']; ?></div>
+</div>
                                             <?php } ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        </div>
                             </div>
+</div>
                             <?php if ($sch_setting->staff_account_details) { ?>
-                                <div class="tshadow mb25 bozero">
-                                    <h3 class="pagetitleh2"><?php echo $this->lang->line('bank_account_details'); ?></h3>
-                                    <div class="table-responsive around10 pt10">
-                                        <table class="table table-hover table-striped tmb0">
-                                            <tbody>
-                                                <tr>
-                                                    <td class="col-md-4"><?php echo $this->lang->line('account_title'); ?></td>
-                                                    <td class="col-md-5"><?php echo $staff['account_title']; ?></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('bank_name'); ?></td>
-                                                    <td><?php echo $staff['bank_name']; ?></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('bank_branch_name'); ?></td>
-                                                    <td><?php echo $staff['bank_branch']; ?></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('bank_account_number'); ?></td>
-                                                    <td><?php echo $staff['bank_account_no']; ?></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('ifsc_code'); ?></td>
-                                                    <td><?php echo $staff['ifsc_code']; ?></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                <div class="sp2-card">
+    <div class="sp2-card-header"><i class="fa fa-info-circle"></i> <?php echo $this->lang->line('bank_account_details'); ?></div>
+    <div class="sp2-card-body">
+                                    <div class="sp2-data-grid">
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('account_title'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['account_title']; ?></div>
+</div>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('bank_name'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['bank_name']; ?></div>
+</div>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('bank_branch_name'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['bank_branch']; ?></div>
+</div>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('bank_account_number'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['bank_account_no']; ?></div>
+</div>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('ifsc_code'); ?></div>
+    <div class="sp2-data-box-value"><?php echo $staff['ifsc_code']; ?></div>
+</div>
+                                            </div>
                                 </div>
+</div>
                             <?php }
                             if ($sch_setting->staff_social_media) { ?>
-                                <div class="tshadow mb25  bozero">
-                                    <h3 class="pagetitleh2"><?php echo $this->lang->line('social_media_link'); ?></h3>
-                                    <div class="table-responsive around10 pt0">
-                                        <table class="table table-hover table-striped tmb0">
-                                            <tbody>
-                                                <tr>
-                                                    <td class="col-md-4"><?php echo $this->lang->line('facebook_url'); ?></td>
-                                                    <td class="col-md-5"><a href="<?php echo $staff['facebook']; ?>" target="_blank"><?php echo $staff['facebook']; ?></a></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('twitter_url'); ?></td>
-                                                    <td><a href="<?php echo $staff['twitter']; ?>" target="_blank"><?php echo $staff['twitter']; ?></a></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('linkedin_url'); ?></td>
-                                                    <td><a href="<?php echo $staff['linkedin']; ?>" target="_blank"><?php echo $staff['linkedin']; ?></a></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('instagram_url'); ?></td>
-                                                    <td><a href="<?php echo $staff['instagram']; ?>" target="_blank"><?php echo $staff['instagram']; ?></a></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                <div class="sp2-card">
+    <div class="sp2-card-header"><i class="fa fa-info-circle"></i> <?php echo $this->lang->line('social_media_link'); ?></div>
+    <div class="sp2-card-body">
+                                    <div class="sp2-data-grid">
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('facebook_url'); ?></div>
+    <div class="sp2-data-box-value"><a href="<?php echo $staff['facebook']; ?>" target="_blank"><?php echo $staff['facebook']; ?></a></div>
+</div>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('twitter_url'); ?></div>
+    <div class="sp2-data-box-value"><a href="<?php echo $staff['twitter']; ?>" target="_blank"><?php echo $staff['twitter']; ?></a></div>
+</div>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('linkedin_url'); ?></div>
+    <div class="sp2-data-box-value"><a href="<?php echo $staff['linkedin']; ?>" target="_blank"><?php echo $staff['linkedin']; ?></a></div>
+</div>
+                                                <div class="sp2-data-box">
+    <div class="sp2-data-box-label"><?php echo $this->lang->line('instagram_url'); ?></div>
+    <div class="sp2-data-box-value"><a href="<?php echo $staff['instagram']; ?>" target="_blank"><?php echo $staff['instagram']; ?></a></div>
+</div>
+                                            </div>
                                 </div>
+</div>
                             <?php } ?>
                         </div>
                         <div class="tab-pane" id="payroll">
-                            <div class="row row-flex">
-                                <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
-                                    <div class="staffprofile">
-                                        <h5><?php echo $this->lang->line('total_net_salary_paid'); ?></h5>
-                                        <h4><?php
+                            <div class="sp2-fee-stat-grid">
+    <div class="sp2-fee-stat fs-paid">
+        <div class="sp2-fee-stat-label"><?php echo $this->lang->line('total_net_salary_paid'); ?></div>
+        <div class="sp2-fee-stat-val"><?php
                                             if (!empty($salary["net_salary"])) {
                                                 echo $currency_symbol . amountFormat($salary["net_salary"]);
                                             } else {
                                                 echo $currency_symbol . "0.00";
                                             }
-                                            ?></h4>
-                                        <div class="icon mt12font40">
-                                            <i class="fa fa-money"></i>
-                                        </div>
-                                    </div>
-                                </div><!--./col-md-3-->
-                                <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
-                                    <div class="staffprofile">
-                                        <h5><?php echo $this->lang->line('total_gross_salary'); ?></h5>
-                                        <h4><?php
+                                            ?></div>
+    </div>
+    <div class="sp2-fee-stat fs-fine">
+        <div class="sp2-fee-stat-label"><?php echo $this->lang->line('total_gross_salary'); ?></div>
+        <div class="sp2-fee-stat-val"><?php
                                             if (!empty($salary["basic_salary"])) {
                                                 $basic_salary = $salary["basic_salary"] + $salary["earnings"] - $salary["deduction"];
                                                 echo $currency_symbol . amountFormat($basic_salary);
                                             } else {
                                                 echo $currency_symbol . "0.00";
                                             }
-                                            ?></h4>
-                                        <div class="icon mt12font40">
-                                            <i class="fa fa-money"></i>
-                                        </div>
-                                    </div>
-                                </div><!--./col-md-3-->
-                                <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
-                                    <div class="staffprofile">
-                                        <h5><?php echo $this->lang->line('total_earning'); ?></h5>
-                                        <h4><?php
+                                            ?></div>
+    </div>
+    <div class="sp2-fee-stat fs-earning" style="background: #e0e7ff; border-color: #c7d2fe;">
+        <div class="sp2-fee-stat-label" style="color: #4f46e5;"><?php echo $this->lang->line('total_earning'); ?></div>
+        <div class="sp2-fee-stat-val" style="color: #4f46e5;"><?php
                                             if (!empty($salary["earnings"])) {
                                                 echo $currency_symbol . amountFormat($salary["earnings"]);
                                             } else {
                                                 echo $currency_symbol . "0.00";
                                             }
-                                            ?></h4>
-                                        <div class="icon mt12font40">
-                                            <i class="fa fa-money"></i>
-                                        </div>
-                                    </div>
-                                </div><!--./col-md-3-->
-                                <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
-                                    <div class="staffprofile">
-                                        <h5><?php echo $this->lang->line('total_deduction'); ?></h5>
-                                        <h4><?php
+                                            ?></div>
+    </div>
+    <div class="sp2-fee-stat fs-balance">
+        <div class="sp2-fee-stat-label"><?php echo $this->lang->line('total_deduction'); ?></div>
+        <div class="sp2-fee-stat-val"><?php
                                             $deduction = $salary["deduction"] + $salary["tax"];
 
                                             if (!empty($deduction)) {
                                                 echo $currency_symbol . amountFormat($deduction);
                                             } else {
                                                 echo $currency_symbol . "0.00";
-                                            } ?> </h4>
-                                        <div class="icon mt12font40">
-                                            <i class="fa fa-money"></i>
-                                        </div>
-                                    </div>
-                                </div><!--./col-md-3-->
-                            </div>
-                            <div class="table-responsive">
+                                            } ?> </div>
+    </div>
+</div>
+
+                            <div class="sp2-card">
+<div class="table-responsive">
                                 <div class="download_label"><?php echo $this->lang->line('details_for'); ?> <?php echo $staff["name"] . " " . $staff["surname"] . $employee_id; ?></div>
                                 <table class="table table-hover table-striped example" data-export-title="<?php echo $staff["name"] . " " . $staff["surname"] . $employee_id; ?>">
                                     <thead>
@@ -653,6 +1805,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                     </tbody>
                                 </table>
                             </div>
+</div>
                         </div>
 
                         <?php if ($sch_setting->staff_upload_documents) {
@@ -754,7 +1907,6 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                         <?php } ?>
                                     </div><!--./row-->
                                 </div>
-                                </table>
                             </div>
                         <?php } ?>
 
@@ -815,62 +1967,31 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                         </div>
 
                         <div class="tab-pane" id="attendance">
-                            <div class="row">
-                                <div class="col-lg-3 col-md-4 col-sm-6 col20per">
-                                    <div class="staffprofile">
-                                        <h5><?php echo $this->lang->line('total_present'); ?></h5>
-                                        <h4 class="total_present"><?php echo count($countAttendance['Present']); ?></h4>
-                                        <div class="icon">
-                                            <i class="fa  fa-check-square-o"></i>
-                                        </div>
-                                    </div>
-                                </div><!--./col-md-3-->
-                                <div class="col-lg-3 col-md-4 col-sm-6 col20per">
-                                    <div class="staffprofile">
-                                        <h5><?php echo $this->lang->line('total_late'); ?></h5>
-                                        <h4 class="total_late"><?php echo count($countAttendance['Late']); ?></h4>
-                                        <div class="icon">
-                                            <i class="fa  fa-check-square-o"></i>
-                                        </div>
-                                    </div>
-                                </div><!--./col-md-3-->
-                                <div class="col-lg-3 col-md-4 col-sm-6 col20per">
-                                    <div class="staffprofile">
-                                        <h5><?php echo $this->lang->line('total_absent'); ?></h5>
-                                        <h4 class="total_absent"><?php echo count($countAttendance['Absent']); ?></h4>
-                                        <div class="icon">
-                                            <i class="fa  fa-check-square-o"></i>
-                                        </div>
-                                    </div>
-                                </div><!--./col-md-3-->
-                                <div class="col-lg-3 col-md-4 col-sm-6 col20per">
-                                    <div class="staffprofile">
-                                        <h5><?php echo $this->lang->line('total_half_day'); ?></h5>
-                                        <h4 class="total_half_day"><?php echo count($countAttendance['Half Day']); ?></h4>
-                                        <div class="icon">
-                                            <i class="fa fa-check-square-o"></i>
-                                        </div>
-                                    </div>
-                                </div><!--./col-md-3-->
-
-                                <div class="col-lg-3 col-md-4 col-sm-6 col20per">
-                                    <div class="staffprofile">
-                                        <h5><?php echo $this->lang->line('total_holiday'); ?></h5>
-                                        <h4 class="total_holiday"><?php echo count($countAttendance['Holiday']); ?></h4>
-                                        <div class="icon">
-                                            <i class="fa  fa-check-square-o"></i>
-                                        </div>
-                                    </div>
-                                </div><!--./col-md-3-->
-                                 <div class="col-lg-3 col-md-4 col-sm-6 col20per">
-                                    <div class="staffprofile">
-                                        <h5><?php echo $this->lang->line('half_day_second_shift'); ?></h5>
-                                        <h4 class="total_half_day_second_shift"><?php echo count($countAttendance['Half Day Second Shift']); ?></h4>
-                                        <div class="icon">
-                                            <i class="fa  fa-check-square-o"></i>
-                                        </div>
-                                    </div>
-                                </div><!--./col-md-3-->
+                            <div class="sp2-att-grid">
+                                <div class="sp2-att-box ab-present">
+                                    <div class="sp2-att-box-val"><?php echo count($countAttendance['Present']); ?></div>
+                                    <div class="sp2-att-box-label"><?php echo $this->lang->line('total_present'); ?></div>
+                                </div>
+                                <div class="sp2-att-box ab-late">
+                                    <div class="sp2-att-box-val"><?php echo count($countAttendance['Late']); ?></div>
+                                    <div class="sp2-att-box-label"><?php echo $this->lang->line('total_late'); ?></div>
+                                </div>
+                                <div class="sp2-att-box ab-absent">
+                                    <div class="sp2-att-box-val"><?php echo count($countAttendance['Absent']); ?></div>
+                                    <div class="sp2-att-box-label"><?php echo $this->lang->line('total_absent'); ?></div>
+                                </div>
+                                <div class="sp2-att-box ab-halfday">
+                                    <div class="sp2-att-box-val"><?php echo count($countAttendance['Half Day']); ?></div>
+                                    <div class="sp2-att-box-label"><?php echo $this->lang->line('total_half_day'); ?></div>
+                                </div>
+                                <div class="sp2-att-box ab-holiday">
+                                    <div class="sp2-att-box-val"><?php echo count($countAttendance['Holiday']); ?></div>
+                                    <div class="sp2-att-box-label"><?php echo $this->lang->line('total_holiday'); ?></div>
+                                </div>
+                                <div class="sp2-att-box ab-halfday">
+                                    <div class="sp2-att-box-val"><?php echo count($countAttendance['Half Day Second Shift']); ?></div>
+                                    <div class="sp2-att-box-label"><?php echo $this->lang->line('half_day_second_shift'); ?></div>
+                                </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-3 col-sm-3">
@@ -912,7 +2033,8 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                             </div>
                             <div style="position: relative;" class="row">
                                 <div class="modal_inner_loader displaynone"></div>
-                                <div id="ajaxattendance" class="table-responsive mt10">
+                                <div class="sp2-card">
+<div id="ajaxattendance" class="table-responsive mt10">
                                  
                                     <table class="table table-striped table-bordered table-hover attendancetable" data-export-title="<?php echo $this->lang->line('details_for'); ?> <?php echo $staff["name"] . " " . $staff["surname"]; ?>" id="attendancetable">
                                         <thead>
@@ -961,6 +2083,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                         </tbody>
                                     </table>
                                 </div>
+</div>
                             </div>
                         </div>
                         <?php if ($staff['user_type'] == 2) {
@@ -1009,33 +2132,30 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                             </div>
                         <?php } ?>
                         <div class="tab-pane" id="leaves">
-                            <div class="row row-flex">
+                            <div class="sp2-fee-stat-grid">
                                 <?php foreach ($leavedetails as $ldkey => $ldvalue) {
                                 ?>
                                     <?php if (!empty($ldvalue["alloted_leave"])) {
                                     ?>
-                                        <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
-                                            <div class="staffprofile">
-                                                <h5><?php echo $ldvalue["type"] . " (" . $ldvalue["alloted_leave"] . ")"; ?></h5>
-                                                <p><?php echo $this->lang->line('used'); ?>: <?php
-                                                                                                if (!empty($ldvalue["approve_leave"])) {
-                                                                                                    echo $ldvalue["approve_leave"];
-                                                                                                } else {
-                                                                                                    echo "0";
-                                                                                                }
-                                                                                                ?></p>
-                                                <p><?php echo $this->lang->line('available'); ?>: <?php echo $ldvalue["alloted_leave"] - $ldvalue["approve_leave"] ?></p>
-                                                <div class="icon">
-                                                    <i class="fa fa-plane"></i>
-                                                </div>
+                                        <div class="sp2-fee-stat fs-total" style="background: #fff8e6; border-color: #fce4a8;">
+                                            <div class="sp2-fee-stat-label" style="color: #d09435;"><?php echo $ldvalue["type"] . " (" . $ldvalue["alloted_leave"] . ")"; ?></div>
+                                            <div class="sp2-fee-stat-val" style="color: #d09435; font-size: 13px;">
+                                                <?php echo $this->lang->line('used'); ?>: <?php
+                                                                                            if (!empty($ldvalue["approve_leave"])) {
+                                                                                                echo $ldvalue["approve_leave"];
+                                                                                            } else {
+                                                                                                echo "0";
+                                                                                            }
+                                                                                            ?><br>
+                                                <?php echo $this->lang->line('available'); ?>: <?php echo $ldvalue["alloted_leave"] - $ldvalue["approve_leave"] ?>
                                             </div>
-                                        </div><!--./col-md-3-->
+                                        </div>
                                 <?php
                                     }
                                 }
                                 ?>
                             </div>
-                            <div class="timeline-header no-border">
+                            <div class="sp2-card">
                                 <div class="download_label"><?php echo $this->lang->line('details_for'); ?> <?php echo $staff["name"] . " " . $staff["surname"] . $staff['employee_id']; ?></div>
                                 <div class="table-responsive overflow-visible">
                                     <table class="table table-striped table-bordered table-hover example" data-export-title="<?php echo $staff["name"] . " " . $staff["surname"] . $employee_id; ?>">

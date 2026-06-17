@@ -119,8 +119,12 @@ class Receiptvoucher extends MY_Addon_AccountsController
                 );
             }
 
-            $this->accvoucher_model->addVoucher($data_insert, $items);
+            $new_id = $this->accvoucher_model->addVoucher($data_insert, $items);
             $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">' . $this->lang->line('success_message') . '</div>');
+            $this->session->set_flashdata('msg_toast_success', $this->lang->line('success_message'));
+            if ($this->input->post('save_and_print') == '1' && $new_id) {
+                $this->session->set_flashdata('print_voucher_id', $new_id);
+            }
             redirect('accounts/receiptvoucher');
         }
     }
@@ -391,6 +395,10 @@ class Receiptvoucher extends MY_Addon_AccountsController
 
             $this->accvoucher_model->addVoucher($data_update, $items);
             $this->session->set_flashdata('msg', '<div class="alert alert-success">' . $this->lang->line('update_message') . '</div>');
+            $this->session->set_flashdata('msg_toast_success', $this->lang->line('update_message'));
+            if ($this->input->post('save_and_print') == '1') {
+                $this->session->set_flashdata('print_voucher_id', $id);
+            }
             redirect('accounts/receiptvoucher');
         }
     }

@@ -195,3 +195,5 @@ $lang["exam_category"] = "Exam Category";
 $lang["admit_card"] = "Admit Card";
 $lang["subject_note_should_be_choosen_from_selected_exam"] = "Subject Note Should Be Chosen From Selected Exam";
 $lang["select_template_to_mail"] = "Select Template To Mail";
+$lang["marks_register"] = "Marks Register";
+$lang["timetable_viewer"] = "Timetable Viewer";

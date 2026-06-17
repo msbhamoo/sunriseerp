@@ -3316,6 +3316,29 @@ FROM `students`
             }
         }
 
+        // Age Analysis
+        $this->db->select('students.dob');
+        $this->db->from('students');
+        $this->db->join('student_session', 'student_session.student_id = students.id');
+        $this->db->where('student_session.session_id', $session_id);
+        $this->db->where('students.is_active', 'yes');
+        $this->db->where('students.dob IS NOT NULL');
+        $this->db->where('students.dob !=', '0000-00-00');
+        $dobs = $this->db->get()->result_array();
+
+        $age_stats = [];
+        $currentDate = new DateTime($date);
+        foreach($dobs as $d) {
+            $birthDate = new DateTime($d['dob']);
+            $age = $birthDate->diff($currentDate)->y;
+            $age_group = $age . " Yrs";
+            if(!isset($age_stats[$age_group])) {
+                $age_stats[$age_group] = 0;
+            }
+            $age_stats[$age_group]++;
+        }
+        ksort($age_stats);
+
         return [
             'total_students' => $total_students,
             'gender_ratio' => $gender_stats,
@@ -3326,7 +3349,8 @@ FROM `students`
             'birthdays_list' => $birthdays_list,
             'new_admissions' => $new_admissions,
             'attendance_today' => $attendance_today,
-            'total_present' => $total_present
+            'total_present' => $total_present,
+            'age_stats' => $age_stats
         ];
     }
 
