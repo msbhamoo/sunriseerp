@@ -16,7 +16,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label><?php echo $this->lang->line('ledger_account'); ?></label><small class="req"> *</small>
-                                        <select name="ledger_id" class="form-control" required>
+                                        <select name="ledger_id" class="form-control select2">
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
                                             <?php foreach ($ledgers as $ledger) { ?>
                                                 <option value="<?php echo $ledger['id'] ?>" <?php echo set_select('ledger_id', $ledger['id'], (isset($ledger_id) && $ledger_id == $ledger['id'])); ?>><?php echo $ledger['name'] ?></option>
@@ -53,6 +53,16 @@
                 <div class="box box-info">
                     <div class="box-header ptbnull">
                         <h3 class="box-title titlefix"><i class="fa fa-file-text-o"></i> <?php echo $this->lang->line('statement'); ?></h3>
+                        <div class="box-tools pull-right">
+                            <form id="export-form" method="post" action="" target="_blank" style="display:inline;">
+                                <?php echo $this->customlib->getCSRF(); ?>
+                                <input type="hidden" name="ledger_id" value="<?php echo isset($ledger_id) ? $ledger_id : ''; ?>">
+                                <input type="hidden" name="date_from" value="<?php echo isset($date_from) ? $date_from : ''; ?>">
+                                <input type="hidden" name="date_to" value="<?php echo isset($date_to) ? $date_to : ''; ?>">
+                                <button type="button" class="btn btn-default btn-xs" style="margin-right: 5px;" onclick="submitExport('print')"><i class="fa fa-print"></i> Print</button>
+                                <button type="button" class="btn btn-default btn-xs" onclick="exportToExcel('Statement_Report')"><i class="fa fa-file-excel-o"></i> Excel</button>
+                            </form>
+                        </div>
                     </div>
                     <div class="box-body table-responsive">
                         <table class="table table-striped table-bordered table-hover">
@@ -97,7 +107,7 @@
                                             <td><?php echo date($this->customlib->getSchoolDateFormat(), strtotime($row['voucher_date'])); ?></td>
                                             <td><?php echo $row['voucher_no']; ?></td>
                                             <td><?php echo ucfirst($row['voucher_type']); ?></td>
-                                            <td><b><?php echo $row['opposite_ledger_name'] ? $row['opposite_ledger_name'] : 'System'; ?></b><br><small><?php echo $row['narration']; ?></small></td>
+                                            <td><b><?php echo $row['opposite_ledger_name'] ? $row['opposite_ledger_name'] : 'System'; ?></b><br><small><?php echo !empty($row['narration']) ? $row['narration'] : (isset($row['voucher_narration']) ? $row['voucher_narration'] : ''); ?></small></td>
                                             <td class="text-right"><?php echo ($dr > 0) ? $currency_symbol . amountFormat($dr) : ''; ?></td>
                                             <td class="text-right"><?php echo ($cr > 0) ? $currency_symbol . amountFormat($cr) : ''; ?></td>
                                             <td class="text-right"><?php echo $currency_symbol . amountFormat(abs($balance)) . ' ' . ($balance >= 0 ? 'Dr' : 'Cr'); ?></td>
@@ -137,6 +147,8 @@
 </style>
 <script>
 $(document).ready(function() {
+    $('.select2').select2();
+    
     setTimeout(function() {
         $('table th').each(function(index) {
             var text = $(this).text().toLowerCase();
@@ -198,4 +210,37 @@ $(document).ready(function() {
         });
     });
 });
+
+function submitExport(type) {
+    var form = document.getElementById('export-form');
+    form.action = '<?php echo site_url('accounts/reports/export_statement/') ?>' + type;
+    form.submit();
+}
+
+function exportToExcel(filename) {
+    var uri = 'data:application/vnd.ms-excel;base64,';
+    var template = '\x3Chtml xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"\x3E\x3Chead\x3E\x3C!--[if gte mso 9]\x3E\x3Cxml\x3E\x3Cx:ExcelWorkbook\x3E\x3Cx:ExcelWorksheets\x3E\x3Cx:ExcelWorksheet\x3E\x3Cx:Name\x3E{worksheet}\x3C/x:Name\x3E\x3Cx:WorksheetOptions\x3E\x3Cx:DisplayGridlines/\x3E\x3C/x:WorksheetOptions\x3E\x3C/x:ExcelWorksheet\x3E\x3C/x:ExcelWorksheets\x3E\x3C/x:ExcelWorkbook\x3E\x3C/xml\x3E\x3C![endif]--\x3E\x3Cmeta charset="UTF-8"\x3E\x3C/head\x3E\x3Cbody\x3E\x3Ctable\x3E{table}\x3C/table\x3E\x3C/body\x3E\x3C/html\x3E';
+    var base64 = function (s) {
+        return window.btoa(unescape(encodeURIComponent(s)));
+    };
+    var format = function (s, c) {
+        return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; });
+    };
+
+    var tables = document.querySelectorAll('.box-body.table-responsive table');
+    var combinedHtml = "";
+    tables.forEach(function(table) {
+        combinedHtml += table.outerHTML + "\x3Cbr\x3E\x3Cbr\x3E";
+    });
+
+    var ctx = {
+        worksheet: 'Worksheet',
+        table: combinedHtml
+    };
+
+    var link = document.createElement("a");
+    link.download = filename + ".xls";
+    link.href = uri + base64(format(template, ctx));
+    link.click();
+}
 </script>

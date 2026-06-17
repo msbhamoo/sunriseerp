@@ -107,6 +107,51 @@ class Reports extends MY_Addon_AccountsController
         $this->load->view('layout/footer', $data);
     }
     
+    public function export_statement($format = 'print')
+    {
+        if (!$this->rbac->hasPrivilege('acc_statement', 'can_view')) {
+            access_denied();
+        }
+
+        $ledger_id = $this->input->post('ledger_id');
+        $date_from = $this->input->post('date_from');
+        $date_to = $this->input->post('date_to');
+
+        if (empty($ledger_id) || empty($date_from) || empty($date_to)) {
+            redirect('accounts/reports/statement');
+        }
+
+        $data['ledger_id'] = $ledger_id;
+        $data['date_from'] = $date_from;
+        $data['date_to'] = $date_to;
+        
+        $db_date_from = date('Y-m-d', $this->customlib->datetostrtotime($date_from));
+        $db_date_to = date('Y-m-d', $this->customlib->datetostrtotime($date_to));
+        
+        $data['result'] = $this->accreport_model->getLedgerStatement($ledger_id, $db_date_from, $db_date_to);
+        $data['ledgers'] = $this->accledger_model->getLedgers();
+        
+        $ledger_name = '';
+        foreach($data['ledgers'] as $l) {
+            if ($l['id'] == $ledger_id) {
+                $ledger_name = $l['name'];
+                break;
+            }
+        }
+        $data['ledger_name'] = $ledger_name;
+        $data['settinglist'] = $this->setting_model->get();
+
+        if ($format == 'pdf') {
+            $html = $this->load->view('accounts/reports/print_statement_custom', $data, true);
+            $this->load->library('M_pdf');
+            $mpdf = $this->m_pdf->load();
+            $mpdf->WriteHTML($html);
+            $mpdf->Output('Statement_Report.pdf', 'D');
+        } else {
+            $this->load->view('accounts/reports/print_statement_custom', $data);
+        }
+    }
+    
     public function outstanding()
     {
         if (!$this->rbac->hasPrivilege('acc_outstanding', 'can_view')) {

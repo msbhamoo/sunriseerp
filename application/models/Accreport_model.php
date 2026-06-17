@@ -99,7 +99,7 @@ class Accreport_model extends MY_Model
         // 2. Get Transactions for the period
         $opposite_ledger_sql = "(SELECT GROUP_CONCAT(l2.name SEPARATOR ', ') FROM acc_voucher_items vi2 JOIN acc_ledgers l2 ON l2.id = vi2.ledger_id WHERE vi2.voucher_id = v.id AND vi2.ledger_id != vi.ledger_id)";
 
-        $this->db->select('v.voucher_date, v.voucher_no, v.voucher_type, vi.debit_amount, vi.credit_amount, vi.narration, ' . $opposite_ledger_sql . ' as opposite_ledger_name', FALSE);
+        $this->db->select('v.voucher_date, v.voucher_no, v.voucher_type, v.narration as voucher_narration, vi.debit_amount, vi.credit_amount, vi.narration, ' . $opposite_ledger_sql . ' as opposite_ledger_name', FALSE);
         $this->db->from('acc_vouchers v');
         $this->db->join('acc_voucher_items vi', 'vi.voucher_id = v.id');
         $this->db->where('vi.ledger_id', $ledger_id);
