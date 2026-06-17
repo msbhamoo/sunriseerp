@@ -1,6 +1,6 @@
 <style>
-    .offcanvas-right { position: fixed; top: 0; right: -800px; width: 800px; height: 100vh; background: #fff; z-index: 1050; box-shadow: -2px 0 8px rgba(0,0,0,0.1); transition: right 0.3s ease; overflow-y: auto; }
-    .offcanvas-right.open { right: 0; }
+    .offcanvas-right { position: fixed; top: 0; right: -550px; width: 550px; height: 100vh; background: #fff; z-index: 1050; box-shadow: -2px 0 8px rgba(0,0,0,0.1); transition: right 0.3s ease; overflow-y: auto; }
+    .offcanvas-right.open { right: 0 !important; }
     .offcanvas-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 1040; display: none; }
     .offcanvas-overlay.open { display: block; }
     .offcanvas-header { padding: 15px; border-bottom: 1px solid #e5e5e5; background: #f8f9fa; display: flex; justify-content: space-between; align-items: center; }
@@ -178,7 +178,7 @@
     </section>
 
     <!-- Right Side Panel for Birthday Poster -->
-    <div class="offcanvas-right" id="studentListOffcanvas" style="width: 550px; right: -550px;">
+    <div class="offcanvas-right" id="studentListOffcanvas">
         <div class="offcanvas-header">
             <h4 class="m-0"><b>Birthday Wishes</b></h4>
             <div>
