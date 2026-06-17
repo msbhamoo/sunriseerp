@@ -348,6 +348,8 @@ class Studentreport extends Admin_Controller
             }
         }
         $data['results'] = $results;
+        
+        $data['sch_setting'] = $this->setting_model->getSetting();
 
         $this->load->view('layout/header', $data);
         $this->load->view('student/reports/birthdays_today', $data);

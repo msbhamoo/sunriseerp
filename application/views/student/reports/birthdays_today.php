@@ -188,6 +188,12 @@
         <div class="offcanvas-body">
             
             <div class="bday-poster-container" id="posterContainer">
+                <div style="text-align: center; margin-bottom: 15px; background: rgba(255,255,255,0.4); padding: 10px; border-radius: 10px;">
+                    <?php if(!empty($sch_setting->image)) { ?>
+                    <img src="<?php echo base_url('uploads/school_content/logo/' . $sch_setting->image); ?>" style="height: 50px; max-width: 100%; object-fit: contain;">
+                    <?php } ?>
+                    <h4 style="margin: 5px 0 0; font-weight: bold; color: #333; text-transform: uppercase; font-size: 16px;"><?php echo $sch_setting->name; ?></h4>
+                </div>
                 <div class="bday-poster-header">Happy Birthday!</div>
                 <img src="" class="bday-photo" id="posterPhoto" onerror="this.src='<?php echo base_url("uploads/student_images/no_image.png"); ?>'">
                 <div class="bday-name" id="posterName">Student Name</div>
@@ -209,6 +215,16 @@
 <script>
     var currentStudent = null;
     var baseUrl = "<?php echo base_url(); ?>";
+    var gradients = [
+        "linear-gradient(135deg, #fceabb 0%, #f8b500 100%)",
+        "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)",
+        "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
+        "linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)",
+        "linear-gradient(135deg, #fccb90 0%, #d57eeb 100%)",
+        "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
+        "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+        "linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+    ];
 
     $(document).ready(function() {
         if ($.fn.datepicker) {
@@ -223,6 +239,9 @@
 
     function openBirthdayPoster(student) {
         currentStudent = student;
+        
+        var randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
+        $('#posterContainer').css('background', randomGradient);
         
         var name = student.firstname + (student.lastname ? ' ' + student.lastname : '');
         var classStr = student.class + ' (' + student.section + ')';
