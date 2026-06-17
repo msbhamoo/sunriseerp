@@ -102,7 +102,7 @@ class Studentreport extends Admin_Controller
             $grouped = array();
             
             foreach ($all_students as $student) {
-                if ($gender !== '' && strtolower($student['gender']) !== strtolower($gender)) continue;
+                if ($gender !== '' && strtolower((string)$student['gender']) !== strtolower((string)$gender)) continue;
                 
                 $key = $student['class_id'] . '_' . $student['section_id'];
                 if(!isset($grouped[$key])) {
@@ -201,7 +201,7 @@ class Studentreport extends Admin_Controller
             $grouped = array();
             
             foreach ($all_students as $student) {
-                if ($religion !== '' && strtolower($student['religion']) !== strtolower($religion)) continue;
+                if ($religion !== '' && strtolower((string)$student['religion']) !== strtolower((string)$religion)) continue;
                 
                 $key = $student['class_id'] . '_' . $student['section_id'];
                 if(!isset($grouped[$key])) {
@@ -289,7 +289,7 @@ class Studentreport extends Admin_Controller
         $grouped = array();
         
         foreach ($all_students as $student) {
-            if (strtolower($student['rte']) !== 'yes') continue;
+            if (strtolower((string)$student['rte']) !== 'yes') continue;
             
             $key = $student['class_id'] . '_' . $student['section_id'];
             if(!isset($grouped[$key])) {
