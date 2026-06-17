@@ -163,7 +163,7 @@
                                 <td><?php echo $row['mobileno']; ?></td>
                                 <td><?php echo date($this->customlib->getSchoolDateFormat(), strtotime($row['dob'])); ?></td>
                                 <td>
-                                    <button class="btn btn-primary btn-xs" onclick='openBirthdayPoster(<?php echo json_encode($row); ?>)' title="View Poster">
+                                    <button class="btn btn-primary btn-xs" onclick="openBirthdayPoster(<?php echo htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8'); ?>)" title="View Poster">
                                         <i class="fa fa-gift"></i> View Poster
                                     </button>
                                 </td>

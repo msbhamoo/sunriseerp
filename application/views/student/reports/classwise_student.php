@@ -83,7 +83,7 @@
                                 <td><?php echo $row['section']; ?></td>
                                 <td><?php echo $row['total']; ?></td>
                                 <td>
-                                    <button class="btn btn-default btn-xs" onclick='openStudentList(<?php echo json_encode($row); ?>)' title="View List">
+                                    <button class="btn btn-default btn-xs" onclick="openStudentList(<?php echo htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8'); ?>)" title="View List">
                                         <i class="fa fa-eye text-success"></i>
                                     </button>
                                 </td>
