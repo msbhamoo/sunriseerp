@@ -332,7 +332,6 @@ class Studentreport extends Admin_Controller
         
         if ($this->input->server('REQUEST_METHOD') === 'POST' || true) {
             $all_students = $this->student_model->get(); 
-            $grouped = array();
             
             $target_m = date('m', strtotime($date));
             $target_d = date('d', strtotime($date));
@@ -344,24 +343,9 @@ class Studentreport extends Admin_Controller
                 
                 if ($sm != $target_m || $sd != $target_d) continue;
                 
-                $key = $student['class_id'] . '_' . $student['section_id'];
-                if(!isset($grouped[$key])) {
-                    $grouped[$key] = array(
-                        'class' => $student['class'],
-                        'class_id' => $student['class_id'],
-                        'section' => $student['section'],
-                        'section_id' => $student['section_id'],
-                        'total' => 0,
-                        'students' => array()
-                    );
-                }
-                
                 $student['age_string'] = date($this->customlib->getSchoolDateFormat(), strtotime($student['dob'])); 
-                $grouped[$key]['total']++;
-                $grouped[$key]['students'][] = $student;
+                $results[] = $student;
             }
-            ksort($grouped);
-            $results = array_values($grouped);
         }
         $data['results'] = $results;
 

@@ -9,6 +9,85 @@
     .title-area { display: flex; align-items: center; margin-bottom: 15px; }
     .title-area h2 { margin: 0; font-size: 22px; font-weight: 600; margin-left: 15px; }
     .breadcrumb-custom { margin-left: 45px; font-size: 12px; color: #555; }
+    
+    /* Birthday Poster Styles */
+    .bday-poster-container {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+        position: relative;
+        text-align: center;
+        background: linear-gradient(135deg, #fceabb 0%, #f8b500 100%);
+        border-radius: 15px;
+        padding: 30px 20px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        color: #333;
+        font-family: 'Arial', sans-serif;
+    }
+    .bday-poster-header {
+        font-size: 32px;
+        font-weight: bold;
+        color: #d32f2f;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    .bday-photo {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 5px solid #fff;
+        object-fit: cover;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        margin-bottom: 15px;
+    }
+    .bday-name {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 10px 0 5px;
+        color: #2c3e50;
+    }
+    .bday-class {
+        font-size: 18px;
+        color: #555;
+        margin-bottom: 25px;
+    }
+    .bday-message {
+        font-size: 18px;
+        font-style: italic;
+        line-height: 1.5;
+        margin-bottom: 30px;
+    }
+    .bday-share-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 20px;
+    }
+    .btn-whatsapp {
+        background-color: #25D366;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: bold;
+        transition: background-color 0.3s;
+    }
+    .btn-whatsapp:hover { background-color: #128C7E; color: #fff; }
+    
+    .btn-instagram {
+        background: #f09433; 
+        background: -moz-linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); 
+        background: -webkit-linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); 
+        background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); 
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: bold;
+        transition: opacity 0.3s;
+    }
+    .btn-instagram:hover { opacity: 0.9; color: #fff; }
 </style>
 
 <div class="offcanvas-overlay" id="studentListOverlay"></div>
@@ -56,31 +135,36 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>CLASS</th>
-                                <th>STREAM</th>
-                                <th>SECTION</th>
-                                <th>TOTAL BIRTHDAYS</th>
-                                <th>View List</th>
+                                <th>ADMISSION NO</th>
+                                <th>NAME</th>
+                                <th>CLASS (SECTION)</th>
+                                <th>FATHER NAME</th>
+                                <th>CONTACT</th>
+                                <th>DOB</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($results)) { ?>
                             <tr>
-                                <td colspan="6" class="text-center text-danger">No birthdays found</td>
+                                <td colspan="8" class="text-center text-danger">No birthdays found</td>
                             </tr>
                             <?php } else {
                                 $count = 1;
                                 foreach ($results as $row) {
+                                    $name = $row['firstname'] . ' ' . $row['lastname'];
                             ?>
                             <tr>
                                 <td><?php echo $count++; ?></td>
-                                <td><?php echo $row['class']; ?></td>
-                                <td>Common</td>
-                                <td><?php echo $row['section']; ?></td>
-                                <td><?php echo $row['total']; ?></td>
+                                <td><?php echo $row['admission_no']; ?></td>
+                                <td><?php echo $name; ?></td>
+                                <td><?php echo $row['class'] . ' (' . $row['section'] . ')'; ?></td>
+                                <td><?php echo $row['father_name']; ?></td>
+                                <td><?php echo $row['mobileno']; ?></td>
+                                <td><?php echo date($this->customlib->getSchoolDateFormat(), strtotime($row['dob'])); ?></td>
                                 <td>
-                                    <button class="btn btn-default btn-xs" onclick='openStudentList(<?php echo json_encode($row); ?>)' title="View List">
-                                        <i class="fa fa-eye text-success"></i>
+                                    <button class="btn btn-primary btn-xs" onclick='openBirthdayPoster(<?php echo json_encode($row); ?>)' title="View Poster">
+                                        <i class="fa fa-gift"></i> View Poster
                                     </button>
                                 </td>
                             </tr>
@@ -93,37 +177,39 @@
         </div>
     </section>
 
-    <div class="offcanvas-right" id="studentListOffcanvas">
+    <!-- Right Side Panel for Birthday Poster -->
+    <div class="offcanvas-right" id="studentListOffcanvas" style="width: 550px; right: -550px;">
         <div class="offcanvas-header">
-            <h4 class="m-0"><b id="panel_title">Class - Section</b></h4>
+            <h4 class="m-0"><b>Birthday Wishes</b></h4>
             <div>
-                <button class="btn btn-success btn-sm"><i class="fa fa-print"></i></button>
-                <button class="btn btn-success btn-sm"><i class="fa fa-file-excel-o"></i></button>
-                <button type="button" class="close" style="margin-left:15px; font-size:28px;" onclick="closeOffcanvas()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="close" style="font-size:28px;" onclick="closeOffcanvas()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             </div>
         </div>
         <div class="offcanvas-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-bordered table-custom-header" id="panelStudentTable">
-                    <thead>
-                        <tr>
-                            <th>SERIAL NO.</th>
-                            <th>SR NO.</th>
-                            <th>NAME</th>
-                            <th>FATHER NAME</th>
-                            <th>CONTACT</th>
-                            <th>DOB</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
+            
+            <div class="bday-poster-container" id="posterContainer">
+                <div class="bday-poster-header">Happy Birthday!</div>
+                <img src="" class="bday-photo" id="posterPhoto" onerror="this.src='<?php echo base_url("uploads/student_images/no_image.png"); ?>'">
+                <div class="bday-name" id="posterName">Student Name</div>
+                <div class="bday-class" id="posterClass">Class</div>
+                <div class="bday-message">
+                    "Wishing you a day filled with happiness and a year filled with joy. May all your dreams come true!"
+                </div>
             </div>
+            
+            <div class="bday-share-buttons">
+                <button class="btn btn-whatsapp" onclick="shareOnWhatsApp()"><i class="fa fa-whatsapp"></i> Share on WhatsApp</button>
+                <button class="btn btn-instagram" onclick="shareOnInstagram()"><i class="fa fa-instagram"></i> Share on Instagram</button>
+            </div>
+            
         </div>
     </div>
 </div>
 
 <script>
+    var currentStudent = null;
+    var baseUrl = "<?php echo base_url(); ?>";
+
     $(document).ready(function() {
         if ($.fn.datepicker) {
             $('.date').datepicker({
@@ -135,30 +221,17 @@
         $('#studentListOverlay').click(function() { closeOffcanvas(); });
     });
 
-    function openStudentList(rowData) {
-        $('#panel_title').text(rowData.class + ' - Common - ' + rowData.section);
-        var tbody = '';
-        var sr = 1;
-        if(rowData.students && rowData.students.length > 0) {
-            $.each(rowData.students, function(i, student) {
-                var name = student.firstname + (student.lastname ? ' ' + student.lastname : '');
-                var contact = student.mobileno ? student.mobileno : '';
-                var father = student.father_name ? student.father_name : '';
-                var adm_no = student.admission_no ? student.admission_no : '';
-                
-                tbody += '<tr>';
-                tbody += '<td>' + sr++ + '</td>';
-                tbody += '<td>' + adm_no + '</td>';
-                tbody += '<td>' + name + '</td>';
-                tbody += '<td>' + father + '</td>';
-                tbody += '<td>' + contact + '</td>';
-                tbody += '<td>' + student.age_string + '</td>';
-                tbody += '</tr>';
-            });
-        } else {
-            tbody = '<tr><td colspan="6" class="text-center">No students found</td></tr>';
-        }
-        $('#panelStudentTable tbody').html(tbody);
+    function openBirthdayPoster(student) {
+        currentStudent = student;
+        
+        var name = student.firstname + (student.lastname ? ' ' + student.lastname : '');
+        var classStr = student.class + ' (' + student.section + ')';
+        var photoUrl = student.image ? baseUrl + student.image : baseUrl + "uploads/student_images/no_image.png";
+        
+        $('#posterName').text(name);
+        $('#posterClass').text(classStr);
+        $('#posterPhoto').attr('src', photoUrl);
+        
         $('#studentListOffcanvas').addClass('open');
         $('#studentListOverlay').addClass('open');
     }
@@ -166,5 +239,19 @@
     function closeOffcanvas() {
         $('#studentListOffcanvas').removeClass('open');
         $('#studentListOverlay').removeClass('open');
+    }
+    
+    function shareOnWhatsApp() {
+        if(!currentStudent) return;
+        var name = currentStudent.firstname + (currentStudent.lastname ? ' ' + currentStudent.lastname : '');
+        var message = "Happy Birthday " + name + "! Wishing you a fantastic day ahead. 🎉🎂";
+        var whatsappUrl = "https://wa.me/?text=" + encodeURIComponent(message);
+        window.open(whatsappUrl, '_blank');
+    }
+    
+    function shareOnInstagram() {
+        // Instagram doesn't have a direct share URL for pre-filled text or images via web intent like WhatsApp.
+        // Usually, users have to download the poster and upload it manually.
+        alert("To share on Instagram, please take a screenshot or download the poster and share it via the Instagram app.");
     }
 </script>
