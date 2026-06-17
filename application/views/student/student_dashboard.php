@@ -242,7 +242,6 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
 <script>
     var classWiseChartInstance = null;
     var genderRatioChartInstance = null;
@@ -357,63 +356,43 @@
     }
 
     function renderClassWiseChart(data) {
-        var ctx = document.getElementById('classWiseChart');
-        if(!ctx) return;
-        ctx = ctx.getContext('2d');
+        var ctx = document.getElementById('classWiseChart').getContext('2d');
         var labels = Object.keys(data);
         var values = Object.values(data);
         
-        var baseColors = ['#4f46e5', '#ec4899', '#14b8a6', '#f59e0b', '#3b82f6', '#8b5cf6', '#ef4444', '#10b981', '#f97316', '#6366f1', '#d946ef', '#06b6d4'];
-        var bgColors = [];
-        for(var i=0; i<values.length; i++) {
-            bgColors.push(baseColors[i % baseColors.length]);
-        }
-
         if (classWiseChartInstance) {
             classWiseChartInstance.destroy();
         }
 
-        classWiseChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Students',
-                    data: values,
-                    backgroundColor: bgColors,
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                legend: { display: false },
-                scales: {
-                    yAxes: [{
-                        ticks: { beginAtZero: true }
-                    }]
-                }
-            }
+        var barData = {
+            labels: labels,
+            datasets: [{
+                fillColor: "#4f46e5",
+                strokeColor: "#4f46e5",
+                data: values
+            }]
+        };
+
+        classWiseChartInstance = new Chart(ctx).Bar(barData, {
+            responsive: true,
+            maintainAspectRatio: false
         });
     }
 
     function renderGenderChart(data) {
-        var ctx = document.getElementById('genderRatioChart');
-        if(!ctx) return;
-        ctx = ctx.getContext('2d');
+        var ctx = document.getElementById('genderRatioChart').getContext('2d');
         var pieData = [];
-        var pieLabels = [];
-        var colors = {'Male': '#fbedcf', 'Female': '#f4e8fb'}; // Matches dashboard2 pills
-        var borderColors = {'Male': '#d09435', 'Female': '#9d50ce'};
-        var bgColors = [];
-        var bColors = [];
+        var colors = {'Male': '#d09435', 'Female': '#9d50ce'};
+        var highlights = {'Male': '#b8812d', 'Female': '#8944b5'};
         
         $.each(data, function(gender, count) {
             if (count > 0) {
-                pieData.push(count);
-                pieLabels.push(gender);
-                bgColors.push(colors[gender] || '#e0e7ff');
-                bColors.push(borderColors[gender] || '#4f46e5');
+                pieData.push({
+                    value: count,
+                    color: colors[gender] || '#4f46e5',
+                    highlight: highlights[gender] || '#4f46e5',
+                    label: gender
+                });
             }
         });
 
@@ -421,38 +400,26 @@
             genderRatioChartInstance.destroy();
         }
 
-        genderRatioChartInstance = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: pieLabels,
-                datasets: [{
-                    data: pieData,
-                    backgroundColor: bgColors,
-                    borderColor: bColors,
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                legend: { position: 'bottom' }
-            }
+        genderRatioChartInstance = new Chart(ctx).Pie(pieData, {
+            responsive: true,
+            maintainAspectRatio: false
         });
     }
 
     function renderCategoryChart(data) {
-        var ctx = document.getElementById('categoryDistributionChart');
-        if(!ctx) return;
-        ctx = ctx.getContext('2d');
+        var ctx = document.getElementById('categoryDistributionChart').getContext('2d');
         var doughnutData = [];
-        var dLabels = [];
         var bgColors = ['#eab308', '#0284c7', '#d8456a', '#3b9b65', '#9d50ce', '#d09435'];
         var i = 0;
 
         $.each(data, function(cat, count) {
             if (count > 0) {
-                doughnutData.push(count);
-                dLabels.push(cat);
+                doughnutData.push({
+                    value: count,
+                    color: bgColors[i % bgColors.length],
+                    highlight: bgColors[i % bgColors.length],
+                    label: cat
+                });
                 i++;
             }
         });
@@ -461,30 +428,14 @@
             categoryDistributionChartInstance.destroy();
         }
 
-        categoryDistributionChartInstance = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: dLabels,
-                datasets: [{
-                    data: doughnutData,
-                    backgroundColor: bgColors,
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutoutPercentage: 60,
-                legend: { position: 'bottom' }
-            }
+        categoryDistributionChartInstance = new Chart(ctx).Doughnut(doughnutData, {
+            responsive: true,
+            maintainAspectRatio: false
         });
     }
 
     function renderAgeChart(data) {
-        var ctx = document.getElementById('ageAnalysisChart');
-        if(!ctx) return;
-        ctx = ctx.getContext('2d');
+        var ctx = document.getElementById('ageAnalysisChart').getContext('2d');
         var labels = Object.keys(data);
         var values = Object.values(data);
 
@@ -492,28 +443,18 @@
             ageAnalysisChartInstance.destroy();
         }
 
-        ageAnalysisChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Students',
-                    data: values,
-                    backgroundColor: '#14b8a6',
-                    borderColor: '#0f766e',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                legend: { display: false },
-                scales: {
-                    yAxes: [{
-                        ticks: { beginAtZero: true }
-                    }]
-                }
-            }
+        var barData = {
+            labels: labels,
+            datasets: [{
+                fillColor: "#14b8a6",
+                strokeColor: "#0f766e",
+                data: values
+            }]
+        };
+
+        ageAnalysisChartInstance = new Chart(ctx).Bar(barData, {
+            responsive: true,
+            maintainAspectRatio: false
         });
     }
 
