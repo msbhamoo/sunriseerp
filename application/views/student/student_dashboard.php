@@ -238,6 +238,9 @@
                     <tbody id="metricsModalTableBody"></tbody>
                 </table>
             </div>
+            <div class="modal-footer" id="metricsModalFooter">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
 </div>
@@ -292,39 +295,46 @@
         var title = "Metrics Data";
         var headHtml = "";
         var bodyHtml = "";
+        var reportUrl = "";
         
         if(type === 'class_wise') {
             title = "Class-wise Students";
+            reportUrl = base_url + "studentreport/classwise";
             headHtml = "<th>Class</th><th>Student Count</th>";
             $.each(dashboardGlobalData.class_wise, function(k, v) {
                 bodyHtml += "<tr><td>" + k + "</td><td><span class='label label-primary'>" + v + "</span></td></tr>";
             });
         } else if(type === 'age_analysis') {
             title = "Age Analysis";
+            reportUrl = base_url + "studentreport/agewise";
             headHtml = "<th>Age Group</th><th>Student Count</th>";
             $.each(dashboardGlobalData.age_stats, function(k, v) {
                 bodyHtml += "<tr><td>" + k + "</td><td><span class='label label-success'>" + v + "</span></td></tr>";
             });
         } else if(type === 'gender') {
             title = "Gender Ratio";
+            reportUrl = base_url + "studentreport/genderwise";
             headHtml = "<th>Gender</th><th>Count</th>";
             $.each(dashboardGlobalData.gender_ratio, function(k, v) {
                 bodyHtml += "<tr><td>" + k + "</td><td><span class='label label-info'>" + v + "</span></td></tr>";
             });
         } else if(type === 'category') {
             title = "Category Distribution";
+            reportUrl = base_url + "studentreport/categorywise";
             headHtml = "<th>Category</th><th>Count</th>";
             $.each(dashboardGlobalData.category_distribution, function(k, v) {
                 bodyHtml += "<tr><td>" + k + "</td><td><span class='label label-warning'>" + v + "</span></td></tr>";
             });
         } else if(type === 'attendance') {
             title = "Today's Attendance Breakdown";
+            reportUrl = base_url + "studentreport/attendance";
             headHtml = "<th>Type</th><th>Count</th>";
             $.each(dashboardGlobalData.attendance_today, function(k, v) {
                 bodyHtml += "<tr><td>" + k + "</td><td><span class='label label-default'>" + v + "</span></td></tr>";
             });
         } else if(type === 'birthdays') {
             title = "Birthdays Today";
+            reportUrl = base_url + "studentreport/birthdays";
             headHtml = "<th>Name</th><th>Class</th>";
             $.each(dashboardGlobalData.birthdays_list, function(i, student) {
                 bodyHtml += "<tr><td>" + student.firstname + " " + student.lastname + "</td><td>" + student.class + " (" + student.section + ")</td></tr>";
@@ -334,24 +344,33 @@
             }
         } else if(type === 'rte') {
             title = "RTE Students Summary";
+            reportUrl = base_url + "studentreport/rtewise";
             headHtml = "<th>Metric</th><th>Value</th>";
             bodyHtml += "<tr><td>Total RTE Students Enrolled</td><td><span class='label label-primary'>" + dashboardGlobalData.rte_students + "</span></td></tr>";
             bodyHtml += "<tr><td colspan='2' class='text-muted text-center' style='font-size:12px;'>Detailed RTE list can be viewed from Student List report.</td></tr>";
         } else if(type === 'total_students') {
             title = "Total Students Summary";
+            reportUrl = base_url + "studentreport/totalstudents";
             headHtml = "<th>Metric</th><th>Value</th>";
             bodyHtml += "<tr><td>Total Active Students Enrolled</td><td><span class='label label-primary'>" + dashboardGlobalData.total_students + "</span></td></tr>";
             bodyHtml += "<tr><td colspan='2' class='text-muted text-center' style='font-size:12px;'>Please visit Student Details for a full list.</td></tr>";
         } else if(type === 'new_admissions') {
             title = "New Admissions Summary";
+            reportUrl = base_url + "studentreport/newadmissions";
             headHtml = "<th>Metric</th><th>Value</th>";
             bodyHtml += "<tr><td>New Admissions this Month</td><td><span class='label label-success'>" + dashboardGlobalData.new_admissions + "</span></td></tr>";
             bodyHtml += "<tr><td colspan='2' class='text-muted text-center' style='font-size:12px;'>Check Admission Enquiries or Student List for full records.</td></tr>";
         }
         
+        var footerHtml = '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>';
+        if(reportUrl !== "") {
+            footerHtml += '<a href="' + reportUrl + '" class="btn btn-primary">View Full Report</a>';
+        }
+        
         $('#metricsModalTitle').text(title);
         $('#metricsModalTableHead').html(headHtml);
         $('#metricsModalTableBody').html(bodyHtml);
+        $('#metricsModalFooter').html(footerHtml);
         $('#metricsModal').modal('show');
     }
 
