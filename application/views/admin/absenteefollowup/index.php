@@ -150,11 +150,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php if (empty($resultlist)) { ?>
-                                        <tr>
-                                            <td colspan="10" class="text-center text-danger"><?php echo $this->lang->line('no_record_found'); ?></td>
-                                        </tr>
-                                    <?php } else {
+                                    <?php if (!empty($resultlist)) {
                                             foreach ($resultlist as $student) {
                                                 $consecutive = $student['consecutive_days'];
                                                 $badge_class = 'pill-info';

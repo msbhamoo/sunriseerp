@@ -327,7 +327,7 @@
             });
         } else if(type === 'attendance') {
             title = "Today's Attendance Breakdown";
-            reportUrl = base_url + "studentreport/attendance";
+            reportUrl = base_url + "admin/absenteefollowup";
             headHtml = "<th>Type</th><th>Count</th>";
             $.each(dashboardGlobalData.attendance_today, function(k, v) {
                 bodyHtml += "<tr><td>" + k + "</td><td><span class='label label-default'>" + v + "</span></td></tr>";
