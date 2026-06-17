@@ -81,4 +81,386 @@ class Studentreport extends Admin_Controller
         $this->load->view('student/reports/agewise_student', $data);
         $this->load->view('layout/footer', $data);
     }
+
+    public function genderwise()
+    {
+        if (!$this->rbac->hasPrivilege('student_dashboard', 'can_view')) {
+            access_denied();
+        }
+
+        $data['title'] = 'Gender Wise Student';
+        
+        $gender = $this->input->post('gender') ? $this->input->post('gender') : '';
+        $as_on_date = $this->input->post('as_on_date') ? $this->input->post('as_on_date') : date('Y-m-d');
+        
+        $data['gender'] = $gender;
+        $data['as_on_date'] = $as_on_date;
+        $results = array();
+        
+        if ($this->input->server('REQUEST_METHOD') === 'POST') {
+            $all_students = $this->student_model->get(); 
+            $grouped = array();
+            
+            foreach ($all_students as $student) {
+                if ($gender !== '' && strtolower($student['gender']) !== strtolower($gender)) continue;
+                
+                $key = $student['class_id'] . '_' . $student['section_id'];
+                if(!isset($grouped[$key])) {
+                    $grouped[$key] = array(
+                        'class' => $student['class'],
+                        'class_id' => $student['class_id'],
+                        'section' => $student['section'],
+                        'section_id' => $student['section_id'],
+                        'total' => 0,
+                        'students' => array()
+                    );
+                }
+                
+                $student['age_string'] = $student['gender']; // repurposing age_string field for display
+                $grouped[$key]['total']++;
+                $grouped[$key]['students'][] = $student;
+            }
+            ksort($grouped);
+            $results = array_values($grouped);
+        }
+        $data['results'] = $results;
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('student/reports/genderwise_student', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    public function categorywise()
+    {
+        if (!$this->rbac->hasPrivilege('student_dashboard', 'can_view')) {
+            access_denied();
+        }
+
+        $data['title'] = 'Category Wise Student';
+        
+        $category_id = $this->input->post('category_id') ? $this->input->post('category_id') : '';
+        $as_on_date = $this->input->post('as_on_date') ? $this->input->post('as_on_date') : date('Y-m-d');
+        
+        $data['category_id'] = $category_id;
+        $data['as_on_date'] = $as_on_date;
+        $data['category_list'] = $this->category_model->get();
+
+        $results = array();
+        
+        if ($this->input->server('REQUEST_METHOD') === 'POST') {
+            $all_students = $this->student_model->get(); 
+            $grouped = array();
+            
+            foreach ($all_students as $student) {
+                if ($category_id !== '' && $student['category_id'] != $category_id) continue;
+                
+                $key = $student['class_id'] . '_' . $student['section_id'];
+                if(!isset($grouped[$key])) {
+                    $grouped[$key] = array(
+                        'class' => $student['class'],
+                        'class_id' => $student['class_id'],
+                        'section' => $student['section'],
+                        'section_id' => $student['section_id'],
+                        'total' => 0,
+                        'students' => array()
+                    );
+                }
+                
+                $student['age_string'] = $student['category']; 
+                $grouped[$key]['total']++;
+                $grouped[$key]['students'][] = $student;
+            }
+            ksort($grouped);
+            $results = array_values($grouped);
+        }
+        $data['results'] = $results;
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('student/reports/categorywise_student', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    public function religionwise()
+    {
+        if (!$this->rbac->hasPrivilege('student_dashboard', 'can_view')) {
+            access_denied();
+        }
+
+        $data['title'] = 'Religion Wise Student';
+        
+        $religion = $this->input->post('religion') ? $this->input->post('religion') : '';
+        $as_on_date = $this->input->post('as_on_date') ? $this->input->post('as_on_date') : date('Y-m-d');
+        
+        $data['religion'] = $religion;
+        $data['as_on_date'] = $as_on_date;
+
+        $results = array();
+        
+        if ($this->input->server('REQUEST_METHOD') === 'POST') {
+            $all_students = $this->student_model->get(); 
+            $grouped = array();
+            
+            foreach ($all_students as $student) {
+                if ($religion !== '' && strtolower($student['religion']) !== strtolower($religion)) continue;
+                
+                $key = $student['class_id'] . '_' . $student['section_id'];
+                if(!isset($grouped[$key])) {
+                    $grouped[$key] = array(
+                        'class' => $student['class'],
+                        'class_id' => $student['class_id'],
+                        'section' => $student['section'],
+                        'section_id' => $student['section_id'],
+                        'total' => 0,
+                        'students' => array()
+                    );
+                }
+                
+                $student['age_string'] = $student['religion']; 
+                $grouped[$key]['total']++;
+                $grouped[$key]['students'][] = $student;
+            }
+            ksort($grouped);
+            $results = array_values($grouped);
+        }
+        $data['results'] = $results;
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('student/reports/religionwise_student', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    public function classwise()
+    {
+        if (!$this->rbac->hasPrivilege('student_dashboard', 'can_view')) {
+            access_denied();
+        }
+
+        $data['title'] = 'Class Wise Students';
+        
+        $class_id = $this->input->post('class_id') ? $this->input->post('class_id') : '';
+        $data['class_id'] = $class_id;
+        $data['classlist'] = $this->class_model->get();
+
+        $results = array();
+        
+        if ($this->input->server('REQUEST_METHOD') === 'POST') {
+            $all_students = $this->student_model->get(); 
+            $grouped = array();
+            
+            foreach ($all_students as $student) {
+                if ($class_id !== '' && $student['class_id'] != $class_id) continue;
+                
+                $key = $student['class_id'] . '_' . $student['section_id'];
+                if(!isset($grouped[$key])) {
+                    $grouped[$key] = array(
+                        'class' => $student['class'],
+                        'class_id' => $student['class_id'],
+                        'section' => $student['section'],
+                        'section_id' => $student['section_id'],
+                        'total' => 0,
+                        'students' => array()
+                    );
+                }
+                
+                $student['age_string'] = ''; 
+                $grouped[$key]['total']++;
+                $grouped[$key]['students'][] = $student;
+            }
+            ksort($grouped);
+            $results = array_values($grouped);
+        }
+        $data['results'] = $results;
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('student/reports/classwise_student', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    public function rtewise()
+    {
+        if (!$this->rbac->hasPrivilege('student_dashboard', 'can_view')) {
+            access_denied();
+        }
+
+        $data['title'] = 'RTE Students';
+        
+        $results = array();
+        $all_students = $this->student_model->get(); 
+        $grouped = array();
+        
+        foreach ($all_students as $student) {
+            if (strtolower($student['rte']) !== 'yes') continue;
+            
+            $key = $student['class_id'] . '_' . $student['section_id'];
+            if(!isset($grouped[$key])) {
+                $grouped[$key] = array(
+                    'class' => $student['class'],
+                    'class_id' => $student['class_id'],
+                    'section' => $student['section'],
+                    'section_id' => $student['section_id'],
+                    'total' => 0,
+                    'students' => array()
+                );
+            }
+            
+            $student['age_string'] = 'RTE'; 
+            $grouped[$key]['total']++;
+            $grouped[$key]['students'][] = $student;
+        }
+        ksort($grouped);
+        $results = array_values($grouped);
+        
+        $data['results'] = $results;
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('student/reports/rtewise_student', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    public function birthdays()
+    {
+        if (!$this->rbac->hasPrivilege('student_dashboard', 'can_view')) {
+            access_denied();
+        }
+
+        $data['title'] = 'Birthdays Today';
+        
+        $date = $this->input->post('date') ? $this->input->post('date') : date('Y-m-d');
+        $data['date'] = $date;
+
+        $results = array();
+        
+        if ($this->input->server('REQUEST_METHOD') === 'POST' || true) {
+            $all_students = $this->student_model->get(); 
+            $grouped = array();
+            
+            $target_m = date('m', strtotime($date));
+            $target_d = date('d', strtotime($date));
+            
+            foreach ($all_students as $student) {
+                if(empty($student['dob']) || $student['dob'] == '0000-00-00') continue;
+                $sm = date('m', strtotime($student['dob']));
+                $sd = date('d', strtotime($student['dob']));
+                
+                if ($sm != $target_m || $sd != $target_d) continue;
+                
+                $key = $student['class_id'] . '_' . $student['section_id'];
+                if(!isset($grouped[$key])) {
+                    $grouped[$key] = array(
+                        'class' => $student['class'],
+                        'class_id' => $student['class_id'],
+                        'section' => $student['section'],
+                        'section_id' => $student['section_id'],
+                        'total' => 0,
+                        'students' => array()
+                    );
+                }
+                
+                $student['age_string'] = date($this->customlib->getSchoolDateFormat(), strtotime($student['dob'])); 
+                $grouped[$key]['total']++;
+                $grouped[$key]['students'][] = $student;
+            }
+            ksort($grouped);
+            $results = array_values($grouped);
+        }
+        $data['results'] = $results;
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('student/reports/birthdays_today', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    public function newadmissions()
+    {
+        if (!$this->rbac->hasPrivilege('student_dashboard', 'can_view')) {
+            access_denied();
+        }
+
+        $data['title'] = 'New Admissions';
+        
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : date('Y-m-01');
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : date('Y-m-t');
+        
+        $data['from_date'] = $from_date;
+        $data['to_date'] = $to_date;
+
+        $results = array();
+        
+        if ($this->input->server('REQUEST_METHOD') === 'POST' || true) {
+            $all_students = $this->student_model->get(); 
+            $grouped = array();
+            
+            $t_from = strtotime($from_date);
+            $t_to = strtotime($to_date);
+            
+            foreach ($all_students as $student) {
+                if(empty($student['admission_date']) || $student['admission_date'] == '0000-00-00') continue;
+                $t_adm = strtotime($student['admission_date']);
+                
+                if ($t_adm < $t_from || $t_adm > $t_to) continue;
+                
+                $key = $student['class_id'] . '_' . $student['section_id'];
+                if(!isset($grouped[$key])) {
+                    $grouped[$key] = array(
+                        'class' => $student['class'],
+                        'class_id' => $student['class_id'],
+                        'section' => $student['section'],
+                        'section_id' => $student['section_id'],
+                        'total' => 0,
+                        'students' => array()
+                    );
+                }
+                
+                $student['age_string'] = date($this->customlib->getSchoolDateFormat(), strtotime($student['admission_date'])); 
+                $grouped[$key]['total']++;
+                $grouped[$key]['students'][] = $student;
+            }
+            ksort($grouped);
+            $results = array_values($grouped);
+        }
+        $data['results'] = $results;
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('student/reports/new_admissions', $data);
+        $this->load->view('layout/footer', $data);
+    }
+    
+    public function totalstudents()
+    {
+        if (!$this->rbac->hasPrivilege('student_dashboard', 'can_view')) {
+            access_denied();
+        }
+
+        $data['title'] = 'Total Students Summary';
+        
+        $results = array();
+        $all_students = $this->student_model->get(); 
+        $grouped = array();
+        
+        foreach ($all_students as $student) {
+            $key = $student['class_id'] . '_' . $student['section_id'];
+            if(!isset($grouped[$key])) {
+                $grouped[$key] = array(
+                    'class' => $student['class'],
+                    'class_id' => $student['class_id'],
+                    'section' => $student['section'],
+                    'section_id' => $student['section_id'],
+                    'total' => 0,
+                    'students' => array()
+                );
+            }
+            
+            $student['age_string'] = ''; 
+            $grouped[$key]['total']++;
+            $grouped[$key]['students'][] = $student;
+        }
+        ksort($grouped);
+        $results = array_values($grouped);
+        
+        $data['results'] = $results;
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('student/reports/total_students', $data);
+        $this->load->view('layout/footer', $data);
+    }
 }
