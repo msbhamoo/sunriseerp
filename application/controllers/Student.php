@@ -37,6 +37,81 @@ class Student extends Admin_Controller
         $this->load->view('layout/footer', $data);
     }
 
+    public function generaterollno()
+    {
+        if (!$this->rbac->hasPrivilege('student', 'can_edit')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'Student Information');
+        $this->session->set_userdata('sub_menu', 'student/generaterollno');
+        $data['title'] = 'Generate Roll No';
+        $class         = $this->class_model->get();
+        $data['classlist'] = $class;
+
+        if ($this->input->server('REQUEST_METHOD') == 'POST') {
+            $action = $this->input->post('action');
+
+            if ($action == 'save') {
+                $student_ids = $this->input->post('student_id');
+                $roll_nos    = $this->input->post('roll_no');
+
+                if (!empty($student_ids)) {
+                    $update_data = array();
+                    foreach ($student_ids as $key => $student_id) {
+                        $update_data[] = array(
+                            'id'      => $student_id,
+                            'roll_no' => $roll_nos[$key]
+                        );
+                    }
+                    if (!empty($update_data)) {
+                        $this->db->update_batch('students', $update_data, 'id');
+                    }
+                    $data['msg'] = '<div class="alert alert-success">' . $this->lang->line('success_message') . '</div>';
+                }
+                $action = 'search';
+            }
+            
+            if ($action == 'search') {
+                $class_id   = $this->input->post('class_id');
+                $section_id = $this->input->post('section_id');
+                $sort_by    = $this->input->post('sort_by');
+
+                $data['class_id']   = $class_id;
+                $data['section_id'] = $section_id;
+                $data['sort_by']    = $sort_by;
+
+                $session = $this->setting_model->getCurrentSession();
+
+                $this->db->select('students.id, students.firstname, students.middlename, students.lastname, students.admission_no, students.roll_no, students.admission_date');
+                $this->db->from('students');
+                $this->db->join('student_session', 'student_session.student_id = students.id');
+                $this->db->where('student_session.class_id', $class_id);
+                $this->db->where('student_session.section_id', $section_id);
+                $this->db->where('student_session.session_id', $session);
+                $this->db->where('students.is_active', 'yes');
+
+                if ($sort_by == 'name') {
+                    $this->db->order_by('students.firstname', 'asc');
+                    $this->db->order_by('students.lastname', 'asc');
+                } else if ($sort_by == 'admission_no') {
+                    $this->db->order_by('CAST(students.admission_no AS UNSIGNED)', 'asc');
+                } else if ($sort_by == 'admission_date') {
+                    $this->db->order_by('students.admission_date', 'asc');
+                } else {
+                    $this->db->order_by('students.firstname', 'asc');
+                }
+
+                $query = $this->db->get();
+                $data['students'] = $query->result();
+            }
+        }
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('student/generaterollno', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
     public function multiclass()
     {
         if (!$this->rbac->hasPrivilege('multi_class_student', 'can_view')) {
