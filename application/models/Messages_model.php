@@ -380,6 +380,68 @@ class Messages_model extends MY_Model
         }
     }
 
+    public function get_whatsapp_template($id = null)
+    {
+        $this->db->select('*')->from('whatsapp_template');
+        if ($id != null) {
+            $this->db->where('whatsapp_template.id', $id);
+        } else {
+            $this->db->order_by('whatsapp_template.id');
+        }
+        $query = $this->db->get();
+        if ($id != null) {
+            return $query->row();
+        } else {
+            return $query->result_array();
+        }
+    }
+
+    public function add_whatsapp_template($data)
+    {
+        $this->db->trans_start();
+        $this->db->trans_strict(false);
+        if (isset($data['id'])) {
+            $this->db->where('id', $data['id']);
+            $this->db->update('whatsapp_template', $data);
+            $message   = UPDATE_RECORD_CONSTANT . " On whatsapp template id " . $data['id'];
+            $action    = "Update";
+            $record_id = $id = $data['id'];
+            $this->log($message, $record_id, $action);
+        } else {
+            $this->db->insert('whatsapp_template', $data);
+            $insert_id = $this->db->insert_id();
+            $message   = INSERT_RECORD_CONSTANT . " On whatsapp template id " . $insert_id;
+            $action    = "Insert";
+            $record_id = $id = $insert_id;
+            $this->log($message, $record_id, $action);
+        }
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === false) {
+            $this->db->trans_rollback();
+            return false;
+        } else {
+            return $id;
+        }
+    }
+
+    public function delete_whatsapp_template($id)
+    {
+        $this->db->trans_start();
+        $this->db->trans_strict(false);
+        $this->db->where('id', $id);
+        $this->db->delete('whatsapp_template');
+        $message   = DELETE_RECORD_CONSTANT . " On whatsapp template id " . $id;
+        $action    = "Delete";
+        $record_id = $id;
+        $this->log($message, $record_id, $action);
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === false) {
+            $this->db->trans_rollback();
+            return false;
+        }
+    }
+
+
     public function get_email_template_attachment($email_template_id)
     {
         $this->db->select('*');

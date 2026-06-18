@@ -363,7 +363,7 @@ class Mailsms extends Admin_Controller
                 }
 
                 $data['user_list'] = json_encode($user_array);
-                $last_inserted_id  = $this->messages_model->add($data);
+                $last_inserted_id  = $message_id = $this->messages_model->add($data);
 
                 if (!empty($attachment_data)) {
                     foreach ($attachment_data as $attachment_key => $attachment_data_value) {
@@ -506,7 +506,7 @@ class Mailsms extends Admin_Controller
                 }
 
                 $data['user_list'] = json_encode($user_array);
-                $last_inserted_id  = $this->messages_model->add($data);
+                $last_inserted_id  = $message_id = $this->messages_model->add($data);
 
                 if (!empty($attachment_data)) {
                     foreach ($attachment_data as $attachment_key => $attachment_data_value) {
@@ -703,7 +703,7 @@ class Mailsms extends Admin_Controller
                     }
                 }
                 $data['user_list'] = json_encode($user_array);
-                $last_inserted_id  = $this->messages_model->add($data);
+                $last_inserted_id  = $message_id = $this->messages_model->add($data);
 
                 if (!empty($attachment_data)) {
                     foreach ($attachment_data as $attachment_key => $attachment_data_value) {
@@ -851,7 +851,7 @@ class Mailsms extends Admin_Controller
             }
 
             $data['user_list'] = json_encode($user_array);
-            $this->messages_model->add($data);
+            $message_id = $this->messages_model->add($data);
             if ($send_type == 'send_now') {
                 echo json_encode(array('status' => 0, 'msg' => $this->lang->line('message_sent_successfully')));
             } else {
@@ -1028,7 +1028,7 @@ class Mailsms extends Admin_Controller
                 $data['schedule_date_time'] = date('Y-m-d H:i:s', $this->customlib->dateTimeformatTwentyfourhour($this->input->post('schedule_date_time'), false));
             }
             $data['user_list'] = json_encode($user_array);
-            $this->messages_model->add($data);
+            $message_id = $this->messages_model->add($data);
             if ($send_type == 'send_now') {
                 echo json_encode(array('status' => 0, 'msg' => $this->lang->line('message_sent_successfully')));
             } else {
@@ -1156,7 +1156,7 @@ class Mailsms extends Admin_Controller
                 $data['schedule_date_time'] = date('Y-m-d H:i:s', $this->customlib->dateTimeformatTwentyfourhour($this->input->post('schedule_date_time'), false));
             }
             $data['user_list'] = json_encode($user_array);
-            $this->messages_model->add($data);
+            $message_id = $this->messages_model->add($data);
             if ($send_type == 'send_now') {
                 echo json_encode(array('status' => 0, 'msg' => $this->lang->line('message_sent_successfully')));
             } else {
@@ -1337,7 +1337,7 @@ class Mailsms extends Admin_Controller
                     }
                 }
                 $data['user_list'] = json_encode($user_array);
-                $last_inserted_id = $this->messages_model->add($data);
+                $last_inserted_id = $message_id = $this->messages_model->add($data);
 
                 if (!empty($attachment_data)) {
                     foreach ($attachment_data as $attachment_key => $attachment_data_value) {
@@ -2480,7 +2480,7 @@ class Mailsms extends Admin_Controller
                 $data['schedule_date_time'] = date('Y-m-d H:i:s', $this->customlib->dateTimeformatTwentyfourhour($this->input->post('schedule_date_time'), false));
             }
             $data['user_list'] = json_encode($user_array);
-            $this->messages_model->add($data);
+            $message_id = $this->messages_model->add($data);
             echo json_encode(array('status' => 0, 'msg' => $this->lang->line('success_message')));
         } else {
 
@@ -2675,7 +2675,7 @@ class Mailsms extends Admin_Controller
                 $data['schedule_date_time'] = date('Y-m-d H:i:s', $this->customlib->dateTimeformatTwentyfourhour($this->input->post('schedule_date_time'), false));
             }
             $data['user_list'] = json_encode($user_array);
-            $this->messages_model->add($data);
+            $message_id = $this->messages_model->add($data);
             echo json_encode(array('status' => 0, 'msg' => $this->lang->line('success_message')));
         } else {
 
@@ -2816,7 +2816,7 @@ class Mailsms extends Admin_Controller
 
             $data['user_list'] = json_encode($user_array);
 
-            $this->messages_model->add($data);
+            $message_id = $this->messages_model->add($data);
             echo json_encode(array('status' => 0, 'msg' => $this->lang->line('success_message')));
         } else {
 
@@ -3007,7 +3007,7 @@ class Mailsms extends Admin_Controller
 
             $data['user_list'] = json_encode($user_array);
 
-            $this->messages_model->add($data);
+            $message_id = $this->messages_model->add($data);
             echo json_encode(array('status' => 0, 'msg' => $this->lang->line('success_message')));
         } else {
 
@@ -3209,7 +3209,7 @@ class Mailsms extends Admin_Controller
 
 
             $data['user_list'] = json_encode($user_array);
-            $this->messages_model->add($data);
+            $message_id = $this->messages_model->add($data);
             echo json_encode(array('status' => 0, 'msg' => $this->lang->line('success_message')));
         } else {
 
@@ -3306,7 +3306,7 @@ class Mailsms extends Admin_Controller
             $data['schedule_date_time'] = date('Y-m-d H:i:s', $this->customlib->dateTimeformatTwentyfourhour($this->input->post('schedule_date_time'), false));
 
             $data['user_list'] = json_encode($user_array);
-            $this->messages_model->add($data);
+            $message_id = $this->messages_model->add($data);
             echo json_encode(array('status' => 0, 'msg' => $this->lang->line('success_message')));
         } else {
 
@@ -3367,7 +3367,7 @@ class Mailsms extends Admin_Controller
             $data['schedule_date_time'] = date('Y-m-d H:i:s', $this->customlib->dateTimeformatTwentyfourhour($this->input->post('schedule_date_time'), false));
 
             $data['user_list'] = json_encode($user_array);
-            $this->messages_model->add($data);
+            $message_id = $this->messages_model->add($data);
             echo json_encode(array('status' => 0, 'msg' => $this->lang->line('success_message')));
         } else {
 
@@ -3461,7 +3461,7 @@ class Mailsms extends Admin_Controller
             $data['schedule_date_time'] = date('Y-m-d H:i:s', $this->customlib->dateTimeformatTwentyfourhour($this->input->post('schedule_date_time'), false));
 
             $data['user_list'] = json_encode($user_array);
-            $this->messages_model->add($data);
+            $message_id = $this->messages_model->add($data);
             echo json_encode(array('status' => 0, 'msg' => $this->lang->line('success_message')));
         } else {
 
@@ -3522,4 +3522,521 @@ class Mailsms extends Admin_Controller
 
         return $this->saasvalidation->validateCanUploadFile($str, $params_array);
     }
+
+    // ==========================================
+    // WHATSAPP TEMPLATE MAKER
+    // ==========================================
+    public function whatsapp_template()
+    {
+        if (!$this->rbac->hasPrivilege('sms_template', 'can_view')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'Communicate');
+        $this->session->set_userdata('sub_menu', 'whatsapp_template');
+
+        $whatsapp_template_list = $this->messages_model->get_whatsapp_template();
+        $data['whatsapp_template_list'] = $whatsapp_template_list;
+        $this->load->view('layout/header');
+        $this->load->view('admin/mailsms/whatsapp_template/whatsapp_template', $data);
+        $this->load->view('layout/footer');
+    }
+
+    public function add_whatsapp_template()
+    {
+        if (!$this->rbac->hasPrivilege('sms_template', 'can_add')) {
+            access_denied();
+        }
+
+        $this->form_validation->set_rules('title', $this->lang->line('title'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('message', $this->lang->line('message'), 'trim|required|xss_clean');
+
+        if ($this->form_validation->run() == false) {
+            $msg = array(
+                'title'   => form_error('title'),
+                'message' => form_error('message')
+            );
+            $array = array('status' => '0', 'error' => $msg, 'message' => '');
+        } else {
+            $data = array(
+                'title'      => $this->input->post('title'),
+                'message'    => $this->input->post('message'),
+                'created_at' => date('Y-m-d H:i:s'),
+            );
+            $this->messages_model->add_whatsapp_template($data);
+            $array = array('status' => '1', 'error' => '', 'message' => $this->lang->line('success_message'));
+        }
+        echo json_encode($array);
+    }
+
+    public function edit_whatsapp_template()
+    {
+        if (!$this->rbac->hasPrivilege('sms_template', 'can_edit')) {
+            access_denied();
+        }
+        $id = $this->input->post('id');
+        $data['whatsapp_template_list'] = $this->messages_model->get_whatsapp_template($id);
+        $page = $this->load->view('admin/mailsms/whatsapp_template/_edit_whatsapp_template', $data, true);
+        echo json_encode(array('status' => 1, 'page' => $page));
+    }
+
+    public function update_whatsapp_template()
+    {
+        if (!$this->rbac->hasPrivilege('sms_template', 'can_edit')) {
+            access_denied();
+        }
+        $this->form_validation->set_rules('title', $this->lang->line('title'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('message', $this->lang->line('message'), 'trim|required|xss_clean');
+        if ($this->form_validation->run() == false) {
+            $msg = array(
+                'title'   => form_error('title'),
+                'message' => form_error('message'),
+            );
+            $array = array('status' => '0', 'error' => $msg, 'message' => '');
+        } else {
+            $data = array(
+                'id'         => $this->input->post('id'),
+                'title'      => $this->input->post('title'),
+                'message'    => $this->input->post('message')
+            );
+            $this->messages_model->add_whatsapp_template($data);
+            $array = array('status' => '1', 'error' => '', 'message' => $this->lang->line('success_message'));
+        }
+        echo json_encode($array);
+    }
+
+    public function delete_whatsapp_template($id)
+    {
+        if (!$this->rbac->hasPrivilege('sms_template', 'can_delete')) {
+            access_denied();
+        }
+        $this->messages_model->delete_whatsapp_template($id);
+        $this->session->set_flashdata('message', $this->lang->line('delete_message'));
+        redirect('admin/mailsms/whatsapp_template');
+    }
+
+    public function whatsapptemplatedata()
+    {
+        $template_id = $this->input->post('template_id');
+        $whatsapp_template_list = $this->messages_model->get_whatsapp_template($template_id);
+        echo json_encode(array('data' => $whatsapp_template_list));
+    }
+
+    // ==========================================
+    // WHATSAPP COMPOSER
+    // ==========================================
+    public function compose_whatsapp()
+    {
+        if (!$this->rbac->hasPrivilege('whatsapp', 'can_view')) {
+            access_denied();
+        }
+        $this->session->set_userdata('top_menu', 'Communicate');
+        $this->session->set_userdata('sub_menu', 'mailsms/compose_whatsapp');
+        $data['title'] = 'Compose WhatsApp';
+        $data['classlist'] = $this->class_model->get();
+        $data['whatsapp_template_list'] = $this->messages_model->get_whatsapp_template();
+        $data['roles'] = $this->role_model->get();
+        $data['sch_setting'] = $this->sch_setting_detail;
+        $data['superadmin_restriction'] = $this->customlib->superadmin_visible();
+        
+        $date = date('Y-m-d');
+        $birthDaysList = array();
+        $birthStudents = $this->student_model->getBirthDayStudents($date, false, false);
+        $birthStaff = $this->staff_model->getBirthDayStaff($date, 1, false, false);
+        if (!empty($birthStudents)) {
+            $array = array();
+            foreach ($birthStudents as $student_value) {
+                $array[] = array(
+                    'name' => $this->customlib->getFullName($student_value['firstname'], $student_value['middlename'], $student_value['lastname'], $this->sch_setting_detail->middlename, $this->sch_setting_detail->lastname),
+                    'contact_no' => $student_value['mobileno'],
+                    'admission_no' => $student_value['admission_no']
+                );
+            }
+            $birthDaysList['students'] = $array;
+        }
+        if (!empty($birthStaff)) {
+            $array = array();
+            foreach ($birthStaff as $staff_value) {
+                $array[] = array('name' => $staff_value['name'], 'contact_no' => $staff_value['contact_no'], 'employee_id' => $staff_value['employee_id']);
+            }
+            $birthDaysList['staff'] = $array;
+        }
+        $data['birthDaysList'] = $birthDaysList;
+        
+        $this->load->view('layout/header');
+        $this->load->view('admin/mailsms/compose_whatsapp', $data);
+        $this->load->view('layout/footer');
+    }
+
+    public function whatsapp_log()
+    {
+        if (!$this->rbac->hasPrivilege('whatsapp_log', 'can_view')) {
+            access_denied();
+        }
+        $this->session->set_userdata('top_menu', 'Communicate');
+        $this->session->set_userdata('sub_menu', 'mailsms/whatsapp_log');
+        $data['title'] = 'WhatsApp Log';
+        
+        // Custom query to get only whatsapp messages
+        $this->db->select()->from('messages');
+        $this->db->where('messages.send_whatsapp', '1');
+        $this->db->order_by('messages.created_at', 'desc');
+        $listMessage = $this->db->get()->result_array();
+        
+        $data['listMessage'] = $listMessage;
+        $this->load->view('layout/header');
+        $this->load->view('admin/mailsms/whatsapp_log', $data);
+        $this->load->view('layout/footer');
+    }
+
+    public function get_whatsapp_individual_logs()
+    {
+        $message_id = $this->input->post('message_id');
+        $this->db->select('*');
+        $this->db->from('whatsapp_message_logs');
+        $this->db->where('message_id', $message_id);
+        $this->db->order_by('id', 'desc');
+        $logs = $this->db->get()->result_array();
+        echo json_encode($logs);
+    }
+
+    // Helper for placeholder replacement
+    private function _replace_whatsapp_placeholders($message, $user_id, $role)
+    {
+        $recipient_name = '';
+        if($role == 'student' || $role == 'parent') {
+            $student = $this->student_model->get($user_id);
+            if($student) {
+                $student_name = $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $this->sch_setting_detail->middlename, $this->sch_setting_detail->lastname);
+                $recipient_name = ($role == 'parent') ? ($student['father_name'] ? $student['father_name'] : $student_name) : $student_name;
+                $message = str_replace('{{student_name}}', $student_name, $message);
+                $message = str_replace('{{parent_name}}', $student['father_name'] ? $student['father_name'] : '', $message);
+                $message = str_replace('{{admission_no}}', $student['admission_no'], $message);
+                $message = str_replace('{{class}}', $student['class'], $message);
+                $message = str_replace('{{section}}', $student['section'], $message);
+                $message = str_replace('{{category}}', $student['category'], $message);
+                
+                // Transport details
+                $message = str_replace('{{route}}', $student['route_title'], $message);
+                $message = str_replace('{{pickup_point}}', $student['vehicle_no'], $message); // Simplified
+                
+                // Hostel details
+                $message = str_replace('{{hostel_details}}', $student['hostel_name'], $message);
+                
+                // Fees - Simplified for now
+                $message = str_replace('{{total_fee}}', '', $message);
+                $message = str_replace('{{remaining_fee}}', '', $message);
+            }
+        } else if ($role == 'staff') {
+            $staff = $this->staff_model->get($user_id);
+            if ($staff) {
+                $recipient_name = $staff['name'] . ' ' . $staff['surname'];
+            }
+        }
+        return array('message' => $message, 'name' => $recipient_name);
+    }
+
+    public function send_group_whatsapp()
+    {
+        $this->form_validation->set_error_delimiters('');
+        $this->form_validation->set_rules('group_title', $this->lang->line('title'), 'required');
+        $this->form_validation->set_rules('group_message', $this->lang->line('message'), 'required');
+        $this->form_validation->set_rules('user[]', $this->lang->line('message_to'), 'required');
+
+        if ($this->form_validation->run()) {
+            $user_array = array();
+            $message = $this->input->post('group_message');
+            $message_title = $this->input->post('group_title');
+            
+            $data = array(
+                'is_group' => 1,
+                'title' => $message_title,
+                'message' => $message,
+                'send_mail' => 0,
+                'send_sms' => 0,
+                'send_whatsapp' => '1',
+                'whatsapp_template_id' => $this->input->post('template_id'),
+                'group_list' => json_encode($this->input->post('user[]')),
+                'created_at' => date('Y-m-d H:i:s')
+            );
+
+            $userlisting = $this->input->post('user[]');
+            foreach ($userlisting as $users_value) {
+                if ($users_value == "student") {
+                    $student_array = $this->student_model->get();
+                    if (!empty($student_array)) {
+                        foreach ($student_array as $student_value) {
+                            $user_array[] = array('user_id' => $student_value['id'], 'mobileno' => $student_value['mobileno'], 'role' => 'student');
+                        }
+                    }
+                } else if ($users_value == "parent") {
+                    $parent_array = $this->student_model->get();
+                    if (!empty($parent_array)) {
+                        foreach ($parent_array as $parent_value) {
+                            $user_array[] = array('user_id' => $parent_value['id'], 'mobileno' => $parent_value['guardian_phone'], 'role' => 'parent');
+                        }
+                    }
+                } else if (is_numeric($users_value)) {
+                    $staff = $this->staff_model->getEmployeeByRoleID($users_value);
+                    if (!empty($staff)) {
+                        foreach ($staff as $staff_value) {
+                            $user_array[] = array('user_id' => $staff_value['id'], 'mobileno' => $staff_value['contact_no'], 'role' => 'staff');
+                        }
+                    }
+                }
+            }
+            
+            $data['user_list'] = json_encode($user_array);
+            $message_id = $this->messages_model->add($data);
+
+            if (!empty($user_array)) {
+                $this->load->library('whatsappgateway');
+                foreach ($user_array as $user_mail_value) {
+                    if ($user_mail_value['mobileno'] != "") {
+                        $parsed = $this->_replace_whatsapp_placeholders($message, $user_mail_value['user_id'], $user_mail_value['role']);
+                        $compiled_msg = $parsed['message'];
+                        $recipient_name = $parsed['name'];
+                        
+                        $response = $this->whatsappgateway->sendDynamicWhatsapp($user_mail_value['mobileno'], $compiled_msg);
+                        $status = 'failed';
+                        if ($response) {
+                            $resp_obj = json_decode($response);
+                            if (isset($resp_obj->error) && $resp_obj->error === false) {
+                                $status = 'sent';
+                            }
+                        }
+                        
+                        $this->db->insert('whatsapp_message_logs', array(
+                            'message_id' => $message_id,
+                            'recipient_name' => $recipient_name,
+                            'mobile_number' => $user_mail_value['mobileno'],
+                            'message_text' => $compiled_msg,
+                            'status' => $status
+                        ));
+                    }
+                }
+            }
+
+            echo json_encode(array('status' => 0, 'msg' => $this->lang->line('message_sent_successfully')));
+        } else {
+            $data = array(
+                'group_title' => form_error('group_title'),
+                'group_message' => form_error('group_message'),
+                'user[]' => form_error('user[]')
+            );
+            echo json_encode(array('status' => 1, 'msg' => $data));
+        }
+    }
+
+    public function send_individual_whatsapp()
+    {
+        $this->form_validation->set_error_delimiters('');
+        $this->form_validation->set_rules('individual_title', $this->lang->line('title'), 'required');
+        $this->form_validation->set_rules('individual_message', $this->lang->line('message'), 'required');
+        $this->form_validation->set_rules('user_list', $this->lang->line('recipient'), 'required');
+
+        if ($this->form_validation->run()) {
+            $userlisting = json_decode($this->input->post('user_list'));
+            $user_array = array();
+            foreach ($userlisting as $userlisting_value) {
+                $user_array[] = array(
+                    'category' => $userlisting_value[0]->category,
+                    'user_id' => $userlisting_value[0]->record_id,
+                    'mobileno' => $userlisting_value[0]->mobileno,
+                    'role' => $userlisting_value[0]->category
+                );
+            }
+
+            $message = $this->input->post('individual_message');
+            $message_title = $this->input->post('individual_title');
+            $data = array(
+                'is_individual' => 1,
+                'title' => $message_title,
+                'message' => $message,
+                'send_mail' => 0,
+                'send_sms' => 0,
+                'send_whatsapp' => '1',
+                'whatsapp_template_id' => $this->input->post('template_id'),
+                'user_list' => json_encode($user_array),
+                'created_at' => date('Y-m-d H:i:s'),
+            );
+            $message_id = $this->messages_model->add($data);
+
+            if (!empty($user_array)) {
+                $this->load->library('whatsappgateway');
+                foreach ($user_array as $user_mail_value) {
+                    if ($user_mail_value['mobileno'] != "") {
+                        $parsed = $this->_replace_whatsapp_placeholders($message, $user_mail_value['user_id'], $user_mail_value['role']);
+                        $compiled_msg = $parsed['message'];
+                        $recipient_name = $parsed['name'];
+                        
+                        $response = $this->whatsappgateway->sendDynamicWhatsapp($user_mail_value['mobileno'], $compiled_msg);
+                        $status = 'failed';
+                        if ($response) {
+                            $resp_obj = json_decode($response);
+                            if (isset($resp_obj->error) && $resp_obj->error === false) {
+                                $status = 'sent';
+                            }
+                        }
+                        
+                        $this->db->insert('whatsapp_message_logs', array(
+                            'message_id' => $message_id,
+                            'recipient_name' => $recipient_name,
+                            'mobile_number' => $user_mail_value['mobileno'],
+                            'message_text' => $compiled_msg,
+                            'status' => $status
+                        ));
+                    }
+                }
+            }
+
+            echo json_encode(array('status' => 0, 'msg' => $this->lang->line('message_sent_successfully')));
+        } else {
+            $data = array(
+                'individual_title' => form_error('individual_title'),
+                'individual_message' => form_error('individual_message'),
+                'user_list' => form_error('user_list')
+            );
+            echo json_encode(array('status' => 1, 'msg' => $data));
+        }
+    }
+
+    public function send_class_whatsapp()
+    {
+        $this->form_validation->set_error_delimiters('');
+        $this->form_validation->set_rules('class_title', $this->lang->line('title'), 'required');
+        $this->form_validation->set_rules('class_message', $this->lang->line('message'), 'required');
+        $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'required');
+
+        if ($this->form_validation->run()) {
+            $user_array = array();
+            $message = $this->input->post('class_message');
+            $message_title = $this->input->post('class_title');
+            $class_id = $this->input->post('class_id');
+            $userlisting = $this->input->post('user[]');
+            
+            $data = array(
+                'is_class' => 1,
+                'title' => $message_title,
+                'message' => $message,
+                'send_mail' => 0,
+                'send_sms' => 0,
+                'send_whatsapp' => '1',
+                'whatsapp_template_id' => $this->input->post('template_id'),
+                'created_at' => date('Y-m-d H:i:s'),
+            );
+
+            $section = $this->input->post('user[]');
+            $student_array = $this->student_model->getStudentByClassSectionID($class_id, $section);
+            
+            if (!empty($student_array)) {
+                foreach ($student_array as $student_value) {
+                    $send_to = $this->input->post('send_to[]');
+                    if(!empty($send_to)) {
+                        if(in_array('student', $send_to) && $student_value['mobileno'] != '') {
+                            $user_array[] = array('user_id' => $student_value['id'], 'mobileno' => $student_value['mobileno'], 'role' => 'student');
+                        }
+                        if(in_array('parent', $send_to) && $student_value['guardian_phone'] != '') {
+                            $user_array[] = array('user_id' => $student_value['id'], 'mobileno' => $student_value['guardian_phone'], 'role' => 'parent');
+                        }
+                    }
+                }
+            }
+
+            $data['user_list'] = json_encode($user_array);
+            $message_id = $this->messages_model->add($data);
+
+            if (!empty($user_array)) {
+                $this->load->library('whatsappgateway');
+                foreach ($user_array as $user_mail_value) {
+                    if ($user_mail_value['mobileno'] != "") {
+                        $parsed = $this->_replace_whatsapp_placeholders($message, $user_mail_value['user_id'], $user_mail_value['role']);
+                        $compiled_msg = $parsed['message'];
+                        $recipient_name = $parsed['name'];
+                        
+                        $response = $this->whatsappgateway->sendDynamicWhatsapp($user_mail_value['mobileno'], $compiled_msg);
+                        $status = 'failed';
+                        if ($response) {
+                            $resp_obj = json_decode($response);
+                            if (isset($resp_obj->error) && $resp_obj->error === false) {
+                                $status = 'sent';
+                            }
+                        }
+                        
+                        $this->db->insert('whatsapp_message_logs', array(
+                            'message_id' => $message_id,
+                            'recipient_name' => $recipient_name,
+                            'mobile_number' => $user_mail_value['mobileno'],
+                            'message_text' => $compiled_msg,
+                            'status' => $status
+                        ));
+                    }
+                }
+            }
+
+            echo json_encode(array('status' => 0, 'msg' => $this->lang->line('message_sent_successfully')));
+        } else {
+            $data = array(
+                'class_title' => form_error('class_title'),
+                'class_message' => form_error('class_message'),
+                'class_id' => form_error('class_id'),
+            );
+            echo json_encode(array('status' => 1, 'msg' => $data));
+        }
+    }
+
+    public function send_birthday_whatsapp()
+    {
+        $this->form_validation->set_error_delimiters('');
+        $this->form_validation->set_rules('birthday_title', $this->lang->line('title'), 'required');
+        $this->form_validation->set_rules('birthday_message', $this->lang->line('message'), 'required');
+        $this->form_validation->set_rules('user[]', $this->lang->line('message_to'), 'required');
+
+        if ($this->form_validation->run()) {
+            $user_array = array();
+            $message = $this->input->post('birthday_message');
+            $message_title = $this->input->post('birthday_title');
+            
+            $data = array(
+                'is_group' => 1, // reusing logic
+                'title' => $message_title,
+                'message' => $message,
+                'send_mail' => 0,
+                'send_sms' => 0,
+                'send_whatsapp' => '1',
+                'whatsapp_template_id' => $this->input->post('template_id'),
+                'created_at' => date('Y-m-d H:i:s'),
+            );
+
+            $userlisting = $this->input->post('user[]');
+            foreach ($userlisting as $users_value) {
+                // Here, users_value is the mobileno.
+                $user_array[] = array('user_id' => 0, 'mobileno' => $users_value, 'role' => 'unknown');
+            }
+
+            $data['user_list'] = json_encode($user_array);
+            $message_id = $this->messages_model->add($data);
+
+            if (!empty($user_array)) {
+                $this->load->library('whatsappgateway');
+                foreach ($user_array as $user_mail_value) {
+                    if ($user_mail_value['mobileno'] != "") {
+                        $compiled_msg = $message; // no ID, no replace for birthday raw number for now
+                        $this->whatsappgateway->sendDynamicWhatsapp($user_mail_value['mobileno'], $compiled_msg);
+                    }
+                }
+            }
+
+            echo json_encode(array('status' => 0, 'msg' => $this->lang->line('message_sent_successfully')));
+        } else {
+            $data = array(
+                'birthday_title' => form_error('birthday_title'),
+                'birthday_message' => form_error('birthday_message'),
+                'user[]' => form_error('user[]')
+            );
+            echo json_encode(array('status' => 1, 'msg' => $data));
+        }
+    }
+
+
 }

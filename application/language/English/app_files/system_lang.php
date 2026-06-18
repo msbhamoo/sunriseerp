@@ -2662,5 +2662,15 @@ $lang['select_criteria'] = "Select Criteria";
 $lang['room_transfer_log'] = 'Room Transfer Logs';
 $lang['generate_admit_card'] = 'Generate Admit Card';
 $lang['contact_details'] = 'Personal Details';
-
-
+$lang['generate_roll_no'] = 'Generate Roll No';
+$lang['whatsapp'] = 'WhatsApp';
+$lang['whatsapp_setting'] = 'WhatsApp Setting';
+$lang['whatsapp_template'] = 'WhatsApp Template';
+$lang['compose_whatsapp'] = 'Compose WhatsApp';
+$lang['whatsapp_log'] = 'WhatsApp Log';
+$lang['send_whatsapp'] = 'Send WhatsApp';
+$lang['whatsapp_message'] = 'WhatsApp Message';
+$lang['total_fee'] = 'Total Fee';
+$lang['remaining_fee'] = 'Remaining Fee';
+$lang['transport_details'] = 'Transport Details';
+$lang['hostel_details'] = 'Hostel Details';
