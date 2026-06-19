@@ -6,6 +6,8 @@ if (!defined('BASEPATH')) {
 
 class Studentcall_model extends MY_Model
 {
+    protected $current_session;
+
     public function __construct()
     {
         parent::__construct();
@@ -16,7 +18,6 @@ class Studentcall_model extends MY_Model
     {
         $this->db->select('*');
         $this->db->from('student_call_purpose');
-        $this->db->where('is_active', 1);
         $this->db->order_by('id', 'desc');
         $query = $this->db->get();
         return $query->result_array();

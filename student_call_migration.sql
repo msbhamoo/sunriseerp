@@ -41,8 +41,5 @@ CREATE TABLE `student_call_followups` (
 INSERT IGNORE INTO `permission_group` (`name`, `short_code`, `is_active`, `system`, `created_at`) VALUES ('Student Call Log', 'student_call_log', 1, 0, CURRENT_TIMESTAMP);
 INSERT IGNORE INTO `permission_group` (`name`, `short_code`, `is_active`, `system`, `created_at`) VALUES ('Call Purpose Setup', 'call_purpose_setup', 1, 0, CURRENT_TIMESTAMP);
 
--- RBAC Permission Categories (maps to the UI)
-INSERT IGNORE INTO `permission_category` (`name`, `short_code`, `perm_group_id`, `enable_view`, `enable_add`, `enable_edit`, `enable_delete`, `created_at`) 
-VALUES 
-('Student Call Log', 'student_call_log', (SELECT id FROM `permission_group` WHERE `short_code` = 'student_call_log'), 1, 1, 1, 1, CURRENT_TIMESTAMP),
-('Call Purpose Setup', 'call_purpose_setup', (SELECT id FROM `permission_group` WHERE `short_code` = 'call_purpose_setup'), 1, 1, 1, 1, CURRENT_TIMESTAMP);
+ALTER TABLE `student_calls` ADD `duration` VARCHAR(20) NULL DEFAULT NULL AFTER `date`;
+ALTER TABLE `student_call_followups` ADD `call_status` VARCHAR(50) NULL DEFAULT NULL AFTER `status`;
