@@ -128,7 +128,7 @@
                                         <th>Bank Name</th>
                                         <th>Expense Type</th>
                                         <th><?php echo $this->lang->line('amount'); ?></th>
-                                        <th>More Info</th>
+                                        <th>Mode</th>
                                         <th>Narration</th>
                                         <th class="text-right"><?php echo $this->lang->line('action'); ?></th>
                                     </tr>

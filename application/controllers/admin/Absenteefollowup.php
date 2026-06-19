@@ -105,6 +105,91 @@ class Absenteefollowup extends Admin_Controller
                  // Trigger SMS
             } elseif ($this->input->post('action') == 'Email') {
                  // Trigger Email
+            } elseif ($this->input->post('action') == 'WhatsApp') {
+                $this->load->library('smsgateway');
+                $this->load->library('whatsappgateway');
+                
+                $student_session_id = $this->input->post('student_session_id');
+                $date_post = $this->input->post('date');
+                $date_formatted = date('Y-m-d', $this->customlib->datetostrtotime($date_post));
+                
+                $chk_mail_sms = $this->customlib->sendMailSMS('student_absent_attendence');
+                if ($chk_mail_sms['is_whatsapp'] && $chk_mail_sms['template'] != "") {
+                    // Fetch comprehensive student details including class, section, and attendance type
+                    $student_result_v = $this->db->select('students.*, classes.class, sections.section, student_attendences.attendence_type_id, students.parent_app_key, students.app_key')
+                        ->from('student_session')
+                        ->join('students', 'students.id = student_session.student_id')
+                        ->join('classes', 'classes.id = student_session.class_id')
+                        ->join('sections', 'sections.id = student_session.section_id')
+                        ->join('student_attendences', 'student_attendences.student_session_id = student_session.id AND student_attendences.date = ' . $this->db->escape($date_formatted))
+                        ->where('student_session.id', $student_session_id)
+                        ->get()
+                        ->row_array();
+                        
+                    if (!empty($student_result_v) && $student_result_v['attendence_type_id'] == 4) { // Only send if Absent (4)
+                        $detail = array(
+                            'date'                => $date_formatted,
+                            'parent_app_key'      => $student_result_v['parent_app_key'],
+                            'app_key'             => $student_result_v['app_key'],
+                            'mobileno'            => $student_result_v['mobileno'],
+                            'email'               => $student_result_v['email'],
+                            'firstname'           => $student_result_v['firstname'],
+                            'middlename'          => $student_result_v['middlename'],
+                            'lastname'            => $student_result_v['lastname'],
+                            'father_name'         => $student_result_v['father_name'],
+                            'father_phone'        => $student_result_v['father_phone'],
+                            'father_occupation'   => $student_result_v['father_occupation'],
+                            'mother_name'         => $student_result_v['mother_name'],
+                            'mother_phone'        => $student_result_v['mother_phone'],
+                            'guardian_name'       => $student_result_v['guardian_name'],
+                            'guardian_phone'      => $student_result_v['guardian_phone'],
+                            'guardian_occupation' => $student_result_v['guardian_occupation'],
+                            'guardian_email'      => $student_result_v['guardian_email'],
+                            'student_name'        => $student_result_v['firstname'] . ' ' . $student_result_v['lastname'],
+                            'class'               => $student_result_v['class'],
+                            'section'             => $student_result_v['section'],
+                            'current_session_name'=> $this->setting_model->getCurrentSessionName()
+                        );
+                        
+                        if ($chk_mail_sms['is_student_recipient']) { 
+                            $this->whatsappgateway->sendAbsentAttendancenotification($detail, $chk_mail_sms['template'], $chk_mail_sms['whatsapp_template_id'], $detail['mobileno']);
+                            
+                            // Log to Central WhatsApp Log
+                            $this->load->model('messages_model');
+                            $user_list = array(
+                                array(
+                                    'mobileno' => $detail['mobileno'] ? $detail['mobileno'] : ($detail['guardian_phone'] ? $detail['guardian_phone'] : ($detail['father_phone'] ? $detail['father_phone'] : $detail['mother_phone'])),
+                                    'app_key'  => $detail['app_key']
+                                )
+                            );
+                            
+                            $msg = $this->smsgateway->getAbsentStudentContent($detail, $chk_mail_sms['template'], '');
+                            
+                            $message_data = array(
+                                'title'              => 'Absentee Follow-up: ' . $this->customlib->getFullName($detail['firstname'], $detail['middlename'], $detail['lastname'], $this->sch_setting_detail->middlename, $this->sch_setting_detail->lastname),
+                                'message'            => $msg,
+                                'append_roles'       => '',
+                                'user_list'          => json_encode($user_list),
+                                'is_group'           => 0,
+                                'is_individual'      => 1,
+                                'is_class'           => 0,
+                                'send_mail'          => 0,
+                                'send_sms'           => 0,
+                                'send_whatsapp'      => 1,
+                                'created_at'         => $this->customlib->getCurrentTime(),
+                            );
+                            $message_id = $this->messages_model->add($message_data);
+                            
+                            // Insert into whatsapp_message_logs
+                            $this->db->insert('whatsapp_message_logs', array(
+                                'message_id' => $message_id,
+                                'mobileno'   => $user_list[0]['mobileno'],
+                                'status'     => 'Sent',
+                                'created_at' => $this->customlib->getCurrentTime()
+                            ));
+                        }
+                    }
+                }
             }
 
             $data = array('status' => 'success', 'message' => $this->lang->line('success_message'));

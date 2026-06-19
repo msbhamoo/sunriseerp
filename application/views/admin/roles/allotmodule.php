@@ -18,12 +18,12 @@
                                 <table class="table table-striped table-bordered table-hover  table-fixed-header">
                                     <thead class="header">
                                         <tr>
-                                            <th><?php echo $this->lang->line('module'); ?></th>
+                                            <th><?php echo $this->lang->line('module'); ?> <label class="pull-right" style="margin:0; font-size:12px; font-weight:normal;"><input type="checkbox" id="select_all_global"> Select All</label></th>
                                             <th><?php echo $this->lang->line('feature'); ?></th>
-                                            <th><?php echo $this->lang->line('view'); ?></th>
-                                            <th><?php echo $this->lang->line('add'); ?></th>
-                                            <th><?php echo $this->lang->line('edit'); ?></th>
-                                            <th><?php echo $this->lang->line('delete'); ?></th>
+                                            <th><?php echo $this->lang->line('view'); ?> <label class="pull-right" style="margin:0; font-size:12px; font-weight:normal;"><input type="checkbox" class="select_column" data-column="can_view"> All</label></th>
+                                            <th><?php echo $this->lang->line('add'); ?> <label class="pull-right" style="margin:0; font-size:12px; font-weight:normal;"><input type="checkbox" class="select_column" data-column="can_add"> All</label></th>
+                                            <th><?php echo $this->lang->line('edit'); ?> <label class="pull-right" style="margin:0; font-size:12px; font-weight:normal;"><input type="checkbox" class="select_column" data-column="can_edit"> All</label></th>
+                                            <th><?php echo $this->lang->line('delete'); ?> <label class="pull-right" style="margin:0; font-size:12px; font-weight:normal;"><input type="checkbox" class="select_column" data-column="can_delete"> All</label></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -34,9 +34,16 @@
     
                                         ?>
                                             <tr>
-                                                <th><?php
-    
-                                                    echo $value->name ?></th>
+                                                <th>
+                                                    <?php echo $value->name ?>
+                                                    <div style="margin-top: 5px;">
+                                                        <label style="margin:0; font-size:11px; font-weight:normal; cursor:pointer;" title="Select All in Group"><input type="checkbox" class="select_group" data-group="<?php echo $value->id; ?>"> All</label>
+                                                        <label style="margin:0 0 0 5px; font-size:11px; font-weight:normal; cursor:pointer;" title="Select All View in Group"><input type="checkbox" class="select_group_col" data-group="<?php echo $value->id; ?>" data-column="can_view"> V</label>
+                                                        <label style="margin:0 0 0 5px; font-size:11px; font-weight:normal; cursor:pointer;" title="Select All Add in Group"><input type="checkbox" class="select_group_col" data-group="<?php echo $value->id; ?>" data-column="can_add"> A</label>
+                                                        <label style="margin:0 0 0 5px; font-size:11px; font-weight:normal; cursor:pointer;" title="Select All Edit in Group"><input type="checkbox" class="select_group_col" data-group="<?php echo $value->id; ?>" data-column="can_edit"> E</label>
+                                                        <label style="margin:0 0 0 5px; font-size:11px; font-weight:normal; cursor:pointer;" title="Select All Delete in Group"><input type="checkbox" class="select_group_col" data-group="<?php echo $value->id; ?>" data-column="can_delete"> D</label>
+                                                    </div>
+                                                </th>
                                                 <?php
                                                 if (!empty($value->permission_category)) {
                                                 ?>
@@ -51,7 +58,7 @@
                                                         if ($value->permission_category[0]->enable_view == 1) {
                                                         ?>
                                                             <label class="">
-                                                                <input class="permission_chk" data-action="can_view" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $value->permission_category[0]->id ?>" type="checkbox" name="<?php echo "can_view-perm_" . $value->permission_category[0]->id; ?>" value="1" <?php echo set_checkbox("can_view-perm_" . $value->permission_category[0]->id, $value->permission_category[0]->id, ($value->permission_category[0]->can_view == 1) ? true : false); ?>>
+                                                                <input class="permission_chk group_<?php echo $value->id; ?>" data-action="can_view" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $value->permission_category[0]->id ?>" type="checkbox" name="<?php echo "can_view-perm_" . $value->permission_category[0]->id; ?>" value="1" <?php echo set_checkbox("can_view-perm_" . $value->permission_category[0]->id, $value->permission_category[0]->id, ($value->permission_category[0]->can_view == 1) ? true : false); ?>>
                                                             </label>
                                                         <?php
                                                         }
@@ -62,7 +69,7 @@
                                                         if ($value->permission_category[0]->enable_add == 1) {
                                                         ?>
                                                             <label class="">
-                                                                <input class="permission_chk" data-action="can_add" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $value->permission_category[0]->id ?>" type="checkbox" name="<?php echo "can_add-perm_" . $value->permission_category[0]->id; ?>" value="1" <?php echo set_checkbox("can_add-perm_" . $value->permission_category[0]->id, $value->permission_category[0]->id, ($value->permission_category[0]->can_add == 1) ? true : false); ?>>
+                                                                <input class="permission_chk group_<?php echo $value->id; ?>" data-action="can_add" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $value->permission_category[0]->id ?>" type="checkbox" name="<?php echo "can_add-perm_" . $value->permission_category[0]->id; ?>" value="1" <?php echo set_checkbox("can_add-perm_" . $value->permission_category[0]->id, $value->permission_category[0]->id, ($value->permission_category[0]->can_add == 1) ? true : false); ?>>
                                                             </label>
                                                         <?php
                                                         }
@@ -73,7 +80,7 @@
                                                         if ($value->permission_category[0]->enable_edit == 1) {
                                                         ?>
                                                             <label class="">
-                                                                <input class="permission_chk" data-action="can_edit" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $value->permission_category[0]->id ?>" type="checkbox" name="<?php echo "can_edit-perm_" . $value->permission_category[0]->id; ?>" value="1" <?php echo set_checkbox("can_edit-perm_" . $value->permission_category[0]->id, $value->permission_category[0]->id, ($value->permission_category[0]->can_edit == 1) ? true : false); ?>>
+                                                                <input class="permission_chk group_<?php echo $value->id; ?>" data-action="can_edit" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $value->permission_category[0]->id ?>" type="checkbox" name="<?php echo "can_edit-perm_" . $value->permission_category[0]->id; ?>" value="1" <?php echo set_checkbox("can_edit-perm_" . $value->permission_category[0]->id, $value->permission_category[0]->id, ($value->permission_category[0]->can_edit == 1) ? true : false); ?>>
                                                             </label>
                                                         <?php
                                                         }
@@ -84,7 +91,7 @@
                                                         if ($value->permission_category[0]->enable_delete == 1) {
                                                         ?>
                                                             <label class="">
-                                                                <input class="permission_chk" data-action="can_delete" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $value->permission_category[0]->id ?>" type="checkbox" name="<?php echo "can_delete-perm_" . $value->permission_category[0]->id; ?>" value="1" <?php echo set_checkbox("can_delete-perm_" . $value->permission_category[0]->id, $value->permission_category[0]->id, ($value->permission_category[0]->can_delete == 1) ? true : false); ?>>
+                                                                <input class="permission_chk group_<?php echo $value->id; ?>" data-action="can_delete" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $value->permission_category[0]->id ?>" type="checkbox" name="<?php echo "can_delete-perm_" . $value->permission_category[0]->id; ?>" value="1" <?php echo set_checkbox("can_delete-perm_" . $value->permission_category[0]->id, $value->permission_category[0]->id, ($value->permission_category[0]->can_delete == 1) ? true : false); ?>>
                                                             </label>
                                                         <?php
                                                         }
@@ -115,7 +122,7 @@
                                                             if ($new_feature_value->enable_view == 1) {
                                                             ?>
                                                                 <label class="">
-                                                                    <input class="permission_chk" data-action="can_view" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $new_feature_value->id ?>" type="checkbox" name="<?php echo "can_view-perm_" . $new_feature_value->id; ?>" value="<?php echo $new_feature_value->id; ?>" <?php echo set_checkbox("can_view-perm_" . $new_feature_value->id, $new_feature_value->id, ($new_feature_value->can_view == 1) ? true : false); ?>>
+                                                                    <input class="permission_chk group_<?php echo $value->id; ?>" data-action="can_view" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $new_feature_value->id ?>" type="checkbox" name="<?php echo "can_view-perm_" . $new_feature_value->id; ?>" value="<?php echo $new_feature_value->id; ?>" <?php echo set_checkbox("can_view-perm_" . $new_feature_value->id, $new_feature_value->id, ($new_feature_value->can_view == 1) ? true : false); ?>>
                                                                 </label>
                                                             <?php
                                                             }
@@ -126,7 +133,7 @@
                                                             if ($new_feature_value->enable_add == 1) {
                                                             ?>
                                                                 <label class="">
-                                                                    <input class="permission_chk" data-action="can_add" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $new_feature_value->id ?>" type="checkbox" name="<?php echo "can_add-perm_" . $new_feature_value->id; ?>" value="<?php echo $new_feature_value->id; ?>" <?php echo set_checkbox("can_add-perm_" . $new_feature_value->id, $new_feature_value->id, ($new_feature_value->can_add == 1) ? true : false); ?>>
+                                                                    <input class="permission_chk group_<?php echo $value->id; ?>" data-action="can_add" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $new_feature_value->id ?>" type="checkbox" name="<?php echo "can_add-perm_" . $new_feature_value->id; ?>" value="<?php echo $new_feature_value->id; ?>" <?php echo set_checkbox("can_add-perm_" . $new_feature_value->id, $new_feature_value->id, ($new_feature_value->can_add == 1) ? true : false); ?>>
                                                                 </label>
                                                             <?php
                                                             }
@@ -137,7 +144,7 @@
                                                             if ($new_feature_value->enable_edit == 1) {
                                                             ?>
                                                                 <label class="">
-                                                                    <input class="permission_chk" data-action="can_edit" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $new_feature_value->id ?>" type="checkbox" name="<?php echo "can_edit-perm_" . $new_feature_value->id; ?>" value="<?php echo $new_feature_value->id; ?>" <?php echo set_checkbox("can_edit-perm_" . $new_feature_value->id, $new_feature_value->id, ($new_feature_value->can_edit == 1) ? true : false); ?>>
+                                                                    <input class="permission_chk group_<?php echo $value->id; ?>" data-action="can_edit" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $new_feature_value->id ?>" type="checkbox" name="<?php echo "can_edit-perm_" . $new_feature_value->id; ?>" value="<?php echo $new_feature_value->id; ?>" <?php echo set_checkbox("can_edit-perm_" . $new_feature_value->id, $new_feature_value->id, ($new_feature_value->can_edit == 1) ? true : false); ?>>
                                                                 </label>
                                                             <?php
                                                             }
@@ -148,7 +155,7 @@
                                                             if ($new_feature_value->enable_delete == 1) {
                                                             ?>
                                                                 <label class="">
-                                                                    <input class="permission_chk" data-action="can_delete" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $new_feature_value->id ?>" type="checkbox" name="<?php echo "can_delete-perm_" . $new_feature_value->id; ?>" value="<?php echo $new_feature_value->id; ?>" <?php echo set_checkbox("can_delete-perm_" . $new_feature_value->id, $new_feature_value->id, ($new_feature_value->can_delete == 1) ? true : false); ?>>
+                                                                    <input class="permission_chk group_<?php echo $value->id; ?>" data-action="can_delete" data-role_id="<?php echo $role['id'] ?>" data-per_cat="<?php echo $new_feature_value->id ?>" type="checkbox" name="<?php echo "can_delete-perm_" . $new_feature_value->id; ?>" value="<?php echo $new_feature_value->id; ?>" <?php echo set_checkbox("can_delete-perm_" . $new_feature_value->id, $new_feature_value->id, ($new_feature_value->can_delete == 1) ? true : false); ?>>
                                                                 </label>
                                                             <?php
                                                             }
@@ -252,6 +259,170 @@
     })(jQuery);
 
     $(document).ready(function() {
+
+        $(document).on('change', '#select_all_global', function() {
+            var is_checked = $(this).is(':checked');
+            $('.select_group').prop('checked', is_checked);
+            
+            var updates = [];
+            $('.permission_chk').each(function() {
+                if ($(this).is(':checked') !== is_checked) {
+                    $(this).prop('checked', is_checked);
+                    updates.push({
+                        action: $(this).data('action'),
+                        per_cat: $(this).data('per_cat'),
+                        role_id: $(this).data('role_id'),
+                        add_remove: is_checked ? 1 : 0
+                    });
+                }
+            });
+            
+            if (updates.length > 0) {
+                sendBulkUpdates(updates);
+            }
+            syncCheckboxes();
+        });
+
+        $(document).on('change', '.select_group', function() {
+            var is_checked = $(this).is(':checked');
+            var group_id = $(this).data('group');
+            
+            // visually sync the V A E D checkboxes
+            $('.select_group_col[data-group="'+group_id+'"]').prop('checked', is_checked);
+
+            var updates = [];
+            $('.group_' + group_id).each(function() {
+                if ($(this).is(':checked') !== is_checked) {
+                    $(this).prop('checked', is_checked);
+                    updates.push({
+                        action: $(this).data('action'),
+                        per_cat: $(this).data('per_cat'),
+                        role_id: $(this).data('role_id'),
+                        add_remove: is_checked ? 1 : 0
+                    });
+                }
+            });
+            
+            if (updates.length > 0) {
+                sendBulkUpdates(updates);
+            }
+            syncCheckboxes();
+        });
+
+        $(document).on('change', '.select_group_col', function() {
+            var is_checked = $(this).is(':checked');
+            var group_id = $(this).data('group');
+            var column_action = $(this).data('column');
+            
+            var updates = [];
+            $('.group_' + group_id + '[data-action="' + column_action + '"]').each(function() {
+                if ($(this).is(':checked') !== is_checked) {
+                    $(this).prop('checked', is_checked);
+                    updates.push({
+                        action: $(this).data('action'),
+                        per_cat: $(this).data('per_cat'),
+                        role_id: $(this).data('role_id'),
+                        add_remove: is_checked ? 1 : 0
+                    });
+                }
+            });
+            
+            if (updates.length > 0) {
+                sendBulkUpdates(updates);
+            }
+            syncCheckboxes();
+        });
+
+        $(document).on('change', '.select_column', function() {
+            var is_checked = $(this).is(':checked');
+            var column_action = $(this).data('column');
+            
+            var updates = [];
+            $('.permission_chk[data-action="' + column_action + '"]').each(function() {
+                if ($(this).is(':checked') !== is_checked) {
+                    $(this).prop('checked', is_checked);
+                    updates.push({
+                        action: $(this).data('action'),
+                        per_cat: $(this).data('per_cat'),
+                        role_id: $(this).data('role_id'),
+                        add_remove: is_checked ? 1 : 0
+                    });
+                }
+            });
+            
+            if (updates.length > 0) {
+                sendBulkUpdates(updates);
+            }
+            syncCheckboxes();
+        });
+
+        function sendBulkUpdates(updates) {
+            $.ajax({
+                type: "POST",
+                url: base_url + "admin/roles/savebulk",
+                data: { updates: updates },
+                dataType: "json",
+                beforeSend: function() {
+                    $('.modal_loader_div').css("display", "block");
+                },
+                success: function(data) {
+                    if (data.status == 0) {
+                        errorMsg(data.error);
+                    } else {
+                        successMsg(data.message);
+                    }
+                    $('.modal_loader_div').fadeOut(400);
+                },
+                error: function(xhr) {
+                    alert("<?php echo $this->lang->line('error_occured_please_try_again'); ?>");
+                    $('.modal_loader_div').fadeOut(400);
+                }
+            });
+        }
+
+        function syncCheckboxes() {
+            // Sync Group Columns (V A E D)
+            $('.select_group_col').each(function() {
+                var group_id = $(this).data('group');
+                var column_action = $(this).data('column');
+                var chks = $('.group_' + group_id + '[data-action="' + column_action + '"]');
+                if(chks.length > 0) {
+                    var all_checked = chks.length === chks.filter(':checked').length;
+                    $(this).prop('checked', all_checked);
+                }
+            });
+            
+            // Sync Group All
+            $('.select_group').each(function() {
+                var group_id = $(this).data('group');
+                var chks = $('.group_' + group_id);
+                if(chks.length > 0) {
+                    var all_checked = chks.length === chks.filter(':checked').length;
+                    $(this).prop('checked', all_checked);
+                }
+            });
+
+            // Sync Column All
+            $('.select_column').each(function() {
+                var column_action = $(this).data('column');
+                var chks = $('.permission_chk[data-action="' + column_action + '"]');
+                if(chks.length > 0) {
+                    var all_checked = chks.length === chks.filter(':checked').length;
+                    $(this).prop('checked', all_checked);
+                }
+            });
+
+            // Sync Global All
+            var all_chks = $('.permission_chk');
+            if(all_chks.length > 0) {
+                var all_checked = all_chks.length === all_chks.filter(':checked').length;
+                $('#select_all_global').prop('checked', all_checked);
+            }
+        }
+
+        // Initial sync on page load
+        syncCheckboxes();
+
         $(document).on('change', '.permission_chk', function() {
        let add_remove=0;
             if ($(this).is(':checked')) {
@@ -260,6 +431,7 @@
                 
                 add_remove=0;
             }
+            syncCheckboxes();
 
             $.ajax({
                 type: "POST",

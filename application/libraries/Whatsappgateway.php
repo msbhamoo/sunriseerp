@@ -9,6 +9,7 @@ class Whatsappgateway
     private $CI;
     private $api_url = "http://202.143.97.65/smppv/production/api_page/wa/send_message.php";
     private $auth_key = "";
+    private $sent_messages = array();
 
     public function __construct()
     {
@@ -23,11 +24,26 @@ class Whatsappgateway
         }
     }
 
-    private function _sendWhatsapp($mobile, $message_text)
+    private function _sendWhatsapp($mobile, $message_text, $detail = null)
     {
+        if (empty($mobile) && !empty($detail)) {
+            if (is_array($detail)) {
+                $mobile = !empty($detail['mobileno']) ? $detail['mobileno'] : (!empty($detail['guardian_phone']) ? $detail['guardian_phone'] : (!empty($detail['father_phone']) ? $detail['father_phone'] : (!empty($detail['mother_phone']) ? $detail['mother_phone'] : '')));
+            } else if (is_object($detail)) {
+                $mobile = !empty($detail->mobileno) ? $detail->mobileno : (!empty($detail->guardian_phone) ? $detail->guardian_phone : (!empty($detail->father_phone) ? $detail->father_phone : (!empty($detail->mother_phone) ? $detail->mother_phone : '')));
+            }
+        }
+
         if (empty($this->auth_key) || empty($mobile) || empty($message_text)) {
+            file_put_contents('whatsapp_debug.log', "Early exit in _sendWhatsapp. auth_key_empty=" . empty($this->auth_key) . ", mobile=" . $mobile . ", message_text length=" . strlen($message_text) . "\n", FILE_APPEND);
             return false;
         }
+
+        $msg_hash = md5($mobile . $message_text);
+        if (isset($this->sent_messages[$msg_hash])) {
+            return true;
+        }
+        $this->sent_messages[$msg_hash] = true;
 
         // Format mobile: ensuring 10 digits or 12 digits (91XXXXXXXXXX)
         $mobile = preg_replace('/[^0-9]/', '', $mobile);
@@ -80,73 +96,73 @@ class Whatsappgateway
     public function sentAddGroupFeeWhatsapp($detail, $send_to, $template, $template_id)
     {
         $content = $this->CI->smsgateway->getGroupAddFeeContent($detail, $template, null);
-        return $this->_sendWhatsapp($send_to, $content);
+        return $this->_sendWhatsapp($send_to, $content, $detail);
     }
 
     public function sentAddFeeWhatsapp($detail, $send_to, $template, $template_id)
     {
         $content = $this->CI->smsgateway->getAddFeeContent($detail, $template, null);
-        return $this->_sendWhatsapp($send_to, $content);
+        return $this->_sendWhatsapp($send_to, $content, $detail);
     }
 
     public function sentFeeProcessingNotification($detail, $send_to, $template, $template_id)
     {
         $content = $this->CI->smsgateway->getFeeProcessingContent($detail, $template, null);
-        return $this->_sendWhatsapp($send_to, $content);
+        return $this->_sendWhatsapp($send_to, $content, $detail);
     }
 
     public function sentfeesreminderNotification($detail, $send_to, $template, $template_id)
     {
         $content = $this->CI->smsgateway->getContent($detail, $template, null);
-        return $this->_sendWhatsapp($send_to, $content);
+        return $this->_sendWhatsapp($send_to, $content, $detail);
     }
 
     public function sendStudentLoginCredential($chk_mail_sms, $sender_details, $template, $template_id)
     {
         $content = $this->CI->smsgateway->getLoginCredentialContent($chk_mail_sms['student_recipient'], $sender_details, $template, null);
-        return $this->_sendWhatsapp($sender_details['mobileno'], $content);
+        return $this->_sendWhatsapp($sender_details['mobileno'], $content, $sender_details);
     }
 
     public function sendStaffLoginCredential($chk_mail_sms, $sender_details, $template, $template_id)
     {
         $content = $this->CI->smsgateway->getLoginCredentialContent($chk_mail_sms['staff_recipient'], $sender_details, $template, null);
-        return $this->_sendWhatsapp($sender_details['contact_no'], $content);
+        return $this->_sendWhatsapp($sender_details['contact_no'], $content, $sender_details);
     }
 
     public function student_apply_leave($sender_details, $template, $template_id)
     {
         $content = $this->CI->smsgateway->getstudent_apply_leaveContent($sender_details, $template, null);
-        return $this->_sendWhatsapp($sender_details['mobileno'], $content); // Assuming mobileno
+        return $this->_sendWhatsapp($sender_details['mobileno'], $content, $sender_details); // Assuming mobileno
     }
 
     public function sentExamResultWhatsapp($detail, $template, $template_id)
     {
         $content = $this->CI->smsgateway->getStudentResultContent($detail, $template, null);
-        return $this->_sendWhatsapp($detail['mobileno'], $content);
+        return $this->_sendWhatsapp($detail['mobileno'], $content, $detail);
     }
 
     public function sendPresentAttendancenotification($detail, $template, $template_id, $send_to)
     {
         $content = $this->CI->smsgateway->getPresentStudentContent($detail, $template, null);
-        return $this->_sendWhatsapp($send_to, $content);
+        return $this->_sendWhatsapp($send_to, $content, $detail);
     }
 
     public function sentPresentStaffWhatsapp($detail, $template, $template_id)
     {
         $content = $this->CI->smsgateway->getPresentStaffContent($detail, $template, null);
-        return $this->_sendWhatsapp($detail['contact_no'], $content);
+        return $this->_sendWhatsapp($detail['contact_no'], $content, $detail);
     }
 
     public function sentAbsentStaffWhatsapp($detail, $template, $template_id)
     {
         $content = $this->CI->smsgateway->getAbsentStaffContent($detail, $template, null);
-        return $this->_sendWhatsapp($detail['contact_no'], $content);
+        return $this->_sendWhatsapp($detail['contact_no'], $content, $detail);
     }
 
     public function sendAbsentAttendancenotification($detail, $template, $template_id, $send_to)
     {
         $content = $this->CI->smsgateway->getAbsentStudentContent($detail, $template, null);
-        return $this->_sendWhatsapp($send_to, $content);
+        return $this->_sendWhatsapp($send_to, $content, $detail);
     }
 
     public function sendstudentlhomework($student_sms_list, $template, $template_id)
@@ -154,7 +170,7 @@ class Whatsappgateway
         if(!empty($student_sms_list)){
             foreach($student_sms_list as $student){
                 $content = $this->CI->smsgateway->getHomeworkStudentContent($student, $template, null);
-                $this->_sendWhatsapp($student['mobileno'], $content);
+                $this->_sendWhatsapp($student['mobileno'], $content, $student);
             }
         }
         return true;
@@ -165,7 +181,7 @@ class Whatsappgateway
         if(!empty($student_sms_list)){
             foreach($student_sms_list as $student){
                 $content = $this->CI->smsgateway->getOnlineexamStudentContent($student, $template, null);
-                $this->_sendWhatsapp($student['mobileno'], $content);
+                $this->_sendWhatsapp($student['mobileno'], $content, $student);
             }
         }
         return true;
@@ -174,13 +190,13 @@ class Whatsappgateway
     public function sendOnlineadmissionformsubmit($student_details, $template, $send_to, $template_id)
     {
         $content = $this->CI->smsgateway->getOnlineadmissionStudentContent($student_details, $template);
-        return $this->_sendWhatsapp($send_to, $content);
+        return $this->_sendWhatsapp($send_to, $content, $student_details);
     }
 
     public function sentstudentOnlineadmissionFeessubmissionWhatsapp($student_details, $template, $send_to, $template_id)
     {
         $content = $this->CI->smsgateway->getOnlineadmissionFeesContent($student_details, $template, null);
-        return $this->_sendWhatsapp($send_to, $content);
+        return $this->_sendWhatsapp($send_to, $content, $student_details);
     }
 
     public function sendDynamicWhatsapp($mobile, $message_text)

@@ -58,10 +58,11 @@
     }
     .action-btn:hover { transform: translateY(-2px); box-shadow: 0 3px 6px rgba(0,0,0,0.15); color: #fff; }
     .btn-call { background: #3b82f6; }
-    .btn-sms { background: #8b5cf6; }
-    .btn-email { background: #10b981; }
+    .btn-sms { background: #8b5cf6; display: none; }
+    .btn-email { background: #10b981; display: none; }
     .btn-edit { background: #f59e0b; }
     .btn-history { background: #64748b; }
+    .btn-whatsapp { background: #25D366; }
     
     .table>thead>tr>th {
         border-bottom: 2px solid #eaeaea;
@@ -179,8 +180,11 @@
                                                         <?php if ($contact) { ?>
                                                             <a href="tel:<?php echo $contact; ?>" class="action-btn btn-call" data-toggle="tooltip" title="<?php echo $this->lang->line('call'); ?>" onclick="logAction(<?php echo $student['student_session_id']; ?>, 'Call')"><i class="fa fa-phone"></i></a>
                                                         <?php } ?>
-                                                        <button class="action-btn btn-sms" data-toggle="tooltip" title="SMS" onclick="logAction(<?php echo $student['student_session_id']; ?>, 'SMS')"><i class="fa fa-comment-o"></i></button>
-                                                        <button class="action-btn btn-email" data-toggle="tooltip" title="Email" onclick="logAction(<?php echo $student['student_session_id']; ?>, 'Email')"><i class="fa fa-envelope-o"></i></button>
+                                                        <!-- <button class="action-btn btn-sms" data-toggle="tooltip" title="SMS" onclick="logAction(<?php echo $student['student_session_id']; ?>, 'SMS')"><i class="fa fa-comment-o"></i></button> -->
+                                                        <!-- <button class="action-btn btn-email" data-toggle="tooltip" title="Email" onclick="logAction(<?php echo $student['student_session_id']; ?>, 'Email')"><i class="fa fa-envelope-o"></i></button> -->
+                                                        <?php if ($student['attendence_type_id'] == 4) { ?>
+                                                            <button class="action-btn btn-whatsapp" data-toggle="tooltip" title="WhatsApp" onclick="logAction(<?php echo $student['student_session_id']; ?>, 'WhatsApp')"><i class="fa fa-whatsapp"></i></button>
+                                                        <?php } ?>
                                                         <button class="action-btn btn-edit" data-toggle="tooltip" title="<?php echo $this->lang->line('status_update'); ?>" onclick="openStatusModal(<?php echo $student['student_session_id']; ?>)"><i class="fa fa-pencil"></i></button>
                                                         <button class="action-btn btn-history" data-toggle="tooltip" title="<?php echo $this->lang->line('history'); ?>" onclick="openHistoryModal(<?php echo $student['student_session_id']; ?>)"><i class="fa fa-history"></i></button>
                                                     </td>
@@ -223,6 +227,7 @@
                             <option value="Wrong Number"><?php echo $this->lang->line('wrong_number'); ?></option>
                             <option value="SMS Sent"><?php echo $this->lang->line('sms_sent'); ?></option>
                             <option value="Email Sent"><?php echo $this->lang->line('email_sent'); ?></option>
+                            <option value="WhatsApp Sent">WhatsApp Sent</option>
                             <option value="Informed"><?php echo $this->lang->line('informed'); ?></option>
                             <option value="Pending"><?php echo $this->lang->line('pending'); ?></option>
                         </select>

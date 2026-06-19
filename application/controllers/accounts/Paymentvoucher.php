@@ -220,7 +220,7 @@ class Paymentvoucher extends MY_Addon_AccountsController
                 }
                 $details .= "<br><small class='text-muted' style='font-size:11px; font-weight:500;'><strong style='color:#dc2626;'>" . htmlspecialchars($cr_names) . "</strong> &rarr; <strong style='color:#10b981;'>" . htmlspecialchars($dr_names) . "</strong></small>";
 
-                $more_info = "<strong>Mode:</strong> " . htmlspecialchars(strtoupper($pm)) . "<br>";
+                $more_info = htmlspecialchars(strtoupper($pm)) . "<br>";
                 if (!empty($value->cheque_no)) {
                     $more_info .= "<strong>Ref:</strong> " . htmlspecialchars($value->cheque_no);
                 } elseif (!empty($value->upi_transaction_id)) {
@@ -244,7 +244,7 @@ class Paymentvoucher extends MY_Addon_AccountsController
                     $row[] = '';
                 }
                 $row[] = htmlspecialchars($exp_names);
-                $row[] = $currency_symbol . amountFormat($value->total_amount);
+                $row[] = amountFormat($value->total_amount);
                 $row[] = $more_info;
                 $row[] = $narration_text;
                 $row[] = $action;

@@ -140,6 +140,27 @@ class Roles extends Admin_Controller
         }
     }
 
+    public function savebulk()
+    {
+        $updates = $this->input->post('updates');
+        if (!empty($updates) && is_array($updates)) {
+            foreach ($updates as $update) {
+                $update_array = [
+                    'action' => $update['action'],
+                    'perm_cat_id' => $update['per_cat'],
+                    'role_id' => $update['role_id'],
+                    'value' => $update['add_remove']
+                ];
+                $this->role_model->updatePermission($update_array);
+            }
+            $array = array('status' => 1, 'error' => '', 'message' => $this->lang->line('permission_updated_successfully'));
+            echo json_encode($array);
+        } else {
+            $array = array('status' => 0, 'error' => 'No data');
+            echo json_encode($array);
+        }
+    }
+
     public function edit($id)
     {
         if (!$this->rbac->hasPrivilege('superadmin', 'can_view')) {
