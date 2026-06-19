@@ -28,7 +28,7 @@
                                         <th><?php echo $this->lang->line('recipient'); ?></th>
                                         <th><?php echo $this->lang->line('template_id'); ?></th> 
 										
-										<?php if ($this->module_lib->hasModule('whatsapp_messaging') && $this->module_lib->hasActive('whatsapp_messaging')) { ?>
+										<?php if (true) { ?>
                                         <th><?php echo $this->lang->line('whatsapp_template_id'); ?></th>
 										<?php } ?>
 										
@@ -78,7 +78,7 @@ if ($note_value->display_sms) {
     ?>
 									<br>
 									
-									<?php if ($this->module_lib->hasModule('whatsapp_messaging') && $this->module_lib->hasActive('whatsapp_messaging')) { ?>
+									<?php if (true) { ?>
 	<?php if ($note_value->display_whatsapp) {
         ?>
                                                         <label class="checkbox-inline">
@@ -123,7 +123,7 @@ if (!empty($note_value)) {
         echo $note_value->template_id;
     }
     ?></td>
-	<?php if ($this->module_lib->hasModule('whatsapp_messaging') && $this->module_lib->hasActive('whatsapp_messaging')) { ?>
+	<?php if (true) { ?>
 	<td width="10%"> <?php
 if (!empty($note_value)) {
         echo $note_value->whatsapp_template_id;

@@ -27,7 +27,7 @@ class Mailsmsconf
         $this->CI->load->model('studentsession_model');
         $this->CI->load->model('student_model');
         $this->CI->load->model('apply_leave_model');
-        // $this->CI->load->model('whatsappconfig_model');
+        $this->CI->load->model('whatsappconfig_model');
         $this->config_mailsms = $this->CI->config->item('mailsms');
         $this->sch_setting    = $this->CI->setting_model->getSetting();
     }
@@ -38,7 +38,7 @@ class Mailsmsconf
         $send_for        = $this->config_mailsms[$send_for];
         $chk_mail_sms    = $this->CI->customlib->sendMailSMS($send_for);
         $sms_detail      = $this->CI->smsconfig_model->getActiveSMS();
-        // $whatsapp_detail      = $this->CI->whatsappconfig_model->getActiveWhatsApp();
+        $whatsapp_detail      = $this->CI->whatsappconfig_model->getActiveWhatsApp();
 		
 		
         $emails          = array();
