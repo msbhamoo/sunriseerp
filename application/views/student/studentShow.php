@@ -1429,10 +1429,60 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                         <!------- Behaviour Report End-------->
 
                         
-						
+                        <?php if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) { ?>
+                            <li class=""><a href="#call_log" data-toggle="tab" aria-expanded="true"><?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Call Log'); ?></a></li>
+                        <?php } ?>
                     </ul>
 
                     <div class="tab-content">
+                        <div class="tab-pane" id="call_log">
+                            <div class="sp2-card">
+                                <div class="sp2-section-title"><i class="fa fa-phone"></i> <?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Call Log'); ?></div>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered table-hover example" cellspacing="0" width="100%">
+                                        <thead>
+                                            <tr>
+                                                <th><?php echo $this->lang->line('call_type'); ?></th>
+                                                <th><?php echo $this->lang->line('purpose'); ?></th>
+                                                <th><?php echo ($this->lang->line('contact_person') ? $this->lang->line('contact_person') : 'Contact Person'); ?></th>
+                                                <th><?php echo $this->lang->line('phone'); ?></th>
+                                                <th><?php echo $this->lang->line('status'); ?></th>
+                                                <th><?php echo $this->lang->line('date'); ?></th>
+                                                <th><?php echo ($this->lang->line('next_follow_up_date') ? $this->lang->line('next_follow_up_date') : 'Next Follow Up'); ?></th>
+                                                <th><?php echo $this->lang->line('note'); ?></th>
+                                                <th><?php echo $this->lang->line('created_by'); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php 
+                                            $CI =& get_instance();
+                                            $CI->load->model('studentcall_model');
+                                            $stu_calls = $CI->studentcall_model->get_calls_by_student($student['student_session_id']);
+                                            if (!empty($stu_calls)) {
+                                                foreach ($stu_calls as $c) { ?>
+                                                    <tr>
+                                                        <td><?php echo $c['call_type']; ?></td>
+                                                        <td><?php echo $c['purpose_name']; ?></td>
+                                                        <td><?php echo $c['contact_person']; ?></td>
+                                                        <td><?php echo $c['phone_number']; ?></td>
+                                                        <td><?php echo $c['call_status']; ?></td>
+                                                        <td><?php echo date($this->customlib->getSchoolDateFormat(true, true), strtotime($c['date'])); ?></td>
+                                                        <td><?php 
+                                                            $stu_fws = $CI->studentcall_model->get_followups_by_call($c['id']);
+                                                            if(!empty($stu_fws) && isset($stu_fws[0]['due_date']) && $stu_fws[0]['status']=='Pending') {
+                                                                echo date($this->customlib->getSchoolDateFormat(), strtotime($stu_fws[0]['due_date']));
+                                                            }
+                                                        ?></td>
+                                                        <td><?php echo $c['notes']; ?></td>
+                                                        <td><?php echo $c['staff_name'] . " " . $c['staff_surname']; ?></td>
+                                                    </tr>
+                                                <?php }
+                                            } ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                         <div class="tab-pane active" id="activity">
                             <div class="row">
                                 <div class="col-md-6 col-sm-12">

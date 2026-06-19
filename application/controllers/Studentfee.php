@@ -1654,4 +1654,53 @@ class Studentfee extends Admin_Controller
         );
         return $new_student;
     }
+
+    public function printFeesCertificate()
+    {
+        if (!$this->rbac->hasPrivilege('collect_fees', 'can_view')) {
+            access_denied();
+        }
+
+        $student_session_id = $this->input->post('student_session_id');
+        $student = $this->student_model->getByStudentSession($student_session_id);
+        
+        $total_paid = 0;
+        $fees = $this->studentfeemaster_model->getStudentFees($student_session_id);
+        if (!empty($fees)) {
+            foreach ($fees as $fee_key => $fee) {
+                if (!empty($fee->fees)) {
+                    foreach ($fee->fees as $fee_value) {
+                        if (!empty($fee_value->amount_detail)) {
+                            $fee_deposits = json_decode($fee_value->amount_detail);
+                            foreach ($fee_deposits as $fee_deposits_value) {
+                                $total_paid += $fee_deposits_value->amount;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Also add transport fees if they exist
+        $transport_fees = $this->studentfeemaster_model->getStudentTransportFees($student_session_id, $student['route_pickup_point_id']);
+        if (!empty($transport_fees)) {
+            foreach ($transport_fees as $transport_fee_value) {
+                if (!empty($transport_fee_value->amount_detail)) {
+                    $fee_deposits = json_decode($transport_fee_value->amount_detail);
+                    foreach ($fee_deposits as $fee_deposits_value) {
+                        $total_paid += $fee_deposits_value->amount;
+                    }
+                }
+            }
+        }
+
+        $data['student'] = $student;
+        $data['total_paid'] = $total_paid;
+        $data['settinglist'] = $this->setting_model->get();
+        $current_session_id = $this->setting_model->getCurrentSession();
+        $data['current_session'] = $this->db->get_where('sessions', ['id' => $current_session_id])->row_array();
+        
+        $page = $this->load->view('print/printFeesCertificate', $data, true);
+        echo $page;
+    }
 }

@@ -264,6 +264,9 @@ foreach ($studentlistbysection as $stkey => $stvalue) {
                             </div>
                             <div class="col-md-8">
                                 <div class="btn-group pull-right">
+                                    <button type="button" class="btn btn-success btn-xs" onclick="printFeesCertificate('<?php echo $student['student_session_id']; ?>')" style="margin-right: 5px;">
+                                        <i class="fa fa-certificate"></i> Fees Certificate
+                                    </button>
                                     <a href="<?php echo base_url() ?>studentfee" type="button" class="btn btn-primary btn-xs">
                                         <i class="fa fa-arrow-left"></i> <?php echo $this->lang->line('back'); ?></a>
                                 </div>
@@ -1913,7 +1916,19 @@ function printReceiptCopies(mode = 'both') {
     
     // Restore visibility in modal just in case
     $('.receipt-copy.office-copy').show();
-    $('.receipt-copy.receiver-copy').show();
+}
+</script>
+
+<script type="text/javascript">
+function printFeesCertificate(student_session_id) {
+    $.ajax({
+        url: baseurl + 'studentfee/printFeesCertificate',
+        type: 'POST',
+        data: { 'student_session_id': student_session_id },
+        success: function (res) {
+            Popup(res);
+        }
+    });
 }
 </script>
 

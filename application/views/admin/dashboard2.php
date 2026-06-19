@@ -305,6 +305,69 @@
             <?php endif; ?>
         </div>
 
+        <?php if($this->rbac->hasPrivilege('student_call_log', 'can_view')): ?>
+        <div class="row">
+            <?php 
+                $CI =& get_instance();
+                $CI->load->model('studentcall_model');
+                $staff_id = $CI->customlib->getUserData()["id"];
+                $pending_fw = $CI->studentcall_model->get_pending_followups_by_staff($staff_id);
+                $call_stats = $CI->studentcall_model->get_call_statistics($staff_id);
+            ?>
+            <div class="col-md-6">
+                <div class="d2-card" style="height:100%;">
+                    <div class="d2-title" style="color:#d8456a;">My Pending Call Follow-ups</div>
+                    <?php if(!empty($pending_fw)): ?>
+                        <ul style="list-style:none; padding:0; margin:0; max-height:200px; overflow-y:auto;">
+                        <?php foreach($pending_fw as $fw): ?>
+                            <li style="margin-bottom:15px; border-bottom:1px solid #fbe0e8; padding-bottom:10px;">
+                                <div style="font-weight:600; font-size:14px; color:#222;">
+                                    <?php echo $fw['firstname'] . ' ' . $fw['lastname'] . ' (' . $fw['admission_no'] . ')'; ?>
+                                </div>
+                                <div style="font-size:12px; color:#d8456a; margin-top:3px; font-weight:600;">
+                                    <i class="fa fa-calendar"></i> Due: <?php echo date('d M Y', strtotime($fw['due_date'])); ?> 
+                                    | <i class="fa fa-phone"></i> <?php echo $fw['phone_number']; ?> (<?php echo $fw['contact_person']; ?>)
+                                </div>
+                                <div style="font-size:12px; color:#666; margin-top:3px;">
+                                    <a href="<?php echo site_url('admin/studentcall'); ?>" class="btn btn-xs btn-primary">Go to Call Log</a>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <div style="font-size:13px; color:#888;">No pending follow-ups assigned to you.</div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="d2-card" style="height:100%;">
+                    <div class="d2-title" style="color:#007bff;">My Call Statistics</div>
+                    <div class="row">
+                        <?php 
+                        $colors = ['Connected' => 'success', 'Not Answered' => 'warning', 'Busy' => 'info', 'Switched Off' => 'danger', 'Wrong Number' => 'danger', 'Callback Requested' => 'primary'];
+                        if(!empty($call_stats)):
+                            foreach($call_stats as $st): 
+                                $clr = isset($colors[$st['call_status']]) ? $colors[$st['call_status']] : 'default';
+                        ?>
+                            <div class="col-xs-6 col-md-4" style="margin-bottom:15px;">
+                                <div style="padding:10px; background:#f4f6f9; border-radius:6px; text-align:center; border:1px solid #eaeaea;">
+                                    <div style="font-size:24px; font-weight:700; color:#333;"><?php echo $st['count']; ?></div>
+                                    <div style="font-size:11px; text-transform:uppercase; color:#666; margin-top:5px;" class="text-<?php echo $clr; ?>"><?php echo $st['call_status']; ?></div>
+                                </div>
+                            </div>
+                        <?php 
+                            endforeach; 
+                        else:
+                        ?>
+                            <div class="col-md-12"><div style="font-size:13px; color:#888;">No calls logged yet.</div></div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <div class="row">
             <!-- Top Lists -->
             <div class="col-md-4">
@@ -522,6 +585,34 @@
                         </ul>
                     <?php else: ?>
                         <div style="font-size:13px; color:#888;">No visitors logged today</div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Student Call Follow-ups -->
+            <?php if($this->rbac->hasPrivilege('student_call_log', 'can_view')): ?>
+            <div class="col-md-4">
+                <div class="d2-card" style="height:100%;">
+                    <div class="d2-title" style="color:#d946ef;">Pending Call Follow-ups</div>
+                    <?php 
+                        $CI =& get_instance();
+                        $CI->load->model('studentcall_model');
+                        $my_followups = $CI->studentcall_model->get_calls(null, null, null, null, null, 'Pending'); // simplified
+                    ?>
+                    <?php if(!empty($my_followups)): ?>
+                        <ul style="list-style:none; padding:0; margin:0;">
+                        <?php foreach(array_slice($my_followups, 0, 5) as $fw): ?>
+                            <li style="margin-bottom:15px; border-bottom:1px solid #fdf4ff; padding-bottom:10px;">
+                                <div style="font-weight:600; font-size:14px; color:#222;">
+                                    <i class="fa fa-phone"></i> <?php echo $fw['student_name']; ?> 
+                                    <span style="font-size:11px; color:#d946ef; float:right;"><?php echo date('d M', strtotime($fw['date'])); ?></span>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <div style="font-size:13px; color:#888;">No pending follow-ups</div>
                     <?php endif; ?>
                 </div>
             </div>

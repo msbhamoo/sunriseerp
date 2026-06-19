@@ -95,10 +95,22 @@ foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
 
                     }
 
-                    if ($side_list_value->lang_key == 'student_information' && $this->rbac->hasPrivilege('student_dashboard', 'can_view')) {
-                        ?>
-                        <li class="<?php echo set_Submenu('studentreport/custom_report'); ?>"><a href="<?php echo site_url('studentreport/custom_report'); ?>"><i class="icon-circle-small"></i>Custom Report</a></li>
-                        <?php
+                    if ($side_list_value->lang_key == 'student_information') {
+                        if ($this->rbac->hasPrivilege('student_dashboard', 'can_view')) {
+                            ?>
+                            <li class="<?php echo set_Submenu('studentreport/custom_report'); ?>"><a href="<?php echo site_url('studentreport/custom_report'); ?>"><i class="icon-circle-small"></i>Custom Report</a></li>
+                            <?php
+                        }
+                        if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) {
+                            ?>
+                            <li class="<?php echo set_Submenu('admin/studentcall'); ?>"><a href="<?php echo site_url('admin/studentcall'); ?>"><i class="icon-circle-small"></i>Student Call Log</a></li>
+                            <?php
+                        }
+                        if ($this->rbac->hasPrivilege('call_purpose_setup', 'can_view')) {
+                            ?>
+                            <li class="<?php echo set_Submenu('admin/callpurpose'); ?>"><a href="<?php echo site_url('admin/callpurpose'); ?>"><i class="icon-circle-small"></i>Call Purpose Setup</a></li>
+                            <?php
+                        }
                     }
 
                     ?>
