@@ -8,7 +8,7 @@ application/logs/*
 uploads/
 
 # Ignore database config if you have different local/live databases
-application/config/database.php
+
 
 # Ignore addons
 /addons/

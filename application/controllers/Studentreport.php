@@ -449,4 +449,104 @@ class Studentreport extends Admin_Controller
         $this->load->view('student/reports/total_students', $data);
         $this->load->view('layout/footer', $data);
     }
+
+    public function custom_report()
+    {
+        if (!$this->rbac->hasPrivilege('student_dashboard', 'can_view')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'Student Information');
+        $this->session->set_userdata('sub_menu', 'studentreport/custom_report');
+        $data['title'] = 'Custom Report';
+
+        $data['classlist'] = $this->class_model->get();
+        // Since Admission Type is a custom field, we'll fetch its values or let it be empty initially
+        $this->load->model('customfield_model');
+        $custom_fields = $this->customfield_model->getByBelong('students');
+        $data['custom_fields'] = $custom_fields;
+
+        if ($this->input->server('REQUEST_METHOD') === 'POST') {
+            $class_ids = $this->input->post('class_id') ? $this->input->post('class_id') : [];
+            $section_ids = $this->input->post('section_id') ? $this->input->post('section_id') : [];
+            $admission_types = $this->input->post('admission_type') ? $this->input->post('admission_type') : [];
+            $selected_columns = $this->input->post('columns') ? $this->input->post('columns') : [];
+
+            // Get students
+            $students = $this->student_model->get();
+            $results = [];
+
+            foreach ($students as $student) {
+                // Filter by Class
+                if (!empty($class_ids) && !in_array('all', $class_ids) && !in_array($student['class_id'], $class_ids)) {
+                    continue;
+                }
+                // Filter by Section
+                if (!empty($section_ids) && !in_array('all', $section_ids) && !in_array($student['section_id'], $section_ids)) {
+                    continue;
+                }
+                
+                // Fetch custom fields for student
+                $student_custom_fields = $this->customfield_model->get_custom_fields('students', $student['id']);
+                
+                // Filter by Admission Type (assuming Admission Type is a custom field)
+                if (!empty($admission_types) && !in_array('all', $admission_types)) {
+                    $has_admission_type = false;
+                    if (!empty($student_custom_fields)) {
+                        foreach ($student_custom_fields as $scf) {
+                            // Match if any custom field value is in the selected admission types
+                            if (in_array($scf->field_value, $admission_types)) {
+                                $has_admission_type = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!$has_admission_type) {
+                        continue;
+                    }
+                }
+                
+                $student['custom_fields'] = $student_custom_fields;
+                
+                // Add to results
+                $results[] = $student;
+            }
+
+            // Custom fields and fees
+            foreach ($results as &$res) {
+                // Fetch fee info
+                $this->load->model('studentfeemaster_model');
+                $student_due_fee = $this->studentfeemaster_model->getStudentFees($res['student_session_id']);
+                $total_fee = 0;
+                $total_paid = 0;
+                if (!empty($student_due_fee)) {
+                    foreach ($student_due_fee as $fee_key => $fee_value) {
+                        $total_fee += $fee_value->amount;
+                        if (is_string($fee_value->amount_detail)) {
+                            $amount_detail = json_decode($fee_value->amount_detail);
+                            if (is_array($amount_detail)) {
+                                foreach ($amount_detail as $amount_detail_val) {
+                                    $total_paid += $amount_detail_val->amount;
+                                }
+                            }
+                        }
+                    }
+                }
+                $res['total_fee'] = $total_fee;
+                $res['total_paid'] = $total_paid;
+                $res['total_balance'] = $total_fee - $total_paid;
+            }
+
+            $data['results'] = $results;
+            $data['selected_columns'] = $selected_columns;
+            $this->load->view('layout/header', $data);
+            $this->load->view('student/reports/custom_report_view', $data);
+            $this->load->view('layout/footer', $data);
+            return;
+        }
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('student/reports/custom_report', $data);
+        $this->load->view('layout/footer', $data);
+    }
 }

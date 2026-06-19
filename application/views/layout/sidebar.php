@@ -95,6 +95,12 @@ foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
 
                     }
 
+                    if ($side_list_value->lang_key == 'student_information' && $this->rbac->hasPrivilege('student_dashboard', 'can_view')) {
+                        ?>
+                        <li class="<?php echo set_Submenu('studentreport/custom_report'); ?>"><a href="<?php echo site_url('studentreport/custom_report'); ?>"><i class="icon-circle-small"></i>Custom Report</a></li>
+                        <?php
+                    }
+
                     ?>
                         </ul>
                             <?php
