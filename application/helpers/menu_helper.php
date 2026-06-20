@@ -206,6 +206,7 @@ if (!function_exists('main_menu_array')) {
                 'subject'       => array('index','edit'),                 
                 'classes'       => array('index','edit'),                 
                 'sections'      => array('index','edit'),                 
+                'substitution'  => array('index','history'),
             ), 
             
             'human_resource' => array(                   
