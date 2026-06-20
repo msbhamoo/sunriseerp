@@ -42,7 +42,7 @@ class Timetable extends Admin_Controller
 
             $class_id           = $this->input->post('class_id');
             $section_id         = $this->input->post('section_id');
-            $section_id         = $this->input->post('group_id');
+            $group_id           = $this->input->post('group_id');
             $data['class_id']   = $class_id;
             $data['section_id'] = $section_id;
             $result_subjects    = $this->teachersubject_model->getSubjectByClsandSection($class_id, $section_id);
@@ -306,11 +306,16 @@ class Timetable extends Admin_Controller
         if (isset($total_rows) && !empty($total_rows)) {
 
             foreach ($this->input->post('total_row') as $key => $value) {
-                $this->form_validation->set_rules('subject_' . $value, 'Subject', 'trim|required');
-                $this->form_validation->set_rules('staff_' . $value, 'Staff', 'trim|required');
-                $this->form_validation->set_rules('time_from_' . $value, 'Time From', 'trim|required');
-                $this->form_validation->set_rules('time_to_' . $value, 'Time To', 'trim|required');
-                $this->form_validation->set_rules('room_no_' . $value, 'Room No', 'trim|required');
+                if ($this->input->post('period_type_' . $value) == 'break') {
+                    $this->form_validation->set_rules('time_from_' . $value, 'Time From', 'trim|required');
+                    $this->form_validation->set_rules('time_to_' . $value, 'Time To', 'trim|required');
+                    $this->form_validation->set_rules('break_label_' . $value, 'Break Label', 'trim|required');
+                } else {
+                    $this->form_validation->set_rules('subject_' . $value, 'Subject', 'trim|required');
+                    $this->form_validation->set_rules('staff_' . $value, 'Staff', 'trim|required');
+                    $this->form_validation->set_rules('time_from_' . $value, 'Time From', 'trim|required');
+                    $this->form_validation->set_rules('time_to_' . $value, 'Time To', 'trim|required');
+                }
             }
         }
 
@@ -324,11 +329,16 @@ class Timetable extends Admin_Controller
             );
             if (isset($total_rows) && !empty($total_rows)) {
                 foreach ($this->input->post('total_row') as $key => $value) {
-                    $json['subject_' . $value]   = form_error('subject_' . $value, '<li>', '</li>');
-                    $json['staff_' . $value]     = form_error('staff_' . $value, '<li>', '</li>');
-                    $json['time_from_' . $value] = form_error('time_from_' . $value, '<li>', '</li>');
-                    $json['time_to_' . $value]   = form_error('time_to_' . $value, '<li>', '</li>');
-                    $json['room_no_' . $value]   = form_error('room_no_' . $value, '<li>', '</li>');
+                    if ($this->input->post('period_type_' . $value) == 'break') {
+                        $json['time_from_' . $value]   = form_error('time_from_' . $value, '<li>', '</li>');
+                        $json['time_to_' . $value]     = form_error('time_to_' . $value, '<li>', '</li>');
+                        $json['break_label_' . $value] = form_error('break_label_' . $value, '<li>', '</li>');
+                    } else {
+                        $json['subject_' . $value]   = form_error('subject_' . $value, '<li>', '</li>');
+                        $json['staff_' . $value]     = form_error('staff_' . $value, '<li>', '</li>');
+                        $json['time_from_' . $value] = form_error('time_from_' . $value, '<li>', '</li>');
+                        $json['time_to_' . $value]   = form_error('time_to_' . $value, '<li>', '</li>');
+                    }
                 }
             }
 
@@ -353,39 +363,35 @@ class Timetable extends Admin_Controller
             if (isset($total_row)) {
                 foreach ($total_row as $total_key => $total_value) {
                     $prev_id = $this->input->post('prev_id_' . $total_value);
+                    $period_type = $this->input->post('period_type_' . $total_value) == 'break' ? 'break' : 'period';
+                    $break_label = $period_type == 'break' ? $this->input->post('break_label_' . $total_value) : null;
+                    $subject_id = $period_type == 'break' ? null : $this->input->post('subject_' . $total_value);
+                    $staff_id = $period_type == 'break' ? null : $this->input->post('staff_' . $total_value);
+                    $room_no = $period_type == 'break' ? null : $this->input->post('room_no_' . $total_value);
+
+                    $arr = array(
+                        'day'                      => $day,
+                        'class_id'                 => $class_id,
+                        'section_id'               => $section_id,
+                        'subject_group_id'         => $subject_group_id,
+                        'subject_group_subject_id' => $subject_id,
+                        'staff_id'                 => $staff_id,
+                        'time_from'                => $this->input->post('time_from_' . $total_value),
+                        'time_to'                  => $this->input->post('time_to_' . $total_value),
+                        'start_time'               => $this->customlib->timeFormat($this->input->post('time_from_' . $total_value), true),
+                        'end_time'                 => $this->customlib->timeFormat($this->input->post('time_to_' . $total_value), true),
+                        'room_no'                  => $room_no,
+                        'period_type'              => $period_type,
+                        'break_label'              => $break_label,
+                        'session_id'               => $session,
+                    );
 
                     if ($prev_id == 0) {
-                        $insert_array[] = array(
-                            'day'                      => $day,
-                            'class_id'                 => $class_id,
-                            'section_id'               => $section_id,
-                            'subject_group_id'         => $subject_group_id,
-                            'subject_group_subject_id' => $this->input->post('subject_' . $total_value),
-                            'staff_id'                 => $this->input->post('staff_' . $total_value),
-                            'time_from'                => $this->input->post('time_from_' . $total_value),
-                            'time_to'                  => $this->input->post('time_to_' . $total_value),
-                            'start_time'               => $this->customlib->timeFormat($this->input->post('time_from_' . $total_value), true),
-                            'end_time'                 => $this->customlib->timeFormat($this->input->post('time_to_' . $total_value), true),
-                            'room_no'                  => $this->input->post('room_no_' . $total_value),
-                            'session_id'               => $session,
-                        );
+                        $insert_array[] = $arr;
                     } else {
                         $preserve_array[] = $prev_id;
-                        $update_array[]   = array(
-                            'id'                       => $prev_id,
-                            'day'                      => $day,
-                            'class_id'                 => $class_id,
-                            'section_id'               => $section_id,
-                            'subject_group_id'         => $subject_group_id,
-                            'subject_group_subject_id' => $this->input->post('subject_' . $total_value),
-                            'staff_id'                 => $this->input->post('staff_' . $total_value),
-                            'time_from'                => $this->input->post('time_from_' . $total_value),
-                            'time_to'                  => $this->input->post('time_to_' . $total_value),
-                            'start_time'               => $this->customlib->timeFormat($this->input->post('time_from_' . $total_value), true),
-                            'end_time'                 => $this->customlib->timeFormat($this->input->post('time_to_' . $total_value), true),
-                            'room_no'                  => $this->input->post('room_no_' . $total_value),
-                            'session_id'               => $session,
-                        );
+                        $arr['id'] = $prev_id;
+                        $update_array[] = $arr;
                     }
                 }
             }
@@ -403,6 +409,177 @@ class Timetable extends Admin_Controller
         $this->output
             ->set_content_type('application/json')
             ->set_output(json_encode($json_array));
+    }
+
+    public function quick_generate()
+    {
+        if (!$this->rbac->hasPrivilege('class_timetable', 'can_edit')) {
+            $json_array = array('status' => '0', 'error' => $this->lang->line('access_denied'));
+            $this->output->set_content_type('application/json')->set_output(json_encode($json_array));
+            return;
+        }
+
+        $class_id             = $this->input->post('class_id');
+        $section_id           = $this->input->post('section_id');
+        $subject_group_id     = $this->input->post('subject_group_id');
+        
+        $start_time           = $this->input->post('start_time');
+        $duration             = $this->input->post('duration');
+        $interval             = $this->input->post('interval');
+        $total_periods        = $this->input->post('total_periods');
+        
+        $periods_before_break = $this->input->post('periods_before_break');
+        $break_duration       = $this->input->post('break_duration');
+        $break_label          = $this->input->post('break_label');
+        $room_no              = $this->input->post('room_no');
+        
+        $session              = $this->setting_model->getCurrentSession();
+
+        $days = $this->customlib->getDaysname();
+        unset($days['Sunday']); // Remove Sunday
+
+        $insert_array = array();
+
+        foreach ($days as $day_key => $day_value) {
+            
+            // Delete existing records for this day
+            $this->db->where('class_id', $class_id);
+            $this->db->where('section_id', $section_id);
+            $this->db->where('subject_group_id', $subject_group_id);
+            $this->db->where('day', $day_value);
+            $this->db->where('session_id', $session);
+            $this->db->delete('subject_timetable');
+            
+            // Calculate periods
+            $current_start_time = $start_time;
+            $period_counter = 0;
+            
+            for ($i = 0; $i < $total_periods; $i++) {
+                
+                // insert teaching period
+                $new_time = date('h:i A', strtotime($current_start_time . " +$duration minutes"));
+                
+                $insert_array[] = array(
+                    'day'                      => $day_value,
+                    'class_id'                 => $class_id,
+                    'section_id'               => $section_id,
+                    'subject_group_id'         => $subject_group_id,
+                    'subject_group_subject_id' => null, // empty initially
+                    'staff_id'                 => null, // empty initially
+                    'time_from'                => $current_start_time,
+                    'time_to'                  => $new_time,
+                    'start_time'               => $this->customlib->timeFormat($current_start_time, true),
+                    'end_time'                 => $this->customlib->timeFormat($new_time, true),
+                    'room_no'                  => $room_no,
+                    'period_type'              => 'period',
+                    'break_label'              => null,
+                    'session_id'               => $session,
+                );
+                
+                $current_start_time = date('h:i A', strtotime($new_time . " +$interval minutes"));
+                $period_counter++;
+                
+                if (!empty($periods_before_break) && $periods_before_break > 0 && $period_counter == $periods_before_break) {
+                    // insert break
+                    if (!empty($break_duration) && $break_duration > 0) {
+                        $break_new_time = date('h:i A', strtotime($current_start_time . " +$break_duration minutes"));
+                        $insert_array[] = array(
+                            'day'                      => $day_value,
+                            'class_id'                 => $class_id,
+                            'section_id'               => $section_id,
+                            'subject_group_id'         => $subject_group_id,
+                            'subject_group_subject_id' => null,
+                            'staff_id'                 => null,
+                            'time_from'                => $current_start_time,
+                            'time_to'                  => $break_new_time,
+                            'start_time'               => $this->customlib->timeFormat($current_start_time, true),
+                            'end_time'                 => $this->customlib->timeFormat($break_new_time, true),
+                            'room_no'                  => null,
+                            'period_type'              => 'break',
+                            'break_label'              => !empty($break_label) ? $break_label : 'Lunch Break',
+                            'session_id'               => $session,
+                        );
+                        $current_start_time = $break_new_time; // no interval after break usually
+                    }
+                    $period_counter = 0; // reset
+                }
+            }
+        }
+
+        if (!empty($insert_array)) {
+            $this->db->insert_batch('subject_timetable', $insert_array);
+        }
+
+        $json_array = array('status' => '1', 'error' => '', 'message' => $this->lang->line('success_message'));
+        $this->output->set_content_type('application/json')->set_output(json_encode($json_array));
+    }
+
+    public function copy_timetable()
+    {
+        if (!$this->rbac->hasPrivilege('class_timetable', 'can_edit')) {
+            $json_array = array('status' => '0', 'error' => $this->lang->line('access_denied'));
+            $this->output->set_content_type('application/json')->set_output(json_encode($json_array));
+            return;
+        }
+
+        $class_id             = $this->input->post('class_id');
+        $section_id           = $this->input->post('section_id');
+        $subject_group_id     = $this->input->post('subject_group_id');
+        $source_day           = $this->input->post('source_day');
+        $target_day           = $this->input->post('target_day');
+        
+        $session              = $this->setting_model->getCurrentSession();
+
+        // fetch source day records
+        $this->db->where('class_id', $class_id);
+        $this->db->where('section_id', $section_id);
+        $this->db->where('subject_group_id', $subject_group_id);
+        $this->db->where('day', $source_day);
+        $this->db->where('session_id', $session);
+        $source_records = $this->db->get('subject_timetable')->result_array();
+
+        if (empty($source_records)) {
+            $json_array = array('status' => '0', 'error' => "No timetable data found for " . $source_day . " to copy.");
+            $this->output->set_content_type('application/json')->set_output(json_encode($json_array));
+            return;
+        }
+
+        $target_days = array();
+        if ($target_day == 'all') {
+            $days = $this->customlib->getDaysname();
+            unset($days['Sunday']);
+            unset($days[$source_day]);
+            $target_days = array_keys($days);
+        } else {
+            if ($target_day != $source_day) {
+                $target_days = array($target_day);
+            }
+        }
+
+        $insert_array = array();
+
+        foreach ($target_days as $t_day) {
+            $this->db->where('class_id', $class_id);
+            $this->db->where('section_id', $section_id);
+            $this->db->where('subject_group_id', $subject_group_id);
+            $this->db->where('day', $t_day);
+            $this->db->where('session_id', $session);
+            $this->db->delete('subject_timetable');
+            
+            foreach ($source_records as $rec) {
+                $new_rec = $rec;
+                unset($new_rec['id']);
+                $new_rec['day'] = $t_day;
+                $insert_array[] = $new_rec;
+            }
+        }
+
+        if (!empty($insert_array)) {
+            $this->db->insert_batch('subject_timetable', $insert_array);
+        }
+
+        $json_array = array('status' => '1', 'error' => '', 'message' => "Timetable copied successfully!");
+        $this->output->set_content_type('application/json')->set_output(json_encode($json_array));
     }
 
     public function getteachertimetable()

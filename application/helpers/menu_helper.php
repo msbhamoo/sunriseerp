@@ -479,7 +479,7 @@ function side_menu_list($list = -1)
 function access_permission_sidebar_remove_pipe($access_permissions)
 {
     // remove pipe sign ||
-    $module_permission = array_map('trim', explode('||', preg_replace('/\(\'|\'|\)/', '', $access_permissions)));
+    $module_permission = array_map('trim', explode('||', preg_replace('/\(\'|\'|\)/', '', $access_permissions ?? '')));
 
     return $module_permission;
 }
@@ -487,6 +487,6 @@ function access_permission_sidebar_remove_pipe($access_permissions)
 function access_permission_remove_comma($m_permission_value)
 {
     // remove pipe sign ||
-    $module_permission_seprated = array_map('trim', explode(',', preg_replace('/\s+/', '', $m_permission_value)));
+    $module_permission_seprated = array_map('trim', explode(',', preg_replace('/\s+/', '', $m_permission_value ?? '')));
     return $module_permission_seprated;
 }
