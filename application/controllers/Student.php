@@ -2647,15 +2647,22 @@ class Student extends Admin_Controller
                 $transport_fee_type = $this->input->post('transport_fee_type');
                 if ($transport_fee_type == 'Yearly' && !empty($route_pickup_point_id) && !empty($class_id)) {
                     $yearly_fees = $this->transportyearlyfee_model->getApplicableYearlyFees($class_id, $route_pickup_point_id);
+                    $assigned_yearly_fee_ids = array();
                     if (!empty($yearly_fees)) {
                         foreach($yearly_fees as $yf) {
                             $data_assign = array(
                                 'student_session_id' => $student_session_id,
                                 'transport_yearly_feemaster_id' => $yf['id'],
                             );
-                            $this->transportyearlyfee_model->assignStudent($data_assign);
+                            $assigned_yearly_fee_ids[] = $this->transportyearlyfee_model->assignStudent($data_assign);
                         }
                     }
+                    // Remove old yearly fees for this student session
+                    $this->db->where('student_session_id', $student_session_id);
+                    if (!empty($assigned_yearly_fee_ids)) {
+                        $this->db->where_not_in('id', $assigned_yearly_fee_ids);
+                    }
+                    $this->db->delete('student_transport_yearly_fees');
                 } else {
                     // Remove all yearly fees for this student session if not yearly
                     $this->db->where('student_session_id', $student_session_id);

@@ -65,7 +65,7 @@ if (!function_exists('dateToWords')) {
 }
 
 $dob = date('d-M-Y', strtotime($student_data['dob']));
-$dob_words = dateToWords($student_data['dob']);
+$dob_words = ucwords(dateToWords($student_data['dob']));
 
 $img_url = empty($student_data['image']) ? base_url('uploads/student_images/no_image.png') : base_url($student_data['image']);
 $print_logo = empty($sch_setting_detail->admin_logo) ? base_url('uploads/school_content/admin_logo/default.png') : base_url('uploads/school_content/admin_logo/'.$sch_setting_detail->admin_logo);
@@ -95,25 +95,46 @@ $print_logo = empty($sch_setting_detail->admin_logo) ? base_url('uploads/school_
         }
         
         .cert-border {
-            border: 5px solid <?php echo $theme_color; ?>;
-            padding: 2px;
+            border: 2px solid #222;
+            border-radius: 8px;
+            padding: 0;
             box-sizing: border-box;
-            margin: 0;
-            width: 100%;
+            margin: 15px 30px;
+            width: auto;
             page-break-after: avoid;
             max-width: 100%;
             overflow: hidden;
         }
         
         .cert-inner {
-            border: 2px solid <?php echo $theme_color; ?>;
-            padding: 15px 12px 90px 12px;
+            border: none;
+            padding: 15px 15px 20px 15px;
             box-sizing: border-box;
             position: relative;
             background-color: #fcfcfc;
             min-height: auto;
             width: 100%;
             overflow-x: hidden;
+        }
+
+        .scissor-cut-line {
+            display: flex;
+            align-items: center;
+            margin: 10px 30px;
+            color: #555;
+            font-size: 20px;
+            page-break-before: avoid;
+        }
+        .scissor-cut-line .scissor-icon {
+            margin-right: 10px;
+            font-size: 22px;
+            color: #333;
+        }
+        .scissor-cut-line .cut-dash {
+            flex-grow: 1;
+            height: 0;
+            border: none;
+            border-top: 2px dashed #555;
         }
         
         .cert-title {
@@ -161,12 +182,10 @@ $print_logo = empty($sch_setting_detail->admin_logo) ? base_url('uploads/school_
         }
         
         .footer-table {
-            position: absolute;
-            bottom: 20px;
-            left: 40px;
-            width: 85%;
-            margin-top: 0;
-            padding-top: 15px;
+            position: relative;
+            width: 100%;
+            margin-top: 15px;
+            padding-top: 5px;
         }
         
         .signature-line {
@@ -231,10 +250,11 @@ $print_logo = empty($sch_setting_detail->admin_logo) ? base_url('uploads/school_
             }
             
             .cert-border {
-                margin: 0;
-                padding: 2px;
-                width: 100%;
-                border: 5px solid <?php echo $theme_color; ?> !important;
+                margin: 15px 30px;
+                padding: 0;
+                width: auto;
+                border: 2px solid #222 !important;
+                border-radius: 8px;
                 page-break-after: avoid;
                 max-width: 100%;
                 overflow: hidden;
@@ -242,9 +262,9 @@ $print_logo = empty($sch_setting_detail->admin_logo) ? base_url('uploads/school_
             
             .cert-inner {
                 margin: 0;
-                padding: 15px 12px 90px 12px;
+                padding: 15px 15px 20px 15px;
                 background-color: #fcfcfc !important;
-                border: 2px solid <?php echo $theme_color; ?> !important;
+                border: none !important;
                 width: 100%;
                 overflow-x: hidden;
             }
@@ -294,9 +314,10 @@ $print_logo = empty($sch_setting_detail->admin_logo) ? base_url('uploads/school_
             if (strpos($cert_name_lower, 'character') !== false || strpos($cert_name_lower, 'cc') !== false) {
             ?>
             <p style="text-align: justify; margin-bottom: 20px;">
-                <i>This is to certify that</i> <?php echo $master_miss; ?> <span class="bold"><?php echo $name; ?></span>,
-                <?php echo $son_daughter; ?> of Mr. <span class="bold"><?php echo strtoupper($student_data['father_name'] ?? ''); ?></span> and Mrs. <span class="bold"><?php echo strtoupper($student_data['mother_name'] ?? ''); ?></span>,
-                bearing Admission No. <span class="bold"><?php echo $student_data['admission_no']; ?></span>, was a student of <span class="bold"><?php echo $sch_setting_detail->name; ?></span>.
+                <i>This is to certify that</i> <?php echo $master_miss; ?> <span class="bold"><?php echo $name; ?></span>, <?php echo $son_daughter; ?> of Mr. <span class="bold"><?php echo strtoupper($student_data['father_name'] ?? ''); ?></span> and Mrs. <span class="bold"><?php echo strtoupper($student_data['mother_name'] ?? ''); ?></span>,
+                bearing Admission No. <span class="bold"><?php echo $student_data['admission_no']; ?></span>,
+                Date of Birth <span class="bold"><?php echo $dob; ?></span> (<?php echo $dob_words; ?>),
+                was a student of <span class="bold"><?php echo $sch_setting_detail->name; ?></span>.
             </p>
 
             <p style="margin-bottom: 20px;">
@@ -313,27 +334,55 @@ $print_logo = empty($sch_setting_detail->admin_logo) ? base_url('uploads/school_
             <?php
             } elseif (strpos($cert_name_lower, 'scholar') !== false || strpos($cert_name_lower, 'sc') !== false) {
             ?>
-            <p style="text-align: justify; margin-bottom: 20px;">
-                <i>This is to certify that</i> <?php echo $master_miss; ?> <span class="bold"><?php echo $name; ?></span>,
-                <?php echo $son_daughter; ?> of Mr. <span class="bold"><?php echo strtoupper($student_data['father_name'] ?? ''); ?></span> and Mrs. <span class="bold"><?php echo strtoupper($student_data['mother_name'] ?? ''); ?></span>,
-                bearing Admission No. <span class="bold"><?php echo $student_data['admission_no']; ?></span>, is/was a bonafide student of <span class="bold"><?php echo $sch_setting_detail->name; ?></span>.
-            </p>
+            <style>
+                .sc-underline {
+                    border-bottom: 1px dashed #222;
+                    font-weight: 700;
+                    padding: 0 8px;
+                }
+                .sc-cert-line {
+                    display: flex;
+                    align-items: flex-end;
+                    margin-bottom: 20px;
+                    font-size: 15px;
+                    color: #1f2937;
+                }
+                .sc-input-line {
+                    border-bottom: 1px dashed #222;
+                    color: #1f2937;
+                    font-weight: 700;
+                    text-align: center;
+                    padding: 0 10px;
+                }
+            </style>
 
-            <p style="margin-bottom: 15px;">As per school records, the student studied in:</p>
+            <div style="padding: 0 20px; margin-top: 20px;">
+                <p style="text-align: justify; margin-bottom: 20px; font-size: 15px; line-height: 2.2;">
+                    <i>This is to certify that</i> <?php echo $master_miss; ?> <span class="sc-underline"><?php echo $name; ?></span>, <?php echo $son_daughter; ?> of Mr. <span class="sc-underline"><?php echo strtoupper($student_data['father_name'] ?? ''); ?></span> and Mrs. <span class="sc-underline"><?php echo strtoupper($student_data['mother_name'] ?? ''); ?></span>, bearing Admission No. <span class="sc-underline"><?php echo $student_data['admission_no']; ?></span>, Date of Birth <span class="sc-underline"><?php echo $dob; ?></span> (<i><?php echo $dob_words; ?></i>), is a bonafide student of <strong><?php echo $sch_setting_detail->name; ?></strong>.
+                </p>
 
-            <table width="100%" class="info-table" style="margin-left: 40px; margin-bottom: 30px; line-height: 1.8; font-size: 18px;">
-                <tr><td width="30%">Class</td><td>: <span class="bold"><?php echo $student_data['class']; ?></span></td></tr>
-                <tr><td>Section</td><td>: <span class="bold"><?php echo $student_data['section']; ?></span></td></tr>
-                <tr><td>Academic Session</td><td>: <span class="bold"><?php echo $session_name; ?></span></td></tr>
-            </table>
+                <p style="margin-bottom: 15px; font-size: 15px;">As per school records, the student studies in:</p>
 
-            <p style="margin-bottom: 20px;">
-                The student attended the institution during the above-mentioned academic session and <?php echo $his_her; ?> attendance and academic records are maintained by the school.
-            </p>
+                <div class="sc-cert-line">
+                    <span style="white-space: nowrap; margin-right: 15px;">Class</span>
+                    <span class="sc-input-line" style="width: 300px;"><?php echo $student_data['class']; ?></span>
+                    <span style="white-space: nowrap; margin: 0 15px;">Section</span>
+                    <span class="sc-input-line" style="flex-grow: 1;"><?php echo $student_data['section']; ?></span>
+                </div>
 
-            <p style="margin-bottom: 20px;">
-                This certificate is being issued upon the request of the student/parent for whatever purpose it may serve.
-            </p>
+                <div class="sc-cert-line">
+                    <span style="white-space: nowrap; margin-right: 15px;">Academic Session</span>
+                    <span class="sc-input-line" style="flex-grow: 1;"><?php echo $session_name; ?></span>
+                </div>
+
+                <p style="margin-bottom: 20px; font-size: 15px;">
+                    The student attended the institution during the above-mentioned academic session and <?php echo $his_her; ?> attendance and academic records are maintained by the school.
+                </p>
+
+                <p style="margin-bottom: 20px; font-size: 15px;">
+                    This certificate is being issued upon the request of the student/parent for whatever purpose it may serve.
+                </p>
+            </div>
             <?php
             } elseif (strpos($cert_name_lower, 'transfer') !== false || strpos($cert_name_lower, 'tc') !== false) {
                 $dt_adm = date('d/m/Y', strtotime($student_data['admission_date']));
@@ -457,14 +506,14 @@ $print_logo = empty($sch_setting_detail->admin_logo) ? base_url('uploads/school_
     <tr>
         <td width="30%" align="left">
             <div class="issue-date">
-                <br><br><br>
+                <br>
                 Date: <?php echo date('d-M-Y', strtotime($cert['issue_date'])); ?>
             </div>
         </td>
 
         <td width="35%">
             <div class="signature-box">
-                <div class="signature-space"><br><br><br></div>
+                <div class="signature-space"><br></div>
                 <div class="signature-line"></div>
                 <div class="signature-title">
                     Issued By
@@ -474,7 +523,7 @@ $print_logo = empty($sch_setting_detail->admin_logo) ? base_url('uploads/school_
 
         <td width="35%">
             <div class="signature-box">
-                <div class="signature-space"><br><br><br></div>
+                <div class="signature-space"><br></div>
                 <div class="signature-line"></div>
                 <div class="signature-title">
                     Verified By
@@ -484,7 +533,7 @@ $print_logo = empty($sch_setting_detail->admin_logo) ? base_url('uploads/school_
 
         <td width="35%">
             <div class="signature-box">
-                <div class="signature-space"><br><br><br></div>
+                <div class="signature-space"><br></div>
                 <div class="signature-line"></div>
                 <div class="signature-title">
                     Principal
@@ -495,6 +544,11 @@ $print_logo = empty($sch_setting_detail->admin_logo) ? base_url('uploads/school_
 </table>
 
     </div>
+</div>
+
+<div class="scissor-cut-line">
+    <span class="scissor-icon">&#9986;</span>
+    <span class="cut-dash"></span>
 </div>
 
 </body>

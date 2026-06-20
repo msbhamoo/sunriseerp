@@ -39,7 +39,7 @@ class Timetable_model extends CI_Model
     {
        $query=$this->db->query("select subject_timetable.*, `staff`.`name` as staff_name  from subject_timetable 
         left join staff on staff.id=subject_timetable.staff_id 
-        where  staff_id = '$staff_id' and day='$day' and start_time='$time_from' and end_time='$time_to'");
+        where  staff_id = " . $this->db->escape($staff_id) . " and day=" . $this->db->escape($day) . " and start_time=" . $this->db->escape($time_from) . " and end_time=" . $this->db->escape($time_to));
        return $query->result_array();
     }
 

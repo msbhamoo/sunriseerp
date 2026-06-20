@@ -45,12 +45,20 @@
                                                         <?php
                                                     } else {
                                                         foreach ($timetable[$tm_key] as $tm_k => $tm_kue) {
-                                                        ?>
+                                                            if (isset($tm_kue->period_type) && $tm_kue->period_type == 'break') {
+                                                            ?>
+                                                            <div class="attachment-block attachment-block-normal clearfix" style="background-color: #f4f4f4; text-align: center; border-left: 3px solid #ccc;">
+                                                                <strong class="text-muted"><i class="fa fa-coffee"></i> <?php echo $tm_kue->break_label; ?></strong><br>
+                                                                <small class="text-muted"><i class="fa fa-clock-o"></i> <?php echo $tm_kue->time_from; ?> - <?php echo $tm_kue->time_to; ?></small>
+                                                            </div>
+                                                            <?php
+                                                            } else {
+                                                            ?>
                                                             <div class="attachment-block attachment-block-normal clearfix">
 
                                                                 <div class="relative attachment-left-space"><i class="fa fa-book"></i><?php echo $this->lang->line('subject') ?>:
                                                                     <?php
-                                                                    echo $tm_kue->subject_name;
+                                                                    echo $tm_kue->subject_name != '' ? $tm_kue->subject_name : '<span class="text-danger">'.$this->lang->line('not_scheduled').'</span>';
                                                                     if ($tm_kue->code != '') {
                                                                         echo " (" . $tm_kue->code . ")";
                                                                     }
@@ -60,12 +68,13 @@
                                                                     <b class="text text-center">-</b>
                                                                     <strong class="text-green"><?php echo $tm_kue->time_to; ?></strong>
                                                                 </div>
-                                                                <div class="relative attachment-left-space"><i class="fa fa-user"></i> <?php echo $tm_kue->name." ".$tm_kue->surname." (".$tm_kue->employee_id.")";?>
+                                                                <div class="relative attachment-left-space"><i class="fa fa-user"></i> <?php echo $tm_kue->name != '' ? $tm_kue->name." ".$tm_kue->surname." (".$tm_kue->employee_id.")" : '<span class="text-danger">'.$this->lang->line('not_scheduled').'</span>';?>
                                                                     </div>
                                                                 <div class="relative attachment-left-space"><i class="fa fa-building"></i><?php echo $this->lang->line('room_no'); ?>: <?php echo $tm_kue->room_no; ?>
                                                                 </div>
                                                             </div>
                                                     <?php
+                                                            }
                                                         }
                                                     }
                                                     ?>

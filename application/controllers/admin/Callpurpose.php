@@ -39,7 +39,6 @@ class Callpurpose extends Admin_Controller
         } else {
             $data = array(
                 'purpose'   => $this->input->post('purpose'),
-                'is_active' => 1
             );
             $this->studentcall_model->add_purpose($data);
             $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('success_message'));

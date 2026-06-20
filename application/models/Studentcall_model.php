@@ -202,4 +202,16 @@ class Studentcall_model extends MY_Model
         $query = $this->db->get();
         return $query->result_array();
     }
+
+    public function get_calls_by_student($student_session_id)
+    {
+        $this->db->select('student_calls.*, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname');
+        $this->db->from('student_calls');
+        $this->db->join('student_call_purpose', 'student_call_purpose.id = student_calls.call_purpose_id', 'left');
+        $this->db->join('staff', 'staff.id = student_calls.created_by', 'left');
+        $this->db->where('student_calls.student_session_id', $student_session_id);
+        $this->db->order_by('student_calls.date', 'desc');
+        $query = $this->db->get();
+        return $query->result_array();
+    }
 }

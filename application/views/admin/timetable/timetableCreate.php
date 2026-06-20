@@ -129,57 +129,72 @@
                             <form action="#" method="POST" id="universal_from">
                                 <input type="hidden" name="active_tab_day" id="active_tab_day">
                                 <div class="row">
-                                    <div class="col-sm-4 col-lg-2 col-md-2">
+                                    <div class="col-sm-2">
                                         <div class="form-group">
-                                            <label for="form_name"><?php echo $this->lang->line('period_start_time'); ?><small class="req"> *</small></label>
-
-                                            <div class="input-group">
-                                                <input type="text" name="start_time" class="form-control datetimepicker3 " id="start_time" value="">
-                                                <div class="input-group-addon">
-                                                    <span class="fa fa-clock-o"></span>
-                                                </div>
-                                            </div>
-
-                                            <div class="text text-danger"></div>
+                                            <label for="total_periods">Total Periods<small class="req"> *</small></label>
+                                            <input type="number" name="total_periods" class="form-control" id="total_periods" value="" min="1">
                                         </div>
                                     </div>
-                                    <div class="col-sm-4 col-lg-2 col-md-3">
+                                    <div class="col-sm-3">
+                                        <div class="form-group">
+                                            <label for="form_name"><?php echo $this->lang->line('period_start_time'); ?><small class="req"> *</small></label>
+                                            <div class="input-group">
+                                                <input type="text" name="start_time" class="form-control datetimepicker3 " id="start_time" value="">
+                                                <div class="input-group-addon"><span class="fa fa-clock-o"></span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
                                         <div class="form-group">
                                             <label for="form_email"><?php echo $this->lang->line('duration_minute'); ?><small class="req"> *</small></label>
                                             <div class="input-group">
                                                 <input type="number" name="duration" class="form-control" id="duration" value="">
-                                                <div class="input-group-addon">
-                                                    <span class="fa fa-hourglass-start"></span>
-                                                </div>
+                                                <div class="input-group-addon"><span class="fa fa-hourglass-start"></span></div>
                                             </div>
-                                            <div class="text text-danger"></div>
                                         </div>
                                     </div>
-                                    <div class="col-sm-3 col-lg-2 col-md-2">
+                                    <div class="col-sm-3">
                                         <div class="form-group">
                                             <label for="form_phone"><?php echo $this->lang->line('interval_minute'); ?><small class="req"> *</small></label>
                                             <div class="input-group">
                                                 <input type="number" name="interval" class="form-control" id="interval" value="0">
-                                                <div class="input-group-addon">
-                                                    <span class="fa fa-hourglass-start"></span>
-                                                </div>
+                                                <div class="input-group-addon"><span class="fa fa-hourglass-start"></span></div>
                                             </div>
-                                            <div class="text text-danger"></div>
                                         </div>
                                     </div>
-                                    <div class="col-sm-8 col-lg-2 col-md-2">
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-2">
+                                        <div class="form-group">
+                                            <label for="periods_before_break">Periods Before Break</label>
+                                            <input type="number" name="periods_before_break" class="form-control" id="periods_before_break" value="" min="1">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <div class="form-group">
+                                            <label for="break_duration">Break Duration (min)</label>
+                                            <div class="input-group">
+                                                <input type="number" name="break_duration" class="form-control" id="break_duration" value="">
+                                                <div class="input-group-addon"><span class="fa fa-hourglass-start"></span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <div class="form-group">
+                                            <label for="break_label">Break Label</label>
+                                            <input type="text" name="break_label" class="form-control" id="break_label" value="Lunch Break">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-2">
                                         <div class="form-group">
                                             <label for="form_phone"><?php echo $this->lang->line('room_no'); ?></label>
                                             <input type="text" name="rroom_no" class="form-control" id="froom_no">
-
-                                            <div class="help-block with-errors"></div>
                                         </div>
                                     </div>
                                     <div class="col-sm-2">
                                         <div class="form-group">
                                             <label for="form_phone" class="displayblock opacity d-sm-none">&nbsp;</label>
-                                            <input type="submit" class="btn btn-primary btn-send smallbtn28" value="<?php echo $this->lang->line('apply'); ?>">
-                                            <div class="help-block with-errors"></div>
+                                            <button type="button" class="btn btn-primary btn-send smallbtn28" id="quick_generate_btn"><?php echo $this->lang->line('apply'); ?></button>
                                         </div>
                                     </div>
                                 </div>
@@ -228,7 +243,95 @@
     </section>
 </div>
 
+<!-- Copy Timetable Modal -->
+<div class="modal fade" id="copyTimetableModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Copy Timetable</h4>
+            </div>
+            <div class="modal-body">
+                <form id="copyTimetableForm">
+                    <input type="hidden" name="source_day" id="copy_source_day" value="">
+                    <div class="form-group">
+                        <label>Copy To</label>
+                        <select class="form-control" name="target_day" id="copy_target_day">
+                            <option value="all">All Days (except Sunday)</option>
+                            <?php foreach ($getDaysnameList as $day_key => $day_value) { 
+                                if($day_key != 'Sunday') { ?>
+                                <option value="<?php echo $day_key; ?>"><?php echo $day_value; ?></option>
+                            <?php } } ?>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo $this->lang->line('cancel'); ?></button>
+                <button type="button" class="btn btn-primary" id="btnCopyTimetable">Copy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="text/javascript">
+
+    function openCopyModal(day) {
+        $('#copy_source_day').val(day);
+        $('#copyTimetableModal').modal('show');
+    }
+
+    $(document).on('click', '#btnCopyTimetable', function() {
+        var class_id = $('#class_id').val();
+        var section_id = $('#section_id').val();
+        var subject_group_id = $('#subject_group_id').val();
+        var source_day = $('#copy_source_day').val();
+        var target_day = $('#copy_target_day').val();
+
+        if (!class_id || !section_id || !subject_group_id) {
+            errorMsg("Please select Class, Section, and Subject Group first.");
+            return;
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: base_url + "admin/timetable/copy_timetable",
+            data: {
+                class_id: class_id,
+                section_id: section_id,
+                subject_group_id: subject_group_id,
+                source_day: source_day,
+                target_day: target_day
+            },
+            dataType: 'json',
+            success: function(res) {
+                if (res.status == 1) {
+                    successMsg(res.message);
+                    $('#copyTimetableModal').modal('hide');
+                    // Optionally refresh the current tab or let the user do it
+                } else {
+                    errorMsg(res.error);
+                }
+            }
+        });
+    });
+
+    $(document).on('change', '#class_id', function(e) {
+        document.getElementById("insertbtn").disabled = true;
+    });
+    
+    $(document).on('change', '#section_id', function(e) {
+        document.getElementById("insertbtn").disabled = true;
+    });
+
+    $(document).on('change', '#subject_group_id', function(e) {
+        if($(this).val() != '') {
+            document.getElementById("insertbtn").disabled = false;
+        } else {
+            document.getElementById("insertbtn").disabled = true;
+        }
+    });
+
     $(document).on('submit', '.create_time_table', function(e) {
         document.getElementById("insertbtn").disabled = true;
     });
@@ -410,7 +513,7 @@
         $(document).on("click", ".addrow", function() {
             var newRow = $("<tr>");
             var cols = "";
-            cols += '<td class="relative"><input type="hidden" name="total_row[]" value="' + tot_count + '"><input type="hidden" name="prev_id_' + tot_count + '" value="0"><select class="form-control subject" id="subject_id_' + tot_count + '" name="subject_' + tot_count + '">' + $("#subject_dropdown").text() + '</select></td>';
+            cols += '<td class="relative"><input type="hidden" name="total_row[]" value="' + tot_count + '"><input type="hidden" name="prev_id_' + tot_count + '" value="0"><input type="hidden" class="period_type" name="period_type_' + tot_count + '" value="period"><select class="form-control subject" id="subject_id_' + tot_count + '" name="subject_' + tot_count + '">' + $("#subject_dropdown").text() + '</select></td>';
 
             cols += '<td>' +
             '<div class="input-group">' +
@@ -449,6 +552,39 @@ cols += '<td>' +
                 dropdownAutoWidth: true,
                 width: '100%'
             });
+            tot_count++;
+        });
+
+        $(document).on("click", ".addbreakrow", function() {
+            var newRow = $("<tr>");
+            var cols = "";
+            cols += '<td class="relative"><input type="hidden" name="total_row[]" value="' + tot_count + '"><input type="hidden" name="prev_id_' + tot_count + '" value="0"><input type="hidden" class="period_type" name="period_type_' + tot_count + '" value="break"><input type="text" class="form-control break_label" name="break_label_' + tot_count + '" placeholder="Break Label"></td>';
+
+            cols += '<td>' +
+            '<div class="input-group">' +
+                '<input type="text" name="time_from_' + tot_count + '" class="form-control datetimepicker3 time_from" id="time_from_' + tot_count + '">' +
+                '<span class="input-group-addon">' +
+                    '<span class="fa fa-clock-o"></span>' +
+                '</span>' +
+            '</div>' +
+        '</td>';
+
+        cols += '<td>' +
+            '<div class="input-group">' +
+                '<input type="text" name="time_to_' + tot_count + '" class="form-control datetimepicker3 time_to" id="time_to_' + tot_count + '">' +
+                '<span class="input-group-addon">' +
+                    '<span class="fa fa-clock-o"></span>' +
+                '</span>' +
+            '</div>' +
+        '</td>';
+
+            cols += '<td class="relative"><span class="text-muted">N/A</span></td>';
+            cols += '<td><span class="text-muted">N/A</span></td>';
+            cols += '<td class="text-right"><button type="button" class="ibtnDel btn btn-danger"><i class="fa fa-trash"></i></button></td>';
+            newRow.append(cols);
+
+            $("table.order-list").append(newRow);
+
             tot_count++;
         });
 
@@ -548,24 +684,61 @@ cols += '<td>' +
             // Make sure the form is submitted to the destination defined
             // in the "action" attribute of the form when valid
             submitHandler: function(form) {
+                // Now handled by quick_generate_btn click
+            }
+        });
 
-                let start_time = $('#start_time', form).val();
-                let duration = $('#duration', form).val();
-                let interval = $('#interval', form).val();
-                let froom_no = $('#froom_no', form).val();
-                var interest = $('div.tab-pane.active').find('table#tab_logic');
-                $('tbody  > tr', interest).each(function() {
-                    var new_time = moment(start_time, "hh:mm A")
-                        .add(duration, 'minutes')
-                        .format('hh:mm A');
+        $(document).on('click', '#quick_generate_btn', function() {
+            var class_id = $('#class_id').val();
+            var section_id = $('#section_id').val();
+            var subject_group_id = $('#subject_group_id').val();
 
-                    var t_form = $(this).find(".time_from").val(start_time);
-                    var t_to = $(this).find(".time_to").val(new_time);
-                    var r_no = $(this).find(".room_no").val(froom_no);
+            if (!class_id || !section_id || !subject_group_id) {
+                errorMsg("Please select Class, Section, and Subject Group first.");
+                return;
+            }
 
-                    start_time = moment(new_time, "hh:mm A")
-                        .add(interval, 'minutes')
-                        .format('hh:mm A');
+            var start_time = $('#start_time').val();
+            var duration = $('#duration').val();
+            var interval = $('#interval').val();
+            var total_periods = $('#total_periods').val();
+            
+            if (!start_time || !duration || !total_periods) {
+                errorMsg("Please fill in Total Periods, Start Time, and Duration.");
+                return;
+            }
+
+            if (confirm("This will overwrite existing timetable empty rows for all days except Sunday. Do you want to continue?")) {
+                $.ajax({
+                    type: 'POST',
+                    url: base_url + "admin/timetable/quick_generate",
+                    data: {
+                        class_id: class_id,
+                        section_id: section_id,
+                        subject_group_id: subject_group_id,
+                        start_time: start_time,
+                        duration: duration,
+                        interval: interval,
+                        total_periods: total_periods,
+                        periods_before_break: $('#periods_before_break').val(),
+                        break_duration: $('#break_duration').val(),
+                        break_label: $('#break_label').val(),
+                        room_no: $('#froom_no').val()
+                    },
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.status == 1) {
+                            successMsg(res.message);
+                            // Refresh the current active tab
+                            var target = $('.nav-tabs .active a').attr("href");
+                            var target_id = $('.nav-tabs .active a').attr("id");
+                            var ajax_data = $('.nav-tabs .active a').data();
+                            $(target).html("");
+                            getGroupdata(target, target_id, ajax_data);
+                        } else {
+                            errorMsg(res.error);
+                        }
+                    }
                 });
             }
         });
@@ -603,36 +776,7 @@ $(document).on("focus", ".datetimepicker3", function () {
 
 
 <script>
-    function check_class_dublicate_recored(tot_count, staff_id) {
 
-        return;
-        var time_from = $("#time_from_" + tot_count).val();
-        var time_to = $("#time_to_" + tot_count).val();
-        var day = $("#active_tab_day").val();
-
-        alert("time_from - " + time_from);
-        alert("time_to - " + time_to);
-        alert("day - " + day);
-        alert("staff_id - " + staff_id);
-
-        $.ajax({
-            type: "POST",
-            url: base_url + "admin/timetable/check_class_dublicate_recored",
-            data: {
-                time_from: time_from,
-                time_to: time_to,
-                staff_id: staff_id,
-                day: day
-            },
-            dataType: "json",
-            success: function(res) {
-                if (res.status == 1) {
-                    errorMsg(res.error);
-                }
-            }
-        });
-
-    }
 
 
 

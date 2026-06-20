@@ -22,6 +22,14 @@
 // };
 
 
+// Disable DataTables alert popups globally
+$.fn.dataTable.ext.errMode = 'none';
+
+// Log DataTables errors to the console instead for debugging
+$(document).on('error.dt', function (e, settings, techNote, message) {
+    console.error('DataTables Error:', message, ' - More info: https://datatables.net/tn/7');
+});
+
 function imageUrlToBase64(url) {
   return new Promise((resolve, reject) => {
     const img = new Image();

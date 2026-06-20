@@ -38,7 +38,15 @@ if (!empty($timetable)) {
                             <?php
                         } else {
                             foreach ($timetable[$tm_key] as $tm_k => $tm_kue) {
-                            ?>
+                                if (isset($tm_kue->period_type) && $tm_kue->period_type == 'break') {
+                                    ?>
+                                    <div class="attachment-block attachment-block-normal clearfix" style="background-color: #f4f4f4; text-align: center; border-left: 3px solid #ccc;">
+                                        <strong class="text-muted"><i class="fa fa-coffee"></i> <?php echo $tm_kue->break_label; ?></strong><br>
+                                        <small class="text-muted"><i class="fa fa-clock-o"></i> <?php echo $tm_kue->time_from; ?> - <?php echo $tm_kue->time_to; ?></small>
+                                    </div>
+                                    <?php
+                                } else {
+                                ?>
                                 <div class="attachment-block attachment-block-normal clearfix">
                                     <div class="relative attachment-left-space"><i class="fa fa-book"></i><?php echo $this->lang->line('class') ?>: <?php echo $tm_kue->class . "(" . $tm_kue->section . ")"; ?>
                                         <?php echo $this->lang->line('subject') ?>: <?php
@@ -57,8 +65,9 @@ if (!empty($timetable)) {
                                     <div class="relative attachment-left-space"><i class="fa fa-building"></i><?php echo $this->lang->line('room_no') ?>: <?php echo $tm_kue->room_no; ?></div>
 
                                 </div>
-                                </div>
-                        <?php
+                                
+                            <?php
+                                }
                             }
                         }
                         ?>

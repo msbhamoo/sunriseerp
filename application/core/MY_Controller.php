@@ -5,8 +5,134 @@ define('BASE_URI', str_replace('index.php', '', $_SERVER['SCRIPT_NAME']));
 
 class MY_Controller extends CI_Controller
 {
+    public $exceptions;
 
     protected $langs = array();
+
+    protected $lazy_models = array(
+        'session_model' => true,
+        'staff_model' => true,
+        'section_model' => true,
+        'setting_model' => true,
+        'class_model' => true,
+        'classsection_model' => true,
+        'category_model' => true,
+        'student_model' => true,
+        'feemaster_model' => true,
+        'feecategory_model' => true,
+        'feetype_model' => true,
+        'studentfee_model' => true,
+        'stuattendence_model' => true,
+        'attendencetype_model' => true,
+        'studentsession_model' => true,
+        'language_model' => true,
+        'admin_model' => true,
+        'smsconfig_model' => true,
+        'langpharses_model' => true,
+        'subject_model' => true,
+        'teacher_model' => true,
+        'teachersubject_model' => true,
+        'exam_model' => true,
+        'mark_model' => true,
+        'examschedule_model' => true,
+        'examresult_model' => true,
+        'expense_model' => true,
+        'expensehead_model' => true,
+        'studenttransportfee_model' => true,
+        'book_model' => true,
+        'grade_model' => true,
+        'timetable_model' => true,
+        'hostel_model' => true,
+        'route_model' => true,
+        'content_model' => true,
+        'user_model' => true,
+        'notification_model' => true,
+        'paymentsetting_model' => true,
+        'payroll_model' => true,
+        'roomtype_model' => true,
+        'department_model' => true,
+        'designation_model' => true,
+        'hostelroom_model' => true,
+        'vehicle_model' => true,
+        'vehroute_model' => true,
+        'librarian_model' => true,
+        'accountant_model' => true,
+        'homework_model' => true,
+        'librarymanagement_model' => true,
+        'librarymember_model' => true,
+        'bookissue_model' => true,
+        'feegroup_model' => true,
+        'feegrouptype_model' => true,
+        'feesessiongroup_model' => true,
+        'studentfeemaster_model' => true,
+        'feediscount_model' => true,
+        'emailconfig_model' => true,
+        'income_model' => true,
+        'incomehead_model' => true,
+        'itemcategory_model' => true,
+        'schoolhouse_model' => true,
+        'item_model' => true,
+        'messages_model' => true,
+        'itemstore_model' => true,
+        'itemsupplier_model' => true,
+        'notificationsetting_model' => true,
+        'itemstock_model' => true,
+        'itemissue_model' => true,
+        'userlog_model' => true,
+        'cms_program_model' => true,
+        'cms_menu_model' => true,
+        'cms_media_model' => true,
+        'cms_page_model' => true,
+        'cms_menuitems_model' => true,
+        'cms_page_content_model' => true,
+        'role_model' => true,
+        'calendar_model' => true,
+        'userpermission_model' => true,
+        'staffroles_model' => true,
+        'staffattendancemodel' => true,
+        'rolepermission_model' => true,
+        'Certificate_model' => true,
+        'classteacher_model' => true,
+        'Generatecertificate_model' => true,
+        'Student_id_card_model' => true,
+        'timeline_model' => true,
+        'Generateidcard_model' => true,
+        'Module_model' => true,
+        'subjectgroup_model' => true,
+        'studentsubjectgroup_model' => true,
+        'subjecttimetable_model' => true,
+        'studentsubjectattendence_model' => true,
+        'audit_model' => true,
+        'Chat_model' => true,
+        'apply_leave_model' => true,
+        'disable_reason_model' => true,
+        'question_model' => true,
+        'leavetypes_model' => true,
+        'alumni_model' => true,
+        'lessonplan_model' => true,
+        'syllabus_model' => true,
+        'Staffidcard_model' => true,
+        'Generatestaffidcard_model' => true,
+        'visitors_model' => true,
+        'video_tutorial_model' => true,
+        'customfield_model' => true,
+        'onlinestudent_model' => true,
+        'houselist_model' => true,
+        'onlineexam_model' => true,
+        'onlineexamquestion_model' => true,
+        'onlineexamresult_model' => true,
+        'examstudent_model' => true,
+        'admitcard_model' => true,
+        'marksheet_model' => true,
+        'chatuser_model' => true,
+        'examgroupstudent_model' => true,
+        'examgroup_model' => true,
+        'batchsubject_model' => true,
+        'filetype_model' => true,
+        'currency_model' => true,
+        'examsubject_model' => true,
+        'feereminder_model' => true
+    );
 
     public function __construct()
     {
@@ -16,10 +142,8 @@ class MY_Controller extends CI_Controller
         $this->load->library('Db_manager');
         $this->config->load('license');
         $this->load->helper(array('language', 'directory', 'customfield', 'custom', 'mime'));
-        $this->load->model(array('session_model', 'staff_model', 'section_model', 'setting_model', 'class_model', 'classsection_model', 'category_model', 'student_model', 'feemaster_model', 'feecategory_model', 'feetype_model', 'studentfee_model', 'stuattendence_model', 'attendencetype_model', 'studentsession_model', 'language_model', 'admin_model', 'smsconfig_model', 'langpharses_model', 'subject_model', 'teacher_model', 'teachersubject_model', 'exam_model', 'mark_model', 'examschedule_model', 'examresult_model', 'expense_model', 'expensehead_model', 'studenttransportfee_model', 'book_model', 'grade_model', 'timetable_model', 'hostel_model', 'route_model', 'content_model', 'user_model', 'notification_model', 'paymentsetting_model', 'payroll_model', 'roomtype_model', 'department_model', 'designation_model', 'hostelroom_model', 'vehicle_model', 'vehroute_model', 'librarian_model', 'accountant_model', 'homework_model', 'librarymanagement_model', 'librarymember_model', 'bookissue_model', 'feegroup_model', 'feegrouptype_model', 'feesessiongroup_model', 'studentfeemaster_model', 'feediscount_model', 'emailconfig_model', 'income_model', 'incomehead_model', 'itemcategory_model', 'schoolhouse_model', 'item_model', 'messages_model', 'itemstore_model', 'itemsupplier_model', 'notificationsetting_model', 'itemstock_model', 'itemissue_model', 'userlog_model', 'cms_program_model', 'cms_menu_model', 'cms_media_model', 'cms_page_model', 'cms_menuitems_model', 'cms_page_content_model', 'role_model', 'calendar_model', 'userpermission_model', 'staffroles_model', 'staffattendancemodel', 'rolepermission_model', 'Certificate_model', 'classteacher_model', 'Generatecertificate_model', 'Student_id_card_model', 'timeline_model', 'Generateidcard_model', 'Module_model', 'subjectgroup_model', 'studentsubjectgroup_model', 'subjecttimetable_model', 'studentsubjectattendence_model', 'audit_model', 'Chat_model', 'apply_leave_model', 'disable_reason_model', 'question_model', 'leavetypes_model', 'alumni_model', 'lessonplan_model', 'syllabus_model', 'Staffidcard_model', 'Generatestaffidcard_model', 'visitors_model', 'video_tutorial_model'));
-        $this->load->model(array('customfield_model', 'onlinestudent_model', 'houselist_model', 'onlineexam_model', 'onlineexamquestion_model', 'onlineexamresult_model', 'examstudent_model', 'admitcard_model', 'marksheet_model', 'chatuser_model', 'examgroupstudent_model', 'examgroup_model', 'batchsubject_model', 'filetype_model', 'currency_model', 'examsubject_model', 'feereminder_model'));
         $this->load->library(array('Role', 'Smsgateway', 'QDMailer', 'Adler32', 'Aes'));
-        $this->load->library(array('auth', 'module_lib', 'pushnotification', 'jsonlib'));
+        $this->load->library(array('auth', 'module_lib', 'pushnotification', 'jsonlib', 'datatables'));
         $this->load->library(array('version_control'));
 
         if ($this->session->has_userdata('admin')) {
@@ -52,6 +176,32 @@ class MY_Controller extends CI_Controller
                 $this->db->query("SET @current_audit_user_id = " . (int)$audit_user_id);
             }
         }
+    }
+
+    public function __get($key)
+    {
+        if (isset($this->lazy_models[$key])) {
+            $this->load->model($key);
+            return $this->$key;
+        }
+
+        // Case-insensitive fallback
+        $lower_key = strtolower($key);
+        foreach ($this->lazy_models as $model_name => $val) {
+            if (strtolower($model_name) === $lower_key) {
+                $this->load->model($model_name);
+                // Return using original $key to ensure compatibility
+                // but CodeIgniter's loader sets the property matching the casing of the string passed
+                // wait, if we load 'Module_model', it sets $this->Module_model.
+                // we should assign it to $this->$key as well, so future accesses are O(1).
+                if (!isset($this->$key) && isset($this->$model_name)) {
+                    $this->$key = $this->$model_name;
+                }
+                return $this->$key;
+            }
+        }
+
+        return null;
     }
 
 }

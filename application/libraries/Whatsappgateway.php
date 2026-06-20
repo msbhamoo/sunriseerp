@@ -78,6 +78,81 @@ class Whatsappgateway
         if ($err) {
             return false;
         } else {
+            // Log to Central WhatsApp Log
+            $title_map = array(
+                'sentRegisterWhatsapp' => 'New Admission',
+                'sentAddGroupFeeWhatsapp' => 'Group Fee Submission',
+                'sentAddFeeWhatsapp' => 'Fee Submission',
+                'sentFeeProcessingNotification' => 'Fee Processing',
+                'sentfeesreminderNotification' => 'Fees Reminder',
+                'sendStudentLoginCredential' => 'Student Login Credential',
+                'sendStaffLoginCredential' => 'Staff Login Credential',
+                'student_apply_leave' => 'Leave Application',
+                'sentExamResultWhatsapp' => 'Exam Result',
+                'sendPresentAttendancenotification' => 'Present Attendance',
+                'sentPresentStaffWhatsapp' => 'Staff Present',
+                'sentAbsentStaffWhatsapp' => 'Staff Absent',
+                'sendAbsentAttendancenotification' => 'Absent Attendance',
+                'sendstudentlhomework' => 'Homework Notification',
+                'sentOnlineexamStudentWhatsapp' => 'Online Exam Notification',
+                'sendOnlineadmissionformsubmit' => 'Online Admission Form',
+                'sentstudentOnlineadmissionFeessubmissionWhatsapp' => 'Online Admission Fee Submission'
+            );
+
+            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+            $caller_function = isset($trace[1]['function']) ? $trace[1]['function'] : 'Automated WhatsApp Message';
+
+            // Only log if the caller function is one of the automated ones.
+            // Manual broadcasts (via sendDynamicWhatsapp) are already logged by the Mailsms controller.
+            if (isset($title_map[$caller_function])) {
+                $title = $title_map[$caller_function];
+
+                if (!empty($detail)) {
+                    $name = '';
+                    if (is_array($detail) && !empty($detail['student_name'])) {
+                        $name = $detail['student_name'];
+                    } elseif (is_object($detail) && !empty($detail->firstname)) {
+                        $name = $detail->firstname . ' ' . $detail->lastname;
+                    } elseif (is_array($detail) && !empty($detail['firstname'])) {
+                        $name = $detail['firstname'] . ' ' . $detail['lastname'];
+                    }
+                    if ($name) {
+                        $title .= " - " . $name;
+                    }
+                }
+
+                $this->CI->load->model('messages_model');
+                $user_list = array(
+                    array(
+                        'mobileno' => $mobile,
+                        'app_key'  => ''
+                    )
+                );
+                
+                $message_data = array(
+                    'title'              => $title,
+                    'message'            => $message_text,
+                    'append_roles'       => '',
+                    'user_list'          => json_encode($user_list),
+                    'is_group'           => 0,
+                    'is_individual'      => 1,
+                    'is_class'           => 0,
+                    'send_mail'          => 0,
+                    'send_sms'           => 0,
+                    'send_whatsapp'      => 1,
+                    'created_at'         => date('Y-m-d H:i:s'),
+                );
+                $message_id = $this->CI->messages_model->add($message_data);
+                
+                // Insert into whatsapp_message_logs
+                $this->CI->db->insert('whatsapp_message_logs', array(
+                    'message_id' => $message_id,
+                    'mobileno'   => $mobile,
+                    'status'     => 'Sent',
+                    'created_at' => date('Y-m-d H:i:s')
+                ));
+            }
+
             return $response;
         }
     }

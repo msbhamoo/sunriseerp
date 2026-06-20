@@ -185,13 +185,21 @@
             <tbody>
               <?php
               foreach ($timetable[$tm_key] as $tm_k => $tm_kue) {
-
+                  if (isset($tm_kue->period_type) && $tm_kue->period_type == 'break') {
+                  ?>
+                    <tr>
+                      <td class="text text-center" colspan="4" style="background-color: #f9f9f9;">
+                        <strong><?php echo $tm_kue->break_label; ?></strong> (<?php echo $tm_kue->time_from . " - " . $tm_kue->time_to; ?>)
+                      </td>
+                    </tr>
+                  <?php
+                  } else {
               ?>
                 <tr>
 
                   <td class="text">
                     <?php
-                    echo $tm_kue->subject_name;
+                    echo $tm_kue->subject_name != '' ? $tm_kue->subject_name : '<span class="text-danger">'.$this->lang->line('not_scheduled').'</span>';
                     if ($tm_kue->code != '') {
                       echo " (" . $tm_kue->code . ")";
                     }
@@ -199,12 +207,12 @@
                   </td>
                   <td class="text">
                     <?php echo $tm_kue->time_from . " - " . $tm_kue->time_to; ?></td>
-                  <td class="text"><?php echo $tm_kue->name . " " . $tm_kue->surname . " (" . $tm_kue->employee_id . ")"; ?></td>
+                  <td class="text"><?php echo $tm_kue->name != '' ? $tm_kue->name . " " . $tm_kue->surname . " (" . $tm_kue->employee_id . ")" : '<span class="text-danger">'.$this->lang->line('not_scheduled').'</span>'; ?></td>
 
                   <td class="text"><?php echo $tm_kue->room_no; ?></td>
                 </tr>
               <?php
-
+                  }
               }
               ?>
 

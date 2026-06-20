@@ -153,40 +153,6 @@ class Absenteefollowup extends Admin_Controller
                         
                         if ($chk_mail_sms['is_student_recipient']) { 
                             $this->whatsappgateway->sendAbsentAttendancenotification($detail, $chk_mail_sms['template'], $chk_mail_sms['whatsapp_template_id'], $detail['mobileno']);
-                            
-                            // Log to Central WhatsApp Log
-                            $this->load->model('messages_model');
-                            $user_list = array(
-                                array(
-                                    'mobileno' => $detail['mobileno'] ? $detail['mobileno'] : ($detail['guardian_phone'] ? $detail['guardian_phone'] : ($detail['father_phone'] ? $detail['father_phone'] : $detail['mother_phone'])),
-                                    'app_key'  => $detail['app_key']
-                                )
-                            );
-                            
-                            $msg = $this->smsgateway->getAbsentStudentContent($detail, $chk_mail_sms['template'], '');
-                            
-                            $message_data = array(
-                                'title'              => 'Absentee Follow-up: ' . $this->customlib->getFullName($detail['firstname'], $detail['middlename'], $detail['lastname'], $this->sch_setting_detail->middlename, $this->sch_setting_detail->lastname),
-                                'message'            => $msg,
-                                'append_roles'       => '',
-                                'user_list'          => json_encode($user_list),
-                                'is_group'           => 0,
-                                'is_individual'      => 1,
-                                'is_class'           => 0,
-                                'send_mail'          => 0,
-                                'send_sms'           => 0,
-                                'send_whatsapp'      => 1,
-                                'created_at'         => $this->customlib->getCurrentTime(),
-                            );
-                            $message_id = $this->messages_model->add($message_data);
-                            
-                            // Insert into whatsapp_message_logs
-                            $this->db->insert('whatsapp_message_logs', array(
-                                'message_id' => $message_id,
-                                'mobileno'   => $user_list[0]['mobileno'],
-                                'status'     => 'Sent',
-                                'created_at' => $this->customlib->getCurrentTime()
-                            ));
                         }
                     }
                 }

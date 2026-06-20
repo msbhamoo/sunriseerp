@@ -184,6 +184,15 @@
             <tbody>
               <?php
               foreach ($timetable[$tm_key] as $tm_k => $tm_kue) {
+                  if (isset($tm_kue->period_type) && $tm_kue->period_type == 'break') {
+                  ?>
+                    <tr>
+                      <td class="text text-center" colspan="4" style="background-color: #f9f9f9;">
+                        <strong><?php echo $tm_kue->break_label; ?></strong> (<?php echo $tm_kue->time_from . " - " . $tm_kue->time_to; ?>)
+                      </td>
+                    </tr>
+                  <?php
+                  } else {
               ?>
                 <tr>
 
@@ -203,7 +212,7 @@
                   <td class="text"><?php echo $tm_kue->room_no; ?></td>
                 </tr>
               <?php
-
+                  }
               }
               ?>
 

@@ -17,7 +17,8 @@
 
     <div class="col-md-12 column">
         
-        <a id="add_row" class="addrow addbtnright btn btn-primary pull-right"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add_new'); ?></a>
+        <a id="add_row" class="addrow btn btn-primary btn-sm pull-right ml-1"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add_new'); ?></a>
+        <a id="add_break_row" class="addbreakrow btn btn-info btn-sm pull-right mr-1" style="margin-right: 5px;"><i class="fa fa-coffee"></i> Add Break</a>
 
 
 
@@ -68,24 +69,30 @@
                                     <td>
                                         <input type="hidden" name="total_row[]" value="<?php echo $counter; ?>">
                                         <input type="hidden" name="prev_id_<?php echo $counter; ?>" value="<?php echo $prev_rec_value->id; ?>">
-                                        <select class="form-control subject" id="subject_id_<?php echo $counter; ?>" name="subject_<?php echo $counter; ?>">
+                                        <input type="hidden" class="period_type" name="period_type_<?php echo $counter; ?>" value="<?php echo isset($prev_rec_value->period_type) ? $prev_rec_value->period_type : 'period'; ?>">
+                                        
+                                        <?php if (isset($prev_rec_value->period_type) && $prev_rec_value->period_type == 'break') { ?>
+                                            <input type="text" class="form-control break_label" name="break_label_<?php echo $counter; ?>" value="<?php echo $prev_rec_value->break_label; ?>" placeholder="Break Label">
+                                        <?php } else { ?>
+                                            <select class="form-control subject" id="subject_id_<?php echo $counter; ?>" name="subject_<?php echo $counter; ?>">
 
-                                            <option value=""><?php echo $this->lang->line('select') ?></option>
-                                            <?php
-                                            foreach ($subject as $subject_key => $subject_value) {
-                                            ?>
+                                                <option value=""><?php echo $this->lang->line('select') ?></option>
+                                                <?php
+                                                foreach ($subject as $subject_key => $subject_value) {
+                                                ?>
 
-                                                <option value="<?php echo $subject_value->id; ?>" <?php echo set_select('subject_' . $counter, $subject_value->id, ($prev_rec_value->subject_group_subject_id == $subject_value->id) ? TRUE : FALSE); ?>>
-                                                    <?php
-                                                    $sub_code = ($subject_value->code != "") ? " (" . $subject_value->code . ")" : "";
-                                                    echo $subject_value->name . $sub_code;
-                                                    ?>
-                                                    <?php ?>
-                                                </option>
-                                            <?php
-                                            }
-                                            ?>
-                                        </select>
+                                                    <option value="<?php echo $subject_value->id; ?>" <?php echo set_select('subject_' . $counter, $subject_value->id, ($prev_rec_value->subject_group_subject_id == $subject_value->id) ? TRUE : FALSE); ?>>
+                                                        <?php
+                                                        $sub_code = ($subject_value->code != "") ? " (" . $subject_value->code . ")" : "";
+                                                        echo $subject_value->name . $sub_code;
+                                                        ?>
+                                                        <?php ?>
+                                                    </option>
+                                                <?php
+                                                }
+                                                ?>
+                                            </select>
+                                        <?php } ?>
 
                                     </td>
 
@@ -121,21 +128,29 @@
                                     </td>
 
                                     <td>
-                                        <select class="form-control staff" onchange="check_class_dublicate_recored(<?php echo $counter; ?>,this.value)" id="staff_id_<?php echo $counter; ?>" name="staff_<?php echo $counter; ?>">
-                                            <option value=""><?php echo $this->lang->line('select') ?></option>
-                                            <?php
-                                            foreach ($staff as $staff_key => $staff_value) {
-                                            ?>
+                                        <?php if (isset($prev_rec_value->period_type) && $prev_rec_value->period_type == 'break') { ?>
+                                            <span class="text-muted">N/A</span>
+                                        <?php } else { ?>
+                                            <select class="form-control staff" onchange="check_class_dublicate_recored(<?php echo $counter; ?>,this.value)" id="staff_id_<?php echo $counter; ?>" name="staff_<?php echo $counter; ?>">
+                                                <option value=""><?php echo $this->lang->line('select') ?></option>
+                                                <?php
+                                                foreach ($staff as $staff_key => $staff_value) {
+                                                ?>
 
-                                                <option value="<?php echo $staff_value['id']; ?>" <?php echo set_select('staff_' . $counter, $staff_value['id'], ($prev_rec_value->staff_id == $staff_value['id']) ? TRUE : FALSE); ?>><?php echo $staff_value['name'] . " " . $staff_value['surname'] . " (" . $staff_value['employee_id'] . ")"; ?></option>
-                                            <?php
-                                            }
-                                            ?>
-                                        </select>
+                                                    <option value="<?php echo $staff_value['id']; ?>" <?php echo set_select('staff_' . $counter, $staff_value['id'], ($prev_rec_value->staff_id == $staff_value['id']) ? TRUE : FALSE); ?>><?php echo $staff_value['name'] . " " . $staff_value['surname'] . " (" . $staff_value['employee_id'] . ")"; ?></option>
+                                                <?php
+                                                }
+                                                ?>
+                                            </select>
+                                        <?php } ?>
 
                                     </td>
                                     <td>
-                                        <input type="text" name='room_no_<?php echo $counter; ?>' value="<?php echo $prev_rec_value->room_no; ?>" placeholder='Room no' class="form-control room_no" id="room_no_<?php echo $counter; ?>" />
+                                        <?php if (isset($prev_rec_value->period_type) && $prev_rec_value->period_type == 'break') { ?>
+                                            <span class="text-muted">N/A</span>
+                                        <?php } else { ?>
+                                            <input type="text" name='room_no_<?php echo $counter; ?>' value="<?php echo $prev_rec_value->room_no; ?>" placeholder='Room no' class="form-control room_no" id="room_no_<?php echo $counter; ?>" />
+                                        <?php } ?>
                                     </td>
                                     <td class="text-right"><button class="ibtnDel btn btn-danger btn-danger"> <i class="fa fa-trash"></i></button></td>
 
@@ -152,6 +167,7 @@
                                 <td class="relative">
                                     <input type="hidden" name="total_row[]" value="<?php echo $total_count; ?>">
                                     <input type="hidden" name="prev_id_<?php echo $total_count; ?>" value="0">
+                                    <input type="hidden" class="period_type" name="period_type_<?php echo $total_count; ?>" value="period">
                                     <select class="form-control subject" id="subject_id_<?php echo $total_count; ?>" name="subject_<?php echo $total_count; ?>">
 
                                         <option value=""><?php echo $this->lang->line('select') ?></option>
@@ -226,6 +242,7 @@
             <?php if ($this->rbac->hasPrivilege('class_timetable', 'can_edit')) {
             ?>
                 <button class="btn btn-primary pull-right" type="submit"><i class="fa fa-save"></i> <?php echo $this->lang->line('save'); ?></button>
+                <button type="button" class="btn btn-info pull-right mr-1" style="margin-right: 5px;" onclick="openCopyModal('<?php echo $day; ?>')"><i class="fa fa-copy"></i> Copy Timetable</button>
             <?php }
             ?>
 
@@ -245,22 +262,36 @@
 
             // adding rules for inputs with class 'comment'
             $('select[id^="subject_id_"]').each(function() {
-                $(this).rules('add', {
-                    required: true,
-                    messages: {
-                        required: "<?php echo $this->lang->line('required'); ?>"
-                    }
-                });
+                if ($(this).closest('tr').find('.period_type').val() !== 'break') {
+                    $(this).rules('add', {
+                        required: true,
+                        messages: {
+                            required: "<?php echo $this->lang->line('required'); ?>"
+                        }
+                    });
+                }
+            });
 
-            }); // adding rules for inputs with class 'comment'
             $('select[id^="staff_id_"]').each(function() {
-                $(this).rules('add', {
-                    required: true,
-                    messages: {
-                        required: "<?php echo $this->lang->line('required'); ?>"
-                    }
-                });
+                if ($(this).closest('tr').find('.period_type').val() !== 'break') {
+                    $(this).rules('add', {
+                        required: true,
+                        messages: {
+                            required: "<?php echo $this->lang->line('required'); ?>"
+                        }
+                    });
+                }
+            });
 
+            $('input[id^="break_label_"]').each(function() {
+                if ($(this).closest('tr').find('.period_type').val() === 'break') {
+                    $(this).rules('add', {
+                        required: true,
+                        messages: {
+                            required: "<?php echo $this->lang->line('required'); ?>"
+                        }
+                    });
+                }
             });
 
 
@@ -283,14 +314,7 @@
                 });
             });
 
-            $('input[id^="room_no_"]').each(function() {
-                $(this).rules('add', {
-                    required: true,
-                    messages: {
-                        required: "<?php echo $this->lang->line('required'); ?>"
-                    }
-                });
-            });
+
 
             // prevent default submit action         
             event.preventDefault();
