@@ -54,6 +54,9 @@ class Substitution extends Admin_Controller
         $day_of_week = date('l', $timestamp);
 
         $timetable = $this->subjecttimetable_model->getByStaffandDay($staff_id, $day_of_week);
+        if (!$timetable) {
+            $timetable = [];
+        }
 
         // Fetch already substituted periods for this specific date and absent teacher
         $current_session = $this->setting_model->getCurrentSession();
