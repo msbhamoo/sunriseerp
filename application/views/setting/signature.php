@@ -33,9 +33,6 @@ $signatures = [
                             <?php foreach($signatures as $field_name => $display_name): ?>
                                 <div class="col-lg-3 col-md-4 col-sm-6">
                                     <div class="card-body-logo" style="position: relative; margin-bottom: 20px; min-height: 250px; display: flex; flex-direction: column; justify-content: space-between; padding: 15px; border: 1px solid #e1e1e1; border-radius: 4px; background: #fff;">
-                                        <?php if (!empty($result->{$field_name})) { ?>
-                                            <a href="javascript:void(0);" class="btn btn-xs btn-danger remove_signature_btn" data-signature_type="<?php echo $field_name; ?>" style="position: absolute; top: 10px; right: 10px; z-index: 10; padding: 2px 6px;" title="Remove Signature"><i class="fa fa-trash"></i></a>
-                                        <?php } ?>
                                         <div>
                                             <h4 style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid #f4f4f4; padding-bottom: 10px; margin-top: 0; color: #333;" title="<?php echo $display_name; ?>"><?php echo $display_name; ?></h4> 
                                             
@@ -60,7 +57,12 @@ $signatures = [
 
                                         <div>
                                             <div class="form-group" style="margin-bottom: 0;">
-                                                <label style="font-size: 12px; font-weight: normal; color: #666; display: block; text-align: left;">Map to Staff:</label>
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                                    <label style="font-size: 12px; font-weight: normal; color: #666; margin: 0;">Map to Staff:</label>
+                                                    <?php if (!empty($result->{$field_name})) { ?>
+                                                        <a href="javascript:void(0);" class="text-danger remove_signature_btn" data-signature_type="<?php echo $field_name; ?>" style="font-size: 11px;" title="Remove Signature"><i class="fa fa-trash"></i> Remove</a>
+                                                    <?php } ?>
+                                                </div>
                                                 <select class="form-control signature_staff_mapping input-sm" data-signature_type="<?php echo $field_name; ?>_staff">
                                                     <option value="">Select Staff</option>
                                                     <?php foreach ($staffs as $staff) { 
