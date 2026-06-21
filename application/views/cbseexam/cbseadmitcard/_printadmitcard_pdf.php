@@ -21,9 +21,9 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
 <style>
     :root {
         --primary-color: <?php echo $theme_color; ?>;
-        --border-color: #000000;
+        --border-color: #e5e7eb;
         --text-main: #1f2937;
-        --text-muted: #4b5563;
+        --text-muted: #6b7280;
     }
 
     * {
@@ -32,24 +32,25 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
         color-adjust: exact !important;
     }
 
-    body {
+    /* Print Base */
+    html, body {
         margin: 0;
         padding: 0;
         background: #fff;
-        font-family: 'Helvetica', 'Arial', sans-serif;
+        font-family: 'Inter', sans-serif;
         color: var(--text-main);
     }
-
     .print-receipt-wrapper {
-        width: 100%;
-        margin: 0 auto;
-        padding-bottom: 20px;
+        width: 96%;
+        max-width: 800px;
+        margin: 15px auto;
     }
 
     /* Receipt Copy Container */
     .receipt-copy {
         width: 100%;
-        border: 1px solid var(--border-color);
+        border: 2px solid var(--primary-color);
+        border-radius: 8px;
         margin-bottom: 20px; /* Space between copies */
         position: relative;
         overflow: hidden;
@@ -71,72 +72,83 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
     .receipt-inner {
         position: relative;
         z-index: 1;
-        padding: 10px 15px;
+        padding: 20px;
     }
 
     /* Header Top Row */
     .header-top {
         display: flex;
         justify-content: space-between;
-        font-size: 10px;
+        font-size: 11px;
         color: var(--text-muted);
-        margin-bottom: 5px;
+        margin-bottom: 10px;
     }
 
     /* Main Header */
     .receipt-header {
-        display: table;
-        width: 100%;
-        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 15px;
     }
-    
-    .header-col {
-        display: table-cell;
-        vertical-align: middle;
-    }
-    
     .logo-container {
-        width: 60px;
+        width: 140px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     .logo-container img {
-        width: 100%;
-        max-height: 60px;
-        height: auto;
+        max-width: 100%;
+        max-height: 80px;
+        object-fit: contain;
     }
     
     .school-info {
+        flex-grow: 1;
         text-align: center;
-        padding: 0 10px;
+        padding: 0 15px;
     }
     .school-name {
-        font-size: 18px;
-        font-weight: bold;
-        color: var(--primary-color);
-        margin: 0 0 3px 0;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0 0 5px 0;
     }
     .school-address {
-        font-size: 11px;
+        font-size: 12px;
         color: var(--text-muted);
-        margin: 0 0 3px 0;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 3px;
+        margin: 0 0 5px 0;
+        border-bottom: 1px solid var(--text-main);
+        padding-bottom: 8px;
         display: inline-block;
-        width: 80%;
+        width: 90%;
+    }
+    .school-contact {
+        font-size: 11px;
+        margin: 0;
+        color: var(--text-main);
+        margin-top: 5px;
     }
     .session-info {
-        font-weight: bold;
+        font-weight: 700;
         font-size: 12px;
-        margin-top: 3px;
-        color: #000;
-        text-transform: uppercase;
-    }
-    
-    .copy-label {
-        font-size: 12px;
-        font-weight: bold;
+        margin-top: 5px;
         color: var(--text-main);
-        width: 100px;
-        text-align: right;
+    }
+    .cert-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-top: 5px;
+    }
+
+    .cert-title {
+        text-align: center;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 20px 0 30px 0;
     }
 
     /* Meta Info Grid */
@@ -210,6 +222,12 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
 </head>
 <body>
 
+<?php 
+$exam_incharge_sig = $this->customlib->getSignatureMapping('sign_exam_incharge');
+$class_teacher_sig = $this->customlib->getSignatureMapping('sign_class_teacher');
+$principal_sig = $this->customlib->getSignatureMapping('sign_principal');
+?>
+
 <?php foreach ($student_details as $student) { ?>
     <div class="print-receipt-wrapper">
         <div class="receipt-copy">
@@ -221,13 +239,14 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
             <div class="receipt-inner">
                 <!-- Header Top Row -->
                 <div class="header-top">
-                    <span><strong>Roll No:</strong> <?php echo $student->roll_no; ?></span>
-                    <span><strong>Center:</strong> <?php echo $admitcard->exam_center; ?></span>
+                    <span>Reg No: <?php echo $sch_setting->dise_code; ?></span>
+                    <span>Affiliation No.: <?php echo $sch_setting->dise_code; ?></span>
+                    <span>U Dise Code: <?php echo $sch_setting->dise_code; ?></span>
                 </div>
 
                 <!-- Main Header -->
                 <div class="receipt-header">
-                    <div class="header-col logo-container">
+                    <div class="logo-container">
                         <?php if (!empty($admitcard->left_logo)) { ?>
                             <img src="<?php echo base_url('uploads/cbseexam/admitcard/' . $admitcard->left_logo); ?>">
                         <?php } elseif (!empty($sch_setting->image)) { ?>
@@ -235,14 +254,20 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
                         <?php } ?>
                     </div>
                     
-                    <div class="header-col school-info">
-                        <div class="school-name"><?php echo (!empty($admitcard->school_name)) ? $admitcard->school_name : $sch_setting->name; ?></div>
+                    <div class="school-info">
+                        <h1 class="school-name"><?php echo $sch_setting->name; ?></h1>
                         <div class="school-address"><?php echo $sch_setting->address; ?></div>
-                        <div class="session-info"><?php echo $admitcard->title; ?> <?php echo (!empty($admitcard->exam_name)) ? '- ' . $admitcard->exam_name : '- ' . $exam->name; ?></div>
+                        <p class="school-contact">Email: <?php echo $sch_setting->email; ?> &nbsp; Mobile No: <?php echo $sch_setting->phone; ?> &nbsp; Website: <?php echo $sch_setting->phone; ?></p>
+                        <div class="session-info">Admit Card - <?php echo $exam->name; ?></div>
                     </div>
                     
-                    <div class="header-col copy-label" style="width: 60px;">
-                        <!-- Removed Candidate/Office Copy label -->
+                    <div class="logo-container" style="visibility: hidden;">
+                        <!-- Balancer for flex -->
+                        <?php if (!empty($admitcard->left_logo)) { ?>
+                            <img src="<?php echo base_url('uploads/cbseexam/admitcard/' . $admitcard->left_logo); ?>">
+                        <?php } elseif (!empty($sch_setting->image)) { ?>
+                            <img src="<?php echo base_url('uploads/school_content/logo/' . $sch_setting->image); ?>" alt="School Logo">
+                        <?php } ?>
                     </div>
                 </div>
 
@@ -252,8 +277,8 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
                         <td class="meta-label">Student Name</td>
                         <td class="meta-value">: <?php echo $student->firstname . ' ' . $student->lastname; ?></td>
                         
-                        <td class="meta-label" style="padding-left:15px;">Father's Name</td>
-                        <td class="meta-value">: <?php echo $student->father_name; ?></td>
+                        <td class="meta-label" style="padding-left:15px;">Roll No</td>
+                        <td class="meta-value">: <?php echo $student->roll_no; ?></td>
                         
                         <td rowspan="4" class="student-photo-cell">
                             <?php if (!empty($student->image)) { ?>
@@ -276,6 +301,13 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
                         
                         <td class="meta-label" style="padding-left:15px;">Adm No</td>
                         <td class="meta-value">: <?php echo $student->admission_no; ?></td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">Father's Name</td>
+                        <td class="meta-value">: <?php echo $student->father_name; ?></td>
+                        
+                        <td class="meta-label" style="padding-left:15px;">Center</td>
+                        <td class="meta-value">: <?php echo $admitcard->exam_center; ?></td>
                     </tr>
                 </table>
 
@@ -312,21 +344,30 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
                 <table class="signatures">
                     <tr>
                         <td style="text-align:left; width:33%;">
-                            <?php if (!empty($admitcard->left_sign)) { ?>
-                                <img src="<?php echo base_url('uploads/cbseexam/admitcard/' . $admitcard->left_sign); ?>" style="max-height: 25px;"><br>
+                            <?php if (!empty($exam_incharge_sig['image_url'])) { ?>
+                                <img src="<?php echo $exam_incharge_sig['image_url']; ?>" style="max-height: 25px;"><br>
+                            <?php } else { ?>
+                                <div style="height: 25px;"></div>
                             <?php } ?>
-                            Candidate's Sign
+                            <?php if (!empty($exam_incharge_sig['staff_name'])) { echo '<strong>'.$exam_incharge_sig['staff_name'].'</strong><br>'; } ?>
+                            Exam Incharge's Sign
                         </td>
                         <td style="text-align:center; width:33%;">
-                            <?php if (!empty($admitcard->middle_sign)) { ?>
-                                <img src="<?php echo base_url('uploads/cbseexam/admitcard/' . $admitcard->middle_sign); ?>" style="max-height: 25px;"><br>
+                            <?php if (!empty($class_teacher_sig['image_url'])) { ?>
+                                <img src="<?php echo $class_teacher_sig['image_url']; ?>" style="max-height: 25px;"><br>
+                            <?php } else { ?>
+                                <div style="height: 25px;"></div>
                             <?php } ?>
+                            <?php if (!empty($class_teacher_sig['staff_name'])) { echo '<strong>'.$class_teacher_sig['staff_name'].'</strong><br>'; } ?>
                             Class Teacher
                         </td>
                         <td style="text-align:right; width:33%;">
-                            <?php if (!empty($admitcard->right_sign)) { ?>
-                                <img src="<?php echo base_url('uploads/cbseexam/admitcard/' . $admitcard->right_sign); ?>" style="max-height: 25px;"><br>
+                            <?php if (!empty($principal_sig['image_url'])) { ?>
+                                <img src="<?php echo $principal_sig['image_url']; ?>" style="max-height: 25px;"><br>
+                            <?php } else { ?>
+                                <div style="height: 25px;"></div>
                             <?php } ?>
+                            <?php if (!empty($principal_sig['staff_name'])) { echo '<strong>'.$principal_sig['staff_name'].'</strong><br>'; } ?>
                             Principal's Sign
                         </td>
                     </tr>

@@ -350,6 +350,218 @@
 			color: #7f8c8d;
 			font-size: 13px;
 		}
+
+/* =========================================
+   Top Navbar SaaS Modernization
+   ========================================= */
+
+/* Organization Name (Sidebar Session) */
+.sidebar-session {
+    font-family: 'Inter', -apple-system, sans-serif !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: #111827 !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 50px !important;
+    padding-left: 15px !important;
+    letter-spacing: -0.2px !important;
+    text-transform: none !important;
+}
+
+/* Base Navbar Cleanup */
+.main-header {
+    border-bottom: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    background-color: #ffffff !important;
+}
+
+/* Separation for Logo (Sidebar Width) */
+.main-header .logo {
+    padding-left: 20px !important;
+    border-right: 1px solid #9ca3af !important;
+    background-color: #ffffff !important;
+    text-align: left !important;
+}
+
+.main-header .navbar {
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    height: 50px !important;
+}
+
+/* Flexbox Layout for Right Menu */
+.navbar-custom-menu {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    height: 100% !important;
+}
+
+.navbar-nav.headertopmenu {
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex-direction: row !important;
+}
+
+/* Fix spacing for currency and language switchers */
+.currency-icon-list, .langdiv {
+    display: flex !important;
+    align-items: center !important;
+    margin-right: 8px !important;
+}
+
+/* Navbar Icons (The Action Buttons) */
+.navbar-nav.headertopmenu > li {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.navbar-nav.headertopmenu > li > a {
+    color: #4b5563 !important;
+    transition: all 0.2s ease !important;
+    padding: 0 !important;
+    width: 38px !important;
+    height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important; /* Circular like Google/GitHub */
+    margin: 0 4px !important;
+    position: relative !important;
+}
+
+.navbar-nav.headertopmenu > li > a:hover {
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+}
+
+.navbar-nav.headertopmenu > li > a i {
+    font-size: 20px !important;
+    font-weight: normal !important;
+    position: static !important;
+    color: #4b5563 !important;
+}
+
+/* Fix WhatsApp Icon */
+.whatsapp-icon-bg {
+    display: flex !important;
+    align-items: center !important;
+}
+.whatsapp-icon-bg a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 50% !important;
+}
+.whatsapp-icon-bg svg {
+    transition: all 0.2s ease !important;
+    width: 22px !important;
+    height: 22px !important;
+}
+.whatsapp-icon-bg:hover svg {
+    transform: scale(1.1);
+}
+
+/* Notification Badges (The Red Dots) */
+.navbar-nav.headertopmenu .todo-indicator,
+.navbar-nav.headertopmenu .topbadges {
+    position: absolute !important;
+    top: 0px !important;
+    right: -2px !important;
+    background-color: #ef4444 !important; /* Soft Red */
+    color: #ffffff !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    border-radius: 50% !important;
+    width: 18px !important;
+    height: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    box-sizing: content-box !important;
+}
+
+/* User Profile Image Box */
+.topuser-image {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 2px solid transparent !important;
+    transition: all 0.2s ease !important;
+    margin-left: 8px !important;
+}
+
+.navbar-nav.headertopmenu > li > a:hover .topuser-image {
+    border-color: var(--primary-theme-color, #3b82f6) !important;
+}
+
+/* Top Navbar Dropdowns (Tasks, Profile, Language) */
+.navbar-nav .dropdown-menu,
+.dropdown-menu.menuboxshadow {
+    border-radius: 12px !important;
+    box-shadow: 0 10px 30px -5px rgba(0,0,0,0.1), 0 4px 10px -5px rgba(0,0,0,0.04) !important;
+    border: 1px solid #e5e7eb !important;
+    padding: 8px 0 !important;
+    margin-top: 10px !important;
+}
+
+.navbar-nav .dropdown-menu > li > a {
+    color: #4b5563 !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    margin: 2px 8px !important;
+    transition: all 0.2s ease !important;
+    display: block !important;
+}
+
+.navbar-nav .dropdown-menu > li > a:hover {
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+    transform: translateX(2px) !important;
+}
+
+/* Dropdown Headers (e.g. "You have 3 pending tasks") */
+.navbar-nav .dropdown-menu .todoview,
+.navbar-nav .dropdown-menu li.header {
+    background-color: #ffffff !important;
+    color: #6b7280 !important;
+    font-weight: 600 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    padding: 10px 16px !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    margin-bottom: 6px !important;
+}
+
+/* Fix Language & Currency Dropdown Containers */
+.langdiv .bootstrap-select > .dropdown-toggle,
+.currency-icon-list .bootstrap-select > .dropdown-toggle {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #4b5563 !important;
+    font-weight: 500 !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+}
+.langdiv .bootstrap-select > .dropdown-toggle:hover,
+.currency-icon-list .bootstrap-select > .dropdown-toggle:hover {
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+}
   </style>
     </head>
 	
@@ -451,7 +663,7 @@ if ($this->module_lib->hasActive('calendar_to_do_list')) {
         ?>
                                             <li class="dropdown" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('task') ?>">
                                                 <a href="#"  class="dropdown-toggle todoicon" data-toggle="dropdown">
-                                                    <i class="icon-check-square" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i>
+                                                    <i class="fa fa-check-square-o" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i>
                                                     <?php
 $userdata = $this->customlib->getUserData();
         $count    = $this->customlib->countincompleteTask($userdata["id"],$userdata["role_id"]);

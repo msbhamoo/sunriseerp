@@ -98,10 +98,41 @@ class Cbseadmitcardbulk extends Admin_Controller
         redirect('cbseexam/cbseadmitcardbulk/generate');
     }
 
+    public function generate_admitcards()
+    {
+        $series = $this->input->post('series');
+        $cbse_exam_student_ids = $this->input->post('cbse_exam_student_id');
+
+        if (empty($cbse_exam_student_ids)) {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger">No students selected!</div>');
+            redirect('cbseexam/cbseadmitcardbulk/generate');
+        }
+
+        if (empty($series)) {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger">Please enter a Series to generate Admit Cards.</div>');
+            redirect('cbseexam/cbseadmitcardbulk/generate');
+        }
+
+        $current_series = (int)$series;
+
+        // Generate Roll Numbers
+        foreach ($cbse_exam_student_ids as $cbse_exam_student_id) {
+            $exam_student = $this->db->get_where('cbse_exam_students', ['id' => $cbse_exam_student_id])->row();
+            if ($exam_student) {
+                if (empty($exam_student->roll_no) || $exam_student->roll_no == 0 || $exam_student->roll_no == '') {
+                    $this->db->update('cbse_exam_students', ['roll_no' => $current_series], ['id' => $exam_student->id]);
+                    $current_series++;
+                }
+            }
+        }
+
+        $this->session->set_flashdata('msg', '<div class="alert alert-success">Admit Cards Generated successfully.</div>');
+        redirect('cbseexam/cbseadmitcardbulk/generate');
+    }
+
     public function save_and_download()
     {
         $admitcard_template = $this->input->post('admitcard_template');
-        $series = $this->input->post('series');
         $exam_id = $this->input->post('exam_id'); 
         $show_timetable = $this->input->post('show_timetable') ? 1 : 0;
         
@@ -113,21 +144,19 @@ class Cbseadmitcardbulk extends Admin_Controller
             redirect('cbseexam/cbseadmitcardbulk/generate');
         }
 
-        $current_series = (int)$series;
-
-        // Generate Roll Numbers if series is provided and roll_no is empty
+        // Get student ids that actually have roll numbers generated
+        $student_ids = array();
         foreach ($cbse_exam_student_ids as $cbse_exam_student_id) {
             $exam_student = $this->db->get_where('cbse_exam_students', ['id' => $cbse_exam_student_id])->row();
-            if ($exam_student) {
-                // Determine true student id for mpdf generating backwards compatibility
+            if ($exam_student && !empty($exam_student->roll_no)) {
                 $student_session = $this->db->get_where('student_session', ['id' => $exam_student->student_session_id])->row();
                 $student_ids[] = $student_session->student_id;
-
-                if (!empty($current_series) && (empty($exam_student->roll_no) || $exam_student->roll_no == 0 || $exam_student->roll_no == '')) {
-                    $this->db->update('cbse_exam_students', ['roll_no' => $current_series], ['id' => $exam_student->id]);
-                    $current_series++;
-                }
             }
+        }
+
+        if (empty($student_ids)) {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger">None of the selected students have generated Admit Cards. Please generate them first.</div>');
+            redirect('cbseexam/cbseadmitcardbulk/generate');
         }
 
         // Get admit card template
@@ -165,6 +194,49 @@ class Cbseadmitcardbulk extends Admin_Controller
 
         $mpdf->WriteHTML($pdf_html);
         $mpdf->Output('Admit_Cards_' . time() . '.pdf', 'D'); // Download
+    }
+    public function view_admitcard_html()
+    {
+        $admitcard_template = $this->input->post('admitcard_template');
+        $exam_id = $this->input->post('exam_id'); 
+        $show_timetable = $this->input->post('show_timetable') ? 1 : 0;
+        
+        $cbse_exam_student_id = $this->input->post('cbse_exam_student_id');
+
+        if (empty($cbse_exam_student_id)) {
+            echo '<div class="alert alert-danger">No student selected!</div>';
+            return;
+        }
+
+        $exam_student = $this->db->get_where('cbse_exam_students', ['id' => $cbse_exam_student_id])->row();
+        if ($exam_student) {
+            $student_session = $this->db->get_where('student_session', ['id' => $exam_student->student_session_id])->row();
+            $student_ids = [$student_session->student_id];
+        } else {
+            echo '<div class="alert alert-danger">Student not found!</div>';
+            return;
+        }
+
+        $data['admitcard'] = $this->cbseexam_admitcard_model->get($admitcard_template);
+        $data['sch_setting'] = $this->sch_setting_detail;
+        $data['show_timetable'] = $show_timetable;
+
+        $pdf_html = "";
+        
+        $data['exam'] = $this->cbseexam_admitcard_model->getexamlist($exam_id);
+        $data['exam_subjects'] = $this->cbseexam_admitcard_model->get_cbse_exam_timetable($exam_id);
+        $data['student_details'] = $this->cbseexam_admitcard_model->get_cbse_exam_students($student_ids, $exam_id);
+        
+        if (!empty($data['student_details'])) {
+            $pdf_html .= $this->load->view('cbseexam/cbseadmitcard/_printadmitcard_pdf', $data, true);
+        }
+
+        if (empty($pdf_html)) {
+            echo '<div class="alert alert-danger">Admit card could not be generated.</div>';
+            return;
+        }
+
+        echo $pdf_html;
     }
 }
 ?>

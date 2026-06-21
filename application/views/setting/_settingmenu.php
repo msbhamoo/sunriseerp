@@ -7,6 +7,9 @@
             <li class="<?php echo set_SubSubmenu('schsettings/logo'); ?>">
                 <a class="<?php echo set_SubSubmenu('schsettings/logo'); ?>" href="<?php echo site_url('schsettings/logo') ?>"><?php echo $this->lang->line('logo'); ?></a>
             </li>
+            <li class="<?php echo set_SubSubmenu('schsettings/signature'); ?>">
+                <a class="<?php echo set_SubSubmenu('schsettings/signature'); ?>" href="<?php echo site_url('schsettings/signature') ?>">Signatures</a>
+            </li>
             <li class="<?php echo set_SubSubmenu('schsettings/login_page_background'); ?>">
                 <a class="<?php echo set_SubSubmenu('schsettings/login_page_background'); ?>" href="<?php echo site_url('schsettings/login_page_background') ?>"><?php echo $this->lang->line('login_page_background'); ?></a>
             </li>            

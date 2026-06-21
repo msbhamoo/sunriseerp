@@ -93,26 +93,16 @@ input:checked + .slider:before {
   transform: translateX(20px);
 }
 
-/* Action Bar Sticky */
-.sticky-action-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid var(--border);
+/* Action Bar Top */
+.action-bar-top {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
     padding: 16px 24px;
-    box-shadow: 0 -4px 6px -1px rgb(0 0 0 / 0.05);
-    z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    transform: translateY(100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.sticky-action-bar.visible {
-    transform: translateY(0);
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .btn-premium {
@@ -224,7 +214,7 @@ input:checked + .slider:before {
     left: 2px;
 }
 
-.content-wrapper { padding-bottom: 80px; } /* Space for sticky bar */
+.content-wrapper { padding-bottom: 30px; }
 </style>
 
 <div class="content-wrapper">
@@ -325,8 +315,8 @@ input:checked + .slider:before {
                                 <input type="hidden" name="admitcard_template" value="<?php echo isset($get_active_admitcard->id) ? $get_active_admitcard->id : 0; ?>">
                                 <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
                                 
-                                <!-- Sticky Action Bar -->
-                                <div class="sticky-action-bar" id="stickyActionBar">
+                                <!-- Top Action Bar -->
+                                <div class="action-bar-top" id="topActionBar">
                                     <div style="display:flex; align-items:center; gap: 20px;">
                                         <div style="font-weight:600; color:var(--primary);">
                                             <span id="selectedCount">0</span> Students Selected
@@ -343,9 +333,12 @@ input:checked + .slider:before {
                                             </label>
                                         </div>
                                     </div>
-                                    <div>
-                                        <button class="btn-premium" type="submit" id="bulkDownloadBtn" disabled>
-                                            <i class="fa fa-file-pdf-o"></i> Generate & Download
+                                    <div style="display:flex; gap: 10px;">
+                                        <button class="btn btn-default" type="button" id="bulkGenerateBtn" onclick="submitGenerate()" disabled style="border-radius:8px; padding:10px 20px; font-weight:500;">
+                                            <i class="fa fa-cogs"></i> Generate / Regenerate
+                                        </button>
+                                        <button class="btn-premium" type="button" id="bulkDownloadBtn" onclick="submitDownload()" disabled>
+                                            <i class="fa fa-download"></i> Download All Generated
                                         </button>
                                     </div>
                                 </div>
@@ -397,6 +390,9 @@ input:checked + .slider:before {
                                                     <td><?php echo $student['category']; ?></td>
                                                     <td style="text-align:right;">
                                                         <?php if($has_roll) { ?>
+                                                            <button type="button" class="btn btn-default btn-xs" onclick="viewIndividual(<?php echo $student['cbse_exam_student_id']; ?>)" title="View Admit Card">
+                                                                <i class="fa fa-eye text-primary"></i>
+                                                            </button>
                                                             <!-- Trigger specific download via JS -->
                                                             <button type="button" class="btn btn-default btn-xs" onclick="downloadIndividual(<?php echo $student['cbse_exam_student_id']; ?>)" title="Download">
                                                                 <i class="fa fa-download text-primary"></i>
@@ -439,6 +435,21 @@ input:checked + .slider:before {
     <input type="hidden" name="show_timetable" value="1">
     <input type="hidden" name="cbse_exam_student_id[]" id="single_cbse_exam_student_id" value="">
 </form>
+
+<!-- Admit Card Modal -->
+<div class="modal fade" id="admitCardModal" tabindex="-1" role="dialog" aria-labelledby="admitCardModalLabel">
+  <div class="modal-dialog modal-lg" role="document" style="width: 80%;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="admitCardModalLabel">View Admit Card</h4>
+      </div>
+      <div class="modal-body" id="admitCardModalBody" style="padding:0;">
+          <iframe id="admitCardIframe" style="width: 100%; height: 700px; border: none;"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
     var class_id = '<?php echo set_value('class_id', $class_id) ?>';
@@ -493,16 +504,26 @@ input:checked + .slider:before {
         var checkedCount = $('.student-cb:checked').length;
         $('#selectedCount').text(checkedCount);
         
-        var actionBar = $('#stickyActionBar');
-        var btn = $('#bulkDownloadBtn');
+        var btnGen = $('#bulkGenerateBtn');
+        var btnDown = $('#bulkDownloadBtn');
 
         if(checkedCount > 0) {
-            actionBar.addClass('visible');
-            btn.prop('disabled', false);
+            btnGen.prop('disabled', false);
+            btnDown.prop('disabled', false);
         } else {
-            actionBar.removeClass('visible');
-            btn.prop('disabled', true);
+            btnGen.prop('disabled', true);
+            btnDown.prop('disabled', true);
         }
+    }
+
+    function submitGenerate() {
+        $('#generateCard').attr('action', '<?php echo base_url('cbseexam/cbseadmitcardbulk/generate_admitcards') ?>');
+        $('#generateCard').submit();
+    }
+
+    function submitDownload() {
+        $('#generateCard').attr('action', '<?php echo base_url('cbseexam/cbseadmitcardbulk/save_and_download') ?>');
+        $('#generateCard').submit();
     }
 
     function confirmGenerateMissing() {
@@ -518,5 +539,31 @@ input:checked + .slider:before {
     function downloadIndividual(cbse_exam_student_id) {
         $('#single_cbse_exam_student_id').val(cbse_exam_student_id);
         $('#individualDownloadForm').submit();
+    }
+
+    function viewIndividual(cbse_exam_student_id) {
+        var admitcard_template = $('input[name="admitcard_template"]').val();
+        var exam_id = $('input[name="exam_id"]').val();
+        var show_timetable = $('input[name="show_timetable"]').is(':checked') ? 1 : 0;
+        var base_url = '<?php echo base_url() ?>';
+
+        $.ajax({
+            url: base_url + "cbseexam/cbseadmitcardbulk/view_admitcard_html",
+            type: "POST",
+            data: {
+                cbse_exam_student_id: cbse_exam_student_id,
+                admitcard_template: admitcard_template,
+                exam_id: exam_id,
+                show_timetable: show_timetable
+            },
+            success: function(response) {
+                var iframe = document.getElementById('admitCardIframe');
+                iframe.srcdoc = response;
+                $('#admitCardModal').modal('show');
+            },
+            error: function() {
+                alert('Error fetching admit card preview');
+            }
+        });
     }
 </script>

@@ -2520,4 +2520,42 @@ class Customlib
             return $subjectnote[0]['note'];
         }
     }
+
+    public function getSignatureMapping($signature_type)
+    {
+        $setting = $this->CI->setting_model->getSetting();
+        $staff_col = $signature_type . '_staff';
+        
+        $image_file = isset($setting->$signature_type) ? $setting->$signature_type : '';
+        $staff_id = isset($setting->$staff_col) ? $setting->$staff_col : null;
+        
+        $image_url = '';
+        if (!empty($image_file)) {
+            $this->CI->load->library('media_storage');
+            $image_url = $this->CI->media_storage->getImageURL('uploads/school_content/signatures/' . $image_file);
+        }
+        
+        $staff_name = '';
+        $staff_employee_id = '';
+        $staff_designation = '';
+        if (!empty($staff_id)) {
+            $this->CI->load->model('staff_model');
+            $staff = $this->CI->staff_model->getProfile($staff_id);
+            if ($staff) {
+                $staff_name = $staff['name'] . ' ' . $staff['surname'];
+                $staff_employee_id = $staff['employee_id'];
+                $staff_designation = isset($staff['designation']) ? $staff['designation'] : '';
+            }
+        }
+        
+        return [
+            'image_file' => $image_file,
+            'image_url' => $image_url,
+            'staff_name' => $staff_name,
+            'staff_employee_id' => $staff_employee_id,
+            'staff_designation' => $staff_designation,
+            'staff_id' => $staff_id,
+            'signature_type' => $signature_type
+        ];
+    }
 }

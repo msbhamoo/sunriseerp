@@ -531,6 +531,145 @@ class Schsettings extends Admin_Controller
         $this->load->view('layout/footer');
     }
 
+    public function signature()
+    {        
+        $this->session->set_userdata('top_menu', 'System Settings');
+        $this->session->set_userdata('sub_menu', 'schsettings/index');
+        $this->session->set_userdata('subsub_menu', 'schsettings/signature');
+    
+        $setting              = $this->setting_model->getSetting();
+        $data['result']       = $setting;
+        $data['staffs']       = $this->staff_model->getAll(null, 1);
+        $this->load->view('layout/header');
+        $this->load->view('setting/signature', $data);
+        $this->load->view('layout/footer');
+    }
+
+    public function ajax_edit_signature_staff()
+    {
+        $this->form_validation->set_rules('signature_type', 'Signature Type', 'trim|required|xss_clean');
+        $this->form_validation->set_rules('staff_id', 'Staff', 'trim|xss_clean');
+
+        if ($this->form_validation->run() == false) {
+            $array = array('success' => false, 'error' => validation_errors());
+            echo json_encode($array);
+        } else {
+            $signature_type = $this->input->post('signature_type');
+            $staff_id = $this->input->post('staff_id');
+            if (empty($staff_id)) {
+                $staff_id = null;
+            }
+
+            // Ensure the signature type ends with _staff
+            if (strpos($signature_type, '_staff') === false) {
+                echo json_encode(['success' => false, 'error' => 'Invalid signature type']);
+                return;
+            }
+
+            $allowed_signatures = [
+                'sign_principal_staff', 'sign_vice_principal_staff', 'sign_class_teacher_staff', 
+                'sign_exam_incharge_staff', 'sign_academic_coordinator_staff', 'sign_headmaster_staff', 
+                'sign_manager_staff', 'sign_secretary_staff', 'sign_director_staff', 'sign_chairman_staff', 
+                'sign_admin_officer_staff', 'sign_accounts_officer_staff', 'sign_admission_incharge_staff', 
+                'sign_cbse_coordinator_staff', 'sign_school_seal_staff'
+            ];
+
+            if (!in_array($signature_type, $allowed_signatures)) {
+                echo json_encode(['success' => false, 'error' => 'Invalid signature type']);
+                return;
+            }
+
+            $setting = $this->setting_model->getSetting();
+            $data_record = array('id' => $setting->id, $signature_type => $staff_id);
+            $this->setting_model->add($data_record);
+            
+            $array = array('success' => true, 'error' => '', 'message' => 'Staff mapping updated successfully');
+            echo json_encode($array);
+        }
+    }
+
+    public function ajax_edit_signature()
+    {
+        $this->form_validation->set_rules('id', $this->lang->line('id'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('signature_type', 'Signature Type', 'trim|required|xss_clean');
+        $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_upload');
+
+        $storage_array = "file";
+        $this->form_validation->set_rules('validate_storage', $this->lang->line('storage'), "callback_validateCanUploadFile[$storage_array]");
+
+        if ($this->form_validation->run() == false) {
+            $data = array(
+                'file' => form_error('file'),
+                'validate_storage' => form_error('validate_storage'),
+                'signature_type' => form_error('signature_type')
+            );
+            $array = array('success' => false, 'error' => $data);
+            echo json_encode($array);
+        } else {
+            try {
+                $id = $this->input->post('id');
+                $signature_type = $this->input->post('signature_type');
+
+                // Validate signature_type to prevent SQL injection or mapping to wrong fields
+                $allowed_signatures = [
+                    'sign_principal', 'sign_vice_principal', 'sign_class_teacher', 
+                    'sign_exam_incharge', 'sign_academic_coordinator', 'sign_headmaster', 
+                    'sign_manager', 'sign_secretary', 'sign_director', 'sign_chairman', 
+                    'sign_admin_officer', 'sign_accounts_officer', 'sign_admission_incharge', 
+                    'sign_cbse_coordinator', 'sign_school_seal'
+                ];
+
+                if (!in_array($signature_type, $allowed_signatures)) {
+                    echo json_encode(['success' => false, 'error' => ['signature_type' => 'Invalid signature type']]);
+                    return;
+                }
+
+                $setting = $this->setting_model->getSetting();
+                $prev_file_size = 0;
+                $total_image_upload_size = 0;
+
+                if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
+                    $prev_file_size = $this->media_storage->getUploadedFileSize($setting->{$signature_type}, 'uploads/school_content/signatures/');
+                    $img_name = $this->media_storage->fileupload("file", "./uploads/school_content/signatures/");
+                    
+                    if (!IsNullOrEmptyString($img_name)) {	
+                        $total_image_upload_size += $this->media_storage->getTmpFileSize('file');
+                    }
+                } else {
+                    $img_name = $setting->{$signature_type};
+                }
+
+                if ($prev_file_size > $total_image_upload_size) {
+                    $size_difference = $prev_file_size - $total_image_upload_size;
+                    $this->saasvalidation->deleteResouceQuota('storage', $size_difference);
+                } elseif ($prev_file_size < $total_image_upload_size) {
+                    $size_difference = $total_image_upload_size - $prev_file_size;
+                    $this->saasvalidation->updateResouceQuota('storage', $size_difference);
+                }
+
+                if (isset($_FILES["file"]) && $_FILES['file']['name'] != '' && (!empty($_FILES['file']['name']))) {
+                    if ($setting->{$signature_type} != '') {
+                        $this->media_storage->filedelete($setting->{$signature_type}, "uploads/school_content/signatures/");
+                    }
+                }
+
+                $data_record = array('id' => $id, $signature_type => $img_name);
+                $this->setting_model->add($data_record);
+                
+                $array = array('success' => true, 'error' => '', 'message' => $this->lang->line('success_message'));
+                echo json_encode($array);
+
+            } catch (Exception $e) {
+                $array = array(
+                    'success' => false,
+                    'error' => array('exception' => $e->getMessage()),
+                    'message' => 'An unexpected error occurred. Please try again.'
+                );
+                echo json_encode($array);
+            }
+        }
+    }
+
     public function miscellaneous()
     {
         $this->session->set_userdata('top_menu', 'System Settings');
