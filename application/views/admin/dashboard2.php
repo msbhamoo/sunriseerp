@@ -245,7 +245,7 @@
             <div class="col-md-4" style="display:flex; margin-bottom: 24px;">
                 <div class="d2-card" style="width:100%;">
                     <div class="d2-title">Class-wise Strength</div>
-                    <div style="height: 280px; position: relative; width: 100%;">
+                    <div style="height: 320px; position: relative; width: 100%;">
                         <canvas id="classStrengthChart"></canvas>
                     </div>
                 </div>
@@ -256,7 +256,7 @@
             <div class="col-md-4" style="display:flex; margin-bottom: 24px;">
                 <div class="d2-card" style="width:100%;">
                     <div class="d2-title">Staff Roles</div>
-                    <div style="height: 280px; position: relative; width: 100%;">
+                    <div style="height: 320px; position: relative; width: 100%;">
                         <canvas id="staffRoleChart"></canvas>
                     </div>
                 </div>
@@ -496,8 +496,8 @@
                     maintainAspectRatio: false,
                     cutoutPercentage: 75,
                     legend: {
-                        position: 'right',
-                        labels: { usePointStyle: true, padding: 15, fontSize: 11, fontColor: '#64748b' }
+                        position: 'bottom',
+                        labels: { usePointStyle: true, padding: 10, fontSize: 11, fontColor: '#64748b' }
                     }
                 }
             });
@@ -527,8 +527,8 @@
                     maintainAspectRatio: false,
                     cutoutPercentage: 75,
                     legend: {
-                        position: 'right',
-                        labels: { usePointStyle: true, padding: 15, fontSize: 11, fontColor: '#64748b' }
+                        position: 'bottom',
+                        labels: { usePointStyle: true, padding: 10, fontSize: 11, fontColor: '#64748b' }
                     }
                 }
             });
