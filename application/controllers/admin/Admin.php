@@ -465,8 +465,8 @@ class Admin extends Admin_Controller
         if ($dash_version == '2.0') {
             $current_session = $this->setting_model->getCurrentSession();
             
-            $this->load->model('enquiry_model');
-            $data['pending_admissions'] = $this->enquiry_model->getPendingAdmissions();
+            $this->load->model('student_model');
+            $data['new_admissions'] = $this->student_model->getNewAdmissions($current_session, $year_str_month, $year_end_month);
             
             $this->load->model('calendar_model');
             $data['upcoming_events'] = $this->calendar_model->getUpcomingEvents(5);
@@ -486,6 +486,126 @@ class Admin extends Admin_Controller
             if (isset($total_fess) && $total_fess > 0 && isset($total_paid)) {
                 $data['fee_recovery'] = round(($total_paid / $total_fess) * 100, 2);
             }
+
+            // Move queries from view to controller
+            $this->load->model('studentfeemaster_model');
+            $this->load->model('module_model');
+            
+            $total_coll = 0;
+            $all_collections = $this->studentfeemaster_model->getFeeCollectionReport('1970-01-01', '2099-12-31', null, null, null, null, null);
+            if(!empty($all_collections)){
+                foreach($all_collections as $col){
+                    $total_coll += (float)$col['amount'] + (float)$col['amount_fine'];
+                }
+            }
+
+            $outstanding = 0;
+            $all_due = $this->studentfeemaster_model->getFeesAwaiting('1970-01-01', '2099-12-31');
+            if(!empty($all_due)){
+                foreach($all_due as $f){
+                    $amt = isset($f->is_system) && $f->is_system ? $f->amount : $f->fee_amount;
+                    $paid = 0;
+                    $discount = 0;
+                    if(!empty($f->amount_detail)){
+                        $details = json_decode($f->amount_detail, true);
+                        if(is_array($details)){
+                            foreach($details as $d){
+                                $paid += (float)$d['amount'];
+                                $discount += (float)$d['amount_discount'];
+                            }
+                        }
+                    }
+                    $bal = (float)$amt - ($paid + $discount);
+                    if($bal > 0) $outstanding += $bal;
+                }
+            }
+            if ($this->module_model->hasModule('transport')) {
+                $all_transport = $this->studentfeemaster_model->getTransportFeesByDueDate('1970-01-01', '2099-12-31');
+                if(!empty($all_transport)){
+                    foreach($all_transport as $f){
+                        $amt = isset($f->fees) ? $f->fees : (isset($f->fee_amount) ? $f->fee_amount : 0);
+                        $paid = 0;
+                        $discount = 0;
+                        if(!empty($f->amount_detail)){
+                            $details = json_decode($f->amount_detail, true);
+                            if(is_array($details)){
+                                foreach($details as $d){
+                                    $paid += (float)$d['amount'];
+                                    $discount += (float)$d['amount_discount'];
+                                }
+                            }
+                        }
+                        $bal = (float)$amt - ($paid + $discount);
+                        if($bal > 0) $outstanding += $bal;
+                    }
+                }
+            }
+
+            $this_month_coll = 0;
+            $month_collections = $this->studentfeemaster_model->getFeeCollectionReport(date('Y-m-01'), date('Y-m-t'), null, null, null, null, null);
+            if(!empty($month_collections)){
+                foreach($month_collections as $col){
+                    $this_month_coll += (float)$col['amount'] + (float)$col['amount_fine'];
+                }
+            }
+
+            $today_coll = 0;
+            $today_collections = $this->studentfeemaster_model->getFeeCollectionReport(date('Y-m-d'), date('Y-m-d'), null, null, null, null, null);
+            if(!empty($today_collections)){
+                foreach($today_collections as $col){
+                    $today_coll += (float)$col['amount'] + (float)$col['amount_fine'];
+                }
+            }
+
+            $data['total_coll'] = $total_coll;
+            $data['outstanding'] = $outstanding;
+            $data['this_month_coll'] = $this_month_coll;
+            $data['today_coll'] = $today_coll;
+
+            $this->load->model('studentcall_model');
+            $staff_id = $this->customlib->getUserData()["id"];
+            $data['pending_fw'] = $this->studentcall_model->get_pending_followups_by_staff($staff_id);
+            $data['call_stats'] = $this->studentcall_model->get_call_statistics($staff_id);
+            $data['my_followups'] = $this->studentcall_model->get_calls(null, null, null, null, null, 'Pending');
+            
+            $today = date('Y-m-d');
+            $data['pending_leaves'] = $this->db->query("
+                SELECT s.name, s.surname, s.employee_id, lr.leave_from, lr.leave_to, lr.leave_days 
+                FROM staff_leave_request lr 
+                JOIN staff s ON lr.staff_id = s.id 
+                WHERE lr.status = 'pending' 
+                ORDER BY lr.id DESC 
+                LIMIT 5
+            ")->result_array();
+
+            $data['on_leave_today'] = $this->db->query("
+                SELECT s.name, s.surname, s.employee_id, lr.leave_from, lr.leave_to, lr.leave_days 
+                FROM staff_leave_request lr 
+                JOIN staff s ON lr.staff_id = s.id 
+                WHERE lr.status = 'approve' AND '$today' >= lr.leave_from AND '$today' <= lr.leave_to 
+                ORDER BY lr.id DESC
+            ")->result_array();
+
+            $data['today_visitors'] = $this->db->query("
+                SELECT name, purpose, contact, in_time 
+                FROM visitors_book 
+                WHERE date = '$today' 
+                ORDER BY id DESC 
+                LIMIT 5
+            ")->result_array();
+
+            $cbse_query = $this->db->query("
+                SELECT e.name as exam_title, e.description as exam_description,
+                       MIN(t.date) as start_date, MAX(t.date) as end_date
+                FROM cbse_exams e
+                JOIN cbse_exam_timetable t ON t.cbse_exam_id = e.id
+                WHERE e.session_id = $current_session
+                GROUP BY e.id
+                HAVING MAX(t.date) >= '$today'
+                ORDER BY MIN(t.date) ASC
+                LIMIT 5
+            ");
+            $data['upcoming_cbse_exams'] = $cbse_query->result_array();
 
             $this->load->view('layout/header', $data);
             $this->load->view('admin/dashboard2', $data);

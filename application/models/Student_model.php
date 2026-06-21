@@ -3404,4 +3404,53 @@ FROM `students`
         $result = $this->db->query($query, array($session_id));
         return $result->row_array();
     }
+
+    public function getNewAdmissions($session_id = null, $start_date = null, $end_date = null) {
+        if ($session_id == null) {
+            $session_id = $this->current_session;
+        }
+
+        $this->db->select('id');
+        $this->db->from('custom_fields');
+        $this->db->where('belong_to', 'students');
+        $this->db->group_start();
+        $this->db->where('name', 'admission type');
+        $this->db->or_where('name', 'Admission Type');
+        $this->db->group_end();
+        $cf_query = $this->db->get();
+        $cf_row = $cf_query->row_array();
+        
+        $cf_id = 0;
+        if (!empty($cf_row)) {
+            $cf_id = $cf_row['id'];
+        }
+
+        $this->db->select('COUNT(DISTINCT s.id) as total');
+        $this->db->from('students s');
+        $this->db->join('student_session ss', 'ss.student_id = s.id');
+        
+        if ($cf_id > 0) {
+            $this->db->join('custom_field_values cfv', 'cfv.belong_table_id = s.id AND cfv.custom_field_id = ' . (int)$cf_id, 'left');
+        }
+
+        $this->db->where('s.is_active', 'yes');
+        $this->db->where('ss.session_id', $session_id);
+        
+        $this->db->group_start();
+        if ($start_date != null && $end_date != null) {
+            $this->db->where("s.admission_date >= ", $start_date);
+            $this->db->where("s.admission_date <= ", $end_date);
+        } else {
+            // fallback if dates not provided
+            $this->db->where("(SELECT MIN(session_id) FROM student_session WHERE student_id = s.id) = " . (int)$session_id);
+        }
+        
+        if ($cf_id > 0) {
+            $this->db->or_where("LOWER(cfv.field_value) = 'new'");
+        }
+        $this->db->group_end();
+
+        $query = $this->db->get();
+        return $query->row_array()['total'];
+    }
 }
