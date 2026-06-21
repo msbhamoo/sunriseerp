@@ -588,6 +588,43 @@ class Schsettings extends Admin_Controller
         }
     }
 
+    public function ajax_remove_signature()
+    {
+        $this->form_validation->set_rules('signature_type', 'Signature Type', 'trim|required|xss_clean');
+
+        if ($this->form_validation->run() == false) {
+            $array = array('success' => false, 'error' => validation_errors());
+            echo json_encode($array);
+        } else {
+            $signature_type = $this->input->post('signature_type');
+
+            $allowed_signatures = [
+                'sign_principal', 'sign_vice_principal', 'sign_class_teacher', 
+                'sign_exam_incharge', 'sign_academic_coordinator', 'sign_headmaster', 
+                'sign_manager', 'sign_secretary', 'sign_director', 'sign_chairman', 
+                'sign_admin_officer', 'sign_accounts_officer', 'sign_admission_incharge', 
+                'sign_cbse_coordinator', 'sign_school_seal'
+            ];
+
+            if (!in_array($signature_type, $allowed_signatures)) {
+                echo json_encode(['success' => false, 'error' => 'Invalid signature type']);
+                return;
+            }
+
+            $setting = $this->setting_model->getSetting();
+            
+            if (!empty($setting->{$signature_type})) {
+                $this->media_storage->filedelete($setting->{$signature_type}, "uploads/school_content/signatures/");
+            }
+
+            $data_record = array('id' => $setting->id, $signature_type => '');
+            $this->setting_model->add($data_record);
+            
+            $array = array('success' => true, 'error' => '', 'message' => 'Signature removed successfully');
+            echo json_encode($array);
+        }
+    }
+
     public function ajax_edit_signature()
     {
         $this->form_validation->set_rules('id', $this->lang->line('id'), 'trim|required|xss_clean');

@@ -257,7 +257,7 @@ $principal_sig = $this->customlib->getSignatureMapping('sign_principal');
                     <div class="school-info">
                         <h1 class="school-name"><?php echo $sch_setting->name; ?></h1>
                         <div class="school-address"><?php echo $sch_setting->address; ?></div>
-                        <p class="school-contact">Email: <?php echo $sch_setting->email; ?> &nbsp; Mobile No: <?php echo $sch_setting->phone; ?> &nbsp; Website: <?php echo $sch_setting->phone; ?></p>
+                        <p class="school-contact">Email: <?php echo $sch_setting->email; ?> &nbsp; Mobile No: <?php echo $sch_setting->phone; ?> &nbsp; Website: <?php echo $sch_setting->base_url; ?></p>
                         <div class="session-info">Admit Card - <?php echo $exam->name; ?></div>
                     </div>
                     

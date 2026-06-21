@@ -32,7 +32,10 @@ $signatures = [
                         <div class="row">
                             <?php foreach($signatures as $field_name => $display_name): ?>
                                 <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <div class="card-body-logo" style="margin-bottom: 20px; min-height: 250px; display: flex; flex-direction: column; justify-content: space-between; padding: 15px; border: 1px solid #e1e1e1; border-radius: 4px; background: #fff;">
+                                    <div class="card-body-logo" style="position: relative; margin-bottom: 20px; min-height: 250px; display: flex; flex-direction: column; justify-content: space-between; padding: 15px; border: 1px solid #e1e1e1; border-radius: 4px; background: #fff;">
+                                        <?php if (!empty($result->{$field_name})) { ?>
+                                            <a href="javascript:void(0);" class="btn btn-xs btn-danger remove_signature_btn" data-signature_type="<?php echo $field_name; ?>" style="position: absolute; top: 10px; right: 10px; z-index: 10; padding: 2px 6px;" title="Remove Signature"><i class="fa fa-trash"></i></a>
+                                        <?php } ?>
                                         <div>
                                             <h4 style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid #f4f4f4; padding-bottom: 10px; margin-top: 0; color: #333;" title="<?php echo $display_name; ?>"><?php echo $display_name; ?></h4> 
                                             
@@ -188,6 +191,30 @@ $signatures = [
             fd.append("id", $('#signature_setting_id').val());
             fd.append("signature_type", current_signature_type);
             uploadSignatureData(fd);
+        });
+
+        $('.remove_signature_btn').on('click', function (e) {
+            e.stopPropagation();
+            var signature_type = $(this).data('signature_type');
+            if (confirm("Are you sure you want to remove this signature?")) {
+                $.ajax({
+                    url: '<?php echo site_url('schsettings/ajax_remove_signature') ?>',
+                    type: 'post',
+                    data: { signature_type: signature_type },
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.success) {
+                            successMsg(response.message);
+                            window.location.reload(true);
+                        } else {
+                            errorMsg(response.error);
+                        }
+                    },
+                    error: function (xhr) { 
+                        errorMsg("An error occurred while removing the signature.");
+                    }
+                });
+            }
         });
     });
 
