@@ -599,7 +599,7 @@
                                 <?php if ($this->rbac->hasPrivilege('currency_switcher', 'can_view')) {
                                     $currency_count    = $this->customlib->get_active_currency_count();
                                     if ($currency_count > 1) { ?>
-                                    <div class="currency-icon-list" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('currency') ?>">
+                                    <div class="currency-icon-list hidden-xs" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('currency') ?>">
                                         <select class="languageselectpicker" type="text" id="currencySwitcher" >
                                            <?php $this->load->view('admin/currency/currencySwitcher')?>
                                         </select>
@@ -612,7 +612,7 @@
                                      $language_count    = $this->customlib->get_active_language_count();
                                     if ($language_count > 1) { 
     ?>
-                                    <div class="langdiv" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('language') ?>"><select class="languageselectpicker" onchange="set_languages(this.value)"  type="text" id="languageSwitcher" >
+                                    <div class="langdiv hidden-xs" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('language') ?>"><select class="languageselectpicker" onchange="set_languages(this.value)"  type="text" id="languageSwitcher" >
 
                                            <?php $this->load->view('admin/language/languageSwitcher')?>
 
@@ -625,7 +625,7 @@
  <!-- Dark/Light Mode Toggle Button -->                             
 	
                                     <?php if ($this->rbac->hasPrivilege('student', 'can_view')) {?>
-                                        <li class="cal15" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('search'); ?>">
+                                        <li class="cal15 hidden-xs" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('search'); ?>">
                                             <a href="#" data-toggle="modal" data-target="#globalSearchModal"><i class="icon-search" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i></a>
                                         </li>
                                     <?php }?>
@@ -634,13 +634,13 @@
 									if ($this->rbac->hasPrivilege('multi_branch_switch_branch', 'can_view')) {								
                                         if (($this->module_lib->hasModule('multi_branch') && $this->module_lib->hasActive('multi_branch')) || $this->db->multi_branch) { ?>
                                     
-                                            <li class="cal15" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('switch_branch'); ?>"><a href="#" data-toggle="modal" data-target="#multiBranchSwitchModal"><i class="icon-arrow-right-left" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;" aria-hidden="true"></i></a></li>
+                                            <li class="cal15 hidden-xs" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('switch_branch'); ?>"><a href="#" data-toggle="modal" data-target="#multiBranchSwitchModal"><i class="icon-arrow-right-left" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;" aria-hidden="true"></i></a></li>
                                     
                                     <?php } 
                                     }?>
                                     
                                     <?php if ($this->rbac->hasPrivilege('quick_session_change', 'can_view')) { ?>
-                                            <li class="cal15" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('current_session') . ": " . $this->setting_model->getCurrentSessionName(); ?>">
+                                            <li class="cal15 hidden-xs" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('current_session') . ": " . $this->setting_model->getCurrentSessionName(); ?>">
                                                 <a href="#" data-toggle="modal" data-target="#sessionModal"><i class="icon-pencil" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;" aria-hidden="true"></i></a>
                                             </li>
                                     <?php } ?>
@@ -661,7 +661,7 @@ if ($this->module_lib->hasActive('calendar_to_do_list')) {
 if ($this->module_lib->hasActive('calendar_to_do_list')) {
     if ($this->rbac->hasPrivilege('calendar_to_do_list', 'can_view')) {
         ?>
-                                            <li class="dropdown" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('task') ?>">
+                                            <li class="dropdown hidden-xs" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('task') ?>">
                                                 <a href="#"  class="dropdown-toggle todoicon" data-toggle="dropdown">
                                                     <i class="fa fa-check-square-o" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i>
                                                     <?php
@@ -691,15 +691,27 @@ $tasklist = $this->customlib->getincompleteTask($userdata["id"],$userdata["role_
                                                 </ul>
                                             </li>
                                         <li class="dropdown d-lg-none d-sm-block ellipsis-px-3">
-                                        <a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="icon-more-vertical" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i>
+                                        <a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-ellipsis-v" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i>
                                         </a>
                                         <ul class="dropdown-menu min-w-full sm-drop-down">
-                                          <li><a href="<?php echo base_url() ?>admin/calendar/events"><i class="icon-calendar" style="margin-right: 5px;"></i></a></li>
+                                          <?php if ($this->rbac->hasPrivilege('student', 'can_view')) {?>
+                                              <li><a href="#" data-toggle="modal" data-target="#globalSearchModal"><i class="icon-search" style="margin-right: 10px; width: 16px; text-align: center;"></i> <?php echo $this->lang->line('search'); ?></a></li>
+                                          <?php }?>
+                                          <?php if ($this->rbac->hasPrivilege('multi_branch_switch_branch', 'can_view') && (($this->module_lib->hasModule('multi_branch') && $this->module_lib->hasActive('multi_branch')) || $this->db->multi_branch)) { ?>
+                                              <li><a href="#" data-toggle="modal" data-target="#multiBranchSwitchModal"><i class="icon-arrow-right-left" style="margin-right: 10px; width: 16px; text-align: center;"></i> <?php echo $this->lang->line('switch_branch'); ?></a></li>
+                                          <?php } ?>
+                                          <?php if ($this->rbac->hasPrivilege('quick_session_change', 'can_view')) { ?>
+                                              <li><a href="#" data-toggle="modal" data-target="#sessionModal"><i class="icon-pencil" style="margin-right: 10px; width: 16px; text-align: center;"></i> <?php echo $this->lang->line('current_session'); ?></a></li>
+                                          <?php } ?>
+                                          <?php if ($this->module_lib->hasActive('calendar_to_do_list') && $this->rbac->hasPrivilege('calendar_to_do_list', 'can_view')) { ?>
+                                              <li><a href="<?php echo base_url() ?>admin/calendar/events"><i class="fa fa-check-square-o" style="margin-right: 10px; width: 16px; text-align: center;"></i> <?php echo $this->lang->line('task'); ?></a></li>
+                                              <li><a href="<?php echo base_url() ?>admin/calendar/events"><i class="icon-calendar" style="margin-right: 10px; width: 16px; text-align: center;"></i> <?php echo $this->lang->line('calendar'); ?></a></li>
+                                          <?php } ?>
                                           <?php 
                                           if ($this->module_lib->hasActive('chat')) {
                                             if ($this->rbac->hasPrivilege('chat', 'can_view')) { ?>
-                                          <li><a href="<?php echo base_url() ?>admin/chat"><i class="icon-message-circle" style="margin-right: 5px;"></i></a></li>
-                                      <?php } } ?>
+                                          <li><a href="<?php echo base_url() ?>admin/chat"><i class="icon-message-circle" style="margin-right: 10px; width: 16px; text-align: center;"></i> <?php echo $this->lang->line('chat'); ?></a></li>
+                                          <?php } } ?>
                                          
 
 <?php  
@@ -725,20 +737,7 @@ $tasklist = $this->customlib->getincompleteTask($userdata["id"],$userdata["role_
 	
 	if($show_hide){
 ?>
-<li class="cal15 whatsapp-icon-bg"><a href="<?php echo $url; ?>" target="_blank" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('whatsapp_link') ?>">
-<svg height="18px" width="18px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve">
-<path style="fill:#fff;" d="M0,512l35.31-128C12.359,344.276,0,300.138,0,254.234C0,114.759,114.759,0,255.117,0
-    S512,114.759,512,254.234S395.476,512,255.117,512c-44.138,0-86.51-14.124-124.469-35.31L0,512z"></path>
-<path style="fill:#55CD6C;" d="M137.71,430.786l7.945,4.414c32.662,20.303,70.621,32.662,110.345,32.662
-    c115.641,0,211.862-96.221,211.862-213.628S371.641,44.138,255.117,44.138S44.138,137.71,44.138,254.234
-    c0,40.607,11.476,80.331,32.662,113.876l5.297,7.945l-20.303,74.152L137.71,430.786z"></path>
-<path style="fill:#fff;" d="M187.145,135.945l-16.772-0.883c-5.297,0-10.593,1.766-14.124,5.297
-    c-7.945,7.062-21.186,20.303-24.717,37.959c-6.179,26.483,3.531,58.262,26.483,90.041s67.09,82.979,144.772,105.048
-    c24.717,7.062,44.138,2.648,60.028-7.062c12.359-7.945,20.303-20.303,22.952-33.545l2.648-12.359
-    c0.883-3.531-0.883-7.945-4.414-9.71l-55.614-25.6c-3.531-1.766-7.945-0.883-10.593,2.648l-22.069,28.248
-    c-1.766,1.766-4.414,2.648-7.062,1.766c-15.007-5.297-65.324-26.483-92.69-79.448c-0.883-2.648-0.883-5.297,0.883-7.062
-    l21.186-23.834c1.766-2.648,2.648-6.179,1.766-8.828l-25.6-57.379C193.324,138.593,190.676,135.945,187.145,135.945"></path>
-</svg></a></li>
+<li><a href="<?php echo $url; ?>" target="_blank"><i class="fa fa-whatsapp" style="margin-right: 10px; width: 16px; text-align: center; color:#25D366; font-size:16px;"></i> <?php echo $this->lang->line('whatsapp_link') ?></a></li>
 <?php } } ?>
 
                                         </ul>

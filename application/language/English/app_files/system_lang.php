@@ -2722,3 +2722,7 @@ $lang['substitution_planning'] = "Substitute Planning";
 $lang['substitution_history'] = "Substitution History";
 
 $lang['todays_schedule'] = "Today's Schedule";
+
+$lang['consolidated_trial_balance'] = 'Consolidated Trial Balance';
+$lang['consolidated_profit_loss'] = 'Consolidated Profit & Loss';
+$lang['consolidated_balance_sheet'] = 'Consolidated Balance Sheet';
