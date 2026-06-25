@@ -113,4 +113,17 @@ class Vehicle_model extends MY_Model
         return $query->result();
     }
 
+    public function getVehicleRoutes($vehicle_id)
+    {
+        $this->db->select('vehicle_routes.id as vehroute_id, transport_route.route_title, pickup_point.name as pickup_point_name, route_pickup_point.pickup_time');
+        $this->db->from('vehicle_routes');
+        $this->db->join('transport_route', 'transport_route.id = vehicle_routes.route_id');
+        $this->db->join('route_pickup_point', 'route_pickup_point.transport_route_id = transport_route.id', 'left');
+        $this->db->join('pickup_point', 'pickup_point.id = route_pickup_point.pickup_point_id', 'left');
+        $this->db->where('vehicle_routes.vehicle_id', $vehicle_id);
+        $this->db->order_by('transport_route.route_title, route_pickup_point.order_number', 'ASC');
+        $query = $this->db->get();
+        return $query->result_array();
+    }
+
 }

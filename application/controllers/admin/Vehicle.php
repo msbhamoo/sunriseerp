@@ -81,7 +81,57 @@ class Vehicle extends Admin_Controller
                 'max_seating_capacity' => $this->input->post('max_seating_capacity'),
                 'manufacture_year'      => $this->input->post('manufacture_year'),
                 'vehicle_photo'        => $vehicle_photo,
+                
+                // Insurance
+                'insurance_provider' => $this->input->post('insurance_provider'),
+                'policy_number' => $this->input->post('policy_number'),
+                'insurance_type' => $this->input->post('insurance_type'),
+                'insurance_start' => ($this->input->post('insurance_start')) ? date('Y-m-d', strtotime($this->input->post('insurance_start'))) : null,
+                'insurance_expiry' => ($this->input->post('insurance_expiry')) ? date('Y-m-d', strtotime($this->input->post('insurance_expiry'))) : null,
+                
+                // Permits & Certs
+                'permit_number' => $this->input->post('permit_number'),
+                'permit_expiry' => ($this->input->post('permit_expiry')) ? date('Y-m-d', strtotime($this->input->post('permit_expiry'))) : null,
+                'fitness_number' => $this->input->post('fitness_number'),
+                'fitness_expiry' => ($this->input->post('fitness_expiry')) ? date('Y-m-d', strtotime($this->input->post('fitness_expiry'))) : null,
+                'puc_number' => $this->input->post('puc_number'),
+                'puc_expiry' => ($this->input->post('puc_expiry')) ? date('Y-m-d', strtotime($this->input->post('puc_expiry'))) : null,
+                'road_tax_valid' => ($this->input->post('road_tax_valid')) ? date('Y-m-d', strtotime($this->input->post('road_tax_valid'))) : null,
+                
+                // Driver Details
+                'license_number' => $this->input->post('license_number'),
+                'license_category' => $this->input->post('license_category'),
+                'license_expiry' => ($this->input->post('license_expiry')) ? date('Y-m-d', strtotime($this->input->post('license_expiry'))) : null,
+                'background_verification' => $this->input->post('background_verification'),
+                'attendant_name' => $this->input->post('attendant_name'),
+                'attendant_contact' => $this->input->post('attendant_contact'),
+                
+                // Safety & Compliance
+                'has_gps' => $this->input->post('has_gps') ? $this->input->post('has_gps') : 'No',
+                'gps_device_id' => $this->input->post('gps_device_id'),
+                'has_cctv' => $this->input->post('has_cctv') ? $this->input->post('has_cctv') : 'No',
+                'has_fire_extinguisher' => $this->input->post('has_fire_extinguisher') ? $this->input->post('has_fire_extinguisher') : 'No',
+                'fire_extinguisher_expiry' => ($this->input->post('fire_extinguisher_expiry')) ? date('Y-m-d', strtotime($this->input->post('fire_extinguisher_expiry'))) : null,
+                'has_first_aid' => $this->input->post('has_first_aid') ? $this->input->post('has_first_aid') : 'No',
+                'has_speed_governor' => $this->input->post('has_speed_governor') ? $this->input->post('has_speed_governor') : 'No',
+                
+                // Maintenance & Status
+                'vehicle_status' => $this->input->post('vehicle_status') ? $this->input->post('vehicle_status') : 'Active',
+                'last_maintenance_date' => ($this->input->post('last_maintenance_date')) ? date('Y-m-d', strtotime($this->input->post('last_maintenance_date'))) : null,
+                'next_maintenance_due' => ($this->input->post('next_maintenance_due')) ? date('Y-m-d', strtotime($this->input->post('next_maintenance_due'))) : null,
             );
+            
+            // Handle Document Uploads
+            $doc_fields = ['doc_rc', 'doc_insurance', 'doc_fitness', 'doc_puc', 'doc_permit', 'doc_license'];
+            foreach ($doc_fields as $doc_field) {
+                if (isset($_FILES[$doc_field]) && $_FILES[$doc_field]['name'] != '') {
+                    $doc_name = $this->media_storage->fileupload($doc_field, "./uploads/vehicle_documents/");
+                    if (!IsNullOrEmptyString($doc_name)) {
+                        $data[$doc_field] = $doc_name;
+                    }
+                }
+            }
+
            
             $this->vehicle_model->add($data);
 
@@ -142,8 +192,57 @@ class Vehicle extends Admin_Controller
                 'registration_number'  => $this->input->post('registration_number'),
                 'chasis_number'        => $this->input->post('chasis_number'),
                 'max_seating_capacity' => $this->input->post('max_seating_capacity'),
-                'manufacture_year' => $this->input->post('manufacture_year'),        
-            );            
+                'manufacture_year' => $this->input->post('manufacture_year'),
+                
+                // Insurance
+                'insurance_provider' => $this->input->post('insurance_provider'),
+                'policy_number' => $this->input->post('policy_number'),
+                'insurance_type' => $this->input->post('insurance_type'),
+                'insurance_start' => ($this->input->post('insurance_start')) ? date('Y-m-d', strtotime($this->input->post('insurance_start'))) : null,
+                'insurance_expiry' => ($this->input->post('insurance_expiry')) ? date('Y-m-d', strtotime($this->input->post('insurance_expiry'))) : null,
+                
+                // Permits & Certs
+                'permit_number' => $this->input->post('permit_number'),
+                'permit_expiry' => ($this->input->post('permit_expiry')) ? date('Y-m-d', strtotime($this->input->post('permit_expiry'))) : null,
+                'fitness_number' => $this->input->post('fitness_number'),
+                'fitness_expiry' => ($this->input->post('fitness_expiry')) ? date('Y-m-d', strtotime($this->input->post('fitness_expiry'))) : null,
+                'puc_number' => $this->input->post('puc_number'),
+                'puc_expiry' => ($this->input->post('puc_expiry')) ? date('Y-m-d', strtotime($this->input->post('puc_expiry'))) : null,
+                'road_tax_valid' => ($this->input->post('road_tax_valid')) ? date('Y-m-d', strtotime($this->input->post('road_tax_valid'))) : null,
+                
+                // Driver Details
+                'license_number' => $this->input->post('license_number'),
+                'license_category' => $this->input->post('license_category'),
+                'license_expiry' => ($this->input->post('license_expiry')) ? date('Y-m-d', strtotime($this->input->post('license_expiry'))) : null,
+                'background_verification' => $this->input->post('background_verification'),
+                'attendant_name' => $this->input->post('attendant_name'),
+                'attendant_contact' => $this->input->post('attendant_contact'),
+                
+                // Safety & Compliance
+                'has_gps' => $this->input->post('has_gps') ? $this->input->post('has_gps') : 'No',
+                'gps_device_id' => $this->input->post('gps_device_id'),
+                'has_cctv' => $this->input->post('has_cctv') ? $this->input->post('has_cctv') : 'No',
+                'has_fire_extinguisher' => $this->input->post('has_fire_extinguisher') ? $this->input->post('has_fire_extinguisher') : 'No',
+                'fire_extinguisher_expiry' => ($this->input->post('fire_extinguisher_expiry')) ? date('Y-m-d', strtotime($this->input->post('fire_extinguisher_expiry'))) : null,
+                'has_first_aid' => $this->input->post('has_first_aid') ? $this->input->post('has_first_aid') : 'No',
+                'has_speed_governor' => $this->input->post('has_speed_governor') ? $this->input->post('has_speed_governor') : 'No',
+                
+                // Maintenance & Status
+                'vehicle_status' => $this->input->post('vehicle_status') ? $this->input->post('vehicle_status') : 'Active',
+                'last_maintenance_date' => ($this->input->post('last_maintenance_date')) ? date('Y-m-d', strtotime($this->input->post('last_maintenance_date'))) : null,
+                'next_maintenance_due' => ($this->input->post('next_maintenance_due')) ? date('Y-m-d', strtotime($this->input->post('next_maintenance_due'))) : null,
+            );
+            
+            // Handle Document Uploads
+            $doc_fields = ['doc_rc', 'doc_insurance', 'doc_fitness', 'doc_puc', 'doc_permit', 'doc_license'];
+            foreach ($doc_fields as $doc_field) {
+                if (isset($_FILES[$doc_field]) && $_FILES[$doc_field]['name'] != '') {
+                    $doc_name = $this->media_storage->fileupload($doc_field, "./uploads/vehicle_documents/");
+                    if (!IsNullOrEmptyString($doc_name)) {
+                        $data[$doc_field] = $doc_name;
+                    }
+                }
+            }            
             
             if (isset($_FILES["vehicle_photo"]) && $_FILES['vehicle_photo']['name'] != '' && (!empty($_FILES['vehicle_photo']['name']))) {
                 $prev_file_size = $this->media_storage->getUploadedFileSize($vehicle->vehicle_photo, 'uploads/vehicle_photo');
@@ -205,8 +304,50 @@ class Vehicle extends Admin_Controller
     {
         $vehicleid           = $this->input->post('vehicleid');
         $data['editvehicle'] = $this->vehicle_model->get($vehicleid);
+        $data['vehicle_routes'] = $this->vehicle_model->getVehicleRoutes($vehicleid);
         $page                = $this->load->view('admin/vehicle/_vehicledetails', $data, true);
         echo json_encode(array('page' => $page));
+    }
+    
+    public function update_alert()
+    {
+        if (!$this->rbac->hasPrivilege('vehicle', 'can_edit')) {
+            echo json_encode(array('status' => 'fail', 'message' => 'Access Denied'));
+            return;
+        }
+        
+        $id = $this->input->post('vehicle_id');
+        $field_name = $this->input->post('field_name'); 
+        $new_date = $this->input->post('new_date');
+        $doc_field_name = $this->input->post('doc_field_name'); 
+        
+        if (empty($id) || empty($field_name) || empty($new_date)) {
+            echo json_encode(array('status' => 'fail', 'message' => 'Missing required fields'));
+            return;
+        }
+
+        $data = array(
+            'id' => $id,
+            $field_name => date('Y-m-d', $this->customlib->datetostrtotime($new_date))
+        );
+
+        if (isset($_FILES['new_document']) && !empty($_FILES['new_document']['name']) && !empty($doc_field_name)) {
+            $file_name = $_FILES["new_document"]["name"];
+            $time      = md5($_FILES["new_document"]['name'] . microtime());
+            $ext       = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+            $img_name  = $time . "." . $ext;
+            
+            $this->media_storage->fileupload("new_document", "./uploads/vehicle_documents/");
+            $data[$doc_field_name] = $img_name;
+            
+            $vehicle = $this->vehicle_model->get($id);
+            if (!empty($vehicle->$doc_field_name)) {
+                $this->media_storage->filedelete($vehicle->$doc_field_name, "uploads/vehicle_documents/");
+            }
+        }
+
+        $this->vehicle_model->add($data); 
+        echo json_encode(array('status' => 'success', 'message' => 'Updated successfully!'));
     }
     
     public function handle_upload()
