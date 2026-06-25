@@ -36,17 +36,22 @@ class Cbseadmitcardbulk extends Admin_Controller
         $data['sch_setting']= $this->sch_setting_detail;
 
         $data['student_list'] = [];
+        $data['summary_data'] = [];
 
         if ($this->input->server('REQUEST_METHOD') === 'POST' && !empty($exam_id)) {
-            // Fetch students for the selected exam, optionally filtered by class/section
-            // We need a custom query or logic to get students in this exam + their roll_no
-            $data['student_list'] = $this->get_exam_students_with_roll_no($exam_id, $class_id, $section_id);
+            if (empty($class_id) && empty($section_id)) {
+                // Fetch summary data for the exam
+                $data['summary_data'] = $this->cbseexam_admitcard_model->get_admitcard_generation_summary($exam_id);
+            } else {
+                // Fetch students for the selected exam, filtered by class/section
+                $data['student_list'] = $this->get_exam_students_with_roll_no($exam_id, $class_id, $section_id);
+            }
         } else {
-            // Initial Load: If an exam exists, load students for the most recent/first exam
+            // Initial Load: If an exam exists, load summary for the most recent/first exam
             if (!empty($data['getexamlist'])) {
                 $first_exam_id = $data['getexamlist'][0]->id;
                 $data['exam_id'] = $first_exam_id;
-                $data['student_list'] = $this->get_exam_students_with_roll_no($first_exam_id, '', '');
+                $data['summary_data'] = $this->cbseexam_admitcard_model->get_admitcard_generation_summary($first_exam_id);
             }
         }
 
@@ -85,7 +90,18 @@ class Cbseadmitcardbulk extends Admin_Controller
             redirect('cbseexam/cbseadmitcardbulk/generate');
         }
 
-        $students = $this->db->get_where('cbse_exam_students', ['cbse_exam_id' => $exam_id])->result();
+        $this->db->select('cbse_exam_students.*');
+        $this->db->from('cbse_exam_students');
+        $this->db->join('student_session', 'student_session.id = cbse_exam_students.student_session_id', 'left');
+        $this->db->join('students', 'students.id = student_session.student_id', 'left');
+        $this->db->join('classes', 'classes.id = student_session.class_id', 'left');
+        $this->db->join('sections', 'sections.id = student_session.section_id', 'left');
+        $this->db->where('cbse_exam_students.cbse_exam_id', $exam_id);
+        $this->db->order_by('classes.class', 'asc');
+        $this->db->order_by('sections.section', 'asc');
+        $this->db->order_by('students.firstname', 'asc');
+        $this->db->order_by('students.lastname', 'asc');
+        $students = $this->db->get()->result();
         
         foreach ($students as $student) {
             if (empty($student->roll_no) || $student->roll_no == 0 || $student->roll_no == '') {
@@ -95,6 +111,39 @@ class Cbseadmitcardbulk extends Admin_Controller
         }
 
         $this->session->set_flashdata('msg', '<div class="alert alert-success">Successfully generated missing roll numbers for the exam.</div>');
+        redirect('cbseexam/cbseadmitcardbulk/generate');
+    }
+
+    public function generate_missing_by_section() {
+        $exam_id = $this->input->post('exam_id');
+        $class_id = $this->input->post('class_id');
+        $section_id = $this->input->post('section_id');
+        $series = (int)$this->input->post('series');
+        
+        if (empty($exam_id) || empty($series) || empty($class_id) || empty($section_id)) {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger">Exam, Class, Section and Series are required.</div>');
+            redirect('cbseexam/cbseadmitcardbulk/generate');
+        }
+
+        $this->db->select('cbse_exam_students.*');
+        $this->db->from('cbse_exam_students');
+        $this->db->join('student_session', 'student_session.id = cbse_exam_students.student_session_id', 'left');
+        $this->db->join('students', 'students.id = student_session.student_id', 'left');
+        $this->db->where('cbse_exam_students.cbse_exam_id', $exam_id);
+        $this->db->where('student_session.class_id', $class_id);
+        $this->db->where('student_session.section_id', $section_id);
+        $this->db->order_by('students.firstname', 'asc');
+        $this->db->order_by('students.lastname', 'asc');
+        $students = $this->db->get()->result();
+        
+        foreach ($students as $student) {
+            if (empty($student->roll_no) || $student->roll_no == 0 || $student->roll_no == '') {
+                $this->db->update('cbse_exam_students', ['roll_no' => $series], ['id' => $student->id]);
+                $series++;
+            }
+        }
+
+        $this->session->set_flashdata('msg', '<div class="alert alert-success">Successfully generated missing roll numbers for the selected section.</div>');
         redirect('cbseexam/cbseadmitcardbulk/generate');
     }
 
@@ -115,15 +164,23 @@ class Cbseadmitcardbulk extends Admin_Controller
 
         $current_series = (int)$series;
 
+        $this->db->select('cbse_exam_students.*');
+        $this->db->from('cbse_exam_students');
+        $this->db->join('student_session', 'student_session.id = cbse_exam_students.student_session_id', 'left');
+        $this->db->join('students', 'students.id = student_session.student_id', 'left');
+        $this->db->join('classes', 'classes.id = student_session.class_id', 'left');
+        $this->db->join('sections', 'sections.id = student_session.section_id', 'left');
+        $this->db->where_in('cbse_exam_students.id', $cbse_exam_student_ids);
+        $this->db->order_by('classes.class', 'asc');
+        $this->db->order_by('sections.section', 'asc');
+        $this->db->order_by('students.firstname', 'asc');
+        $this->db->order_by('students.lastname', 'asc');
+        $exam_students = $this->db->get()->result();
+
         // Generate Roll Numbers
-        foreach ($cbse_exam_student_ids as $cbse_exam_student_id) {
-            $exam_student = $this->db->get_where('cbse_exam_students', ['id' => $cbse_exam_student_id])->row();
-            if ($exam_student) {
-                if (empty($exam_student->roll_no) || $exam_student->roll_no == 0 || $exam_student->roll_no == '') {
-                    $this->db->update('cbse_exam_students', ['roll_no' => $current_series], ['id' => $exam_student->id]);
-                    $current_series++;
-                }
-            }
+        foreach ($exam_students as $exam_student) {
+            $this->db->update('cbse_exam_students', ['roll_no' => $current_series], ['id' => $exam_student->id]);
+            $current_series++;
         }
 
         $this->session->set_flashdata('msg', '<div class="alert alert-success">Admit Cards Generated successfully.</div>');

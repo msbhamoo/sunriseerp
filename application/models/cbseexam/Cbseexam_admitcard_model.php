@@ -230,7 +230,7 @@ class Cbseexam_admitcard_model extends MY_model
         // $query = $this->db->get();
         // return $query->result();
 
-         $this->db->select('*')
+        $this->db->select('*')
         ->from('cbse_exam_timetable')
         ->join('cbse_exams', 'cbse_exams.id = cbse_exam_timetable.cbse_exam_id', 'left')
         ->join('subjects', 'cbse_exam_timetable.subject_id = subjects.id', 'left')
@@ -240,11 +240,27 @@ class Cbseexam_admitcard_model extends MY_model
         return $query->result();
     }
 
-
-
-
-
-
-
+    public function get_admitcard_generation_summary($exam_id)
+    {
+        $this->db->select('
+            classes.class, 
+            sections.section,
+            student_session.class_id,
+            student_session.section_id,
+            COUNT(cbse_exam_students.id) as total_students,
+            SUM(CASE WHEN cbse_exam_students.roll_no IS NOT NULL AND cbse_exam_students.roll_no != "" AND cbse_exam_students.roll_no != 0 THEN 1 ELSE 0 END) as generated_count,
+            SUM(CASE WHEN cbse_exam_students.roll_no IS NULL OR cbse_exam_students.roll_no = "" OR cbse_exam_students.roll_no = 0 THEN 1 ELSE 0 END) as missing_count
+        ');
+        $this->db->from('cbse_exam_students');
+        $this->db->join('student_session', 'student_session.id = cbse_exam_students.student_session_id', 'left');
+        $this->db->join('classes', 'classes.id = student_session.class_id', 'left');
+        $this->db->join('sections', 'sections.id = student_session.section_id', 'left');
+        $this->db->where('cbse_exam_students.cbse_exam_id', $exam_id);
+        $this->db->group_by(array('student_session.class_id', 'student_session.section_id', 'classes.class', 'sections.section'));
+        $this->db->order_by('classes.class', 'asc');
+        $this->db->order_by('sections.section', 'asc');
+        $query = $this->db->get();
+        return $query->result_array();
+    }
 
 }

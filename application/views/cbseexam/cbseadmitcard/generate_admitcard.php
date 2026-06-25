@@ -288,6 +288,148 @@ input:checked + .slider:before {
                     </div>
                 <?php } ?>
 
+                <!-- Summary Dashboard -->
+                <?php if (isset($summary_data) && !empty($summary_data)) { 
+                    $total_students_all = 0;
+                    $total_generated_all = 0;
+                    $total_missing_all = 0;
+                    foreach ($summary_data as $summary) {
+                        $total_students_all += $summary['total_students'];
+                        $total_generated_all += $summary['generated_count'];
+                        $total_missing_all += $summary['missing_count'];
+                    }
+                    $overall_progress = ($total_students_all > 0) ? round(($total_generated_all / $total_students_all) * 100) : 0;
+                ?>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="info-box" style="background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                                <span class="info-box-icon" style="background:#e0f2fe; color:#0369a1; border-radius:8px 0 0 8px;"><i class="fa fa-users"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text text-muted" style="text-transform:uppercase; font-size:12px; font-weight:600;">Total Students</span>
+                                    <span class="info-box-number" style="font-size:24px; color:var(--text-main);"><?php echo $total_students_all; ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="info-box" style="background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                                <span class="info-box-icon" style="background:#dcfce7; color:#15803d; border-radius:8px 0 0 8px;"><i class="fa fa-check-circle"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text text-muted" style="text-transform:uppercase; font-size:12px; font-weight:600;">Generated</span>
+                                    <span class="info-box-number" style="font-size:24px; color:var(--text-main);"><?php echo $total_generated_all; ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="info-box" style="background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                                <span class="info-box-icon" style="background:#fce7f3; color:#be185d; border-radius:8px 0 0 8px;"><i class="fa fa-exclamation-circle"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text text-muted" style="text-transform:uppercase; font-size:12px; font-weight:600;">Pending</span>
+                                    <span class="info-box-number" style="font-size:24px; color:var(--text-main);"><?php echo $total_missing_all; ?></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modern-card">
+                        <div class="modern-header" style="display:flex; justify-content:space-between; align-items:center;">
+                            <h3 class="modern-title"><i class="fa fa-pie-chart"></i> Class & Section Summary (<?php echo $overall_progress; ?>% Complete)</h3>
+                            
+                            <!-- Bulk Generate All Missing (Entire Exam) -->
+                            <form action="<?php echo site_url('cbseexam/cbseadmitcardbulk/generate_missing'); ?>" method="post" class="form-inline" id="generateMissingFormAll">
+                                <?php echo $this->customlib->getCSRF(); ?>
+                                <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
+                                <div class="input-group">
+                                    <input type="number" name="series" class="form-control input-sm" placeholder="Start Series (e.g. 1001)" required style="width: 160px; border-radius: 4px 0 0 4px;">
+                                    <span class="input-group-btn">
+                                        <button type="submit" class="btn btn-success btn-sm" style="border-radius: 0 4px 4px 0;" onclick="return confirm('Are you sure you want to generate admit cards for ALL missing students in this exam?');">
+                                            <i class="fa fa-magic"></i> Auto-Generate All Missing
+                                        </button>
+                                    </span>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modern-body p-0">
+                            <div class="table-responsive">
+                                <table class="modern-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Class (Section)</th>
+                                            <th style="text-align:center;">Total</th>
+                                            <th style="text-align:center;">Generated</th>
+                                            <th style="text-align:center;">Pending</th>
+                                            <th style="width:30%;">Progress</th>
+                                            <th style="text-align:right;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($summary_data as $row) { 
+                                            $progress = ($row['total_students'] > 0) ? round(($row['generated_count'] / $row['total_students']) * 100) : 0;
+                                            $progress_color = $progress == 100 ? '#10b981' : ($progress > 50 ? '#3b82f6' : '#f59e0b');
+                                        ?>
+                                            <tr>
+                                                <td style="font-weight:600; color:var(--text-main);"><?php echo $row['class'] . ' (' . $row['section'] . ')'; ?></td>
+                                                <td style="text-align:center;"><span class="badge-soft badge-gray"><?php echo $row['total_students']; ?></span></td>
+                                                <td style="text-align:center;"><span class="badge-soft badge-green"><?php echo $row['generated_count']; ?></span></td>
+                                                <td style="text-align:center;">
+                                                    <?php if ($row['missing_count'] > 0) { ?>
+                                                        <span class="badge-soft badge-pink"><?php echo $row['missing_count']; ?></span>
+                                                    <?php } else { ?>
+                                                        <span class="badge-soft badge-gray">0</span>
+                                                    <?php } ?>
+                                                </td>
+                                                <td>
+                                                    <div style="display:flex; align-items:center; gap:10px;">
+                                                        <div style="flex:1; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
+                                                            <div style="height:100%; width:<?php echo $progress; ?>%; background:<?php echo $progress_color; ?>; transition:width 0.5s ease;"></div>
+                                                        </div>
+                                                        <span style="font-size:12px; font-weight:600; color:var(--text-muted); width:35px;"><?php echo $progress; ?>%</span>
+                                                    </div>
+                                                </td>
+                                                <td style="text-align:right; display:flex; gap:5px; justify-content:flex-end;">
+                                                    <!-- View Students -->
+                                                    <button type="button" class="btn btn-default btn-xs" onclick="viewClassSection(<?php echo $row['class_id']; ?>, <?php echo $row['section_id']; ?>)" title="View Students">
+                                                        <i class="fa fa-eye text-primary"></i> View
+                                                    </button>
+                                                    
+                                                    <!-- Generate for this section -->
+                                                    <?php if ($row['missing_count'] > 0) { ?>
+                                                        <form action="<?php echo site_url('cbseexam/cbseadmitcardbulk/generate_missing_by_section'); ?>" method="post" style="display:inline;" onsubmit="return confirm('Generate admit cards for missing students in this section?');">
+                                                            <?php echo $this->customlib->getCSRF(); ?>
+                                                            <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
+                                                            <input type="hidden" name="class_id" value="<?php echo $row['class_id']; ?>">
+                                                            <input type="hidden" name="section_id" value="<?php echo $row['section_id']; ?>">
+                                                            <div class="input-group" style="width:120px;">
+                                                                <input type="number" name="series" class="form-control input-xs" placeholder="Series" required style="height:22px; padding:2px 5px; font-size:12px; border-radius: 4px 0 0 4px;">
+                                                                <span class="input-group-btn">
+                                                                    <button type="submit" class="btn btn-success btn-xs" style="height:22px; padding:2px 5px; border-radius: 0 4px 4px 0;" title="Generate Missing">
+                                                                        <i class="fa fa-magic"></i>
+                                                                    </button>
+                                                                </span>
+                                                            </div>
+                                                        </form>
+                                                    <?php } else { ?>
+                                                        <button class="btn btn-success btn-xs" disabled style="opacity:0.5;"><i class="fa fa-check"></i> Complete</button>
+                                                    <?php } ?>
+                                                </td>
+                                            </tr>
+                                        <?php } ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <script>
+                        function viewClassSection(classId, sectionId) {
+                            $('#class_id').val(classId).trigger('change');
+                            setTimeout(function() {
+                                $('#section_id').val(sectionId);
+                                $('#class_id').closest('form').submit();
+                            }, 500);
+                        }
+                    </script>
+                <?php } ?>
+
                 <!-- Step 2: Student List & Actions -->
                 <?php if (isset($student_list) && !empty($student_list)) { ?>
                     <div class="modern-card">
