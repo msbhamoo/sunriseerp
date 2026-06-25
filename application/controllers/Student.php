@@ -172,6 +172,9 @@ class Student extends Admin_Controller
 
         $data["timeline_list"] = $this->timeline_model->getStudentTimeline($id, $status = '');
 
+        $this->load->model('absenteefollowup_model');
+        $data['absentee_followups'] = $this->absenteefollowup_model->getAllLogsByStudent($student['student_session_id']);
+
         $data['sch_setting'] = $this->sch_setting_detail;
 
         $data['adm_auto_insert']      = $this->sch_setting_detail->adm_auto_insert;
@@ -321,6 +324,8 @@ class Student extends Admin_Controller
 
         $data['student_doc_id'] = $id;
         $data['category_list']  = $this->category_model->get();
+        $data['religion_list'] = $this->religion_model->get();
+        $data['cast_list'] = $this->cast_model->get();
 
         $data['student'] = $student;
 
@@ -3366,6 +3371,8 @@ class Student extends Admin_Controller
         $data['title']       = 'Student List';
         $data['classlist']   = $this->class_model->get();
         $data['categorylist'] = $this->category_model->get();
+        $data['religion_list'] = $this->religion_model->get();
+        $data['cast_list'] = $this->cast_model->get();
         $data['custom_fields'] = $this->customfield_model->get_custom_fields('students');
         
         $this->load->view('layout/header', $data);
@@ -3893,6 +3900,8 @@ class Student extends Admin_Controller
         $data['student']  = $this->student_model->getStudentByClassSectionIDWithCustomfield($result['class_id'], $result['section_id'], $student_id);
         $data['sch_setting']    =    $this->sch_setting_detail;
         $data['category_list']  = $this->category_model->get();
+        $data['religion_list'] = $this->religion_model->get();
+        $data['cast_list'] = $this->cast_model->get();
         $data['fields']         = $this->customfield_model->get_custom_fields('students');
         $html  =  $this->load->view('print/printStudentDetails', $data, true);
         $this->load->library('m_pdf');

@@ -151,11 +151,6 @@ foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
                             <li class="<?php echo set_Submenu('admin/studentcall'); ?>"><a href="<?php echo site_url('admin/studentcall'); ?>"><i class="icon-circle-small"></i>Student Call Log</a></li>
                             <?php
                         }
-                        if ($this->rbac->hasPrivilege('call_purpose_setup', 'can_view')) {
-                            ?>
-                            <li class="<?php echo set_Submenu('admin/callpurpose'); ?>"><a href="<?php echo site_url('admin/callpurpose'); ?>"><i class="icon-circle-small"></i>Call Purpose Setup</a></li>
-                            <?php
-                        }
                     }
 
                     ?>

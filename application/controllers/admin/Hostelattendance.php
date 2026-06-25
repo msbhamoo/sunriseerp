@@ -33,6 +33,11 @@ class Hostelattendance extends Admin_Controller
 
         $hostel_id = $this->input->post('hostel_id');
         $date = $this->input->post('date');
+        $roll_call_type = $this->input->post('roll_call_type');
+        if (empty($roll_call_type)) {
+            $roll_call_type = 'morning';
+        }
+        $data['roll_call_type'] = $roll_call_type;
 
         if (isset($_POST['search'])) {
             $this->form_validation->set_rules('hostel_id', 'Hostel', 'required');
@@ -44,7 +49,7 @@ class Hostelattendance extends Admin_Controller
                 $data['hostel_id'] = $hostel_id;
                 
                 $data['students'] = $this->hostelattendance_model->get_hostel_students($hostel_id);
-                $data['attendance'] = $this->hostelattendance_model->get_attendance($hostel_id, $date_format);
+                $data['attendance'] = $this->hostelattendance_model->get_attendance($hostel_id, $date_format, $roll_call_type);
             }
         }
 
@@ -61,6 +66,10 @@ class Hostelattendance extends Admin_Controller
 
         $hostel_id = $this->input->post('hostel_id');
         $date = $this->input->post('date');
+        $roll_call_type = $this->input->post('roll_call_type');
+        if (empty($roll_call_type)) {
+            $roll_call_type = 'morning';
+        }
         $date_format = $this->customlib->dateFormatToYYYYMMDD($date);
         $student_sessions = $this->input->post('student_session');
 
@@ -75,6 +84,7 @@ class Hostelattendance extends Admin_Controller
                         'hostel_id' => $hostel_id,
                         'student_session_id' => $student_session_id,
                         'date' => $date_format,
+                        'roll_call_type' => $roll_call_type,
                         'attendence_type_id' => $attendance_type_id,
                         'remark' => $remark
                     ];
@@ -107,6 +117,10 @@ class Hostelattendance extends Admin_Controller
         $hostel_id = $this->input->post('hostel_id');
         $month = $this->input->post('month');
         $year = $this->input->post('year');
+        $roll_call_type = $this->input->post('roll_call_type');
+        if (empty($roll_call_type)) {
+            $roll_call_type = 'morning';
+        }
 
         if (empty($month)) {
             $month = date('m');
@@ -118,6 +132,7 @@ class Hostelattendance extends Admin_Controller
         $data['month'] = $month;
         $data['year'] = $year;
         $data['hostel_id'] = $hostel_id;
+        $data['roll_call_type'] = $roll_call_type;
         
         $data['days_in_month'] = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 
@@ -126,7 +141,7 @@ class Hostelattendance extends Admin_Controller
 
             if ($this->form_validation->run() == TRUE) {
                 $data['students'] = $this->hostelattendance_model->get_hostel_students($hostel_id);
-                $data['attendance'] = $this->hostelattendance_model->get_monthly_attendance($hostel_id, $month, $year);
+                $data['attendance'] = $this->hostelattendance_model->get_monthly_attendance($hostel_id, $month, $year, $roll_call_type);
             }
         }
 

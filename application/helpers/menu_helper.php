@@ -145,6 +145,9 @@ if (!function_exists('main_menu_array')) {
                 'category'        => array('index','edit'),               
                 'schoolhouse'     => array('index','edit'),               
                 'disable_reason'  => array('index','edit'),                              
+                'callpurpose'     => array('index','edit'),
+                'religion'        => array('index','edit'),
+                'cast'            => array('index','edit'),
             ),
             
             'fees_collection' => array(                             
@@ -455,9 +458,10 @@ if (!function_exists("activate_submenu")) {
         // Getting router class to active.
         $class  = $CI->router->fetch_class();
         $method = $CI->router->fetch_method();
+        $classes = explode(',', $arg_class);
         if (is_array($arg_methods)) {
             foreach ($arg_methods as $arg_methods_key => $arg_methods_value) {
-                if ($method == $arg_methods_value && $class == $arg_class) {
+                if ($method == $arg_methods_value && in_array($class, $classes)) {
                     return $class_active;
                     break;
                 }

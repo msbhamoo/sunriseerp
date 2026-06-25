@@ -6,6 +6,17 @@
     </section>
     <section class="content">
         <div class="row">
+            <div class="col-md-2">
+                <div class="box border0">
+                                        <ul class="tablists">
+                        <li><a href="<?php echo site_url('category') ?>"><?php echo $this->lang->line('student_categories') ? $this->lang->line('student_categories') : 'Student Categories'; ?></a></li>
+                        <li><a href="<?php echo site_url('admin/schoolhouse') ?>"><?php echo $this->lang->line('student_house') ? $this->lang->line('student_house') : 'Student House'; ?></a></li>
+                        <li><a href="<?php echo site_url('admin/disable_reason') ?>"><?php echo $this->lang->line('disable_reason') ? $this->lang->line('disable_reason') : 'Disable Reason'; ?></a></li>
+                        <li><a href="<?php echo site_url('religion') ?>"><?php echo $this->lang->line('religion') ? $this->lang->line('religion') : 'Religion'; ?></a></li>
+                        <li><a href="<?php echo site_url('cast') ?>"><?php echo $this->lang->line('cast') ? $this->lang->line('cast') : 'Cast'; ?></a></li>
+                    </ul>
+                </div>
+            </div>
             <?php if ($this->rbac->hasPrivilege('call_purpose_setup', 'can_add')) { ?>
                 <div class="col-md-4">
                     <div class="box box-primary">
@@ -28,7 +39,7 @@
                     </div>
                 </div>
             <?php } ?>
-            <div class="col-md-<?php echo ($this->rbac->hasPrivilege('call_purpose_setup', 'can_add')) ? "8" : "12"; ?>">
+            <div class="col-md-<?php echo ($this->rbac->hasPrivilege('call_purpose_setup', 'can_add')) ? "6" : "10"; ?>">
                 <div class="box box-primary">
                     <div class="box-header ptbnull">
                         <h3 class="box-title titlefix"><?php echo ($this->lang->line('purpose_list') ? $this->lang->line('purpose_list') : 'Purpose List'); ?></h3>

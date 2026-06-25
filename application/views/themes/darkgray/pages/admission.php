@@ -186,7 +186,12 @@ if (set_value('category_id') == $category['id']) {
             <div class="col-md-3">
                 <div class="form-group">
                     <label><?php echo $this->lang->line('religion'); ?></label>
-                    <input id="religion" name="religion" placeholder="" type="text" class="form-control"  value="<?php echo set_value('religion'); ?>" autocomplete="off" />
+                    <select class="form-control" name="religion" id="religion">
+    <option value=""><?php echo $this->lang->line("select"); ?></option>
+    <?php if (isset($religion_list)) { foreach ($religion_list as $religion_item) { ?>
+        <option value="<?php echo $religion_item["religion"]; ?>" <?php if (set_value("religion", (isset($student["religion"]) ? $student["religion"] : (isset($religion) ? $religion : ""))) == $religion_item["religion"]) echo "selected"; ?>><?php echo $religion_item["religion"]; ?></option>
+    <?php } } ?>
+</select>" autocomplete="off" />
                     <span class="text-danger"><?php echo form_error('religion'); ?></span>
                 </div>
             </div>
@@ -194,7 +199,12 @@ if (set_value('category_id') == $category['id']) {
                 <div class="col-md-3">
                     <div class="form-group">
                         <label><?php echo $this->lang->line('caste'); ?></label>
-                        <input id="cast" name="cast" placeholder="" type="text" class="form-control" autocomplete="off"  value="<?php echo set_value('cast'); ?>" />
+                        <select class="form-control" name="cast" id="cast">
+    <option value=""><?php echo $this->lang->line("select"); ?></option>
+    <?php if (isset($cast_list)) { foreach ($cast_list as $cast_item) { ?>
+        <option value="<?php echo $cast_item["cast"]; ?>" <?php if (set_value("cast", (isset($student["cast"]) ? $student["cast"] : (isset($cast) ? $cast : ""))) == $cast_item["cast"]) echo "selected"; ?>><?php echo $cast_item["cast"]; ?></option>
+    <?php } } ?>
+</select>
                         <span class="text-danger"><?php echo form_error('cast'); ?></span>
                     </div>
                 </div>

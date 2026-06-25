@@ -116,4 +116,16 @@ class Absenteefollowup_model extends MY_Model
         $query = $this->db->get();
         return $query->result_array();
     }
+
+    public function getAllLogsByStudent($student_session_id)
+    {
+        $this->db->select('attendance_followup_log.*, staff.name, staff.surname, staff.employee_id');
+        $this->db->from('attendance_followup_log');
+        $this->db->join('staff', 'staff.id = attendance_followup_log.created_by', 'left');
+        $this->db->where('student_session_id', $student_session_id);
+        $this->db->order_by('attendance_followup_log.date', 'DESC');
+        $this->db->order_by('attendance_followup_log.created_at', 'DESC');
+        $query = $this->db->get();
+        return $query->result_array();
+    }
 }

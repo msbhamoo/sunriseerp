@@ -7,6 +7,17 @@
     <!-- Main content -->
     <section class="content">
         <div class="row">
+            <div class="col-md-2">
+                <div class="box border0">
+                                        <ul class="tablists">
+                        <li><a href="<?php echo site_url('category') ?>"><?php echo $this->lang->line('student_categories') ? $this->lang->line('student_categories') : 'Student Categories'; ?></a></li>
+                        <li><a href="<?php echo site_url('admin/schoolhouse') ?>" class="active"><?php echo $this->lang->line('student_house') ? $this->lang->line('student_house') : 'Student House'; ?></a></li>
+                        <li><a href="<?php echo site_url('admin/disable_reason') ?>"><?php echo $this->lang->line('disable_reason') ? $this->lang->line('disable_reason') : 'Disable Reason'; ?></a></li>
+                        <li><a href="<?php echo site_url('religion') ?>"><?php echo $this->lang->line('religion') ? $this->lang->line('religion') : 'Religion'; ?></a></li>
+                        <li><a href="<?php echo site_url('cast') ?>"><?php echo $this->lang->line('cast') ? $this->lang->line('cast') : 'Cast'; ?></a></li>
+                    </ul>
+                </div>
+            </div>
             <?php
 if (($this->rbac->hasPrivilege('student_houses', 'can_add')) || ($this->rbac->hasPrivilege('student_houses', 'can_edit'))) {
     ?>
@@ -51,9 +62,9 @@ if ($this->session->flashdata('msg')) {
             <?php }?>
             <div class="col-md-<?php
 if (($this->rbac->hasPrivilege('student_houses', 'can_add')) || ($this->rbac->hasPrivilege('student_houses', 'can_edit'))) {
-    echo "8";
+    echo "6";
 } else {
-    echo "12";
+    echo "10";
 }
 ?>">
                 <div class="box box-primary">

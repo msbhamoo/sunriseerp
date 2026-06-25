@@ -281,6 +281,8 @@ class Welcome extends Front_Controller
             $this->data['classlist']      = $class;
             $this->data['sch_setting']    = $this->sch_setting_detail;
             $category                     = $this->category_model->get();
+            $this->data['religion_list'] = $this->religion_model->get();
+            $this->data['cast_list'] = $this->cast_model->get();
             $this->data['categorylist']   = $category;
             $this->data["bloodgroup"]     = $this->blood_group;
             $houses                       = $this->student_model->gethouselist();
@@ -735,6 +737,8 @@ class Welcome extends Front_Controller
             $this->data['classlist']        = $class;
             $this->data['sch_setting']      = $this->sch_setting_detail;
             $category                       = $this->category_model->get();
+            $this->data['religion_list'] = $this->religion_model->get();
+            $this->data['cast_list'] = $this->cast_model->get();
             $this->data['categorylist']     = $category;
             $result                         = $this->onlinestudent_model->get($id);
             $classresult                    = $this->onlinestudent_model->getclassbyclasssectionid($result['class_section_id']);
@@ -858,6 +862,8 @@ class Welcome extends Front_Controller
             $this->data['classlist']      = $class;
             $this->data['sch_setting']    = $this->sch_setting_detail;
             $category                     = $this->category_model->get();
+            $this->data['religion_list'] = $this->religion_model->get();
+            $this->data['cast_list'] = $this->cast_model->get();
             $this->data['categorylist']   = $category;
             $class_id                     = $this->input->post('class_id');
             $section_id                   = $this->input->post('section_id');
@@ -873,6 +879,8 @@ class Welcome extends Front_Controller
             $this->data['sch_setting']    = $this->sch_setting_detail;
             $id                           = $this->onlinestudent_model->getidbyrefno($reference_no);
             $category                     = $this->category_model->get();
+            $this->data['religion_list'] = $this->religion_model->get();
+            $this->data['cast_list'] = $this->cast_model->get();
             $this->data['categorylist']   = $category;
             $this->data["bloodgroup"]     = $this->blood_group;
             $houses                       = $this->student_model->gethouselist();

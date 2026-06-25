@@ -23,12 +23,13 @@ class Hostelattendance_model extends MY_Model
         return $this->db->get()->result_array();
     }
 
-    public function get_attendance($hostel_id, $date)
+    public function get_attendance($hostel_id, $date, $roll_call_type = 'morning')
     {
         $this->db->select('hostel_attendance.*');
         $this->db->from('hostel_attendance');
         $this->db->where('hostel_id', $hostel_id);
         $this->db->where('date', $date);
+        $this->db->where('roll_call_type', $roll_call_type);
         $result = $this->db->get()->result_array();
         
         $attendance = [];
@@ -43,6 +44,7 @@ class Hostelattendance_model extends MY_Model
         foreach ($data as $row) {
             $this->db->where('student_session_id', $row['student_session_id']);
             $this->db->where('date', $row['date']);
+            $this->db->where('roll_call_type', $row['roll_call_type']);
             $q = $this->db->get('hostel_attendance');
             
             if ($q->num_rows() > 0) {
@@ -53,13 +55,14 @@ class Hostelattendance_model extends MY_Model
             }
         }
     }
-    public function get_monthly_attendance($hostel_id, $month, $year)
+    public function get_monthly_attendance($hostel_id, $month, $year, $roll_call_type = 'morning')
     {
         $this->db->select('hostel_attendance.*');
         $this->db->from('hostel_attendance');
         $this->db->where('hostel_id', $hostel_id);
         $this->db->where('MONTH(date)', $month);
         $this->db->where('YEAR(date)', $year);
+        $this->db->where('roll_call_type', $roll_call_type);
         $result = $this->db->get()->result_array();
         
         $attendance = [];

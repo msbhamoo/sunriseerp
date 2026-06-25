@@ -23,10 +23,11 @@
                                         <?php
                                         // Standard mappings
                                         $standard_columns = [
+                                            'class' => 'Class',
+                                            'section' => 'Section',
                                             'admission_no' => 'Admission No',
                                             'roll_no' => 'Roll No',
-                                            'firstname' => 'First Name',
-                                            'lastname' => 'Last Name',
+                                            'student_name' => 'Student Name',
                                             'mobileno' => 'Mobile No',
                                             'email' => 'Email',
                                             'state' => 'State',
@@ -52,6 +53,9 @@
                                             'guardian_address' => 'Guardian Address',
                                             'is_active' => 'Is Active',
                                             'admission_date' => 'Admission Date',
+                                            'hostel_name' => 'Hostel',
+                                            'room_no' => 'Room No',
+                                            'pickup_point_name' => 'Pick Point',
                                             'total_fee' => 'Total Fee',
                                             'total_paid' => 'Total Paid',
                                             'total_balance' => 'Total Balance',
@@ -96,8 +100,11 @@
                                                     }
                                                     echo "<td>" . $val . "</td>";
                                                 } else {
-                                                    // Standard or fee column
-                                                    $val = isset($student[$col]) ? $student[$col] : '';
+                                                    if ($col == 'student_name') {
+                                                        $val = trim((isset($student['firstname']) ? $student['firstname'] : '') . ' ' . (isset($student['lastname']) ? $student['lastname'] : ''));
+                                                    } else {
+                                                        $val = isset($student[$col]) ? $student[$col] : '';
+                                                    }
                                                     if ($col == 'dob' || $col == 'admission_date') {
                                                         if (!empty($val) && $val != '0000-00-00') {
                                                             $val = date($this->customlib->getSchoolDateFormat(), strtotime($val));

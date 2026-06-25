@@ -15,8 +15,11 @@ class MY_Controller extends CI_Controller
         'section_model' => true,
         'setting_model' => true,
         'class_model' => true,
-        'classsection_model' => true,
         'category_model' => true,
+        'religion_model' => true,
+        'cast_model' => true,
+        'classsection_model' => true,
+        'feecategory_model' => true,
         'student_model' => true,
         'feemaster_model' => true,
         'feecategory_model' => true,
@@ -397,7 +400,7 @@ class Front_Controller extends CI_Controller
         $this->check_installation();
         $this->load->database();
                 $this->load->library(array('Smsgateway', 'QDMailer'));
-        $this->load->model(array('setting_model', 'language_model', 'Module_model', 'cms_program_model', 'cms_menu_model', 'cms_menuitems_model', 'cms_page_model', 'cms_page_content_model', 'class_model', 'category_model','notificationsetting_model'));
+        $this->load->model(array('setting_model', 'language_model', 'Module_model', 'cms_program_model', 'cms_menu_model', 'cms_menuitems_model', 'cms_page_model', 'cms_page_content_model', 'class_model', 'category_model', 'religion_model', 'cast_model', 'notificationsetting_model'));
 
         if ($this->config->item('installed') == true) {
 

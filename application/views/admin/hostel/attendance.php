@@ -18,7 +18,7 @@
                                 <div class="box-body">
                                     <?php echo $this->customlib->getCSRF(); ?>
                                     <div class="row">
-                                        <div class="col-md-6">
+                                        <div class="col-md-4">
                                             <div class="form-group">
                                                 <label><?php echo $this->lang->line('hostel'); ?></label><small class="req"> *</small>
                                                 <select autofocus="" id="hostel_id" name="hostel_id" class="form-control" >
@@ -30,11 +30,21 @@
                                                 <span class="text-danger"><?php echo form_error('hostel_id'); ?></span>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-md-4">
                                             <div class="form-group">
                                                 <label><?php echo $this->lang->line('date'); ?></label><small class="req"> *</small>
                                                 <input id="date" name="date" placeholder="" type="text" class="form-control date" value="<?php echo isset($date) ? $date : date($this->customlib->getSchoolDateFormat()); ?>" readonly="readonly"/>
                                                 <span class="text-danger"><?php echo form_error('date'); ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Roll Call Type</label><small class="req"> *</small>
+                                                <select id="roll_call_type" name="roll_call_type" class="form-control" >
+                                                    <option value="morning" <?php if (isset($roll_call_type) && $roll_call_type == 'morning') echo "selected"; ?>>Morning</option>
+                                                    <option value="evening" <?php if (isset($roll_call_type) && $roll_call_type == 'evening') echo "selected"; ?>>Evening</option>
+                                                </select>
+                                                <span class="text-danger"><?php echo form_error('roll_call_type'); ?></span>
                                             </div>
                                         </div>
                                     </div>
@@ -50,7 +60,7 @@
                 <?php if (isset($students)) { ?>
                     <div class="box box-info">
                         <div class="box-header with-border">
-                            <h3 class="box-title"><i class="fa fa-users"></i> Hostel Attendance List</h3>
+                            <h3 class="box-title"><i class="fa fa-users"></i> Hostel Attendance List (<?php echo isset($roll_call_type) ? ucfirst($roll_call_type) : 'Morning'; ?>)</h3>
                             <div class="box-tools pull-right">
                                 <!-- Global Checkboxes for mark all -->
                                 <?php foreach ($attendencetypeslist as $key => $value) { ?>
@@ -64,6 +74,7 @@
                             <div class="box-body">
                                 <input type="hidden" name="hostel_id" value="<?php echo $hostel_id; ?>">
                                 <input type="hidden" name="date" value="<?php echo $date; ?>">
+                                <input type="hidden" name="roll_call_type" value="<?php echo isset($roll_call_type) ? $roll_call_type : 'morning'; ?>">
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordered table-hover example">
                                         <thead>

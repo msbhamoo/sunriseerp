@@ -131,7 +131,7 @@
         <link rel="stylesheet" href="<?php echo base_url(); ?>backend/plugins/colorpicker/bootstrap-colorpicker.css">
         <link rel="stylesheet" href="<?php echo base_url(); ?>backend/plugins/daterangepicker/daterangepicker-bs3.css">
         <link rel="stylesheet" href="<?php echo base_url(); ?>backend/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css">
-        <link rel="stylesheet" href="<?php echo base_url(); ?>backend/dist/css/custom_style.css">
+        <link rel="stylesheet" href="<?php echo base_url(); ?>backend/dist/css/custom_style.css?v=<?php echo time(); ?>">
         <!--file dropify-->
         <link rel="stylesheet" href="<?php echo base_url(); ?>backend/dist/css/dropify.min.css">
         <!--file nprogress-->
@@ -417,6 +417,20 @@
 .navbar-nav.headertopmenu > li {
     display: flex !important;
     align-items: center !important;
+}
+
+/* Visibility Fixes */
+@media (max-width: 767px) {
+    .navbar-nav.headertopmenu > li.hidden-xs,
+    .navbar-nav.headertopmenu > li.d-sm-none {
+        display: none !important;
+    }
+}
+@media (min-width: 768px) {
+    .navbar-nav.headertopmenu > li.d-lg-none,
+    .navbar-nav.headertopmenu > li.ellipsis-px-3 {
+        display: none !important;
+    }
 }
 
 .navbar-nav.headertopmenu > li > a {

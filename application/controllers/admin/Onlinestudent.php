@@ -123,6 +123,8 @@ class Onlinestudent extends Admin_Controller
         $data["student_categorize"]    = 'class';
         $data['classlist']             = $class;
         $category                      = $this->category_model->get();
+            $data['religion_list'] = $this->religion_model->get();
+            $data['cast_list'] = $this->cast_model->get();
         $data['categorylist']          = $category;
         $hostelList                    = $this->hostel_model->get();
         $data['hostelList']            = $hostelList;

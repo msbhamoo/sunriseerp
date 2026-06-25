@@ -74,10 +74,11 @@
                             <div class="row">
                                 <?php
                                 $standard_columns = [
+                                    'class' => 'Class',
+                                    'section' => 'Section',
                                     'admission_no' => 'Admission No',
                                     'roll_no' => 'Roll No',
-                                    'firstname' => 'First Name',
-                                    'lastname' => 'Last Name',
+                                    'student_name' => 'Student Name',
                                     'mobileno' => 'Mobile No',
                                     'email' => 'Email',
                                     'state' => 'State',
@@ -103,6 +104,9 @@
                                     'guardian_address' => 'Guardian Address',
                                     'is_active' => 'Is Active',
                                     'admission_date' => 'Admission Date',
+                                    'hostel_name' => 'Hostel',
+                                    'room_no' => 'Room No',
+                                    'pickup_point_name' => 'Pick Point',
                                 ];
                                 
                                 foreach ($standard_columns as $col_key => $col_name) {

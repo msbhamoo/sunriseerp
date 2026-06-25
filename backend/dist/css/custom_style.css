@@ -50,11 +50,13 @@ body .main-sidebar form.sidebar-form {
         transform: none !important; /* MUST be none so position:fixed works */
         left: -150px !important;
         transition: left 0.3s ease-in-out !important;
+        z-index: 99999 !important; /* Force sidebar and its children above content */
     }
     .sidebar-open .main-sidebar {
         transform: none !important;
         left: 0 !important;
         box-shadow: 2px 0 8px rgba(0,0,0,0.15) !important;
+        z-index: 99999 !important;
     }
     .content-wrapper, .main-footer, .main-header .navbar {
         margin-left: 0 !important;

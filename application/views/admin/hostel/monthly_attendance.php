@@ -18,7 +18,7 @@
                                 <div class="box-body">
                                     <?php echo $this->customlib->getCSRF(); ?>
                                     <div class="row">
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-group">
                                                 <label><?php echo $this->lang->line('hostel'); ?></label><small class="req"> *</small>
                                                 <select autofocus="" id="hostel_id" name="hostel_id" class="form-control" >
@@ -30,7 +30,7 @@
                                                 <span class="text-danger"><?php echo form_error('hostel_id'); ?></span>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-group">
                                                 <label><?php echo $this->lang->line('month'); ?></label><small class="req"> *</small>
                                                 <select name="month" class="form-control">
@@ -44,7 +44,7 @@
                                                 <span class="text-danger"><?php echo form_error('month'); ?></span>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-group">
                                                 <label><?php echo $this->lang->line('year'); ?></label><small class="req"> *</small>
                                                 <select name="year" class="form-control">
@@ -56,6 +56,16 @@
                                                     <?php } ?>
                                                 </select>
                                                 <span class="text-danger"><?php echo form_error('year'); ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Roll Call Type</label><small class="req"> *</small>
+                                                <select id="roll_call_type" name="roll_call_type" class="form-control" >
+                                                    <option value="morning" <?php if (isset($roll_call_type) && $roll_call_type == 'morning') echo "selected"; ?>>Morning</option>
+                                                    <option value="evening" <?php if (isset($roll_call_type) && $roll_call_type == 'evening') echo "selected"; ?>>Evening</option>
+                                                </select>
+                                                <span class="text-danger"><?php echo form_error('roll_call_type'); ?></span>
                                             </div>
                                         </div>
                                     </div>
@@ -71,7 +81,7 @@
                 <?php if (isset($students)) { ?>
                     <div class="box box-info">
                         <div class="box-header with-border">
-                            <h3 class="box-title"><i class="fa fa-users"></i> Monthly Attendance Report</h3>
+                            <h3 class="box-title"><i class="fa fa-users"></i> Monthly Attendance Report (<?php echo isset($roll_call_type) ? ucfirst($roll_call_type) : 'Morning'; ?>)</h3>
                         </div>
                         <div class="box-body">
                             <div class="table-responsive">

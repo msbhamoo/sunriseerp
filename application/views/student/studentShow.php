@@ -1431,11 +1431,43 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                         
                         <?php if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) { ?>
                             <li class=""><a href="#call_log" data-toggle="tab" aria-expanded="true"><?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Call Log'); ?></a></li>
+                            <?php } ?>
+                        <?php if ($this->rbac->hasPrivilege('absentee_followup', 'can_view')) { ?>
+                            <li class=""><a href="#absentee_followup" data-toggle="tab" aria-expanded="true"><?php echo ($this->lang->line('absentee_followup') ? $this->lang->line('absentee_followup') : 'Absentee Follow Up'); ?></a></li>
                         <?php } ?>
                     </ul>
 
                     <div class="tab-content">
-                        <div class="tab-pane" id="call_log">
+                                                <div class="tab-pane" id="absentee_followup">
+                            <div class="sp2-card">
+                                <div class="sp2-section-title"><i class="fa fa-phone"></i> <?php echo ($this->lang->line('absentee_followup') ? $this->lang->line('absentee_followup') : 'Absentee Follow Up'); ?></div>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered table-hover example" cellspacing="0" width="100%">
+                                        <thead>
+                                            <tr>
+                                                <th><?php echo $this->lang->line('date'); ?></th>
+                                                <th><?php echo ($this->lang->line('followup_status') ? $this->lang->line('followup_status') : 'Status'); ?></th>
+                                                <th><?php echo $this->lang->line('remark'); ?></th>
+                                                <th><?php echo $this->lang->line('created_by'); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php if (isset($absentee_followups) && !empty($absentee_followups)) { 
+                                                foreach ($absentee_followups as $log) { ?>
+                                                <tr>
+                                                    <td><?php echo date($this->customlib->getSchoolDateFormat(), strtotime($log['date'])); ?></td>
+                                                    <td><?php echo $log['followup_status']; ?></td>
+                                                    <td><?php echo $log['remark']; ?></td>
+                                                    <td><?php echo $log['name'] . ' ' . $log['surname'] . ' (' . $log['employee_id'] . ')'; ?></td>
+                                                </tr>
+                                            <?php } } ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+<div class="tab-pane" id="call_log">
                             <div class="sp2-card">
                                 <div class="sp2-section-title"><i class="fa fa-phone"></i> <?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Call Log'); ?></div>
                                 <div class="table-responsive">
