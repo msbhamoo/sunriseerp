@@ -16,7 +16,7 @@
                         <?php } ?>
                     </div>
                     
-                    <form role="form" action="<?php echo site_url('admin/studentcall') ?>" method="post" class="">
+                    <form id="searchForm" role="form" action="<?php echo site_url('admin/studentcall') ?>" method="post" class="">
                         <div class="box-body row">
                             <?php echo $this->customlib->getCSRF(); ?>
                             <div class="col-sm-2 col-md-2">
@@ -75,6 +75,29 @@
                                     <input type="text" name="date_to" class="form-control date" value="<?php echo set_value('date_to') ?>">
                                 </div>
                             </div>
+                            <div class="col-sm-2 col-md-2">
+                                <div class="form-group">
+                                    <label>Follow-up Date From</label>
+                                    <input type="text" name="follow_up_date_from" class="form-control date" value="<?php echo set_value('follow_up_date_from') ?>">
+                                </div>
+                            </div>
+                            <div class="col-sm-2 col-md-2">
+                                <div class="form-group">
+                                    <label>Follow-up Date To</label>
+                                    <input type="text" name="follow_up_date_to" class="form-control date" value="<?php echo set_value('follow_up_date_to') ?>">
+                                </div>
+                            </div>
+                            <div class="col-sm-2 col-md-2">
+                                <div class="form-group">
+                                    <label>Assigned To</label>
+                                    <select name="assigned_to" class="form-control">
+                                        <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                        <?php foreach ($staff_list as $staff) { ?>
+                                            <option value="<?php echo $staff['id'] ?>" <?php if (set_value('assigned_to') == $staff['id']) echo "selected=selected" ?>><?php echo $staff['name'] . " " . $staff['surname'] . " (" . $staff['employee_id'] . ")" ?></option>
+                                        <?php } ?>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="form-group">
                                 <div class="col-sm-12">
                                     <button type="submit" name="search" value="search_filter" class="btn btn-primary btn-sm checkbox-toggle pull-right"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
@@ -96,12 +119,11 @@
                                         <th><?php echo $this->lang->line('student'); ?></th>
                                         <th><?php echo $this->lang->line('class'); ?></th>
                                         <th><?php echo $this->lang->line('phone'); ?></th>
-                                        <th><?php echo ($this->lang->line('contact_person') ? $this->lang->line('contact_person') : 'Contact Person'); ?></th>
-                                        <th><?php echo $this->lang->line('call_type'); ?></th>
                                         <th><?php echo $this->lang->line('purpose'); ?></th>
                                         <th><?php echo $this->lang->line('status'); ?></th>
                                         <th><?php echo $this->lang->line('date'); ?></th>
                                         <th>Follow-up Status</th>
+                                        <th><?php echo ($this->lang->line('assign_to') ? $this->lang->line('assign_to') : 'Assigned To'); ?></th>
                                         <th><?php echo $this->lang->line('created_by'); ?></th>
                                         <th class="text-right noExport"><?php echo $this->lang->line('action'); ?></th>
                                     </tr>
@@ -113,8 +135,6 @@
                                                 <td><?php echo $call['firstname'] . " " . $call['lastname'] . " (" . $call['admission_no'] . ")"; ?></td>
                                                 <td><?php echo $call['class'] . " (" . $call['section'] . ")"; ?></td>
                                                 <td><?php echo $call['phone_number']; ?></td>
-                                                <td><?php echo $call['contact_person']; ?></td>
-                                                <td><?php echo $call['call_type']; ?></td>
                                                 <td><?php echo $call['purpose_name']; ?></td>
                                                 <td><?php echo $call['call_status']; ?></td>
                                                 <td><?php echo date($this->customlib->getSchoolDateFormat(true, true), strtotime($call['date'])); ?></td>
@@ -129,6 +149,7 @@
                                                     }
                                                     ?>
                                                 </td>
+                                                <td><?php echo $call['assigned_to_name']; ?></td>
                                                 <td><?php echo $call['staff_name'] . " " . $call['staff_surname']; ?></td>
                                                 <td class="pull-right">
                                                     <?php if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) { ?>
@@ -407,17 +428,16 @@
             if (person && student_id && student_phones[student_id]) {
                 var phone = student_phones[student_id][person];
                 if(phone) {
-                    var x = phone.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
-                    var formatted = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
-                    $('#phone_number').val(formatted);
+                    var x = phone.replace(/\D/g, '');
+                    $('#phone_number').val(x);
                 }
             }
         });
 
         // Professional Phone Number Auto-formatting
         $('#phone_number').on('input', function (e) {
-            var x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
-            e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+            var x = e.target.value.replace(/\D/g, '');
+            e.target.value = x;
         });
         
         // Initialize Datepicker with minDate constraint
@@ -489,6 +509,32 @@
                     {
                         $('#section_id').append("<option value=" + obj.section_id + ">" + obj.section + "</option>");
                     });
+                }
+            });
+        });
+
+        $('#searchForm').on('submit', function(e) {
+            e.preventDefault();
+            var $btn = $(this).find('button[type="submit"]');
+            $btn.button('loading');
+            $.ajax({
+                url: '<?php echo site_url("admin/studentcall/search_ajax") ?>',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status == 'success') {
+                        var table = $('.example').DataTable();
+                        table.clear();
+                        if (res.data && res.data.length > 0) {
+                            table.rows.add(res.data);
+                        }
+                        table.draw();
+                    }
+                    $btn.button('reset');
+                },
+                error: function() {
+                    $btn.button('reset');
                 }
             });
         });

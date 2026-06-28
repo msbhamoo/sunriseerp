@@ -936,9 +936,9 @@ modal_click_disabled('subjectModal','addExamModal','observationParameterModal','
     function classes_list(x){
        var list="";
         $.each(exam_classes, function (key, val) {
-            list+= "<div class='form-check'>";
+            list+= "<div class='form-check' style='display:inline-block; margin-right:15px; margin-bottom:5px;'>";
             list+=  "<label class='form-check-label' for='cls_"+val.class_id+"_"+x+"'>";
-            list+= "<input class='form-check-input' type='checkbox' name='classes_"+x+"[]' value='"+val.class_id+"' id='cls_"+val.class_id+"_"+x+"'> "+val.class;                                          
+            list+= "<input class='form-check-input' style='vertical-align: middle; margin-top: -2px;' type='checkbox' name='classes_"+x+"[]' value='"+val.class_id+"' id='cls_"+val.class_id+"_"+x+"'> "+val.class;                                          
             list+= "</label>";
             list+= "</div>";
             });
@@ -948,10 +948,10 @@ modal_click_disabled('subjectModal','addExamModal','observationParameterModal','
     function exam_assessments_list(x){
        var radio_list="";
         $.each(exam_assessments, function (key, val) {
-            radio_list+= "<div class='form-check'>";
+            radio_list+= "<div class='form-check' style='display:inline-block; margin-right:15px; margin-bottom:5px;'>";
             radio_list+=  "<label class='form-check-label' for='chk_"+val.id+"_"+x+"'>";
             var sub_code=(val.code != "") ? " ("+val.code+")":"";
-            radio_list+= "<input class='form-check-input' type='checkbox' name='assessment_"+x+"[]' value='0_"+val.id+"' id='chk_"+val.id+"_"+x+"'> "+val.name+sub_code;                                          
+            radio_list+= "<input class='form-check-input' style='vertical-align: middle; margin-top: -2px;' type='checkbox' name='assessment_"+x+"[]' value='0_"+val.id+"' id='chk_"+val.id+"_"+x+"'> "+val.name+sub_code;                                          
             radio_list+= "</label>";
             radio_list+= "</div>";
             });

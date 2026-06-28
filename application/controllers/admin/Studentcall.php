@@ -48,6 +48,59 @@ class Studentcall extends Admin_Controller
         }
     }
 
+    public function search_ajax()
+    {
+        $class_id = $this->input->post('class_id');
+        $section_id = $this->input->post('section_id');
+        $date_from = $this->input->post('date_from') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('date_from'))) : null;
+        $date_to = $this->input->post('date_to') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('date_to'))) : null;
+        $purpose_id = $this->input->post('purpose_id');
+        $status = $this->input->post('status');
+        
+        $follow_up_date_from = $this->input->post('follow_up_date_from') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('follow_up_date_from'))) : null;
+        $follow_up_date_to = $this->input->post('follow_up_date_to') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('follow_up_date_to'))) : null;
+        $assigned_to = $this->input->post('assigned_to');
+
+        $calls = $this->studentcall_model->get_calls($class_id, $section_id, $date_from, $date_to, $purpose_id, $status, $follow_up_date_from, $follow_up_date_to, $assigned_to);
+
+        file_put_contents('query_debug.txt', $this->db->last_query() . "\nAssigned to var: " . $assigned_to);
+
+        $data = [];
+        if (!empty($calls)) {
+            foreach ($calls as $call) {
+                $followup_status = '';
+                if ($call['total_followups'] == 0) {
+                    $followup_status = "<span class='label label-default'>None</span>";
+                } else if ($call['pending_count'] > 0) {
+                    $followup_status = "<span class='label label-warning'>Pending (" . date($this->customlib->getSchoolDateFormat(), strtotime($call['next_follow_up_date'])) . ")</span>";
+                } else {
+                    $followup_status = "<span class='label label-success'>Resolved</span>";
+                }
+
+                $action = '';
+                if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) {
+                    $action = '<a href="#" class="btn btn-default btn-xs" onclick="follow_up(' . $call['id'] . ')" data-toggle="tooltip" title="' . ($this->lang->line('follow_up') ? $this->lang->line('follow_up') : 'Follow Up') . '"><i class="fa fa-phone"></i></a>';
+                }
+
+                $row = [
+                    $call['firstname'] . ' ' . $call['lastname'] . ' (' . $call['admission_no'] . ')',
+                    $call['class'] . ' (' . $call['section'] . ')',
+                    $call['phone_number'],
+                    $call['purpose_name'],
+                    $call['call_status'],
+                    date($this->customlib->getSchoolDateFormat(true, true), strtotime($call['date'])),
+                    $followup_status,
+                    $call['assigned_to_name'],
+                    $call['staff_name'] . ' ' . $call['staff_surname'],
+                    '<div class="pull-right">' . $action . '</div>'
+                ];
+                $data[] = $row;
+            }
+        }
+
+        echo json_encode(['status' => 'success', 'data' => $data]);
+    }
+
     public function add_call()
     {
         if (!$this->rbac->hasPrivilege('student_call_log', 'can_add')) {

@@ -40,6 +40,7 @@ class Stuattendence extends Admin_Controller
         $this->form_validation->set_rules('date', $this->lang->line('date'), 'trim|required|xss_clean');
         
         if ($this->form_validation->run() == false) {
+            $data['attendencetypeslist'] = $this->attendencetype_model->get();
             $this->load->view('layout/header', $data);
             $this->load->view('admin/stuattendence/attendenceList', $data); 
             $this->load->view('layout/footer', $data);
@@ -134,6 +135,63 @@ class Stuattendence extends Admin_Controller
             $this->load->view('admin/stuattendence/attendenceList', $data);
             $this->load->view('layout/footer', $data);
         }
+    }
+
+    public function bulk()
+    {
+        if (!$this->rbac->hasPrivilege('student_attendance', 'can_add')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'Attendance');
+        $this->session->set_userdata('sub_menu', 'stuattendence/index');
+        
+        $data['attendencetypeslist'] = $this->attendencetype_model->get();
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/stuattendence/bulk_attendance', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    public function bulk_save()
+    {
+        if (!$this->rbac->hasPrivilege('student_attendance', 'can_add')) {
+            access_denied();
+        }
+
+        $date = $this->input->post('date');
+        $attendencetype = $this->input->post('attendencetype');
+        
+        if (empty($date) || empty($attendencetype)) {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">Date and Attendance Type are required.</div>');
+            redirect('admin/stuattendence/index', 'refresh');
+            return;
+        }
+
+        $this->load->model('studentsession_model');
+        $all_active_sessions = $this->studentsession_model->getAllActiveStudentSessions();
+
+        $attendance_array = [];
+        $formatted_date = date('Y-m-d', $this->customlib->datetostrtotime($date));
+
+        foreach ($all_active_sessions as $session) {
+            $attendance_array[] = array(
+                'student_session_id' => $session['student_session_id'],
+                'attendence_type_id' => $attendencetype,
+                'remark'             => '',
+                'in_time'            => null,
+                'out_time'           => null,
+                'date'               => $formatted_date,
+            );
+        }
+
+        if (!empty($attendance_array)) {
+            $this->stuattendence_model->addorUpdate($attendance_array);
+        }
+
+        // We bypass mailsms for bulk operations to avoid spamming the entire school.
+        $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">' . $this->lang->line('success_message') . '</div>');
+        redirect('admin/stuattendence/bulk', 'refresh');
     }
 
     public function attendencereport()

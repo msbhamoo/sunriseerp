@@ -134,6 +134,11 @@
                 <div class="box box-primary">
                     <div class="box-header with-border">
                         <h3 class="box-title"><i class="fa fa-search"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
+                        <?php if ($this->rbac->hasPrivilege('student_attendance', 'can_add')) { ?>
+                        <div class="box-tools pull-right">
+                            <a href="<?php echo site_url('admin/stuattendence/bulk'); ?>" class="btn btn-sm btn-primary"><i class="fa fa-users"></i> Mark Entire School Attendance (Bulk)</a>
+                        </div>
+                        <?php } ?>
                     </div>
                     <form id='form1' action="<?php echo site_url('admin/stuattendence/index') ?>" method="post" accept-charset="utf-8">
                         <div class="box-body">
@@ -183,6 +188,7 @@
                                             <?php echo $this->lang->line('attendance_date'); ?>
                                         </label><small class="req"> *</small>
                                         <input id="date" name="date" placeholder="" type="text" class="form-control date" value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat())); ?>" readonly="readonly" />
+                                        <div id="sunday_message" class="text-danger" style="display:none; font-weight:bold;">Today is Sunday, so mark it a holiday</div>
                                         <span class="text-danger"><?php echo form_error('date'); ?></span>
                                     </div>
                                 </div>
@@ -194,17 +200,20 @@
                             </div>
                         </div>
                     </form>
-                    <?php
-                    if (isset($resultlist)) {
-                    ?>
-                        <div class="">
-                            <div class="box-header ptbnull"></div>
-                            <div class="box-header with-border">
-                                <h3 class="box-title"><i class="fa fa-users"></i> <?php echo $this->lang->line('student_list'); ?></h3>
-                                <div class="box-tools pull-right">
-                                </div>
-                            </div>
-                            <div class="box-body">
+                </div>
+
+
+
+                <?php
+                if (isset($resultlist)) {
+                ?>
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title"><i class="fa fa-users"></i> <?php echo $this->lang->line('student_list'); ?></h3>
+                        <div class="box-tools pull-right">
+                        </div>
+                    </div>
+                    <div class="box-body">
                                 <?php
                                 if (!empty($resultlist)) {
                                     $can_edit = 1;
@@ -425,12 +434,13 @@
                                 <?php
                                 }
                                 ?>
-                            </div>
                         </div>
-                </div>
-            <?php
-                    }
-            ?>
+                    </div>
+                <?php
+                }
+                ?>
+            </div>
+        </div>
     </section>
 </div>
 
@@ -664,5 +674,76 @@ let disable_enable=(type,student_session_id)=>{
         $("#out_time_"+student_session_id).attr("disabled",false);
     }
 }
+
+function parseDateValAndCheckSunday(dateVal) {
+    if (!dateVal) return false;
+    
+    // First let's try to see if it matches standard patterns DD-MM-YYYY or MM/DD/YYYY etc
+    // Typical getSchoolDateFormat strings map to JS patterns:
+    var format = '<?php echo $this->customlib->getSchoolDateFormat(); ?>';
+    
+    if (typeof moment !== 'undefined') {
+        var momentFormat = format.toUpperCase();
+        var m = moment(dateVal, momentFormat, true);
+        if (m.isValid()) {
+            return m.day() === 0;
+        }
+        var m2 = moment(dateVal, ["DD-MM-YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD.MM.YYYY", "DD/MM/YYYY"]);
+        if (m2.isValid()) {
+            return m2.day() === 0;
+        }
+    }
+    
+    // Attempt standard JS Date fallback
+    var d = new Date(dateVal);
+    if (!isNaN(d.getTime())) {
+        return d.getDay() === 0;
+    }
+    
+    // Manual split fallback (assuming DD/MM/YYYY or DD-MM-YYYY)
+    var parts = dateVal.split(/[\.\-\/]/);
+    if (parts.length === 3) {
+        // If year is last, assume DD MM YYYY or MM DD YYYY
+        if (parts[2].length === 4) {
+            var d2 = new Date(parts[2], parts[1]-1, parts[0]);
+            if (d2.getDay() === 0) return true;
+        } else if (parts[0].length === 4) {
+            var d3 = new Date(parts[0], parts[1]-1, parts[2]);
+            if (d3.getDay() === 0) return true;
+        }
+    }
+    return false;
+}
+
+function checkSundayAndShowMessage(dateInputId, messageContainerId) {
+    var dateVal = $('#' + dateInputId).val();
+    if (dateVal) {
+        var isSunday = parseDateValAndCheckSunday(dateVal);
+        
+        if (isSunday) {
+            $('#' + messageContainerId).show();
+            $('.default_radio').each(function() {
+                var label = $(this).next('label').text().toLowerCase();
+                if (label.indexOf('holiday') !== -1) {
+                    $(this).prop('checked', true);
+                }
+            });
+        } else {
+            $('#' + messageContainerId).hide();
+        }
+    }
+}
+
+$(document).ready(function() {
+    // Check initially
+    checkSundayAndShowMessage('date', 'sunday_message');
+
+    // Bootstrap datepicker dp.change or change
+    $('.date').on('change dp.change', function(e) {
+        if ($(this).attr('id') == 'date') {
+            checkSundayAndShowMessage('date', 'sunday_message');
+        }
+    });
+});
 
 </script>

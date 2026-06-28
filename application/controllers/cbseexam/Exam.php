@@ -1381,18 +1381,27 @@ class Exam extends MY_Addon_CBSEController
         if (isset($rows) && !empty($rows)) {
             foreach ($rows as $row_key => $row_value) {
                 $assessment = $this->input->post('assessment_' . $row_value);
+                $classes = $this->input->post('classes_' . $row_value);
+                
                 if (
                     $this->input->post('subject_' . $row_value) == "" ||
                     $this->input->post('time_from' . $row_value) == "" ||
                     $this->input->post('duration' . $row_value) == "" ||
                     $this->input->post('room_no_' . $row_value) == "" ||
-                    $this->input->post('date_from_' . $row_value) == "" || (!isset($assessment) || empty($assessment))
+                    $this->input->post('date_from_' . $row_value) == "" || (!isset($assessment) || empty($assessment)) || (!isset($classes) || empty($classes))
                 ) {
                     $this->form_validation->set_rules('parameter', 'parameter', 'trim|required|xss_clean', array('required' => $this->lang->line('fields_values_required')));
                 }
 
-                if (trim($this->input->post('subject_' . $row_value)) != "") {
-                    $total_subjects[] = $this->input->post('subject_' . $row_value);
+                $subject_id = trim($this->input->post('subject_' . $row_value));
+                if ($subject_id != "") {
+                    if (!empty($classes) && is_array($classes)) {
+                        foreach ($classes as $class_id) {
+                            $total_subjects[] = $subject_id . "-" . $class_id;
+                        }
+                    } else {
+                        $total_subjects[] = $subject_id;
+                    }
                 }
             }
         }

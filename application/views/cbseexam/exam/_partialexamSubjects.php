@@ -3,7 +3,19 @@
             <p class="examinfo"><span><?php echo $this->lang->line('exam'); ?></span><?php echo $examDetail['name']; ?></p>
         </div>
         <div class="col-lg-10 col-md-9 col-sm-12">
-            <p class="examinfo"><span><?php echo $this->lang->line('class_section'); ?></span><?php echo $examDetail['class_sections']; ?></p>
+            <p class="examinfo"><span><?php echo $this->lang->line('class'); ?></span>
+            <?php 
+            if (!empty($examDetail['class_sections'])) {
+                $cs_array = explode(',', $examDetail['class_sections']);
+                $unique_classes = [];
+                foreach ($cs_array as $cs) {
+                    $parts = explode(' - ', trim($cs), 2);
+                    $unique_classes[] = trim($parts[0]);
+                }
+                echo implode(', ', array_unique($unique_classes));
+            }
+            ?>
+            </p>
         </div>
     </div>
     <div class="divider2"></div>
@@ -95,9 +107,9 @@
                                     foreach ($classes as $cls) {
                                         $checked = in_array($cls['class_id'], $assigned_class_ids) ? "checked='checked'" : "";
                                 ?>
-                                        <div class="form-check">
+                                        <div class="form-check" style="display:inline-block; margin-right:15px; margin-bottom:5px;">
                                         <label class="form-check-label" for="cls_<?php echo $cls['class_id'] . "_" . $count; ?>"  >
-                                            <input class="form-check-input" type="checkbox" name="classes_<?php echo $count; ?>[]" value="<?php echo $cls['class_id']; ?>" id="cls_<?php echo $cls['class_id'] . "_" . $count; ?>" <?php echo $checked; ?>>
+                                            <input class="form-check-input" style="vertical-align: middle; margin-top: -2px;" type="checkbox" name="classes_<?php echo $count; ?>[]" value="<?php echo $cls['class_id']; ?>" id="cls_<?php echo $cls['class_id'] . "_" . $count; ?>" <?php echo $checked; ?>>
                                                 <?php echo $cls['class']; ?>
                                             </label>
                                         </div>
@@ -114,10 +126,10 @@
                                 if (!empty($assessments)) {
                                     foreach ($assessments as $assessment_key => $assessment_value) {
                                 ?>
-                                        <div class="form-check">
+                                        <div class="form-check" style="display:inline-block; margin-right:15px; margin-bottom:5px;">
                                         <label class="form-check-label" for="chk_<?php echo $assessment_value->id . "_" . $count; ?>"  >
                                            
-                                            <input class="form-check-input" type="checkbox" name="assessment_<?php echo $count; ?>[]" value="<?php echo $exam_subject_value->id."_".$assessment_value->id; ?>" id="chk_<?php echo $assessment_value->id . "_" . $count; ?>" <?php 
+                                            <input class="form-check-input" style="vertical-align: middle; margin-top: -2px;" type="checkbox" name="assessment_<?php echo $count; ?>[]" value="<?php echo $exam_subject_value->id."_".$assessment_value->id; ?>" id="chk_<?php echo $assessment_value->id . "_" . $count; ?>" <?php 
                                           echo  (!is_null($exam_subject_value->{'cbse_exam_timetable_id_' . $assessment_value->id})) ? "checked='checked'" :""
                                             ?>>
 

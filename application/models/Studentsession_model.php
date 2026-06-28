@@ -111,6 +111,17 @@ class Studentsession_model extends CI_Model
         return $query->result();
     }
 
+    public function getAllActiveStudentSessions()
+    {
+        $this->db->select('student_session.id as student_session_id');
+        $this->db->from('student_session');
+        $this->db->join('students', 'students.id = student_session.student_id');
+        $this->db->where('student_session.session_id', $this->current_session);
+        $this->db->where('students.is_active', 'yes');
+        $query = $this->db->get();
+        return $query->result_array();
+    }
+
     public function add($insert_array, $student_id)
     {
         $not_delarray = array();
