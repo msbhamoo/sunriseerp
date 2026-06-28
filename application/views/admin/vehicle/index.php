@@ -804,6 +804,7 @@ $('.editvehicle').click(function(){
        dataType:'json',
        success:function(response){
           $('#editvehicledata').html(response.page);
+          $('.filestyle').dropify();
        }
    });
 })

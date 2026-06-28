@@ -220,21 +220,19 @@ class Cbseexam_admitcard_model extends MY_model
         return $query->result();
     }
 
-    public function get_cbse_exam_timetable($cbse_exam_id){
+    public function get_cbse_exam_timetable($cbse_exam_id, $class_id = null){
         
-        // $this->db->select('*')
-        // ->from('cbse_exam_timetable')
-        // ->join('cbse_exams', 'cbse_exams.id = cbse_exam_timetable.cbse_exam_id', 'left')
-        // ->join('subjects', 'cbse_exam_timetable.subject_id = subjects.id', 'left')
-        // ->where('cbse_exam_timetable.cbse_exam_id', $cbse_exam_id);
-        // $query = $this->db->get();
-        // return $query->result();
-
         $this->db->select('*')
         ->from('cbse_exam_timetable')
         ->join('cbse_exams', 'cbse_exams.id = cbse_exam_timetable.cbse_exam_id', 'left')
-        ->join('subjects', 'cbse_exam_timetable.subject_id = subjects.id', 'left')
-        ->where('cbse_exam_timetable.cbse_exam_id', $cbse_exam_id)
+        ->join('subjects', 'cbse_exam_timetable.subject_id = subjects.id', 'left');
+        
+        if ($class_id) {
+            $this->db->join('cbse_exam_timetable_classes', 'cbse_exam_timetable_classes.cbse_exam_timetable_id = cbse_exam_timetable.id', 'inner');
+            $this->db->where('cbse_exam_timetable_classes.class_id', $class_id);
+        }
+        
+        $this->db->where('cbse_exam_timetable.cbse_exam_id', $cbse_exam_id)
         ->where('cbse_exams.session_id', $this->current_session);
         $query = $this->db->get();
         return $query->result();

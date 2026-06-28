@@ -106,7 +106,7 @@ class Cbseexam_result_model extends MY_Model {
         $termsdata=array();
         $template_data=$this->templatedata($cbse_template_id);
         $grade=$this->db->select('*')->from('cbse_exam_grades_range')->where('cbse_exam_grade_id',$template_data['gradeexam_id'])->get()->result_array();
-        $subject=$this->db->select('subjects.*')->from('cbse_exam_students')->join('cbse_exam_timetable','cbse_exam_timetable.cbse_exam_id=cbse_exam_students.cbse_exam_id')->join('subjects','subjects.id=cbse_exam_timetable.subject_id')->where('cbse_exam_students.student_session_id',$student_session_id)->group_by('cbse_exam_timetable.subject_id')->get()->result_array();
+        $subject=$this->db->select('subjects.*')->from('cbse_exam_students')->join('student_session', 'student_session.id = cbse_exam_students.student_session_id')->join('cbse_exam_timetable','cbse_exam_timetable.cbse_exam_id=cbse_exam_students.cbse_exam_id')->join('cbse_exam_timetable_classes', 'cbse_exam_timetable_classes.cbse_exam_timetable_id = cbse_exam_timetable.id AND cbse_exam_timetable_classes.class_id = student_session.class_id')->join('subjects','subjects.id=cbse_exam_timetable.subject_id')->where('cbse_exam_students.student_session_id',$student_session_id)->group_by('cbse_exam_timetable.subject_id')->get()->result_array();
         $subjects=array();
         foreach($subject as $skey=>$svalue){
             $subjects[$svalue['id']]['name']=$svalue['name'];
@@ -130,8 +130,10 @@ class Cbseexam_result_model extends MY_Model {
                     
                     $assesment_mark=$this->db->select('cbse_student_subject_marks.mark,,cbse_exam_timetable.subject_id')->from('cbse_student_subject_result')
                     ->join('cbse_exam_students','cbse_exam_students.id=cbse_student_subject_result.cbse_exam_student_id')
+                    ->join('student_session', 'student_session.id = cbse_exam_students.student_session_id')
                     ->join('cbse_student_subject_marks','cbse_student_subject_marks.cbse_student_subject_result_id=cbse_student_subject_result.id')
                     ->join('cbse_exam_timetable','cbse_exam_timetable.id=cbse_student_subject_result.cbse_exam_timetable_id')
+                    ->join('cbse_exam_timetable_classes', 'cbse_exam_timetable_classes.cbse_exam_timetable_id = cbse_exam_timetable.id AND cbse_exam_timetable_classes.class_id = student_session.class_id')
 
                     ->where(array('cbse_student_subject_marks.cbse_exam_assessment_type_id'=>$exam_assessmentsvalue['id'],'cbse_exam_students.cbse_exam_id'=>$examvalue['id'],'cbse_exam_students.student_session_id'=>$student_session_id))->get()->result_array();
 
@@ -180,7 +182,7 @@ class Cbseexam_result_model extends MY_Model {
             foreach ($exam_assessments as $exam_assessmentskey => $exam_assessmentsvalue) {                
 
             $termsdata[$value['id']]['exam'][$examvalue['id']]['exam_assessments'][$exam_assessmentsvalue['id']]=$exam_assessmentsvalue;
-            $assesment_mark=$this->db->select('cbse_student_subject_marks.mark,cbse_exam_timetable.subject_id')->from('cbse_student_subject_result')->join('cbse_exam_students','cbse_exam_students.id=cbse_student_subject_result.cbse_exam_student_id')->join('cbse_student_subject_marks','cbse_student_subject_marks.cbse_student_subject_result_id=cbse_student_subject_result.id')->join('cbse_exam_timetable','cbse_exam_timetable.id=cbse_student_subject_result.cbse_exam_timetable_id')->where(array('cbse_student_subject_marks.cbse_exam_assessment_type_id'=>$exam_assessmentsvalue['id'],'cbse_exam_students.cbse_exam_id'=>$examvalue['id'],'cbse_exam_students.student_session_id'=>$student_session_id))->get()->result_array();
+            $assesment_mark=$this->db->select('cbse_student_subject_marks.mark,cbse_exam_timetable.subject_id')->from('cbse_student_subject_result')->join('cbse_exam_students','cbse_exam_students.id=cbse_student_subject_result.cbse_exam_student_id')->join('student_session', 'student_session.id = cbse_exam_students.student_session_id')->join('cbse_student_subject_marks','cbse_student_subject_marks.cbse_student_subject_result_id=cbse_student_subject_result.id')->join('cbse_exam_timetable','cbse_exam_timetable.id=cbse_student_subject_result.cbse_exam_timetable_id')->join('cbse_exam_timetable_classes', 'cbse_exam_timetable_classes.cbse_exam_timetable_id = cbse_exam_timetable.id AND cbse_exam_timetable_classes.class_id = student_session.class_id')->where(array('cbse_student_subject_marks.cbse_exam_assessment_type_id'=>$exam_assessmentsvalue['id'],'cbse_exam_students.cbse_exam_id'=>$examvalue['id'],'cbse_exam_students.student_session_id'=>$student_session_id))->get()->result_array();
 
             $assesment_marks=array();
             foreach ($assesment_mark as $assesment_markkey => $assesment_markvalue) {
@@ -271,7 +273,7 @@ class Cbseexam_result_model extends MY_Model {
         $grade=$this->db->select('*')->from('cbse_exam_grades_range')->where('cbse_exam_grade_id',1)->get()->result_array();
     
         $terms=$this->db->select('cbse_terms.id,cbse_terms.name')->from('cbse_exam_students')->join('cbse_exams','cbse_exams.id=cbse_exam_students.cbse_exam_id')->join('cbse_terms','cbse_terms.id=cbse_exams.cbse_term_id')->where('cbse_exam_students.student_session_id',$student_session_id)->where('cbse_terms.id',1)->get()->result_array();
-        $subject=$this->db->select('subjects.*')->from('cbse_exam_students')->join('cbse_exam_timetable','cbse_exam_timetable.cbse_exam_id=cbse_exam_students.cbse_exam_id')->join('subjects','subjects.id=cbse_exam_timetable.subject_id')->where('cbse_exam_students.student_session_id',$student_session_id)->group_by('cbse_exam_timetable.subject_id')->get()->result_array();
+        $subject=$this->db->select('subjects.*')->from('cbse_exam_students')->join('student_session', 'student_session.id = cbse_exam_students.student_session_id')->join('cbse_exam_timetable','cbse_exam_timetable.cbse_exam_id=cbse_exam_students.cbse_exam_id')->join('cbse_exam_timetable_classes', 'cbse_exam_timetable_classes.cbse_exam_timetable_id = cbse_exam_timetable.id AND cbse_exam_timetable_classes.class_id = student_session.class_id')->join('subjects','subjects.id=cbse_exam_timetable.subject_id')->where('cbse_exam_students.student_session_id',$student_session_id)->group_by('cbse_exam_timetable.subject_id')->get()->result_array();
         $subjects=array();
         foreach($subject as $skey=>$svalue){
             $subjects[$svalue['id']]['name']=$svalue['name'];
@@ -324,7 +326,7 @@ class Cbseexam_result_model extends MY_Model {
     {
         $grade=$this->db->select('*')->from('cbse_exam_grades_range')->where('cbse_exam_grade_id',1)->get()->result_array();  
 
-        $subject=$this->db->select('subjects.*')->from('cbse_exam_students')->join('cbse_exam_timetable','cbse_exam_timetable.cbse_exam_id=cbse_exam_students.cbse_exam_id')->join('subjects','subjects.id=cbse_exam_timetable.subject_id')->where('cbse_exam_students.student_session_id',$student_session_id)->group_by('cbse_exam_timetable.subject_id')->get()->result_array();
+        $subject=$this->db->select('subjects.*')->from('cbse_exam_students')->join('student_session', 'student_session.id = cbse_exam_students.student_session_id')->join('cbse_exam_timetable','cbse_exam_timetable.cbse_exam_id=cbse_exam_students.cbse_exam_id')->join('cbse_exam_timetable_classes', 'cbse_exam_timetable_classes.cbse_exam_timetable_id = cbse_exam_timetable.id AND cbse_exam_timetable_classes.class_id = student_session.class_id')->join('subjects','subjects.id=cbse_exam_timetable.subject_id')->where('cbse_exam_students.student_session_id',$student_session_id)->group_by('cbse_exam_timetable.subject_id')->get()->result_array();
         
         $subjects=array();
         

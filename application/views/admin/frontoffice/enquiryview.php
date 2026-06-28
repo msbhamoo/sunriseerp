@@ -55,14 +55,14 @@ if ($value["source"] == $source_select) {
                             </div>
                              <div class="col-sm-3 col-md-2 col-lg-2">
                                 <div class="form-group">
-                                    <label><?php echo $this->lang->line('enquiry_from_date'); ?><small class="req"> *</small></label>
+                                    <label><?php echo $this->lang->line('enquiry_from_date'); ?></label>
                                         <input type="text" autocomplete="off" name="from_date" class="form-control  date"  value="<?php echo set_value('from_date') ?>">
                                         <span class="text-danger"><?php echo form_error('from_date'); ?></span>
                                     </div>
                             </div>
                             <div class="col-sm-3 col-md-2 col-lg-2">
                                 <div class="form-group">
-                                    <label><?php echo $this->lang->line('enquiry_to_date'); ?><small class="req"> *</small></label>
+                                    <label><?php echo $this->lang->line('enquiry_to_date'); ?></label>
                                         <input type="text" autocomplete="off" name="to_date" class="form-control  date"  value="<?php echo set_value('to_date') ?>">
                                         <span class="text-danger"><?php echo form_error('to_date'); ?></span>
                                     </div>
@@ -115,6 +115,7 @@ if ($enkey == $status) {
                                             <thead>
                                                 <tr>
                                                     <th><?php echo $this->lang->line('name'); ?></th>
+                                                    <th>Father's Name</th>
                                                     <th><?php echo $this->lang->line('phone'); ?></th>
                                                     <th><?php echo $this->lang->line('source'); ?></th>
                                                     <th><?php echo $this->lang->line('enquiry_date'); ?></th>
@@ -146,6 +147,7 @@ if (empty($enquiry_list)) {
         ?>
                                                         <tr <?php echo $class ?>>
                                                             <td class="mailbox-name"><?php echo $value['name']; ?> </td>
+                                                            <td class="mailbox-name"><?php echo $value['father_name']; ?> </td>
                                                             <td class="mailbox-name"><?php echo $value['contact']; ?> </td>
                                                             <td class="mailbox-name"><?php echo $value['source']; ?></td>
                                                             <td class="mailbox-name"> <?php
@@ -165,23 +167,34 @@ if (!empty($next_date) && $next_date != '0000-00-00') {
         ?></td>
                                                             <td> <?php echo $enquiry_status[$value["status"]] ?></td>
                                                             <td class="mailbox-date text-right white-space-nowrap">
-                                                                <?php if ($this->rbac->hasPrivilege('follow_up_admission_enquiry', 'can_view')) {?>
-                                                                    <a class="btn btn-primary btn-xs" onclick="follow_up('<?php echo $value['id']; ?>', '<?php echo $value['status']; ?>', '<?php echo $value['created_by']; ?>');"  data-target="#follow_up" data-toggle="modal"  title="<?php echo $this->lang->line('follow_up_admission_enquiry'); ?>">
-                                                                        <i class="fa fa-phone"></i>
-                                                                    </a>
-                                                                <?php }
-        ?>
-                                                                <?php if ($this->rbac->hasPrivilege('admission_enquiry', 'can_edit')) {?>
-                                                                    <a  onclick="getRecord('<?php echo $value['id']; ?>', '<?php echo $value['status']; ?>')" class="btn btn-primary btn-xs" data-target="#myModaledit" data-toggle="modal"   title="<?php echo $this->lang->line('edit'); ?>"><i class="fa fa-pencil"></i>
-                                                                    </a>
-                                                                <?php }
-        ?>
-                                                                <?php if ($this->rbac->hasPrivilege('admission_enquiry', 'can_delete')) {?>
-                                                                    <a href="#" class="btn btn-primary btn-xs" data-toggle="tooltip" title="" onclick="delete_enquiry('<?php echo $value["id"] ?>')" data-original-title="<?php echo $this->lang->line('delete'); ?>">
-                                                                        <i class="fa fa-remove"></i>
-                                                                    </a>
-                                                                <?php }
-        ?>
+                                                                <?php if ($value['status'] == 'won') { ?>
+                                                                    <?php if (!empty($value['student_id'])) { ?>
+                                                                        <a href="<?php echo site_url('student/view/' . $value['student_id']); ?>" class="btn btn-info btn-xs" data-toggle="tooltip" title="View Profile">
+                                                                            <i class="fa fa-reorder"></i> View Profile
+                                                                        </a>
+                                                                    <?php } ?>
+                                                                <?php } else { ?>
+                                                                    <?php if ($this->rbac->hasPrivilege('follow_up_admission_enquiry', 'can_view')) {?>
+                                                                        <a class="btn btn-primary btn-xs" onclick="follow_up('<?php echo $value['id']; ?>', '<?php echo $value['status']; ?>', '<?php echo $value['created_by']; ?>');"  data-target="#follow_up" data-toggle="modal"  title="<?php echo $this->lang->line('follow_up_admission_enquiry'); ?>">
+                                                                            <i class="fa fa-phone"></i>
+                                                                        </a>
+                                                                    <?php }
+            ?>
+                                                                    <?php if ($this->rbac->hasPrivilege('admission_enquiry', 'can_edit')) {?>
+                                                                        <a  onclick="getRecord('<?php echo $value['id']; ?>', '<?php echo $value['status']; ?>')" class="btn btn-primary btn-xs" data-target="#myModaledit" data-toggle="modal"   title="<?php echo $this->lang->line('edit'); ?>"><i class="fa fa-pencil"></i>
+                                                                        </a>
+                                                                        <a href="<?php echo site_url('student/create?enquiry_id=' . $value['id']); ?>" class="btn btn-success btn-xs" data-toggle="tooltip" title="Convert to Admission">
+                                                                            <i class="fa fa-user-plus"></i>
+                                                                        </a>
+                                                                    <?php }
+            ?>
+                                                                    <?php if ($this->rbac->hasPrivilege('admission_enquiry', 'can_delete')) {?>
+                                                                        <a href="#" class="btn btn-primary btn-xs" data-toggle="tooltip" title="" onclick="delete_enquiry('<?php echo $value["id"] ?>')" data-original-title="<?php echo $this->lang->line('delete'); ?>">
+                                                                            <i class="fa fa-remove"></i>
+                                                                        </a>
+                                                                    <?php }
+            ?>
+                                                                <?php } ?>
                                                             </td>
                                                         </tr>
                                                         <?php
@@ -227,6 +240,26 @@ if (!empty($next_date) && $next_date != '0000-00-00') {
                                         <div class="form-group">
                                             <label><?php echo $this->lang->line('email'); ?></label>
                                             <input type="text" value="<?php echo set_value('email'); ?>" name="email" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <label>Father Name</label>
+                                            <input type="text" autocomplete="off" class="form-control" value="<?php echo set_value('father_name'); ?>" name="father_name">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <label>Mother Name</label>
+                                            <input type="text" autocomplete="off" class="form-control" value="<?php echo set_value('mother_name'); ?>" name="mother_name">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <label>Date Of Birth</label>
+                                            <input type="text" autocomplete="off" class="form-control date" value="<?php echo set_value('dob'); ?>" name="dob" readonly="">
                                         </div>
                                     </div>
                                 </div>

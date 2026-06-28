@@ -134,7 +134,11 @@ class Hostelattendance extends Admin_Controller
         $data['hostel_id'] = $hostel_id;
         $data['roll_call_type'] = $roll_call_type;
         
-        $data['days_in_month'] = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        if ($month != 'all') {
+            $data['days_in_month'] = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        } else {
+            $data['days_in_month'] = 0;
+        }
 
         if (isset($_POST['search'])) {
             $this->form_validation->set_rules('hostel_id', 'Hostel', 'required');

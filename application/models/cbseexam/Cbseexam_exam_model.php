@@ -93,7 +93,7 @@ class Cbseexam_exam_model extends MY_Model
         }
     }
 
-    public function wizard_save_exam($exam_data, $classes, $sections, $subjects, $assessments, $dates, $start_times, $durations, $room_nos)
+    public function wizard_save_exam($exam_data, $classes, $sections, $subjects, $assessments, $dates, $start_times, $durations, $room_nos, $assigned_classes_list = null)
     {
         $this->db->trans_start();
         $this->db->trans_strict(false);
@@ -170,7 +170,237 @@ class Cbseexam_exam_model extends MY_Model
                             ]);
                         }
                     }
+                    
+                    if (isset($assigned_classes_list[$key]) && !empty($assigned_classes_list[$key])) {
+                        $cls_ids = explode(',', $assigned_classes_list[$key]);
+                        foreach ($cls_ids as $c_id) {
+                            if (!empty($c_id)) {
+                                $this->db->insert('cbse_exam_timetable_classes', [
+                                    'cbse_exam_timetable_id' => $timetable_id,
+                                    'class_id' => $c_id
+                                ]);
+                            }
+                        }
+                    }
                 }
+            }
+        }
+        
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    public function getExamClassesSections($exam_id) {
+        $this->db->select('class_section_id, class_id, section_id');
+        $this->db->from('cbse_exam_class_sections');
+        $this->db->join('class_sections', 'class_sections.id = cbse_exam_class_sections.class_section_id');
+        $this->db->where('cbse_exam_id', $exam_id);
+        $result = $this->db->get()->result_array();
+        
+        $assigned = [];
+        foreach ($result as $row) {
+            $assigned[$row['class_id']][] = $row['section_id'];
+        }
+        return $assigned;
+    }
+
+    public function getWizardExamTimetable($exam_id) {
+        $this->db->select('cbse_exam_timetable.*, GROUP_CONCAT(DISTINCT cbse_exam_timetable_assessment_types.cbse_exam_assessment_type_id) as assessment_ids, GROUP_CONCAT(DISTINCT cbse_exam_timetable_classes.class_id) as assigned_class_ids');
+        $this->db->from('cbse_exam_timetable');
+        $this->db->join('cbse_exam_timetable_assessment_types', 'cbse_exam_timetable_assessment_types.cbse_exam_timetable_id = cbse_exam_timetable.id', 'left');
+        $this->db->join('cbse_exam_timetable_classes', 'cbse_exam_timetable_classes.cbse_exam_timetable_id = cbse_exam_timetable.id', 'left');
+        $this->db->where('cbse_exam_timetable.cbse_exam_id', $exam_id);
+        $this->db->group_by('cbse_exam_timetable.id');
+        return $this->db->get()->result_array();
+    }
+
+    public function wizard_update_exam($exam_id, $exam_data, $classes, $sections, $subjects, $assessments, $dates, $start_times, $durations, $room_nos, $timetable_ids, $assigned_classes_list = null)
+    {
+        $this->db->trans_start();
+        $this->db->trans_strict(false);
+        
+        if (isset($exam_data['cbse_exam_assessment_id'])) {
+            unset($exam_data['cbse_exam_assessment_id']);
+        }
+        $this->db->where('id', $exam_id);
+        $this->db->update('cbse_exams', $exam_data);
+        
+        $this->db->select('cbse_exam_class_sections.id as ecs_id, class_sections.id as class_section_id, class_sections.class_id, class_sections.section_id');
+        $this->db->from('cbse_exam_class_sections');
+        $this->db->join('class_sections', 'class_sections.id = cbse_exam_class_sections.class_section_id');
+        $this->db->where('cbse_exam_class_sections.cbse_exam_id', $exam_id);
+        $existing_ecs = $this->db->get()->result();
+        
+        $existing_map = [];
+        foreach ($existing_ecs as $ecs) {
+            $existing_map[$ecs->class_id . '-' . $ecs->section_id] = $ecs;
+        }
+        
+        $submitted_map = [];
+        if (!empty($classes)) {
+            foreach ($classes as $class_id) {
+                if (isset($sections[$class_id])) {
+                    foreach ($sections[$class_id] as $section_id) {
+                        $submitted_map[$class_id . '-' . $section_id] = true;
+                    }
+                }
+            }
+        }
+        
+        foreach ($submitted_map as $key => $val) {
+            if (!isset($existing_map[$key])) {
+                list($class_id, $section_id) = explode('-', $key);
+                $this->db->select('id');
+                $this->db->where('class_id', $class_id);
+                $this->db->where('section_id', $section_id);
+                $cs_row = $this->db->get('class_sections')->row();
+                
+                if ($cs_row) {
+                    $this->db->insert('cbse_exam_class_sections', [
+                        'cbse_exam_id' => $exam_id,
+                        'class_section_id' => $cs_row->id
+                    ]);
+                    
+                    $this->db->select('id');
+                    $this->db->where('session_id', isset($exam_data['session_id']) ? $exam_data['session_id'] : $this->current_session);
+                    $this->db->where('class_id', $class_id);
+                    $this->db->where('section_id', $section_id);
+                    $students = $this->db->get('student_session')->result();
+                    
+                    foreach ($students as $stu) {
+                        $this->db->where('cbse_exam_id', $exam_id);
+                        $this->db->where('student_session_id', $stu->id);
+                        if ($this->db->count_all_results('cbse_exam_students') == 0) {
+                            $this->db->insert('cbse_exam_students', [
+                                'cbse_exam_id' => $exam_id,
+                                'student_session_id' => $stu->id
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+        
+        foreach ($existing_map as $key => $ecs) {
+            if (!isset($submitted_map[$key])) {
+                $this->db->where('id', $ecs->ecs_id);
+                $this->db->delete('cbse_exam_class_sections');
+                
+                $this->db->select('id');
+                $this->db->where('session_id', isset($exam_data['session_id']) ? $exam_data['session_id'] : $this->current_session);
+                $this->db->where('class_id', $ecs->class_id);
+                $this->db->where('section_id', $ecs->section_id);
+                $students = $this->db->get('student_session')->result();
+                
+                $stu_ids = [];
+                foreach ($students as $s) {
+                    $stu_ids[] = $s->id;
+                }
+                
+                if (!empty($stu_ids)) {
+                    $this->db->where('cbse_exam_id', $exam_id);
+                    $this->db->where_in('student_session_id', $stu_ids);
+                    $this->db->delete('cbse_exam_students');
+                }
+            }
+        }
+        
+        $this->db->select('id');
+        $this->db->where('cbse_exam_id', $exam_id);
+        $existing_tts_res = $this->db->get('cbse_exam_timetable')->result();
+        $existing_tt_ids = [];
+        foreach ($existing_tts_res as $t) {
+            $existing_tt_ids[$t->id] = true;
+        }
+        
+        $submitted_tt_ids = [];
+        
+        if (!empty($subjects)) {
+            foreach ($subjects as $key => $subject_id) {
+                if (!empty($subject_id)) {
+                    $assessment_ids = explode(',', $assessments[$key]);
+                    $tt_id = isset($timetable_ids[$key]) ? $timetable_ids[$key] : '';
+                    
+                    if (!empty($tt_id) && isset($existing_tt_ids[$tt_id])) {
+                        $this->db->where('id', $tt_id);
+                        $this->db->update('cbse_exam_timetable', [
+                            'date' => date('Y-m-d', strtotime($dates[$key])),
+                            'time_from' => $start_times[$key],
+                            'duration' => $durations[$key],
+                            'room_no' => $room_nos[$key]
+                        ]);
+                        $submitted_tt_ids[$tt_id] = true;
+                        
+                        $this->db->where('cbse_exam_timetable_id', $tt_id);
+                        $this->db->delete('cbse_exam_timetable_assessment_types');
+                        
+                        foreach ($assessment_ids as $assess_id) {
+                            if (!empty($assess_id)) {
+                                $this->db->insert('cbse_exam_timetable_assessment_types', [
+                                    'cbse_exam_timetable_id' => $tt_id,
+                                    'cbse_exam_assessment_type_id' => $assess_id
+                                ]);
+                            }
+                        }
+                        
+                        $this->db->where('cbse_exam_timetable_id', $tt_id);
+                        $this->db->delete('cbse_exam_timetable_classes');
+                        
+                        if (isset($assigned_classes_list[$key]) && !empty($assigned_classes_list[$key])) {
+                            $cls_ids = explode(',', $assigned_classes_list[$key]);
+                            foreach ($cls_ids as $c_id) {
+                                if (!empty($c_id)) {
+                                    $this->db->insert('cbse_exam_timetable_classes', [
+                                        'cbse_exam_timetable_id' => $tt_id,
+                                        'class_id' => $c_id
+                                    ]);
+                                }
+                            }
+                        }
+                    } else {
+                        $this->db->insert('cbse_exam_timetable', [
+                            'cbse_exam_id' => $exam_id,
+                            'subject_id' => $subject_id,
+                            'date' => date('Y-m-d', strtotime($dates[$key])),
+                            'time_from' => $start_times[$key],
+                            'duration' => $durations[$key],
+                            'room_no' => $room_nos[$key]
+                        ]);
+                        $new_tt_id = $this->db->insert_id();
+                        
+                        foreach ($assessment_ids as $assess_id) {
+                            if (!empty($assess_id)) {
+                                $this->db->insert('cbse_exam_timetable_assessment_types', [
+                                    'cbse_exam_timetable_id' => $new_tt_id,
+                                    'cbse_exam_assessment_type_id' => $assess_id
+                                ]);
+                            }
+                        }
+                        
+                        if (isset($assigned_classes_list[$key]) && !empty($assigned_classes_list[$key])) {
+                            $cls_ids = explode(',', $assigned_classes_list[$key]);
+                            foreach ($cls_ids as $c_id) {
+                                if (!empty($c_id)) {
+                                    $this->db->insert('cbse_exam_timetable_classes', [
+                                        'cbse_exam_timetable_id' => $new_tt_id,
+                                        'class_id' => $c_id
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        foreach ($existing_tt_ids as $tt_id => $val) {
+            if (!isset($submitted_tt_ids[$tt_id])) {
+                $this->db->where('id', $tt_id);
+                $this->db->delete('cbse_exam_timetable');
+                $this->db->where('cbse_exam_timetable_id', $tt_id);
+                $this->db->delete('cbse_exam_timetable_assessment_types');
+                $this->db->where('cbse_exam_timetable_id', $tt_id);
+                $this->db->delete('cbse_exam_timetable_classes');
             }
         }
         
@@ -252,12 +482,12 @@ class Cbseexam_exam_model extends MY_Model
                 } 
             }
            
-			$this->db->select('cbse_exams.*,cbse_category.name as category_name,CONCAT(classes.class, " (", GROUP_CONCAT(sections.section ORDER BY sections.section ASC SEPARATOR ","), ")" ) AS class_sections,cbse_terms.name as term_name, (select count(cbse_exam_timetable.id) from cbse_exam_timetable where cbse_exam_timetable.cbse_exam_id = cbse_exams.id)  as subjectsincluded ')
+			$this->db->select('cbse_exams.*,cbse_category.name as category_name,GROUP_CONCAT(CONCAT(classes.class, " - ", sections.section) ORDER BY classes.class ASC, sections.section ASC SEPARATOR ", ") AS class_sections,cbse_terms.name as term_name, (select count(cbse_exam_timetable.id) from cbse_exam_timetable where cbse_exam_timetable.cbse_exam_id = cbse_exams.id)  as subjectsincluded ', false)
             ->from('cbse_exams')
-            ->join('cbse_exam_class_sections', 'cbse_exam_class_sections.cbse_exam_id=cbse_exams.id')
-            ->join('class_sections', 'class_sections.id=cbse_exam_class_sections.class_section_id')
-            ->join('classes', 'classes.id=class_sections.class_id')
-            ->join('sections', 'sections.id=class_sections.section_id')
+            ->join('cbse_exam_class_sections', 'cbse_exam_class_sections.cbse_exam_id=cbse_exams.id', 'left')
+            ->join('class_sections', 'class_sections.id=cbse_exam_class_sections.class_section_id', 'left')
+            ->join('classes', 'classes.id=class_sections.class_id', 'left')
+            ->join('sections', 'sections.id=class_sections.section_id', 'left')
             ->join('cbse_terms', 'cbse_terms.id=cbse_exams.cbse_term_id', 'left')
             ->join('cbse_category', 'cbse_category.id=cbse_exams.cbse_category_id', 'left')
             ->group_by('cbse_exams.id')
@@ -624,6 +854,17 @@ class Cbseexam_exam_model extends MY_Model
         return $exams;
     }
 
+    public function getExamClasses($exam_id)
+    {
+        $this->db->select('classes.id as class_id, classes.class');
+        $this->db->from('cbse_exam_class_sections');
+        $this->db->join('class_sections', 'class_sections.id = cbse_exam_class_sections.class_section_id');
+        $this->db->join('classes', 'classes.id = class_sections.class_id');
+        $this->db->where('cbse_exam_id', $exam_id);
+        $this->db->group_by('classes.id');
+        return $this->db->get()->result_array();
+    }
+
     public function getClassByExam($exam_id)
     {
         $this->db->select('cbse_exam_class_sections.*,class_sections.class_id,classes.class');
@@ -701,7 +942,7 @@ class Cbseexam_exam_model extends MY_Model
 
     public function getexamdetails($exam_id)
     {
-        return $this->db->select('cbse_exams.*,CONCAT(classes.class, ": ", GROUP_CONCAT(sections.section ORDER BY sections.section ASC SEPARATOR ",")) AS class_sections,cbse_terms.name as term_name')->from('cbse_exams')->join('cbse_exam_class_sections', 'cbse_exam_class_sections.cbse_exam_id=cbse_exams.id')->join('class_sections', 'class_sections.id=cbse_exam_class_sections.class_section_id')->join('classes', 'classes.id=class_sections.class_id')->join('sections', 'sections.id=class_sections.section_id')->join('cbse_terms', 'cbse_terms.id=cbse_exams.cbse_term_id', 'left')->where('cbse_exams.id', $exam_id)->group_by('cbse_exams.id')->get()->row_array();
+        return $this->db->select('cbse_exams.*, GROUP_CONCAT(CONCAT(classes.class, " - ", sections.section) ORDER BY classes.class ASC, sections.section ASC SEPARATOR ", ") AS class_sections, cbse_terms.name as term_name', false)->from('cbse_exams')->join('cbse_exam_class_sections', 'cbse_exam_class_sections.cbse_exam_id=cbse_exams.id')->join('class_sections', 'class_sections.id=cbse_exam_class_sections.class_section_id')->join('classes', 'classes.id=class_sections.class_id')->join('sections', 'sections.id=class_sections.section_id')->join('cbse_terms', 'cbse_terms.id=cbse_exams.cbse_term_id', 'left')->where('cbse_exams.id', $exam_id)->group_by('cbse_exams.id')->get()->row_array();
     }
 
     public function add_examsubject($insert_array, $update_array, $not_be_del, $exam_id, $timetable_prev_rows, $assessment_array, $prev_assessment_array)
@@ -731,6 +972,7 @@ class Cbseexam_exam_model extends MY_Model
             foreach ($insert_array as $insert_key => $insert_value) {
                 $insert_assessments = $insert_array[$insert_key]['assessment'];
                 unset($insert_array[$insert_key]['assessment']);
+                unset($insert_array[$insert_key]['classes']);
                 $this->db->insert('cbse_exam_timetable', $insert_array[$insert_key]);
                 $inserted_id = $this->db->insert_id();
                 $not_be_del[] = $inserted_id;
@@ -744,6 +986,19 @@ class Cbseexam_exam_model extends MY_Model
                     ];
 
                     $this->db->insert('cbse_exam_timetable_assessment_types', $n);
+                }
+
+                if (isset($insert_value['classes']) && !empty($insert_value['classes'])) {
+                    $class_mappings = [];
+                    foreach ($insert_value['classes'] as $cls_id) {
+                        $class_mappings[] = [
+                            'cbse_exam_timetable_id' => $inserted_id,
+                            'class_id' => $cls_id
+                        ];
+                    }
+                    if (!empty($class_mappings)) {
+                        $this->db->insert_batch('cbse_exam_timetable_classes', $class_mappings);
+                    }
                 }
             }
         }
@@ -765,6 +1020,25 @@ class Cbseexam_exam_model extends MY_Model
                     }
                 }
                 unset($update_array[$up_key]['assessment']);
+
+                if (isset($up_value['classes'])) {
+                    $this->db->where('cbse_exam_timetable_id', $up_value['id']);
+                    $this->db->delete('cbse_exam_timetable_classes');
+
+                    if (!empty($up_value['classes'])) {
+                        $class_mappings = [];
+                        foreach ($up_value['classes'] as $cls_id) {
+                            $class_mappings[] = [
+                                'cbse_exam_timetable_id' => $up_value['id'],
+                                'class_id' => $cls_id
+                            ];
+                        }
+                        if (!empty($class_mappings)) {
+                            $this->db->insert_batch('cbse_exam_timetable_classes', $class_mappings);
+                        }
+                    }
+                }
+                unset($update_array[$up_key]['classes']);
             }
 
             $this->db->update_batch('cbse_exam_timetable', $update_array, 'id');
@@ -841,7 +1115,7 @@ class Cbseexam_exam_model extends MY_Model
         
     }
 
-    public function getexamSubjectswithAssessment($exam_id, $assessments)
+    public function getexamSubjectswithAssessment($exam_id, $assessments, $class_ids = null)
     {
         $assessment_sql_additional = [];
         $assessment_variables = [];
@@ -855,8 +1129,16 @@ class Cbseexam_exam_model extends MY_Model
         $additional_sql = implode(" ", $assessment_sql_additional);
         $additional_assessment_variables = implode(" ,", $assessment_variables);
 
-        $sql = "SELECT cbse_exam_timetable.*,`subjects`.`name` as `subject_name`, `subjects`.`code` as `subject_code`,cbse_exams.cbse_exam_assessment_id, " . $additional_assessment_variables . " from cbse_exam_timetable INNER join cbse_exams on cbse_exams.id=cbse_exam_timetable.cbse_exam_id  
-        JOIN `subjects` ON `subjects`.`id`=`cbse_exam_timetable`.`subject_id` " . $additional_sql . " WHERE cbse_exam_timetable.cbse_exam_id=" . $exam_id . " order by cbse_exam_timetable.date asc, cbse_exam_timetable.time_from asc, subjects.name asc";
+        $class_filter = "";
+        $class_join = "";
+        if (!empty($class_ids) && is_array($class_ids)) {
+            $class_ids_str = implode(',', array_map('intval', $class_ids));
+            $class_join = " INNER JOIN cbse_exam_timetable_classes ON cbse_exam_timetable_classes.cbse_exam_timetable_id = cbse_exam_timetable.id ";
+            $class_filter = " AND cbse_exam_timetable_classes.class_id IN (" . $class_ids_str . ") ";
+        }
+
+        $sql = "SELECT DISTINCT cbse_exam_timetable.*,`subjects`.`name` as `subject_name`, `subjects`.`code` as `subject_code`,cbse_exams.cbse_exam_assessment_id " . (!empty($additional_assessment_variables) ? ", " . $additional_assessment_variables : "") . " from cbse_exam_timetable INNER join cbse_exams on cbse_exams.id=cbse_exam_timetable.cbse_exam_id  
+        JOIN `subjects` ON `subjects`.`id`=`cbse_exam_timetable`.`subject_id` " . $class_join . $additional_sql . " WHERE cbse_exam_timetable.cbse_exam_id=" . $exam_id . $class_filter . " order by cbse_exam_timetable.date asc, cbse_exam_timetable.time_from asc, subjects.name asc";
 
         $query = $this->db->query($sql);
         return $query->result();
@@ -905,6 +1187,40 @@ class Cbseexam_exam_model extends MY_Model
         }
 
         return $exams;
+    }
+
+    public function getExamTimetableMatrix($exam_id, $class_id = null)
+    {
+        $this->db->select('cbse_exam_timetable.*, subjects.name as subject_name, subjects.code as subject_code, cbse_exam_timetable_classes.class_id, classes.class as class_name');
+        $this->db->from('cbse_exam_timetable');
+        $this->db->join('subjects', 'subjects.id = cbse_exam_timetable.subject_id');
+        $this->db->join('cbse_exam_timetable_classes', 'cbse_exam_timetable_classes.cbse_exam_timetable_id = cbse_exam_timetable.id');
+        $this->db->join('classes', 'classes.id = cbse_exam_timetable_classes.class_id');
+        $this->db->where('cbse_exam_timetable.cbse_exam_id', $exam_id);
+        if ($class_id) {
+            $this->db->where('cbse_exam_timetable_classes.class_id', $class_id);
+        }
+        $this->db->order_by('cbse_exam_timetable.date', 'ASC');
+        $this->db->order_by('classes.class', 'ASC');
+        $results = $this->db->get()->result_array();
+
+        $dates = [];
+        $matrix = [];
+        
+        foreach ($results as $row) {
+            $date = $row['date'];
+            if (!in_array($date, $dates)) {
+                $dates[] = $date;
+            }
+            $matrix[$row['class_name']][$date][] = $row;
+        }
+
+        // Ensure dates are sorted chronologically
+        usort($dates, function($a, $b) {
+            return strtotime($a) - strtotime($b);
+        });
+
+        return ['dates' => $dates, 'classes' => $matrix];
     }
 
     public function getStudentExamTimetable($student_session_id)
@@ -1002,6 +1318,7 @@ class Cbseexam_exam_model extends MY_Model
             ->join('sections', 'sections.id = student_session.section_id')
             ->join('students', 'students.id=student_session.student_id')
             ->join('cbse_exam_timetable', 'cbse_exam_timetable.cbse_exam_id=cbse_exam_students.cbse_exam_id')
+            ->join('cbse_exam_timetable_classes', 'cbse_exam_timetable_classes.cbse_exam_timetable_id=cbse_exam_timetable.id AND cbse_exam_timetable_classes.class_id=classes.id')
             ->where('cbse_exam_timetable.id', $timetable_id);
 
         if ($class_id) {
@@ -1041,6 +1358,7 @@ class Cbseexam_exam_model extends MY_Model
             ->join('sections', 'sections.id = student_session.section_id')
             ->join('students', 'students.id=student_session.student_id')
             ->join('cbse_exam_timetable', 'cbse_exam_timetable.cbse_exam_id=cbse_exam_students.cbse_exam_id')
+            ->join('cbse_exam_timetable_classes', 'cbse_exam_timetable_classes.cbse_exam_timetable_id=cbse_exam_timetable.id AND cbse_exam_timetable_classes.class_id=classes.id')
             ->where('cbse_exam_timetable.id', $timetable_id);
 
         if (!empty($class_ids)) {

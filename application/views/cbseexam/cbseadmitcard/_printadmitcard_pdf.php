@@ -49,9 +49,10 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
     /* Receipt Copy Container */
     .receipt-copy {
         width: 100%;
+        height: 48vh;
         border: 2px solid var(--primary-color);
         border-radius: 8px;
-        margin-bottom: 20px; /* Space between copies */
+        margin-bottom: 2vh;
         position: relative;
         overflow: hidden;
         page-break-inside: avoid;
@@ -92,7 +93,7 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
         margin-bottom: 15px;
     }
     .logo-container {
-        width: 140px;
+        width: 80px;
         flex-shrink: 0;
         display: flex;
         align-items: center;
@@ -100,7 +101,7 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
     }
     .logo-container img {
         max-width: 100%;
-        max-height: 80px;
+        max-height: 55px;
         object-fit: contain;
     }
     
@@ -164,9 +165,10 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
         vertical-align: top;
     }
     .meta-label {
-        width: 90px;
+        width: 100px;
         font-weight: bold;
         color: var(--text-main);
+        white-space: nowrap;
     }
     .meta-value {
         font-weight: normal;
@@ -228,7 +230,12 @@ $class_teacher_sig = $this->customlib->getSignatureMapping('sign_class_teacher')
 $principal_sig = $this->customlib->getSignatureMapping('sign_principal');
 ?>
 
-<?php foreach ($student_details as $student) { ?>
+<?php 
+$print_count = 0;
+$total_students = count($student_details);
+foreach ($student_details as $student) { 
+    $print_count++;
+?>
     <div class="print-receipt-wrapper">
         <div class="receipt-copy">
             <!-- Watermark -->
@@ -238,38 +245,35 @@ $principal_sig = $this->customlib->getSignatureMapping('sign_principal');
 
             <div class="receipt-inner">
                 <!-- Header Top Row -->
-                <div class="header-top">
-                    <span>Reg No: <?php echo $sch_setting->dise_code; ?></span>
-                    <span>Affiliation No.: <?php echo $sch_setting->dise_code; ?></span>
-                    <span>U Dise Code: <?php echo $sch_setting->dise_code; ?></span>
-                </div>
+                <table width="100%" style="font-size: 11px; color: #6b7280; margin-bottom: 10px;">
+                    <tr>
+                        <td width="33%" align="left">Reg No: <?php echo $sch_setting->dise_code; ?></td>
+                        <td width="33%" align="center">Affiliation No.: <?php echo $sch_setting->dise_code; ?></td>
+                        <td width="33%" align="right">U Dise Code: <?php echo $sch_setting->dise_code; ?></td>
+                    </tr>
+                </table>
 
                 <!-- Main Header -->
-                <div class="receipt-header">
-                    <div class="logo-container">
-                        <?php if (!empty($admitcard->left_logo)) { ?>
-                            <img src="<?php echo base_url('uploads/cbseexam/admitcard/' . $admitcard->left_logo); ?>">
-                        <?php } elseif (!empty($sch_setting->image)) { ?>
-                            <img src="<?php echo base_url('uploads/school_content/logo/' . $sch_setting->image); ?>" alt="School Logo">
-                        <?php } ?>
-                    </div>
-                    
-                    <div class="school-info">
-                        <h1 class="school-name"><?php echo $sch_setting->name; ?></h1>
-                        <div class="school-address"><?php echo $sch_setting->address; ?></div>
-                        <p class="school-contact">Email: <?php echo $sch_setting->email; ?> &nbsp; Mobile No: <?php echo $sch_setting->phone; ?> &nbsp; Website: <?php echo $sch_setting->base_url; ?></p>
-                        <div class="session-info">Admit Card - <?php echo $exam->name; ?></div>
-                    </div>
-                    
-                    <div class="logo-container" style="visibility: hidden;">
-                        <!-- Balancer for flex -->
-                        <?php if (!empty($admitcard->left_logo)) { ?>
-                            <img src="<?php echo base_url('uploads/cbseexam/admitcard/' . $admitcard->left_logo); ?>">
-                        <?php } elseif (!empty($sch_setting->image)) { ?>
-                            <img src="<?php echo base_url('uploads/school_content/logo/' . $sch_setting->image); ?>" alt="School Logo">
-                        <?php } ?>
-                    </div>
-                </div>
+                <table width="100%" style="margin-bottom: 15px;">
+                    <tr>
+                        <td width="25%" align="left" valign="middle">
+                            <?php if (!empty($admitcard->left_logo)) { ?>
+                                <img src="<?php echo base_url('uploads/cbseexam/admitcard/' . $admitcard->left_logo); ?>" style="max-height:55px; max-width:100%;">
+                            <?php } elseif (!empty($sch_setting->image)) { ?>
+                                <img src="<?php echo base_url('uploads/school_content/logo/' . $sch_setting->image); ?>" style="max-height:55px; max-width:100%;" alt="School Logo">
+                            <?php } ?>
+                        </td>
+                        <td width="50%" align="center" valign="middle">
+                            <h1 style="font-size: 20px; font-weight: 700; color: <?php echo $theme_color; ?>; margin: 0 0 5px 0;"><?php echo $sch_setting->name; ?></h1>
+                            <div style="font-size: 12px; color: #6b7280; margin: 0 0 5px 0; border-bottom: 1px solid #1f2937; padding-bottom: 8px; display: inline-block; width: 90%;"><?php echo $sch_setting->address; ?></div>
+                            <p style="font-size: 11px; margin: 5px 0 0 0; color: #1f2937;">Email: <?php echo $sch_setting->email; ?> &nbsp; Mobile No: <?php echo $sch_setting->phone; ?> &nbsp; Website: <?php echo $sch_setting->base_url; ?></p>
+                            <div style="font-weight: 700; font-size: 12px; margin-top: 5px; color: #1f2937;">Admit Card - <?php echo $exam->name; ?></div>
+                        </td>
+                        <td width="25%" align="right" valign="middle">
+                            <!-- Empty spacer to ensure perfect centering -->
+                        </td>
+                    </tr>
+                </table>
 
                 <!-- Student Meta Data -->
                 <table class="meta-table">
@@ -326,7 +330,10 @@ $principal_sig = $this->customlib->getSignatureMapping('sign_principal');
                             <?php foreach ($exam_subjects as $subject) { ?>
                                 <tr>
                                     <td><?php echo date($this->customlib->getSchoolDateFormat(), strtotime($subject->date)); ?></td>
-                                    <td><?php echo $subject->time_from . ' - ' . $subject->time_to; ?></td>
+                                    <td><?php 
+                                        $end_time = date('H:i:s', strtotime($subject->time_from . ' + ' . $subject->duration . ' minutes'));
+                                        echo $subject->time_from . ' - ' . $end_time; 
+                                    ?></td>
                                     <td><?php echo $subject->name . ' (' . $subject->code . ')'; ?></td>
                                     <td><?php echo $subject->room_no; ?></td>
                                 </tr>
@@ -377,7 +384,14 @@ $principal_sig = $this->customlib->getSignatureMapping('sign_principal');
         </div>
 
     </div>
-<?php } // end student loop ?>
+<?php 
+    if ($print_count % 2 == 0 && $print_count < $total_students) {
+        echo '<pagebreak />';
+    } else if ($print_count < $total_students) {
+        echo '<div style="border-bottom: 1px dashed #999; margin: 1vh 0;"></div>';
+    }
+} 
+?>
 
 </body>
 </html>

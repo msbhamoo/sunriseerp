@@ -125,13 +125,14 @@
         // Exam change, get subjects
         $('#exam_id').change(function () {
             var exam_id = $(this).val();
+            var class_ids = $('#class_id').val();
             $('#subject_id').html('<option value=""><?php echo $this->lang->line('select'); ?></option>');
             
             if (exam_id !== "") {
                 $.ajax({
                     type: "POST",
                     url: baseurl + "cbseexam/exam/getexamSubjects",
-                    data: {'exam_id': exam_id},
+                    data: {'exam_id': exam_id, 'class_ids': class_ids},
                     dataType: "json",
                     success: function (data) {
                         // Assuming the API returns a list of exam_subjects

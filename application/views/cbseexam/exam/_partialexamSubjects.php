@@ -20,6 +20,7 @@
                 <thead>
                     <tr>
                         <th class=""><?php echo $this->lang->line('subject'); ?><small class="req"> *</small></th>
+                        <th class=""><?php echo $this->lang->line('classes'); ?><small class="req"> *</small></th>
                         <th class=""><?php echo $this->lang->line('assessment'); ?><small class="req"> *</small></th>
                         <th class=""><?php echo $this->lang->line('date'); ?><small class="req"> *</small></th>
                         <th class=""><?php echo $this->lang->line('start_time'); ?><small class="req"> *</small></th>
@@ -78,6 +79,35 @@
                                     }
                                     ?>
                                 </select>
+                            </td>
+                            <td>
+                                <?php
+                                $assigned_class_ids = array();
+                                if (isset($exam_subject_value->id) && !empty($exam_subject_value->id)) {
+                                    $CI =& get_instance();
+                                    $CI->db->select('class_id');
+                                    $CI->db->where('cbse_exam_timetable_id', $exam_subject_value->id);
+                                    $res = $CI->db->get('cbse_exam_timetable_classes')->result_array();
+                                    $assigned_class_ids = array_column($res, 'class_id');
+                                }
+                                
+                                if (!empty($classes)) {
+                                    foreach ($classes as $cls) {
+                                        $checked = in_array($cls['class_id'], $assigned_class_ids) ? "checked='checked'" : "";
+                                ?>
+                                        <div class="form-check">
+                                        <label class="form-check-label" for="cls_<?php echo $cls['class_id'] . "_" . $count; ?>"  >
+                                            <input class="form-check-input" type="checkbox" name="classes_<?php echo $count; ?>[]" value="<?php echo $cls['class_id']; ?>" id="cls_<?php echo $cls['class_id'] . "_" . $count; ?>" <?php echo $checked; ?>>
+                                                <?php echo $cls['class']; ?>
+                                            </label>
+                                        </div>
+                                <?php
+                                    }
+                                } else {
+                                    echo "<span style='color:#d8456a; font-size:11px;'>No classes assigned to this exam.</span>";
+                                }
+                                ?>
+                                <input type="hidden" name="classes_hidden_<?php echo $count; ?>" value="">
                             </td>
                             <td>
                                 <?php

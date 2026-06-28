@@ -60,15 +60,20 @@ class Hostelattendance_model extends MY_Model
         $this->db->select('hostel_attendance.*');
         $this->db->from('hostel_attendance');
         $this->db->where('hostel_id', $hostel_id);
-        $this->db->where('MONTH(date)', $month);
+        if ($month != 'all') {
+            $this->db->where('MONTH(date)', $month);
+        }
         $this->db->where('YEAR(date)', $year);
-        $this->db->where('roll_call_type', $roll_call_type);
+        if ($roll_call_type != 'all') {
+            $this->db->where('roll_call_type', $roll_call_type);
+        }
         $result = $this->db->get()->result_array();
         
         $attendance = [];
         foreach ($result as $row) {
+            $m = date('m', strtotime($row['date']));
             $day = date('j', strtotime($row['date']));
-            $attendance[$row['student_session_id']][$day] = $row['attendence_type_id'];
+            $attendance[$row['student_session_id']][$m][$day][$row['roll_call_type']] = $row['attendence_type_id'];
         }
         return $attendance;
     }

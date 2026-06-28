@@ -34,6 +34,7 @@
                                             <div class="form-group">
                                                 <label><?php echo $this->lang->line('month'); ?></label><small class="req"> *</small>
                                                 <select name="month" class="form-control">
+                                                    <option value="all" <?php if ($month == 'all') echo "selected"; ?>>All (Annual)</option>
                                                     <?php
                                                     $months = array("01" => "January", "02" => "February", "03" => "March", "04" => "April", "05" => "May", "06" => "June", "07" => "July", "08" => "August", "09" => "September", "10" => "October", "11" => "November", "12" => "December");
                                                     foreach ($months as $key => $value) {
@@ -64,6 +65,7 @@
                                                 <select id="roll_call_type" name="roll_call_type" class="form-control" >
                                                     <option value="morning" <?php if (isset($roll_call_type) && $roll_call_type == 'morning') echo "selected"; ?>>Morning</option>
                                                     <option value="evening" <?php if (isset($roll_call_type) && $roll_call_type == 'evening') echo "selected"; ?>>Evening</option>
+                                                    <option value="all" <?php if (isset($roll_call_type) && $roll_call_type == 'all') echo "selected"; ?>>All (Cumulative)</option>
                                                 </select>
                                                 <span class="text-danger"><?php echo form_error('roll_call_type'); ?></span>
                                             </div>
@@ -91,8 +93,24 @@
                                             <th>Student Name</th>
                                             <th>Admission No</th>
                                             <th>Room No</th>
-                                            <?php for ($i = 1; $i <= $days_in_month; $i++) { ?>
-                                                <th><?php echo $i; ?></th>
+                                            <?php if ($month == 'all') { ?>
+                                                <?php 
+                                                $months_labels = array("01" => "Jan", "02" => "Feb", "03" => "Mar", "04" => "Apr", "05" => "May", "06" => "Jun", "07" => "Jul", "08" => "Aug", "09" => "Sep", "10" => "Oct", "11" => "Nov", "12" => "Dec");
+                                                foreach ($months_labels as $m_num => $m_name) { ?>
+                                                    <th><?php echo $m_name; ?></th>
+                                                <?php } ?>
+                                            <?php } else { ?>
+                                                <?php for ($i = 1; $i <= $days_in_month; $i++) { ?>
+                                                    <th><?php echo sprintf("%02d", $i); ?></th>
+                                                <?php } ?>
+                                            <?php } ?>
+                                            <?php foreach ($attendencetypeslist as $at) { ?>
+                                                <?php if (isset($roll_call_type) && $roll_call_type == 'all') { ?>
+                                                    <th class="text-center">Total <?php echo $at['key_value']; ?> (M)</th>
+                                                    <th class="text-center">Total <?php echo $at['key_value']; ?> (E)</th>
+                                                <?php } else { ?>
+                                                    <th class="text-center">Total <?php echo $at['key_value']; ?></th>
+                                                <?php } ?>
                                             <?php } ?>
                                         </tr>
                                     </thead>
@@ -110,32 +128,110 @@
 
                                             foreach ($students as $student) {
                                                 $student_session_id = $student['student_session_id'];
+                                                
+                                                // Initialize counters for cumulative report
+                                                $totals = array();
+                                                $totals_m = array();
+                                                $totals_e = array();
+                                                foreach($attendencetypeslist as $at) {
+                                                    $totals[$at['key_value']] = 0;
+                                                    $totals_m[$at['key_value']] = 0;
+                                                    $totals_e[$at['key_value']] = 0;
+                                                }
+
                                                 ?>
                                                 <tr>
                                                     <td><?php echo $student['firstname'] . ' ' . $student['lastname']; ?></td>
                                                     <td><?php echo $student['admission_no']; ?></td>
                                                     <td><?php echo $student['room_no']; ?></td>
-                                                    <?php for ($i = 1; $i <= $days_in_month; $i++) { 
-                                                        $val = "";
-                                                        if(isset($attendance[$student_session_id][$i])) {
-                                                            $type_id = $attendance[$student_session_id][$i];
-                                                            $val = isset($att_types[$type_id]) ? $att_types[$type_id] : '';
-                                                        }
+                                                    
+                                                    <?php if ($month == 'all') { 
+                                                        $months_labels = array("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12");
+                                                        foreach ($months_labels as $m_num) {
+                                                            $m_totals = array();
+                                                            foreach($attendencetypeslist as $at) { $m_totals[$at['key_value']] = 0; }
+                                                            
+                                                            $days_in_this_month = cal_days_in_month(CAL_GREGORIAN, $m_num, $year);
+                                                            for ($i = 1; $i <= $days_in_this_month; $i++) {
+                                                                if(isset($attendance[$student_session_id][$m_num][$i]['morning'])) {
+                                                                    $type_id = $attendance[$student_session_id][$m_num][$i]['morning'];
+                                                                    $m_val = isset($att_types[$type_id]) ? $att_types[$type_id] : '';
+                                                                    if($m_val != '' && ($roll_call_type == 'morning' || $roll_call_type == 'all')) {
+                                                                        $m_totals[$m_val]++;
+                                                                        $totals[$m_val]++;
+                                                                        $totals_m[$m_val]++;
+                                                                    }
+                                                                }
+                                                                if(isset($attendance[$student_session_id][$m_num][$i]['evening'])) {
+                                                                    $type_id = $attendance[$student_session_id][$m_num][$i]['evening'];
+                                                                    $e_val = isset($att_types[$type_id]) ? $att_types[$type_id] : '';
+                                                                    if($e_val != '' && ($roll_call_type == 'evening' || $roll_call_type == 'all')) {
+                                                                        $m_totals[$e_val]++;
+                                                                        $totals[$e_val]++;
+                                                                        $totals_e[$e_val]++;
+                                                                    }
+                                                                }
+                                                            }
+                                                            
+                                                            $cell_display = array();
+                                                            foreach($m_totals as $k => $v) {
+                                                                if ($v > 0) $cell_display[] = "$k:$v";
+                                                            }
+                                                            $display_str = empty($cell_display) ? "-" : implode(", ", $cell_display);
+                                                            ?>
+                                                            <td class="text-center" style="font-size: 11px; white-space: nowrap;"><?php echo $display_str; ?></td>
+                                                        <?php } ?>
+                                                    <?php } else { ?>
+                                                        <?php for ($i = 1; $i <= $days_in_month; $i++) { 
+                                                            $m_val = "";
+                                                            $e_val = "";
+                                                            
+                                                            if(isset($attendance[$student_session_id][$month][$i]['morning'])) {
+                                                                $type_id = $attendance[$student_session_id][$month][$i]['morning'];
+                                                                $m_val = isset($att_types[$type_id]) ? $att_types[$type_id] : '';
+                                                                if($m_val != '' && ($roll_call_type == 'morning' || $roll_call_type == 'all')) {
+                                                                    $totals[$m_val]++;
+                                                                    $totals_m[$m_val]++;
+                                                                }
+                                                            }
+                                                            if(isset($attendance[$student_session_id][$month][$i]['evening'])) {
+                                                                $type_id = $attendance[$student_session_id][$month][$i]['evening'];
+                                                                $e_val = isset($att_types[$type_id]) ? $att_types[$type_id] : '';
+                                                                if($e_val != '' && ($roll_call_type == 'evening' || $roll_call_type == 'all')) {
+                                                                    $totals[$e_val]++;
+                                                                    $totals_e[$e_val]++;
+                                                                }
+                                                            }
 
-                                                        // Add coloring depending on value
-                                                        $label_class = "label-default";
-                                                        if($val == 'P') $label_class = 'label-success';
-                                                        else if($val == 'A') $label_class = 'label-danger';
-                                                        else if($val == 'L') $label_class = 'label-warning';
-                                                        else if($val == 'H') $label_class = 'label-info';
-                                                        else if($val == 'F') $label_class = 'label-primary';
-                                                        
-                                                        ?>
-                                                        <td class="text-center">
-                                                            <?php if($val != "") { ?>
-                                                                <span class="label <?php echo $label_class; ?>"><?php echo $val; ?></span>
-                                                            <?php } else { echo "-"; } ?>
-                                                        </td>
+                                                            if ($roll_call_type == 'all') {
+                                                                $display_val = "";
+                                                                if($m_val != "") $display_val .= $m_val; else $display_val .= "-";
+                                                                $display_val .= "/";
+                                                                if($e_val != "") $display_val .= $e_val; else $display_val .= "-";
+                                                                if ($display_val == "-/-") $display_val = "-";
+                                                            } else if ($roll_call_type == 'morning') {
+                                                                $display_val = ($m_val != "") ? $m_val : "-";
+                                                            } else {
+                                                                $display_val = ($e_val != "") ? $e_val : "-";
+                                                            }
+                                                            ?>
+                                                            <td class="text-center" style="font-size: 12px; white-space: nowrap;">
+                                                                <?php echo $display_val; ?>
+                                                            </td>
+                                                        <?php } ?>
+                                                    <?php } ?>
+                                                    
+                                                    <?php foreach ($attendencetypeslist as $at) { 
+                                                        $count = $totals[$at['key_value']];
+                                                        $count_m = $totals_m[$at['key_value']];
+                                                        $count_e = $totals_e[$at['key_value']];
+                                                    ?>
+                                                        <?php if ($roll_call_type == 'all') { ?>
+                                                            <td class="text-center" style="font-weight: bold; background: #f9fafb;"><?php echo $count_m; ?></td>
+                                                            <td class="text-center" style="font-weight: bold; background: #f9fafb;"><?php echo $count_e; ?></td>
+                                                        <?php } else { ?>
+                                                            <td class="text-center" style="font-weight: bold; background: #f9fafb;"><?php echo $count; ?></td>
+                                                        <?php } ?>
                                                     <?php } ?>
                                                 </tr>
                                             <?php }

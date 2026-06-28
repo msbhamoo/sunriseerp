@@ -51,8 +51,7 @@ class Exam extends MY_Addon_CBSEController
         
         if ($id != null) {
             $data['exam'] = $this->cbseexam_exam_model->get_exambyId($id);
-            // Fetch subjects and timetable data for Step 3
-            // $data['exam_subjects'] = ...
+            $data['assigned_classes'] = $this->cbseexam_exam_model->getExamClassesSections($id);
         } else {
             $data['exam'] = null;
         }
@@ -78,9 +77,23 @@ class Exam extends MY_Addon_CBSEController
         $classes = $this->input->post('classes');
         $sections = $this->input->post('sections');
         $assessment_id = $this->input->post('assessment_id');
+        $exam_id = $this->input->post('exam_id');
         
         $data['batch_subjects'] = $this->cbseexam_exam_model->getSubject();
         $data['assessments'] = $this->cbseexam_assessment_model->getWithAssessmentTypeByAssessmentID($assessment_id);
+
+        $assigned_classes_details = [];
+        if (!empty($classes)) {
+            $this->db->select('id, class');
+            $this->db->from('classes');
+            $this->db->where_in('id', $classes);
+            $assigned_classes_details = $this->db->get()->result_array();
+        }
+        $data['assigned_classes_details'] = $assigned_classes_details;
+
+        if ($exam_id) {
+            $data['existing_timetable'] = $this->cbseexam_exam_model->getWizardExamTimetable($exam_id);
+        }
 
         // Render a generic timetable grid that applies to all selected classes
         echo $this->load->view('cbseexam/exam/_partial_wizard_timetable', $data, true);
@@ -101,19 +114,26 @@ class Exam extends MY_Addon_CBSEController
             'cbse_exam_grade_id' => $this->input->post('grade_id'),
             'is_active' => $this->input->post('is_active') ? 1 : 0,
             'is_publish' => 0,
-            'created_at' => date('Y-m-d H:i:s'),
         ];
         
         $classes = $this->input->post('classes');
         $sections = $this->input->post('sections');
         $subjects = $this->input->post('subjects');
         $assessments = $this->input->post('assessments');
+        $assigned_classes_list = $this->input->post('assigned_classes');
         $dates = $this->input->post('dates');
         $start_times = $this->input->post('start_times');
         $durations = $this->input->post('durations');
         $room_nos = $this->input->post('room_nos');
+        $timetable_ids = $this->input->post('timetable_ids');
+        $exam_id = $this->input->post('exam_id');
 
-        $result = $this->cbseexam_exam_model->wizard_save_exam($exam_data, $classes, $sections, $subjects, $assessments, $dates, $start_times, $durations, $room_nos);
+        if (!empty($exam_id)) {
+            $result = $this->cbseexam_exam_model->wizard_update_exam($exam_id, $exam_data, $classes, $sections, $subjects, $assessments, $dates, $start_times, $durations, $room_nos, $timetable_ids, $assigned_classes_list);
+        } else {
+            $exam_data['created_at'] = date('Y-m-d H:i:s');
+            $result = $this->cbseexam_exam_model->wizard_save_exam($exam_data, $classes, $sections, $subjects, $assessments, $dates, $start_times, $durations, $room_nos, $assigned_classes_list);
+        }
         
         if ($result) {
             $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">Exam created successfully!</div>');
@@ -168,10 +188,12 @@ class Exam extends MY_Addon_CBSEController
         }
 
         $exam_id = $this->input->post('exam_id');
+        $class_ids = $this->input->post('class_ids');
 
         $data['examDetail'] = $this->cbseexam_exam_model->getexamdetails($exam_id);
+        $data['classes'] = $this->cbseexam_exam_model->getExamClasses($exam_id);
         $data['assessments'] = $this->cbseexam_assessment_model->getWithAssessmentTypeByAssessmentID($data['examDetail']['cbse_exam_assessment_id']);
-        $data['exam_subjects'] = $this->cbseexam_exam_model->getexamSubjectswithAssessment($exam_id, $data['assessments']);       
+        $data['exam_subjects'] = $this->cbseexam_exam_model->getexamSubjectswithAssessment($exam_id, $data['assessments'], $class_ids);       
         $data['batch_subjects'] = $this->cbseexam_exam_model->getSubject();
 
         $data['exam_id'] = $exam_id;
@@ -1421,7 +1443,8 @@ class Exam extends MY_Addon_CBSEController
                             'time_from' => $this->input->post('time_from' . $row_value),
                             'duration' => $this->input->post('duration' . $row_value),
                             'room_no' => $this->input->post('room_no_' . $row_value),
-                            'assessment' => $this->input->post('assessment_' . $row_value)
+                            'assessment' => $this->input->post('assessment_' . $row_value),
+                            'classes' => $this->input->post('classes_' . $row_value)
                         );
                     }
                 } else {
@@ -1434,7 +1457,8 @@ class Exam extends MY_Addon_CBSEController
                         'time_from' => $this->input->post('time_from' . $row_value),
                         'duration' => $this->input->post('duration' . $row_value),
                         'room_no' => $this->input->post('room_no_' . $row_value),
-                        'assessment' => $this->input->post('assessment_' . $row_value)
+                        'assessment' => $this->input->post('assessment_' . $row_value),
+                        'classes' => $this->input->post('classes_' . $row_value)
 
                     );
                 }
@@ -1870,10 +1894,32 @@ class Exam extends MY_Addon_CBSEController
     public function examtimetable()
     {
         $data = [];
-        $data['exams'] = $this->cbseexam_exam_model->getExamTimetable();
+        $data['exams'] = $this->cbseexam_exam_model->getexamlist();
+        $data['classes'] = $this->class_model->get();
+
         $this->load->view('layout/header');
         $this->load->view('cbseexam/exam/examtimetable', $data);
         $this->load->view('layout/footer');
+    }
+
+    public function get_examtimetable_matrix()
+    {
+        $exam_id = $this->input->post('exam_id');
+        $class_id = $this->input->post('class_id');
+        $data = [];
+        
+        if ($exam_id) {
+            $data['matrix'] = $this->cbseexam_exam_model->getExamTimetableMatrix($exam_id, $class_id);
+            $data['exam_name'] = $this->cbseexam_exam_model->get_exambyId($exam_id)->name;
+            if ($class_id) {
+                $class_data = $this->class_model->get($class_id);
+                $data['class_name'] = $class_data['class'];
+            }
+        }
+        $data['settinglist'] = $this->setting_model->get();
+        
+        $page = $this->load->view('cbseexam/exam/_partial_examtimetable_matrix', $data, true);
+        echo json_encode(array('status' => 1, 'page' => $page));
     }
 	
 	public function uploadfile()

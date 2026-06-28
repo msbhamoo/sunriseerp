@@ -42,7 +42,51 @@
                                     <?php foreach ($result as $key => $value) { ?>
                                         <tr>
                                             <td><?php echo $value['name']; ?></td>
-                                            <td><?php echo $value['class_sections']; ?></td>
+                                            <td>
+                                                <?php 
+                                                if (!empty($value['class_sections'])) {
+                                                    $cs_array = explode(',', $value['class_sections']);
+                                                    $grouped = [];
+                                                    foreach ($cs_array as $cs) {
+                                                        $parts = explode(' - ', trim($cs), 2);
+                                                        if (count($parts) == 2) {
+                                                            $c = trim($parts[0]);
+                                                            $s = trim($parts[1]);
+                                                            $grouped[$c][] = $s;
+                                                        } else {
+                                                            $grouped[trim($cs)] = [];
+                                                        }
+                                                    }
+                                                    $group_count = count($grouped);
+                                                    $display_limit = 2; // Show only 2 classes initially
+                                                    $i = 0;
+                                                    $hidden_html = "";
+                                                    
+                                                    foreach ($grouped as $c => $sections) {
+                                                        $sec_str = !empty($sections) ? implode(', ', $sections) : '';
+                                                        $html = "";
+                                                        if (!empty($sec_str)) {
+                                                            $html = "<div style='margin-bottom:5px; line-height: 1.4;'><span class='label label-info' style='display:inline-block; margin-right:5px; font-weight:bold;'>" . $c . "</span><span style='color:#444; font-size:12px;'>" . $sec_str . "</span></div>";
+                                                        } else {
+                                                            $html = "<div style='margin-bottom:5px; line-height: 1.4;'><span class='label label-info' style='display:inline-block; font-weight:bold;'>" . $c . "</span></div>";
+                                                        }
+                                                        
+                                                        if ($i < $display_limit) {
+                                                            echo $html;
+                                                        } else {
+                                                            $hidden_html .= $html;
+                                                        }
+                                                        $i++;
+                                                    }
+                                                    
+                                                    if (!empty($hidden_html)) {
+                                                        $unique_id = 'classes_' . $value['id'];
+                                                        echo "<div id='more_" . $unique_id . "' style='display:none;'>" . $hidden_html . "</div>";
+                                                        echo "<a href='javascript:void(0);' class='text-primary btn-show-more' onclick='$(this).hide(); $(\"#more_" . $unique_id . "\").slideDown();' style='font-size:12px; display:inline-block; margin-top:3px; font-weight:600;'><i class='fa fa-plus-circle'></i> Show More (" . ($group_count - $display_limit) . ")</a>";
+                                                    }
+                                                }
+                                                ?>
+                                            </td>
                                             <td><?php echo $value['term_name']; ?></td>                                            
                                             <td><?php echo $value['subjectsincluded']; ?></td>                               
                                             <td><?php                                             
@@ -101,7 +145,7 @@
                                                 
                                                 <?php } if ($this->rbac->hasPrivilege('cbse_exam', 'can_edit')) { ?>
                                                 
-                                                <button class="btn btn-primary btn-xs editexamModalButton" data-toggle="tooltip" data-exam_id="<?php echo $value['id']; ?>" title="<?php echo $this->lang->line('edit'); ?>"><i class="fa fa-pencil" aria-hidden="true"></i></button>
+                                                <a href="<?php echo site_url('cbseexam/exam/wizard/'.$value['id']); ?>" class="btn btn-primary btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>"><i class="fa fa-pencil" aria-hidden="true"></i></a>
                                                 
                                                 <?php } ?>
                                                 
@@ -800,6 +844,7 @@ modal_click_disabled('subjectModal','addExamModal','observationParameterModal','
 
     var batch_subjects = "";
     var exam_assessments=[];
+    var exam_classes=[];
     $(document).on('click', '#subjectModalButton', function (e) {
             
              x = 1;
@@ -844,6 +889,7 @@ modal_click_disabled('subjectModal','addExamModal','observationParameterModal','
                     batch_subjects = data.batch_subject_dropdown;
                     
                     exam_assessments = data.assessments;
+                    exam_classes = data.classes;
                     if (data.exam_subjects_count > 0) {
                         x = data.exam_subjects_count + 1;
                     }
@@ -864,7 +910,8 @@ modal_click_disabled('subjectModal','addExamModal','observationParameterModal','
         
         html += '<tr>';
         html += '<td><select name="subject_' + x + '" class="form-control item_unit tddm200">' + batch_subjects + '</select></td>';
-        html += '<td>'+exam_assessments_list(x);+'</td>';
+        html += '<td>'+classes_list(x)+'</td>';
+        html += '<td>'+exam_assessments_list(x)+'</td>';
         html += '<td><div class="input-group datepicker_init"><input type="text" name="date_from_' + x + '" class="form-control"/><span class="input-group-addon" id="basic-addon2"><i class="fa fa-calendar"></i></span></div></td>';
         html += '<td><div class="input-group datepicker_init_time"><input type="text" name="time_from' + x + '" class="form-control"/><span class="input-group-addon" id="basic-addon2"><i class="fa fa-clock-o"></i></span></div></td>';
         html += '<td><input type="text" name="duration' + x + '" class="form-control duration" value="0"/></td>';       
@@ -885,6 +932,18 @@ modal_click_disabled('subjectModal','addExamModal','observationParameterModal','
         });
         x++;
     });
+
+    function classes_list(x){
+       var list="";
+        $.each(exam_classes, function (key, val) {
+            list+= "<div class='form-check'>";
+            list+=  "<label class='form-check-label' for='cls_"+val.class_id+"_"+x+"'>";
+            list+= "<input class='form-check-input' type='checkbox' name='classes_"+x+"[]' value='"+val.class_id+"' id='cls_"+val.class_id+"_"+x+"'> "+val.class;                                          
+            list+= "</label>";
+            list+= "</div>";
+            });
+            return list;
+    }
 
     function exam_assessments_list(x){
        var radio_list="";

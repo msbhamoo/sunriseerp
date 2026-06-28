@@ -282,19 +282,19 @@
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label><?php echo $this->lang->line('vehicle_photo'); ?></label>
-                            <input name="vehicle_photo" type="file" class="form-control custom-input" style="padding: 6px 14px;" />
+                            <input name="vehicle_photo" type="file" class="filestyle form-control custom-input" data-height="30" />
                         </div>
                     </div>
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label>RC Copy</label>
-                            <input name="doc_rc" type="file" class="form-control custom-input" style="padding: 6px 14px;" />
+                            <input name="doc_rc" type="file" class="filestyle form-control custom-input" data-height="30" />
                         </div>
                     </div>
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label>Insurance Copy</label>
-                            <input name="doc_insurance" type="file" class="form-control custom-input" style="padding: 6px 14px;" />
+                            <input name="doc_insurance" type="file" class="filestyle form-control custom-input" data-height="30" />
                         </div>
                     </div>
                 </div>
@@ -302,19 +302,19 @@
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label>Fitness Certificate</label>
-                            <input name="doc_fitness" type="file" class="form-control custom-input" style="padding: 6px 14px;" />
+                            <input name="doc_fitness" type="file" class="filestyle form-control custom-input" data-height="30" />
                         </div>
                     </div>
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label>PUC Certificate</label>
-                            <input name="doc_puc" type="file" class="form-control custom-input" style="padding: 6px 14px;" />
+                            <input name="doc_puc" type="file" class="filestyle form-control custom-input" data-height="30" />
                         </div>
                     </div>
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label>Permit Copy</label>
-                            <input name="doc_permit" type="file" class="form-control custom-input" style="padding: 6px 14px;" />
+                            <input name="doc_permit" type="file" class="filestyle form-control custom-input" data-height="30" />
                         </div>
                     </div>
                 </div>
@@ -322,7 +322,7 @@
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label>License Copy</label>
-                            <input name="doc_license" type="file" class="form-control custom-input" style="padding: 6px 14px;" />
+                            <input name="doc_license" type="file" class="filestyle form-control custom-input" data-height="30" />
                         </div>
                     </div>
                 </div>

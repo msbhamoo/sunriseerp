@@ -478,9 +478,17 @@ class Student extends Admin_Controller
         $class                         = $this->class_model->get('', $classteacher = 'yes');
 
         $data['classlist']       = $class;
+
+        $enquiry_id = $this->input->get('enquiry_id');
+        if ($enquiry_id) {
+            $this->load->model('enquiry_model');
+            $data['enquiry_data'] = $this->enquiry_model->getenquiry_list($enquiry_id);
+        }
         $userdata                = $this->customlib->getUserData();
         $category                = $this->category_model->get();
         $data['categorylist']    = $category;
+        $data['cast_list']       = $this->cast_model->get();
+        $data['religion_list']   = $this->religion_model->get();
         $houses                  = $this->student_model->gethouselist();
         $data['houses']          = $houses;
         $data["bloodgroup"]      = $this->blood_group;
@@ -994,6 +1002,11 @@ class Student extends Admin_Controller
                         }
 
 
+
+                        if ($this->input->post('enquiry_id')) {
+                            $this->load->model('enquiry_model');
+                            $this->enquiry_model->changeStatus(array('id' => $this->input->post('enquiry_id'), 'status' => 'won', 'student_id' => $insert_id));
+                        }
 
                         $this->session->set_flashdata('msg', '<div class="alert alert-success">' . $this->lang->line('success_message') . '</div>');
                         redirect('student/create');
@@ -2135,6 +2148,8 @@ class Student extends Admin_Controller
         $data['classlist']          = $class;
         $category                   = $this->category_model->get();
         $data['categorylist']       = $category;
+        $data['cast_list']          = $this->cast_model->get();
+        $data['religion_list']      = $this->religion_model->get();
         $hostelList                 = $this->hostel_model->get();
         $data['hostelList']         = $hostelList;
         $houses                     = $this->student_model->gethouselist();

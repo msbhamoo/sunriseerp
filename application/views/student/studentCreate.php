@@ -29,6 +29,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                     </div>
                     <form id="form1" action="<?php echo site_url('student/create') ?>" id="employeeform"
                         name="employeeform" method="post" accept-charset="utf-8" enctype="multipart/form-data">
+                        <input type="hidden" name="enquiry_id" value="<?php echo isset($enquiry_data) ? $enquiry_data['id'] : ''; ?>">
                         <div class="">
                             <div class="bozero">
                                 <div class="around10">
@@ -135,7 +136,7 @@ if (set_value('class_id') == $class['id']) {
                                                     class="req"> *</small>
                                                 <input id="firstname" name="firstname" placeholder="" type="text"
                                                     class="form-control"
-                                                    value="<?php echo set_value('firstname'); ?>" />
+                                                    value="<?php echo set_value('firstname', isset($enquiry_data) ? $enquiry_data['name'] : ''); ?>" />
                                                 <span class="text-danger"><?php echo form_error('firstname'); ?></span>
                                             </div>
                                         </div>
@@ -190,7 +191,7 @@ if (set_value('gender') == $key) {
                                                     for="exampleInputEmail1"><?php echo $this->lang->line('date_of_birth'); ?></label><small
                                                     class="req"> *</small>
                                                 <input id="dob" name="dob" placeholder="" type="text"
-                                                    class="form-control date" value="<?php echo set_value('dob'); ?>" />
+                                                    class="form-control date" value="<?php echo set_value('dob', (isset($enquiry_data) && !empty($enquiry_data['dob'])) ? date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($enquiry_data['dob'])) : ''); ?>" />
                                                 <span class="text-danger"><?php echo form_error('dob'); ?></span>
                                             </div>
                                         </div>
@@ -252,7 +253,7 @@ if (set_value('category_id') == $category['id']) {
                                                 <label
                                                     for="exampleInputEmail1"><?php echo $this->lang->line('mobile_number'); ?></label>
                                                 <input id="mobileno" name="mobileno" placeholder="" type="text"
-                                                    class="form-control" value="<?php echo set_value('mobileno'); ?>" />
+                                                    class="form-control" value="<?php echo set_value('mobileno', isset($enquiry_data) ? $enquiry_data['contact'] : ''); ?>" />
                                                 <span class="text-danger"><?php echo form_error('mobileno'); ?></span>
                                             </div>
                                         </div>
@@ -262,7 +263,7 @@ if (set_value('category_id') == $category['id']) {
                                                 <label
                                                     for="exampleInputEmail1"><?php echo $this->lang->line('email'); ?></label>
                                                 <input id="email" name="email" placeholder="" type="text"
-                                                    class="form-control" value="<?php echo set_value('email'); ?>" />
+                                                    class="form-control" value="<?php echo set_value('email', isset($enquiry_data) ? $enquiry_data['email'] : ''); ?>" />
                                                 <span class="text-danger"><?php echo form_error('email'); ?></span>
                                             </div>
                                         </div>
@@ -870,7 +871,7 @@ foreach ($hostelList as $hostel_key => $hostel_value) {
                                             <label
                                                 for="exampleInputEmail1"><?php echo $this->lang->line('father_name'); ?></label>
                                             <input id="father_name" name="father_name" placeholder="" type="text"
-                                                class="form-control" value="<?php echo set_value('father_name'); ?>" />
+                                                class="form-control" value="<?php echo set_value('father_name', isset($enquiry_data) ? $enquiry_data['father_name'] : ''); ?>" />
                                             <span class="text-danger"><?php echo form_error('father_name'); ?></span>
                                         </div>
                                     </div>
@@ -917,7 +918,7 @@ foreach ($hostelList as $hostel_key => $hostel_value) {
                                             <label
                                                 for="exampleInputEmail1"><?php echo $this->lang->line('mother_name'); ?></label>
                                             <input id="mother_name" name="mother_name" placeholder="" type="text"
-                                                class="form-control" value="<?php echo set_value('mother_name'); ?>" />
+                                                class="form-control" value="<?php echo set_value('mother_name', isset($enquiry_data) ? $enquiry_data['mother_name'] : ''); ?>" />
                                             <span class="text-danger"><?php echo form_error('mother_name'); ?></span>
                                         </div>
                                     </div>

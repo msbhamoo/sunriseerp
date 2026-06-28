@@ -176,31 +176,34 @@
                             <div class="row">
                                 <div class="col-md-6" style="margin-bottom:15px;">
                                     <label class="d2-label">Exam Name <span style="color:red;">*</span></label>
-                                    <input type="text" class="d2-form-control" name="exam_name" id="exam_name" required>
+                                    <input type="text" class="d2-form-control" name="exam_name" id="exam_name" value="<?php echo isset($exam['name']) ? htmlspecialchars($exam['name']) : ''; ?>" required>
                                 </div>
                                 <div class="col-md-3" style="margin-bottom:15px;">
                                     <label class="d2-label">Term</label>
                                     <select class="d2-form-control" name="term_id" id="term_id">
                                         <option value="">Select Term</option>
                                         <?php foreach ($term_list as $term): ?>
-                                            <option value="<?php echo $term->id; ?>"><?php echo $term->name; ?></option>
+                                            <option value="<?php echo $term->id; ?>" <?php echo (isset($exam['cbse_term_id']) && $exam['cbse_term_id'] == $term->id) ? 'selected' : ''; ?>><?php echo $term->name; ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
                                 <div class="col-md-3" style="margin-bottom:15px;">
                                     <label class="d2-label">Assessment Type <span style="color:red;">*</span></label>
-                                    <select class="d2-form-control" name="assessment_id" id="assessment_id" required>
+                                    <select class="d2-form-control" name="assessment_id" id="assessment_id" <?php echo isset($exam_id) && $exam_id != '' ? 'disabled' : 'required'; ?>>
                                         <option value="">Select Assessment</option>
                                         <?php foreach ($assessment_result as $assessment): ?>
-                                            <option value="<?php echo $assessment['id']; ?>"><?php echo $assessment['name']; ?></option>
+                                            <option value="<?php echo $assessment['id']; ?>" <?php echo (isset($exam['cbse_exam_assessment_id']) && $exam['cbse_exam_assessment_id'] == $assessment['id']) ? 'selected' : ''; ?>><?php echo $assessment['name']; ?></option>
                                         <?php endforeach; ?>
                                     </select>
+                                    <?php if(isset($exam_id) && $exam_id != ''): ?>
+                                        <input type="hidden" name="assessment_id" value="<?php echo $exam['cbse_exam_assessment_id']; ?>">
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-12" style="margin-bottom:15px;">
                                     <label class="d2-label">Description</label>
-                                    <textarea class="d2-form-control" name="description" id="description" rows="3" style="height:auto;"></textarea>
+                                    <textarea class="d2-form-control" name="description" id="description" rows="3" style="height:auto;"><?php echo isset($exam['description']) ? htmlspecialchars($exam['description']) : ''; ?></textarea>
                                 </div>
                             </div>
                             <div class="row">
@@ -371,7 +374,7 @@ $(document).ready(function() {
                         var html = '';
                         $.each(res, function(i, obj) {
                             html += '<label class="d2-checkbox-inline" style="font-size: 12px; margin-bottom: 5px; display:block;">';
-                            html += '<input type="checkbox" class="section_check" name="sections['+classId+'][]" value="'+obj.id+'" checked> ' + obj.section;
+                            html += '<input type="checkbox" class="section_check" name="sections['+classId+'][]" value="'+obj.section_id+'" checked> ' + obj.section;
                             html += '</label>';
                         });
                         sectionContainer.html(html);
@@ -402,5 +405,32 @@ $(document).ready(function() {
             }
         });
     }
+
+    <?php if(isset($assigned_classes) && !empty($assigned_classes)): ?>
+    var assigned_classes = <?php echo json_encode($assigned_classes); ?>;
+    $.each(assigned_classes, function(class_id, sections) {
+        $('.class_check[value="'+class_id+'"]').prop('checked', true);
+        var sectionContainer = $('#sections_for_class_' + class_id);
+        sectionContainer.show();
+        sectionContainer.html('<div class="text-center" style="padding:10px;"><i class="fa fa-spinner fa-spin" style="color:#d68940;"></i></div>');
+        
+        $.ajax({
+            url: '<?php echo base_url(); ?>sections/getByClass',
+            type: 'GET',
+            data: {class_id: class_id},
+            dataType: 'json',
+            success: function(res) {
+                var html = '';
+                $.each(res, function(i, obj) {
+                    var isChecked = sections.indexOf(obj.section_id) !== -1 ? 'checked' : '';
+                    html += '<label class="d2-checkbox-inline" style="font-size: 12px; margin-bottom: 5px; display:block;">';
+                    html += '<input type="checkbox" class="section_check" name="sections['+class_id+'][]" value="'+obj.section_id+'" ' + isChecked + '> ' + obj.section;
+                    html += '</label>';
+                });
+                sectionContainer.html(html);
+            }
+        });
+    });
+    <?php endif; ?>
 });
 </script>

@@ -28,15 +28,15 @@ class Enquiry extends Admin_Controller
         $data["source_select"]  = "";
         $data["status"]         = "active";
         $data['stff_list']      = $this->staff_model->get();
-        $this->form_validation->set_rules('from_date', $this->lang->line('enquiry_from_date'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('to_date', $this->lang->line('enquiry_to_date'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('from_date', $this->lang->line('enquiry_from_date'), 'trim|xss_clean');
+        $this->form_validation->set_rules('to_date', $this->lang->line('enquiry_to_date'), 'trim|xss_clean');
 
-        if ($this->form_validation->run() == true) {
+        if ($this->input->server('REQUEST_METHOD') == 'POST') {
             $class                  = $this->input->post("class");
             $source                 = $this->input->post("source");
             $status                 = $this->input->post("status");
-            $date_from              = date("Y-m-d", $this->customlib->datetostrtotime($this->input->post("from_date")));
-            $date_to                = date("Y-m-d", $this->customlib->datetostrtotime($this->input->post("to_date")));
+            $date_from              = $this->input->post("from_date") ? date("Y-m-d", $this->customlib->datetostrtotime($this->input->post("from_date"))) : "";
+            $date_to                = $this->input->post("to_date") ? date("Y-m-d", $this->customlib->datetostrtotime($this->input->post("to_date"))) : "";
             $data["source_select"]  = $source;
             $data["status"]         = $status;
             $data["selected_class"] = $class;
@@ -101,6 +101,9 @@ class Enquiry extends Admin_Controller
                 'note'           => $this->input->post('note'),
                 'source'         => $this->input->post('source'),
                 'email'          => $this->input->post('email'),
+                'father_name'    => $this->input->post('father_name'),
+                'mother_name'    => $this->input->post('mother_name'),
+                'dob'            => $this->input->post('dob') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('dob'))) : null,
     'assigned'       => IsNullOrEmptyString($this->input->post('assigned')) ? NULL :$this->input->post('assigned'),
                 'class_id' => IsNullOrEmptyString($this->input->post('class')) ? NULL :$this->input->post('class'),
                 'no_of_child'    => $this->input->post('no_of_child'),
@@ -242,6 +245,9 @@ class Enquiry extends Admin_Controller
                 'note'           => $this->input->post('note'),
                 'source'         => $this->input->post('source'),
                 'email'          => $this->input->post('email'),
+                'father_name'    => $this->input->post('father_name'),
+                'mother_name'    => $this->input->post('mother_name'),
+                'dob'            => $this->input->post('dob') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('dob'))) : null,
                 'assigned'       => empty2null($this->input->post('assigned')),
                 'class_id'       => empty2null($this->input->post('class')),
                 'no_of_child'    => $this->input->post('no_of_child'),

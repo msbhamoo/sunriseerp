@@ -26,6 +26,26 @@
             <div class="row">
                 <div class="col-sm-4">
                     <div class="form-group">
+                        <label>Father Name</label>
+                        <input type="text" class="form-control" value="<?php echo set_value('father_name', $enquiry_data['father_name']); ?>" name="father_name">
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label>Mother Name</label>
+                        <input type="text" class="form-control" value="<?php echo set_value('mother_name', $enquiry_data['mother_name']); ?>" name="mother_name">
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label>Date Of Birth</label>
+                        <input type="text" class="form-control date" value="<?php echo (!empty($enquiry_data['dob'])) ? set_value('dob', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($enquiry_data['dob']))) : set_value('dob'); ?>" name="dob" readonly="">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
                         <label for="email"><?php echo $this->lang->line('address'); ?></label> 
                         <textarea name="address" class="form-control"><?php echo set_value('address', trim($enquiry_data['address'])) ?></textarea>
                         <span class="text-danger"><?php echo form_error('address'); ?></span>

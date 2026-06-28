@@ -334,19 +334,40 @@ input:checked + .slider:before {
                         <div class="modern-header" style="display:flex; justify-content:space-between; align-items:center;">
                             <h3 class="modern-title"><i class="fa fa-pie-chart"></i> Class & Section Summary (<?php echo $overall_progress; ?>% Complete)</h3>
                             
-                            <!-- Bulk Generate All Missing (Entire Exam) -->
-                            <form action="<?php echo site_url('cbseexam/cbseadmitcardbulk/generate_missing'); ?>" method="post" class="form-inline" id="generateMissingFormAll">
-                                <?php echo $this->customlib->getCSRF(); ?>
-                                <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
-                                <div class="input-group">
-                                    <input type="number" name="series" class="form-control input-sm" placeholder="Start Series (e.g. 1001)" required style="width: 160px; border-radius: 4px 0 0 4px;">
-                                    <span class="input-group-btn">
-                                        <button type="submit" class="btn btn-success btn-sm" style="border-radius: 0 4px 4px 0;" onclick="return confirm('Are you sure you want to generate admit cards for ALL missing students in this exam?');">
-                                            <i class="fa fa-magic"></i> Auto-Generate All Missing
-                                        </button>
-                                    </span>
-                                </div>
-                            </form>
+                            <!-- Global Actions -->
+                            <div style="display:flex; gap:10px;">
+                                <form action="<?php echo site_url('cbseexam/cbseadmitcardbulk/download_all'); ?>" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to download all generated admit cards? This may take some time depending on the size.');">
+                                    <?php echo $this->customlib->getCSRF(); ?>
+                                    <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
+                                    <!-- <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 4px;">
+                                        <i class="fa fa-download"></i> Download All
+                                    </button> -->
+                                </form>
+
+                                <?php if ($total_generated_all > 0) { ?>
+                                <form action="<?php echo site_url('cbseexam/cbseadmitcardbulk/reset_generated'); ?>" method="post" style="display:inline;" onsubmit="return confirm('DANGER: Are you sure you want to reset all generated admit cards for this exam? This will erase all assigned roll numbers.');">
+                                    <?php echo $this->customlib->getCSRF(); ?>
+                                    <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
+                                    <button type="submit" class="btn btn-danger btn-sm" style="border-radius: 4px;">
+                                        <i class="fa fa-trash"></i> Reset All
+                                    </button>
+                                </form>
+                                <?php } ?>
+
+                                <!-- Bulk Generate All Missing (Entire Exam) -->
+                                <form action="<?php echo site_url('cbseexam/cbseadmitcardbulk/generate_missing'); ?>" method="post" class="form-inline" id="generateMissingFormAll">
+                                    <?php echo $this->customlib->getCSRF(); ?>
+                                    <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
+                                    <div class="input-group">
+                                        <input type="number" name="series" class="form-control input-sm" placeholder="Start Series (e.g. 1001)" required style="width: 160px; border-radius: 4px 0 0 4px;">
+                                        <span class="input-group-btn">
+                                            <button type="submit" class="btn btn-success btn-sm" style="border-radius: 0 4px 4px 0;" onclick="return confirm('Are you sure you want to generate admit cards for ALL missing students in this exam?');">
+                                                <i class="fa fa-magic"></i> Auto-Generate All Missing
+                                            </button>
+                                        </span>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                         <div class="modern-body p-0">
                             <div class="table-responsive">
@@ -408,7 +429,29 @@ input:checked + .slider:before {
                                                             </div>
                                                         </form>
                                                     <?php } else { ?>
-                                                        <button class="btn btn-success btn-xs" disabled style="opacity:0.5;"><i class="fa fa-check"></i> Complete</button>
+                                                        <span class="label label-success" style="padding:4px 6px;"><i class="fa fa-check"></i> Complete</span>
+                                                    <?php } ?>
+                                                    
+                                                    <!-- Section Level Reset & Download -->
+                                                    <?php if ($row['generated_count'] > 0) { ?>
+                                                        <form action="<?php echo site_url('cbseexam/cbseadmitcardbulk/download_all'); ?>" method="post" style="display:inline;" onsubmit="return confirm('Download admit cards for this section?');">
+                                                            <?php echo $this->customlib->getCSRF(); ?>
+                                                            <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
+                                                            <input type="hidden" name="class_id" value="<?php echo $row['class_id']; ?>">
+                                                            <input type="hidden" name="section_id" value="<?php echo $row['section_id']; ?>">
+                                                            <button type="submit" class="btn btn-primary btn-xs" style="height:22px; padding:2px 5px;" title="Download Generated">
+                                                                <i class="fa fa-download"></i>
+                                                            </button>
+                                                        </form>
+                                                        <form action="<?php echo site_url('cbseexam/cbseadmitcardbulk/reset_generated'); ?>" method="post" style="display:inline;" onsubmit="return confirm('DANGER: Reset all generated admit cards for this section?');">
+                                                            <?php echo $this->customlib->getCSRF(); ?>
+                                                            <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
+                                                            <input type="hidden" name="class_id" value="<?php echo $row['class_id']; ?>">
+                                                            <input type="hidden" name="section_id" value="<?php echo $row['section_id']; ?>">
+                                                            <button type="submit" class="btn btn-danger btn-xs" style="height:22px; padding:2px 5px;" title="Reset Generated">
+                                                                <i class="fa fa-trash"></i>
+                                                            </button>
+                                                        </form>
                                                     <?php } ?>
                                                 </td>
                                             </tr>
