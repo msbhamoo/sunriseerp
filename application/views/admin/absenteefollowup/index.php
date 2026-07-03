@@ -140,10 +140,9 @@
                                     <tr>
                                         <th><?php echo $this->lang->line('student_name'); ?></th>
                                         <th><?php echo $this->lang->line('class'); ?></th>
-                                        <th><?php echo $this->lang->line('roll_no'); ?></th>
+                                        <th><?php echo $this->lang->line('admission_no'); ?></th>
                                         <th><?php echo $this->lang->line('father_name'); ?></th>
                                         <th><?php echo $this->lang->line('contact_no'); ?></th>
-                                        <th><?php echo $this->lang->line('status'); ?></th>
                                         <th><?php echo $this->lang->line('consecutive_days'); ?></th>
                                         <th><?php echo $this->lang->line('followup_status'); ?></th>
                                         <th><?php echo $this->lang->line('remark'); ?></th>
@@ -158,7 +157,6 @@
                                                 $badge_text = 'Day ' . $consecutive;
                                                 if ($consecutive >= 3) {
                                                     $badge_class = 'pill-danger';
-                                                    $badge_text = 'Day 3+ (' . $this->lang->line('habitual_absent') . ')';
                                                 } elseif ($consecutive == 2) {
                                                     $badge_class = 'pill-warning';
                                                 }
@@ -168,10 +166,9 @@
                                                 <tr>
                                                     <td style="font-weight: 600; color: #333;"><?php echo $student['firstname'] . ' ' . $student['lastname']; ?></td>
                                                     <td><?php echo $student['class'] . ' (' . $student['section'] . ')'; ?></td>
-                                                    <td><?php echo $student['roll_no']; ?></td>
+                                                    <td><?php echo $student['admission_no']; ?></td>
                                                     <td><?php echo $student['father_name']; ?></td>
                                                     <td><?php echo $student['guardian_phone'] ? $student['guardian_phone'] : $student['mobileno']; ?></td>
-                                                    <td><span class="d2-pill <?php echo $status_badge; ?>"><?php echo $student['att_type']; ?></span></td>
                                                     <td><span class="d2-pill <?php echo $badge_class; ?>"><?php echo $badge_text; ?></span></td>
                                                     <td id="td_status_<?php echo $student['student_session_id']; ?>"><span style="font-weight: 600; color: #555;"><?php echo $student['followup_status']; ?></span></td>
                                                     <td id="td_remark_<?php echo $student['student_session_id']; ?>" style="color: #888; font-size: 12px;"><?php echo $student['remark']; ?></td>

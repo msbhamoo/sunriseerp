@@ -489,10 +489,12 @@ class Studentreport extends Admin_Controller
                 // Fetch custom fields for student
                 $student_custom_fields = $this->customfield_model->get_custom_fields('students', $student['id']);
                 
-                // Filter by Admission Type (assuming Admission Type is a custom field)
+                // Filter by Admission Type
                 if (!empty($admission_types) && !in_array('all', $admission_types)) {
                     $has_admission_type = false;
-                    if (!empty($student_custom_fields)) {
+                    if (isset($student['admission_type']) && in_array($student['admission_type'], $admission_types)) {
+                        $has_admission_type = true;
+                    } else if (!empty($student_custom_fields)) {
                         foreach ($student_custom_fields as $scf) {
                             // Match if any custom field value is in the selected admission types
                             if (in_array($scf->field_value, $admission_types)) {

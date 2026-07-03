@@ -225,4 +225,85 @@ class Studentcall_model extends MY_Model
         $query = $this->db->get();
         return $query->result_array();
     }
+
+    public function get_today_call_statistics($staff_id = null)
+    {
+        $this->db->select('call_status, count(*) as count');
+        $this->db->from('student_calls');
+        $this->db->where('DATE(date)', date('Y-m-d'));
+        if ($staff_id) {
+            $this->db->where('created_by', $staff_id);
+        }
+        $this->db->group_by('call_status');
+        $query = $this->db->get();
+        return $query->result_array();
+    }
+
+    public function get_students_call_status($class_id = null, $section_id = null, $start = 0, $length = 10, $search_value = '')
+    {
+        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.admission_no, students.mobileno, students.father_phone, students.mother_phone, students.guardian_phone, classes.class, sections.section, sc.date as last_call_date, sc.call_status as last_call_status');
+        $this->db->from('student_session');
+        $this->db->join('students', 'students.id = student_session.student_id');
+        $this->db->join('classes', 'student_session.class_id = classes.id');
+        $this->db->join('sections', 'student_session.section_id = sections.id');
+        
+        // Join with subquery to get the most recent call status
+        $this->db->join('(SELECT student_session_id, MAX(date) as max_date FROM student_calls GROUP BY student_session_id) as latest_call', 'latest_call.student_session_id = student_session.id', 'left', false);
+        $this->db->join('student_calls sc', 'sc.student_session_id = student_session.id AND sc.date = latest_call.max_date', 'left', false);
+
+        $this->db->where('student_session.session_id', $this->current_session);
+        $this->db->where('students.is_active', 'yes');
+
+        if (!empty($class_id)) {
+            $this->db->where('student_session.class_id', $class_id);
+        }
+        if (!empty($section_id)) {
+            $this->db->where('student_session.section_id', $section_id);
+        }
+
+        if (!empty($search_value)) {
+            $this->db->group_start();
+            $this->db->like('students.firstname', $search_value);
+            $this->db->or_like('students.lastname', $search_value);
+            $this->db->or_like('students.admission_no', $search_value);
+            $this->db->group_end();
+        }
+
+        $this->db->order_by('students.firstname', 'asc');
+        
+        if ($length != -1) {
+            $this->db->limit($length, $start);
+        }
+        
+        $query = $this->db->get();
+        return $query->result_array();
+    }
+
+    public function get_students_call_status_count($class_id = null, $section_id = null, $search_value = '')
+    {
+        $this->db->select('students.id');
+        $this->db->from('student_session');
+        $this->db->join('students', 'students.id = student_session.student_id');
+        
+        $this->db->where('student_session.session_id', $this->current_session);
+        $this->db->where('students.is_active', 'yes');
+
+        if (!empty($class_id)) {
+            $this->db->where('student_session.class_id', $class_id);
+        }
+        if (!empty($section_id)) {
+            $this->db->where('student_session.section_id', $section_id);
+        }
+
+        if (!empty($search_value)) {
+            $this->db->group_start();
+            $this->db->like('students.firstname', $search_value);
+            $this->db->or_like('students.lastname', $search_value);
+            $this->db->or_like('students.admission_no', $search_value);
+            $this->db->group_end();
+        }
+        
+        $query = $this->db->get();
+        return $query->num_rows();
+    }
 }

@@ -163,7 +163,7 @@ class Gatepass extends Admin_Controller
         );
 
         if ($status == 'Completed' && !empty($in_time)) {
-            $data['in_time'] = $in_time;
+            $data['actual_in_time'] = $in_time;
         }
 
         $this->gatepass_model->add($data);

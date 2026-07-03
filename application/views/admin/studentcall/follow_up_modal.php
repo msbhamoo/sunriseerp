@@ -27,6 +27,47 @@
                         <th><?php echo $this->lang->line('note'); ?></th>
                         <td><?php echo $call['notes']; ?></td>
                     </tr>
+                    <tr>
+                        <th>Siblings</th>
+                        <td colspan="3">
+                            <?php 
+                            $sib_arr = [];
+                            // Add original student to the top of the list so we can switch back easily
+                            $sib_arr[] = '<a href="javascript:void(0)" class="load-sibling-fee" data-session-id="' . $call['student_session_id'] . '" data-name="' . htmlspecialchars($call['firstname'] . " " . $call['lastname']) . '"><i class="fa fa-user"></i> <strong>[Original]</strong> ' . $call['firstname'] . " " . $call['lastname'] . " (" . $call['admission_no'] . ") - " . $call['class'] . " (" . $call['section'] . ")</a>";
+                            
+                            if (!empty($siblings)) {
+                                foreach ($siblings as $sib) {
+                                    $sib_arr[] = '<a href="javascript:void(0)" class="load-sibling-fee" data-session-id="' . $sib->student_session_id . '" data-name="' . htmlspecialchars($sib->firstname . " " . $sib->lastname) . '"><i class="fa fa-user"></i> ' . $sib->firstname . " " . $sib->lastname . " (" . $sib->admission_no . ") - " . $sib->class . " (" . $sib->section . ")</a>";
+                                }
+                            } 
+                            echo implode('<br>', $sib_arr);
+                            ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="padding: 0;">
+                            <table class="table table-bordered" style="margin-bottom: 0;">
+                                <thead>
+                                    <tr>
+                                        <th colspan="4" class="text-center" style="background-color: #f9f9f9;">Fee Summary <span id="fee_for_label" style="font-weight:normal;color:#666;"></span></th>
+                                    </tr>
+                                    <tr>
+                                        <th>Fee Type</th>
+                                        <th>Total</th>
+                                        <th>Collected</th>
+                                        <th>Due</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modal_fee_summary_body">
+                                    <tr><td colspan="4" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Attendance</th>
+                        <td colspan="3" id="modal_att_summary_body"><i class="fa fa-spinner fa-spin"></i> Loading...</td>
+                    </tr>
                 </table>
             </div>
         </div>
@@ -162,6 +203,24 @@
                         <textarea name="remarks" id="fw_remarks" class="form-control" rows="2"></textarea>
                     </div>
                 </div>
+                
+                <?php if (!empty($siblings)) { ?>
+                <div class="col-md-12">
+                    <div class="form-group" style="background: #fdfdfd; padding: 10px; border: 1px solid #eee; border-radius: 4px;">
+                        <label style="color:#337ab7;"><i class="fa fa-copy"></i> Sync Call to Siblings</label>
+                        <p class="text-muted" style="font-size:12px; margin-bottom:5px;">Check the boxes below to create an identical call log entry (and next follow-up, if set) for siblings discussed today.</p>
+                        <?php foreach ($siblings as $sib) { ?>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="copy_to_siblings[]" value="<?php echo $sib->student_session_id . '|' . $sib->id; ?>"> 
+                                    <?php echo $sib->firstname . " " . $sib->lastname . " (" . $sib->class . " " . $sib->section . ")"; ?>
+                                </label>
+                            </div>
+                        <?php } ?>
+                    </div>
+                </div>
+                <?php } ?>
+                
                 <div class="col-md-12">
                     <button type="submit" class="btn btn-primary pull-right">Update</button>
                     <button type="button" class="btn btn-default pull-right" style="margin-right:5px;" onclick="$('#edit_fw_form').hide();">Cancel</button>
@@ -216,6 +275,59 @@
                     follow_up('<?php echo $call['id']; ?>');
                 }
             }
+        });
+    });
+
+    function loadStudentFeeAttendance(student_session_id, label) {
+        $('#modal_fee_summary_body').html('<tr><td colspan="4" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
+        $('#modal_att_summary_body').html('<i class="fa fa-spinner fa-spin"></i> Loading...');
+        if(label) $('#fee_for_label').text('(for ' + label + ')');
+
+        $.ajax({
+            url: "<?php echo site_url('admin/certificateregister/get_student_fee_summary_ajax') ?>",
+            type: "POST",
+            data: { student_session_id: student_session_id },
+            dataType: "json",
+            success: function (res) {
+                var feeHtml = '';
+                if (res.academic) {
+                    feeHtml += '<tr><td>Academic Fees</td><td>' + parseFloat(res.academic.total).toFixed(2) + '</td><td>' + parseFloat(res.academic.collected).toFixed(2) + '</td><td><b>' + parseFloat(res.academic.due).toFixed(2) + '</b></td></tr>';
+                }
+                if (res.transport && res.transport.total > 0) {
+                    feeHtml += '<tr><td>Transport Fees</td><td>' + parseFloat(res.transport.total).toFixed(2) + '</td><td>' + parseFloat(res.transport.collected).toFixed(2) + '</td><td><b>' + parseFloat(res.transport.due).toFixed(2) + '</b></td></tr>';
+                }
+                if (res.hostel && res.hostel.total > 0) {
+                    feeHtml += '<tr><td>Hostel Fees</td><td>' + parseFloat(res.hostel.total).toFixed(2) + '</td><td>' + parseFloat(res.hostel.collected).toFixed(2) + '</td><td><b>' + parseFloat(res.hostel.due).toFixed(2) + '</b></td></tr>';
+                }
+                $('#modal_fee_summary_body').html(feeHtml);
+
+                var attHtml = '';
+                if (res.history && (res.history.working_days !== undefined && res.history.working_days !== null)) {
+                    var working = res.history.working_days ? res.history.working_days : 0;
+                    var present = res.history.present_days ? res.history.present_days : 0;
+                    var absent = working - present;
+                    var perc = res.history.attendance_percentage ? res.history.attendance_percentage + '%' : ((working > 0) ? ((present/working)*100).toFixed(2) + '%' : 'N/A');
+                    attHtml += 'Working Days: <b>' + working + '</b> | Present Days: <b>' + present + '</b> | Absent Days: <b>' + absent + '</b> | Percentage: <b>' + perc + '</b>';
+                } else {
+                    attHtml = 'No attendance history found.';
+                }
+                $('#modal_att_summary_body').html(attHtml);
+            },
+            error: function() {
+                $('#modal_fee_summary_body').html('<tr><td colspan="4" class="text-center text-danger">Error loading fee details.</td></tr>');
+                $('#modal_att_summary_body').html('<span class="text-danger">Error loading attendance details.</span>');
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        var default_session_id = '<?php echo $call['student_session_id']; ?>';
+        var default_name = '<?php echo htmlspecialchars($call['firstname'] . ' ' . $call['lastname']); ?>';
+        loadStudentFeeAttendance(default_session_id, default_name);
+
+        $(document).on('click', '.load-sibling-fee', function(e) {
+            e.preventDefault();
+            loadStudentFeeAttendance($(this).data('session-id'), $(this).data('name'));
         });
     });
 </script>

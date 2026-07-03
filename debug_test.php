@@ -1,0 +1,1 @@
+<?php require "index.php"; $CI =& get_instance(); $CI->load->model("studentcall_model"); $result = $CI->studentcall_model->get_students_call_status(null, null, 0, 10); echo "<pre>"; print_r($result); echo "</pre><br>Last Query:<br>" . $CI->db->last_query(); ?>

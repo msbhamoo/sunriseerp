@@ -386,6 +386,9 @@ if (!function_exists('main_menu_array')) {
                 'cbseadmitcardbulk' => array('generate'),
                 'marks'         => array('index'),
                 'timetable'     => array('index'),
+                'seatingroom'   => array('index','add_building','add_room','bulk_generate_rooms','delete_building','delete_room'),
+                'seatingarrangement' => array('index','create','assign_invigilators','delete'),
+                'seatingreport' => array('index','roomwise','studentwise','invigilator_duty','attendance_sheet','summary_report'),
             ),
             
             'qr_code_attendance' => array(                              

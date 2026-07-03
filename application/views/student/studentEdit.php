@@ -210,7 +210,67 @@ $count++;
                                                     <span class="text-danger"><?php echo form_error('cast'); ?></span>
                                                 </div>
                                             </div>
-                                        <?php }if ($sch_setting->mobile_no) {?>
+                                        <?php } ?>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label for="apaar_id">APAAR ID</label>
+                                                <input id="apaar_id" name="apaar_id" placeholder="" type="text" class="form-control" value="<?php echo set_value('apaar_id', $student['apaar_id']); ?>" />
+                                                <span class="text-danger"><?php echo form_error('apaar_id'); ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label for="pen">PEN</label>
+                                                <input id="pen" name="pen" placeholder="" type="text" class="form-control" value="<?php echo set_value('pen', $student['pen']); ?>" />
+                                                <span class="text-danger"><?php echo form_error('pen'); ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label for="aadhaar_id">Aadhaar ID</label>
+                                                <input id="aadhaar_id" name="aadhaar_id" placeholder="" type="text" class="form-control" value="<?php echo set_value('aadhaar_id', $student['aadhaar_id']); ?>" />
+                                                <span class="text-danger"><?php echo form_error('aadhaar_id'); ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label for="admission_type">Admission Type</label>
+                                                <select class="form-control" name="admission_type">
+                                                    <option value="New" <?php echo set_value('admission_type', $student['admission_type']) == 'New' ? "selected" : ""; ?>>New</option>
+                                                    <option value="Old" <?php echo set_value('admission_type', $student['admission_type']) == 'Old' ? "selected" : ""; ?>>Old</option>
+                                                    <option value="Added" <?php echo set_value('admission_type', $student['admission_type']) == 'Added' ? "selected" : ""; ?>>Added</option>
+                                                    <option value="Promotion" <?php echo set_value('admission_type', $student['admission_type']) == 'Promotion' ? "selected" : ""; ?>>Promotion</option>
+                                                </select>
+                                                <span class="text-danger"><?php echo form_error('admission_type'); ?></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label for="shrestha">Shrestha</label>
+                                                <select class="form-control" name="shrestha">
+                                                    <option value="No" <?php echo set_value('shrestha', $student['shrestha']) == 'No' ? "selected" : ""; ?>>No</option>
+                                                    <option value="Yes" <?php echo set_value('shrestha', $student['shrestha']) == 'Yes' ? "selected" : ""; ?>>Yes</option>
+                                                </select>
+                                                <span class="text-danger"><?php echo form_error('shrestha'); ?></span>
+                                            </div>
+                                        </div>
+                                        <?php if ($sch_setting->rte) { ?>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label><?php echo $this->lang->line('rte'); ?></label>
+                                                <div class="radio" style="margin-top: 2px;">
+                                                    <label><input class="radio-inline" type="radio" name="rte" value="Yes"  <?php echo set_value('rte', $student['rte']) == "Yes" ? "checked" : ""; ?>  ><?php echo $this->lang->line('yes'); ?></label>
+                                                    <label><input class="radio-inline" type="radio" name="rte" value="No" <?php echo set_value('rte', $student['rte']) == "No" ? "checked" : ""; ?>  ><?php echo $this->lang->line('no'); ?></label>
+                                                </div>
+                                                <span class="text-danger"><?php echo form_error('rte'); ?></span>
+                                            </div>
+                                        </div>
+                                        <?php } ?>
+                                        <?php if ($sch_setting->mobile_no) {?>
                                             <div class="col-md-3">
                                                 <div class="form-group">
                                                     <label for="exampleInputEmail1"><?php echo $this->lang->line('mobile_number'); ?></label>
@@ -247,6 +307,9 @@ $count++;
                                             <div class="col-md-3">
                                                 <div class="form-group">
                                                     <label for="exampleInputFile"><?php echo $this->lang->line('student_photo'); ?> (100px X 100px)</label>
+                                                    <?php if (!empty($student['image'])) { ?>
+                                                        <img src="<?php echo $this->media_storage->getImageURL($student['image']); ?>" class="pull-right" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid #ccc; margin-top: -15px; margin-bottom: 2px;">
+                                                    <?php } ?>
                                                     <input class="filestyle form-control" type='file' name='image' id="image" size='20' />
                                                 </div>
                                                 <span class="text-danger"><?php echo form_error('file'); ?></span>
@@ -355,18 +418,7 @@ if ($hvalue["id"] == $student["school_house_id"]) {
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <?php if ($sch_setting->rte) { ?>
-                                        <div class="col-md-3">
-                                            <div class="form-group">
-                                                <label><?php echo $this->lang->line('rte'); ?></label>
-                                                <div class="radio" style="margin-top: 2px;">
-                                                    <label><input class="radio-inline" type="radio" name="rte" value="Yes"  <?php echo set_value('rte', $student['rte']) == "Yes" ? "checked" : ""; ?>  ><?php echo $this->lang->line('yes'); ?></label>
-                                                    <label><input class="radio-inline" type="radio" name="rte" value="No" <?php echo set_value('rte', $student['rte']) == "No" ? "checked" : ""; ?>  ><?php echo $this->lang->line('no'); ?></label>
-                                                </div>
-                                                <span class="text-danger"><?php echo form_error('rte'); ?></span>
-                                            </div>
-                                        </div>
-                                        <?php } ?>
+
                                 <?php
 echo display_custom_fields('students', $student['id']);
 ?>
@@ -900,6 +952,9 @@ if (!empty($feediscountList)) {
                                             <div class="col-md-3">
                                                 <div class="form-group">
                                                     <label for="exampleInputFile"><?php echo $this->lang->line('father_photo'); ?> (100px X 100px)</label>
+                                                    <?php if (!empty($student['father_pic'])) { ?>
+                                                        <img src="<?php echo $this->media_storage->getImageURL($student['father_pic']); ?>" class="pull-right" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid #ccc; margin-top: -15px; margin-bottom: 2px;">
+                                                    <?php } ?>
                                                     <div><input class="filestyle form-control" type='file' name='father_pic' id="file" size='20' />
                                                     </div>
                                                     <span class="text-danger"><?php echo form_error('father_pic'); ?></span></div>
@@ -935,6 +990,9 @@ if (!empty($feediscountList)) {
                                             <div class="col-md-3">
                                                 <div class="form-group">
                                                     <label for="exampleInputFile"><?php echo $this->lang->line('mother_photo'); ?> (100px X 100px)</label>
+                                                    <?php if (!empty($student['mother_pic'])) { ?>
+                                                        <img src="<?php echo $this->media_storage->getImageURL($student['mother_pic']); ?>" class="pull-right" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid #ccc; margin-top: -15px; margin-bottom: 2px;">
+                                                    <?php } ?>
                                                     <div><input class="filestyle form-control" type='file' name='mother_pic' id="file" size='20' />
                                                     </div>
                                                     <span class="text-danger"><?php echo form_error('mother_pic'); ?></span></div>
@@ -947,7 +1005,7 @@ if (!empty($feediscountList)) {
                                             <label><?php echo $this->lang->line('if_guardian_is'); ?></label><small class="req"> *</small>&nbsp;&nbsp;&nbsp;
                                             <label class="radio-inline">
                                                 <input type="radio" name="guardian_is"  <?php
-if ($student['guardian_is'] == "father") {
+if ($student['guardian_is'] == "father" || empty($student['guardian_is'])) {
         echo "checked";
     }
         ?> value="father" > <?php echo $this->lang->line('father'); ?>
@@ -1027,6 +1085,9 @@ if ($student['guardian_is'] == "other") {
                                             <div class="col-md-3">
                                                 <div class="form-group">
                                                     <label for="exampleInputFile"><?php echo $this->lang->line('guardian_photo'); ?> (100px X 100px)</label>
+                                                    <?php if (!empty($student['guardian_pic'])) { ?>
+                                                        <img src="<?php echo $this->media_storage->getImageURL($student['guardian_pic']); ?>" class="pull-right" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid #ccc; margin-top: -15px; margin-bottom: 2px;">
+                                                    <?php } ?>
                                                     <div><input class="filestyle form-control" type='file' name='guardian_pic' id="file" size='20' />
                                                     </div>
                                                     <span class="text-danger"><?php echo form_error('guardian_pic'); ?></span>
@@ -1368,30 +1429,38 @@ if ($student['guardian_is'] == "other") {
         }
     }
 
-    $('input:radio[name="guardian_is"]').change(
-            function () {
-                if ($(this).is(':checked')) {
-                    var value = $(this).val();
-                    if (value == "father") {
-                        var father_relation = "<?php echo $this->lang->line('father'); ?>";
-                        $('#guardian_name').val($('#father_name').val());
-                        $('#guardian_phone').val($('#father_phone').val());
-                        $('#guardian_occupation').val($('#father_occupation').val());
-                        $('#guardian_relation').val(father_relation);
-                    } else if (value == "mother") {
-                        var mother_relation = "<?php echo $this->lang->line('mother'); ?>";
-                        $('#guardian_name').val($('#mother_name').val());
-                        $('#guardian_phone').val($('#mother_phone').val());
-                        $('#guardian_occupation').val($('#mother_occupation').val());
-                        $('#guardian_relation').val(mother_relation);
-                    } else {
-                        $('#guardian_name').val("");
-                        $('#guardian_phone').val("");
-                        $('#guardian_occupation').val("");
-                        $('#guardian_relation').val("")
-                    }
-                }
-            });
+    function auto_fill_guardian() {
+        var value = $('input:radio[name="guardian_is"]:checked').val();
+        if (value == "father") {
+            $('#guardian_name').val($('#father_name').val());
+            $('#guardian_phone').val($('#father_phone').val());
+            $('#guardian_occupation').val($('#father_occupation').val());
+            $('#guardian_relation').val("<?php echo $this->lang->line('father'); ?>");
+        } else if (value == "mother") {
+            $('#guardian_name').val($('#mother_name').val());
+            $('#guardian_phone').val($('#mother_phone').val());
+            $('#guardian_occupation').val($('#mother_occupation').val());
+            $('#guardian_relation').val("<?php echo $this->lang->line('mother'); ?>");
+        }
+    }
+
+    $('input:radio[name="guardian_is"]').change(function () {
+        if ($(this).is(':checked')) {
+            var value = $(this).val();
+            if (value == "other") {
+                $('#guardian_name').val("");
+                $('#guardian_phone').val("");
+                $('#guardian_occupation').val("");
+                $('#guardian_relation').val("");
+            } else {
+                auto_fill_guardian();
+            }
+        }
+    });
+
+    $('#father_name, #father_phone, #father_occupation, #mother_name, #mother_phone, #mother_occupation').on('keyup change', function() {
+        auto_fill_guardian();
+    });
 </script>
 
 <div class="modal" id="mySiblingModal">

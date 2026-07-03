@@ -222,7 +222,12 @@
                             
                             <div class="row">
                                 <div class="col-md-12">
-                                    <label class="d2-label" style="margin-bottom: 15px;">Select Classes <span style="color:red;">*</span></label>
+                                    <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 15px;">
+                                        <label class="d2-label" style="margin:0;">Select Classes <span style="color:red;">*</span></label>
+                                        <label class="d2-checkbox-inline" style="font-size: 13px; font-weight: 700; color: #007bff; margin:0;">
+                                            <input type="checkbox" id="select_all_classes"> Select All Classes
+                                        </label>
+                                    </div>
                                     <div class="row" id="class-checkboxes">
                                         <?php foreach ($classlist as $class): ?>
                                         <div class="col-md-3" style="margin-bottom: 20px; border-left: 2px solid #eaeaea; padding-left: 15px;">
@@ -356,6 +361,35 @@ $(document).ready(function() {
         }
     });
 
+    function loadSectionsForClass(classId, sectionContainer, forceCheckAll) {
+        if (sectionContainer.html().trim() === '' || sectionContainer.html().indexOf('fa-spinner') !== -1) {
+            sectionContainer.html('<div class="text-center" style="padding:10px;"><i class="fa fa-spinner fa-spin" style="color:#d68940;"></i></div>');
+            $.ajax({
+                url: '<?php echo base_url(); ?>sections/getByClass',
+                type: 'GET',
+                data: {class_id: classId},
+                dataType: 'json',
+                success: function(res) {
+                    var html = '';
+                    $.each(res, function(i, obj) {
+                        var checkedStr = forceCheckAll ? 'checked' : 'checked';
+                        html += '<label class="d2-checkbox-inline" style="font-size: 12px; margin-bottom: 5px; display:block;">';
+                        html += '<input type="checkbox" class="section_check" name="sections['+classId+'][]" value="'+obj.section_id+'" ' + checkedStr + '> ' + obj.section;
+                        html += '</label>';
+                    });
+                    sectionContainer.html(html);
+                },
+                error: function() {
+                    sectionContainer.html('<div style="color:red; font-size:11px;">Error loading sections. Please uncheck and check again.</div>');
+                }
+            });
+        } else {
+            if (forceCheckAll) {
+                sectionContainer.find('.section_check').prop('checked', true);
+            }
+        }
+    }
+
     $('.class_check').change(function() {
         var classId = $(this).val();
         var isChecked = $(this).is(':checked');
@@ -363,30 +397,20 @@ $(document).ready(function() {
         
         if (isChecked) {
             sectionContainer.show();
-            if (sectionContainer.html().trim() === '') {
-                sectionContainer.html('<div class="text-center" style="padding:10px;"><i class="fa fa-spinner fa-spin" style="color:#d68940;"></i></div>');
-                $.ajax({
-                    url: '<?php echo base_url(); ?>sections/getByClass',
-                    type: 'GET',
-                    data: {class_id: classId},
-                    dataType: 'json',
-                    success: function(res) {
-                        var html = '';
-                        $.each(res, function(i, obj) {
-                            html += '<label class="d2-checkbox-inline" style="font-size: 12px; margin-bottom: 5px; display:block;">';
-                            html += '<input type="checkbox" class="section_check" name="sections['+classId+'][]" value="'+obj.section_id+'" checked> ' + obj.section;
-                            html += '</label>';
-                        });
-                        sectionContainer.html(html);
-                    }
-                });
-            } else {
-                sectionContainer.find('.section_check').prop('checked', true);
-            }
+            loadSectionsForClass(classId, sectionContainer, true);
         } else {
             sectionContainer.hide();
             sectionContainer.find('.section_check').prop('checked', false);
         }
+    });
+
+    $('#select_all_classes').change(function() {
+        var isChecked = $(this).is(':checked');
+        $('.class_check').each(function() {
+            if ($(this).is(':checked') !== isChecked) {
+                $(this).prop('checked', isChecked).trigger('change');
+            }
+        });
     });
     
     function loadSubjectsAndTimetable() {

@@ -41,18 +41,26 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
         color: var(--text-main);
     }
     .print-receipt-wrapper {
-        width: 96%;
+        width: 100%;
         max-width: 800px;
-        margin: 15px auto;
+        margin: 0 auto;
+        padding-bottom: 5px;
     }
 
-    /* Receipt Copy Container */
+    /* Removed @page as MPDF handles page sizing via PHP */
+    
+    .print-receipt-wrapper {
+        height: 130mm; /* Adjusted to fit within MPDF default margins (printable area is ~267mm) */
+        page-break-inside: avoid;
+        margin: 0;
+        padding: 0;
+    }
+    
     .receipt-copy {
-        width: 100%;
-        height: 48vh;
+        height: 125mm; /* Scaled down slightly to fit exactly 2 per page */
+        margin: 2mm auto;
         border: 2px solid var(--primary-color);
         border-radius: 8px;
-        margin-bottom: 2vh;
         position: relative;
         overflow: hidden;
         page-break-inside: avoid;
@@ -156,8 +164,8 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
     .meta-table {
         width: 100%;
         border-top: 1px solid var(--border-color);
-        padding-top: 8px;
-        margin-bottom: 8px;
+        padding-top: 5px;
+        margin-bottom: 5px;
         font-size: 11px;
     }
     .meta-table td {
@@ -192,8 +200,8 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
     }
     .receipt-table th, .receipt-table td {
         border: 1px solid var(--border-color);
-        padding: 5px 8px;
-        font-size: 11px;
+        padding: 3px 5px; /* Compact padding */
+        font-size: 10px;  /* Compact font size */
         text-align: left;
     }
     .receipt-table th {
@@ -205,14 +213,14 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
     }
 
     .instructions {
-        font-size: 10px;
+        font-size: 9px; /* Reduced from 10px */
         color: var(--text-muted);
-        margin-bottom: 20px;
+        margin-bottom: 10px;
     }
 
     .signatures {
         width: 100%;
-        margin-top: 25px;
+        margin-top: 15px; /* Reduced from 25px */
         font-size: 10px;
     }
     .signatures td {
@@ -228,6 +236,15 @@ if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color))
 $exam_incharge_sig = $this->customlib->getSignatureMapping('sign_exam_incharge');
 $class_teacher_sig = $this->customlib->getSignatureMapping('sign_class_teacher');
 $principal_sig = $this->customlib->getSignatureMapping('sign_principal');
+
+// Pre-fetch all subject-to-class mappings to avoid DB queries in loops
+$CI =& get_instance();
+$CI->db->select('cbse_exam_timetable_id, class_id');
+$mappings = $CI->db->get('cbse_exam_timetable_classes')->result_array();
+$subject_class_map = [];
+foreach ($mappings as $map) {
+    $subject_class_map[$map['cbse_exam_timetable_id']][] = $map['class_id'];
+}
 ?>
 
 <?php 
@@ -313,6 +330,13 @@ foreach ($student_details as $student) {
                         <td class="meta-label" style="padding-left:15px;">Center</td>
                         <td class="meta-value">: <?php echo $admitcard->exam_center; ?></td>
                     </tr>
+                    <tr>
+                        <td class="meta-label">Allocated Room</td>
+                        <td class="meta-value">: <?php echo !empty($student->allocated_room) ? $student->allocated_room : 'Not Allocated'; ?></td>
+                        
+                        <td class="meta-label" style="padding-left:15px;">Seat No</td>
+                        <td class="meta-value">: <?php echo !empty($student->allocated_seat) ? $student->allocated_seat : 'Not Allocated'; ?></td>
+                    </tr>
                 </table>
 
                 <!-- Timetable -->
@@ -327,7 +351,13 @@ foreach ($student_details as $student) {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($exam_subjects as $subject) { ?>
+                            <?php foreach ($exam_subjects as $subject) { 
+                                if (isset($subject_class_map[$subject->timetable_id]) && !empty($subject_class_map[$subject->timetable_id])) {
+                                    if (!in_array($student->class_id, $subject_class_map[$subject->timetable_id])) {
+                                        continue;
+                                    }
+                                }
+                            ?>
                                 <tr>
                                     <td><?php echo date($this->customlib->getSchoolDateFormat(), strtotime($subject->date)); ?></td>
                                     <td><?php 

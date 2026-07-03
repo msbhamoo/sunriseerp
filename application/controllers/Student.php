@@ -1237,6 +1237,11 @@ class Student extends Admin_Controller
                 'hostel_room_id'    => $hostel_room_id,
                 'note'              => $this->input->post('note'),
                 'is_active'         => 'yes',
+                'apaar_id'          => $this->input->post('apaar_id'),
+                'pen'               => $this->input->post('pen'),
+                'aadhaar_id'        => $this->input->post('aadhaar_id'),
+                'admission_type'    => $this->input->post('admission_type'),
+                'shrestha'          => $this->input->post('shrestha'),
             );
 
             if ($hostel_room_id == 0) {
@@ -3590,7 +3595,19 @@ class Student extends Admin_Controller
                 // We'll return it as empty and let frontend render it, or we can use a counter. We'll let Datatables handle it.
                 $row[] = ""; 
                 $row[] = $student->admission_no;
-                $row[] = "<a href='" . base_url() . "student/view/" . $student->id . "'>" . $this->customlib->getFullName($student->firstname, $student->middlename, $student->lastname, $sch_setting->middlename, $sch_setting->lastname) . "</a>";
+                if (!empty($student->image)) {
+                    $file = $student->image;
+                } else {
+                    if ($student->gender == 'Female') {
+                        $file = "uploads/student_images/default_female.jpg";
+                    } else {
+                        $file = "uploads/student_images/default_male.jpg";
+                    }
+                }
+                $image_url = $this->media_storage->getImageURL($file);
+                $profile_img = "<img src='" . $image_url . "' style='width:35px;height:35px;border-radius:50%;margin-right:10px;object-fit:cover;' />";
+
+                $row[] = "<a href='" . base_url() . "student/view/" . $student->id . "' style='display:flex;align-items:center;'>" . $profile_img . $this->customlib->getFullName($student->firstname, $student->middlename, $student->lastname, $sch_setting->middlename, $sch_setting->lastname) . "</a>";
                 $row[] = $student->father_name;
                 $row[] = $student->mobileno;
                 $row[] = $student->class;
@@ -3666,7 +3683,19 @@ class Student extends Admin_Controller
 
                 $row   = array();
                 $row[] = $student->admission_no;
-                $row[] = "<a href='" . base_url() . "student/view/" . $student->id . "'>" . $this->customlib->getFullName($student->firstname, $student->middlename, $student->lastname, $sch_setting->middlename, $sch_setting->lastname) . "</a>";
+                if (!empty($student->image)) {
+                    $file = $student->image;
+                } else {
+                    if ($student->gender == 'Female') {
+                        $file = "uploads/student_images/default_female.jpg";
+                    } else {
+                        $file = "uploads/student_images/default_male.jpg";
+                    }
+                }
+                $image_url = $this->media_storage->getImageURL($file);
+                $profile_img = "<img src='" . $image_url . "' style='width:35px;height:35px;border-radius:50%;margin-right:10px;object-fit:cover;' />";
+
+                $row[] = "<a href='" . base_url() . "student/view/" . $student->id . "' style='display:flex;align-items:center;'>" . $profile_img . $this->customlib->getFullName($student->firstname, $student->middlename, $student->lastname, $sch_setting->middlename, $sch_setting->lastname) . "</a>";
                 if ($sch_setting->roll_no) {
                     $row[] = $student->roll_no;
                 }

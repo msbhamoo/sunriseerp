@@ -324,31 +324,21 @@ class Payrollrule_model extends MY_Model
 
     public function getHolidayCount($month, $year)
     {
+        $this->load->helper('calendar_integration');
+        
         $month = str_pad($month, 2, '0', STR_PAD_LEFT);
         $start_of_month = "$year-$month-01";
         $end_of_month = date("Y-m-t", strtotime($start_of_month));
 
-        $query = $this->db->query("
-            SELECT from_date, to_date
-            FROM annual_calendar
-            WHERE from_date <= ? AND to_date >= ? AND is_active = 1
-        ", array($end_of_month . ' 23:59:59', $start_of_month . ' 00:00:00'));
+        // Use the centralized helper to determine total days - working days
+        $total_days_in_month = date('t', strtotime($start_of_month));
         
-        $holidays = 0;
-        foreach ($query->result_array() as $row) {
-            $h_start = strtotime(date('Y-m-d', strtotime($row['from_date'])));
-            $h_end = strtotime(date('Y-m-d', strtotime($row['to_date'])));
-            $m_start = strtotime($start_of_month);
-            $m_end = strtotime($end_of_month);
-
-            $actual_start = max($h_start, $m_start);
-            $actual_end = min($h_end, $m_end);
-
-            if ($actual_start <= $actual_end) {
-                $days = round(($actual_end - $actual_start) / 86400) + 1;
-                $holidays += $days;
-            }
-        }
+        // get_working_days_between calculates exactly how many working days there are, 
+        // considering weekends and exceptions for the payroll module context
+        $working_days = get_working_days_between($start_of_month, $end_of_month, 'payroll');
+        
+        $holidays = $total_days_in_month - $working_days;
+        
         return $holidays;
     }
 }

@@ -39,7 +39,7 @@ class Calendar_model extends CI_Model
         select holiday_type.is_default,annual_calendar.holiday_type, CAST(type AS CHAR) as event_title,annual_calendar.id, CAST(annual_calendar.holiday_type AS CHAR) as event_type, annual_calendar.from_date as start_date, 
         annual_calendar.to_date as end_date, CAST(annual_calendar.description AS CHAR) as event_description, CAST(annual_calendar.holiday_color AS CHAR) as event_color,0 as event_for,null as role_id from annual_calendar 
             left join holiday_type on holiday_type.id=annual_calendar.holiday_type
-            where annual_calendar.holiday_type!=0")->result_array();
+            where annual_calendar.holiday_type!=0 AND (annual_calendar.is_working_day IS NULL OR annual_calendar.is_working_day = 0)")->result_array();
     }
 
     public function getStudentEvents($id = null)
@@ -49,7 +49,7 @@ class Calendar_model extends CI_Model
         select holiday_type.is_default,annual_calendar.holiday_type, CAST(type AS CHAR) as event_title,annual_calendar.id, CAST(annual_calendar.holiday_type AS CHAR) as event_type, annual_calendar.from_date as start_date, 
         annual_calendar.to_date as end_date, CAST(annual_calendar.description AS CHAR) as event_description, CAST(annual_calendar.holiday_color AS CHAR) as event_color,0 as event_for,null as role_id,annual_calendar.front_site from annual_calendar 
             left join holiday_type on holiday_type.id=annual_calendar.holiday_type
-            where annual_calendar.holiday_type!=0 and annual_calendar.front_site=1")->result_array();
+            where annual_calendar.holiday_type!=0 and annual_calendar.front_site=1 AND (annual_calendar.is_working_day IS NULL OR annual_calendar.is_working_day = 0)")->result_array();
     }
 
     public function deleteEvent($id)
@@ -125,7 +125,7 @@ class Calendar_model extends CI_Model
             SELECT CAST(holiday_type.type AS CHAR) as event_title, annual_calendar.from_date as start_date, annual_calendar.to_date as end_date, CAST('holiday' AS CHAR) as event_type, CAST(annual_calendar.holiday_color AS CHAR) as event_color, CAST(annual_calendar.description AS CHAR) as event_description 
             FROM annual_calendar 
             LEFT JOIN holiday_type ON holiday_type.id = annual_calendar.holiday_type
-            WHERE annual_calendar.from_date >= CURDATE() AND annual_calendar.holiday_type != 0
+            WHERE annual_calendar.from_date >= CURDATE() AND annual_calendar.holiday_type != 0 AND (annual_calendar.is_working_day IS NULL OR annual_calendar.is_working_day = 0)
             ORDER BY start_date ASC 
             LIMIT $limit
         ";

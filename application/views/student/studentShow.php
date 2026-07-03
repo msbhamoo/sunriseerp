@@ -495,8 +495,10 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
 .sp2-invoice-wrapper {
     background: transparent;
     margin-bottom: 24px;
+    overflow-x: auto;
+    width: 100%;
 }
-.sp2-invoice-table { display: block; }
+.sp2-invoice-table { display: block; min-width: 1200px; }
 .sp2-invoice-thead {
     display: flex;
     padding: 0 16px 8px 16px;
@@ -646,7 +648,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
     box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     border: 1px solid #eaeaea;
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: minmax(160px, 1.5fr) minmax(90px, 1fr) minmax(90px, 1fr) minmax(110px, 1.2fr) minmax(100px, 1fr) minmax(90px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(110px, 1.2fr);
     align-items: center;
     gap: 12px;
 }
@@ -2078,16 +2080,16 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                                 <div class="sp2-invoice-col"><?php echo $this->lang->line('fees'); ?></div>
                                                 <!-- <div class="sp2-invoice-col"><?php //echo $this->lang->line('fees_group'); ?></div> -->
                                                 <!-- <div class="sp2-invoice-col"><?php //echo $this->lang->line('fees_code'); ?></div> -->
-                                                <div class="sp2-invoice-col" class="text text-left"><?php echo $this->lang->line('due_date'); ?></div>
-                                                <div class="sp2-invoice-col" class="text text-left"><?php echo $this->lang->line('status'); ?></div>
-                                                <div class="sp2-invoice-col" class="text text-right"><?php echo $this->lang->line('amount'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
-                                                <div class="sp2-invoice-col" class="text text-left"><?php echo $this->lang->line('payment_id'); ?></div>
-                                                <div class="sp2-invoice-col" class="text text-left"><?php echo $this->lang->line('mode'); ?></div>
-                                                <div class="sp2-invoice-col" class="text text-left"><?php echo $this->lang->line('date'); ?></div>
-                                                <div class="sp2-invoice-col" class="text text-right"><?php echo $this->lang->line('discount'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
-                                                <div class="sp2-invoice-col" class="text text-right"><?php echo $this->lang->line('fine'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
-                                                <div class="sp2-invoice-col" class="text text-right"><?php echo $this->lang->line('paid'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
-                                                <div class="sp2-invoice-col" class="text text-right"><?php echo $this->lang->line('balance'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
+                                                <div class="sp2-invoice-col text-left"><?php echo $this->lang->line('due_date'); ?></div>
+                                                <div class="sp2-invoice-col text-left"><?php echo $this->lang->line('status'); ?></div>
+                                                <div class="sp2-invoice-col text-right"><?php echo $this->lang->line('amount'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
+                                                <div class="sp2-invoice-col text-left"><?php echo $this->lang->line('payment_id'); ?></div>
+                                                <div class="sp2-invoice-col text-left"><?php echo $this->lang->line('mode'); ?></div>
+                                                <div class="sp2-invoice-col text-left"><?php echo $this->lang->line('date'); ?></div>
+                                                <div class="sp2-invoice-col text-right"><?php echo $this->lang->line('discount'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
+                                                <div class="sp2-invoice-col text-right"><?php echo $this->lang->line('fine'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
+                                                <div class="sp2-invoice-col text-right"><?php echo $this->lang->line('paid'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
+                                                <div class="sp2-invoice-col text-right"><?php echo $this->lang->line('balance'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?></span></div>
                                             </div>
                                         </div>
                                         <div class="sp2-invoice-tbody">
@@ -2167,7 +2169,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
 
 
 
-                                                        <div class="sp2-invoice-col" class="text text-left">
+                                                        <div class="sp2-invoice-col text-left">
                                                             <?php
                                                             if ($fee_value->due_date == "0000-00-00") {
                                                             } else {
@@ -2177,7 +2179,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                                             }
                                                             ?>
                                                         </div>
-                                                        <div class="sp2-invoice-col" class="text text-left">
+                                                        <div class="sp2-invoice-col text-left">
                                                             <?php
                                                             if ($feetype_balance == 0) {
                                                             ?><span class="label label-success"><?php echo $this->lang->line('paid'); ?></span><?php
@@ -2188,7 +2190,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                                                                                     }
                                                                                                     ?>
                                                         </div>
-                                                        <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($fee_value->amount);
+                                                        <div class="sp2-invoice-col text-right"><?php echo amountFormat($fee_value->amount);
                                                                                     if (($fee_value->due_date != "0000-00-00" && $fee_value->due_date != null) && (strtotime($fee_value->due_date) < strtotime(date('Y-m-d')))) {
 																										
                                                                 // get cumulative fine amount as delay days 
@@ -2230,19 +2232,19 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                                                                     }
                                                             ?>
                                                         </div>
-                                                        <div class="sp2-invoice-col" class="text text-left"></div>
-                                                        <div class="sp2-invoice-col" class="text text-left"></div>
-                                                        <div class="sp2-invoice-col" class="text text-left"></div>
-                                                        <div class="sp2-invoice-col" class="text text-right"><?php
+                                                        <div class="sp2-invoice-col text-left"></div>
+                                                        <div class="sp2-invoice-col text-left"></div>
+                                                        <div class="sp2-invoice-col text-left"></div>
+                                                        <div class="sp2-invoice-col text-right"><?php
                                                                                     echo amountFormat($fee_discount);
                                                                                     ?></div>
-                                                        <div class="sp2-invoice-col" class="text text-right"><?php
+                                                        <div class="sp2-invoice-col text-right"><?php
                                                                                     echo amountFormat($fee_fine);
                                                                                     ?></div>
-                                                        <div class="sp2-invoice-col" class="text text-right"><?php
+                                                        <div class="sp2-invoice-col text-right"><?php
                                                                                     echo amountFormat($fee_paid);
                                                                                     ?></div>
-                                                        <div class="sp2-invoice-col" class="text text-right"><?php
+                                                        <div class="sp2-invoice-col text-right"><?php
                                                                                     $display_none = "ss-none";
                                                                                     if ($feetype_balance > 0) {
                                                                                         $display_none = "";
@@ -2260,12 +2262,12 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                                             foreach ($fee_deposits as $fee_deposits_key => $fee_deposits_value) {
                                                         ?>
                                                                 <div class="sp2-invoice-row sp2-invoice-sub-row white-td">
-                                                                    <!-- <div class="sp2-invoice-col" class="text-left"></div> -->
-                                                                    <div class="sp2-invoice-col" class="text-left"></div>
-                                                                    <div class="sp2-invoice-col" class="text-left"></div>
-                                                                    <div class="sp2-invoice-col" class="text-left"></div>
-                                                                    <div class="sp2-invoice-col" class="text-right"><img src="<?php echo base_url(); ?>backend/images/table-arrow.png" alt="" /></div>
-                                                                    <div class="sp2-invoice-col" class="text text-left">
+                                                                    <!-- <div class="sp2-invoice-col text-left"></div> -->
+                                                                    <div class="sp2-invoice-col text-left"></div>
+                                                                    <div class="sp2-invoice-col text-left"></div>
+                                                                    <div class="sp2-invoice-col text-left"></div>
+                                                                    <div class="sp2-invoice-col text-right"><img src="<?php echo base_url(); ?>backend/images/table-arrow.png" alt="" /></div>
+                                                                    <div class="sp2-invoice-col text-left">
 
                                                                         <a href="#" data-toggle="popover" class="detail_popover"> <?php echo $fee_value->student_fees_deposite_id . "/" . $fee_deposits_value->inv_no; ?></a>
                                                                         <div class="fee_detail_popover" style="display: none">
@@ -2282,17 +2284,17 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                                                             ?>
                                                                         </div>
                                                                     </div>
-                                                                    <div class="sp2-invoice-col" class="text text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></div>
-                                                                    <div class="sp2-invoice-col" class="text text-center">
+                                                                    <div class="sp2-invoice-col text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></div>
+                                                                    <div class="sp2-invoice-col text-center">
                                                                         <?php 
 																			if (($fee_deposits_value->date != "0000-00-00" && $fee_deposits_value->date != null)) {
 																				echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); 
 																			}
 																		?>
                                                                     </div>
-                                                                    <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_discount); ?></div>
-                                                                    <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_fine); ?></div>
-                                                                    <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($fee_deposits_value->amount); ?></div>
+                                                                    <div class="sp2-invoice-col text-right"><?php echo amountFormat($fee_deposits_value->amount_discount); ?></div>
+                                                                    <div class="sp2-invoice-col text-right"><?php echo amountFormat($fee_deposits_value->amount_fine); ?></div>
+                                                                    <div class="sp2-invoice-col text-right"><?php echo amountFormat($fee_deposits_value->amount); ?></div>
                                                                     <div class="sp2-invoice-col"></div>
                                                                 </div>
                                                         <?php
@@ -2372,7 +2374,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                                                                                     }
                                                                                                     ?>
                                                             </div>
-                                                            <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($transport_fee_value->fees);
+                                                            <div class="sp2-invoice-col text-right"><?php echo amountFormat($transport_fee_value->fees);
 
                                                                                         if (($transport_fee_value->due_date != "0000-00-00" && $transport_fee_value->due_date != null) && (strtotime($transport_fee_value->due_date) < strtotime(date('Y-m-d')))) {
                                                                                             $tr_fine_amount = $transport_fee_value->fine_amount;
@@ -2389,19 +2391,19 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                                                                         }
                                                                 ?>
                                                             </div>
-                                                            <div class="sp2-invoice-col" class="text text-left"></div>
-                                                            <div class="sp2-invoice-col" class="text text-left"></div>
-                                                            <div class="sp2-invoice-col" class="text text-left"></div>
-                                                            <div class="sp2-invoice-col" class="text text-right"><?php
+                                                            <div class="sp2-invoice-col text-left"></div>
+                                                            <div class="sp2-invoice-col text-left"></div>
+                                                            <div class="sp2-invoice-col text-left"></div>
+                                                            <div class="sp2-invoice-col text-right"><?php
                                                                                         echo amountFormat($fee_discount);
                                                                                         ?></div>
-                                                            <div class="sp2-invoice-col" class="text text-right"><?php
+                                                            <div class="sp2-invoice-col text-right"><?php
                                                                                         echo amountFormat($fee_fine);
                                                                                         ?></div>
-                                                            <div class="sp2-invoice-col" class="text text-right"><?php
+                                                            <div class="sp2-invoice-col text-right"><?php
                                                                                         echo amountFormat($fee_paid);
                                                                                         ?></div>
-                                                            <div class="sp2-invoice-col" class="text text-right"><?php
+                                                            <div class="sp2-invoice-col text-right"><?php
                                                                                         $display_none = "ss-none";
                                                                                         if ($feetype_balance > 0) {
                                                                                             $display_none = "";
@@ -2424,8 +2426,8 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                                                         <div class="sp2-invoice-col" align="left"></div>
                                                                         <div class="sp2-invoice-col" align="left"></div>
                                                                         <div class="sp2-invoice-col" align="left"></div>
-                                                                        <div class="sp2-invoice-col" class="text-right"><img src="<?php echo base_url(); ?>backend/images/table-arrow.png" alt="" /></div>
-                                                                        <div class="sp2-invoice-col" class="text text-left">
+                                                                        <div class="sp2-invoice-col text-right"><img src="<?php echo base_url(); ?>backend/images/table-arrow.png" alt="" /></div>
+                                                                        <div class="sp2-invoice-col text-left">
 
                                                                             <a href="#" data-toggle="popover" class="detail_popover"> <?php echo $transport_fee_value->student_fees_deposite_id . "/" . $fee_deposits_value->inv_no; ?></a>
                                                                             <div class="fee_detail_popover" style="display: none">
@@ -2442,17 +2444,17 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                                                                 ?>
                                                                             </div>
                                                                         </div>
-                                                                        <div class="sp2-invoice-col" class="text text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></div>
-                                                                        <div class="sp2-invoice-col" class="text text-left">
+                                                                        <div class="sp2-invoice-col text-left"><?php echo $this->lang->line(strtolower($fee_deposits_value->payment_mode)); ?></div>
+                                                                        <div class="sp2-invoice-col text-left">
                                                                             <?php 
 																				if (($fee_deposits_value->date != "0000-00-00" && $fee_deposits_value->date != null)) {
 																					echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee_deposits_value->date)); 
 																				}
 																			?>
                                                                         </div>
-                                                                        <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_discount); ?></div>
-                                                                        <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($fee_deposits_value->amount_fine); ?></div>
-                                                                        <div class="sp2-invoice-col" class="text text-right"><?php echo amountFormat($fee_deposits_value->amount); ?></div>
+                                                                        <div class="sp2-invoice-col text-right"><?php echo amountFormat($fee_deposits_value->amount_discount); ?></div>
+                                                                        <div class="sp2-invoice-col text-right"><?php echo amountFormat($fee_deposits_value->amount_fine); ?></div>
+                                                                        <div class="sp2-invoice-col text-right"><?php echo amountFormat($fee_deposits_value->amount); ?></div>
                                                                         <div class="sp2-invoice-col"></div>
                                                                     </div>
                                                             <?php
@@ -2466,41 +2468,26 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                                 }
                                                 ?>
                                                 
-                                            
-                                                    <div class="sp2-invoice-row sp2-invoice-total-row box box-solid total-bg">
-                                                        <div class="sp2-invoice-col"></div>
-                                                        <!-- <div class="sp2-invoice-col"></div> -->
-                                                        <div class="sp2-invoice-col" class="text text-right" colspan="2">Grand Total </div>
-                                                        <div class="sp2-invoice-col" class="text text-right">
-                                                            <?php echo $currency_symbol . amountFormat($total_amount) . "<span data-toggle='popover' class='text text-danger detail_popover'>+" . amountFormat($total_fees_fine_amount) . "</span>";
-                                                            ?>
-                                                            <div class="fee_detail_popover" style="display: none">
-                                                                <?php
-                                                                if ($total_fees_fine_amount != "") {
-                                                                ?>
-                                                                    <p class="text text-danger"><?php echo $this->lang->line('fine'); ?></p>
-                                                                <?php
-                                                                }
-                                                                ?>
-                                                            </div>
+                                                <div class="sp2-invoice-summary-row" style="display: flex; gap: 15px; justify-content: flex-end; align-items: stretch; margin-top: 10px; padding: 16px; background: #fffaeb; border-radius: 8px; border-left: 4px solid #fbd38d;">
+                                                        <div style="background: #fff; padding: 12px 18px; border-radius: 6px; border: 1px solid #eaeaea; display: flex; align-items: center; justify-content: space-between; width: 240px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                                                            <span style="font-weight: 600; color: #4b5563; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Total Fee</span>
+                                                            <span style="font-weight: 700; color: #111827; font-size: 16px;">
+                                                                <?php echo $currency_symbol . amountFormat($total_amount); ?>
+                                                                <?php if ($total_fees_fine_amount != "") { echo "<span class='text text-danger'>+" . amountFormat($total_fees_fine_amount) . "</span>"; } ?>
+                                                            </span>
                                                         </div>
-                                                        <div class="sp2-invoice-col"></div>
-                                                        <div class="sp2-invoice-col"></div>
-                                                        <div class="sp2-invoice-col"></div>
-                                                        <div class="sp2-invoice-col" class="text text-right"><?php
-                                                                                    echo ($currency_symbol . amountFormat($total_discount_amount + $alot_fee_discount));
-                                                                                    ?></div>
-                                                        <div class="sp2-invoice-col" class="text text-right"><?php
-                                                                                    echo ($currency_symbol . amountFormat($total_fine_amount));
-                                                                                    ?></div>
-                                                        <div class="sp2-invoice-col" class="text text-right"><?php
-                                                                                    echo ($currency_symbol . amountFormat($total_deposite_amount));
-                                                                                    ?></div>
-
-                                                        <div class="sp2-invoice-col" class="text text-right"><?php
-                                                                                    echo ($currency_symbol . amountFormat($total_balance_amount - $alot_fee_discount));
-                                                                                    ?></div>
-
+                                                        <div style="background: #fff; padding: 12px 18px; border-radius: 6px; border: 1px solid #eaeaea; display: flex; align-items: center; justify-content: space-between; width: 240px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                                                            <span style="font-weight: 600; color: #4b5563; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Paid</span>
+                                                            <span style="font-weight: 700; color: #10b981; font-size: 16px;">
+                                                                <?php echo $currency_symbol . amountFormat($total_deposite_amount); ?>
+                                                            </span>
+                                                        </div>
+                                                        <div style="background: #fff; padding: 12px 18px; border-radius: 6px; border: 1px solid #eaeaea; display: flex; align-items: center; justify-content: space-between; width: 240px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                                                            <span style="font-weight: 600; color: #4b5563; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Balance</span>
+                                                            <span style="font-weight: 700; color: #ef4444; font-size: 16px;">
+                                                                <?php echo $currency_symbol . amountFormat($total_balance_amount - $alot_fee_discount); ?>
+                                                            </span>
+                                                        </div>
                                                     </div>
                                         </div>
                                     </div>

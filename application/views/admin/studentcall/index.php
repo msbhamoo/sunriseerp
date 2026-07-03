@@ -3,9 +3,83 @@
         <h1><i class="fa fa-phone"></i> <?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Student Call Log'); ?></h1>
     </section>
 
+    <style type="text/css">
+        .d2-metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .d2-metric-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #eaeaea;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            display: flex;
+            align-items: center;
+        }
+        .d2-metric-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+        }
+        .d2-metric-icon.calls { background: #f0f9ff; color: #0ea5e9; }
+        .d2-metric-icon.connected { background: #ecfdf5; color: #10b981; }
+        .d2-metric-icon.not-connected { background: #fff1f2; color: #ef4444; }
+        .d2-metric-icon.pending { background: #fffbeb; color: #f59e0b; }
+        
+        .d2-metric-content { flex: 1; }
+        .d2-metric-label { font-size: 12px; color: #888; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+        .d2-metric-value { font-size: 26px; font-weight: 800; color: #1f2937; line-height: 1.2; }
+    </style>
+
     <section class="content">
+        <div class="d2-metric-grid">
+            <div class="d2-metric-box">
+                <div class="d2-metric-icon calls"><i class="fa fa-phone"></i></div>
+                <div class="d2-metric-content">
+                    <div class="d2-metric-label">Today's Calls</div>
+                    <div class="d2-metric-value"><?php echo $total_calls_today; ?></div>
+                </div>
+            </div>
+            <div class="d2-metric-box">
+                <div class="d2-metric-icon connected"><i class="fa fa-check"></i></div>
+                <div class="d2-metric-content">
+                    <div class="d2-metric-label">Connected</div>
+                    <div class="d2-metric-value"><?php echo $connected_today; ?></div>
+                </div>
+            </div>
+            <div class="d2-metric-box">
+                <div class="d2-metric-icon not-connected"><i class="fa fa-times"></i></div>
+                <div class="d2-metric-content">
+                    <div class="d2-metric-label">Not Connected</div>
+                    <div class="d2-metric-value"><?php echo $not_connected_today; ?></div>
+                </div>
+            </div>
+            <div class="d2-metric-box">
+                <div class="d2-metric-icon pending"><i class="fa fa-clock-o"></i></div>
+                <div class="d2-metric-content">
+                    <div class="d2-metric-label">Pending Follow-ups</div>
+                    <div class="d2-metric-value"><?php echo $pending_followups; ?></div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-md-12">
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tab_call_logs" data-toggle="tab"><i class="fa fa-list"></i> <?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Call Logs'); ?></a></li>
+                        <li><a href="#tab_student_status" data-toggle="tab"><i class="fa fa-users"></i> Student Status</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="tab_call_logs">
                 <div class="box box-primary">
                     <div class="box-header with-border">
                         <h3 class="box-title"><i class="fa fa-search"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
@@ -166,6 +240,67 @@
                         </div>
                     </div>
                 </div>
+                        </div>
+                        
+                        <div class="tab-pane" id="tab_student_status">
+                            <div class="box box-primary">
+                                <div class="box-header with-border">
+                                    <h3 class="box-title"><i class="fa fa-search"></i> Filter Students</h3>
+                                </div>
+                                <div class="box-body row">
+                                    <div class="col-sm-3 col-md-3">
+                                        <div class="form-group">
+                                            <label><?php echo $this->lang->line('class'); ?></label>
+                                            <select id="status_class_id" name="status_class_id" class="form-control" >
+                                                <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                                <?php foreach ($class_list as $class) { ?>
+                                                    <option value="<?php echo $class['id'] ?>"><?php echo $class['class'] ?></option>
+                                                <?php } ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3 col-md-3">
+                                        <div class="form-group">
+                                            <label><?php echo $this->lang->line('section'); ?></label>
+                                            <select id="status_section_id" name="status_section_id" class="form-control" >
+                                                <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6 col-md-6">
+                                        <div class="form-group" style="margin-top: 25px;">
+                                            <button type="button" id="btn_status_search" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="box box-primary">
+                                <div class="box-header ptbnull">
+                                    <h3 class="box-title titlefix"><i class="fa fa-users"></i> Students Call Status</h3>
+                                </div>
+                                <div class="box-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-bordered table-hover" id="student_status_table" cellspacing="0" width="100%">
+                                            <thead>
+                                                <tr>
+                                                    <th><?php echo $this->lang->line('student'); ?></th>
+                                                    <th>Class (Section)</th>
+                                                    <th><?php echo $this->lang->line('phone'); ?></th>
+                                                    <th>Last Call Date</th>
+                                                    <th>Last Call Status</th>
+                                                    <th class="text-right noExport"><?php echo $this->lang->line('action'); ?></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -201,7 +336,9 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label><?php echo $this->lang->line('student'); ?></label>
+                                            <label><?php echo $this->lang->line('student'); ?> 
+                                                <a href="javascript:void(0);" id="toggle_fee_attendance" style="display:none; margin-left: 5px; color: #333;" title="View Fee & Attendance"><i class="fa fa-eye"></i></a>
+                                            </label>
                                             <input type="text" id="selected_student_name" class="form-control" readonly>
                                         </div>
                                     </div>
@@ -213,6 +350,36 @@
                                                 <option value="Outgoing" selected>Outgoing</option>
                                             </select>
                                             <span class="text-danger" id="error_call_type"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Fee & Attendance Summary Section (Hidden by default) -->
+                                <div id="fee_attendance_section" style="display:none; background: #f9f9f9; padding: 15px; border: 1px solid #ddd; margin-bottom: 15px; border-radius: 4px;">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <h5 style="font-weight:bold; margin-top:0;">Fees Summary</h5>
+                                            <table class="table table-bordered table-striped" style="font-size:12px; margin-bottom: 10px;">
+                                                <thead>
+                                                    <tr>
+                                                        <th>FEE HEAD</th>
+                                                        <th>TOTAL FEES</th>
+                                                        <th>COLLECTED</th>
+                                                        <th>DUE</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="fee_summary_body">
+                                                    <tr><td colspan="4" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <h5 style="font-weight:bold; margin-top:0;">Attendance Summary</h5>
+                                            <div id="attendance_summary_body" style="font-size:12px;">
+                                                <i class="fa fa-spinner fa-spin"></i> Loading...
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -286,6 +453,12 @@
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('note'); ?></label>
                                     <textarea name="notes" class="form-control" rows="2"></textarea>
+                                </div>
+                                
+                                <div class="form-group" id="sync_siblings_container" style="display:none; background: #fdfdfd; padding: 10px; border: 1px solid #eee; border-radius: 4px;">
+                                    <label style="color:#337ab7;"><i class="fa fa-copy"></i> Sync Call to Siblings</label>
+                                    <p class="text-muted" style="font-size:12px; margin-bottom:5px;">Check the boxes below to automatically create identical call log entries for siblings discussed during this call.</p>
+                                    <div id="sync_siblings_list"></div>
                                 </div>
                                 
                                 <hr>
@@ -401,6 +574,9 @@
             $('#search_student_keyword').val('');
             $('#student_search_results').html('');
             
+            $('#toggle_fee_attendance').show();
+            $('#fee_attendance_section').hide();
+            
             $('#call_details_section').show();
             $('#submitBtn, #saveAndNextBtn').show();
             
@@ -420,6 +596,25 @@
                     }
                 }
             });
+            
+            // Fetch Siblings
+            $('#sync_siblings_container').hide();
+            $('#sync_siblings_list').html('');
+            $.ajax({
+                url: "<?php echo site_url("admin/studentcall/get_siblings/") ?>" + selected_student_id,
+                type: "GET",
+                dataType: "json",
+                success: function(res) {
+                    if(res.status == 'success' && res.siblings.length > 0) {
+                        var sibHtml = '';
+                        $.each(res.siblings, function(i, sib) {
+                            sibHtml += '<div class="checkbox"><label><input type="checkbox" name="copy_to_siblings[]" value="' + sib.student_session_id + '|' + sib.student_id + '"> ' + sib.name + ' (' + sib.class_section + ')</label></div>';
+                        });
+                        $('#sync_siblings_list').html(sibHtml);
+                        $('#sync_siblings_container').show();
+                    }
+                }
+            });
         });
 
         $('#contact_person').on('change', function () {
@@ -430,6 +625,56 @@
                 if(phone) {
                     var x = phone.replace(/\D/g, '');
                     $('#phone_number').val(x);
+                }
+            }
+        });
+
+        $('#toggle_fee_attendance').on('click', function() {
+            var $section = $('#fee_attendance_section');
+            if ($section.is(':visible')) {
+                $section.slideUp();
+            } else {
+                $section.slideDown();
+                var student_session_id = $('#student_session_id').val();
+                if (student_session_id) {
+                    $('#fee_summary_body').html('<tr><td colspan="4" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
+                    $('#attendance_summary_body').html('<i class="fa fa-spinner fa-spin"></i> Loading...');
+                    
+                    $.ajax({
+                        url: "<?php echo site_url('admin/certificateregister/get_student_fee_summary_ajax') ?>",
+                        type: "POST",
+                        data: { student_session_id: student_session_id },
+                        dataType: "json",
+                        success: function (res) {
+                            var feeHtml = '';
+                            if (res.academic) {
+                                feeHtml += '<tr><td>Academic Fees</td><td>' + parseFloat(res.academic.total).toFixed(2) + '</td><td>' + parseFloat(res.academic.collected).toFixed(2) + '</td><td><b>' + parseFloat(res.academic.due).toFixed(2) + '</b></td></tr>';
+                            }
+                            if (res.transport && res.transport.total > 0) {
+                                feeHtml += '<tr><td>Transport Fees</td><td>' + parseFloat(res.transport.total).toFixed(2) + '</td><td>' + parseFloat(res.transport.collected).toFixed(2) + '</td><td><b>' + parseFloat(res.transport.due).toFixed(2) + '</b></td></tr>';
+                            }
+                            if (res.hostel && res.hostel.total > 0) {
+                                feeHtml += '<tr><td>Hostel Fees</td><td>' + parseFloat(res.hostel.total).toFixed(2) + '</td><td>' + parseFloat(res.hostel.collected).toFixed(2) + '</td><td><b>' + parseFloat(res.hostel.due).toFixed(2) + '</b></td></tr>';
+                            }
+                            $('#fee_summary_body').html(feeHtml);
+
+                            var attHtml = '';
+                            if (res.history && (res.history.working_days !== undefined && res.history.working_days !== null)) {
+                                var working = res.history.working_days ? res.history.working_days : 0;
+                                var present = res.history.present_days ? res.history.present_days : 0;
+                                var absent = working - present;
+                                var perc = res.history.attendance_percentage ? res.history.attendance_percentage + '%' : ((working > 0) ? ((present/working)*100).toFixed(2) + '%' : 'N/A');
+                                attHtml += 'Working Days: <b>' + working + '</b> | Present Days: <b>' + present + '</b> | Absent Days: <b>' + absent + '</b> | Percentage: <b>' + perc + '</b>';
+                            } else {
+                                attHtml = 'No attendance history found.';
+                            }
+                            $('#attendance_summary_body').html(attHtml);
+                        },
+                        error: function() {
+                            $('#fee_summary_body').html('<tr><td colspan="4" class="text-center text-danger">Error loading fee details.</td></tr>');
+                            $('#attendance_summary_body').html('<span class="text-danger">Error loading attendance details.</span>');
+                        }
+                    });
                 }
             }
         });
@@ -538,6 +783,50 @@
                 }
             });
         });
+        $('#status_class_id').change(function(){
+            var class_id = $(this).val();
+            var base_url = '<?php echo base_url() ?>';
+            $.ajax({
+                type: "GET",
+                url: base_url + "sections/getByClass",
+                data: {'class_id': class_id},
+                dataType: "json",
+                success: function (data) {
+                    $('#status_section_id').empty();
+                    $('#status_section_id').append('<option value=""><?php echo $this->lang->line('select'); ?></option>');
+                    $.each(data, function (i, obj)
+                    {
+                        $('#status_section_id').append("<option value=" + obj.section_id + ">" + obj.section + "</option>");
+                    });
+                }
+            });
+        });
+
+        var student_status_table = $('#student_status_table').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": {
+                "url": "<?php echo site_url('admin/studentcall/students_status_ajax') ?>",
+                "type": "POST",
+                "data": function (d) {
+                    d.class_id = $('#status_class_id').val();
+                    d.section_id = $('#status_section_id').val();
+                    d.<?php echo $this->security->get_csrf_token_name(); ?> = "<?php echo $this->security->get_csrf_hash(); ?>";
+                }
+            },
+            "columns": [
+                { "orderable": true },
+                { "orderable": false },
+                { "orderable": false },
+                { "orderable": false },
+                { "orderable": false },
+                { "orderable": false }
+            ]
+        });
+
+        $('#btn_status_search').on('click', function() {
+            student_status_table.ajax.reload();
+        });
     });
 
     function follow_up(id) {
@@ -548,5 +837,37 @@
                 $('#followUpModal').modal('show');
             }
         });
+    }
+
+    function openCallModalFromStatus(student_id, session_id, name) {
+        $('#addCallModal').modal('show');
+        setTimeout(function(){
+            $('.student-item').remove(); // clear existing dropdown
+            $('#student_id').val(student_id);
+            $('#student_session_id').val(session_id);
+            $('#selected_student_name').val(name);
+            $('#search_student_keyword').val('');
+            
+            $('#toggle_fee_attendance').show();
+            $('#fee_attendance_section').hide();
+            
+            $('#call_details_section').show();
+            $('#submitBtn, #saveAndNextBtn').show();
+            
+            $('#contact_person').val('');
+            $('#phone_number').val('');
+
+            $('#recent_history_container').html('<div class="text-center" style="padding: 20px;"><i class="fa fa-spinner fa-spin fa-2x text-muted"></i></div>');
+            $.ajax({
+                url: "<?php echo site_url('admin/studentcall/get_recent_history/') ?>" + student_id,
+                type: "GET",
+                dataType: "json",
+                success: function(res) {
+                    if(res.status == 'success') {
+                        $('#recent_history_container').html(res.html);
+                    }
+                }
+            });
+        }, 500);
     }
 </script>

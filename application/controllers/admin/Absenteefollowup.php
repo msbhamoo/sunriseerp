@@ -171,9 +171,8 @@ class Absenteefollowup extends Admin_Controller
         }
 
         $student_session_id = $this->input->post('student_session_id');
-        $date = date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('date')));
 
-        $logs = $this->absenteefollowup_model->getLogs($student_session_id, $date);
+        $logs = $this->absenteefollowup_model->getAllLogsByStudent($student_session_id);
 
         $data['logs'] = $logs;
         $html = $this->load->view('admin/absenteefollowup/_history', $data, true);

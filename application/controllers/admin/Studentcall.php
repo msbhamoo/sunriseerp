@@ -32,6 +32,29 @@ class Studentcall extends Admin_Controller
 
         $data['calls'] = $this->studentcall_model->get_calls($class_id, $section_id, $date_from, $date_to, $purpose_id, $status);
 
+        // Fetch widget stats
+        $staff_id = $this->customlib->getUserData()["id"];
+        $today_stats = $this->studentcall_model->get_today_call_statistics();
+        $pending_followups = count($this->studentcall_model->get_pending_followups_by_staff($staff_id));
+        
+        $total_calls_today = 0;
+        $connected_today = 0;
+        $not_connected_today = 0;
+        
+        foreach($today_stats as $stat) {
+            $total_calls_today += $stat['count'];
+            if ($stat['call_status'] == 'Connected') {
+                $connected_today += $stat['count'];
+            } elseif ($stat['call_status'] != 'Callback Requested') {
+                $not_connected_today += $stat['count'];
+            }
+        }
+        
+        $data['total_calls_today'] = $total_calls_today;
+        $data['connected_today'] = $connected_today;
+        $data['not_connected_today'] = $not_connected_today;
+        $data['pending_followups'] = $pending_followups;
+
         $this->load->view('layout/header');
         $this->load->view('admin/studentcall/index', $data);
         $this->load->view('layout/footer');
@@ -62,8 +85,6 @@ class Studentcall extends Admin_Controller
         $assigned_to = $this->input->post('assigned_to');
 
         $calls = $this->studentcall_model->get_calls($class_id, $section_id, $date_from, $date_to, $purpose_id, $status, $follow_up_date_from, $follow_up_date_to, $assigned_to);
-
-        file_put_contents('query_debug.txt', $this->db->last_query() . "\nAssigned to var: " . $assigned_to);
 
         $data = [];
         if (!empty($calls)) {
@@ -158,9 +179,58 @@ class Studentcall extends Admin_Controller
                 }
             }
 
+            $copy_to_siblings = $this->input->post('copy_to_siblings');
+            if (!empty($copy_to_siblings)) {
+                foreach ($copy_to_siblings as $sib_str) {
+                    $sib_parts = explode('|', $sib_str);
+                    if (count($sib_parts) == 2) {
+                        $sib_data = $data;
+                        $sib_data['student_session_id'] = $sib_parts[0];
+                        $sib_data['student_id'] = $sib_parts[1];
+                        
+                        $sib_call_id = $this->studentcall_model->add_call($sib_data);
+                        
+                        if ($this->input->post('follow_up_date')) {
+                            $sib_followup = $followup;
+                            $sib_followup['student_call_id'] = $sib_call_id;
+                            $sib_followup['student_id'] = $sib_parts[1];
+                            $this->studentcall_model->add_followup($sib_followup);
+                            
+                            if (!empty($sib_followup['assigned_to'])) {
+                                $this->add_notification($sib_followup['assigned_to'], "New Follow-up assigned to you for student ID: " . $sib_followup['student_id']);
+                            }
+                        }
+                    }
+                }
+            }
+
             $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('success_message'));
         }
         echo json_encode($array);
+    }
+
+    public function get_siblings($student_id)
+    {
+        if (!$this->rbac->hasPrivilege('student_call_log', 'can_add')) {
+            access_denied();
+        }
+        $this->load->model('student_model');
+        $student = $this->student_model->get($student_id);
+        $siblings_data = [];
+        if ($student && !empty($student['parent_id'])) {
+            $siblings = $this->student_model->getParentChilds($student['parent_id']);
+            foreach ($siblings as $sib) {
+                if ($sib->id != $student_id) {
+                    $siblings_data[] = [
+                        'student_id' => $sib->id,
+                        'student_session_id' => $sib->student_session_id,
+                        'name' => $sib->firstname . " " . $sib->lastname,
+                        'class_section' => $sib->class . " (" . $sib->section . ")"
+                    ];
+                }
+            }
+        }
+        echo json_encode(['status' => 'success', 'siblings' => $siblings_data]);
     }
 
     public function get_recent_history($student_id)
@@ -192,6 +262,19 @@ class Studentcall extends Admin_Controller
         $data['call'] = $this->studentcall_model->get_call($call_id);
         $data['followups'] = $this->studentcall_model->get_followups_by_call($call_id);
         $data['staff_list'] = $this->staff_model->get();
+        
+        $this->load->model('student_model');
+        $student = $this->student_model->get($data['call']['student_id']);
+        $data['siblings'] = [];
+        if ($student && !empty($student['parent_id'])) {
+            $siblings = $this->student_model->getParentChilds($student['parent_id']);
+            foreach ($siblings as $sib) {
+                if ($sib->id != $student['id']) {
+                    $data['siblings'][] = $sib;
+                }
+            }
+        }
+        
         $this->load->view('admin/studentcall/follow_up_modal', $data);
     }
 
@@ -243,9 +326,10 @@ class Studentcall extends Admin_Controller
         );
         $this->studentcall_model->update_followup($id, $data);
 
+        $followup_db = $this->studentcall_model->get_followup($id);
+        
         // Check if next follow up date is set
         if ($this->input->post('next_follow_up_date')) {
-            $followup_db = $this->studentcall_model->get_followup($id);
             $next = array(
                 'student_call_id' => $followup_db['student_call_id'],
                 'student_id'      => $followup_db['student_id'],
@@ -259,6 +343,45 @@ class Studentcall extends Admin_Controller
             
             if (!empty($next['assigned_to']) && $next['assigned_to'] != $userdata['id']) {
                 $this->add_notification($next['assigned_to'], "New Follow-up reassigned to you for student ID: " . $next['student_id']);
+            }
+        }
+
+        $copy_to_siblings = $this->input->post('copy_to_siblings');
+        if (!empty($copy_to_siblings)) {
+            $original_call = $this->studentcall_model->get_call($followup_db['student_call_id']);
+            foreach ($copy_to_siblings as $sib_str) {
+                $sib_parts = explode('|', $sib_str);
+                if (count($sib_parts) == 2) {
+                    $sib_call = array(
+                        'student_session_id' => $sib_parts[0],
+                        'student_id'         => $sib_parts[1],
+                        'call_type'          => $original_call['call_type'],
+                        'contact_person'     => $original_call['contact_person'],
+                        'phone_number'       => $original_call['phone_number'],
+                        'call_purpose_id'    => $original_call['call_purpose_id'],
+                        'call_status'        => $this->input->post('call_status') ? $this->input->post('call_status') : 'Completed',
+                        'date'               => date('Y-m-d'),
+                        'notes'              => $this->input->post('remarks'),
+                        'created_by'         => $userdata["id"]
+                    );
+                    $sib_call_id = $this->studentcall_model->add_call($sib_call);
+                    
+                    if ($this->input->post('next_follow_up_date')) {
+                        $sib_next = array(
+                            'student_call_id' => $sib_call_id,
+                            'student_id'      => $sib_parts[1],
+                            'due_date'        => $this->customlib->dateFormatToYYYYMMDD($this->input->post('next_follow_up_date')),
+                            'priority'        => $this->input->post('next_priority') ? $this->input->post('next_priority') : $followup_db['priority'],
+                            'assigned_to'     => $this->input->post('next_assigned_to') ? $this->input->post('next_assigned_to') : $followup_db['assigned_to'],
+                            'status'          => 'Pending',
+                            'created_by'      => $userdata["id"]
+                        );
+                        $this->studentcall_model->add_followup($sib_next);
+                        if (!empty($sib_next['assigned_to']) && $sib_next['assigned_to'] != $userdata['id']) {
+                            $this->add_notification($sib_next['assigned_to'], "New Follow-up assigned to you for student ID: " . $sib_next['student_id']);
+                        }
+                    }
+                }
             }
         }
 
@@ -283,5 +406,57 @@ class Studentcall extends Admin_Controller
             $staff_roles = array(array('role_id' => $staff['role_id']));
             $this->notification_model->insertBatch($notification, $staff_roles);
         }
+    }
+
+    public function students_status_ajax()
+    {
+        $class_id = $this->input->post('class_id');
+        $section_id = $this->input->post('section_id');
+        $start = $this->input->post('start') ? $this->input->post('start') : 0;
+        $length = $this->input->post('length') ? $this->input->post('length') : 10;
+        
+        $search = $this->input->post('search');
+        $search_value = isset($search['value']) ? $search['value'] : '';
+
+        $students = $this->studentcall_model->get_students_call_status($class_id, $section_id, $start, $length, $search_value);
+        $total_count = $this->studentcall_model->get_students_call_status_count($class_id, $section_id, $search_value);
+
+        $data = [];
+        if (!empty($students)) {
+            foreach ($students as $student) {
+                $status = $student['last_call_status'] ? $student['last_call_status'] : 'Not connected';
+                $last_call = $student['last_call_date'] ? date($this->customlib->getSchoolDateFormat(true, true), strtotime($student['last_call_date'])) : '-';
+                
+                $phone = '';
+                if ($student['mobileno']) $phone = $student['mobileno'];
+                elseif ($student['father_phone']) $phone = $student['father_phone'];
+                elseif ($student['mother_phone']) $phone = $student['mother_phone'];
+                elseif ($student['guardian_phone']) $phone = $student['guardian_phone'];
+
+                $action = '';
+                if ($this->rbac->hasPrivilege('student_call_log', 'can_add')) {
+                    $action = '<button class="btn btn-default btn-xs" onclick="openCallModalFromStatus(' . $student['student_id'] . ', ' . $student['student_session_id'] . ', \'' . addslashes($student['firstname'] . ' ' . $student['lastname'] . ' (' . $student['admission_no'] . ') - ' . $student['class'] . ' (' . $student['section'] . ')') . '\')" data-toggle="tooltip" title="' . ($this->lang->line('add_call') ? $this->lang->line('add_call') : 'Add Call') . '"><i class="fa fa-phone"></i></button>';
+                }
+
+                $row = [
+                    $student['firstname'] . ' ' . $student['lastname'] . ' (' . $student['admission_no'] . ')',
+                    $student['class'] . ' (' . $student['section'] . ')',
+                    $phone,
+                    $last_call,
+                    $status,
+                    '<div class="pull-right">' . $action . '</div>'
+                ];
+                $data[] = $row;
+            }
+        }
+
+        $json_data = json_encode([
+            "draw" => intval($this->input->post('draw')),
+            "recordsTotal" => $total_count,
+            "recordsFiltered" => $total_count,
+            "data" => $data
+        ]);
+        file_put_contents('ajax_debug.txt', $json_data . "\nJSON ERROR: " . json_last_error_msg());
+        echo $json_data;
     }
 }

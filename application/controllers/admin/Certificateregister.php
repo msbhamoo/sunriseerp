@@ -333,6 +333,27 @@ class Certificateregister extends Admin_Controller {
         $this->db->where('student_session_id', $student_session_id);
         $history = $this->db->get('student_scholar_register_history')->row_array();
         
+        // Calculate real-time attendance
+        $this->db->select('count(*) as total_days, sum(case when attendence_type_id in (1, 3, 6) then 1 else 0 end) as present_days');
+        $this->db->where('student_session_id', $student_session_id);
+        $this->db->where_in('attendence_type_id', [1, 2, 3, 4, 6]); // Present, Late with excuse, Late, Absent, Half Day
+        $att = $this->db->get('student_attendences')->row_array();
+        
+        $live_attendance = [
+            'working_days' => $att['total_days'] ?? 0,
+            'present_days' => $att['present_days'] ?? 0,
+            'attendance_percentage' => ($att['total_days'] > 0) ? round(($att['present_days'] / $att['total_days']) * 100, 2) : 0
+        ];
+        
+        if (empty($history)) {
+            $history = $live_attendance;
+        } else {
+            // Prefer history if set manually, otherwise fallback to live calculated
+            $history['working_days'] = !empty($history['working_days']) ? $history['working_days'] : $live_attendance['working_days'];
+            $history['present_days'] = !empty($history['present_days']) ? $history['present_days'] : $live_attendance['present_days'];
+            $history['attendance_percentage'] = !empty($history['attendance_percentage']) ? $history['attendance_percentage'] : $live_attendance['attendance_percentage'];
+        }
+        
         $data = [
             'academic' => ['total' => $academic_total, 'collected' => $academic_collected, 'due' => $academic_due],
             'transport' => ['total' => $transport_total, 'collected' => $transport_collected, 'due' => $transport_due],

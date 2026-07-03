@@ -55,7 +55,7 @@ class Holiday_model extends MY_model {
     {	
 		$session	= $this->setting_model->getCurrentSession();
 		
-        $this->db->select("holiday_type.is_default,holiday_type.type, staff.name,staff.surname,staff.employee_id,annual_calendar.id,annual_calendar.holiday_type,annual_calendar.from_date,annual_calendar.to_date,annual_calendar.description,annual_calendar.is_active,annual_calendar.created_by,annual_calendar.created_at,annual_calendar.updated_at,annual_calendar.front_site,staff_roles.role_id");
+        $this->db->select("holiday_type.is_default,holiday_type.type, staff.name,staff.surname,staff.employee_id,annual_calendar.id,annual_calendar.holiday_type,annual_calendar.from_date,annual_calendar.to_date,annual_calendar.description,annual_calendar.is_active,annual_calendar.created_by,annual_calendar.created_at,annual_calendar.updated_at,annual_calendar.front_site,annual_calendar.is_working_day,annual_calendar.module_impact,annual_calendar.holiday_category,staff_roles.role_id");
         $this->db->from('annual_calendar');
         $this->db->join('staff', "staff.id = annual_calendar.created_by", "left");
         $this->db->join('staff_roles', "staff_roles.staff_id = staff.id", "left");

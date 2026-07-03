@@ -1,3 +1,8 @@
+<style>
+    .bootstrap-timepicker-widget {
+        z-index: 999999 !important;
+    }
+</style>
 <div class="content-wrapper">
     <section class="content-header">
         <h1><i class="fa fa-building-o"></i> <?php echo $this->lang->line('front_office'); ?></h1>
@@ -25,7 +30,8 @@
                                         <th><?php echo $this->lang->line('user'); ?></th>
                                         <th><?php echo $this->lang->line('date'); ?></th>
                                         <th><?php echo $this->lang->line('out_time'); ?></th>
-                                        <th><?php echo $this->lang->line('in_time'); ?></th>
+                                        <th>In Time (Exp.)</th>
+                                        <th>Actual In-Time</th>
                                         <th><?php echo $this->lang->line('status'); ?></th>
                                         <th class="text-right"><?php echo $this->lang->line('action'); ?></th>
                                     </tr>
@@ -44,6 +50,7 @@
                                                 </td>
                                                 <td class="mailbox-name"><?php echo $gatepass['out_time']; ?></td>
                                                 <td class="mailbox-name"><?php echo $gatepass['in_time']; ?></td>
+                                                <td class="mailbox-name"><?php echo $gatepass['actual_in_time'] ? $gatepass['actual_in_time'] : '-'; ?></td>
                                                 <td class="mailbox-name">
                                                     <?php
                                                     if ($gatepass['status'] == 'Pending') {
@@ -59,7 +66,7 @@
                                                 </td>
                                                 <td class="mailbox-date pull-right">
                                                     <?php if ($this->rbac->hasPrivilege('front_office_gate_pass', 'can_edit')) { ?>
-                                                        <a onclick="updateStatus('<?php echo $gatepass['id']; ?>', '<?php echo $gatepass['status']; ?>')" class="btn btn-default btn-xs"  data-toggle="tooltip" title="<?php echo $this->lang->line('update_status'); ?>">
+                                                        <a onclick="updateStatus('<?php echo $gatepass['id']; ?>', '<?php echo $gatepass['status']; ?>', '<?php echo $gatepass['actual_in_time']; ?>')" class="btn btn-default btn-xs"  data-toggle="tooltip" title="<?php echo $this->lang->line('update_status'); ?>">
                                                             <i class="fa fa-pencil"></i>
                                                         </a>
                                                     <?php } ?>
@@ -138,7 +145,7 @@
                                 <label><?php echo $this->lang->line('out_time'); ?></label><small class="req"> *</small>
                                 <div class="input-group">
                                     <input type="text" name="out_time" class="form-control timepicker" id="out_time">
-                                    <div class="input-group-addon">
+                                    <div class="input-group-addon" style="cursor: pointer;" onclick="$('#out_time').focus();">
                                         <i class="fa fa-clock-o"></i>
                                     </div>
                                 </div>
@@ -149,7 +156,7 @@
                                 <label><?php echo $this->lang->line('in_time'); ?> (Expected)</label><small class="req"> *</small>
                                 <div class="input-group">
                                     <input type="text" name="in_time" class="form-control timepicker" id="in_time_add">
-                                    <div class="input-group-addon">
+                                    <div class="input-group-addon" style="cursor: pointer;" onclick="$('#in_time_add').focus();">
                                         <i class="fa fa-clock-o"></i>
                                     </div>
                                 </div>
@@ -192,10 +199,10 @@
                         </select>
                     </div>
                     <div class="form-group" id="in_time_div" style="display:none;">
-                        <label><?php echo $this->lang->line('in_time'); ?></label>
+                        <label>Actual In-Time</label>
                         <div class="input-group">
                             <input type="text" name="in_time" class="form-control timepicker" id="in_time">
-                            <div class="input-group-addon">
+                            <div class="input-group-addon" style="cursor: pointer;" onclick="$('#in_time').focus();">
                                 <i class="fa fa-clock-o"></i>
                             </div>
                         </div>
@@ -303,9 +310,14 @@
         }
     }
 
-    function updateStatus(id, current_status) {
+    function updateStatus(id, current_status, actual_in_time) {
         $('#update_id').val(id);
         $('#update_status').val(current_status);
+        if (actual_in_time) {
+            $('#in_time').val(actual_in_time);
+        } else {
+            $('#in_time').val('');
+        }
         checkCompletedStatus();
         $('#statusModal').modal('show');
     }

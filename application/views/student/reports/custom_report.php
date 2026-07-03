@@ -40,9 +40,10 @@
                                         <label>Select Admission Type</label>
                                         <select id="admission_type" name="admission_type[]" class="form-control select2" multiple="multiple" data-placeholder="Select Admission (Leave empty for All)">
                                             <option value="all">All Admission</option>
-                                            <option value="Regular">Regular</option>
-                                            <option value="RTE">RTE</option>
-                                            <option value="Transfer">Transfer</option>
+                                            <option value="New">New</option>
+                                            <option value="Old">Old</option>
+                                            <option value="Added">Added</option>
+                                            <option value="Promotion">Promotion</option>
                                         </select>
                                     </div>
                                 </div>
@@ -102,6 +103,11 @@
                                     'guardian_relation' => 'Guardian Relation',
                                     'guardian_phone' => 'Guardian Phone',
                                     'guardian_address' => 'Guardian Address',
+                                    'apaar_id' => 'APAAR ID',
+                                    'pen' => 'PEN',
+                                    'aadhaar_id' => 'Aadhaar ID',
+                                    'admission_type' => 'Admission Type',
+                                    'shrestha' => 'Shrestha',
                                     'is_active' => 'Is Active',
                                     'admission_date' => 'Admission Date',
                                     'hostel_name' => 'Hostel',

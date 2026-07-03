@@ -2744,3 +2744,7 @@ $lang['out_time'] = 'Out Time';
 $lang['in_time'] = 'In Time';
 $lang['my_gate_pass'] = 'My Gate Pass';
 $lang['add_gate_pass'] = 'Add Gate Pass';
+
+$lang['seatingroom'] = 'Seating Rooms';
+$lang['seatingarrangement'] = 'Seating Arrangement';
+$lang['seatingreport'] = 'Seating Reports';

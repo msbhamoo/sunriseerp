@@ -191,7 +191,6 @@ class Cbseexam_admitcard_model extends MY_model
         if (!empty($results)) {
             $maxid = $this->db->query('SELECT MAX(roll_no) AS `maxid` FROM `cbse_exam_students` where cbse_exam_id='.$cbse_exam_id)->row()->maxid;
 
-            // $student_update = array();
             if ($maxid == 0) {
                 $update_roll_no = 100001;
             } else {
@@ -199,30 +198,39 @@ class Cbseexam_admitcard_model extends MY_model
             }
             $update_student = array();
             foreach ($results as $res_key => $res_value) {
-                $update_student[] = array('id' => $res_value->id, 'roll_no' => $update_roll_no);
-                $update_roll_no++;
+                if (empty($res_value->roll_no)) {
+                    $update_student[] = array('id' => $res_value->id, 'roll_no' => $update_roll_no);
+                    $update_roll_no++;
+                }
             }
-            $this->db->update_batch('cbse_exam_students', $update_student, 'id');
+            if (!empty($update_student)) {
+                $this->db->update_batch('cbse_exam_students', $update_student, 'id');
+            }
         }
         //admission roll no
 
 
         $students= implode(",",$students_array);
-        $this->db->select('*,cbse_exam_students.roll_no as roll_no,students.roll_no as profile_roll_no')
+        $this->db->select('*,cbse_exam_students.roll_no as roll_no,students.roll_no as profile_roll_no, cbse_seating_rooms.room_number as allocated_room, cbse_seating_student_seats.formatted_seat_number as allocated_seat')
         ->from('cbse_exam_students')
         ->join('student_session', 'student_session.id = cbse_exam_students.student_session_id', 'left')
         ->join('students', 'students.id = student_session.student_id', 'left')
         ->join('classes', 'classes.id = student_session.class_id', 'left')
         ->join('sections', 'sections.id = student_session.section_id', 'left')
+        ->join('cbse_seating_student_seats', 'cbse_seating_student_seats.student_session_id = student_session.id', 'left')
+        ->join('cbse_seating_allocations', 'cbse_seating_allocations.id = cbse_seating_student_seats.allocation_id AND cbse_seating_allocations.cbse_exam_id = '.$cbse_exam_id, 'left')
+        ->join('cbse_seating_room_assignments', 'cbse_seating_room_assignments.id = cbse_seating_student_seats.room_assignment_id', 'left')
+        ->join('cbse_seating_rooms', 'cbse_seating_rooms.id = cbse_seating_room_assignments.room_id', 'left')
         ->where("students.id in  ($students)")
-        ->where('cbse_exam_students.cbse_exam_id', $cbse_exam_id);
+        ->where('cbse_exam_students.cbse_exam_id', $cbse_exam_id)
+        ->group_by('cbse_exam_students.id');
         $query = $this->db->get();
         return $query->result();
     }
 
     public function get_cbse_exam_timetable($cbse_exam_id, $class_id = null){
         
-        $this->db->select('*')
+        $this->db->select('*, cbse_exam_timetable.id as timetable_id')
         ->from('cbse_exam_timetable')
         ->join('cbse_exams', 'cbse_exams.id = cbse_exam_timetable.cbse_exam_id', 'left')
         ->join('subjects', 'cbse_exam_timetable.subject_id = subjects.id', 'left');

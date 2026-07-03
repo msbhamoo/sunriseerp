@@ -4,15 +4,37 @@
 
 <div class="content-wrapper"> 
  <section class="content">
-  <div class="box box-primary">
-   <div class="box-header with-border">
-    <h3 class="box-title">  <?php echo $this->lang->line('annual_calendar'); ?></h3>
-		<div class="box-tools pull-right">
-			<?php if ($this->rbac->hasPrivilege('annual_calendar', 'can_add')) { ?>
-			<button type="button" onclick="add_holiday()" class="btn btn-sm btn-primary" data-toggle="tooltip"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add'); ?></button>  
-			<?php } ?>
-          </div>
-   </div>
+   <!-- FullCalendar -->
+   <link rel="stylesheet" href="<?php echo base_url(); ?>backend/plugins/fullcalendar/fullcalendar.min.css">
+   <link rel="stylesheet" href="<?php echo base_url(); ?>backend/plugins/fullcalendar/fullcalendar.print.css" media="print">
+   
+   <div class="box box-primary">
+    <div class="box-header with-border">
+     <h3 class="box-title">  <?php echo $this->lang->line('annual_calendar'); ?></h3>
+         <div class="box-tools pull-right">
+             <?php if ($this->rbac->hasPrivilege('annual_calendar', 'can_add')) { ?>
+             <button type="button" onclick="add_holiday()" class="btn btn-sm btn-primary" data-toggle="tooltip"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add'); ?></button>  
+             <?php } ?>
+           </div>
+    </div>
+    
+    <div class="nav-tabs-custom">
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#tab_calendar" data-toggle="tab">Calendar View</a></li>
+            <li><a href="#tab_list" data-toggle="tab">List View</a></li>
+            <li><a href="#tab_summary" data-toggle="tab">Yearly Summary</a></li>
+            <?php if ($this->rbac->hasPrivilege('annual_calendar', 'can_edit')) { ?>
+            <li><a href="#tab_settings" data-toggle="tab">Global Settings</a></li>
+            <?php } ?>
+        </ul>
+        <div class="tab-content">
+            <!-- Calendar View Tab -->
+            <div class="tab-pane active" id="tab_calendar">
+                <?php $this->load->view('admin/holiday/calendar_view'); ?>
+            </div>
+            
+            <!-- List View Tab -->
+            <div class="tab-pane" id="tab_list">
    <!-- Seaching section Start-->
    <form class="assign_teacher_form" action="<?php echo base_url(); ?>admin/holiday" method="post" enctype="multipart/form-data">
     <div class="box-body">
@@ -134,7 +156,74 @@
       </div>
      </div>
     </div>
-   </div>
+    </div>
+    
+    <!-- Summary Tab -->
+    <div class="tab-pane" id="tab_summary">
+        <div class="box-body" id="summary_content">
+            <p class="text-center" style="padding: 20px;"><i class="fa fa-spinner fa-spin"></i> Loading Summary...</p>
+        </div>
+    </div>
+    
+    <!-- Settings Tab -->
+    <?php if ($this->rbac->hasPrivilege('annual_calendar', 'can_edit')) { ?>
+    <div class="tab-pane" id="tab_settings">
+        <form action="<?php echo site_url('admin/holiday/save_calendar_settings'); ?>" method="post">
+            <?php echo $this->customlib->getCSRF(); ?>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Calendar Start Date</label>
+                        <input type="text" name="calendar_start_date" class="form-control date" value="<?php echo set_value('calendar_start_date', isset($calendar_settings['calendar_start_date']) ? $calendar_settings['calendar_start_date'] : ''); ?>">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Calendar End Date</label>
+                        <input type="text" name="calendar_end_date" class="form-control date" value="<?php echo set_value('calendar_end_date', isset($calendar_settings['calendar_end_date']) ? $calendar_settings['calendar_end_date'] : ''); ?>">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Default Working Days (Check to set as working day)</label><br>
+                        <?php 
+                        $days = [1=>'Mon', 2=>'Tue', 3=>'Wed', 4=>'Thu', 5=>'Fri', 6=>'Sat', 7=>'Sun'];
+                        $default_working = isset($calendar_settings['default_working_days']) ? explode(',', $calendar_settings['default_working_days']) : [];
+                        foreach($days as $num => $day) {
+                            $checked = in_array($num, $default_working) ? 'checked' : '';
+                            echo "<label class='checkbox-inline'><input type='checkbox' name='default_working_days[]' value='$num' $checked> $day</label>";
+                        }
+                        ?>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>CBSE Working Saturdays (If Saturday is off above)</label><br>
+                        <?php 
+                        $saturdays = [1=>'1st', 2=>'2nd', 3=>'3rd', 4=>'4th', 5=>'5th'];
+                        $working_sats = isset($calendar_settings['working_saturdays']) ? explode(',', $calendar_settings['working_saturdays']) : [];
+                        foreach($saturdays as $num => $sat) {
+                            $checked = in_array($num, $working_sats) ? 'checked' : '';
+                            echo "<label class='checkbox-inline'><input type='checkbox' name='working_saturdays[]' value='$num' $checked> $sat</label>";
+                        }
+                        ?>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 text-right">
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <?php } ?>
+    
+   </div> <!-- tab-content -->
+  </div> <!-- nav-tabs-custom -->
+  </div> <!-- box box-primary -->
   </div>
  </section>
 </div>
@@ -199,6 +288,15 @@
           </div>
          </div>
         </div>
+        <div class="col-md-12 col-lg-12 col-sm-12">
+         <div class="form-group">
+          <label>Is Working Day? (Check if this event should NOT deduct from total working days)</label>	  
+			    <div class="material-switch ">
+				  <input id="is_working_day" name="is_working_day" type="checkbox" class="chk" value="1" />
+				  <label for="is_working_day" class="label-info-success"></label>
+          </div>
+         </div>
+        </div>
        </div>
     </div>
     <div class="modal-footer">
@@ -253,7 +351,8 @@
  function add_holiday() {
       $('#add_holiday').trigger("reset");
       $('input[name="holiday_type"]').prop('checked', false);
-      $("#front_site").attr("checked" , false );
+      $("#front_site").prop("checked" , false );
+      $("#is_working_day").prop("checked" , false );
       $('#title').html('<?php echo $this->lang->line('add_holiday'); ?>');
       $('#holiday_modal').modal({
           backdrop: 'static',
@@ -292,10 +391,213 @@
                         $('#to_date').val(data.result.to_date);
 						 
 						if(data.result.front_site == '1'){
-							$('#front_site').attr('checked', 'checked'); 
-                        }                         
+							$('#front_site').prop('checked', true); 
+                        } else {
+                            $('#front_site').prop('checked', false); 
+                        }
 						
-						$("#radio_"+data.result.holiday_type).attr('checked', 'checked'); 
+						if(data.result.is_working_day == '1'){
+							$('#is_working_day').prop('checked', true); 
+                        } else {
+                            $('#is_working_day').prop('checked', false); 
+                        }
+						
+						$("#radio_"+data.result.holiday_type).prop('checked', true); 
+						$('#myModal').modal('show');						 
+					}					 
+				}, 
+				error: function () {
+					 
+				},
+				complete: function(){
+                    
+                }
+			});			  
+		}
+ 
+ function delete_holiday(id) {
+      var confirmation = confirm('<?php echo $this->lang->line('delete_confirm') ?>');
+      if (confirmation == true) {
+          $.ajax({
+              url: "<?php echo site_url("admin/holiday/delete_holiday") ?>",
+              type: "POST",
+              data: {'id': id},
+              dataType: "json",
+              success: function (res)
+              {
+                  if (res.status == 0) {
+                      errorMsg(res.error);
+                  } else {
+                      successMsg(res.success);
+                      window.location.reload(true);
+                  }
+    <div class="modal-body pb0">
+       <div class="row">
+        <div class="col-md-12 col-lg-12 col-sm-12">
+         <div class="form-group">
+          <input type="hidden" name="id" id="id">
+          <label><?php echo $this->lang->line('type'); ?></label><small class="req"> *</small>	  
+          <br>
+			  <ul class="stepradiolist row gy-0">
+        <?php
+        foreach($holiday_type as $key=>$value){ ?>
+          <li class="col-lg-4 col-md-12 col-sm-4">
+          <label><input class="valign-top" type="radio" id="radio_<?php echo $value['id']; ?>" name="holiday_type" value="<?php echo $value['id']; ?>"
+           onchange="showDate(this.value)"/>
+           <div class="stepimage"><?php 
+            if($value['is_default']==1){
+                echo $this->lang->line(strtolower($value['type']));
+            }else{
+                echo $value['type'];
+            }
+            ?></div></label>
+          </li>
+        <?php }  ?>			
+       </ul>
+        </div>
+        </div>
+        <div class="col-md-4 col-lg-4 col-sm-6 relative" id="date_one">
+         <div class="form-group ">
+          <label id="date_text"><?php echo $this->lang->line('from_date'); ?> </label><small class="req"> *</small>
+          <div class="relative"><input id="from_date" name="from_date" placeholder="" type="text" class="form-control date" value="" /></div>
+         </div>
+        </div>
+        <div class="col-md-4 col-lg-4 col-sm-6" id="date_two">
+         <div class="form-group relative">
+          <label><?php echo $this->lang->line('to_date'); ?></label><small class="req"> *</small>
+          <input id="to_date" name="to_date" placeholder="" type="text" class="form-control date" value="" />
+         </div>
+        </div>
+        <div class="col-md-12 col-lg-12 col-sm-12">
+         <div class="form-group">
+          <label for="exampleInputEmail1"><?php echo $this->lang->line('description'); ?></label><small class="req"> *</small>	  
+          <textarea rows="5" id="description" name="description" placeholder="" type="text" class="form-control"></textarea>
+         </div>
+        </div>
+        <div class="col-md-12 col-lg-12 col-sm-12">
+         <div class="form-group">
+          <label for="exampleInputEmail1"><?php echo $this->lang->line('front_site'); ?></label>	  
+			    <div class="material-switch ">
+				  <input id="front_site" name="front_site" type="checkbox" class="chk" value="checked" />
+				  <label for="front_site" class="label-info-success"></label>
+          </div>
+         </div>
+        </div>
+        <div class="col-md-12 col-lg-12 col-sm-12">
+         <div class="form-group">
+          <label>Is Working Day? (Check if this event should NOT deduct from total working days)</label>	  
+			    <div class="material-switch ">
+				  <input id="is_working_day" name="is_working_day" type="checkbox" class="chk" value="1" />
+				  <label for="is_working_day" class="label-info-success"></label>
+          </div>
+         </div>
+        </div>
+       </div>
+    </div>
+    <div class="modal-footer">
+    <button class="btn btn-info pull-right" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Please wait" value=""><?php echo $this->lang->line('save'); ?></button>
+   </form>
+  </div>
+ </div>
+</div>
+</div>
+
+<script type="text/javascript">	
+  
+ $("#add_holiday").on('submit', (function (e) {
+      e.preventDefault();
+      var $this = $(this).find("button[type=submit]:focus");
+      $.ajax({
+          
+          url: "<?php echo site_url("admin/holiday/add") ?>",
+          type: "POST",
+          data: new FormData(this),
+          dataType: 'json',
+          contentType: false,
+          cache: false,
+          processData: false,
+          beforeSend: function () {
+              $this.button('loading'); 
+          },
+          success: function (res)
+          {
+             if (res.status == "fail") {                
+                  var message = "";
+                  $.each(res.error, function (index, value) {
+                      message += value;
+                  });
+                  errorMsg(message);
+  
+              } else {
+                  successMsg(res.message);
+                  window.location.reload(true);
+              }
+          },
+          error: function (xhr) { // if error occured
+              alert("Error occured.please try again");
+              $this.button('reset');
+          },
+          complete: function () {
+              $this.button('reset');
+          }
+      });
+ }));  
+ 
+ function add_holiday() {
+      $('#add_holiday').trigger("reset");
+      $('input[name="holiday_type"]').prop('checked', false);
+      $("#front_site").prop("checked" , false );
+      $("#is_working_day").prop("checked" , false );
+      $('#title').html('<?php echo $this->lang->line('add_holiday'); ?>');
+      $('#holiday_modal').modal({
+          backdrop: 'static',
+          keyboard: false,
+          show: true
+      });
+      // showDate('');
+  }
+ 
+		function get(id) {
+
+			var base_url = '<?php echo base_url() ?>';
+			$('#title').html('<?php echo $this->lang->line('edit_holiday'); ?>');
+				$('#holiday_modal').modal({
+							backdrop: 'static',
+							keyboard: false,
+							show: true
+				});		 
+				  
+			$.ajax({
+				url: base_url+'admin/holiday/getholiday',
+				type: "POST",
+				data: {id: id},
+				dataType: 'json',
+				beforeSend: function(){
+					 
+				},
+				success: function (data) {
+					if (data.status == 0) {                     
+                         errorMsg(message);
+                    } else { 
+						// showDate(data.result.holiday_type);
+                        $('#from_date').val(data.result.from_date);
+                        $('#id').val(data.result.id); 
+                        $('#description').val(data.result.description); 
+                        $('#to_date').val(data.result.to_date);
+						 
+						if(data.result.front_site == '1'){
+							$('#front_site').prop('checked', true); 
+                        } else {
+                            $('#front_site').prop('checked', false); 
+                        }
+						
+						if(data.result.is_working_day == '1'){
+							$('#is_working_day').prop('checked', true); 
+                        } else {
+                            $('#is_working_day').prop('checked', false); 
+                        }
+						
+						$("#radio_"+data.result.holiday_type).prop('checked', true); 
 						$('#myModal').modal('show');						 
 					}					 
 				}, 
@@ -329,6 +631,29 @@
       }
   }
  
+  // Load Summary when tab is shown
+  $(document).ready(function() {
+      $('a[href="#tab_summary"]').on('click', function (e) {
+          // Prevent multiple rapid clicks
+          if ($('#summary_content').data('loading')) return;
+          $('#summary_content').data('loading', true);
+          
+          $('#summary_content').html('<p class="text-center" style="padding: 20px;"><i class="fa fa-spinner fa-spin"></i> Loading Summary...</p>');
+          
+          $.ajax({
+              url: "<?php echo site_url('admin/holiday/get_yearly_summary'); ?>",
+              type: "GET",
+              success: function (res) {
+                  $('#summary_content').html(res);
+                  $('#summary_content').data('loading', false);
+              },
+              error: function(xhr) {
+                  $('#summary_content').html('<div class="alert alert-danger">Error loading summary. Please check console for details.</div>');
+                  console.error(xhr.responseText);
+                  $('#summary_content').data('loading', false);
+              }
+          });
+      });
+  });
+
 </script>
-
-
