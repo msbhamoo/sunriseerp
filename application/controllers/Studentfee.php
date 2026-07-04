@@ -540,6 +540,13 @@ class Studentfee extends Admin_Controller
         $data['student']       = $student;
         $student_due_fee       = $this->studentfeemaster_model->getStudentFees($id);
         $student_discount_fee  = $this->feediscount_model->getStudentFeesDiscount($id);
+        
+        if ($student['parent_id']) {
+            $data['siblings'] = $this->student_model->getMySiblings($student['parent_id'], $student['id']);
+        } else {
+            $data['siblings'] = array();
+        }
+
 
         $data['transport_fees']         = $transport_fees;
         $data['student_discount_fee']   = $student_discount_fee;

@@ -16,6 +16,7 @@ $scan_type = $sch_setting->scan_code_type;
     }
 
     * {
+        box-sizing: border-box;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
@@ -98,7 +99,7 @@ $scan_type = $sch_setting->scan_code_type;
 
     .meta-table {
         width: 100%;
-        margin-bottom: 15px;
+        margin-bottom: 0;
         font-size: 13px;
         line-height: 1.6;
     }
@@ -110,10 +111,26 @@ $scan_type = $sch_setting->scan_code_type;
         width: 120px;
         font-weight: bold;
     }
+
+    .content-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .details-column {
+        flex: 1;
+        padding-right: 15px;
+    }
+    .barcode-column {
+        width: 160px;
+        flex-shrink: 0;
+        text-align: center;
+    }
     
     .barcode-container {
         text-align: center;
-        margin: 20px 0;
+        margin: 0;
     }
     
     .barcode-container img {
@@ -135,6 +152,18 @@ $scan_type = $sch_setting->scan_code_type;
         width: 80%;
         margin: 0 auto;
         padding-top: 5px;
+    }
+
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 5mm;
+        }
+        .print-receipt-wrapper {
+            max-height: 48vh;
+            overflow: hidden;
+            page-break-after: always;
+        }
     }
 </style>
 </head>
@@ -164,41 +193,47 @@ $scan_type = $sch_setting->scan_code_type;
 
             <div class="cert-title">GATE PASS</div>
 
-            <table class="meta-table">
-                <tr>
-                    <td class="meta-label">User Type</td>
-                    <td>: <?php echo ucfirst($gatepass['user_type']); ?></td>
-                </tr>
-                <tr>
-                    <td class="meta-label">Name & Details</td>
-                    <td>: <?php echo $gatepass['user_details']; ?></td>
-                </tr>
-                <tr>
-                    <td class="meta-label">Out Time</td>
-                    <td>: <?php echo $gatepass['out_time']; ?></td>
-                </tr>
-                <?php if ($gatepass['status'] == 'Completed') { ?>
-                <tr>
-                    <td class="meta-label">In Time</td>
-                    <td>: <?php echo $gatepass['in_time']; ?></td>
-                </tr>
-                <?php } ?>
-                <tr>
-                    <td class="meta-label">Reason</td>
-                    <td>: <?php echo $gatepass['reason']; ?></td>
-                </tr>
-                <tr>
-                    <td class="meta-label">Status</td>
-                    <td>: <strong><?php echo $gatepass['status']; ?></strong></td>
-                </tr>
-            </table>
+            <div class="content-row">
+                <div class="details-column">
+                    <table class="meta-table">
+                        <tr>
+                            <td class="meta-label">User Type</td>
+                            <td>: <?php echo ucfirst($gatepass['user_type']); ?></td>
+                        </tr>
+                        <tr>
+                            <td class="meta-label">Name & Details</td>
+                            <td>: <?php echo $gatepass['user_details']; ?></td>
+                        </tr>
+                        <tr>
+                            <td class="meta-label">Out Time</td>
+                            <td>: <?php echo $gatepass['out_time']; ?></td>
+                        </tr>
+                        <?php if ($gatepass['status'] == 'Completed') { ?>
+                        <tr>
+                            <td class="meta-label">In Time</td>
+                            <td>: <?php echo $gatepass['in_time']; ?></td>
+                        </tr>
+                        <?php } ?>
+                        <tr>
+                            <td class="meta-label">Reason</td>
+                            <td>: <?php echo $gatepass['reason']; ?></td>
+                        </tr>
+                        <tr>
+                            <td class="meta-label">Status</td>
+                            <td>: <strong><?php echo $gatepass['status']; ?></strong></td>
+                        </tr>
+                    </table>
+                </div>
 
-            <div class="barcode-container">
-                <!-- Barcode Generation -->
-                <img src="<?php echo base_url($this->customlib->generatebarcode($gatepass['gate_pass_no'], $gatepass['id'], 'barcode')); ?>" alt="Barcode">
-                <br><br>
-                <!-- QR Code Generation -->
-                <img src="<?php echo base_url($this->customlib->generatebarcode($gatepass['gate_pass_no'], $gatepass['id'], 'qrcode')); ?>" alt="QR Code">
+                <div class="barcode-column">
+                    <div class="barcode-container">
+                        <!-- Barcode Generation -->
+                        <img src="<?php echo base_url($this->customlib->generatebarcode($gatepass['gate_pass_no'], $gatepass['id'], 'barcode')); ?>" alt="Barcode">
+                        <br><br>
+                        <!-- QR Code Generation -->
+                        <img src="<?php echo base_url($this->customlib->generatebarcode($gatepass['gate_pass_no'], $gatepass['id'], 'qrcode')); ?>" alt="QR Code">
+                    </div>
+                </div>
             </div>
 
             <table class="signatures">

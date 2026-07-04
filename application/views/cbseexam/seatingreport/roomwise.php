@@ -74,17 +74,41 @@
                             ?>
                         </p>
                     </div>
-                    <div class="seat-grid">
-                        <?php foreach ($room['students'] as $student) { 
-                            $class_key = $student['class_name'] . " (" . $student['section_name'] . ")";
-                            $bg_color = $class_colors[$class_key];
+                    <div class="seat-grid" style="align-items: flex-start;">
+                        <?php 
+                        $col_depth = isset($allocation['column_depth']) && $allocation['column_depth'] > 1 ? $allocation['column_depth'] : 1;
+                        
+                        if ($col_depth > 1) {
+                            $chunks = array_chunk($room['students'], $col_depth);
+                            foreach ($chunks as $column) {
+                                echo '<div style="display: flex; flex-direction: column; gap: 10px;">';
+                                foreach ($column as $student) {
+                                    $class_key = $student['class_name'] . " (" . $student['section_name'] . ")";
+                                    $bg_color = $class_colors[$class_key];
+                                    ?>
+                                    <div class="seat-item" data-seat-id="<?php echo $student['id']; ?>" style="background-color: <?php echo $bg_color; ?>; margin: 0;">
+                                        <div class="seat-number"><?php echo $student['formatted_seat_number']; ?></div>
+                                        <div class="student-roll"><?php echo $student['roll_no']; ?></div>
+                                        <div class="student-class"><small><?php echo $class_key; ?></small></div>
+                                    </div>
+                                    <?php
+                                }
+                                echo '</div>';
+                            }
+                        } else {
+                            foreach ($room['students'] as $student) { 
+                                $class_key = $student['class_name'] . " (" . $student['section_name'] . ")";
+                                $bg_color = $class_colors[$class_key];
+                            ?>
+                                <div class="seat-item" data-seat-id="<?php echo $student['id']; ?>" style="background-color: <?php echo $bg_color; ?>;">
+                                    <div class="seat-number"><?php echo $student['formatted_seat_number']; ?></div>
+                                    <div class="student-roll"><?php echo $student['roll_no']; ?></div>
+                                    <div class="student-class"><small><?php echo $class_key; ?></small></div>
+                                </div>
+                            <?php 
+                            }
+                        } 
                         ?>
-                            <div class="seat-item" data-seat-id="<?php echo $student['id']; ?>" style="background-color: <?php echo $bg_color; ?>;">
-                                <div class="seat-number"><?php echo $student['formatted_seat_number']; ?></div>
-                                <div class="student-roll"><?php echo $student['roll_no']; ?></div>
-                                <div class="student-class"><small><?php echo $class_key; ?></small></div>
-                            </div>
-                        <?php } ?>
                     </div>
                 </div>
                 <?php } ?>

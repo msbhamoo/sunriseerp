@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS cbse_seating_allocations (
   exam_date DATE NOT NULL,
   allocation_strategy ENUM('interleaved','grouped','random') DEFAULT 'interleaved',
   seat_number_format ENUM('sequential','room_prefixed') DEFAULT 'sequential',
+  column_depth INT DEFAULT 1,
   status ENUM('draft','finalized','locked') DEFAULT 'draft',
   total_students_allocated INT DEFAULT 0,
   total_rooms_used INT DEFAULT 0,
@@ -95,7 +96,6 @@ INSERT IGNORE INTO permission_category (name, short_code, enable_view, enable_ad
 
 -- Update sidebar_sub_menus (Menu ID 34 = CBSE Examination)
 INSERT IGNORE INTO sidebar_sub_menus (sidebar_menu_id, menu, lang_key, url, level, access_permissions, permission_group_id, activate_controller, activate_methods, addon_permission) VALUES
-(34, 'seatingroom', 'seatingroom', 'cbseexam/seatingroom', 1, '(''cbse_exam_seating_rooms'', ''can_view'')', NULL, 'seatingroom', 'index,add_building,add_room,bulk_generate_rooms', 'sscbse'),
 (34, 'seatingarrangement', 'seatingarrangement', 'cbseexam/seatingarrangement', 1, '(''cbse_exam_seating'', ''can_view'')', NULL, 'seatingarrangement', 'index,create,preview,assign_invigilators', 'sscbse'),
 (34, 'seatingreport', 'seatingreport', 'cbseexam/seatingreport', 1, '(''cbse_exam_seating_reports'', ''can_view'')', NULL, 'seatingreport', 'index,roomwise,studentwise,invigilator_duty,attendance_sheet,summary_report', 'sscbse');
 

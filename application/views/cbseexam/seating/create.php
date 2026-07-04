@@ -43,17 +43,25 @@
                             </div>
                             
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label>Allocation Strategy <small class="req"> *</small></label>
                                         <select class="form-control" name="allocation_strategy" required>
                                             <option value="interleaved">Interleaved (Mixed Classes - Prevents Cheating)</option>
                                             <option value="grouped">Grouped (Class by Class)</option>
+                                            <option value="random">Random (Completely Shuffled)</option>
                                         </select>
                                         <small class="text-muted">Interleaved allocates one student from each class sequentially.</small>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Students per Column (Chunk Size) <small class="req"> *</small></label>
+                                        <input type="number" min="1" value="1" class="form-control" name="column_depth" required />
+                                        <small class="text-muted">Set to 1 for standard. Set to &gt;1 to group same class into vertical columns.</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label>Seat Number Format <small class="req"> *</small></label>
                                         <select class="form-control" name="seat_number_format" required>
@@ -136,6 +144,23 @@
             updateTotalCapacity();
             if(!$(this).prop('checked')){
                 $('#checkAll').prop('checked', false);
+            }
+        });
+        
+        var existingAllocations = <?php echo json_encode(isset($existing_allocations) ? $existing_allocations : []); ?>;
+        
+        $('form').submit(function(e) {
+            var examId = $('select[name="exam_id"]').val();
+            
+            var exists = existingAllocations.some(function(alloc) {
+                return alloc.cbse_exam_id == examId;
+            });
+            
+            if (exists) {
+                if (!confirm("A seating arrangement has already been generated for this exam on a previous date.\n\nAre you sure you want to generate another one?")) {
+                    e.preventDefault();
+                    return false;
+                }
             }
         });
     });

@@ -1,1 +1,0 @@
-<?php $conn = new mysqli("localhost", "root", "", "smserp"); $res = $conn->query("SELECT count(*) as count FROM student_calls WHERE DATE(date) = CURDATE()"); while($row = $res->fetch_assoc()) { print_r($row); break; } ?>

@@ -36,7 +36,7 @@ class Cbse_seating_model extends MY_Model
         return $this->db->get()->row_array();
     }
 
-    public function autoAllocateStudents($exam_id, $exam_date, $strategy, $seat_format, $selected_rooms)
+    public function autoAllocateStudents($exam_id, $exam_date, $strategy, $seat_format, $column_depth, $selected_rooms)
     {
         $this->db->trans_start();
 
@@ -85,6 +85,7 @@ class Cbse_seating_model extends MY_Model
             'exam_date' => $exam_date,
             'allocation_strategy' => $strategy,
             'seat_number_format' => $seat_format,
+            'column_depth' => $column_depth,
             'status' => 'draft',
             'session_id' => $this->current_session
         ];
@@ -98,10 +99,15 @@ class Cbse_seating_model extends MY_Model
         $this->db->insert('cbse_seating_allocations', $alloc_data);
         $allocation_id = $this->db->insert_id();
 
-        // 4. Group students by class
+        // 4. Group students by class (used for interleaved)
         $class_groups = [];
         foreach ($students as $student) {
             $class_groups[$student['class_id']][] = $student;
+        }
+
+        // Shuffle all students if strategy is random
+        if ($strategy == 'random') {
+            shuffle($students);
         }
 
         // 5. Allocation Engine
@@ -112,9 +118,10 @@ class Cbse_seating_model extends MY_Model
         $room_assignments = [];
         
         if ($strategy == 'interleaved') {
-            // Pick one from each class in round-robin fashion
+            // Pick students chunk by chunk from each class
             $class_keys = array_keys($class_groups);
             $class_idx = 0;
+            $current_chunk_count = 0;
             
             while ($total_allocated < count($students)) {
                 if ($room_idx >= count($rooms)) break; // Out of rooms
@@ -126,11 +133,22 @@ class Cbse_seating_model extends MY_Model
                 $attempts = 0;
                 while ($student_to_seat == null && $attempts < count($class_keys)) {
                     $key = $class_keys[$class_idx];
+                    
                     if (!empty($class_groups[$key])) {
                         $student_to_seat = array_shift($class_groups[$key]);
+                        $current_chunk_count++;
+                        
+                        // If chunk is full or class empty, advance
+                        if ($current_chunk_count >= $column_depth || empty($class_groups[$key])) {
+                            $class_idx = ($class_idx + 1) % count($class_keys);
+                            $current_chunk_count = 0;
+                        }
+                        break;
+                    } else {
+                        $class_idx = ($class_idx + 1) % count($class_keys);
+                        $current_chunk_count = 0;
+                        $attempts++;
                     }
-                    $class_idx = ($class_idx + 1) % count($class_keys);
-                    $attempts++;
                 }
                 
                 if ($student_to_seat == null) break; // All classes empty
@@ -169,7 +187,7 @@ class Cbse_seating_model extends MY_Model
                 }
             }
         } else {
-            // Grouped Strategy (Fill room sequentially by class)
+            // Grouped or Random Strategy (Fill room sequentially from the student list)
             foreach ($students as $student_to_seat) {
                 if ($room_idx >= count($rooms)) break; // Out of rooms
                 

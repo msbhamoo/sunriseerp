@@ -20,7 +20,8 @@ class Seatingroom extends MY_Addon_CBSEController
         }
 
         $this->session->set_userdata('top_menu', 'cbse_exam');
-        $this->session->set_userdata('sub_menu', 'cbseexam/seatingroom');
+        $this->session->set_userdata('sub_menu', 'cbseexam/setting/index'); // Main sidebar setting tab
+        $this->session->set_userdata('subsub_menu', 'cbseexam/seatingroom'); // Settings inner tab
         
         $data['title'] = 'Seating Rooms Master';
         $data['buildings'] = $this->cbse_seating_room_model->get_buildings();
@@ -98,8 +99,11 @@ class Seatingroom extends MY_Addon_CBSEController
                 $data['id'] = $this->input->post('id');
             }
             
+            // Fetch session first to prevent Active Record query bleeding
+            $session_id = $this->setting_model->getCurrentSession();
+            
             // Basic unique check
-            $check = $this->db->where('building_id', $data['building_id'])->where('room_number', $data['room_number'])->where('session_id', $this->setting_model->getCurrentSession());
+            $check = $this->db->where('building_id', $data['building_id'])->where('room_number', $data['room_number'])->where('session_id', $session_id);
             if (isset($data['id'])) $check->where('id !=', $data['id']);
             
             if ($check->get('cbse_seating_rooms')->num_rows() > 0) {

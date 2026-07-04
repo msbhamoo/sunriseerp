@@ -40,6 +40,7 @@ class Seatingarrangement extends MY_Addon_CBSEController
         $data['title'] = 'New Allocation';
         $data['exams'] = $this->cbseexam_exam_model->getexamlist();
         $data['rooms'] = $this->cbse_seating_room_model->get_rooms();
+        $data['existing_allocations'] = $this->cbse_seating_model->get_allocations();
         
         $this->form_validation->set_rules('exam_id', 'Exam', 'required');
         $this->form_validation->set_rules('exam_date', 'Exam Date', 'required');
@@ -54,9 +55,12 @@ class Seatingarrangement extends MY_Addon_CBSEController
             $exam_date = $this->customlib->dateFormatToYYYYMMDD($this->input->post('exam_date'));
             $strategy = $this->input->post('allocation_strategy');
             $seat_format = $this->input->post('seat_number_format');
+            $column_depth = (int)$this->input->post('column_depth');
+            if ($column_depth < 1) $column_depth = 1;
+            
             $rooms = $this->input->post('rooms');
             
-            $res = $this->cbse_seating_model->autoAllocateStudents($exam_id, $exam_date, $strategy, $seat_format, $rooms);
+            $res = $this->cbse_seating_model->autoAllocateStudents($exam_id, $exam_date, $strategy, $seat_format, $column_depth, $rooms);
             
             if (is_array($res) && !$res['status']) {
                 $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">'.$res['msg'].'</div>');

@@ -264,6 +264,13 @@ foreach ($studentlistbysection as $stkey => $stvalue) {
                             </div>
                             <div class="col-md-8">
                                 <div class="btn-group pull-right">
+                                    <?php if (!empty($siblings)) {
+                                        foreach ($siblings as $sibling) { ?>
+                                            <a href="<?php echo base_url(); ?>studentfee/addfee/<?php echo $sibling->student_session_id; ?>" class="btn btn-info btn-xs" style="margin-right: 5px;" title="Collect Fee for <?php echo $sibling->firstname . ' ' . $sibling->lastname; ?>">
+                                                <i class="fa fa-user"></i> <?php echo $sibling->firstname . ' ' . $sibling->lastname; ?>
+                                            </a>
+                                    <?php }
+                                    } ?>
                                     <button type="button" class="btn btn-success btn-xs" onclick="printFeesCertificate('<?php echo $student['student_session_id']; ?>')" style="margin-right: 5px;">
                                         <i class="fa fa-certificate"></i> Fees Certificate
                                     </button>

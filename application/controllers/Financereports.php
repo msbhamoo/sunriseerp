@@ -397,9 +397,27 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
                     $obj->father_name   = $eachstudent['father_name'];
 					$obj->mobileno   	= $eachstudent['mobileno'];
                     $student_session_id = $eachstudent['student_session_id'];
-                    $student_total_fees = $this->studentfeemaster_model->getTransStudentFees($student_session_id);
+                    $student_id = $eachstudent['id'];
+                    $display_previous_fees = $this->sch_setting_detail->display_previous_fees;
+                    $student_sessions = $this->student_model->getStudentSessions($student_id, $display_previous_fees);
 
-                    if (!empty($student_total_fees)) {
+                    $student_total_fees = array();
+                    $student_transport_fees = array();
+                    if (!empty($student_sessions)) {
+                        foreach ($student_sessions as $sess) {
+                            $fees = $this->studentfeemaster_model->getStudentFees($sess->current_student_session_id);
+                            if (!empty($fees)) {
+                                $student_total_fees = array_merge($student_total_fees, $fees);
+                            }
+                            
+                            $t_fees = $this->studentfeemaster_model->getStudentTransportFees($sess->current_student_session_id, $sess->route_pickup_point_id);
+                            if (!empty($t_fees)) {
+                                $student_transport_fees = array_merge($student_transport_fees, $t_fees);
+                            }
+                        }
+                    }
+
+                    if (!empty($student_total_fees) || !empty($student_transport_fees)) {
                         $totalfee = 0;
                         $deposit  = 0;
                         $discount = 0;
@@ -410,21 +428,66 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
 
                             if (!empty($student_total_fees_value->fees)) {
                                 foreach ($student_total_fees_value->fees as $each_fee_key => $each_fee_value) {
-                                    $totalfee = $totalfee + $each_fee_value->amount;
+                                    $fee_amount = $each_fee_value->amount;
+                                    $totalfee = $totalfee + $fee_amount;
+                                    
+                                    $fee_paid = 0;
+                                    $fee_discount = 0;
+                                    $fee_fine = 0;
                                     
                                     if(isJSON($each_fee_value->amount_detail)){                                        
                                         $amount_detail = json_decode($each_fee_value->amount_detail);
     
                                         if (is_object($amount_detail) && !empty($amount_detail)) {
                                             foreach ($amount_detail as $amount_detail_key => $amount_detail_value) {
-                                                $deposit  = $deposit + $amount_detail_value->amount;
-                                                $fine     = $fine + $amount_detail_value->amount_fine;
-                                                $discount = $discount + $amount_detail_value->amount_discount;
+                                                $fee_paid  += $amount_detail_value->amount;
+                                                $fee_fine  += $amount_detail_value->amount_fine;
+                                                $fee_discount += $amount_detail_value->amount_discount;
                                             }
                                         }
                                     }
+
+                                    $deposit += $fee_paid;
+                                    $fine += $fee_fine;
+                                    $discount += $fee_discount;
+                                    
+                                    $feetype_balance = $fee_amount - ($fee_paid + $fee_discount);
+                                    if ($feetype_balance < 0) {
+                                        $feetype_balance = 0;
+                                    }
+                                    $balance += $feetype_balance;
                                 }
                             }
+                        }
+
+                        foreach ($student_transport_fees as $transport_fee_key => $transport_fee_value) {
+                            $fee_amount = $transport_fee_value->fees;
+                            $totalfee = $totalfee + $fee_amount;
+                            
+                            $fee_paid = 0;
+                            $fee_discount = 0;
+                            $fee_fine = 0;
+                            
+                            if (!empty($transport_fee_value->amount_detail) && isJSON($transport_fee_value->amount_detail)) {
+                                $amount_detail = json_decode($transport_fee_value->amount_detail);
+                                if (is_object($amount_detail) && !empty($amount_detail)) {
+                                    foreach ($amount_detail as $amount_detail_key => $amount_detail_value) {
+                                        $fee_paid  += $amount_detail_value->amount;
+                                        $fee_fine  += $amount_detail_value->amount_fine;
+                                        $fee_discount += $amount_detail_value->amount_discount;
+                                    }
+                                }
+                            }
+
+                            $deposit += $fee_paid;
+                            $fine += $fee_fine;
+                            $discount += $fee_discount;
+                            
+                            $feetype_balance = $fee_amount - ($fee_paid + $fee_discount);
+                            if ($feetype_balance < 0) {
+                                $feetype_balance = 0;
+                            }
+                            $balance += $feetype_balance;
                         }
 
                         $obj->totalfee     = $totalfee;
@@ -432,7 +495,7 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
                         $obj->deposit      = $deposit;
                         $obj->fine         = $fine;
                         $obj->discount     = $discount;
-                        $obj->balance      = $totalfee - ($deposit + $discount);
+                        $obj->balance      = $balance;
                     } else {
 
                         $obj->totalfee     = 0;

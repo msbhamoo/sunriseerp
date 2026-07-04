@@ -6,6 +6,8 @@
 
     <section class="content">
         <div class="row">
+        <?php $this->load->view('cbseexam/_settingmenu'); ?>
+        <div class="col-md-10">
             <!-- Buildings List -->
             <div class="col-md-4">
                 <div class="box box-primary">
@@ -98,6 +100,8 @@
                     </div>
                 </div>
             </div>
+            </div>
+        </div>
         </div>
     </section>
 </div>

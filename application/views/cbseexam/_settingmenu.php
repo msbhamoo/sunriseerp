@@ -22,6 +22,11 @@
                 <a class="<?php echo set_SubSubmenu('cbseexam/cbseadmitcard'); ?>" href="<?php echo site_url('cbseexam/cbseadmitcard') ?>">Design Admit Card</a>
             </li>
 			<?php } ?>
+			<?php if ($this->rbac->hasPrivilege('cbse_exam_seating_rooms', 'can_view')) {  ?>
+            <li class="<?php echo set_SubSubmenu('cbseexam/seatingroom'); ?>">
+                <a class="<?php echo set_SubSubmenu('cbseexam/seatingroom'); ?>" href="<?php echo site_url('cbseexam/seatingroom') ?>">Seating Rooms</a>
+            </li>
+			<?php } ?>
 			
         </ul>
     </div>
