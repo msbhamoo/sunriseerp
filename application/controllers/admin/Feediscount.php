@@ -249,4 +249,78 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
         }
     }
 
+    public function approvalQueue()
+    {
+        if (!$this->rbac->hasPrivilege('fee_discount_approval', 'can_view')) {
+            access_denied();
+        }
+        $this->session->set_userdata('top_menu', 'Fees Collection');
+        $this->session->set_userdata('sub_menu', 'admin/feediscount/approvalQueue');
+        
+        $this->load->model('feediscountrequest_model');
+        $data['requests'] = $this->feediscountrequest_model->getAll();
+        
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/feediscount/approvalQueue', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    public function approveRequest($id)
+    {
+        if (!$this->rbac->hasPrivilege('fee_discount_approval', 'can_edit')) {
+            access_denied();
+        }
+        
+        $this->load->model('feediscountrequest_model');
+        $request = $this->feediscountrequest_model->get($id);
+        
+        if ($request && ($request['status'] == 'pending' || $request['status'] == 'provisional')) {
+            $admin_id = $this->customlib->getStaffID();
+            $this->feediscountrequest_model->updateStatus($id, 'approved', $admin_id);
+            
+            // Create the dynamic discount record
+            $student_fees_discount_id = $this->feediscount_model->createDynamicDiscount($request);
+            
+            if ($request['status'] == 'provisional' && $request['student_fees_deposite_id'] && $student_fees_discount_id) {
+                // Insert into student_applied_discounts since it was applied during collection
+                $applied_data = array(
+                    'student_fees_deposite_id' => $request['student_fees_deposite_id'],
+                    'student_fees_discount_id' => $student_fees_discount_id,
+                    'invoice_id' => $request['student_fees_deposite_id'],
+                    'sub_invoice_id' => $request['sub_invoice_id'],
+                    'date' => date('Y-m-d')
+                );
+                $this->db->insert('student_applied_discounts', $applied_data);
+            }
+            
+            $this->session->set_flashdata('msg', '<div class="alert alert-success">Request Approved Successfully</div>');
+        }
+        redirect('admin/feediscount/approvalQueue');
+    }
+
+    public function rejectRequest()
+    {
+        if (!$this->rbac->hasPrivilege('fee_discount_approval', 'can_edit')) {
+            access_denied();
+        }
+        
+        $id = $this->input->post('request_id');
+        $remark = $this->input->post('admin_remark');
+        
+        $this->load->model('feediscountrequest_model');
+        $request = $this->feediscountrequest_model->get($id);
+        
+        if ($request && ($request['status'] == 'pending' || $request['status'] == 'provisional')) {
+            $admin_id = $this->customlib->getStaffID();
+            $this->feediscountrequest_model->updateStatus($id, 'rejected', $admin_id, $remark);
+            
+            if ($request['status'] == 'provisional' && $request['student_fees_deposite_id']) {
+                $this->studentfeemaster_model->reverseProvisionalDiscount($request['student_fees_deposite_id'], $request['sub_invoice_id']);
+            }
+            
+            $this->session->set_flashdata('msg', '<div class="alert alert-success">Request Rejected Successfully</div>');
+        }
+        redirect('admin/feediscount/approvalQueue');
+    }
+
 }

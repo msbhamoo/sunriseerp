@@ -1129,6 +1129,7 @@ if (!empty($image)) {
                 </div>
             </div>
             
+            <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_view')) { ?>
             <div class="gs-fee-summary" style="margin-top: 20px; border-top: 1px solid #f0f0f0; padding-top: 15px;">
                 <h5 style="font-weight: 600; color: #2c2c2c; margin-bottom: 15px; font-size: 14px;">Fees Summary</h5>
                 <table class="gs-table" style="font-size: 13px;">
@@ -1145,6 +1146,7 @@ if (!empty($image)) {
                     </tbody>
                 </table>
             </div>
+            <?php } ?>
 
             <div class="gs-actions">
                 <a id="btn_view_profile" href="#" class="gs-action-btn"><i class="fa fa-user"></i> View Profile</a>
@@ -1269,60 +1271,62 @@ $(document).ready(function() {
                 $('#btn_collect_fee').attr('href', baseurl + 'studentfee/addfee/' + student.student_session_id);
             }
             
-            // Show loading for fees
-            $('.gs-fee-summary').show();
-            $('#detail_student_fees_body').html('<tr><td colspan="4" class="text-center" style="padding: 15px;"><i class="fa fa-spinner fa-spin"></i> Loading fees...</td></tr>');
-            
             studentDetailsContainer.fadeIn(200);
 
-            // Fetch Fee Summary
-            var feePostData = {
-                student_session_id: student.student_session_id
-            };
-            var csrfInput = $('#global_search_form input[type="hidden"]');
-            if (csrfInput.length > 0) {
-                var csrfName = csrfInput.attr('name');
-                var csrfHash = csrfInput.val();
-                if (csrfName && csrfHash) {
-                    feePostData[csrfName] = csrfHash;
+            if ($('.gs-fee-summary').length > 0) {
+                // Show loading for fees
+                $('.gs-fee-summary').show();
+                $('#detail_student_fees_body').html('<tr><td colspan="4" class="text-center" style="padding: 15px;"><i class="fa fa-spinner fa-spin"></i> Loading fees...</td></tr>');
+                
+                // Fetch Fee Summary
+                var feePostData = {
+                    student_session_id: student.student_session_id
+                };
+                var csrfInput = $('#global_search_form input[type="hidden"]');
+                if (csrfInput.length > 0) {
+                    var csrfName = csrfInput.attr('name');
+                    var csrfHash = csrfInput.val();
+                    if (csrfName && csrfHash) {
+                        feePostData[csrfName] = csrfHash;
+                    }
                 }
-            }
 
-            $.ajax({
-                url: baseurl + 'admin/certificateregister/get_student_fee_summary_ajax',
-                type: 'POST',
-                data: feePostData,
-                dataType: 'json',
-                success: function(response) {
-                    if (response) {
-                        var html = '';
-                        var feeCount = 0;
-                        if (response.academic && parseFloat(response.academic.total) > 0) {
-                            html += '<tr><td style="padding: 8px; color: #4b5563; font-weight: 600;">Academic Fees</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.academic.total).toFixed(2) + '</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.academic.collected).toFixed(2) + '</td><td style="padding: 8px; color: #1f2937; font-weight: 700;">' + parseFloat(response.academic.due).toFixed(2) + '</td></tr>';
-                            feeCount++;
-                        }
-                        if (response.transport && parseFloat(response.transport.total) > 0) {
-                            html += '<tr><td style="padding: 8px; color: #4b5563; font-weight: 600;">Transport Fees</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.transport.total).toFixed(2) + '</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.transport.collected).toFixed(2) + '</td><td style="padding: 8px; color: #1f2937; font-weight: 700;">' + parseFloat(response.transport.due).toFixed(2) + '</td></tr>';
-                            feeCount++;
-                        }
-                        if (response.hostel && parseFloat(response.hostel.total) > 0) {
-                            html += '<tr><td style="padding: 8px; color: #4b5563; font-weight: 600;">Hostel Fees</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.hostel.total).toFixed(2) + '</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.hostel.collected).toFixed(2) + '</td><td style="padding: 8px; color: #1f2937; font-weight: 700;">' + parseFloat(response.hostel.due).toFixed(2) + '</td></tr>';
-                            feeCount++;
-                        }
+                $.ajax({
+                    url: baseurl + 'admin/certificateregister/get_student_fee_summary_ajax',
+                    type: 'POST',
+                    data: feePostData,
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response) {
+                            var html = '';
+                            var feeCount = 0;
+                            if (response.academic && parseFloat(response.academic.total) > 0) {
+                                html += '<tr><td style="padding: 8px; color: #4b5563; font-weight: 600;">Academic Fees</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.academic.total).toFixed(2) + '</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.academic.collected).toFixed(2) + '</td><td style="padding: 8px; color: #1f2937; font-weight: 700;">' + parseFloat(response.academic.due).toFixed(2) + '</td></tr>';
+                                feeCount++;
+                            }
+                            if (response.transport && parseFloat(response.transport.total) > 0) {
+                                html += '<tr><td style="padding: 8px; color: #4b5563; font-weight: 600;">Transport Fees</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.transport.total).toFixed(2) + '</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.transport.collected).toFixed(2) + '</td><td style="padding: 8px; color: #1f2937; font-weight: 700;">' + parseFloat(response.transport.due).toFixed(2) + '</td></tr>';
+                                feeCount++;
+                            }
+                            if (response.hostel && parseFloat(response.hostel.total) > 0) {
+                                html += '<tr><td style="padding: 8px; color: #4b5563; font-weight: 600;">Hostel Fees</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.hostel.total).toFixed(2) + '</td><td style="padding: 8px; color: #4b5563;">' + parseFloat(response.hostel.collected).toFixed(2) + '</td><td style="padding: 8px; color: #1f2937; font-weight: 700;">' + parseFloat(response.hostel.due).toFixed(2) + '</td></tr>';
+                                feeCount++;
+                            }
 
-                        if (feeCount > 0) {
-                            $('#detail_student_fees_body').html(html);
+                            if (feeCount > 0) {
+                                $('#detail_student_fees_body').html(html);
+                            } else {
+                                $('.gs-fee-summary').hide();
+                            }
                         } else {
-                            $('.gs-fee-summary').hide();
+                            $('#detail_student_fees_body').html('<tr><td colspan="4" class="text-center text-danger" style="padding: 15px;">Failed to load fees.</td></tr>');
                         }
-                    } else {
+                    },
+                    error: function() {
                         $('#detail_student_fees_body').html('<tr><td colspan="4" class="text-center text-danger" style="padding: 15px;">Failed to load fees.</td></tr>');
                     }
-                },
-                error: function() {
-                    $('#detail_student_fees_body').html('<tr><td colspan="4" class="text-center text-danger" style="padding: 15px;">Failed to load fees.</td></tr>');
-                }
-            });
+                });
+            }
         }
     });
 

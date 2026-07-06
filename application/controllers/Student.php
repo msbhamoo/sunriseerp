@@ -20,7 +20,7 @@ class Student extends Admin_Controller
         $this->load->library('mailsmsconf');
         $this->load->library('encoding_lib');
         $this->load->model("classteacher_model");
-        $this->load->model(array("timeline_model", "student_edit_field_model", 'transportfee_model', 'marksdivision_model', 'module_model', 'transportyearlyfee_model'));
+        $this->load->model(array("timeline_model", "student_edit_field_model", 'transportfee_model', 'marksdivision_model', 'module_model', 'transportyearlyfee_model', 'staff_model'));
         $this->blood_group        = $this->config->item('bloodgroup');
         $this->sch_setting_detail = $this->setting_model->getSetting();
         $this->role;
@@ -478,6 +478,7 @@ class Student extends Admin_Controller
         $class                         = $this->class_model->get('', $classteacher = 'yes');
 
         $data['classlist']       = $class;
+        $data['staffList']       = $this->staff_model->get();
 
         $enquiry_id = $this->input->get('enquiry_id');
         if ($enquiry_id) {
@@ -2151,6 +2152,7 @@ class Student extends Admin_Controller
 
         $data["student_categorize"] = 'class';
         $data['classlist']          = $class;
+        $data['staffList']          = $this->staff_model->get();
         $category                   = $this->category_model->get();
         $data['categorylist']       = $category;
         $data['cast_list']          = $this->cast_model->get();

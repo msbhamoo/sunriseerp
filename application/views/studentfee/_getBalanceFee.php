@@ -136,16 +136,47 @@ if(!empty($discount_not_applied)){
                  <div class="row">
                      <div class="col-md-5 col-sm-5 col-lg-5">
                          <div class="">
-                             <input type="text" class="form-control" id="amount_discount" value="0">
+                             <input type="text" class="form-control" name="amount_discount" id="amount_discount" value="0">
                              <span class="text-danger" id="amount_discount_error"></span>
                          </div>
+                         <div id="dynamic_discount_reason_container" style="display:none; margin-top: 10px;">
+                             <select class="form-control" id="dynamic_discount_reason_select" style="margin-bottom: 5px;">
+                                 <option value=""><?php echo $this->lang->line('select'); ?> Reason *</option>
+                                <option value="Staff discount">Staff Discount</option>
+                                <option value="Sibling discount">Sibling Discount</option>
+                                <option value="Management discount">Management Discount</option>
+                                <option value="Merit scholarship">Merit Scholarship</option>
+                                <option value="Need-based scholarship">Need-based Scholarship</option>
+                                <option value="Sports scholarship">Sports Scholarship</option>
+                                <option value="Girl child concession">Girl Child Concession</option>
+                                <option value="Single parent concession">Single Parent Concession</option>
+                                <option value="Financial hardship">Financial Hardship</option>
+                                <option value="Special needs concession">Special Needs Concession</option>
+                                <option value="Early payment discount">Early Payment Discount</option>
+                                <option value="Annual payment discount">Annual Payment Discount</option>
+                                <option value="Other">Other</option>
+                             </select>
+                             <input type="text" class="form-control" name="dynamic_discount_reason" id="dynamic_discount_reason" placeholder="Type Custom Reason *" style="display:none;">
+                             <span class="text-danger" id="dynamic_discount_reason_error"></span>
+                             <small class="text-warning"><i class="fa fa-info-circle"></i> This discount requires admin approval.</small>
+                         </div>
+                         <script>
+                             $('#dynamic_discount_reason_select').change(function(){
+                                 var val = $(this).val();
+                                 if(val === 'Other') {
+                                     $('#dynamic_discount_reason').val('').show();
+                                 } else {
+                                     $('#dynamic_discount_reason').hide().val(val);
+                                 }
+                             });
+                         </script>
                      </div>
                      <div class="col-md-2 col-sm-2 col-lg-2 ltextright">
                          <label for="inputPassword3" class="control-label pt-sm-1"><?php echo $this->lang->line('fine'); ?> (<?php echo $currency_symbol; ?>)<small class="req">*</small></label>
                      </div>
                      <div class="col-md-5 col-sm-5 col-lg-5">
                          <div class="">
-                             <input type="text" class="form-control" id="amount_fine" value="<?php echo $remain_amount_fine; ?>">
+                             <input type="text" class="form-control" name="amount_fine" id="amount_fine" value="<?php echo $remain_amount_fine; ?>">
                              <span class="text-danger" id="amount_fine_error"></span>
                          </div>
                      </div>

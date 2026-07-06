@@ -113,6 +113,16 @@
                     <div class="box-header ptbnull">
                         <h3 class="box-title titlefix"><?php echo $this->lang->line('fees_discount_list'); ?></h3>
                         <div class="box-tools pull-right">
+                            <?php if ($this->rbac->hasPrivilege('fee_discount_approval', 'can_view')) { 
+                                $pending_count = $this->db->where('status', 'pending')->or_where('status', 'provisional')->count_all_results('fee_discount_requests');
+                            ?>
+                                <a href="<?php echo site_url('admin/feediscount/approvalQueue'); ?>" class="btn btn-sm btn-primary">
+                                    <i class="fa fa-check-square-o"></i> Approvals 
+                                    <?php if ($pending_count > 0) { ?>
+                                        <span class="badge bg-red"><?php echo $pending_count; ?></span>
+                                    <?php } ?>
+                                </a>
+                            <?php } ?>
                         </div><!-- /.box-tools -->
                     </div><!-- /.box-header -->
                     <div class="box-body">

@@ -51,6 +51,7 @@ class Hostelgatepass_model extends MY_Model
         $data = array(
             'id' => $id,
             'status' => 'Returned',
+            'actual_in_date' => date('Y-m-d'),
             'actual_in_time' => date('H:i:s')
         );
         $this->db->where('id', $id);

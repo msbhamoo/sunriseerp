@@ -474,6 +474,84 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 	</div>	
 	
 
+	<div class="row pt10" style="margin-bottom: 15px;">
+		<div class="col-md-12">
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<span class="bmedium">
+					Discount (<?php echo $currency_symbol; ?>)
+				</span>
+			</div>
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<span class="pull-right">
+					<input class="form-control" style="width:200px" name="amount_discount_global" id="amount_discount_global" type="text" value="0">
+				</span>
+			</div>
+		</div>
+		<div class="col-md-12" id="discount_distribution_container" style="display:none; margin-top: 10px;">
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<span class="bmedium">Distribution Method</span>
+			</div>
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<span class="pull-right">
+					<select class="form-control" name="discount_distribution" id="discount_distribution" style="width:200px">
+						<option value="first">Apply entirely to First Fee</option>
+						<option value="proportional">Split Proportionally</option>
+					</select>
+				</span>
+			</div>
+		</div>
+		<div class="col-md-12" id="dynamic_discount_reason_container_global" style="display:none; margin-top: 10px;">
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<span class="bmedium">Discount Reason <small class="req"> *</small></span>
+			</div>
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				<span class="pull-right" style="width: 200px; text-align: left;">
+					<select class="form-control" id="dynamic_discount_reason_select_global" style="margin-bottom: 5px;">
+						<option value=""><?php echo $this->lang->line('select'); ?> Reason *</option>
+						<option value="Staff discount">Staff Discount</option>
+						<option value="Sibling discount">Sibling Discount</option>
+						<option value="Management discount">Management Discount</option>
+						<option value="Merit scholarship">Merit Scholarship</option>
+						<option value="Need-based scholarship">Need-based Scholarship</option>
+						<option value="Sports scholarship">Sports Scholarship</option>
+						<option value="Girl child concession">Girl Child Concession</option>
+						<option value="Single parent concession">Single Parent Concession</option>
+						<option value="Financial hardship">Financial Hardship</option>
+						<option value="Special needs concession">Special Needs Concession</option>
+						<option value="Early payment discount">Early Payment Discount</option>
+						<option value="Annual payment discount">Annual Payment Discount</option>
+						<option value="Other">Other</option>
+					</select>
+					<input type="text" class="form-control" name="dynamic_discount_reason" id="dynamic_discount_reason_global" placeholder="Type Custom Reason *" style="display:none;">
+					<small class="text-warning"><i class="fa fa-info-circle"></i> Requires admin approval.</small>
+				</span>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		$('#amount_discount_global').on('keyup change', function(){
+			var val = parseFloat($(this).val());
+			if (val > 0) {
+				$('#discount_distribution_container').show();
+				$('#dynamic_discount_reason_container_global').show();
+			} else {
+				$('#discount_distribution_container').hide();
+				$('#dynamic_discount_reason_container_global').hide();
+			}
+			recalculateTotalPaying();
+		});
+
+		$('#dynamic_discount_reason_select_global').change(function(){
+			var val = $(this).val();
+			if(val === 'Other') {
+				$('#dynamic_discount_reason_global').val('').show();
+			} else {
+				$('#dynamic_discount_reason_global').hide().val(val);
+			}
+		});
+	</script>
+
 	<div class="row">
 		<div class="col-md-12">
 			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
@@ -569,10 +647,18 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 
 			let total_amount_for_pay = parseFloat($('#total_amount_for_pay').val()) || 0;
 			let total_paying = parseFloat($('#total_paying').val()) || 0;
+			let global_discount = parseFloat($('#amount_discount_global').val()) || 0;
 			let count = <?php echo $row_counter; ?>;
+			let distribution = $('#discount_distribution').val();
 
-			if (total_paying > total_amount_for_pay) {
+            if (global_discount > total_amount_for_pay) {
+                global_discount = total_amount_for_pay;
+                $('#amount_discount_global').val(global_discount);
+            }
 
+            let effective_total_for_pay = total_amount_for_pay - global_discount;
+
+			if (total_paying > effective_total_for_pay) {
 				alert("<?php echo $this->lang->line('enter_valid_amount_you_are_entering_more_than_required_amount');?>");
 				$('#total_paying').val('');
 
@@ -584,9 +670,8 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 				}
 
 				$("#paying_amount").html('0.00');
-				// $("#update_fine").html('0.00');
-
 				$(':input[type="submit"]').prop('disabled', true);
+				showBalanceMessage();
 				return;
 			}
 
@@ -595,6 +680,35 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 
 			let total_fee_paid = 0;
 			let total_fine_paid = 0;
+
+            let row_discounts = [];
+            let total_fee_amount = 0;
+            for (let i = 1; i < count; i++) {
+                row_discounts[i] = 0;
+                total_fee_amount += parseFloat($("#pay_fee_amount_" + i).val()) || 0;
+            }
+
+            if (global_discount > 0) {
+                if (distribution === 'first') {
+                    let remaining_discount = global_discount;
+                    for (let i = 1; i < count; i++) {
+                        let fee = parseFloat($("#pay_fee_amount_" + i).val()) || 0;
+                        if (fee > 0 && remaining_discount > 0) {
+                            row_discounts[i] = Math.min(remaining_discount, fee);
+                            remaining_discount -= row_discounts[i];
+                        }
+                    }
+                } else if (distribution === 'proportional') {
+                    if (total_fee_amount > 0) {
+                        for (let i = 1; i < count; i++) {
+                            let fee = parseFloat($("#pay_fee_amount_" + i).val()) || 0;
+                            if (fee > 0) {
+                                row_discounts[i] = (fee / total_fee_amount) * global_discount;
+                            }
+                        }
+                    }
+                }
+            }
 
 
 			for (let i = 1; i < count; i++) {
@@ -610,6 +724,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 				if (total_paying <= 0) break;
 
 				let fee = parseFloat($("#pay_fee_amount_" + i).val()) || 0;
+                fee = Math.max(0, fee - row_discounts[i]);
 				let fine = parseFloat($("#actual_fine_amount_" + i).val()) || 0;
 
 
@@ -642,6 +757,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 			}
 
 			$("#paying_amount").html(total_fee_paid.toFixed(2));
+            showBalanceMessage();
 		};
 
 		$(document).on('input paste keyup', '.total_fine_paying', function() {
@@ -757,20 +873,23 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 
 		let enteredPaying = parseFloat($("#total_paying").val()) || 0;
 		let allowedTotal  = parseFloat($("#total_amount_for_pay").val()) || 0;
+		let global_discount = parseFloat($('#amount_discount_global').val()) || 0;
 
-		let diff = enteredPaying - allowedTotal;
+		let diff = enteredPaying - (allowedTotal - global_discount);
 
-		// if (diff > 0) {
-			// $("#form_collection_total_paying_error").html(
-				// "Extra amount <?php echo $currency_symbol;?>" + diff.toFixed(2) 
-			// );
-		// } else 
-		if (diff < 0) {
+		if (diff > 0) {
+			$("#form_collection_total_paying_error").html(
+				"Extra amount <?php echo $currency_symbol;?>" + diff.toFixed(2) 
+			);
+            $(':input[type="submit"]').prop('disabled', true);
+		} else if (diff < 0) {
 			$("#form_collection_total_paying_error").html(
 				"<?php echo $this->lang->line('balance_amount') .' '. $currency_symbol;?>" + Math.abs(diff).toFixed(2) 
 			);
+            $(':input[type="submit"]').prop('disabled', false);
 		} else {
 			$("#form_collection_total_paying_error").html('');
+            $(':input[type="submit"]').prop('disabled', false);
 		}
 	}
 

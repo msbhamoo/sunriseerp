@@ -588,6 +588,9 @@ class Studentfee extends Admin_Controller
             }
         }
 
+        $this->load->model('feediscountrequest_model');
+        $data['discount_requests'] = $this->feediscountrequest_model->getByStudent($student_session_id);
+
         $this->load->view('layout/header', $data);
         $this->load->view('studentfee/studentAddfee', $data);
         $this->load->view('layout/footer', $data);
@@ -694,6 +697,8 @@ class Studentfee extends Admin_Controller
             $data                 = array();
             $student_fees_deposite  = $this->input->post('student_fees_deposite');
             $data['fees_discount']=$this->studentAppliedDiscount_model->get($student_fees_deposite);
+            $this->load->model('feediscountrequest_model');
+            $data['provisional_discounts'] = $this->feediscountrequest_model->getByInvoice($student_fees_deposite);
 			
             $page=$this->load->view('studentfee/_getAppliedDiscounts',$data,true);
             $return_array=['status'=>1,'page'=>$page];
@@ -794,6 +799,28 @@ class Studentfee extends Admin_Controller
             $parent_app_key     = $this->input->post('parent_app_key');
             $student_session_id = $this->input->post('student_session_id');
             $inserted_id        = $this->studentfeemaster_model->fee_deposit($data, $send_to, $discounts,date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('date'))));
+
+            // Dynamic Discount Provisional Request Logic
+            $amount_discount = convertCurrencyFormatToBaseAmount($this->input->post('amount_discount'));
+            $dynamic_discount_reason = $this->input->post('dynamic_discount_reason');
+            
+            if ($amount_discount > 0 && !empty($dynamic_discount_reason)) {
+                $receipt_data_temp = json_decode($inserted_id);
+                $this->load->model('feediscountrequest_model');
+                $prov_data = array(
+                    'student_session_id' => $student_session_id,
+                    'requested_by' => $staff_record['id'],
+                    'discount_type' => $this->input->post('dynamic_discount_type') ?? 'fix',
+                    'amount' => $amount_discount,
+                    'percentage' => $this->input->post('dynamic_discount_percentage') ?? null,
+                    'reason' => $dynamic_discount_reason,
+                    'status' => 'provisional',
+                    'student_fees_deposite_id' => $receipt_data_temp->invoice_id,
+                    'sub_invoice_id' => $receipt_data_temp->sub_invoice_id,
+                    'fee_groups_feetype_id' => $fee_groups_feetype_id
+                );
+                $this->feediscountrequest_model->create($prov_data);
+            }
 
             $print_record = array();
             if ($action == "print") {
@@ -1462,7 +1489,7 @@ class Studentfee extends Admin_Controller
                         'description'     => $this->input->post('fee_gupcollected_note'),
                         'reference_no'    => $this->input->post('reference_no'),
                         'cheque_date'     => $this->input->post('cheque_date') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('cheque_date'))) : null,
-                        'amount_discount' => 0,
+                        'amount_discount' => convertCurrencyFormatToBaseAmount($this->input->post('fee_amount_discount_' . $total_row_value)),
                         'collected_by'    => $collected_by,
                         'amount_fine'     => convertCurrencyFormatToBaseAmount($this->input->post('fee_groups_feetype_fine_amount_' . $total_row_value)),
                         'payment_mode'    => $this->input->post('payment_mode_fee'),
@@ -1509,9 +1536,41 @@ class Studentfee extends Admin_Controller
                     $this->studentfeemaster_model->generate_custom_receipt($dep_fee['invoice_id'], $dep_fee['sub_invoice_id'], $fee_cat);
                 }
             }
-					 
 
+            // PROVISIONAL DISCOUNT INTERCEPTION FOR GROUP FEES
+            $dynamic_discount_reason = $this->input->post('dynamic_discount_reason');
+            if (!empty($dynamic_discount_reason)) {
+                $deposited_fee_index = 0;
+                $this->load->model('feediscountrequest_model');
+                foreach ($total_row as $total_row_key => $total_row_value) {
+                    if ($this->input->post('fee_amount_' . $total_row_value) > 0) {
+                        $row_discount = convertCurrencyFormatToBaseAmount($this->input->post('fee_amount_discount_' . $total_row_value));
+                        if ($row_discount > 0) {
+                            $invoice_id = $deposited_fees[$deposited_fee_index]['invoice_id'];
+                            $sub_invoice_id = $deposited_fees[$deposited_fee_index]['sub_invoice_id'];
+                            $fee_groups_feetype_id = $this->input->post('fee_groups_feetype_id_' . $total_row_value);
+
+                            $prov_data = array(
+                                'student_session_id' => $student_session_id,
+                                'requested_by' => $staff_record['id'],
+                                'discount_type' => 'fix',
+                                'amount' => $row_discount,
+                                'percentage' => null,
+                                'reason' => $dynamic_discount_reason,
+                                'status' => 'provisional',
+                                'student_fees_deposite_id' => $invoice_id,
+                                'sub_invoice_id' => $sub_invoice_id,
+                                'fee_groups_feetype_id' => $fee_groups_feetype_id
+                            );
+                            $this->feediscountrequest_model->create($prov_data);
+                        }
+                        $deposited_fee_index++;
+                    }
+                }
+            }
+					 
 			$deposited_fee_index = 0;
+			$fee_receipt_pdf_url = array();
 			foreach ($total_row as $total_row_key => $total_row_value) {				
 				if($this->input->post('fee_amount_' . $total_row_value) > 0){
 				    $invoice_mail     		= $deposited_fees[$deposited_fee_index]['invoice_id'];   
@@ -1527,7 +1586,6 @@ class Studentfee extends Admin_Controller
 				    $token = encode_receipt_url($invoice_mail, $fee_category, $student_transport_fee_mail, $fee_groups_feetype_mail, $student_fees_master_mail, $fee_session_group_mail, 'staff', $staff_record['id']);
 				
 				    $fee_receipt_pdf_url[] = base_url() . "download-receipt/" . $token;
-                    
                     $deposited_fee_index++;
                 }
 			}	
@@ -1709,5 +1767,42 @@ class Studentfee extends Admin_Controller
         
         $page = $this->load->view('print/printFeesCertificate', $data, true);
         echo $page;
+    }
+    public function requestDiscount()
+    {
+        $this->form_validation->set_rules('discount_type', $this->lang->line('type'), 'required');
+        $this->form_validation->set_rules('reason', $this->lang->line('reason'), 'required');
+        
+        $discount_type = $this->input->post('discount_type');
+        if ($discount_type == 'fix') {
+            $this->form_validation->set_rules('amount', $this->lang->line('amount'), 'required|numeric|greater_than[0]');
+        } else {
+            $this->form_validation->set_rules('percentage', $this->lang->line('percentage'), 'required|numeric|greater_than[0]|less_than_equal_to[100]');
+        }
+
+        if ($this->form_validation->run() == false) {
+            $array = array('status' => 'fail', 'error' => $this->form_validation->error_array());
+            echo json_encode($array);
+        } else {
+            $staff_record = $this->staff_model->get($this->customlib->getStaffID());
+            $this->load->model('feediscountrequest_model');
+            
+            $data = array(
+                'student_session_id' => $this->input->post('student_session_id'),
+                'requested_by' => $staff_record['id'],
+                'discount_type' => $discount_type,
+                'amount' => $discount_type == 'fix' ? $this->input->post('amount') : 0,
+                'percentage' => $discount_type == 'percentage' ? $this->input->post('percentage') : null,
+                'reason' => $this->input->post('reason'),
+                'status' => 'pending'
+            );
+            
+            $this->feediscountrequest_model->create($data);
+            
+            // Notification logic can be added here
+            
+            $array = array('status' => 'success', 'message' => 'Discount request submitted for approval.');
+            echo json_encode($array);
+        }
     }
 }

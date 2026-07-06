@@ -288,7 +288,7 @@ if (set_value('category_id') == $category['id']) {
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row" style="display: flex; flex-wrap: wrap;">
                                         <div class="col-md-3">
                                             <div class="form-group">
                                                 <label for="shrestha">Shrestha</label>
@@ -299,6 +299,7 @@ if (set_value('category_id') == $category['id']) {
                                                 <span class="text-danger"><?php echo form_error('shrestha'); ?></span>
                                             </div>
                                         </div>
+
                                         <?php if ($sch_setting->rte) { ?>
                                         <div class="col-md-3">
                                             <div class="form-group">
@@ -403,9 +404,32 @@ if ($sch_setting->is_student_house) {
                                             </div>
                                         </div>
 
-                                        <?php
+<?php
 }
 ?>
+
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label for="is_staff_kid">Is Staff Kid?</label>
+                                                <select class="form-control" name="is_staff_kid" id="is_staff_kid" onchange="if(this.value == '1') { $('#staff_dropdown_container').show(); } else { $('#staff_dropdown_container').hide(); $('#staff_id').val(''); }">
+                                                    <option value="0" <?php echo set_select('is_staff_kid', '0', true); ?>>No</option>
+                                                    <option value="1" <?php echo set_select('is_staff_kid', '1'); ?>>Yes</option>
+                                                </select>
+                                                <span class="text-danger"><?php echo form_error('is_staff_kid'); ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3" id="staff_dropdown_container" style="display: <?php echo set_value('is_staff_kid') == '1' ? 'block' : 'none'; ?>;">
+                                            <div class="form-group">
+                                                <label for="staff_id">Staff Name</label>
+                                                <select class="form-control" name="staff_id" id="staff_id">
+                                                    <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                                    <?php foreach ($staffList as $staff) { ?>
+                                                        <option value="<?php echo $staff['id']; ?>" <?php echo set_select('staff_id', $staff['id']); ?>><?php echo $staff['name'] . ' ' . $staff['surname'] . ' (' . $staff['employee_id'] . ')'; ?></option>
+                                                    <?php } ?>
+                                                </select>
+                                                <span class="text-danger"><?php echo form_error('staff_id'); ?></span>
+                                            </div>
+                                        </div>
 
                                     </div>
                                     <div class="row">

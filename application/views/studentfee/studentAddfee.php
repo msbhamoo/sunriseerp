@@ -389,6 +389,11 @@ foreach ($categorylist as $value) {
 }
 ?>
                                                 </div>
+                                                <?php if (isset($student['is_staff_kid']) && $student['is_staff_kid'] == '1') { ?>
+                                                <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
+                                                    <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;">Staff Child:</span> <span class="label label-success">Yes</span>
+                                                </div>
+                                                <?php } ?>
                                                 <?php if ($sch_setting->rte) {?>
                                                 <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
                                                     <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('rte'); ?>:</span> <b class="text-danger"><?php echo $student['rte']; ?></b>
@@ -1160,6 +1165,7 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
         var student_session_id = $('#std_id').val();
         var amount = $('#amount').val();
         var amount_discount = $('#amount_discount').val();
+        var dynamic_discount_reason = $('#dynamic_discount_reason').val();
         var amount_fine = $('#amount_fine').val();
         var description = $('#description').val();
         var parent_app_key = $('#parent_app_key').val();
@@ -1183,7 +1189,7 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
         $.ajax({
             url: '<?php echo site_url("studentfee/addstudentfee") ?>',
             type: 'post',
-            data: {action: action, student_session_id: student_session_id, date: date, type: feetype, amount: amount, amount_discount: amount_discount, amount_fine: amount_fine, description: description, reference_no: reference_no, cheque_date: cheque_date, student_fees_master_id: student_fees_master_id, fee_groups_feetype_id: fee_groups_feetype_id,fee_category:fee_category, transport_fees_id:transport_fees_id, payment_mode: payment_mode, bank_account_id: bank_account_id, guardian_phone: guardian_phone, guardian_email: guardian_email, student_fees_discount_id: student_fees_discount_id, parent_app_key: parent_app_key,discounts: selectedDiscounts,fee_session_group_id:fee_session_group_id},
+            data: {action: action, student_session_id: student_session_id, date: date, type: feetype, amount: amount, amount_discount: amount_discount, dynamic_discount_reason: dynamic_discount_reason, amount_fine: amount_fine, description: description, reference_no: reference_no, cheque_date: cheque_date, student_fees_master_id: student_fees_master_id, fee_groups_feetype_id: fee_groups_feetype_id,fee_category:fee_category, transport_fees_id:transport_fees_id, payment_mode: payment_mode, bank_account_id: bank_account_id, guardian_phone: guardian_phone, guardian_email: guardian_email, student_fees_discount_id: student_fees_discount_id, parent_app_key: parent_app_key,discounts: selectedDiscounts,fee_session_group_id:fee_session_group_id},
             dataType: 'json',
             success: function (response) {
                 $this.button('reset');
@@ -1684,15 +1690,27 @@ $("#myFeesModal").on('shown.bs.modal', function (e) {
          balance_amount= (parseFloat(fee_type_amount)-final_discount_amount).toFixed(2);
         });
             
-            if (typeof final_discount_amount !== typeof undefined && final_discount_amount !== false) {
+            if (typeof final_discount_amount !== typeof undefined && final_discount_amount !== false && final_discount_amount > 0) {
                 $('div#myFeesModal').find('input#amount_discount').prop('readonly', true).val(final_discount_amount);
                 $('div#myFeesModal').find('input#amount').val(balance_amount);
+                $('#dynamic_discount_reason_container').hide();
+                $('#dynamic_discount_reason').val('');
             } else {
                 $('div#myFeesModal').find('input#amount').val(fee_type_amount);
                 $('div#myFeesModal').find('input#amount_discount').prop('readonly', false).val(0);
             }
             selectedDiscounts.push($(this).val());
-    });
+        });
+
+        $(document).on('keyup change', 'div#myFeesModal input#amount_discount', function() {
+            var dis_amount = parseFloat($(this).val());
+            if (dis_amount > 0 && !$(this).prop('readonly')) {
+                $('#dynamic_discount_reason_container').show();
+            } else {
+                $('#dynamic_discount_reason_container').hide();
+                $('#dynamic_discount_reason').val('');
+            }
+        });
     });
 
     $("#collect_fee_group").submit(function (e) {
@@ -1701,6 +1719,46 @@ $("#myFeesModal").on('shown.bs.modal', function (e) {
             alert("<?php echo $this->lang->line('please_enter_paying_amount');?>");
             return false;
         }
+
+        var global_discount = parseFloat($('#amount_discount_global').val()) || 0;
+        if (global_discount > 0) {
+            var reason = $('#dynamic_discount_reason_global').val();
+            if (!reason) {
+                alert("Please enter a discount reason.");
+                return false;
+            }
+            var distribution = $('#discount_distribution').val();
+            var count = parseInt($('input[name="row_counter[]"]').last().val()) + 1;
+            
+            $('.dyn-discount-input').remove();
+
+            if (distribution === 'first') {
+                var remaining_discount = global_discount;
+                for (var i = 1; i < count; i++) {
+                    var fee = parseFloat($("#pay_fee_amount_" + i).val()) || 0;
+                    if (fee > 0 && remaining_discount > 0) {
+                        var apply = Math.min(remaining_discount, fee);
+                        $(this).append('<input type="hidden" class="dyn-discount-input" name="fee_amount_discount_'+i+'" value="'+apply.toFixed(2)+'">');
+                        remaining_discount -= apply;
+                    }
+                }
+            } else if (distribution === 'proportional') {
+                var total_fee = 0;
+                for (var i = 1; i < count; i++) {
+                    total_fee += parseFloat($("#pay_fee_amount_" + i).val()) || 0;
+                }
+                if (total_fee > 0) {
+                    for (var i = 1; i < count; i++) {
+                        var fee = parseFloat($("#pay_fee_amount_" + i).val()) || 0;
+                        if (fee > 0) {
+                            var prop = (fee / total_fee) * global_discount;
+                            $(this).append('<input type="hidden" class="dyn-discount-input" name="fee_amount_discount_'+i+'" value="'+prop.toFixed(2)+'">');
+                        }
+                    }
+                }
+            }
+        }
+
         var form = $(this);
         var url = form.attr('action');
         var smt_btn = $(this).find("button[type=submit]");

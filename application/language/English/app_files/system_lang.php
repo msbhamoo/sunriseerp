@@ -2748,3 +2748,5 @@ $lang['add_gate_pass'] = 'Add Gate Pass';
 $lang['seatingroom'] = 'Seating Rooms';
 $lang['seatingarrangement'] = 'Seating Arrangement';
 $lang['seatingreport'] = 'Seating Reports';
+$lang['installment_plan'] = 'Installment Plan';
+$lang['installment_report'] = 'Installment Due Report';

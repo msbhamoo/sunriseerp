@@ -1395,6 +1395,49 @@ public function getFeeSessionGroupId($student_fees_master_id)
         return $array;
     }
 
+    public function reverseProvisionalDiscount($id, $sub_invoice)
+    {
+        $this->db->trans_start();
+        $this->db->trans_strict(false);
+        $should_reverse = false;
+        
+        $this->db->where('id', $id);
+        $q = $this->db->get('student_fees_deposite');
+        
+        if ($q->num_rows() > 0) {
+            $should_reverse = true;
+            $result = $q->row();
+            $a = json_decode($result->amount_detail, true);
+            
+            if (isset($a[$sub_invoice])) {
+                $a[$sub_invoice]['amount_discount'] = 0; // Reverse the discount
+                
+                $data['amount_detail'] = json_encode($a);
+                $this->db->where('id', $id);
+                $this->db->update('student_fees_deposite', $data);
+                
+                $message = UPDATE_RECORD_CONSTANT . " Reversed provisional discount on deposit " . $id;
+                $this->log($message, $id, "Update");
+            }
+        }
+        
+        $this->db->trans_complete();
+        
+        if ($this->db->trans_status() === false) {
+            $this->db->trans_rollback();
+            return false;
+        } else {
+            // Sync with Accounts module to reverse the discount voucher ONLY
+            if ($should_reverse && file_exists(APPPATH . 'libraries/Accounts_integration.php')) {
+                $this->load->library('accounts_integration');
+                $this->accounts_integration->reverse_sync('fee_discount', $id . '_' . $sub_invoice . '_disc');
+                // We do NOT reverse fee_collection because the cash was actually received
+            }
+            return true;
+        }
+    }
+
+
     public function getOnlineFeeCollectionReport($start_date, $end_date)
     {
         $this->db->select('`student_fees_deposite`.*,students.firstname,students.middlename,students.lastname,student_session.class_id,classes.class,sections.section,student_session.section_id,student_session.student_id,`fee_groups`.`name`, `feetype`.`type`, `feetype`.`code`,feetype.is_system,student_fees_master.student_session_id,students.admission_no')->from('student_fees_deposite');

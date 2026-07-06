@@ -234,5 +234,49 @@ class Feediscount_model extends MY_Model
         $query = $this->db->query($query);
         return $query->result();
     }
+    public function createDynamicDiscount($request)
+    {
+        $this->db->trans_start();
+
+        // Get current session
+        $session_id = $this->setting_model->getCurrentSession();
+        $session_data = $this->session_model->get($session_id);
+        
+        $expire_date = null;
+        if (!empty($session_data) && isset($session_data['end_date'])) {
+            $expire_date = date('Y-m-d', strtotime($session_data['end_date']));
+        }
+
+        $discount_data = array(
+            'session_id' => $session_id,
+            'name' => 'Dynamic: ' . (strlen($request['reason']) > 20 ? substr($request['reason'], 0, 17) . '...' : $request['reason']),
+            'code' => 'DYN-' . $request['id'],
+            'type' => $request['discount_type'],
+            'amount' => $request['amount'],
+            'percentage' => $request['percentage'],
+            'description' => $request['reason'],
+            'discount_limit' => 1,
+            'expire_date' => $expire_date,
+            'is_active' => 'no' // It's active for this student, no is default in this system for some reason, wait actually in this system `is_active` might be yes/no.
+        );
+
+        $this->db->insert('fees_discounts', $discount_data);
+        $fees_discount_id = $this->db->insert_id();
+
+        $student_discount_data = array(
+            'student_session_id' => $request['student_session_id'],
+            'fees_discount_id' => $fees_discount_id,
+            'status' => 'assigned'
+        );
+        $this->db->insert('student_fees_discounts', $student_discount_data);
+        $student_fees_discount_id = $this->db->insert_id();
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() === false) {
+            return false;
+        }
+        return $student_fees_discount_id;
+    }
 
 }

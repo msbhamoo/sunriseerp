@@ -75,6 +75,7 @@ class Hostelgatepass extends Admin_Controller
             access_denied();
         }
 
+        $this->form_validation->set_rules('pass_type', 'Pass Type', 'required');
         $this->form_validation->set_rules('student_session_id', 'Student', 'required');
         $this->form_validation->set_rules('going_to', 'Going To', 'required');
         $this->form_validation->set_rules('out_date', 'Out Date', 'required');
@@ -82,6 +83,7 @@ class Hostelgatepass extends Admin_Controller
 
         if ($this->form_validation->run() == FALSE) {
             $msg = array(
+                'pass_type' => form_error('pass_type'),
                 'student_session_id' => form_error('student_session_id'),
                 'going_to' => form_error('going_to'),
                 'out_date' => form_error('out_date'),
@@ -90,13 +92,16 @@ class Hostelgatepass extends Admin_Controller
             $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
         } else {
             $expected_in = $this->input->post('expected_in_time');
+            $expected_in_date = $this->input->post('expected_in_date');
             
             $data = array(
                 'student_session_id' => $this->input->post('student_session_id'),
+                'pass_type' => $this->input->post('pass_type'),
                 'going_to' => $this->input->post('going_to'),
                 'reason' => $this->input->post('reason'),
                 'out_date' => $this->customlib->dateFormatToYYYYMMDD($this->input->post('out_date')),
                 'out_time' => $this->input->post('out_time'),
+                'expected_in_date' => empty($expected_in_date) ? NULL : $this->customlib->dateFormatToYYYYMMDD($expected_in_date),
                 'expected_in_time' => empty($expected_in) ? NULL : $expected_in,
                 'status' => 'Out'
             );

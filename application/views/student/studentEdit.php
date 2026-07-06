@@ -247,7 +247,7 @@ $count++;
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row" style="display: flex; flex-wrap: wrap;">
                                         <div class="col-md-3">
                                             <div class="form-group">
                                                 <label for="shrestha">Shrestha</label>
@@ -258,6 +258,7 @@ $count++;
                                                 <span class="text-danger"><?php echo form_error('shrestha'); ?></span>
                                             </div>
                                         </div>
+
                                         <?php if ($sch_setting->rte) { ?>
                                         <div class="col-md-3">
                                             <div class="form-group">
@@ -355,9 +356,33 @@ if ($hvalue["id"] == $student["school_house_id"]) {
                                                     <span class="text-danger"><?php echo form_error('house'); ?></span>
                                                 </div>
                                             </div>
+<?php } ?>
+
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label for="is_staff_kid">Is Staff Kid?</label>
+                                                <select class="form-control" name="is_staff_kid" id="is_staff_kid" onchange="if(this.value == '1') { $('#staff_dropdown_container_edit').show(); } else { $('#staff_dropdown_container_edit').hide(); $('#staff_id').val(''); }">
+                                                    <option value="0" <?php echo set_value('is_staff_kid', isset($student['is_staff_kid']) ? $student['is_staff_kid'] : '0') == '0' ? "selected" : ""; ?>>No</option>
+                                                    <option value="1" <?php echo set_value('is_staff_kid', isset($student['is_staff_kid']) ? $student['is_staff_kid'] : '0') == '1' ? "selected" : ""; ?>>Yes</option>
+                                                </select>
+                                                <span class="text-danger"><?php echo form_error('is_staff_kid'); ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3" id="staff_dropdown_container_edit" style="display: <?php echo set_value('is_staff_kid', isset($student['is_staff_kid']) ? $student['is_staff_kid'] : '0') == '1' ? 'block' : 'none'; ?>;">
+                                            <div class="form-group">
+                                                <label for="staff_id">Staff Name</label>
+                                                <select class="form-control" name="staff_id" id="staff_id">
+                                                    <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                                    <?php foreach ($staffList as $staff) { ?>
+                                                        <option value="<?php echo $staff['id']; ?>" <?php echo set_value('staff_id', isset($student['staff_id']) ? $student['staff_id'] : '') == $staff['id'] ? "selected" : ""; ?>><?php echo $staff['name'] . ' ' . $staff['surname'] . ' (' . $staff['employee_id'] . ')'; ?></option>
+                                                    <?php } ?>
+                                                </select>
+                                                <span class="text-danger"><?php echo form_error('staff_id'); ?></span>
+                                            </div>
+                                        </div>
                                         </div>
                                         <div class="row">
-                                                <?php }if ($sch_setting->student_height) {
+                                                <?php if ($sch_setting->student_height) {
     ?>
                                             <div class="col-md-3 col-xs-12">
                                                 <div class="form-group">

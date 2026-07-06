@@ -28,6 +28,7 @@
                                         <th>Student Name</th>
                                         <th>Admission No</th>
                                         <th>Going To</th>
+                                        <th>Pass Type</th>
                                         <th>Out Date & Time</th>
                                         <th>Expected In</th>
                                         <th>Actual In</th>
@@ -42,9 +43,32 @@
                                                 <td><?php echo $gp['firstname'] . ' ' . $gp['lastname']; ?></td>
                                                 <td><?php echo $gp['admission_no']; ?></td>
                                                 <td><?php echo $gp['going_to']; ?></td>
-                                                <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($gp['out_date'])) . ' ' . $gp['out_time']; ?></td>
-                                                <td><?php echo $gp['expected_in_time']; ?></td>
-                                                <td><?php echo $gp['actual_in_time']; ?></td>
+                                                <td><?php echo isset($gp['pass_type']) ? $gp['pass_type'] : 'Day Pass'; ?></td>
+                                                <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($gp['out_date'])) . ' ' . date("h:i A", strtotime($gp['out_time'])); ?></td>
+                                                <td>
+                                                    <?php 
+                                                    $exp_str = '';
+                                                    if (!empty($gp['expected_in_date'])) {
+                                                        $exp_str .= date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($gp['expected_in_date'])) . ' ';
+                                                    }
+                                                    if (!empty($gp['expected_in_time'])) {
+                                                        $exp_str .= date("h:i A", strtotime($gp['expected_in_time']));
+                                                    }
+                                                    echo $exp_str;
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <?php 
+                                                    $act_str = '';
+                                                    if (!empty($gp['actual_in_date'])) {
+                                                        $act_str .= date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($gp['actual_in_date'])) . ' ';
+                                                    }
+                                                    if (!empty($gp['actual_in_time'])) {
+                                                        $act_str .= date("h:i A", strtotime($gp['actual_in_time']));
+                                                    }
+                                                    echo $act_str;
+                                                    ?>
+                                                </td>
                                                 <td>
                                                     <?php if ($gp['status'] == 'Out') { ?>
                                                         <span class="label label-warning">Out</span>
@@ -100,6 +124,14 @@
                         <span class="text-danger" id="error_student_session_id"></span>
                     </div>
                     <div class="form-group">
+                        <label>Pass Type <small class="req"> *</small></label>
+                        <select class="form-control" name="pass_type" id="pass_type" required>
+                            <option value="Day Pass">Day Pass</option>
+                            <option value="Holiday Pass">Holiday Pass</option>
+                        </select>
+                        <span class="text-danger" id="error_pass_type"></span>
+                    </div>
+                    <div class="form-group">
                         <label>Going To <small class="req"> *</small></label>
                         <input type="text" class="form-control" name="going_to" required>
                         <span class="text-danger" id="error_going_to"></span>
@@ -109,23 +141,29 @@
                         <textarea class="form-control" name="reason"></textarea>
                     </div>
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label>Out Date <small class="req"> *</small></label>
                                 <input type="text" class="form-control date" name="out_date" value="<?php echo date($this->customlib->getSchoolDateFormat()); ?>" required readonly>
                                 <span class="text-danger" id="error_out_date"></span>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label>Out Time <small class="req"> *</small></label>
                                 <input type="time" class="form-control" name="out_time" required>
                                 <span class="text-danger" id="error_out_time"></span>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
-                                <label>Expected In Time</label>
+                                <label>Exp. Return Date</label>
+                                <input type="text" class="form-control date" name="expected_in_date" value="" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Exp. Return Time</label>
                                 <input type="time" class="form-control" name="expected_in_time">
                             </div>
                         </div>
