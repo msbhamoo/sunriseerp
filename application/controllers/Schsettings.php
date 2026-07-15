@@ -402,6 +402,10 @@ class Schsettings extends Admin_Controller
                 'currency_place'  => $this->input->post('currency_place'),
                 'base_url'        => $this->input->post('base_url'),
                 'folder_path'     => $this->input->post('folder_path'),
+                'email_digest_recipients' => $this->input->post('email_digest_recipients'),
+                'daily_digest_time'       => $this->input->post('daily_digest_time'),
+                'weekly_digest_time'      => $this->input->post('weekly_digest_time'),
+                'monthly_digest_time'     => $this->input->post('monthly_digest_time'),
             );
 
             $this->setting_model->add($data);

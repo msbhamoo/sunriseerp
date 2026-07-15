@@ -45,6 +45,7 @@
                             </div>   
                             <?php $display = (set_value('email_type', $emaillist->email_type) != "smtp") ? 'ss-none' : '' ?>
                             <?php $display_ses = (set_value('email_type', $emaillist->email_type) != "aws_ses") ? 'ss-none' : '' ?>
+                            <?php $display_brevo = (set_value('email_type', $emaillist->email_type) != "brevo_api") ? 'ss-none' : '' ?>
                             <div class="is_disabled <?php echo $display; ?>" >
 
 
@@ -158,6 +159,17 @@
                                     </div>  
                                 </div>
                             </div>
+                            <div class="is_disabled_brevo <?php echo $display_brevo; ?>" >
+                                <div class="form-group">
+                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="exampleInputEmail1">
+                                        Brevo API Key
+                                    </label>
+                                    <div class="col-md-6 col-sm-6 col-xs-12">
+                                        <input id="brevo_api_key" name="brevo_api_key" placeholder="" type="text" class="form-control col-md-7 col-xs-12" value="<?php echo set_value('brevo_api_key', $emaillist->api_key); ?>" />
+                                        <span class="text-danger"><?php echo form_error('brevo_api_key'); ?></span>
+                                    </div>
+                                </div>
+                            </div>
                           </div>                            
                         </div>
                         <div class="box-footer px-10">
@@ -239,12 +251,19 @@
     function is_disabled(selected) {
         if (selected == "smtp") {
             $('.is_disabled_ses').slideUp();
+            $('.is_disabled_brevo').slideUp();
             $('.is_disabled').slideDown();
         }else if(selected == "aws_ses"){
             $('.is_disabled').slideUp();
+            $('.is_disabled_brevo').slideUp();
             $('.is_disabled_ses').slideDown();
+        }else if(selected == "brevo_api"){
+            $('.is_disabled').slideUp();
+            $('.is_disabled_ses').slideUp();
+            $('.is_disabled_brevo').slideDown();
         } else {
             $('.is_disabled_ses').slideUp();
+            $('.is_disabled_brevo').slideUp();
             $('.is_disabled').slideUp();
         }
     }

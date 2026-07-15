@@ -243,6 +243,17 @@
                                             <i class="fa fa-bus vehicle-icon"></i>
                                             <div class="vehicle-title"><?php echo $data['vehicle_no']; ?></div>
                                             <div class="vehicle-subtitle"><?php echo !empty($data['driver_name']) ? $data['driver_name'] : 'No Driver'; ?></div>
+                                            <?php 
+                                            $occupied = isset($occupancy[$data['id']]) ? $occupancy[$data['id']] : 0;
+                                            $capacity = $data['max_seating_capacity'];
+                                            $seat_badge_color = ($occupied > $capacity && $capacity > 0) ? '#ef4444' : '#3b82f6';
+                                            $seat_bg = ($occupied > $capacity && $capacity > 0) ? '#fef2f2' : '#eff6ff';
+                                            ?>
+                                            <div style="margin-top: 8px;">
+                                                <span class="badge-soft" style="background:<?php echo $seat_bg; ?>; color:<?php echo $seat_badge_color; ?>; font-size: 11px;">
+                                                    <i class="fa fa-users"></i> Seats: <?php echo $occupied; ?> / <?php echo $capacity ?: 0; ?>
+                                                </span>
+                                            </div>
                                             <div class="action-overlay">
                                                 <?php if(!empty($data['driver_contact'])) { ?>
                                                     <a href="tel:<?php echo $data['driver_contact']; ?>" class="btn-icon" style="color:#10b981;" data-toggle="tooltip" title="Call Driver">
@@ -254,6 +265,9 @@
                                                         <i class="fa fa-phone"></i>
                                                     </a>
                                                 <?php } ?>
+                                                <button class="btn-icon viewstudents" data-id="<?php echo $data['id'] ?>" data-toggle="tooltip" title="View Students">
+                                                    <i class="fa fa-users"></i>
+                                                </button>
                                                 <button class="btn-icon vehicledetails" data-id="<?php echo $data['id'] ?>" data-toggle="tooltip" title="<?php echo $this->lang->line('view'); ?>">
                                                     <i class="fa fa-eye"></i>
                                                 </button>
@@ -309,7 +323,17 @@
                                                     <td><?php echo $data['vehicle_model'] ?></td>
                                                     <td><span class="badge-soft" style="background:<?php echo $status_color; ?>20; color:<?php echo $status_color; ?>;"><?php echo $status; ?></span></td>
                                                     <td><?php echo $data['registration_number'] ?></td>
-                                                    <td><span class="badge-soft badge-blue"><?php echo $data['max_seating_capacity'] ?></span></td>
+                                                    <td>
+                                                        <?php 
+                                                        $occupied = isset($occupancy[$data['id']]) ? $occupancy[$data['id']] : 0;
+                                                        $capacity = $data['max_seating_capacity'];
+                                                        $seat_badge_color = ($occupied > $capacity && $capacity > 0) ? '#ef4444' : '#0369a1';
+                                                        $seat_bg = ($occupied > $capacity && $capacity > 0) ? '#fef2f2' : '#e0f2fe';
+                                                        ?>
+                                                        <span class="badge-soft" style="background:<?php echo $seat_bg; ?>; color:<?php echo $seat_badge_color; ?>;">
+                                                            <?php echo $occupied; ?> / <?php echo $capacity ?: 0; ?>
+                                                        </span>
+                                                    </td>
                                                     <td><?php echo $data['driver_name'] ?></td>
                                                     <td><?php echo $data['driver_contact'] ?></td>
                                                     <td>
@@ -321,6 +345,9 @@
                                                     </td>
                                                     <td class="text-right">
                                                         <div style="display:flex; gap:4px; justify-content:flex-end;">
+                                                            <button class="btn-icon viewstudents" style="width:28px; height:28px;" data-id="<?php echo $data['id'] ?>" data-toggle="tooltip" title="View Students">
+                                                                <i class="fa fa-users"></i>
+                                                            </button>
                                                             <button class="btn-icon vehicledetails" style="width:28px; height:28px;" data-id="<?php echo $data['id'] ?>" data-toggle="tooltip" title="<?php echo $this->lang->line('view'); ?>">
                                                                 <i class="fa fa-eye"></i>
                                                             </button>
@@ -683,8 +710,6 @@
                             </button>
                         </div>
                 </div>
-
-                </div>
                 
             </form>
         </div>
@@ -873,4 +898,50 @@ $("#editvehicleform").on('submit', (function (e) {
 
     });
 }));
+
+$('.viewstudents').click(function(){
+    $('#viewstudentsmodal').modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+    var vehicle_id = $(this).attr('data-id');
+    $('#btn-assign-new-student').attr('onclick', 'openAssignModal(' + vehicle_id + ')');
+    $('#viewstudentsdata').html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-3x"></i></div>');
+    
+    $.ajax({
+        url:'<?php echo site_url("admin/vehicle/get_vehicle_students"); ?>',
+        type:'post',
+        data:{vehicle_id:vehicle_id},
+        dataType:'json',
+        success:function(response){
+            if(response.status == 1) {
+                $('#viewstudentsdata').html(response.html);
+            }
+        },
+        error: function() {
+            $('#viewstudentsdata').html('<div class="alert alert-danger">Error loading students list.</div>');
+        }
+    });
+});
 </script>
+
+<div class="modal fade" id="viewstudentsmodal" role="dialog" aria-labelledby="viewstudentsmodal">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modern-card" style="border:none;">
+            <div class="modern-header" style="background-color: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
+                <h4 class="modern-title" style="margin: 0;"><i class="fa fa-users"></i> Students Assigned to Vehicle</h4>
+                <div>
+                    <button type="button" class="btn btn-sm btn-primary" id="btn-assign-new-student" style="margin-right: 15px; border-radius: 4px;">
+                        <i class="fa fa-plus"></i> Assign New Student
+                    </button>
+                    <button type="button" class="close" data-dismiss="modal" style="opacity: 0.6; color: #000; text-shadow: none; float: none;">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body modern-body" id="viewstudentsdata">
+                <!-- Content will be loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php $this->load->view('admin/vehicle/assign_student_modal'); ?>

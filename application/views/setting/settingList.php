@@ -228,6 +228,44 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="settinghr"></div>
+                                        <h4 class="session-head">Email Digest Settings</h4>
+                                    </div><!--./col-md-12-->
+                                    <div class="col-md-12">
+                                        <div class="form-group row">
+                                            <label class="col-sm-2">Recipients (comma separated)</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" class="form-control" id="email_digest_recipients" name="email_digest_recipients" value="<?php echo $result->email_digest_recipients; ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group row">
+                                            <label class="col-sm-5 text-lg-end">Daily Digest Time</label>
+                                            <div class="col-sm-7">
+                                                <input type="time" class="form-control" id="daily_digest_time" name="daily_digest_time" value="<?php echo $result->daily_digest_time; ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group row">
+                                            <label class="col-sm-5 text-lg-end">Weekly Digest Time (Sun)</label>
+                                            <div class="col-sm-7">
+                                                <input type="time" class="form-control" id="weekly_digest_time" name="weekly_digest_time" value="<?php echo $result->weekly_digest_time; ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group row">
+                                            <label class="col-sm-5 text-lg-end">Monthly Digest Time (1st)</label>
+                                            <div class="col-sm-7">
+                                                <input type="time" class="form-control" id="monthly_digest_time" name="monthly_digest_time" value="<?php echo $result->monthly_digest_time; ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div><!--./row-->
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="settinghr"></div>
                                         <h4 class="session-head"><?php echo $this->lang->line('file_upload_path'); ?></h4>
                                     </div><!--./col-md-12-->
                                     <div class="col-md-6">

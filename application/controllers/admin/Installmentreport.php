@@ -48,15 +48,16 @@ class Installmentreport extends Admin_Controller
             foreach ($students as $student) {
                 $student_session_id = $student['student_session_id'];
                 
+                // Determine if user filtered by plan
+                $plan_id = $this->input->post('installment_plan_id');
+                if (empty($plan_id)) {
+                    $plan_id = null;
+                }
+
                 // Use calculation engine
-                $installment_data = $this->Installmentplan_model->calculate_student_installments($student_session_id);
+                $installment_data = $this->Installmentplan_model->calculate_student_installments($student_session_id, $plan_id);
                 
                 if ($installment_data && $installment_data['total_overdue'] > 0) {
-                    
-                    $plan_id = $this->input->post('installment_plan_id');
-                    if (!empty($plan_id) && $installment_data['plan_id'] != $plan_id) {
-                        continue;
-                    }
                     
                     // This student has at least one overdue installment
                     $student_record = array(

@@ -27,12 +27,18 @@ class Transportyearlyfee_model extends MY_Model
 
     public function get($id = null, $route_id = null, $pickup_point_id = null)
     {
-        $this->db->select('transport_yearly_feemaster.*, route_pickup_point.pickup_point_id, transport_route.id as route_id, transport_route.route_title, pickup_point.name as pickup_point_name, classes.class as class_name, feetype.type as feetype_name, feetype.code as feetype_code');
+        $this->db->select("transport_yearly_feemaster.*, 
+            IFNULL(route_pickup_point.pickup_point_id, transport_yearly_feemaster.pickup_point_id) as pickup_point_id, 
+            transport_route.id as route_id, transport_route.route_title, 
+            IFNULL(pickup_point.name, p2.name) as pickup_point_name, 
+            classes.class as class_name, feetype.type as feetype_name, feetype.code as feetype_code, 
+            (SELECT GROUP_CONCAT(vehicles.vehicle_no SEPARATOR ', ') FROM vehicle_routes JOIN vehicles ON vehicles.id = vehicle_routes.vehicle_id WHERE vehicle_routes.route_id = transport_route.id) as vehicle_no");
         $this->db->from('transport_yearly_feemaster');
-        $this->db->join('route_pickup_point', 'route_pickup_point.id = transport_yearly_feemaster.route_pickup_point_id');
-        $this->db->join('pickup_point', 'pickup_point.id = route_pickup_point.pickup_point_id');
-        $this->db->join('transport_route', 'transport_route.id = route_pickup_point.transport_route_id');
-        $this->db->join('classes', 'classes.id = transport_yearly_feemaster.class_id');
+        $this->db->join('route_pickup_point', 'route_pickup_point.id = transport_yearly_feemaster.route_pickup_point_id', 'left');
+        $this->db->join('pickup_point', 'pickup_point.id = route_pickup_point.pickup_point_id', 'left');
+        $this->db->join('pickup_point as p2', 'p2.id = transport_yearly_feemaster.pickup_point_id', 'left');
+        $this->db->join('transport_route', 'transport_route.id = route_pickup_point.transport_route_id', 'left');
+        $this->db->join('classes', 'classes.id = transport_yearly_feemaster.class_id', 'left');
         $this->db->join('feetype', 'feetype.id = transport_yearly_feemaster.feetype_id');
         $this->db->where('transport_yearly_feemaster.session_id', $this->current_session);
         
@@ -40,7 +46,10 @@ class Transportyearlyfee_model extends MY_Model
             $this->db->where('route_pickup_point.transport_route_id', $route_id);
         }
         if ($pickup_point_id != null && $pickup_point_id != "") {
+            $this->db->group_start();
             $this->db->where('route_pickup_point.pickup_point_id', $pickup_point_id);
+            $this->db->or_where('transport_yearly_feemaster.pickup_point_id', $pickup_point_id);
+            $this->db->group_end();
         }
         
         if ($id != null) {
@@ -85,11 +94,19 @@ class Transportyearlyfee_model extends MY_Model
 
     public function getApplicableYearlyFees($class_id, $route_pickup_point_id)
     {
+        $this->db->select('pickup_point_id');
+        $this->db->from('route_pickup_point');
+        $this->db->where('id', $route_pickup_point_id);
+        $rp = $this->db->get()->row();
+        $pickup_point_id = $rp ? $rp->pickup_point_id : 0;
+
         $this->db->select('transport_yearly_feemaster.*, feetype.type, feetype.code');
         $this->db->from('transport_yearly_feemaster');
         $this->db->join('feetype', 'feetype.id = transport_yearly_feemaster.feetype_id');
-        $this->db->where('transport_yearly_feemaster.class_id', $class_id);
-        $this->db->where('transport_yearly_feemaster.route_pickup_point_id', $route_pickup_point_id);
+        $this->db->group_start();
+        $this->db->where('(transport_yearly_feemaster.class_id = ' . (int)$class_id . ' AND transport_yearly_feemaster.route_pickup_point_id = ' . (int)$route_pickup_point_id . ')');
+        $this->db->or_where('transport_yearly_feemaster.pickup_point_id', $pickup_point_id);
+        $this->db->group_end();
         $this->db->where('transport_yearly_feemaster.session_id', $this->current_session);
         $query = $this->db->get();
         return $query->result_array();

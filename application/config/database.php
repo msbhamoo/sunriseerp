@@ -10,7 +10,7 @@ if ($is_localhost) {
         'hostname' => 'localhost',
         'username' => 'root',
         'password' => '',
-        'database' => 'smserp',
+        'database' => 'smserpnew',
         'dbdriver'     => 'mysqli',
         'dbprefix'     => '',
         'pconnect'     => false,

@@ -126,4 +126,48 @@ class Vehicle_model extends MY_Model
         return $query->result_array();
     }
 
+    public function getVehicleOccupancy($session_id = null)
+    {
+        if ($session_id == null) {
+            $session_id = $this->current_session;
+        }
+        $this->db->select('vehicle_routes.vehicle_id, COUNT(student_session.id) as occupied_seats');
+        $this->db->from('student_session');
+        $this->db->join('vehicle_routes', 'vehicle_routes.id = student_session.vehroute_id');
+        $this->db->join('students', 'students.id = student_session.student_id');
+        $this->db->where('student_session.session_id', $session_id);
+        $this->db->where('students.is_active', 'yes');
+        $this->db->group_by('vehicle_routes.vehicle_id');
+        
+        $result = $this->db->get()->result_array();
+        
+        $occupancy = array();
+        foreach ($result as $row) {
+            $occupancy[$row['vehicle_id']] = $row['occupied_seats'];
+        }
+        return $occupancy;
+    }
+
+    public function getVehicleStudents($vehicle_id, $session_id = null)
+    {
+        if ($session_id == null) {
+            $session_id = $this->current_session;
+        }
+        $this->db->select('students.admission_no, students.firstname, students.lastname, classes.class, sections.section, transport_route.route_title, pickup_point.name as pickup_point_name');
+        $this->db->from('student_session');
+        $this->db->join('students', 'students.id = student_session.student_id');
+        $this->db->join('classes', 'classes.id = student_session.class_id');
+        $this->db->join('sections', 'sections.id = student_session.section_id');
+        $this->db->join('vehicle_routes', 'vehicle_routes.id = student_session.vehroute_id');
+        $this->db->join('transport_route', 'transport_route.id = vehicle_routes.route_id', 'left');
+        $this->db->join('route_pickup_point', 'route_pickup_point.id = student_session.route_pickup_point_id', 'left');
+        $this->db->join('pickup_point', 'pickup_point.id = route_pickup_point.pickup_point_id', 'left');
+        $this->db->where('vehicle_routes.vehicle_id', $vehicle_id);
+        $this->db->where('student_session.session_id', $session_id);
+        $this->db->where('students.is_active', 'yes');
+        $this->db->order_by('transport_route.route_title', 'ASC');
+        $this->db->order_by('students.firstname', 'ASC');
+        return $this->db->get()->result_array();
+    }
+
 }

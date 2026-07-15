@@ -7,6 +7,8 @@ if (!defined('BASEPATH')) {
 class Installmentplan_model extends MY_Model
 {
 
+    public $current_session;
+
     public function __construct()
     {
         parent::__construct();
@@ -174,7 +176,7 @@ class Installmentplan_model extends MY_Model
         }
     }
 
-    public function calculate_student_installments($student_session_id)
+    public function calculate_student_installments($student_session_id, $plan_id = null)
     {
         // 1. Get student class
         $this->db->select('class_id');
@@ -189,10 +191,16 @@ class Installmentplan_model extends MY_Model
         $this->db->join('fee_installment_plan_classes c', 'c.installment_plan_id = p.id', 'left');
         $this->db->where('p.session_id', $this->current_session);
         $this->db->where('p.is_active', 'yes');
-        $this->db->group_start();
-        $this->db->where('p.is_global', 1);
-        $this->db->or_where('c.class_id', $class_id);
-        $this->db->group_end();
+        
+        if ($plan_id != null) {
+            $this->db->where('p.id', $plan_id);
+        } else {
+            $this->db->group_start();
+            $this->db->where('p.is_global', 1);
+            $this->db->or_where('c.class_id', $class_id);
+            $this->db->group_end();
+        }
+        
         $this->db->order_by('p.id', 'desc');
         $this->db->limit(1);
         $plan = $this->db->get()->row_array();
@@ -205,11 +213,14 @@ class Installmentplan_model extends MY_Model
 
         $included_fee_groups = array();
         $included_transport = array();
+        $included_prev_balance = false;
         foreach ($items as $item) {
             if ($item['fee_source_type'] == 'fee_group') {
                 $included_fee_groups[] = $item['fee_source_id'];
             } else if ($item['fee_source_type'] == 'transport_yearly') {
                 $included_transport[] = $item['fee_source_id'];
+            } else if ($item['fee_source_type'] == 'previous_balance') {
+                $included_prev_balance = true;
             }
         }
 
@@ -225,23 +236,38 @@ class Installmentplan_model extends MY_Model
         $base_academic = 0;
         $base_transport = 0;
         $base_hostel = 0;
+        $base_prev_balance = 0;
+        
         $paid_academic = 0;
         $paid_transport = 0;
         $paid_hostel = 0;
+        $paid_prev_balance = 0;
 
         // Get regular fees (Academic & Hostel)
         $this->load->model('studentfeemaster_model');
         $fees = $this->studentfeemaster_model->getStudentFees($student_session_id);
         
+        // Fix: getStudentFees doesn't return fee_groups_id, it only returns fee_session_group_id. Map it!
+        $fee_session_groups = $this->db->get('fee_session_groups')->result();
+        $group_mapping = array();
+        foreach ($fee_session_groups as $fsg) {
+            $group_mapping[$fsg->id] = $fsg->fee_groups_id;
+        }
+
         foreach ($fees as $fee) {
-            if (in_array($fee->fee_groups_id, $included_fee_groups)) {
-                $is_hostel = in_array($fee->fee_groups_id, $hostel_fee_groups);
+            $fee_groups_id = isset($group_mapping[$fee->fee_session_group_id]) ? $group_mapping[$fee->fee_session_group_id] : null;
+            $is_prev = ($fee->is_system == 1);
+            
+            if (($fee_groups_id && in_array($fee_groups_id, $included_fee_groups)) || ($is_prev && $included_prev_balance)) {
+                $is_hostel = in_array($fee_groups_id, $hostel_fee_groups);
                 
                 foreach ($fee->fees as $f) {
                     $amount = $f->amount;
                     if ($fee->is_system) { $amount = $fee->amount; }
                     
-                    if ($is_hostel) {
+                    if ($is_prev) {
+                        $base_prev_balance += $amount;
+                    } else if ($is_hostel) {
                         $base_hostel += $amount;
                     } else {
                         $base_academic += $amount;
@@ -252,7 +278,9 @@ class Installmentplan_model extends MY_Model
                         $payments = json_decode($f->amount_detail, true);
                         foreach ($payments as $p) {
                             $paid_amount = $p['amount'] + $p['amount_discount'];
-                            if ($is_hostel) {
+                            if ($is_prev) {
+                                $paid_prev_balance += $paid_amount;
+                            } else if ($is_hostel) {
                                 $paid_hostel += $paid_amount;
                             } else {
                                 $paid_academic += $paid_amount;
@@ -262,6 +290,8 @@ class Installmentplan_model extends MY_Model
                 }
             }
         }
+
+
 
         // Apply global student discounts (only to academic)
         $this->load->model('feediscount_model');
@@ -278,7 +308,7 @@ class Installmentplan_model extends MY_Model
         $student = $this->db->get_where('student_session', array('id' => $student_session_id))->row();
         $route_pickup_point_id = $student->route_pickup_point_id;
         
-        $this->db->select('student_transport_yearly_fees.*, transport_yearly_feemaster.amount, transport_yearly_feemaster.id as tyf_id, student_fees_deposite.amount_detail');
+        $this->db->select('student_transport_yearly_fees.*, transport_yearly_feemaster.amount, transport_yearly_feemaster.id as tyf_id, transport_yearly_feemaster.feetype_id, student_fees_deposite.amount_detail');
         $this->db->from('student_transport_yearly_fees');
         $this->db->join('transport_yearly_feemaster', 'transport_yearly_feemaster.id = student_transport_yearly_fees.transport_yearly_feemaster_id');
         $this->db->join('student_fees_deposite', 'student_fees_deposite.student_transport_yearly_fee_id = student_transport_yearly_fees.id', 'left');
@@ -286,7 +316,7 @@ class Installmentplan_model extends MY_Model
         $transport_fees = $this->db->get()->result();
 
         foreach ($transport_fees as $tfee) {
-            if (in_array($tfee->tyf_id, $included_transport)) {
+            if (in_array($tfee->feetype_id, $included_transport)) {
                 $base_transport += $tfee->amount;
                 
                 if (isset($tfee->amount_detail) && !empty($tfee->amount_detail)) {
@@ -302,11 +332,18 @@ class Installmentplan_model extends MY_Model
         $result = array();
         $total_overdue = 0;
         $current_date = date('Y-m-d');
+        $total_paid = $paid_academic + $paid_transport + $paid_hostel + $paid_prev_balance;
 
         foreach ($details as $d) {
-            $ac_due = $base_academic * ($d['academic_percentage'] / 100);
-            $tr_due = $base_transport * ($d['transport_percentage'] / 100);
-            $ho_due = $base_hostel * ($d['hostel_percentage'] / 100);
+            $ac_perc = floatval($d['academic_percentage']);
+            $tr_perc = floatval($d['transport_percentage']);
+            $ho_perc = floatval($d['hostel_percentage']);
+            $pb_perc = isset($d['previous_balance_percentage']) ? floatval($d['previous_balance_percentage']) : 0;
+
+            $ac_due = $base_academic * ($ac_perc / 100);
+            $tr_due = $base_transport * ($tr_perc / 100);
+            $ho_due = $base_hostel * ($ho_perc / 100);
+            $pb_due = $base_prev_balance * ($pb_perc / 100);
 
             // Pour payments sequentially
             $ac_paid = min($ac_due, $paid_academic);
@@ -320,8 +357,12 @@ class Installmentplan_model extends MY_Model
             $ho_paid = min($ho_due, $paid_hostel);
             $paid_hostel -= $ho_paid;
             $ho_bal = $ho_due - $ho_paid;
+            
+            $pb_paid = min($pb_due, $paid_prev_balance);
+            $paid_prev_balance -= $pb_paid;
+            $pb_bal = $pb_due - $pb_paid;
 
-            $total_inst_bal = $ac_bal + $tr_bal + $ho_bal;
+            $total_inst_bal = $ac_bal + $tr_bal + $ho_bal + $pb_bal;
             
             $is_overdue = ($current_date > $d['due_date'] && $total_inst_bal > 0);
             if ($is_overdue) {
@@ -340,6 +381,9 @@ class Installmentplan_model extends MY_Model
                 'hostel_due' => $ho_due,
                 'hostel_paid' => $ho_paid,
                 'hostel_balance' => $ho_bal,
+                'previous_balance_due' => $pb_due,
+                'previous_balance_paid' => $pb_paid,
+                'previous_balance_balance' => $pb_bal,
                 'total_balance' => $total_inst_bal,
                 'is_overdue' => $is_overdue
             );
@@ -354,3 +398,4 @@ class Installmentplan_model extends MY_Model
         );
     }
 }
+

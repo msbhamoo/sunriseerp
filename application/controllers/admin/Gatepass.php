@@ -98,7 +98,7 @@ class Gatepass extends Admin_Controller
         $result = array();
         if ($user_type == 'student') {
             $current_session = $this->setting_model->getCurrentSession();
-            $this->db->select('students.id, students.firstname, students.lastname, students.admission_no, classes.class, sections.section');
+            $this->db->select('students.id, students.firstname, students.lastname, students.admission_no, students.father_name, classes.class, sections.section');
             $this->db->join('student_session', 'student_session.student_id = students.id');
             $this->db->join('classes', 'classes.id = student_session.class_id');
             $this->db->join('sections', 'sections.id = student_session.section_id');
@@ -117,7 +117,7 @@ class Gatepass extends Admin_Controller
             foreach ($students as $student) {
                 $result[] = array(
                     'id' => $student['id'],
-                    'text' => $student['firstname'] . ' ' . $student['lastname'] . ' (' . $student['admission_no'] . ') - ' . $student['class'] . ' (' . $student['section'] . ')'
+                    'text' => $student['firstname'] . ' ' . $student['lastname'] . ' (' . $student['admission_no'] . ')' . ($student['father_name'] ? ' - Father: ' . $student['father_name'] : '') . ' - ' . $student['class'] . ' (' . $student['section'] . ')'
                 );
             }
         } elseif ($user_type == 'staff') {

@@ -20,15 +20,31 @@ class Transportyearlyfee extends Admin_Controller
         $this->session->set_userdata('top_menu', 'Transport');
         $this->session->set_userdata('sub_menu', 'transportyearlyfee/index');
 
-        $data['title'] = 'Yearly Transport Fees';
-        $data['vehroutelist'] = $this->vehroute_model->get();
+        $data['title'] = 'Transport Fee Master';
+        $data['pickuppointlist'] = $this->pickuppoint_model->get();
         $data['classlist'] = $this->class_model->get();
         $data['feetypelist'] = $this->feetype_model->get();
-        $data['yearlyfeelist'] = $this->transportyearlyfee_model->get();
+        
+        $yearlyfeelist = $this->transportyearlyfee_model->get();
+        $grouped = [];
+        $total_classes = count($data['classlist']);
+        foreach ($yearlyfeelist as $fee) {
+            $key = $fee['pickup_point_id'] . '_' . $fee['feetype_id'] . '_' . $fee['amount'] . '_' . $fee['due_date'] . '_' . $fee['fine_type'] . '_' . $fee['fine_percentage'] . '_' . $fee['fine_amount'];
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = $fee;
+                $grouped[$key]['class_names'] = [$fee['class_name']];
+                $grouped[$key]['ids'] = [$fee['id']];
+            } else {
+                if (!in_array($fee['class_name'], $grouped[$key]['class_names'])) {
+                    $grouped[$key]['class_names'][] = $fee['class_name'];
+                }
+                $grouped[$key]['ids'][] = $fee['id'];
+            }
+        }
+        $data['yearlyfeelist'] = array_values($grouped);
+        $data['total_classes'] = $total_classes;
 
-        $this->form_validation->set_rules('route_id', $this->lang->line('route'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('route_pickup_point_id', $this->lang->line('pickup_point'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('class_id[]', $this->lang->line('class'), 'required');
+        $this->form_validation->set_rules('pickup_point_id', $this->lang->line('pickup_point'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('feetype_id', $this->lang->line('fees_type'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('amount', $this->lang->line('amount'), 'trim|required|xss_clean|numeric');
         $this->form_validation->set_rules('due_date', $this->lang->line('due_date'), 'trim|required|xss_clean');
@@ -53,39 +69,37 @@ class Transportyearlyfee extends Admin_Controller
                 $fine_type = 'none';
             }
 
-            $class_ids = $this->input->post('class_id');
-            if (is_array($class_ids)) {
-                foreach ($class_ids as $c_id) {
-                    $data_insert = array(
-                        'session_id' => $this->setting_model->getCurrentSession(),
-                        'route_pickup_point_id' => $this->input->post('route_pickup_point_id'),
-                        'class_id' => $c_id,
-                        'feetype_id' => $this->input->post('feetype_id'),
-                        'amount' => convertCurrencyFormatToBaseAmount($this->input->post('amount')),
-                        'due_date' => $this->customlib->dateFormatToYYYYMMDD($this->input->post('due_date')),
-                        'fine_type' => $fine_type,
-                        'fine_amount' => convertCurrencyFormatToBaseAmount($fine_amount),
-                        'fine_percentage' => $fine_percentage
-                    );
+            $data_insert = array(
+                'session_id' => $this->setting_model->getCurrentSession(),
+                'pickup_point_id' => $this->input->post('pickup_point_id'),
+                'route_pickup_point_id' => 0,
+                'class_id' => 0,
+                'feetype_id' => $this->input->post('feetype_id'),
+                'amount' => convertCurrencyFormatToBaseAmount($this->input->post('amount')),
+                'due_date' => $this->customlib->dateFormatToYYYYMMDD($this->input->post('due_date')),
+                'fine_type' => $fine_type,
+                'fine_amount' => convertCurrencyFormatToBaseAmount($fine_amount),
+                'fine_percentage' => $fine_percentage
+            );
 
-                    $insert_id = $this->transportyearlyfee_model->add($data_insert);
-                    
-                    // Handle bulk assign if checked
-                    $assign_to = $this->input->post('assign_to');
-                    if ($assign_to == 'all') {
-                        // Assign to all students in this class
-                        $students = $this->student_model->searchByClassSection($c_id);
+            $insert_id = $this->transportyearlyfee_model->add($data_insert);
+            
+            // Handle bulk assign if checked
+            $assign_to = $this->input->post('assign_to');
+            if ($assign_to == 'all') {
+                // Fetch all students having this pickup point via their route_pickup_point_id
+                $route_pickups = $this->pickuppoint_model->getRoutePickupsByPickupId($this->input->post('pickup_point_id'));
+                if (!empty($route_pickups)) {
+                    foreach ($route_pickups as $rp) {
+                        $students = $this->db->get_where('student_session', array('route_pickup_point_id' => $rp['id'], 'session_id' => $this->setting_model->getCurrentSession()))->result_array();
                         if(!empty($students)) {
                             foreach($students as $student) {
-                                // Check if student route matches
-                                if ($student['route_pickup_point_id'] == $data_insert['route_pickup_point_id']) {
-                                    $assign_data = array(
-                                        'student_session_id' => $student['student_session_id'],
-                                        'transport_yearly_feemaster_id' => $insert_id,
-                                        'is_active' => 'yes'
-                                    );
-                                    $this->transportyearlyfee_model->assignStudent($assign_data);
-                                }
+                                $assign_data = array(
+                                    'student_session_id' => $student['id'],
+                                    'transport_yearly_feemaster_id' => $insert_id,
+                                    'is_active' => 'yes'
+                                );
+                                $this->transportyearlyfee_model->assignStudent($assign_data);
                             }
                         }
                     }
@@ -112,6 +126,34 @@ class Transportyearlyfee extends Admin_Controller
         $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">Record deleted successfully</div>');
         redirect('admin/transportyearlyfee');
     }
+
+    public function delete_bulk($ids_string)
+    {
+        if (!($this->rbac->hasPrivilege('transport_fees_master', 'can_delete'))) {
+            access_denied();
+        }
+
+        if (empty($ids_string)) {
+            redirect('admin/transportyearlyfee');
+            return;
+        }
+
+        $ids = explode('-', $ids_string);
+        
+        foreach ($ids as $id) {
+            if ($this->transportyearlyfee_model->check_payment_exists($id)) {
+                $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">Cannot delete, payment is already made for this fee group.</div>');
+                redirect('admin/transportyearlyfee');
+            }
+        }
+
+        foreach ($ids as $id) {
+            $this->transportyearlyfee_model->remove($id);
+        }
+        
+        $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">Record deleted successfully</div>');
+        redirect('admin/transportyearlyfee');
+    }
     public function search_yearly_fees()
     {
         $route_id = $this->input->post('route_id');
@@ -124,7 +166,22 @@ class Transportyearlyfee extends Admin_Controller
             }
         }
         
-        $data['yearlyfeelist'] = $this->transportyearlyfee_model->get(null, $route_id, $pickup_point_id);
+        $yearlyfeelist = $this->transportyearlyfee_model->get(null, $route_id, $pickup_point_id);
+        $grouped = [];
+        $total_classes = count($this->class_model->get());
+        foreach ($yearlyfeelist as $fee) {
+            $key = $fee['route_pickup_point_id'] . '_' . $fee['feetype_id'] . '_' . $fee['amount'] . '_' . $fee['due_date'];
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = $fee;
+                $grouped[$key]['class_names'] = [$fee['class_name']];
+                $grouped[$key]['ids'] = [$fee['id']];
+            } else {
+                $grouped[$key]['class_names'][] = $fee['class_name'];
+                $grouped[$key]['ids'][] = $fee['id'];
+            }
+        }
+        $data['yearlyfeelist'] = array_values($grouped);
+        $data['total_classes'] = $total_classes;
         $data['currency_symbol'] = $this->customlib->getSchoolCurrencyFormat();
         
         $html = $this->load->view('admin/transport/_yearlyfeelist', $data, true);

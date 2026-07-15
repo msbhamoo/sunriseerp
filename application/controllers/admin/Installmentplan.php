@@ -41,10 +41,10 @@ class Installmentplan extends Admin_Controller
         // Get transport yearly fees (grouped by name if possible, or just all)
         // Transport yearly doesn't have a direct name, it's linked to route/class. 
         // We will just fetch all distinct route pickup points used in yearly fees.
-        $this->db->select('transport_yearly_feemaster.id, route_pickup_point.destination_distance as name');
+        $this->db->select('feetype.id, feetype.type as name');
         $this->db->from('transport_yearly_feemaster');
-        $this->db->join('route_pickup_point', 'route_pickup_point.id = transport_yearly_feemaster.route_pickup_point_id');
-        $this->db->group_by('transport_yearly_feemaster.id');
+        $this->db->join('feetype', 'feetype.id = transport_yearly_feemaster.feetype_id');
+        $this->db->group_by('feetype.id');
         $data['transportYearlyList'] = $this->db->get()->result_array();
 
         $this->load->view('layout/header', $data);
@@ -105,6 +105,7 @@ class Installmentplan extends Admin_Controller
                     'academic_percentage' => $this->input->post('academic_percentage_' . $i),
                     'transport_percentage' => $this->input->post('transport_percentage_' . $i),
                     'hostel_percentage' => $this->input->post('hostel_percentage_' . $i),
+                    'previous_balance_percentage' => floatval($this->input->post('previous_balance_percentage_' . $i)),
                     'due_date' => $this->customlib->dateFormatToYYYYMMDD($this->input->post('due_date_' . $i))
                 );
             }
@@ -135,10 +136,10 @@ class Installmentplan extends Admin_Controller
         $this->db->join('fee_groups', 'fee_groups.id = hostel_fee_groups.fee_groups_id');
         $data['hostelFeegroupList'] = $this->db->get()->result_array();
         
-        $this->db->select('transport_yearly_feemaster.id, route_pickup_point.destination_distance as name');
+        $this->db->select('feetype.id, feetype.type as name');
         $this->db->from('transport_yearly_feemaster');
-        $this->db->join('route_pickup_point', 'route_pickup_point.id = transport_yearly_feemaster.route_pickup_point_id');
-        $this->db->group_by('transport_yearly_feemaster.id');
+        $this->db->join('feetype', 'feetype.id = transport_yearly_feemaster.feetype_id');
+        $this->db->group_by('feetype.id');
         $data['transportYearlyList'] = $this->db->get()->result_array();
 
         $data['edit_plan'] = $this->Installmentplan_model->get($id);
@@ -175,5 +176,24 @@ class Installmentplan extends Admin_Controller
         }
         $this->Installmentplan_model->remove($id);
         redirect('admin/installmentplan');
+    }
+
+    // Temporary Debugging Tool
+    public function debug($student_session_id)
+    {
+        // Only allow admins to run this
+        if (!$this->rbac->hasPrivilege('installment_plan', 'can_view')) {
+            access_denied();
+        }
+        $res = $this->Installmentplan_model->calculate_student_installments($student_session_id);
+        echo "<h2>Installment Engine Debugger</h2>";
+        echo "Testing Student Session ID: " . $student_session_id . "<br><br>";
+        echo "<pre>";
+        if (!$res) {
+            echo "RESULT: FALSE (Student is not in an active plan, or plan is disabled)";
+        } else {
+            print_r($res);
+        }
+        echo "</pre>";
     }
 }

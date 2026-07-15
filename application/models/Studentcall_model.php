@@ -68,7 +68,7 @@ class Studentcall_model extends MY_Model
 
     public function search_student($query)
     {
-        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.admission_no, students.roll_no, students.firstname, students.middlename, students.lastname, students.mobileno, students.father_phone, students.mother_phone, students.guardian_phone, classes.class, sections.section');
+        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.admission_no, students.roll_no, students.firstname, students.middlename, students.lastname, students.father_name, students.mobileno, students.father_phone, students.mother_phone, students.guardian_phone, classes.class, sections.section');
         $this->db->from('student_session');
         $this->db->join('students', 'students.id = student_session.student_id');
         $this->db->join('classes', 'student_session.class_id = classes.id');
@@ -90,7 +90,7 @@ class Studentcall_model extends MY_Model
 
     public function get_calls($class_id = null, $section_id = null, $date_from = null, $date_to = null, $purpose_id = null, $status = null, $follow_up_date_from = null, $follow_up_date_to = null, $assigned_to = null)
     {
-        $this->db->select('student_calls.*, students.firstname, students.lastname, students.admission_no, classes.class, sections.section, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname, (SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id ASC LIMIT 1) as next_follow_up_date, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending") as pending_count, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id) as total_followups, (SELECT CONCAT(staff.name, " ", staff.surname) FROM student_call_followups JOIN staff ON staff.id = student_call_followups.assigned_to WHERE student_call_id = student_calls.id AND student_call_followups.status = "Pending" ORDER BY student_call_followups.id ASC LIMIT 1) as assigned_to_name');
+        $this->db->select('student_calls.*, students.firstname, students.lastname, students.admission_no, students.father_name, classes.class, sections.section, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname, (SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id ASC LIMIT 1) as next_follow_up_date, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending") as pending_count, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id) as total_followups, (SELECT CONCAT(staff.name, " ", staff.surname) FROM student_call_followups JOIN staff ON staff.id = student_call_followups.assigned_to WHERE student_call_id = student_calls.id AND student_call_followups.status = "Pending" ORDER BY student_call_followups.id ASC LIMIT 1) as assigned_to_name');
         $this->db->from('student_calls');
         $this->db->join('student_session', 'student_session.id = student_calls.student_session_id');
         $this->db->join('students', 'students.id = student_calls.student_id');
@@ -134,7 +134,7 @@ class Studentcall_model extends MY_Model
 
     public function get_call($id)
     {
-        $this->db->select('student_calls.*, students.firstname, students.lastname, students.admission_no, classes.class, sections.section, student_call_purpose.purpose as purpose_name');
+        $this->db->select('student_calls.*, students.firstname, students.lastname, students.admission_no, students.father_name, classes.class, sections.section, student_call_purpose.purpose as purpose_name');
         $this->db->from('student_calls');
         $this->db->join('student_session', 'student_session.id = student_calls.student_session_id');
         $this->db->join('students', 'students.id = student_calls.student_id');
@@ -241,7 +241,7 @@ class Studentcall_model extends MY_Model
 
     public function get_students_call_status($class_id = null, $section_id = null, $start = 0, $length = 10, $search_value = '')
     {
-        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.admission_no, students.mobileno, students.father_phone, students.mother_phone, students.guardian_phone, classes.class, sections.section, sc.date as last_call_date, sc.call_status as last_call_status');
+        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.admission_no, students.father_name, students.mobileno, students.father_phone, students.mother_phone, students.guardian_phone, classes.class, sections.section, sc.date as last_call_date, sc.call_status as last_call_status');
         $this->db->from('student_session');
         $this->db->join('students', 'students.id = student_session.student_id');
         $this->db->join('classes', 'student_session.class_id = classes.id');

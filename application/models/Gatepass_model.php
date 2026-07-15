@@ -28,8 +28,9 @@ class Gatepass_model extends MY_Model
 
     public function get($id = null)
     {
-        $this->db->select('front_office_gate_pass.*');
+        $this->db->select('front_office_gate_pass.*, students.father_name');
         $this->db->from('front_office_gate_pass');
+        $this->db->join('students', 'students.id = front_office_gate_pass.user_id AND front_office_gate_pass.user_type = "student"', 'left');
         
         if ($id != null) {
             $this->db->where('front_office_gate_pass.id', $id);
@@ -68,7 +69,7 @@ class Gatepass_model extends MY_Model
     private function get_user_details($user_type, $user_id)
     {
         if ($user_type == 'student') {
-            $this->db->select('students.firstname, students.lastname, students.admission_no, classes.class, sections.section');
+            $this->db->select('students.firstname, students.lastname, students.admission_no, students.father_name, classes.class, sections.section');
             $this->db->from('students');
             $this->db->join('student_session', 'student_session.student_id = students.id');
             $this->db->join('classes', 'classes.id = student_session.class_id');
@@ -122,5 +123,21 @@ class Gatepass_model extends MY_Model
     {
         $this->db->where('id', $id);
         $this->db->delete('front_office_gate_pass');
+    }
+
+    public function check_student_gatepass($date)
+    {
+        $this->db->select('user_id');
+        $this->db->from('front_office_gate_pass');
+        $this->db->where('user_type', 'student');
+        $this->db->where('date', $date);
+        
+        $result = $this->db->get()->result_array();
+        
+        $gatepasses = [];
+        foreach ($result as $row) {
+            $gatepasses[] = $row['user_id'];
+        }
+        return $gatepasses;
     }
 }

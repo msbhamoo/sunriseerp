@@ -6,276 +6,1306 @@ if (!defined('BASEPATH')) {
 
 class Whatsappgateway
 {
-    private $CI;
-    private $api_url = "http://202.143.97.65/smppv/production/api_page/wa/send_message.php";
-    private $auth_key = "";
-    private $sent_messages = array();
+
+    private $_CI;
+    private $sch_setting;
 
     public function __construct()
     {
-        $this->CI =& get_instance();
-        $this->CI->load->model('whatsappconfig_model');
-        $this->CI->load->library('smsgateway'); // We will use smsgateway to get replaced content
-        
-        $whatsapp_detail = $this->CI->whatsappconfig_model->getActiveWhatsApp();
-        if ($whatsapp_detail) {
-            // Using api_key from DB as auth_key
-            $this->auth_key = $whatsapp_detail->api_key;
-        }
+        $this->_CI = &get_instance();
+        $this->_CI->load->model('setting_model');
+        $this->_CI->load->model('student_model');
+        $this->_CI->load->model('whatsappconfig_model');
+        $this->sch_setting = $this->_CI->setting_model->get(); 		
+		
     }
+	
+	
+	
 
-    private function _sendWhatsapp($mobile, $message_text, $detail = null)
+	/* ================= META ================= */
+	
+	
+
+
+	
+	/* ================= RICHAUTOMATE ================= */
+	private function sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $language, $msg) {
+		$ch = curl_init();
+		
+		$variables = array_values($msg);
+		$payload = array(
+			"phone" => $send_to,
+			"template" => $template_id,
+			"language" => $language,
+			"variables" => $variables
+		);
+
+		curl_setopt($ch, CURLOPT_URL, "https://richautomate.in/api/v1/send-template");
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+			"Authorization: Bearer " . $whatsapp_detail->authkey,
+			"Content-Type: application/json"
+		));
+
+		$response = curl_exec($ch);
+		curl_close($ch);
+
+		$res = json_decode($response, true);
+		return (isset($res["success"]) && $res["success"] == true);
+	}
+	/* ================= RICHAUTOMATE ================= */
+
+	private function sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$language,$msg) {
+		
+		$params = [
+			'access_token'    => $whatsapp_detail->authkey,
+			'phone_number_id' => $whatsapp_detail->contact,
+		];
+
+		$this->_CI->load->library('meta_whatsapp', $params);
+
+		$components = [
+			[
+				"type" => "body",
+				"parameters" => []
+			]
+		];
+
+		foreach ($msg as $value) {
+			$components[0]['parameters'][] = [
+				"type" => "text",
+				"text" => $value
+			];
+		}
+
+		return $this->_CI->meta_whatsapp->sendTemplate($send_to,$template_id,$language,$components);
+		
+	}
+	
+	
+
+	/* ================= META ================= */
+	
+	/* ================= TWILIO ================= */
+	public function sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg)
     {
-        if (empty($mobile) && !empty($detail)) {
-            if (is_array($detail)) {
-                $mobile = !empty($detail['mobileno']) ? $detail['mobileno'] : (!empty($detail['guardian_phone']) ? $detail['guardian_phone'] : (!empty($detail['father_phone']) ? $detail['father_phone'] : (!empty($detail['mother_phone']) ? $detail['mother_phone'] : '')));
-            } else if (is_object($detail)) {
-                $mobile = !empty($detail->mobileno) ? $detail->mobileno : (!empty($detail->guardian_phone) ? $detail->guardian_phone : (!empty($detail->father_phone) ? $detail->father_phone : (!empty($detail->mother_phone) ? $detail->mother_phone : '')));
-            }
-        }
+        $params = [
+            'username' => $whatsapp_detail->username,
+            'password' => $whatsapp_detail->password,
+            'api_version' => '2010-04-01',
+            'number' => $whatsapp_detail->contact,
+            'whatsapp_template_id' => $template_id,
+        ];
 
-        if (empty($this->auth_key) || empty($mobile) || empty($message_text)) {
-            file_put_contents('whatsapp_debug.log', "Early exit in _sendWhatsapp. auth_key_empty=" . empty($this->auth_key) . ", mobile=" . $mobile . ", message_text length=" . strlen($message_text) . "\n", FILE_APPEND);
-            return false;
-        }
+        $this->_CI->load->library('twilio_whatsapp', $params);
 
-        $msg_hash = md5($mobile . $message_text);
-        if (isset($this->sent_messages[$msg_hash])) {
-            return true;
-        }
-        $this->sent_messages[$msg_hash] = true;
+        $response = $this->_CI->twilio_whatsapp->send($whatsapp_detail->contact, $send_to, $msg);
 
-        // Format mobile: ensuring 10 digits or 12 digits (91XXXXXXXXXX)
-        $mobile = preg_replace('/[^0-9]/', '', $mobile);
-        if (strlen($mobile) === 10) {
-            $mobile = '91' . $mobile;
-        }
-
-        $data = array(
-            'auth_key'      => $this->auth_key,
-            'campaign_name' => 'Scholarship_OTP',
-            'msg_type'      => 'text',
-            'mobile'        => $mobile,
-            'caption'       => $message_text,
-            'priority'      => 0
-        );
-        file_put_contents('whatsapp_debug.log', "Sending payload: " . json_encode($data) . "\n", FILE_APPEND);
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $this->api_url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        
-        $response = curl_exec($ch);
-        $err = curl_error($ch);
-        curl_close($ch);
-
-        file_put_contents('whatsapp_debug.log', "Response: " . $response . " Error: " . $err . "\n", FILE_APPEND);
-
-        if ($err) {
-            return false;
-        } else {
-            // Log to Central WhatsApp Log
-            $title_map = array(
-                'sentRegisterWhatsapp' => 'New Admission',
-                'sentAddGroupFeeWhatsapp' => 'Group Fee Submission',
-                'sentAddFeeWhatsapp' => 'Fee Submission',
-                'sentFeeProcessingNotification' => 'Fee Processing',
-                'sentfeesreminderNotification' => 'Fees Reminder',
-                'sendStudentLoginCredential' => 'Student Login Credential',
-                'sendStaffLoginCredential' => 'Staff Login Credential',
-                'student_apply_leave' => 'Leave Application',
-                'sentExamResultWhatsapp' => 'Exam Result',
-                'sendPresentAttendancenotification' => 'Present Attendance',
-                'sentPresentStaffWhatsapp' => 'Staff Present',
-                'sentAbsentStaffWhatsapp' => 'Staff Absent',
-                'sendAbsentAttendancenotification' => 'Absent Attendance',
-                'sendstudentlhomework' => 'Homework Notification',
-                'sentOnlineexamStudentWhatsapp' => 'Online Exam Notification',
-                'sendOnlineadmissionformsubmit' => 'Online Admission Form',
-                'sentstudentOnlineadmissionFeessubmissionWhatsapp' => 'Online Admission Fee Submission'
-            );
-
-            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-            $caller_function = isset($trace[1]['function']) ? $trace[1]['function'] : 'Automated WhatsApp Message';
-
-            // Only log if the caller function is one of the automated ones.
-            // Manual broadcasts (via sendDynamicWhatsapp) are already logged by the Mailsms controller.
-            if (isset($title_map[$caller_function])) {
-                $title = $title_map[$caller_function];
-
-                if (!empty($detail)) {
-                    $name = '';
-                    if (is_array($detail) && !empty($detail['student_name'])) {
-                        $name = $detail['student_name'];
-                    } elseif (is_object($detail) && !empty($detail->firstname)) {
-                        $name = $detail->firstname . ' ' . $detail->lastname;
-                    } elseif (is_array($detail) && !empty($detail['firstname'])) {
-                        $name = $detail['firstname'] . ' ' . $detail['lastname'];
-                    }
-                    if ($name) {
-                        $title .= " - " . $name;
-                    }
-                }
-
-                $this->CI->load->model('messages_model');
-                $user_list = array(
-                    array(
-                        'mobileno' => $mobile,
-                        'app_key'  => ''
-                    )
-                );
-                
-                $message_data = array(
-                    'title'              => $title,
-                    'message'            => $message_text,
-                    'append_roles'       => '',
-                    'user_list'          => json_encode($user_list),
-                    'is_group'           => 0,
-                    'is_individual'      => 1,
-                    'is_class'           => 0,
-                    'send_mail'          => 0,
-                    'send_sms'           => 0,
-                    'send_whatsapp'      => 1,
-                    'created_at'         => date('Y-m-d H:i:s'),
-                );
-                $message_id = $this->CI->messages_model->add($message_data);
-                
-                // Insert into whatsapp_message_logs
-                $this->CI->db->insert('whatsapp_message_logs', array(
-                    'message_id' => $message_id,
-                    'mobileno'   => $mobile,
-                    'status'     => 'Sent',
-                    'created_at' => date('Y-m-d H:i:s')
-                ));
-            }
-
-            return $response;
-        }
+        return ($response && empty($response->error_message));
     }
-
-    public function testMessage($mobile, $message_text)
-    {
-        return $this->_sendWhatsapp($mobile, $message_text);
-    }
-
-    public function sentRegisterWhatsapp($id, $send_to, $template, $template_id)
-    {
-        $content = $this->CI->smsgateway->getStudentRegistrationContent($id, $template, null);
-        return $this->_sendWhatsapp($send_to, $content);
-    }
-
-    public function sentAddGroupFeeWhatsapp($detail, $send_to, $template, $template_id)
-    {
-        $content = $this->CI->smsgateway->getGroupAddFeeContent($detail, $template, null);
-        return $this->_sendWhatsapp($send_to, $content, $detail);
-    }
-
-    public function sentAddFeeWhatsapp($detail, $send_to, $template, $template_id)
-    {
-        $content = $this->CI->smsgateway->getAddFeeContent($detail, $template, null);
-        return $this->_sendWhatsapp($send_to, $content, $detail);
-    }
-
-    public function sentFeeProcessingNotification($detail, $send_to, $template, $template_id)
-    {
-        $content = $this->CI->smsgateway->getFeeProcessingContent($detail, $template, null);
-        return $this->_sendWhatsapp($send_to, $content, $detail);
-    }
-
-    public function sentfeesreminderNotification($detail, $send_to, $template, $template_id)
-    {
-        $content = $this->CI->smsgateway->getContent($detail, $template, null);
-        return $this->_sendWhatsapp($send_to, $content, $detail);
-    }
+	/* ================= TWILIO ================= */
 
     public function sendStudentLoginCredential($chk_mail_sms, $sender_details, $template, $template_id)
-    {
-        $content = $this->CI->smsgateway->getLoginCredentialContent($chk_mail_sms['student_recipient'], $sender_details, $template, null);
-        return $this->_sendWhatsapp($sender_details['mobileno'], $content, $sender_details);
+    {   
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg        = $this->getLoginCredentialContent($sender_details['credential_for'], $sender_details, $template, $whatsapp_detail->type);		
+		
+        $send_to = $sender_details['contact_no'];
+        if (!empty($whatsapp_detail)) {
+            if ($whatsapp_detail->type == 'twilio') {                 
+				
+				return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+		
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {				
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);				
+				
+			} else {
+
+            }
+        }
+        return true;
     }
 
-    public function sendStaffLoginCredential($chk_mail_sms, $sender_details, $template, $template_id)
-    {
-        $content = $this->CI->smsgateway->getLoginCredentialContent($chk_mail_sms['staff_recipient'], $sender_details, $template, null);
-        return $this->_sendWhatsapp($sender_details['contact_no'], $content, $sender_details);
+	public function getLoginCredentialContent($credential_for, $sender_details, $template, $sms_detail_type)
+    {  
+        if ($credential_for == "student") {
+            $student                        = $this->_CI->student_model->get($sender_details['id']);
+            $sender_details['url']          = base_url();
+            $sender_details['display_name'] = $student['firstname'] . " " . $student['lastname'];
+        } elseif ($credential_for == "parent") {
+            $parent                         = $this->_CI->student_model->get($sender_details['id']);
+            $sender_details['url']          = base_url();
+            $sender_details['display_name'] = $parent['guardian_name'];
+        } elseif ($credential_for == "staff") {
+            $staff                          = $this->_CI->staff_model->get($sender_details['id']);
+            $sender_details['url']          = base_url();
+            $sender_details['display_name'] = $staff['name'];
+        }  
+		
+		$sl = 0;
+		
+        foreach ($sender_details as $key => $value) {
+            
+			$foundValues = [];
+			
+			// Loop through the template and check for each placeholder
+			preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+			
+			// Extract values from the $data array if the key exists in the template
+			foreach ($matches[1] as $key1) {
+				if (isset($sender_details[$key1])) {
+					$foundValues[$key1] = $sender_details[$key1]; // Add to foundValues array	
+					
+				}
+			} 
+			 
+        }
+		  
+        return $foundValues;
     }
 
-    public function student_apply_leave($sender_details, $template, $template_id)
+	
+	public function sendStaffLoginCredential($chk_mail_sms, $sender_details, $template, $template_id)
+    { 
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg        = $this->getLoginCredentialContent($sender_details['credential_for'], $sender_details, $template, $whatsapp_detail->type);		
+		
+        $send_to = $sender_details['contact_no'];
+        if (!empty($whatsapp_detail)) {
+            if ($whatsapp_detail->type == 'twilio') {
+
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }
+        }
+        return true;
+    }  
+
+
+    public function sendstudentlhomework($sender_details, $template, $template_id)
+    { 
+
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg = $this->getstudenthomeworkkey($sender_details, $template, $whatsapp_detail->type);    
+        
+        foreach ($sender_details as $student_key => $student_value) {
+        //student and parent contact number loop will executed
+        $send_to = $student_key;
+
+        if (!empty($whatsapp_detail)) {
+            if ($whatsapp_detail->type == 'twilio') {
+				
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }
+        }
+        }
+        return true;
+    }
+
+
+    public function getstudenthomeworkkey($sender_details, $template, $sms_detail_type)
+    {  
+        $sl = 0;
+        $foundValues = [];
+        foreach ($sender_details as $key => $value) {
+            // Loop through the template and check for each placeholder
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+
+                if (isset($sender_details[$key][$key1])) {
+                    $foundValues[$key1] = $sender_details[$key][$key1]; // Add to foundValues array                       
+                }
+            } 
+        }
+        return $foundValues;
+    }
+
+    public function sendAbsentAttendancenotification($sender_details, $template, $template_id,$mobileno)
+    { 
+        
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg = $this->extract_key($sender_details, $template); 
+    
+        $send_to = $mobileno;
+
+        if (!empty($whatsapp_detail)) {
+            if ($whatsapp_detail->type == 'twilio') {
+                
+				return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }
+        }
+
+        return true;
+    }
+
+    public function sendPresentAttendancenotification($sender_details, $template, $template_id,$mobileno)
+    { 
+        
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg = $this->extract_key($sender_details, $template); 
+    
+        $send_to = $mobileno;
+
+        if (!empty($whatsapp_detail)) {
+            if ($whatsapp_detail->type == 'twilio') {
+
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }
+        }
+
+        return true;
+    }
+
+    public function extract_key($sender_details, $template)
+    {  
+        foreach ($sender_details as $key => $value) {
+            $foundValues = [];
+            
+            // Loop through the template and check for each placeholder
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($sender_details[$key1])) {
+                    $foundValues[$key1] = $sender_details[$key1]; // Add to foundValues array   
+                    
+                }
+            } 
+        }
+        return $foundValues;
+    }
+
+
+    public function sentRegisterWhatsapp($student_id, $send_to, $template, $template_id)
     {
-        $content = $this->CI->smsgateway->getstudent_apply_leaveContent($sender_details, $template, null);
-        return $this->_sendWhatsapp($sender_details['mobileno'], $content, $sender_details); // Assuming mobileno
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg = $this->getStudentRegistrationContent($student_id, $template);
+
+        if (!empty($whatsapp_detail)) {
+            if ($whatsapp_detail->type == 'twilio') {
+
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }
+        }
+        return true;
+    }
+
+    public function getStudentRegistrationContent($id, $template)
+    {
+        $session_name                    = $this->_CI->setting_model->getCurrentSessionName();
+        $sender_details                         = $this->_CI->student_model->get($id);
+        $sender_details['current_session_name'] = $session_name;
+        $sender_details['student_name']         = $sender_details['firstname'] . " " . $sender_details['lastname'];
+
+         foreach ($sender_details as $key => $value) {
+            
+            $foundValues = [];
+            
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($sender_details[$key1])) {
+                    $foundValues[$key1] = $sender_details[$key1]; // Add to foundValues array   
+                    
+                }
+            } 
+        }
+        return $foundValues;
+    }
+
+    public function sentAddFeeWhatsapp($sender_details, $send_to, $template, $template_id)
+    {
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg = $this->sentAddFeeWhatsapp_key($sender_details, $template);
+
+        if (!empty($whatsapp_detail)) {
+            if ($whatsapp_detail->type == 'twilio') {
+
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }
+        }
+        return true;
+    }
+	
+	public function sentAddGroupFeeWhatsapp($sender_details, $send_to, $template, $template_id)
+    {
+		
+		$whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+		
+		$invoice_id=[];
+        $sub_invoice_id=[];
+        
+        foreach ($sender_details['invoice'] as $inv_key => $inv_value) {
+            $invoice_id[]=$inv_value['invoice_id'];
+            $sub_invoice_id[]=$inv_value['sub_invoice_id'];
+        }
+        
+        $sender_details['invoice_id']= "(".implode(',', $invoice_id).")";
+        $sender_details['sub_invoice_id']= "(".implode(',', $sub_invoice_id).")";
+		
+        $msg = $this->getGroupAddFeeWhatsappKeys($sender_details, $template);
+
+        if (!empty($whatsapp_detail)) {
+            if ($whatsapp_detail->type == 'twilio') {
+
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }
+        }
+        return true;
+    }
+	
+	public function getGroupAddFeeWhatsappKeys($data, $template)
+	{
+		$currency_symbol = $this->sch_setting[0]['currency_symbol'];
+
+		if (is_string($data['invoice'])) {
+			$data['invoice'] = json_decode($data['invoice'], true);
+		}
+
+		if (!is_array($data['invoice'])) {
+			return [];
+		}
+
+		$fee_amount = 0;
+		$payment_id = [];
+		$fee = null;
+
+		foreach ($data['invoice'] as $invoice_value) {
+
+			$payment_id[] = $invoice_value['invoice_id'] . '/' . $invoice_value['sub_invoice_id'];
+
+			if ($invoice_value['fee_category'] === 'transport') {
+				$fee = $this->_CI->studentfeemaster_model
+					->getTransportFeeByInvoice($invoice_value['invoice_id'], $invoice_value['sub_invoice_id']);
+			} else {
+				$fee = $this->_CI->studentfeemaster_model
+					->getFeeByInvoice($invoice_value['invoice_id'], $invoice_value['sub_invoice_id']);
+			}
+
+			$amount_detail = json_decode($fee->amount_detail);
+			$record = $amount_detail->{$invoice_value['sub_invoice_id']};
+
+			$fee_amount +=
+				($record->amount ?? 0) +
+				($record->amount_fine ?? 0) -
+				($record->amount_discount ?? 0);
+		}
+
+		$data['payment_id']  = '(' . implode(',', $payment_id) . ')';
+		$data['class']       = $fee->class ?? '';
+		$data['section']     = $fee->section ?? '';
+		$data['amount']      = $currency_symbol . ($data['amount'] ?? 0);
+		$data['fine_amount'] = $currency_symbol . ($data['fine_amount'] ?? 0);
+		$data['fee_amount']  = $currency_symbol . amountFormat($fee_amount);
+
+		$data['student_name'] = $this->_CI->customlib->getFullName(
+			$fee->firstname ?? '',
+			$fee->middlename ?? '',
+			$fee->lastname ?? '',
+			$this->sch_setting[0]['middlename'],
+			$this->sch_setting[0]['lastname']
+		);
+	 
+		$foundValues = [];
+		preg_match_all('/{{(.*?)}}/', $template, $matches);
+
+		foreach ($matches[1] as $key) {
+			if (isset($data[$key])) {
+				$foundValues[$key] = $data[$key];
+			}
+		}
+
+		return $foundValues;
+	}
+	
+	
+    public function sentAddFeeWhatsapp_key($data, $template)
+    {
+        $currency_symbol      = $this->sch_setting[0]['currency_symbol'];
+        $school_name          = $this->sch_setting[0]['name'];
+        $invoice_data         = json_decode($data->invoice);
+        $data->invoice_id     = $invoice_data->invoice_id;
+        $data->sub_invoice_id = $invoice_data->sub_invoice_id;
+        $data->payment_id     = $data->invoice_id."/".$data->sub_invoice_id;       
+        $data->amount         = $currency_symbol . $data->amount;      
+        
+        if ($data->fee_category == "transport") {
+            $fee = $this->_CI->studentfeemaster_model->getTransportFeeByInvoice($data->invoice_id, $data->sub_invoice_id);
+        } else {
+            $fee = $this->_CI->studentfeemaster_model->getFeeByInvoice($data->invoice_id, $data->sub_invoice_id);
+        }
+       
+        $a                    = json_decode($fee->amount_detail);
+        $record               = $a->{$data->sub_invoice_id};
+        $fee_amount           = number_format((($record->amount)), 2, '.', ',');
+        $data->firstname      = $fee->firstname;
+        $data->lastname       = $fee->lastname;
+        $data->class          = $fee->class;
+        $data->section        = $fee->section;
+        $data->fee_amount     = $currency_symbol . $fee_amount;
+		 $data->fine_amount   = $currency_symbol . $record->amount_fine;
+		
+        $data->student_name   = $this->_CI->customlib->getFullName($fee->firstname, $fee->middlename, $fee->lastname, $this->sch_setting[0]['middlename'], $this->sch_setting[0]['lastname']); 
+				
+        foreach ($data as $key => $value) {
+            
+            $foundValues = [];
+            
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($data->$key1)) {
+                    $foundValues[$key1] = $data->$key1; // Add to foundValues array   
+                    
+                }
+            } 
+        }
+        return $foundValues;
     }
 
     public function sentExamResultWhatsapp($detail, $template, $template_id)
     {
-        $content = $this->CI->smsgateway->getStudentResultContent($detail, $template, null);
-        return $this->_sendWhatsapp($detail['mobileno'], $content, $detail);
-    }
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg        = $this->getStudentResultContent_key($detail, $template);
+        
+        foreach ($detail['contact_numbers'] as $key => $contact_numbersvalue) {
+            $send_to = $contact_numbersvalue;
+            
+             if (!empty($whatsapp_detail)) {
+				 
+				if ($whatsapp_detail->type == 'twilio') {
 
-    public function sendPresentAttendancenotification($detail, $template, $template_id, $send_to)
-    {
-        $content = $this->CI->smsgateway->getPresentStudentContent($detail, $template, null);
-        return $this->_sendWhatsapp($send_to, $content, $detail);
-    }
+					return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+			   
+				} else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+					return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+				} else {
 
-    public function sentPresentStaffWhatsapp($detail, $template, $template_id)
-    {
-        $content = $this->CI->smsgateway->getPresentStaffContent($detail, $template, null);
-        return $this->_sendWhatsapp($detail['contact_no'], $content, $detail);
-    }
-
-    public function sentAbsentStaffWhatsapp($detail, $template, $template_id)
-    {
-        $content = $this->CI->smsgateway->getAbsentStaffContent($detail, $template, null);
-        return $this->_sendWhatsapp($detail['contact_no'], $content, $detail);
-    }
-
-    public function sendAbsentAttendancenotification($detail, $template, $template_id, $send_to)
-    {
-        $content = $this->CI->smsgateway->getAbsentStudentContent($detail, $template, null);
-        return $this->_sendWhatsapp($send_to, $content, $detail);
-    }
-
-    public function sendstudentlhomework($student_sms_list, $template, $template_id)
-    {
-        if(!empty($student_sms_list)){
-            foreach($student_sms_list as $student){
-                $content = $this->CI->smsgateway->getHomeworkStudentContent($student, $template, null);
-                $this->_sendWhatsapp($student['mobileno'], $content, $student);
-            }
+            } 
         }
+        }
+
         return true;
     }
 
-    public function sentOnlineexamStudentWhatsapp($student_sms_list, $template, $template_id)
+    public function getStudentResultContent_key($data, $template)
     {
-        if(!empty($student_sms_list)){
-            foreach($student_sms_list as $student){
-                $content = $this->CI->smsgateway->getOnlineexamStudentContent($student, $template, null);
-                $this->_sendWhatsapp($student['mobileno'], $content, $student);
-            }
+
+        foreach ($data as $key => $value) {
+            $foundValues = [];
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                    
+                }
+            } 
         }
-        return true;
+        return $foundValues;
     }
 
-    public function sendOnlineadmissionformsubmit($student_details, $template, $send_to, $template_id)
+    public function sentOnlineexamStudentWhatsapp($detail, $template, $template_id)
     {
-        $content = $this->CI->smsgateway->getOnlineadmissionStudentContent($student_details, $template);
-        return $this->_sendWhatsapp($send_to, $content, $student_details);
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+    
+        if (!empty($whatsapp_detail)) {
+
+            foreach ($detail as $student_key => $student_value) {
+				
+                $send_to = $student_key;
+                $msg  = $this->getOnlineexamStudentContent_key($detail[$student_key], $template);
+				
+            if ($whatsapp_detail->type == 'twilio') {                
+
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            } 
+        }
+        }
+    }
+    
+    public function getOnlineexamStudentContent_key($data, $template)
+    {
+
+         foreach ($data as $key => $value) {
+            
+            $foundValues = [];
+            
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                    
+                }
+            } 
+        }
+        return $foundValues;
     }
 
-    public function sentstudentOnlineadmissionFeessubmissionWhatsapp($student_details, $template, $send_to, $template_id)
+    public function student_apply_leave($sender_details, $template,$template_id)
     {
-        $content = $this->CI->smsgateway->getOnlineadmissionFeesContent($student_details, $template, null);
-        return $this->_sendWhatsapp($send_to, $content, $student_details);
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+    
+        if (!empty($whatsapp_detail)) {
+
+            $send_to = $sender_details['contact_no'];
+            $msg        = $this->getstudent_apply_leaveContent($sender_details, $template);
+			
+            if ($whatsapp_detail->type == 'twilio') {                
+
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            } 
+        }
     }
 
-    public function sendDynamicWhatsapp($mobile, $message_text)
+    public function getstudent_apply_leaveContent($data, $template)
     {
-        return $this->_sendWhatsapp($mobile, $message_text);
+         foreach ($data as $key => $value) {
+            
+            $foundValues = [];
+            
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                    
+                }
+            } 
+        }
+        return $foundValues;
     }
+
+    //send staff attendance whatsapp and notification on app absent   
+    public function sentAbsentStaffWhatsapp($sender_details, $template,$template_id)
+    {
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        if (!empty($whatsapp_detail)) {
+
+            $send_to = $sender_details['contact_no'];
+            $msg        = $this->getAbsentStaffContent($sender_details, $template);
+			
+            if ($whatsapp_detail->type == 'twilio') {                
+
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            } 
+        }
+    }
+  
+    public function getAbsentStaffContent($data, $template)
+    {
+        
+        foreach ($data as $key => $value) {
+            
+            $foundValues = [];
+            
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                    
+                }
+            } 
+        }
+        return $foundValues;
+    }
+    //send staff attendance whatsapp notification on app absent   
+
+    //send staff attendance whatsapp notification on app absent   
+    public function sentPresentStaffWhatsapp($sender_details, $template,$template_id)
+    {
+
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        if (!empty($whatsapp_detail)) {
+
+            $send_to = $sender_details['contact_no'];
+            $msg        = $this->getPresentStaffContent($sender_details, $template);
+			
+            if ($whatsapp_detail->type == 'twilio') {                
+
+                 return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				 
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            } 
+        }
+    }
+  
+    public function getPresentStaffContent($data, $template)
+    {
+        foreach ($data as $key => $value) {
+            $foundValues = [];
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                }
+            } 
+        }
+        return $foundValues;
+    }
+
+    //send staff attendance whatsapp notification on app absent  
+
+    public function sentCBSEExamResultWhatsapp($detail, $template,$chk_mail_sms,$send_to,$template_id)
+    {
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+
+        if (!empty($whatsapp_detail)) {
+            
+			$msg        = $this->getCBSEExamResultContent($detail, $template);
+			
+            if ($whatsapp_detail->type == 'twilio') {                
+
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            } 
+        }
+    }
+
+    public function getCBSEExamResultContent($data, $template)
+    {
+
+        foreach ($data as $key => $value) {
+            $foundValues = [];
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                }
+            } 
+        }
+        return $foundValues;
+    }
+
+    //==================send notification by whatsapp FOR ONLINE COURSE===================//
+
+    public function publishsendWhatsapp($sender_details,$template,$send_to,$template_id)
+    {
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg = $this->getpublishcontent($sender_details, $template);
+
+         if (!empty($whatsapp_detail)) {            
+            if ($whatsapp_detail->type == 'twilio') {
+                
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }  
+        }
+    }
+
+    public function getpublishcontent($data, $template)
+    {
+        foreach ($data as $key => $value) {
+            $foundValues = [];
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                }
+            } 
+        }
+        return $foundValues;
+    }
+
+    public function purchasesendWhatsapp($sender_details,$template,$send_to,$template_id)
+    {
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg = $this->getpurchasecontent($sender_details, $template);
+
+         if (!empty($whatsapp_detail)) {            
+            if ($whatsapp_detail->type == 'twilio') {
+                
+				return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }  
+        }
+    }
+
+    public function getpurchasecontent($data, $template)
+    {
+        foreach ($data as $key => $value) {
+            $foundValues = [];
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                }
+            } 
+        }
+        return $foundValues;
+    }
+
+    //==================send notification by whatsapp FOR ONLINE COURSE===================//
+
+
+    //==================send notificaion by whatsapp in GMEET================//
+    
+    public function sentOnlineMeetingStaffwhatsapp($sender_details,$template,$send_to,$template_id)
+    {
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg = $this->getOnlineMeetingStaffcontent($sender_details["$send_to"], $template);
+         if (!empty($whatsapp_detail)) {            
+            if ($whatsapp_detail->type == 'twilio') {
+                
+				return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }  
+        }
+    }
+
+    public function getOnlineMeetingStaffcontent($data, $template)
+    {
+        foreach ($data as $key => $value) {
+            $foundValues = [];
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                }
+            } 
+        }
+        return $foundValues;
+    }
+
+    public function sentstudentOnlineClasswhatsapp($sender_details,$template,$send_to,$template_id){
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg = $this->getstudentOnlineClasscontent($sender_details["$send_to"], $template);
+
+        if(!empty($whatsapp_detail)) {            
+            if ($whatsapp_detail->type == 'twilio') {
+				
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }  
+        }
+    }
+
+    public function getstudentOnlineClasscontent($data, $template)
+    {
+        foreach ($data as $key => $value) {
+            $foundValues = [];
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                }
+            } 
+        }
+        return $foundValues;
+    }
+    //==================send notificaion by whatsapp in GMEET================//
+
+    //===============send notification by whatsapp in Zoom================//
+    public function sentZoomMeetingStaffwhatsapp($sender_details,$template,$send_to,$template_id)
+    {
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg = $this->getZoomMeetingStaffcontent($sender_details["$send_to"], $template);
+         if (!empty($whatsapp_detail)) {            
+            if ($whatsapp_detail->type == 'twilio') {
+				
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            } 
+        }
+    }
+
+    public function getZoomMeetingStaffcontent($data, $template)
+    {
+        foreach ($data as $key => $value) {
+            $foundValues = [];
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                }
+            } 
+        }
+        return $foundValues;
+    }
+
+    public function sentstudentZoomClasswhatsapp($sender_details,$template,$send_to,$template_id)
+    {
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg = $this->getstudentZoomClasscontent($sender_details["$send_to"], $template);
+
+        if(!empty($whatsapp_detail)) {         
+            if ($whatsapp_detail->type == 'twilio') {
+				
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }  
+        }
+    }
+
+    public function getstudentZoomClasscontent($data, $template)
+    {
+        foreach ($data as $key => $value) {
+            $foundValues = [];
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                }
+            } 
+        }
+        return $foundValues;
+    }
+    //===============send notification by whatsapp in Zoom================//
+
+    //===================behavioural=====================//
+    public function sentBehaviourIncidentAssignedstudentWhatsapp($sender_details,$template,$send_to,$template_id)
+    {
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg = $this->getstudentBehaviourIncidentAssignedcontent($sender_details["$send_to"], $template);
+
+        if(!empty($whatsapp_detail)) {            
+            if ($whatsapp_detail->type == 'twilio') {
+				
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }  
+        }
+    }
+
+    public function getstudentBehaviourIncidentAssignedcontent($data, $template)
+    {
+        foreach ($data as $key => $value) {
+            $foundValues = [];
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                }
+            } 
+        }
+        return $foundValues;
+    }
+    //===================behavioural=====================//
+
+    //==================online admission fees submission===============//
+    public function sentstudentOnlineadmissionFeessubmissionWhatsapp($sender_details,$template,$send_to,$template_id)
+    {
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg = $this->getstudentOnlineadmissionFeescontent($sender_details, $template);
+        if(!empty($whatsapp_detail)) {            
+            if ($whatsapp_detail->type == 'twilio') {
+				
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }  
+        }
+    }
+
+    public function getstudentOnlineadmissionFeescontent($data, $template)
+    {
+       foreach ($data as $key => $value) {
+            $foundValues = [];
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                }
+            } 
+        }
+        return $foundValues;
+    }
+    //==================online admission fees submission===============//
+
+    //==================online admission admission form submission===================//
+    public function sendOnlineadmissionformsubmit($sender_details,$template,$send_to,$template_id)
+    {
+        $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+        $msg = $this->getOnlineadmissionformsubmitcontent($sender_details, $template);
+        if(!empty($whatsapp_detail)) {            
+            if ($whatsapp_detail->type == 'twilio') {
+                
+				return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+					
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			} else {
+
+            }  
+        }
+    }
+
+    public function getOnlineadmissionformsubmitcontent($data, $template)
+    {
+       foreach ($data as $key => $value) {
+            $foundValues = [];
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+                if (isset($data[$key1])) {
+                    $foundValues[$key1] = $data[$key1]; // Add to foundValues array   
+                }
+            } 
+        }
+        return $foundValues;
+    }
+    //==================online admission admission form submission===================//
+
+
+    //=========fees reminder===============//
+    public function sentfeesreminderNotification($sender_details,$send_to,$template,$template_id)
+    {
+         $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+    
+        if (!empty($whatsapp_detail)) {
+			
+			$msg        = $this->getfeesreminderContent($sender_details, $template);
+			
+            if ($whatsapp_detail->type == 'twilio') {                
+
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			}  
+        }
+
+    }
+
+    public function getfeesreminderContent($data, $template)
+    {
+         foreach ($data as $key => $value) {
+            $foundValues = [];
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+
+                if (isset($data->$key1)) {
+                    $foundValues[$key1] = $data->$key1; // Add to foundValues array   
+                    
+                }
+            } 
+        }
+        return $foundValues;
+    }
+	
+	
+
+//=========fees reminder===============//
+
+
+	public function sentFeeProcessingNotification($sender_details,$send_to,$template,$template_id)
+    {
+         $whatsapp_detail = $this->_CI->whatsappconfig_model->getActiveWhatsApp();
+    
+        if (!empty($whatsapp_detail)) {
+			
+			 $msg        = $this->getFeeProcessingContent($sender_details, $template);
+			 
+            if ($whatsapp_detail->type == 'twilio') {               
+
+                return $this->sendByTwilio($whatsapp_detail, $send_to, $template_id, $msg);
+				
+				
+            } else if ($whatsapp_detail->type == 'richautomate') {
+				
+				return $this->sendRichAutomateTemplate($whatsapp_detail, $send_to, $template_id, $whatsapp_detail->language, $msg);
+				
+			} else if ($whatsapp_detail->type == 'meta') {
+				
+				return $this->sendMetaTemplate($whatsapp_detail,$send_to,$template_id,$whatsapp_detail->language,$msg);
+				
+			}  
+        }
+
+    }
+
+	public function getFeeProcessingContent($data, $template)
+    {
+         foreach ($data as $key => $value) {
+            $foundValues = [];
+            preg_match_all('/{{(.*?)}}/', $template, $matches); // Match all placeholders
+            // Extract values from the $data array if the key exists in the template
+            foreach ($matches[1] as $key1) {
+
+                if (isset($data->$key1)) {
+                    $foundValues[$key1] = $data->$key1; // Add to foundValues array   
+                    
+                }
+            } 
+        }
+        return $foundValues;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+	
+
 }

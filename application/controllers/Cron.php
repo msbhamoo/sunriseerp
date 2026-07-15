@@ -35,12 +35,18 @@ class Cron extends MY_Controller
 
     public function index($key = '')
     {
+        if ($key == 'test_digest') {
+            $this->test_digest();
+            return;
+        }
+
         if ($key != "" && $this->cron_key == $key) {
 
             $this->autobackup($key);
             $this->feereminder($key);
             $this->eventreminder($key);
             $this->schedulesmsemails($key);
+            $this->send_email_digests($key);
         } else {
             echo "Invalid Key or Direct access is not allowed";
             return;
@@ -385,6 +391,125 @@ class Cron extends MY_Controller
                 $this->messages_model->add($insert);
 
             }
+        }
+    }
+
+    public function send_email_digests($key = "")
+    {
+        if ($key != "" && $this->cron_key != $key) {
+            echo "Invalid Key or Direct access is not allowed";
+            return;
+        }
+
+        $setting_result = $this->setting_model->getSetting();
+        $recipients = $setting_result->email_digest_recipients;
+
+        if (empty($recipients)) {
+            return;
+        }
+
+        $current_time = date('H:i');
+        $is_daily = (!empty($setting_result->daily_digest_time) && $current_time == date('H:i', strtotime($setting_result->daily_digest_time)));
+        $is_weekly = (!empty($setting_result->weekly_digest_time) && date('w') == 0 && $current_time == date('H:i', strtotime($setting_result->weekly_digest_time)));
+        $is_monthly = (!empty($setting_result->monthly_digest_time) && date('d') == 1 && $current_time == date('H:i', strtotime($setting_result->monthly_digest_time)));
+
+        if ($is_daily || $is_weekly || $is_monthly) {
+            $this->load->library('brevogateway');
+            $this->load->model('digest_model');
+            
+            $start_date = date('Y-m-d');
+            $end_date = date('Y-m-d');
+            $period_name = 'Daily';
+            
+            if ($is_monthly) {
+                $start_date = date('Y-m-01');
+                $end_date = date('Y-m-t');
+                $period_name = 'Monthly';
+            } elseif ($is_weekly) {
+                $start_date = date('Y-m-d', strtotime('-6 days'));
+                $end_date = date('Y-m-d');
+                $period_name = 'Weekly';
+            }
+            
+            $stats = $this->digest_model->get_stats($start_date, $end_date);
+            
+            $recipient_list = array_map('trim', explode(',', $recipients));
+            
+            foreach ($recipient_list as $email) {
+                if (empty($email)) continue;
+                
+                // Lookup name
+                $staff = $this->db->select('name, surname')->where('email', $email)->get('staff')->row();
+                $recipient_name = $staff ? trim($staff->name . ' ' . $staff->surname) : 'Administrator';
+                
+                $data = [
+                    'is_daily' => $is_daily,
+                    'is_weekly' => $is_weekly,
+                    'is_monthly' => $is_monthly,
+                    'period_name' => $period_name,
+                    'stats' => $stats,
+                    'recipient_name' => $recipient_name
+                ];
+                
+                $html_content = $this->load->view('emailconfig/digest_report', $data, true);
+                $subject = "Sunrise ERP " . $period_name . " Digest Report";
+                
+                $this->brevogateway->send_digest($email, $subject, $html_content);
+            }
+        }
+    }
+    public function test_digest()
+    {
+        echo "Testing Digest...\n";
+        $this->load->library('brevogateway');
+        $this->load->model('digest_model');
+        
+        $setting_result = $this->setting_model->getSetting();
+        $recipients = $setting_result->email_digest_recipients;
+
+        if (empty($recipients)) {
+            echo "Error: No recipients configured in General Settings.\n";
+            return;
+        }
+
+        $start_date = date('Y-m-d');
+        $end_date = date('Y-m-d');
+        $period_name = 'Test Daily';
+
+        $stats = $this->digest_model->get_stats($start_date, $end_date);
+        
+        $recipient_list = array_map('trim', explode(',', $recipients));
+        $success_count = 0;
+        
+        foreach ($recipient_list as $email) {
+            if (empty($email)) continue;
+            
+            // Lookup name
+            $staff = $this->db->select('name, surname')->where('email', $email)->get('staff')->row();
+            $recipient_name = $staff ? trim($staff->name . ' ' . $staff->surname) : 'Administrator';
+            
+            $data = [
+                'is_daily' => true,
+                'is_weekly' => false,
+                'is_monthly' => false,
+                'period_name' => $period_name,
+                'stats' => $stats,
+                'recipient_name' => $recipient_name
+            ];
+            
+            $html_content = $this->load->view('emailconfig/digest_report', $data, true);
+            $subject = "Sunrise ERP " . $period_name . " Digest Report (TEST)";
+            
+            if ($this->brevogateway->send_digest($email, $subject, $html_content)) {
+                $success_count++;
+                echo "Digest sent successfully to: " . $email . "\n";
+            } else {
+                echo "Failed to send digest to: " . $email . ". Check application logs for Brevo API error.\n";
+            }
+        }
+        
+        if ($success_count == 0) {
+            echo "Failed to send any test digests.\n";
         }
     }
 

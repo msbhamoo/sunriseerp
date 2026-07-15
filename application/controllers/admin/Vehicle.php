@@ -12,6 +12,10 @@ class Vehicle extends Admin_Controller
         parent::__construct();
         $this->load->library('media_storage');
         $this->load->library('SaasValidation');
+        $this->load->model('vehroute_model');
+        $this->load->model('student_model');
+        $this->load->model('studenttransportfee_model');
+        $this->load->model('transportyearlyfee_model');
     }
 
     public function index()
@@ -24,7 +28,9 @@ class Vehicle extends Admin_Controller
         $this->session->set_userdata('sub_menu', 'vehicle/index');
         $data['title']       = 'Add Vehicle';
         $listVehicle         = $this->vehicle_model->get();
+        $data['occupancy']   = $this->vehicle_model->getVehicleOccupancy();
         $data['listVehicle'] = $listVehicle;
+        $data['vehroutelist'] = $this->vehroute_model->get();
         $this->load->view('layout/header');
         $this->load->view('admin/vehicle/index', $data);
         $this->load->view('layout/footer');
@@ -347,9 +353,98 @@ class Vehicle extends Admin_Controller
         }
 
         $this->vehicle_model->add($data); 
-        echo json_encode(array('status' => 'success', 'message' => 'Updated successfully!'));
+        echo json_encode(array('status' => 1, 'msg' => $this->lang->line('update_message')));
     }
-    
+
+    public function assign_student_transport()
+    {
+        if (!$this->rbac->hasPrivilege('vehicle', 'can_add') && !$this->rbac->hasPrivilege('vehicle', 'can_edit')) {
+            echo json_encode(['status' => 0, 'error' => ['Access Denied']]);
+            return;
+        }
+
+        $student_id = $this->input->post('student_id');
+        $student_session_id = $this->input->post('student_session_id');
+        $class_id = $this->input->post('class_id');
+        $vehroute_id = $this->input->post('vehroute_id');
+        $route_pickup_point_id = $this->input->post('route_pickup_point_id');
+
+        if(empty($student_session_id) || empty($vehroute_id) || empty($route_pickup_point_id) || empty($class_id)) {
+            echo json_encode(['status' => 0, 'error' => ['Please fill all required fields.']]);
+            return;
+        }
+
+        // 1. Check if the student has paid Yearly fees
+        $paid_yearly_fees = $this->db->query("
+            SELECT syf.id, syf.transport_yearly_feemaster_id 
+            FROM student_transport_yearly_fees syf 
+            JOIN student_fees_deposite sfd ON sfd.student_transport_yearly_fee_id = syf.id 
+            WHERE syf.student_session_id = ?
+        ", [$student_session_id])->result_array();
+
+        $paid_master_ids = [];
+        foreach($paid_yearly_fees as $pyf) {
+            $paid_master_ids[] = $pyf['transport_yearly_feemaster_id'];
+        }
+
+        $this->db->trans_begin();
+
+        // 2. Update Student Session Profile
+        $this->db->where('id', $student_session_id);
+        $this->db->update('student_session', [
+            'vehroute_id' => $vehroute_id,
+            'route_pickup_point_id' => $route_pickup_point_id
+        ]);
+
+        // 3. Protect Paid Fees: We do not update them because they are tied to the old fee master which acts as receipt for what they paid.
+
+        // 4. Safely Delete ALL UNPAID yearly fees for this student
+        $this->db->where('student_session_id', $student_session_id);
+        if (count($paid_yearly_fees) > 0) {
+            $paid_fee_ids = array_column($paid_yearly_fees, 'id');
+            $this->db->where_not_in('id', $paid_fee_ids);
+        }
+        $this->db->delete('student_transport_yearly_fees');
+
+        // 5. Automatically fetch and assign new Yearly Fees based on Class and Pickup Point
+        $yearly_fees = $this->transportyearlyfee_model->getApplicableYearlyFees($class_id, $route_pickup_point_id);
+        
+        if (!empty($yearly_fees)) {
+            foreach($yearly_fees as $yf) {
+                // Prevent duplicate assignment if they already paid for this exact fee master ID!
+                if(!in_array($yf['id'], $paid_master_ids)) {
+                    $insert_val = array(
+                        'student_session_id' => $student_session_id,
+                        'transport_yearly_feemaster_id' => $yf['id'],
+                    );
+                    $this->db->insert('student_transport_yearly_fees', $insert_val);
+                }
+            }
+        }
+
+        if ($this->db->trans_status() === FALSE) {
+            $this->db->trans_rollback();
+            echo json_encode(['status' => 0, 'error' => ['Database error occurred.']]);
+        } else {
+            $this->db->trans_commit();
+            echo json_encode(['status' => 1, 'message' => 'Student successfully assigned to transport!']);
+        }
+    }
+
+    public function get_vehicle_students()
+    {
+        if (!$this->rbac->hasPrivilege('vehicle', 'can_view')) {
+            access_denied();
+        }
+        $vehicle_id = $this->input->post('vehicle_id');
+        $students = $this->vehicle_model->getVehicleStudents($vehicle_id);
+        $data['students'] = $students;
+        $data['vehicle_id'] = $vehicle_id;
+        
+        $html = $this->load->view('admin/vehicle/_students_list', $data, true);
+        echo json_encode(array('status' => 1, 'html' => $html));
+    }
+
     public function handle_upload()
     {
         $image_validate = $this->config->item('file_validate');

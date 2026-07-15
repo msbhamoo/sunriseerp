@@ -104,7 +104,17 @@
                                                             <input type="hidden" name="student_session[]" value="<?php echo $student_session_id; ?>">
                                                             <?php echo $count++; ?>
                                                         </td>
-                                                        <td><?php echo $student['firstname'] . ' ' . $student['lastname']; ?></td>
+                                                        <td>
+                                                            <?php echo $student['firstname'] . ' ' . $student['lastname']; ?>
+                                                            <?php 
+                                                            if (isset($gatepasses) && in_array($student['student_id'], $gatepasses)) {
+                                                                echo '<span class="label label-warning pull-right" data-toggle="tooltip" title="Issued from Front Desk">Gatepass Issued</span>';
+                                                            }
+                                                            if (isset($transport_presence) && array_key_exists($student['student_session_id'], $transport_presence)) {
+                                                                echo '<span class="label label-info pull-right" style="margin-right: 5px;">On Bus</span>';
+                                                            }
+                                                            ?>
+                                                        </td>
                                                         <td><?php echo $student['admission_no']; ?></td>
                                                         <td><?php echo $student['room_no']; ?></td>
                                                         <td><?php echo $student['hostel_bed_no']; ?></td>

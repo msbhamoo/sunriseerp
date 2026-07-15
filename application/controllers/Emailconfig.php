@@ -52,6 +52,10 @@ class Emailconfig extends Admin_Controller
             $this->form_validation->set_rules('region', $this->lang->line('region'), 'required');
         }
 
+        if ($this->input->post('email_type') == "brevo_api") {
+            $this->form_validation->set_rules('brevo_api_key', 'Brevo API Key', 'required');
+        }
+
         if ($this->form_validation->run() === false) {
             $data['title'] = 'Email Config List';
             $this->load->view('layout/header', $data);
@@ -63,6 +67,10 @@ class Emailconfig extends Admin_Controller
             } elseif ($this->input->post('email_type') == "smtp") {
                 $email = $this->input->post('smtp_username');
             }
+            $api_key = $this->input->post('access_key');
+            if ($this->input->post('email_type') == "brevo_api") {
+                $api_key = $this->input->post('brevo_api_key');
+            }
             $data['title'] = 'Email Config List';
             $data_insert   = array(
                 'email_type'    => $this->input->post('email_type'),
@@ -73,7 +81,7 @@ class Emailconfig extends Admin_Controller
                 'smtp_port'     => $this->input->post('smtp_port'),
                 'ssl_tls'       => $this->input->post('smtp_security'),
                 'smtp_auth'     => $this->input->post('smtp_auth'),
-                'api_key'       => $this->input->post('access_key'),
+                'api_key'       => $api_key,
                 'api_secret'    => $this->input->post('secret_access_key'),
                 'region'        => $this->input->post('region'),
                 'is_active'     => 'yes',

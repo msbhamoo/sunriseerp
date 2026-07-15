@@ -1536,6 +1536,7 @@ class Customlib
         $mail_method['sendmail'] = 'SendMail';
         $mail_method['smtp']     = 'SMTP';
         $mail_method['aws_ses']  = 'AWS SES';
+        $mail_method['brevo_api'] = 'Brevo API';
         return $mail_method;
     }
 

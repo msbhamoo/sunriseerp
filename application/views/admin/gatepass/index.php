@@ -28,10 +28,13 @@
                                         <th><?php echo $this->lang->line('gate_pass_no'); ?></th>
                                         <th><?php echo $this->lang->line('user_type'); ?></th>
                                         <th><?php echo $this->lang->line('user'); ?></th>
+                                        <th>Father Name</th>
                                         <th><?php echo $this->lang->line('date'); ?></th>
+                                        <th>Duration</th>
                                         <th><?php echo $this->lang->line('out_time'); ?></th>
                                         <th>In Time (Exp.)</th>
                                         <th>Actual In-Time</th>
+                                        <th>Reason</th>
                                         <th><?php echo $this->lang->line('status'); ?></th>
                                         <th class="text-right"><?php echo $this->lang->line('action'); ?></th>
                                     </tr>
@@ -45,12 +48,15 @@
                                                 <td class="mailbox-name"><?php echo $gatepass['gate_pass_no']; ?></td>
                                                 <td class="mailbox-name"><?php echo ucfirst($gatepass['user_type']); ?></td>
                                                 <td class="mailbox-name"><?php echo $gatepass['user_details']; ?></td>
+                                                <td class="mailbox-name"><?php echo isset($gatepass['father_name']) ? $gatepass['father_name'] : '-'; ?></td>
                                                 <td class="mailbox-name">
                                                     <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($gatepass['date'])); ?>
                                                 </td>
+                                                <td class="mailbox-name"><?php echo (empty($gatepass['in_time']) || $gatepass['in_time'] == '00:00:00' || $gatepass['in_time'] == null) ? 'Full Day' : 'Partial Time'; ?></td>
                                                 <td class="mailbox-name"><?php echo $gatepass['out_time']; ?></td>
-                                                <td class="mailbox-name"><?php echo $gatepass['in_time']; ?></td>
+                                                <td class="mailbox-name"><?php echo $gatepass['in_time'] ? $gatepass['in_time'] : '-'; ?></td>
                                                 <td class="mailbox-name"><?php echo $gatepass['actual_in_time'] ? $gatepass['actual_in_time'] : '-'; ?></td>
+                                                <td class="mailbox-name"><?php echo $gatepass['reason']; ?></td>
                                                 <td class="mailbox-name">
                                                     <?php
                                                     if ($gatepass['status'] == 'Pending') {

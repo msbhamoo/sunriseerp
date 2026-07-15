@@ -9,7 +9,7 @@
                 <div class="col-md-4">
                     <div class="box box-primary">
                         <div class="box-header with-border">
-                            <h3 class="box-title"><?php echo "Add Yearly Fees"; // $this->lang->line('add_yearly_fees'); ?></h3>
+                            <h3 class="box-title">Add Transport Fee Master</h3>
                         </div>
                         <form id="form1" action="<?php echo site_url('admin/transportyearlyfee') ?>" method="post" accept-charset="utf-8">
                             <div class="box-body">
@@ -19,25 +19,14 @@
                                 <?php echo $this->customlib->getCSRF(); ?>
                                 
                                 <div class="form-group">
-                                    <label for="route_id"><?php echo $this->lang->line('route_list'); ?> <small class="req"> *</small></label>
-                                    <select autofocus="" id="route_id" name="route_id" class="form-control" onchange="get_pickup_point(this.value)">
+                                    <label for="pickup_point_id"><?php echo $this->lang->line('pickup_point'); ?> <small class="req"> *</small></label>
+                                    <select autofocus="" id="pickup_point_id" name="pickup_point_id" class="form-control">
                                         <option value=""><?php echo $this->lang->line('select'); ?></option>
-                                        <?php foreach ($vehroutelist as $vehroute) { ?>
-                                            <optgroup label=" <?php echo $vehroute->route_title; ?>">
-                                                <?php foreach ($vehroute->vehicles as $vehicle) { ?>
-                                                    <option value="<?php echo $vehicle->vec_route_id ?>" <?php if (set_value('route_id') == $vehicle->vec_route_id) echo "selected"; ?>><?php echo $vehicle->vehicle_no ?></option>
-                                                <?php } ?>
-                                            </optgroup>
+                                        <?php foreach ($pickuppointlist as $pickup) { ?>
+                                            <option value="<?php echo $pickup['id'] ?>" <?php if (set_value('pickup_point_id') == $pickup['id']) echo "selected"; ?>><?php echo $pickup['name'] ?></option>
                                         <?php } ?>
                                     </select>
-                                    <span class="text-danger"><?php echo form_error('route_id'); ?></span>
-                                </div>
-                                <div class="form-group">
-                                    <label for="route_pickup_point_id"><?php echo $this->lang->line('pickup_point'); ?> <small class="req"> *</small></label>
-                                    <select id="pickup_point" name="route_pickup_point_id" class="form-control">
-                                        <option value=""><?php echo $this->lang->line('select'); ?></option>
-                                    </select>
-                                    <span class="text-danger"><?php echo form_error('route_pickup_point_id'); ?></span>
+                                    <span class="text-danger"><?php echo form_error('pickup_point_id'); ?></span>
                                 </div>
                                 <div class="form-group">
                                     <label for="feetype_id"><?php echo $this->lang->line('fees_type'); ?> <small class="req"> *</small></label>
@@ -49,15 +38,7 @@
                                     </select>
                                     <span class="text-danger"><?php echo form_error('feetype_id'); ?></span>
                                 </div>
-                                <div class="form-group">
-                                    <label for="class_id"><?php echo $this->lang->line('class'); ?> <small class="req"> *</small></label>
-                                    <select id="class_id" name="class_id[]" class="form-control select2" multiple="multiple">
-                                        <?php foreach ($classlist as $class) { ?>
-                                            <option value="<?php echo $class['id'] ?>" <?php if ($this->input->post('class_id') && in_array($class['id'], $this->input->post('class_id'))) echo "selected='selected'"; ?>><?php echo $class['class'] ?></option>
-                                        <?php } ?>
-                                    </select>
-                                    <span class="text-danger"><?php echo form_error('class_id[]'); ?></span>
-                                </div>
+
                                 <div class="form-group">
                                     <label for="amount"><?php echo $this->lang->line('amount'); ?> (<?php echo $currency_symbol; ?>) <small class="req"> *</small></label>
                                     <input id="amount" name="amount" type="text" class="form-control" value="<?php echo set_value('amount'); ?>" />
@@ -130,7 +111,7 @@
             <div class="col-md-<?php if ($this->rbac->hasPrivilege('transport_fees_master', 'can_add')) { echo "8"; } else { echo "12"; } ?>">
                 <div class="box box-primary">
                     <div class="box-header ptbnull">
-                        <h3 class="box-title titlefix">Yearly Fees List</h3>
+                        <h3 class="box-title titlefix">Transport Fee Master List</h3>
                         <div class="box-tools pull-right">
                             <?php if ($this->rbac->hasPrivilege('transport_fees_master', 'can_add')) { ?>
                             <a href="<?php echo base_url(); ?>admin/transportyearlyfee/bulk_assign" class="btn btn-sm btn-primary"><i class="fa fa-upload"></i> Bulk Assign Pickup Point</a>
@@ -139,23 +120,13 @@
                     </div>
                     <div class="box-body">
                         <div class="row" style="margin-bottom: 10px;">
-                            <div class="col-md-6">
-                                <label><?php echo $this->lang->line('route_list'); ?></label>
-                                <select id="filter_route_id" class="form-control">
-                                    <option value=""><?php echo $this->lang->line('select'); ?></option>
-                                    <?php foreach ($vehroutelist as $vehroute) { ?>
-                                        <optgroup label=" <?php echo $vehroute->route_title; ?>">
-                                            <?php foreach ($vehroute->vehicles as $vehicle) { ?>
-                                                <option value="<?php echo $vehicle->vec_route_id ?>"><?php echo $vehicle->vehicle_no ?></option>
-                                            <?php } ?>
-                                        </optgroup>
-                                    <?php } ?>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label><?php echo $this->lang->line('pickup_point'); ?></label>
                                 <select id="filter_pickup_point" class="form-control">
                                     <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                    <?php foreach ($pickuppointlist as $pickup) { ?>
+                                        <option value="<?php echo $pickup['id'] ?>"><?php echo $pickup['name'] ?></option>
+                                    <?php } ?>
                                 </select>
                             </div>
                         </div>
@@ -163,9 +134,7 @@
                             <table class="table table-striped table-bordered table-hover example" id="yearlyfee_table">
                                 <thead>
                                     <tr>
-                                        <th><?php echo $this->lang->line('route_list'); ?></th>
                                         <th><?php echo $this->lang->line('pickup_point'); ?></th>
-                                        <th><?php echo $this->lang->line('class'); ?></th>
                                         <th><?php echo $this->lang->line('fees_type'); ?></th>
                                         <th><?php echo $this->lang->line('due_date'); ?></th>
                                         <th><?php echo $this->lang->line('amount'); ?></th>
@@ -175,7 +144,7 @@
                                 <tbody>
                                     <?php 
                                     try {
-                                        $this->load->view('admin/transport/_yearlyfeelist', array('yearlyfeelist' => $yearlyfeelist, 'currency_symbol' => isset($currency_symbol) ? $currency_symbol : '')); 
+                                        $this->load->view('admin/transport/_yearlyfeelist', array('yearlyfeelist' => $yearlyfeelist, 'currency_symbol' => isset($currency_symbol) ? $currency_symbol : '', 'total_classes' => isset($total_classes) ? $total_classes : 0)); 
                                     } catch (Throwable $e) {
                                         echo "<tr><td colspan='5'>ERROR: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine() . "</td></tr>";
                                     }

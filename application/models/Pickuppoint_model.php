@@ -272,6 +272,13 @@ class Pickuppoint_model extends MY_Model
         return $query->result();
     }
 
+    public function getRoutePickupsByPickupId($pickup_point_id)
+    {
+        $this->db->select('*')->from('route_pickup_point')->where('pickup_point_id', $pickup_point_id)->where('session_id', $this->current_session);
+        $query = $this->db->get();
+        return $query->result_array();
+    }
+
     public function is_duplicate($route_id,$pickup_point_id){
         $this->db->select('*')->from('route_pickup_point')->where('route_pickup_point.transport_route_id', $route_id)->where("route_pickup_point.pickup_point_id in ( $pickup_point_id)")->where('session_id',$this->current_session)->order_by('order_number', 'asc');
         $route_pickup_point = $this->db->get();

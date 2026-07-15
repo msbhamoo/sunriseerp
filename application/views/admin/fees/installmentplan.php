@@ -77,6 +77,9 @@
                                     ?>
                                     <label class="checkbox-inline"><input type="checkbox" name="fee_items[]" value="transport_yearly-<?php echo $ty['id'] ?>" <?php echo $checked; ?>> <?php echo $ty['name'] ?></label><br>
                                     <?php } ?>
+                                    <br><b>Other Fees</b><br>
+                                    <?php $checked = in_array('previous_balance-0', $edit_item_vals) ? 'checked' : ''; ?>
+                                    <label class="checkbox-inline"><input type="checkbox" name="fee_items[]" value="previous_balance-0" <?php echo $checked; ?>> Previous Session Balance</label><br>
                                 </div>
 
                                 <div class="form-group">
@@ -99,9 +102,10 @@
                                     ?>
                                         <h4>Installment <?php echo $i; ?></h4>
                                         <div class="row">
-                                        <div class="col-md-3"><label>Academic %</label><input type="number" step="0.01" class="form-control ac_perc" name="academic_percentage_<?php echo $i; ?>" value="<?php echo $det['academic_percentage']; ?>"></div>
-                                        <div class="col-md-3"><label>Transport %</label><input type="number" step="0.01" class="form-control tr_perc" name="transport_percentage_<?php echo $i; ?>" value="<?php echo $det['transport_percentage']; ?>"></div>
-                                        <div class="col-md-3"><label>Hostel %</label><input type="number" step="0.01" class="form-control ho_perc" name="hostel_percentage_<?php echo $i; ?>" value="<?php echo $det['hostel_percentage']; ?>"></div>
+                                        <div class="col-md-2"><label>Academic %</label><input type="number" step="0.01" class="form-control ac_perc" name="academic_percentage_<?php echo $i; ?>" value="<?php echo $det['academic_percentage']; ?>"></div>
+                                        <div class="col-md-2"><label>Transport %</label><input type="number" step="0.01" class="form-control tr_perc" name="transport_percentage_<?php echo $i; ?>" value="<?php echo $det['transport_percentage']; ?>"></div>
+                                        <div class="col-md-2"><label>Hostel %</label><input type="number" step="0.01" class="form-control ho_perc" name="hostel_percentage_<?php echo $i; ?>" value="<?php echo $det['hostel_percentage']; ?>"></div>
+                                        <div class="col-md-3"><label>Prev. Bal %</label><input type="number" step="0.01" class="form-control pb_perc" name="previous_balance_percentage_<?php echo $i; ?>" value="<?php echo isset($det['previous_balance_percentage']) ? $det['previous_balance_percentage'] : '0.00'; ?>"></div>
                                         <div class="col-md-3"><label>Due Date</label><input type="text" class="form-control date" name="due_date_<?php echo $i; ?>" value="<?php echo $date; ?>"></div>
                                         </div><hr>
                                     <?php
@@ -192,25 +196,27 @@
         var count = $('#total_installments').val();
         var html = '';
         for(var i=1; i<=count; i++) {
-            html += '<h4>Installment ' + i + '</h4>';
-            html += '<div class="row">';
-            html += '<div class="col-md-3"><label>Academic %</label><input type="number" step="0.01" class="form-control ac_perc" name="academic_percentage_' + i + '" value="0"></div>';
-            html += '<div class="col-md-3"><label>Transport %</label><input type="number" step="0.01" class="form-control tr_perc" name="transport_percentage_' + i + '" value="0"></div>';
-            html += '<div class="col-md-3"><label>Hostel %</label><input type="number" step="0.01" class="form-control ho_perc" name="hostel_percentage_' + i + '" value="0"></div>';
+            html += '<h4>Installment ' + i + '</h4><div class="row">';
+            html += '<div class="col-md-2"><label>Academic %</label><input type="number" step="0.01" class="form-control ac_perc" name="academic_percentage_' + i + '" value="0"></div>';
+            html += '<div class="col-md-2"><label>Transport %</label><input type="number" step="0.01" class="form-control tr_perc" name="transport_percentage_' + i + '" value="0"></div>';
+            html += '<div class="col-md-2"><label>Hostel %</label><input type="number" step="0.01" class="form-control ho_perc" name="hostel_percentage_' + i + '" value="0"></div>';
+            html += '<div class="col-md-3"><label>Prev. Bal %</label><input type="number" step="0.01" class="form-control pb_perc" name="previous_balance_percentage_' + i + '" value="0"></div>';
             html += '<div class="col-md-3"><label>Due Date</label><input type="text" class="form-control date" name="due_date_' + i + '"></div>';
             html += '</div><hr>';
         }
         $('#installment_rows').html(html);
+        $('.date').datepicker({format: 'dd-mm-yyyy', autoclose: true});
     }
 
     function submitPlan() {
         // Validation for 100%
-        var totalAc = 0, totalTr = 0, totalHo = 0;
+        var totalAc = 0, totalTr = 0, totalHo = 0, totalPb = 0;
         $('.ac_perc').each(function(){ totalAc += parseFloat($(this).val()) || 0; });
         $('.tr_perc').each(function(){ totalTr += parseFloat($(this).val()) || 0; });
         $('.ho_perc').each(function(){ totalHo += parseFloat($(this).val()) || 0; });
+        $('.pb_perc').each(function(){ totalPb += parseFloat($(this).val()) || 0; });
         
-        var isAcChecked = false, isTrChecked = false, isHoChecked = false;
+        var isAcChecked = false, isTrChecked = false, isHoChecked = false, isPbChecked = false;
         $('input[name="fee_items[]"]:checked').each(function() {
             var val = $(this).val();
             // simple check, we should probably check properly based on actual types
@@ -221,6 +227,9 @@
             }
             if(val.startsWith('transport_yearly-')) {
                 isTrChecked = true;
+            }
+            if(val === 'previous_balance-0') {
+                isPbChecked = true;
             }
         });
 
@@ -236,6 +245,10 @@
         if(isHoChecked && totalHo > 0 && Math.abs(totalHo - 100) > 0.01) {
             alert('Total Hostel Percentage must be exactly 100% (currently ' + totalHo + '%)');
             return;
+        }
+        if(isPbChecked && Math.abs(totalPb - 100) > 0.01) {
+            alert('Total Previous Balance Percentage must be exactly 100% (currently ' + totalPb + '%)');
+            return false;
         }
         
         var dateMissing = false;
@@ -290,6 +303,7 @@
                                         <th>Academic %</th>
                                         <th>Transport %</th>
                                         <th>Hostel %</th>
+                                        <th>Prev. Bal %</th>
                                         <th>Due Date</th>
                                     </tr>
                                 </thead>
@@ -320,6 +334,10 @@
                     html += "<td>" + value.academic_percentage + "%</td>";
                     html += "<td>" + value.transport_percentage + "%</td>";
                     html += "<td>" + value.hostel_percentage + "%</td>";
+                    
+                    var pb_perc = (value.previous_balance_percentage) ? value.previous_balance_percentage : '0.00';
+                    html += "<td>" + pb_perc + "%</td>";
+                    
                     html += "<td>" + value.due_date + "</td>";
                     html += "</tr>";
                 });

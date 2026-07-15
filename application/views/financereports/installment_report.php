@@ -177,7 +177,10 @@
                                                 <small class="text-muted">
                                                 (Ac: <?php echo amountFormat($od['academic_balance']); ?>, 
                                                 Tr: <?php echo amountFormat($od['transport_balance']); ?>, 
-                                                Ho: <?php echo amountFormat($od['hostel_balance']); ?>)
+                                                Ho: <?php echo amountFormat($od['hostel_balance']); ?>
+                                                <?php if (isset($od['previous_balance_balance']) && $od['previous_balance_balance'] > 0) { ?>
+                                                , Pb: <?php echo amountFormat($od['previous_balance_balance']); ?>
+                                                <?php } ?>)
                                                 </small>
                                             </li>
                                         <?php } ?>

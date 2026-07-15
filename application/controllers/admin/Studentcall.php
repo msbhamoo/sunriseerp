@@ -105,6 +105,7 @@ class Studentcall extends Admin_Controller
 
                 $row = [
                     $call['firstname'] . ' ' . $call['lastname'] . ' (' . $call['admission_no'] . ')',
+                    $call['father_name'],
                     $call['class'] . ' (' . $call['section'] . ')',
                     $call['phone_number'],
                     $call['purpose_name'],
@@ -440,6 +441,7 @@ class Studentcall extends Admin_Controller
 
                 $row = [
                     $student['firstname'] . ' ' . $student['lastname'] . ' (' . $student['admission_no'] . ')',
+                    $student['father_name'],
                     $student['class'] . ' (' . $student['section'] . ')',
                     $phone,
                     $last_call,

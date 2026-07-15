@@ -2750,3 +2750,5 @@ $lang['seatingarrangement'] = 'Seating Arrangement';
 $lang['seatingreport'] = 'Seating Reports';
 $lang['installment_plan'] = 'Installment Plan';
 $lang['installment_report'] = 'Installment Due Report';
+
+$lang['bus_attendance'] = 'Bus Attendance';

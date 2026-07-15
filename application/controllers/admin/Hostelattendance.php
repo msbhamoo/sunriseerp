@@ -50,6 +50,13 @@ class Hostelattendance extends Admin_Controller
                 
                 $data['students'] = $this->hostelattendance_model->get_hostel_students($hostel_id);
                 $data['attendance'] = $this->hostelattendance_model->get_attendance($hostel_id, $date_format, $roll_call_type);
+                
+                // Cross-module dependencies
+                $this->load->model('gatepass_model');
+                $this->load->model('transportattendance_model');
+                
+                $data['gatepasses'] = $this->gatepass_model->check_student_gatepass($date_format);
+                $data['transport_presence'] = $this->transportattendance_model->check_transport_presence($date_format, $roll_call_type);
             }
         }
 

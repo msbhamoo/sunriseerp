@@ -2684,16 +2684,61 @@ class Student extends Admin_Controller
                             $assigned_yearly_fee_ids[] = $this->transportyearlyfee_model->assignStudent($data_assign);
                         }
                     }
-                    // Remove old yearly fees for this student session
+                    // Remove old yearly fees for this student session safely
+                    $this->db->select('id');
                     $this->db->where('student_session_id', $student_session_id);
                     if (!empty($assigned_yearly_fee_ids)) {
                         $this->db->where_not_in('id', $assigned_yearly_fee_ids);
                     }
-                    $this->db->delete('student_transport_yearly_fees');
+                    $old_fees = $this->db->get('student_transport_yearly_fees')->result_array();
+
+                    if (!empty($old_fees)) {
+                        foreach ($old_fees as $old) {
+                            $this->db->where('student_transport_yearly_fee_id', $old['id']);
+                            $deposit_count = $this->db->get('student_fees_deposite')->num_rows();
+
+                            if ($deposit_count > 0) {
+                                if (count($assigned_yearly_fee_ids) == 1) {
+                                    // Transfer payment to the newly assigned fee
+                                    $new_fee_id = $assigned_yearly_fee_ids[0];
+                                    $this->db->where('student_transport_yearly_fee_id', $old['id']);
+                                    $this->db->update('student_fees_deposite', array('student_transport_yearly_fee_id' => $new_fee_id));
+                                    
+                                    // Now safe to delete old fee
+                                    $this->db->where('id', $old['id']);
+                                    $this->db->delete('student_transport_yearly_fees');
+                                } else {
+                                    // Can't automatically transfer, just mark as inactive so receipts aren't orphaned
+                                    $this->db->where('id', $old['id']);
+                                    $this->db->update('student_transport_yearly_fees', array('is_active' => 'no'));
+                                }
+                            } else {
+                                // No payments, safe to delete
+                                $this->db->where('id', $old['id']);
+                                $this->db->delete('student_transport_yearly_fees');
+                            }
+                        }
+                    }
                 } else {
-                    // Remove all yearly fees for this student session if not yearly
+                    // Remove all yearly fees for this student session if not yearly, safely
+                    $this->db->select('id');
                     $this->db->where('student_session_id', $student_session_id);
-                    $this->db->delete('student_transport_yearly_fees');
+                    $old_fees = $this->db->get('student_transport_yearly_fees')->result_array();
+                    
+                    if (!empty($old_fees)) {
+                        foreach ($old_fees as $old) {
+                            $this->db->where('student_transport_yearly_fee_id', $old['id']);
+                            $deposit_count = $this->db->get('student_fees_deposite')->num_rows();
+                            
+                            if ($deposit_count > 0) {
+                                $this->db->where('id', $old['id']);
+                                $this->db->update('student_transport_yearly_fees', array('is_active' => 'no'));
+                            } else {
+                                $this->db->where('id', $old['id']);
+                                $this->db->delete('student_transport_yearly_fees');
+                            }
+                        }
+                    }
                 }
 
                 $this->session->set_flashdata('msg', '<div student="alert alert-success text-left">' . $this->lang->line('update_message') . '</div>');

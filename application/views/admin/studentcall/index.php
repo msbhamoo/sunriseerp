@@ -191,6 +191,7 @@
                                 <thead>
                                     <tr>
                                         <th><?php echo $this->lang->line('student'); ?></th>
+                                        <th>Father Name</th>
                                         <th><?php echo $this->lang->line('class'); ?></th>
                                         <th><?php echo $this->lang->line('phone'); ?></th>
                                         <th><?php echo $this->lang->line('purpose'); ?></th>
@@ -207,6 +208,7 @@
                                         foreach ($calls as $call) { ?>
                                             <tr>
                                                 <td><?php echo $call['firstname'] . " " . $call['lastname'] . " (" . $call['admission_no'] . ")"; ?></td>
+                                                <td><?php echo $call['father_name']; ?></td>
                                                 <td><?php echo $call['class'] . " (" . $call['section'] . ")"; ?></td>
                                                 <td><?php echo $call['phone_number']; ?></td>
                                                 <td><?php echo $call['purpose_name']; ?></td>
@@ -285,6 +287,7 @@
                                             <thead>
                                                 <tr>
                                                     <th><?php echo $this->lang->line('student'); ?></th>
+                                                    <th>Father Name</th>
                                                     <th>Class (Section)</th>
                                                     <th><?php echo $this->lang->line('phone'); ?></th>
                                                     <th>Last Call Date</th>
@@ -556,7 +559,7 @@
                                 Guardian: value.guardian_phone,
                                 Student: value.mobileno
                             };
-                            html += '<li class="list-group-item student-item" style="cursor:pointer;" data-id="' + value.student_id + '" data-session="' + value.student_session_id + '" data-name="' + value.firstname + ' ' + value.lastname + ' (' + value.admission_no + ') - ' + value.class + ' (' + value.section + ')">' + value.firstname + ' ' + value.lastname + ' (' + value.admission_no + ') - ' + value.class + ' (' + value.section + ')</li>';
+                            html += '<li class="list-group-item student-item" style="cursor:pointer;" data-id="' + value.student_id + '" data-session="' + value.student_session_id + '" data-name="' + value.firstname + ' ' + value.lastname + ' (' + value.admission_no + ')' + (value.father_name ? ' - Father: ' + value.father_name : '') + ' - ' + value.class + ' (' + value.section + ')">' + value.firstname + ' ' + value.lastname + ' (' + value.admission_no + ')' + (value.father_name ? ' - Father: ' + value.father_name : '') + ' - ' + value.class + ' (' + value.section + ')</li>';
                         });
                         $('#student_search_results').html(html);
                     }
@@ -816,6 +819,7 @@
             },
             "columns": [
                 { "orderable": true },
+                { "orderable": false },
                 { "orderable": false },
                 { "orderable": false },
                 { "orderable": false },

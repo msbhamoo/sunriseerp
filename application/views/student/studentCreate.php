@@ -1655,13 +1655,14 @@ if (($userdata["role_id"] == 2)) {
 
     function get_pickup_point(vehroute_id, pickuppoint_id) {
         if (vehroute_id != "") {
-
+            var class_id = $('#class_id').val();
             var div_data = '<option value=""><?php echo $this->lang->line('select'); ?></option>';
             $.ajax({
                 url: baseurl + 'admin/pickuppoint/get_pickupdropdownlist',
                 type: "POST",
                 data: {
-                    vehroute_id: vehroute_id
+                    vehroute_id: vehroute_id,
+                    class_id: class_id
                 },
                 dataType: 'json',
                 beforeSend: function() {
@@ -1674,9 +1675,10 @@ if (($userdata["role_id"] == 2)) {
                         if (pickuppoint_id == value.route_pickup_point_id) {
                             sel = "selected";
                         }
-
+                        
+                        var fee_text = value.fees ? " (<?php echo $this->customlib->getSchoolCurrencyFormat(); ?>" + value.fees + ")" : "";
                         div_data += "<option  value=" + value.route_pickup_point_id + " " +
-                            sel + ">" + value.name + "</option>";
+                            sel + ">" + value.name + fee_text + "</option>";
                     });
 
                     $('#pickup_point').html(div_data);
@@ -1891,23 +1893,57 @@ $(document).on('click', '.add_sibling', function() {
 
                 // Only auto-fill parent info if this is the first sibling added
                 if (current_ids.length === 1) {
-                    $('#father_name').val(data.father_name);
-                    $('#father_phone').val(data.father_phone);
-                    $('#father_occupation').val(data.father_occupation);
-                    $('#mother_name').val(data.mother_name);
-                    $('#mother_phone').val(data.mother_phone);
-                    $('#mother_occupation').val(data.mother_occupation);
-                    $('#guardian_name').val(data.guardian_name);
-                    $('#guardian_relation').val(data.guardian_relation);
-                    $('#guardian_address').val(data.guardian_address);
-                    $('#guardian_phone').val(data.guardian_phone);
-                    $('#state').val(data.state);
-                    $('#city').val(data.city);
-                    $('#pincode').val(data.pincode);
-                    $('#current_address').val(data.current_address);
-                    $('#permanent_address').val(data.permanent_address);
-                    $('#guardian_occupation').val(data.guardian_occupation);
-                    $("input[name=guardian_is][value='" + data.guardian_is + "']").prop("checked", true);
+                    var hasData = $('#father_name').val() !== '' || $('#mother_name').val() !== '' || $('#guardian_name').val() !== '';
+                    var doFill = function() {
+                        $('#father_name').val(data.father_name);
+                        $('#father_phone').val(data.father_phone);
+                        $('#father_occupation').val(data.father_occupation);
+                        $('#mother_name').val(data.mother_name);
+                        $('#mother_phone').val(data.mother_phone);
+                        $('#mother_occupation').val(data.mother_occupation);
+                        $('#guardian_name').val(data.guardian_name);
+                        $('#guardian_relation').val(data.guardian_relation);
+                        $('#guardian_address').val(data.guardian_address);
+                        $('#guardian_phone').val(data.guardian_phone);
+                        $('#state').val(data.state);
+                        $('#city').val(data.city);
+                        $('#pincode').val(data.pincode);
+                        $('#current_address').val(data.current_address);
+                        $('#permanent_address').val(data.permanent_address);
+                        $('#guardian_occupation').val(data.guardian_occupation);
+                        $("input[name=guardian_is][value='" + data.guardian_is + "']").prop("checked", true);
+                    };
+
+                    if (hasData) {
+                        if ($('#siblingConfirmModal').length === 0) {
+                            var modalHtml = '<div class="modal fade" id="siblingConfirmModal" tabindex="-1" role="dialog" aria-labelledby="siblingConfirmModalLabel" aria-hidden="true">' +
+                                '<div class="modal-dialog modal-sm" role="document">' +
+                                '<div class="modal-content">' +
+                                '<div class="modal-header">' +
+                                '<h4 class="modal-title" id="siblingConfirmModalLabel">Confirm Overwrite</h4>' +
+                                '</div>' +
+                                '<div class="modal-body">' +
+                                'Parent/Guardian details are already filled. Do you want to overwrite them with the sibling\'s details?' +
+                                '</div>' +
+                                '<div class="modal-footer">' +
+                                '<button type="button" class="btn btn-default" data-dismiss="modal">No</button>' +
+                                '<button type="button" class="btn btn-primary" id="btnConfirmSiblingOverwrite">Yes</button>' +
+                                '</div>' +
+                                '</div>' +
+                                '</div>' +
+                                '</div>';
+                            $('body').append(modalHtml);
+                        }
+                        
+                        $('#btnConfirmSiblingOverwrite').off('click').on('click', function() {
+                            doFill();
+                            $('#siblingConfirmModal').modal('hide');
+                        });
+                        
+                        $('#siblingConfirmModal').modal('show');
+                    } else {
+                        doFill();
+                    }
                 }
                 
                 $('#mySiblingModal').modal('hide');
