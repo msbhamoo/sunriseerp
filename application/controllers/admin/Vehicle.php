@@ -31,6 +31,10 @@ class Vehicle extends Admin_Controller
         $data['occupancy']   = $this->vehicle_model->getVehicleOccupancy();
         $data['listVehicle'] = $listVehicle;
         $data['vehroutelist'] = $this->vehroute_model->get();
+        
+        $this->load->model('staff_model');
+        $data['stafflist'] = $this->staff_model->get();
+        
         $this->load->view('layout/header');
         $this->load->view('admin/vehicle/index', $data);
         $this->load->view('layout/footer');
@@ -156,6 +160,10 @@ class Vehicle extends Admin_Controller
     {
         $vehicleid           = $this->input->post('vehicleid');
         $data['editvehicle'] = $this->vehicle_model->get($vehicleid);
+        
+        $this->load->model('staff_model');
+        $data['stafflist'] = $this->staff_model->get();
+
         $page                = $this->load->view('admin/vehicle/edit', $data, true);
         echo json_encode(array('page' => $page));
     }

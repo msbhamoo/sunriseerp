@@ -120,7 +120,7 @@ class Migrate_fee_import extends CI_Controller
                     'sidebar_menu_id' => $menu_id,
                     'menu' => 'Historical Fee Import',
                     'key' => 'historical_fee_import',
-                    'lang_key' => '',
+                    'lang_key' => 'historical_fee_import',
                     'url' => 'feeimport',
                     'level' => 1,
                     'access_permissions' => 'fee_import,can_view',

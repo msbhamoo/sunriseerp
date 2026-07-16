@@ -137,11 +137,26 @@ class Transportattendance extends Admin_Controller
         $attendance_type = $this->input->post('attendance_type');
         
         // Get student session
+        $session_id = $this->setting_model->getCurrentSession();
         $this->db->where('student_id', $student_id);
-        $this->db->where('session_id', $this->setting_model->getCurrentSession());
+        $this->db->where('session_id', $session_id);
         $student_session = $this->db->get('student_session')->row_array();
         
         if ($student_session) {
+            // Check if already assigned to this bus
+            $bus_students = $this->transportattendance_model->get_bus_students($vehicle_id);
+            $is_already_in_bus = false;
+            foreach ($bus_students as $bs) {
+                if ($bs['student_session_id'] == $student_session['id']) {
+                    $is_already_in_bus = true;
+                    break;
+                }
+            }
+            
+            if ($is_already_in_bus) {
+                echo json_encode(['status' => 0, 'msg' => 'Student is already permanently assigned to this bus.']);
+                return;
+            }
             $insert_data = [[
                 'student_session_id' => $student_session['id'],
                 'vehicle_id' => $vehicle_id,
@@ -155,5 +170,159 @@ class Transportattendance extends Admin_Controller
         } else {
             echo json_encode(['status' => 0, 'msg' => 'Student session not found.']);
         }
+    }
+
+    public function remove_custom_rider()
+    {
+        if (!$this->rbac->hasPrivilege('transport_attendance', 'can_edit')) {
+            echo json_encode(['status' => 0, 'msg' => 'Access Denied']);
+            return;
+        }
+
+        $student_session_id = $this->input->post('student_session_id');
+        $vehicle_id = $this->input->post('vehicle_id');
+        $date = $this->customlib->dateFormatToYYYYMMDD($this->input->post('date'));
+        $attendance_type = $this->input->post('attendance_type');
+
+        if ($student_session_id && $vehicle_id && $date) {
+            $this->db->where('student_session_id', $student_session_id);
+            $this->db->where('vehicle_id', $vehicle_id);
+            $this->db->where('date', $date);
+            $this->db->where('attendance_type', $attendance_type);
+            $this->db->where('status', 'Switched Bus');
+            $this->db->delete('transport_attendance');
+            
+            echo json_encode(['status' => 1, 'msg' => 'Custom rider removed successfully.']);
+        } else {
+            echo json_encode(['status' => 0, 'msg' => 'Invalid parameters.']);
+        }
+    }
+
+    public function daily_summary()
+    {
+        if (!$this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'Transport');
+        $this->session->set_userdata('sub_menu', 'transport_attendance/daily_summary');
+        
+        $date = $this->input->post('date');
+        if (empty($date)) {
+            $date = date($this->customlib->getSchoolDateFormat());
+        }
+        
+        $search_date = $this->customlib->dateFormatToYYYYMMDD($date);
+        
+        $data['date'] = $date;
+        $data['summary'] = $this->transportattendance_model->get_daily_summary($search_date);
+        
+        $this->load->view('layout/header');
+        $this->load->view('admin/transport/daily_summary', $data);
+        $this->load->view('layout/footer');
+    }
+
+    public function monthly_summary()
+    {
+        if (!$this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'Transport');
+        $this->session->set_userdata('sub_menu', 'transport_attendance/monthly_summary');
+        
+        $month = $this->input->post('month');
+        $year = $this->input->post('year');
+        
+        if (empty($month) || empty($year)) {
+            $month = date('m');
+            $year = date('Y');
+        }
+        
+        $data['month'] = $month;
+        $data['year'] = $year;
+        $data['summary'] = $this->transportattendance_model->get_monthly_summary($month, $year);
+        
+        $this->load->view('layout/header');
+        $this->load->view('admin/transport/monthly_summary', $data);
+        $this->load->view('layout/footer');
+    }
+    
+    public function get_summary_detail()
+    {
+        if (!$this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
+            echo json_encode(['status' => 0, 'msg' => 'Access Denied']);
+            return;
+        }
+
+        $vehicle_id = $this->input->post('vehicle_id');
+        $date_str = $this->input->post('date');
+        $date = $this->customlib->dateFormatToYYYYMMDD($date_str);
+        
+        $details = $this->transportattendance_model->get_attendance_detail($vehicle_id, $date);
+        
+        $html = '<table class="table table-striped table-bordered table-hover">';
+        $html .= '<thead><tr><th>Student</th><th>Class (Section)</th><th>Shift</th><th>Status</th><th>Remark</th></tr></thead><tbody>';
+        
+        if (!empty($details)) {
+            foreach ($details as $row) {
+                $status_label = $row['status'] == 'Switched Bus' ? '<span class="label label-info">Custom Rider</span>' : '<span class="label label-success">Present</span>';
+                $name = $row['firstname'] . ' ' . $row['lastname'] . ' (' . $row['admission_no'] . ')';
+                $class_sec = $row['class'] . ' (' . $row['section'] . ')';
+                
+                $html .= '<tr>';
+                $html .= '<td>' . $name . '</td>';
+                $html .= '<td>' . $class_sec . '</td>';
+                $html .= '<td>' . $row['attendance_type'] . '</td>';
+                $html .= '<td>' . $status_label . '</td>';
+                $html .= '<td>' . $row['remark'] . '</td>';
+                $html .= '</tr>';
+            }
+        } else {
+            $html .= '<tr><td colspan="5" class="text-center text-danger">No attendance marked for this date.</td></tr>';
+        }
+        $html .= '</tbody></table>';
+        
+        echo json_encode(['status' => 1, 'html' => $html]);
+    }
+    
+    public function get_monthly_summary_detail()
+    {
+        if (!$this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
+            echo json_encode(['status' => 0, 'msg' => 'Access Denied']);
+            return;
+        }
+
+        $vehicle_id = $this->input->post('vehicle_id');
+        $month = $this->input->post('month');
+        $year = $this->input->post('year');
+        
+        $details = $this->transportattendance_model->get_monthly_attendance_detail($vehicle_id, $month, $year);
+        
+        $html = '<table class="table table-striped table-bordered table-hover">';
+        $html .= '<thead><tr><th>Date</th><th>Student</th><th>Class (Section)</th><th>Shift</th><th>Status</th><th>Remark</th></tr></thead><tbody>';
+        
+        if (!empty($details)) {
+            foreach ($details as $row) {
+                $status_label = $row['status'] == 'Switched Bus' ? '<span class="label label-info">Custom Rider</span>' : '<span class="label label-success">Present</span>';
+                $name = $row['firstname'] . ' ' . $row['lastname'] . ' (' . $row['admission_no'] . ')';
+                $class_sec = $row['class'] . ' (' . $row['section'] . ')';
+                $formatted_date = date($this->customlib->getSchoolDateFormat(), strtotime($row['date']));
+                
+                $html .= '<tr>';
+                $html .= '<td>' . $formatted_date . '</td>';
+                $html .= '<td>' . $name . '</td>';
+                $html .= '<td>' . $class_sec . '</td>';
+                $html .= '<td>' . $row['attendance_type'] . '</td>';
+                $html .= '<td>' . $status_label . '</td>';
+                $html .= '<td>' . $row['remark'] . '</td>';
+                $html .= '</tr>';
+            }
+        } else {
+            $html .= '<tr><td colspan="6" class="text-center text-danger">No attendance marked for this month.</td></tr>';
+        }
+        $html .= '</tbody></table>';
+        
+        echo json_encode(['status' => 1, 'html' => $html]);
     }
 }

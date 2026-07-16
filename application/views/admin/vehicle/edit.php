@@ -226,25 +226,44 @@
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label><?php echo $this->lang->line('driver_name'); ?></label>
-                            <input name="driver_name" type="text" class="form-control custom-input" value="<?php echo set_value('driver_name',$editvehicle->driver_name); ?>" />
+                            <select name="driver_name" class="form-control custom-input" onchange="populateContact(this, 'driver_contact_edit')">
+                                <option value="">Select</option>
+                                <?php if(isset($stafflist)) { foreach($stafflist as $staff) { 
+                                    $staff_name = trim($staff['name'] . ' ' . $staff['surname']);
+                                ?>
+                                    <option value="<?php echo $staff_name; ?>" data-contact="<?php echo $staff['contact_no']; ?>" <?php echo ($staff_name == $editvehicle->driver_name) ? 'selected' : ''; ?>>
+                                        <?php echo $staff_name; ?> (<?php echo $staff['employee_id']; ?>)
+                                    </option>
+                                <?php } } ?>
+                            </select>
                         </div>
                     </div>
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label><?php echo $this->lang->line('driver_contact'); ?></label>
-                            <input name="driver_contact" type="text" class="form-control custom-input" value="<?php echo set_value('driver_contact',$editvehicle->driver_contact); ?>" />
+                            <input name="driver_contact" id="driver_contact_edit" type="text" class="form-control custom-input" value="<?php echo set_value('driver_contact',$editvehicle->driver_contact); ?>" />
                         </div>
                     </div>
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label>Attendant/Helper Name</label>
-                            <input name="attendant_name" type="text" class="form-control custom-input" value="<?php echo set_value('attendant_name', isset($editvehicle->attendant_name) ? $editvehicle->attendant_name : ''); ?>" />
+                            <select name="attendant_name" class="form-control custom-input" onchange="populateContact(this, 'attendant_contact_edit')">
+                                <option value="">Select</option>
+                                <?php if(isset($stafflist)) { foreach($stafflist as $staff) { 
+                                    $staff_name = trim($staff['name'] . ' ' . $staff['surname']);
+                                    $attendant_val = isset($editvehicle->attendant_name) ? $editvehicle->attendant_name : '';
+                                ?>
+                                    <option value="<?php echo $staff_name; ?>" data-contact="<?php echo $staff['contact_no']; ?>" <?php echo ($staff_name == $attendant_val) ? 'selected' : ''; ?>>
+                                        <?php echo $staff_name; ?> (<?php echo $staff['employee_id']; ?>)
+                                    </option>
+                                <?php } } ?>
+                            </select>
                         </div>
                     </div>
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label>Attendant Contact</label>
-                            <input name="attendant_contact" type="text" class="form-control custom-input" value="<?php echo set_value('attendant_contact', isset($editvehicle->attendant_contact) ? $editvehicle->attendant_contact : ''); ?>" />
+                            <input name="attendant_contact" id="attendant_contact_edit" type="text" class="form-control custom-input" value="<?php echo set_value('attendant_contact', isset($editvehicle->attendant_contact) ? $editvehicle->attendant_contact : ''); ?>" />
                         </div>
                     </div>
                 </div>

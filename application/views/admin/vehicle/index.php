@@ -206,9 +206,14 @@
                     <div class="modern-header">
                         <h3 class="modern-title"><i class="fa fa-list"></i> <?php echo $this->lang->line('vehicle_list'); ?></h3>
                         <?php if ($this->rbac->hasPrivilege('vehicle', 'can_add')) { ?>
-                            <button type="button" class="btn-premium" data-toggle="modal" data-backdrop="static" data-target="#myModal">
-                                <i class="fa fa-plus"></i> <?php echo $this->lang->line('add_vehicle'); ?>
-                            </button>
+                            <div>
+                                <button type="button" class="btn-premium" onclick="openAssignModal('')" style="margin-right: 10px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);">
+                                    <i class="fa fa-user-plus"></i> Assign New Student
+                                </button>
+                                <button type="button" class="btn-premium" data-toggle="modal" data-backdrop="static" data-target="#myModal">
+                                    <i class="fa fa-plus"></i> <?php echo $this->lang->line('add_vehicle'); ?>
+                                </button>
+                            </div>
                         <?php } ?>
                     </div>
                     
@@ -217,6 +222,31 @@
                             <li class="active"><a href="#tab_grid" data-toggle="tab"><i class="fa fa-th-large"></i> Grid View</a></li>
                             <li><a href="#tab_list" data-toggle="tab"><i class="fa fa-list"></i> List View</a></li>
                         </ul>
+                        
+                        <?php
+                        // Pre-calculate driver occurrences
+                        $driver_counts = array();
+                        foreach ($listVehicle as $v) {
+                            if (!empty($v['driver_name'])) {
+                                if (!isset($driver_counts[$v['driver_name']])) {
+                                    $driver_counts[$v['driver_name']] = 0;
+                                }
+                                $driver_counts[$v['driver_name']]++;
+                            }
+                        }
+
+                        // Pre-calculate vehicles with routes
+                        $vehicles_with_routes = array();
+                        if (isset($vehroutelist)) {
+                            foreach ($vehroutelist as $vehroute) {
+                                if (!empty($vehroute->vehicles)) {
+                                    foreach ($vehroute->vehicles as $v) {
+                                        $vehicles_with_routes[] = $v->id;
+                                    }
+                                }
+                            }
+                        }
+                        ?>
                         
                         <div class="tab-content">
                             <!-- Grid View -->
@@ -233,6 +263,13 @@
                                                 if ($days <= 30) { $alerts++; }
                                             }
                                         }
+                                        
+                                        $driver_duplicate = (!empty($data['driver_name']) && isset($driver_counts[$data['driver_name']]) && $driver_counts[$data['driver_name']] > 1);
+                                        $no_route_assigned = !in_array($data['id'], $vehicles_with_routes);
+                                        
+                                        if ($driver_duplicate) { $alerts++; }
+                                        if ($no_route_assigned) { $alerts++; }
+                                        
                                         $status = isset($data['vehicle_status']) ? strtolower($data['vehicle_status']) : 'active';
                                         $status_class = 'status-' . $status; 
                                         ?>
@@ -243,6 +280,18 @@
                                             <i class="fa fa-bus vehicle-icon"></i>
                                             <div class="vehicle-title"><?php echo $data['vehicle_no']; ?></div>
                                             <div class="vehicle-subtitle"><?php echo !empty($data['driver_name']) ? $data['driver_name'] : 'No Driver'; ?></div>
+                                            
+                                            <?php if ($no_route_assigned) { ?>
+                                                <div style="color: #ef4444; font-size: 11px; font-weight: bold; margin-bottom: 2px;">
+                                                    <i class="fa fa-exclamation-triangle"></i> No Route Assigned
+                                                </div>
+                                            <?php } ?>
+                                            <?php if ($driver_duplicate) { ?>
+                                                <div style="color: #f59e0b; font-size: 11px; font-weight: bold; margin-bottom: 2px;">
+                                                    <i class="fa fa-exclamation-triangle"></i> Driver in <?php echo $driver_counts[$data['driver_name']]; ?> Buses
+                                                </div>
+                                            <?php } ?>
+                                            
                                             <?php 
                                             $occupied = isset($occupancy[$data['id']]) ? $occupancy[$data['id']] : 0;
                                             $capacity = $data['max_seating_capacity'];
@@ -304,17 +353,26 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php foreach ($listVehicle as $key => $data) { 
+                                                <?php foreach ($listVehicle as $key => $data) { 
                                                 $alerts = 0;
+                                                $alert_messages = array();
+                                                
                                                 $today = time();
                                                 $dates_to_check = ['insurance_expiry', 'fitness_expiry', 'puc_expiry', 'permit_expiry'];
                                                 foreach ($dates_to_check as $date_field) {
                                                     if (!empty($data[$date_field]) && $data[$date_field] != '0000-00-00') {
                                                         $diff = strtotime($data[$date_field]) - $today;
                                                         $days = floor($diff / (60 * 60 * 24));
-                                                        if ($days <= 30) { $alerts++; }
+                                                        if ($days <= 30) { $alerts++; $alert_messages[] = "Document expiring soon"; }
                                                     }
                                                 }
+                                                
+                                                $driver_duplicate = (!empty($data['driver_name']) && isset($driver_counts[$data['driver_name']]) && $driver_counts[$data['driver_name']] > 1);
+                                                $no_route_assigned = !in_array($data['id'], $vehicles_with_routes);
+                                                
+                                                if ($driver_duplicate) { $alerts++; $alert_messages[] = "Driver in ".$driver_counts[$data['driver_name']]." buses"; }
+                                                if ($no_route_assigned) { $alerts++; $alert_messages[] = "No route assigned"; }
+                                                
                                                 $status = isset($data['vehicle_status']) ? $data['vehicle_status'] : 'Active';
                                                 $status_color = ($status == 'Active') ? '#10b981' : (($status == 'Maintenance') ? '#f59e0b' : '#ef4444');
                                             ?>
@@ -338,7 +396,9 @@
                                                     <td><?php echo $data['driver_contact'] ?></td>
                                                     <td>
                                                         <?php if ($alerts > 0) { ?>
-                                                            <span class="badge-soft" style="background:#fef2f2; color:#ef4444;"><i class="fa fa-exclamation-circle"></i> <?php echo $alerts; ?></span>
+                                                            <span class="badge-soft" style="background:#fef2f2; color:#ef4444;" data-toggle="tooltip" title="<?php echo implode(', ', $alert_messages); ?>">
+                                                                <i class="fa fa-exclamation-circle"></i> <?php echo $alerts; ?>
+                                                            </span>
                                                         <?php } else { ?>
                                                             <span style="color:#10b981;"><i class="fa fa-check-circle"></i></span>
                                                         <?php } ?>
@@ -607,25 +667,39 @@
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label><?php echo $this->lang->line('driver_name'); ?></label>
-                                        <input name="driver_name" type="text" class="form-control custom-input" />
+                                        <select name="driver_name" class="form-control custom-input" onchange="populateContact(this, 'driver_contact_add')">
+                                            <option value="">Select</option>
+                                            <?php if(isset($stafflist)) { foreach($stafflist as $staff) { ?>
+                                                <option value="<?php echo trim($staff['name'] . ' ' . $staff['surname']); ?>" data-contact="<?php echo $staff['contact_no']; ?>">
+                                                    <?php echo trim($staff['name'] . ' ' . $staff['surname']); ?> (<?php echo $staff['employee_id']; ?>)
+                                                </option>
+                                            <?php } } ?>
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label><?php echo $this->lang->line('driver_contact'); ?></label>
-                                        <input name="driver_contact" type="text" class="form-control custom-input" />
+                                        <input name="driver_contact" id="driver_contact_add" type="text" class="form-control custom-input" />
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label>Attendant/Helper Name</label>
-                                        <input name="attendant_name" type="text" class="form-control custom-input" />
+                                        <select name="attendant_name" class="form-control custom-input" onchange="populateContact(this, 'attendant_contact_add')">
+                                            <option value="">Select</option>
+                                            <?php if(isset($stafflist)) { foreach($stafflist as $staff) { ?>
+                                                <option value="<?php echo trim($staff['name'] . ' ' . $staff['surname']); ?>" data-contact="<?php echo $staff['contact_no']; ?>">
+                                                    <?php echo trim($staff['name'] . ' ' . $staff['surname']); ?> (<?php echo $staff['employee_id']; ?>)
+                                                </option>
+                                            <?php } } ?>
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label>Attendant Contact</label>
-                                        <input name="attendant_contact" type="text" class="form-control custom-input" />
+                                        <input name="attendant_contact" id="attendant_contact_add" type="text" class="form-control custom-input" />
                                     </div>
                                 </div>
                             </div>
@@ -923,6 +997,20 @@ $('.viewstudents').click(function(){
         }
     });
 });
+
+function populateContact(selectObj, targetId) {
+    if(selectObj.selectedIndex > 0) {
+        var selectedOption = selectObj.options[selectObj.selectedIndex];
+        var contact = selectedOption.getAttribute('data-contact');
+        if (contact) {
+            document.getElementById(targetId).value = contact;
+        } else {
+            document.getElementById(targetId).value = '';
+        }
+    } else {
+        document.getElementById(targetId).value = '';
+    }
+}
 </script>
 
 <div class="modal fade" id="viewstudentsmodal" role="dialog" aria-labelledby="viewstudentsmodal">

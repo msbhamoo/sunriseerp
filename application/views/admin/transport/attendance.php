@@ -103,16 +103,24 @@
                                                             <?php if (!empty($student['has_gatepass'])) { ?>
                                                                 <span class="label label-warning pull-right" data-toggle="tooltip" title="Issued from Front Desk">Gatepass Issued</span>
                                                             <?php } ?>
-                                                            <?php if (isset($student['status']) && $student['status'] == 'Switched Bus') { ?>
-                                                                <span class="label label-info pull-right">Custom Rider</span>
+                                                            <?php if (isset($student['status']) && $student['status'] == 'Switched Bus') { 
+                                                                if (!empty($student['original_vehicle_no'])) {
+                                                                    $rider_type = 'Custom Rider (' . $student['original_vehicle_no'] . ')';
+                                                                } elseif (!empty($student['hostel_room_id']) && $student['hostel_room_id'] > 0) {
+                                                                    $rider_type = 'Custom Rider (Hosteler)';
+                                                                } else {
+                                                                    $rider_type = 'Custom Rider (Day Scholar)';
+                                                                }
+                                                            ?>
+                                                                <span class="label label-info pull-right"><?php echo $rider_type; ?></span>
                                                             <?php } ?>
                                                         </td>
                                                         <td><?php echo $student['class'] . ' (' . $student['section'] . ')'; ?></td>
                                                         <td>
                                                             <?php if (isset($student['status']) && $student['status'] == 'Switched Bus') { ?>
-                                                                <select class="form-control" name="attendencetype<?php echo $student['student_session_id']; ?>">
-                                                                    <option value="Switched Bus" selected>Switched Bus (Present)</option>
-                                                                </select>
+                                                                <input type="hidden" name="attendencetype<?php echo $student['student_session_id']; ?>" value="Switched Bus">
+                                                                <input type="hidden" name="is_custom_rider<?php echo $student['student_session_id']; ?>" value="yes">
+                                                                <span class="label label-info">Custom Rider (Present)</span>
                                                             <?php } else { ?>
                                                                 <select class="form-control" name="attendencetype<?php echo $student['student_session_id']; ?>">
                                                                     <option value="Present" <?php if($student['attendance_status'] == 'Present') echo 'selected'; ?>>Present</option>
@@ -123,7 +131,14 @@
                                                             <?php } ?>
                                                         </td>
                                                         <td>
-                                                            <input type="text" name="remark<?php echo $student['student_session_id']; ?>" class="form-control" value="<?php echo $student['remark']; ?>">
+                                                            <div style="display: flex; align-items: center; gap: 5px;">
+                                                                <input type="text" name="remark<?php echo $student['student_session_id']; ?>" class="form-control" value="<?php echo $student['remark']; ?>" style="flex-grow:1;">
+                                                                <?php if (isset($student['status']) && $student['status'] == 'Switched Bus') { ?>
+                                                                    <button type="button" class="btn btn-danger btn-xs" title="Remove custom rider" onclick="removeCustomRider(<?php echo $student['student_session_id']; ?>, this)">
+                                                                        <i class="fa fa-times"></i>
+                                                                    </button>
+                                                                <?php } ?>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 <?php } ?>
@@ -142,6 +157,38 @@
         </div>
     </section>
 </div>
+
+<script type="text/javascript">
+function removeCustomRider(student_session_id, btn) {
+    if (confirm('Are you sure you want to remove this custom rider?')) {
+        var vehicle_id = $('select[name="vehicle_id"]').val();
+        var date = $('#date').val();
+        var attendance_type = $('select[name="attendance_type"]').val();
+        
+        $.ajax({
+            url: "<?php echo site_url('admin/transportattendance/remove_custom_rider') ?>",
+            type: "POST",
+            data: {
+                student_session_id: student_session_id,
+                vehicle_id: vehicle_id,
+                date: date,
+                attendance_type: attendance_type
+            },
+            dataType: 'json',
+            success: function(res) {
+                if (res.status == 1) {
+                    successMsg(res.msg);
+                    $(btn).closest('tr').fadeOut(400, function() {
+                        $(this).remove();
+                    });
+                } else {
+                    errorMsg(res.msg);
+                }
+            }
+        });
+    }
+}
+</script>
 
 <!-- Custom Rider Modal -->
 <div id="customRiderModal" class="modal fade" role="dialog">
@@ -192,11 +239,11 @@
         $(document).on('click', '.add_custom_btn', function() {
             var student_id = $(this).data('studentid');
             var vehicle_id = $('select[name="vehicle_id"]').val();
-            var date = $('input[name="date"]').val();
+            var date = $('#date').val();
             var attendance_type = $('select[name="attendance_type"]').val();
             
             if(!vehicle_id || !date || !attendance_type) {
-                alert('Please ensure you have selected a date, vehicle, and attendance type on the main page first.');
+                errorMsg('Please ensure you have selected a date, vehicle, and attendance type on the main page first.');
                 return;
             }
             
@@ -212,11 +259,15 @@
                 dataType: 'json',
                 success: function(res) {
                     if (res.status == 1) {
-                        alert(res.msg);
-                        location.reload();
+                        successMsg(res.msg);
+                        setTimeout(function(){ location.reload(); }, 1000);
                     } else {
-                        alert(res.msg);
+                        errorMsg(res.msg);
                     }
+                },
+                error: function(xhr) {
+                    errorMsg('An error occurred. Check console for details.');
+                    console.error(xhr.responseText);
                 }
             });
         });

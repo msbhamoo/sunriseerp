@@ -82,17 +82,28 @@
 <script type="text/javascript">
 function openAssignModal(vehicle_id) {
     $('#viewstudentsmodal').modal('hide');
-    $('#assign_vehicle_id').val(vehicle_id);
+    $('#assign_vehicle_id').val(vehicle_id || '');
     
     // Auto select the route that has this vehicle
-    setTimeout(function() {
-        $('#vehroute_id option').each(function() {
-            if($(this).data('vehicle-id') == vehicle_id) {
-                $(this).prop('selected', true);
-                get_pickup_point($(this).val(), '');
-            }
-        });
-    }, 500);
+    if (vehicle_id) {
+        setTimeout(function() {
+            $('#vehroute_id option').each(function() {
+                if($(this).data('vehicle-id') == vehicle_id) {
+                    $(this).prop('selected', true);
+                    get_pickup_point($(this).val(), '');
+                }
+            });
+        }, 500);
+    } else {
+        // Reset the form if opened without a specific vehicle
+        $('#vehroute_id').val('');
+        $('#pickup_point').html('<option value="">Select</option>');
+        $('#search_student_text_vehicle').val('');
+        $('#selected_student_details').hide();
+        $('#assign_student_id').val('');
+        $('#assign_student_session_id').val('');
+        $('#assign_class_id').val('');
+    }
 
     $('#assignStudentModal').modal({
         backdrop: 'static',

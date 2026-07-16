@@ -10,7 +10,7 @@ if ($is_localhost) {
         'hostname' => 'localhost',
         'username' => 'root',
         'password' => '',
-        'database' => 'smserpnew',
+        'database' => 'schoolerp',
         'dbdriver'     => 'mysqli',
         'dbprefix'     => '',
         'pconnect'     => false,
