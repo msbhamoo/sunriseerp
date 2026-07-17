@@ -267,29 +267,6 @@ class Pickuppoint extends Admin_Controller
             $msg['pickup_point'] = "<p>" . $this->lang->line('the_pickup_point_field_is_required') . "</p>";
         }
 
-        if (!empty($_POST['monthly_fees'])) {
-            foreach ($_POST['monthly_fees'] as $monthly_feeskey => $monthly_feesvalue) {
-                if ($monthly_feesvalue == '') {
-                    $validate            = 0;
-                    $msg['monthly_fees'] = "<p>" . $this->lang->line('the_monthly_fees_field_is_required') . "</p>";
-                    break;
-                }else{
-                   
-                  $expr = '/^[0-9]*(\.[0-9]{0,2})?$/';
-                if (!preg_match($expr, $monthly_feesvalue)) {
-                   $validate            = 0;
-                   $msg['monthly_fees'] = "<p>" . $this->lang->line('invalid_amount') . "</p>";
-                   break;
-                }
-
-
-                }
-            }
-        } else {
-            $validate            = 0;
-            $msg['monthly_fees'] = "<p>" . $this->lang->line('the_monthly_fees_field_is_required') . "</p>";
-        }
-
         if (!empty($_POST['time'])) {
             foreach ($_POST['time'] as $timekey => $timevalue) {
                 if ($timevalue == '') {
@@ -332,7 +309,6 @@ class Pickuppoint extends Admin_Controller
                         'transport_route_id'   => $this->input->post('route_id'),
                         'pickup_point_id'      => $this->input->post('pickup_point')[$pickup_pointkey],
                         'destination_distance' => $this->input->post('destination_distance')[$pickup_pointkey],
-                        'fees'                 => convertCurrencyFormatToBaseAmount($this->input->post('monthly_fees')[$pickup_pointkey]),
                         'pickup_time'          => $this->customlib->timeFormat($time, true),
                     );
                     if (empty($data['id'])) {
@@ -475,7 +451,30 @@ class Pickuppoint extends Admin_Controller
     public function get_pickupdropdownlist()
     {
         $vehroute_id           = $this->input->post('vehroute_id');
+        $class_id              = $this->input->post('class_id');
         $vehicle_route_pickups = $this->pickuppoint_model->getPickupPointsByvehrouteId($vehroute_id);
+        
+        if (!empty($vehicle_route_pickups)) {
+            foreach ($vehicle_route_pickups as &$pickup) {
+                if (!empty($class_id)) {
+                    $yearly_fees = $this->transportyearlyfee_model->getApplicableYearlyFees($class_id, $pickup->route_pickup_point_id);
+                    
+                    if (!empty($yearly_fees)) {
+                        // If there are multiple fees, we can sum them or just take the first one. Usually there's only one base fee for a pickup point.
+                        $total_fee = 0;
+                        foreach($yearly_fees as $yf) {
+                            $total_fee += $yf['amount'];
+                        }
+                        $pickup->fees = number_format($total_fee, 2, '.', '');
+                    } else {
+                        $pickup->fees = "";
+                    }
+                } else {
+                    $pickup->fees = "";
+                }
+            }
+        }
+        
         echo json_encode($vehicle_route_pickups);
     }
 

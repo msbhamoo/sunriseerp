@@ -406,6 +406,13 @@ class Studentcall extends Admin_Controller
             );
             $staff_roles = array(array('role_id' => $staff['role_id']));
             $this->notification_model->insertBatch($notification, $staff_roles);
+
+            // System Notification (Bell Icon)
+            $this->load->model('SystemNotificationSetting_model');
+            if ($this->SystemNotificationSetting_model->check_setting('student_call_log')) {
+                $this->load->model('SystemNotification_model');
+                $this->SystemNotification_model->notifyUser($staff_id, 'Follow-up Task', $message, 'admin/studentcall');
+            }
         }
     }
 

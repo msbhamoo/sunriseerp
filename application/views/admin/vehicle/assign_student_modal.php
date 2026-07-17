@@ -150,6 +150,11 @@ function selectStudentForAssign(student_id, student_session_id, name, admission_
     $('#search_results_vehicle').hide();
     $('#search_student_text_vehicle').val('');
     $('#selected_student_details').show();
+    
+    var current_vehroute = $('#vehroute_id').val();
+    if (current_vehroute != "") {
+        get_pickup_point(current_vehroute, $('#pickup_point').val());
+    }
 }
 
 function get_pickup_point(vehroute_id, pickuppoint_id) {

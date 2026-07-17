@@ -183,6 +183,20 @@ class Studentcall_model extends MY_Model
         return $query->result_array();
     }
 
+    public function get_all_pending_followups_for_reminder()
+    {
+        $this->db->select('student_call_followups.*, student_calls.student_id, student_calls.phone_number, students.firstname, students.lastname, students.admission_no');
+        $this->db->from('student_call_followups');
+        $this->db->join('student_calls', 'student_calls.id = student_call_followups.student_call_id');
+        $this->db->join('students', 'students.id = student_calls.student_id');
+        $this->db->where('student_call_followups.status', 'Pending');
+        $this->db->where('student_call_followups.assigned_to IS NOT NULL', null, false);
+        $this->db->where('student_call_followups.assigned_to !=', 0);
+        $this->db->where('student_call_followups.due_date <=', date('Y-m-d'));
+        $query = $this->db->get();
+        return $query->result_array();
+    }
+
     public function get_call_statistics($staff_id = null)
     {
         $this->db->select('call_status, count(*) as count');

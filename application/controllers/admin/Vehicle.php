@@ -145,6 +145,24 @@ class Vehicle extends Admin_Controller
            
             $this->vehicle_model->add($data);
 
+            // System Notification (Bell Icon)
+            $this->load->model('SystemNotificationSetting_model');
+            if ($this->SystemNotificationSetting_model->check_setting('vehicle_alerts')) {
+                $this->load->model('SystemNotification_model');
+                $message = "New Vehicle Added: " . $data['vehicle_no'];
+                // Notify Super Admin (Role 7)
+                $this->SystemNotification_model->notifyRole(7, 'Vehicle Added', $message, 'admin/vehicle');
+                
+                // Notify Driver
+                if (!empty($data['driver_name'])) {
+                    $this->load->model('staff_model');
+                    $driver_id = $this->staff_model->getStaffByName($data['driver_name']);
+                    if ($driver_id) {
+                        $this->SystemNotification_model->notifyUser($driver_id, 'Vehicle Assigned', "You have been assigned as driver for vehicle: " . $data['vehicle_no'], 'admin/vehicle');
+                    }
+                }
+            }
+
             $msg   = $this->lang->line('success_message');
             $array = array('status' => 'success', 'error' => '', 'message' => $msg);
 

@@ -7,10 +7,8 @@ foreach ($result as $key => $value) {
 	<td><?php echo $value->pickup_point_name; ?></td>
 	<td ><?php echo $value->destination_distance; ?></td>
 	<td ><?php echo $this->customlib->timeFormat($value->pickup_time, $this->customlib->getSchoolTimeFormat()); ?></td>
-	<td class="text-right"><?php echo amountFormat($value->fees); ?></td>
 </tr>
 <?php
 $s++;
 }
 ?>
-

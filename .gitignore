@@ -12,3 +12,4 @@ uploads/
 
 # Ignore addons
 /addons/
+backup/database_backup/

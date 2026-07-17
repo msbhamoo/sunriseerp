@@ -86,6 +86,16 @@ class Gatepass extends Admin_Controller
 
             $this->gatepass_model->add($data);
 
+            // System Notification
+            $this->load->model('SystemNotificationSetting_model');
+            if ($this->SystemNotificationSetting_model->check_setting('gatepass_issued')) {
+                $this->load->model('SystemNotification_model');
+                $this->SystemNotification_model->notifyRole(7, 'Gate Pass Issued', "A new gate pass (No: {$gate_pass_no}) has been issued.", 'admin/gatepass');
+                if ($user_type == 'staff') {
+                    $this->SystemNotification_model->notifyUser($user_id, 'Gate Pass Issued', "Your gate pass (No: {$gate_pass_no}) has been issued.", 'admin/mygatepass');
+                }
+            }
+
             echo json_encode(array('status' => 'success', 'message' => $this->lang->line('success_message')));
         }
     }
@@ -196,15 +206,12 @@ class Gatepass extends Admin_Controller
                         'visible_parent' => 'No'
                     );
                     
-                    // In a real scenario, we might want to restrict this to just the class teacher role or specific staff.
-                    // For now, we broadcast to staff role and rely on staff dashboard to filter if needed,
-                    // or ideally just send a direct email via mailsmsconf.
                     $staff_roles = array();
                     foreach ($class_teachers as $teacher) {
                         // Assuming role_id is needed, standard staff role is usually 2 or fetched dynamically.
                         // However, we just insert into send_notification
                     }
-                    $this->notification_model->insertBatch($notification_data, array(array('role_id' => 2))); // Broadcasting to Staff role as fallback
+                    $this->notification_model->insertBatch($notification_data, array(array('role_id' => 2))); // Broadcasting to Staff role as fallback 
                 }
             }
         }

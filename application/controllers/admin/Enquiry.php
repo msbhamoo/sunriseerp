@@ -111,6 +111,14 @@ class Enquiry extends Admin_Controller
                 'created_by'     => $created_by,
             );
             $this->enquiry_model->add($enquiry);
+            
+            // System Notification
+            $this->load->model('SystemNotificationSetting_model');
+            if ($this->SystemNotificationSetting_model->check_setting('enquiry_added')) {
+                $this->load->model('SystemNotification_model');
+                $this->SystemNotification_model->notifyRole(7, 'New Enquiry Added', 'A new enquiry has been added: ' . $this->input->post('name'), 'admin/enquiry');
+            }
+            
             $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('success_message'));
         }
         echo json_encode($array);
@@ -281,6 +289,16 @@ class Enquiry extends Admin_Controller
         if (!empty($id)) {
             $data = array('id' => $id, 'status' => $status);
             $this->enquiry_model->changeStatus($data);
+            
+            // System Notification
+            if ($status == 'won' || strtolower($status) == 'admission') {
+                $this->load->model('SystemNotificationSetting_model');
+                if ($this->SystemNotificationSetting_model->check_setting('enquiry_converted')) {
+                    $this->load->model('SystemNotification_model');
+                    $this->SystemNotification_model->notifyRole(7, 'Enquiry Converted', 'An enquiry has been converted to admission.', 'admin/enquiry');
+                }
+            }
+            
             $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('success_message'));
         } else {
             $array = array('status' => 'fail', 'error' => '', 'message' => $this->lang->line('update_message'));

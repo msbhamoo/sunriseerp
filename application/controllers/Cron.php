@@ -47,9 +47,107 @@ class Cron extends MY_Controller
             $this->eventreminder($key);
             $this->schedulesmsemails($key);
             $this->send_email_digests($key);
+            $this->studentcall_followup_reminder($key);
+            $this->vehicle_expiration_reminder($key);
         } else {
             echo "Invalid Key or Direct access is not allowed";
             return;
+        }
+    }
+
+    public function studentcall_followup_reminder($key = "")
+    {
+        if ($key != "") {
+            if ($key != "" && $this->cron_key != $key) {
+                echo "Invalid Key or Direct access is not allowed";
+                return;
+            }
+
+            $this->load->model('SystemNotificationSetting_model');
+            if ($this->SystemNotificationSetting_model->check_setting('student_call_log')) {
+                $this->load->model('studentcall_model');
+                $this->load->model('SystemNotification_model');
+
+                $pending_followups = $this->studentcall_model->get_all_pending_followups_for_reminder();
+
+                if (!empty($pending_followups)) {
+                    foreach ($pending_followups as $followup) {
+                        $message = "Reminder: You have a pending follow-up due for student {$followup['firstname']} {$followup['lastname']} ({$followup['admission_no']}). Phone: {$followup['phone_number']}";
+                        $this->SystemNotification_model->notifyUser($followup['assigned_to'], 'Follow-up Reminder', $message, 'admin/studentcall');
+                    }
+                }
+            }
+        }
+    }
+
+    public function vehicle_expiration_reminder($key = "")
+    {
+        if ($key != "") {
+            if ($key != "" && $this->cron_key != $key) {
+                echo "Invalid Key or Direct access is not allowed";
+                return;
+            }
+
+            $this->load->model('SystemNotificationSetting_model');
+            if ($this->SystemNotificationSetting_model->check_setting('vehicle_alerts')) {
+                $this->load->model('vehicle_model');
+                $this->load->model('staff_model');
+                $this->load->model('SystemNotification_model');
+
+                $vehicles = $this->vehicle_model->get();
+                $notify_days = [15, 7, 5, 3, 2, 1];
+                $today = new DateTime(date('Y-m-d'));
+
+                $check_fields = [
+                    'insurance_expiry' => 'Insurance',
+                    'permit_expiry' => 'Permit',
+                    'fitness_expiry' => 'Fitness',
+                    'puc_expiry' => 'PUC',
+                    'license_expiry' => 'License',
+                    'fire_extinguisher_expiry' => 'Fire Extinguisher',
+                    'next_maintenance_due' => 'Maintenance'
+                ];
+
+                if (!empty($vehicles)) {
+                    foreach ($vehicles as $v) {
+                        foreach ($check_fields as $field => $label) {
+                            if (!empty($v[$field]) && $v[$field] != '0000-00-00') {
+                                $exp_date = new DateTime($v[$field]);
+                                $diff = $today->diff($exp_date);
+                                $days = (int)$diff->format('%R%a'); // positive if in future, negative if past
+
+                                $trigger = false;
+                                if (in_array($days, $notify_days)) {
+                                    $trigger = true;
+                                    $msg_text = "expires in {$days} days";
+                                } else if ($days <= 0) {
+                                    $trigger = true;
+                                    $msg_text = ($days == 0) ? "expires TODAY" : "is OVERDUE";
+                                }
+
+                                if ($trigger) {
+                                    $message = "Vehicle {$v['vehicle_no']} {$label} {$msg_text} ({$v[$field]}).";
+                                    
+                                    // Notify Super Admin
+                                    $this->SystemNotification_model->notifyRole(7, 'Vehicle Expiration Alert', $message, 'admin/vehicle');
+                                    
+                                    // Notify Driver
+                                    if (!empty($v['driver_name'])) {
+                                        $driver_id = $this->staff_model->getStaffByName($v['driver_name']);
+                                        if ($driver_id) $this->SystemNotification_model->notifyUser($driver_id, 'Vehicle Expiration Alert', $message, 'admin/vehicle');
+                                    }
+
+                                    // Notify Attendant
+                                    if (!empty($v['attendant_name'])) {
+                                        $attendant_id = $this->staff_model->getStaffByName($v['attendant_name']);
+                                        if ($attendant_id) $this->SystemNotification_model->notifyUser($attendant_id, 'Vehicle Expiration Alert', $message, 'admin/vehicle');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

@@ -433,6 +433,7 @@
     }
 }
 
+/* Top Header Icons */
 .navbar-nav.headertopmenu > li > a {
     color: #4b5563 !important;
     transition: all 0.2s ease !important;
@@ -443,8 +444,9 @@
     align-items: center !important;
     justify-content: center !important;
     border-radius: 50% !important; /* Circular like Google/GitHub */
-    margin: 0 4px !important;
+    margin: 6px 4px !important; /* 6px top/bottom to vertically center in 50px navbar */
     position: relative !important;
+    overflow: visible !important;
 }
 
 .navbar-nav.headertopmenu > li > a:hover {
@@ -471,6 +473,7 @@
     width: 38px !important;
     height: 38px !important;
     border-radius: 50% !important;
+    margin-top: 6px !important;
 }
 .whatsapp-icon-bg svg {
     transition: all 0.2s ease !important;
@@ -485,22 +488,28 @@
 .navbar-nav.headertopmenu .todo-indicator,
 .navbar-nav.headertopmenu .topbadges {
     position: absolute !important;
-    top: 0px !important;
-    right: -2px !important;
+    top: 2px !important;
+    right: 2px !important;
+    margin: 0 !important;
     background-color: #ef4444 !important; /* Soft Red */
     color: #ffffff !important;
     font-size: 10px !important;
     font-weight: 700 !important;
     border-radius: 50% !important;
-    width: 18px !important;
-    height: 18px !important;
+    width: 16px !important;
+    height: 16px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     padding: 0 !important;
     border: 2px solid #ffffff !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
     box-sizing: content-box !important;
+    z-index: 10 !important;
+    line-height: 1 !important;
+}
+.main-header, .navbar, .navbar-custom-menu, .navbar-nav.headertopmenu, .navbar-nav.headertopmenu > li, .navbar-nav.headertopmenu > li > a {
+    overflow: visible !important;
 }
 
 /* User Profile Image Box */
@@ -575,6 +584,107 @@
 .currency-icon-list .bootstrap-select > .dropdown-toggle:hover {
     background-color: #f3f4f6 !important;
     color: #111827 !important;
+}
+/* Offcanvas System Notifications */
+.sys-offcanvas {
+    position: fixed;
+    top: 50px;
+    right: -350px;
+    width: 350px;
+    height: calc(100vh - 50px);
+    background-color: #fff;
+    box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+    z-index: 1050;
+    transition: right 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+.sys-offcanvas.open {
+    right: 0;
+}
+.sys-offcanvas-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f9fafb;
+}
+.sys-offcanvas-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+}
+.sys-offcanvas-close {
+    cursor: pointer;
+    font-size: 20px;
+    color: #6b7280;
+}
+.sys-offcanvas-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px 20px;
+}
+.sys-alert-group {
+    margin-bottom: 20px;
+}
+.sys-alert-group-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 5px;
+}
+.sys-alert-item {
+    display: block;
+    padding: 12px;
+    border-radius: 8px;
+    background-color: #eff6ff; /* slightly blue for unread */
+    margin-bottom: 8px;
+    text-decoration: none !important;
+    color: #374151 !important;
+    transition: background-color 0.2s;
+    border: 1px solid #dbeafe;
+    position: relative;
+}
+.sys-alert-item.read-alert {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+}
+.sys-unread-dot {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 8px;
+    height: 8px;
+    background-color: #3b82f6;
+    border-radius: 50%;
+    display: none;
+}
+.sys-alert-item.unread-alert .sys-unread-dot {
+    display: block;
+}
+.sys-alert-item:hover {
+    background-color: #e5e7eb;
+}
+.sys-alert-item strong {
+    display: block;
+    font-size: 14px;
+    color: #111827;
+    margin-bottom: 4px;
+}
+.sys-alert-item.read-alert strong {
+    font-weight: 500;
+    color: #4b5563;
+}
+.sys-alert-item small {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.4;
 }
   </style>
     </head>
@@ -764,10 +874,10 @@ if ($this->module_lib->hasActive('chat')) {
         ?>
     <li class="cal15 d-sm-none">
 
-        <a data-placement="bottom" data-toggle="tooltip" title="" href="<?php echo base_url() ?>admin/chat" data-original-title="<?php echo $this->lang->line('chat') ?>" class="todoicon"><i class="icon-message-circle" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"> <span class="total_chat_msg text-white badge bg-red topbadges"><?php
-        $msg_count=$this->customlib->get_chat_msg_count();
-        echo  count($msg_count);
-    ?></span></i></a>
+        <a data-placement="bottom" data-toggle="tooltip" title="" href="<?php echo base_url() ?>admin/chat" data-original-title="<?php echo $this->lang->line('chat') ?>" class="todoicon">
+            <i class="icon-message-circle" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i>
+            <span class="total_chat_msg topbadges"><?php $msg_count=$this->customlib->get_chat_msg_count(); echo count($msg_count); ?></span>
+        </a>
 
    
     </li>
@@ -835,6 +945,14 @@ if (!empty($image)) {
 
 <?php } } ?>
 
+                                    <!-- System Notifications Bell -->
+                                    <li class="hidden-xs" data-placement="bottom" data-toggle="tooltip" title="System Notifications">
+                                        <a href="#" id="sys-notification-bell">
+                                            <i class="icon-bell" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i>
+                                            <span class="todo-indicator sys-notification-count" style="display:none;">0</span>
+                                        </a>
+                                    </li>
+
                                     <li class="dropdown user-menu">
                                         <a class="dropdown-toggle" style="padding: 15px 12px;" data-toggle="dropdown" href="#" aria-expanded="false">
                                             <img src="<?php echo base_url($file); ?>" class="topuser-image" alt="User Image">
@@ -874,6 +992,20 @@ if (!empty($image)) {
                 </nav>
             </header>
 
+            <!-- System Notifications Offcanvas -->
+            <div class="sys-offcanvas" id="sys-offcanvas">
+                <div class="sys-offcanvas-header">
+                    <h4>Notifications</h4>
+                    <div>
+                        <a href="#" id="sys-mark-all-read" style="font-size:12px; color:#3b82f6; margin-right:15px; text-decoration:none;">Mark all as read</a>
+                        <span class="sys-offcanvas-close" id="sys-offcanvas-close">&times;</span>
+                    </div>
+                </div>
+                <div class="sys-offcanvas-body" id="sys-notification-list">
+                    <div style="text-align: center; color: #6b7280; padding: 20px;">Loading...</div>
+                </div>
+            </div>
+
             <?php $this->load->view('layout/sidebar');?>
 <script>
     function set_languages(lang_id){
@@ -887,6 +1019,93 @@ if (!empty($image)) {
         }
         });
     }
+</script>
+<script>
+    $(document).ready(function() {
+        // Toggle Offcanvas
+        $('#sys-notification-bell').on('click', function(e) {
+            e.preventDefault();
+            $('#sys-offcanvas').toggleClass('open');
+        });
+        $('#sys-offcanvas-close').on('click', function() {
+            $('#sys-offcanvas').removeClass('open');
+        });
+
+        function renderGroup(title, alerts) {
+            if (!alerts || alerts.length === 0) return '';
+            var html = '<div class="sys-alert-group">';
+            html += '<div class="sys-alert-group-title">' + title + '</div>';
+            $.each(alerts, function(i, alert) {
+                var link = alert.action_url ? baseurl + alert.action_url : '#';
+                var readClass = (alert.is_read == '1' || alert.is_read == 1) ? 'read-alert' : 'unread-alert';
+                html += '<a href="' + link + '" class="sys-alert-item ' + readClass + '" data-id="' + alert.id + '">';
+                html += '<strong>' + alert.title + '</strong>';
+                html += '<small>' + alert.message + '</small>';
+                html += '<span class="sys-unread-dot"></span>';
+                html += '</a>';
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function loadSystemAlerts() {
+            $.ajax({
+                url: baseurl + 'admin/systemalerts/get_alerts',
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    var count = parseInt(data.count);
+                    if (count > 0) {
+                        $('.sys-notification-count').text(count).show();
+                    } else {
+                        $('.sys-notification-count').hide();
+                    }
+                    
+                    var html = '';
+                    if (data.grouped_alerts) {
+                        html += renderGroup('Today', data.grouped_alerts.today);
+                        html += renderGroup('Yesterday', data.grouped_alerts.yesterday);
+                        html += renderGroup('Last Week', data.grouped_alerts.last_week);
+                        html += renderGroup('Last Month', data.grouped_alerts.last_month);
+                    }
+                    
+                    if (html === '') {
+                        html = '<div style="text-align: center; color: #6b7280; padding: 20px;">No new notifications</div>';
+                    }
+                    
+                    $('#sys-notification-list').html(html);
+                }
+            });
+        }
+        
+        loadSystemAlerts();
+        setInterval(loadSystemAlerts, 60000); // Poll every minute
+        
+        // Mark Single as Read
+        $(document).on('click', '.sys-alert-item.unread-alert', function(e) {
+            var id = $(this).data('id');
+            $.ajax({
+                url: baseurl + 'admin/systemalerts/mark_as_read',
+                type: 'POST',
+                data: {id: id},
+                success: function() {
+                    loadSystemAlerts();
+                }
+            });
+        });
+
+        // Mark All as Read
+        $('#sys-mark-all-read').on('click', function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: baseurl + 'admin/systemalerts/mark_all_as_read',
+                type: 'POST',
+                success: function() {
+                    loadSystemAlerts();
+                }
+            });
+        });
+    });
 </script>
 <!-- Global Search Modal -->
 <style>

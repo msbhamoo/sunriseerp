@@ -60,6 +60,19 @@ class Staff_model extends MY_Model
         return $query->result_array();
     }
 
+    public function getStaffByName($fullname)
+    {
+        $this->db->select('id');
+        $this->db->from('staff');
+        $this->db->where('TRIM(CONCAT(name, " ", surname)) =', $fullname);
+        $this->db->limit(1);
+        $query = $this->db->get();
+        if ($query->num_rows() > 0) {
+            return $query->row()->id;
+        }
+        return false;
+    }
+
     public function getTodayDayAttendance()
     {
         $date = date('Y-m-d');

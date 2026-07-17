@@ -46,7 +46,6 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                         <tr>
                                             <th><?php echo $this->lang->line('route'); ?></th>
                                             <th><?php echo $this->lang->line('pickup_point'); ?></th>
-                                            <th class="text-right"><?php echo $this->lang->line('monthly_fees'); ?> <span><?php echo "(" . $currency_symbol . ")"; ?> </span></th>
                                             <th><?php echo $this->lang->line('distance_km'); ?></th>
                                             <th><?php echo $this->lang->line('pickup_time'); ?></th>
                                             <th class="noExport"><?php echo $this->lang->line('action'); ?></th>
@@ -71,12 +70,6 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                     <ul class="liststyle1"><li><?php echo $sn . " " . $value['pickup_point']; ?></li></ul>
                                                     <?php $sn++;
         }?></td>
-                                                    <td class="mailbox-name"> <?php foreach ($data['point_list'] as $key => $value) {
-            ?>
-                                                    <ul class="liststyle1"><li><?php echo amountFormat($value['fees']); ?> &nbsp &nbsp   </li>
-                                                    </ul>
-                                                    <?php
-}?></td>
                                                     <td  > <?php foreach ($data['point_list'] as $key => $value) {
             ?>
                                                     <ul class="liststyle1 "><li><?php echo $value['destination_distance']; ?></li>
@@ -143,7 +136,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                         <th><?php echo $this->lang->line("pickup_point"); ?></th>
                                         <th><?php echo $this->lang->line('distance_km'); ?></th>
                                         <th><?php echo $this->lang->line('pickup_time'); ?></th>
-                                        <th class="text-right"><?php echo $this->lang->line('monthly_fees'); ?> <?php echo "(" . $currency_symbol . ")"; ?></th>
+
                                     </tr>
                                 </thead>
                                 <tbody class="row_position" id="reorder_result">

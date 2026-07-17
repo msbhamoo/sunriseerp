@@ -1,4 +1,0 @@
-Staff: 1, Day: Thursday
-Page:
-    <div class="alert alert-info">No timetable periods found for this staff member on the selected day.</div>
-

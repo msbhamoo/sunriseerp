@@ -49,7 +49,9 @@
             <li class="<?php echo set_SubSubmenu('schsettings/miscellaneous'); ?>">
                 <a class="<?php echo set_SubSubmenu('schsettings/miscellaneous'); ?>" href="<?php echo site_url('schsettings/miscellaneous') ?>"><?php echo $this->lang->line('miscellaneous'); ?></a>
             </li>
-            
+            <li class="<?php echo set_SubSubmenu('admin/systemnotificationsetting'); ?>">
+                <a class="<?php echo set_SubSubmenu('admin/systemnotificationsetting'); ?>" href="<?php echo site_url('admin/systemnotificationsetting') ?>">System Notifications</a>
+            </li>
         </ul>
     </div>
 </div><!--./col-md-3--> 
