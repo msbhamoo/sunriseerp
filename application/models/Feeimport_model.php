@@ -144,6 +144,24 @@ class Feeimport_model extends CI_Model
                         } elseif ($t_fee_yearly) {
                             $row['student_transport_yearly_fee_id'] = $t_fee_yearly->id;
                             $row['status'] = 'matched';
+                            
+                            // Self-heal: If student_session is missing route_pickup_point_id, fix it now
+                            $sess = $this->db->where('id', $student->student_session_id)->get('student_session')->row();
+                            if ($sess && empty($sess->route_pickup_point_id)) {
+                                $existing_master = $this->db->where('id', $t_fee_yearly->transport_yearly_feemaster_id)->get('transport_yearly_feemaster')->row();
+                                if ($existing_master) {
+                                    $route_point = $this->db->where('id', $existing_master->route_pickup_point_id)->get('route_pickup_point')->row();
+                                    if ($route_point) {
+                                        $this->db->where('id', $student->student_session_id);
+                                        $this->db->update('student_session', [
+                                            'route_pickup_point_id' => $existing_master->route_pickup_point_id,
+                                            // The actual schema does not have vehroute_id in route_pickup_point, it is transport_route_id. 
+                                            // We get vehroute_id from vehicle_routes table.
+                                            'vehroute_id' => $this->db->where('route_id', $route_point->transport_route_id)->get('vehicle_routes')->row()->id ?? null
+                                        ]);
+                                    }
+                                }
+                            }
                         } else {
                             // Student has NO transport assigned. Force auto-assign to Yearly (most common fallback)
                             if ($fallback_route_id) {
@@ -168,10 +186,11 @@ class Feeimport_model extends CI_Model
                                 // CRUCIAL FIX: Update student_session so the fee actually renders in the UI
                                 $route_point = $this->db->where('id', $master->route_pickup_point_id)->get('route_pickup_point')->row();
                                 if ($route_point) {
+                                    $veh_route = $this->db->where('route_id', $route_point->transport_route_id)->get('vehicle_routes')->row();
                                     $this->db->where('id', $student->student_session_id);
                                     $this->db->update('student_session', [
                                         'route_pickup_point_id' => $master->route_pickup_point_id,
-                                        'vehroute_id' => $route_point->vehroute_id
+                                        'vehroute_id' => $veh_route ? $veh_route->id : null
                                     ]);
                                 }
                             } else {
