@@ -157,10 +157,11 @@ class Feeimport_model extends CI_Model
                                     $route_point = $rpp_query->get('route_pickup_point')->row();
                                     
                                     if ($route_point) {
+                                        $veh_route = $this->db->where('route_id', $route_point->transport_route_id)->get('vehicle_routes')->row();
                                         $this->db->where('id', $student->student_session_id);
                                         $this->db->update('student_session', [
                                             'route_pickup_point_id' => $route_point->id,
-                                            'vehroute_id' => $this->db->where('route_id', $route_point->transport_route_id)->get('vehicle_routes')->row()->id ?? null
+                                            'vehroute_id' => $veh_route ? $veh_route->id : null
                                         ]);
                                     }
                                 }
