@@ -150,13 +150,16 @@ class Feeimport_model extends CI_Model
                             if ($sess && empty($sess->route_pickup_point_id)) {
                                 $existing_master = $this->db->where('id', $t_fee_yearly->transport_yearly_feemaster_id)->get('transport_yearly_feemaster')->row();
                                 if ($existing_master) {
-                                    $route_point = $this->db->where('id', $existing_master->route_pickup_point_id)->get('route_pickup_point')->row();
+                                    $rpp_query = !empty($existing_master->route_pickup_point_id) 
+                                        ? $this->db->where('id', $existing_master->route_pickup_point_id)
+                                        : $this->db->where('pickup_point_id', $existing_master->pickup_point_id);
+                                    
+                                    $route_point = $rpp_query->get('route_pickup_point')->row();
+                                    
                                     if ($route_point) {
                                         $this->db->where('id', $student->student_session_id);
                                         $this->db->update('student_session', [
-                                            'route_pickup_point_id' => $existing_master->route_pickup_point_id,
-                                            // The actual schema does not have vehroute_id in route_pickup_point, it is transport_route_id. 
-                                            // We get vehroute_id from vehicle_routes table.
+                                            'route_pickup_point_id' => $route_point->id,
                                             'vehroute_id' => $this->db->where('route_id', $route_point->transport_route_id)->get('vehicle_routes')->row()->id ?? null
                                         ]);
                                     }
@@ -184,12 +187,16 @@ class Feeimport_model extends CI_Model
                                 $row['status'] = 'matched';
                                 
                                 // CRUCIAL FIX: Update student_session so the fee actually renders in the UI
-                                $route_point = $this->db->where('id', $master->route_pickup_point_id)->get('route_pickup_point')->row();
+                                $rpp_query = !empty($master->route_pickup_point_id) 
+                                    ? $this->db->where('id', $master->route_pickup_point_id)
+                                    : $this->db->where('pickup_point_id', $master->pickup_point_id);
+                                    
+                                $route_point = $rpp_query->get('route_pickup_point')->row();
                                 if ($route_point) {
                                     $veh_route = $this->db->where('route_id', $route_point->transport_route_id)->get('vehicle_routes')->row();
                                     $this->db->where('id', $student->student_session_id);
                                     $this->db->update('student_session', [
-                                        'route_pickup_point_id' => $master->route_pickup_point_id,
+                                        'route_pickup_point_id' => $route_point->id,
                                         'vehroute_id' => $veh_route ? $veh_route->id : null
                                     ]);
                                 }
