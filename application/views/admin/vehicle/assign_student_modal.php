@@ -1,15 +1,23 @@
 
 <div class="modal fade" id="assignStudentModal" role="dialog" aria-labelledby="assignStudentModal">
     <div class="modal-dialog modal-lg" role="document">
-        <div class="modern-card" style="border:none;">
-            <div class="modern-header" style="background-color: #f8fafc;">
-                <h4 class="modern-title"><i class="fa fa-user-plus"></i> Assign Student to Vehicle</h4>
-                <button type="button" class="close" data-dismiss="modal" style="opacity:0.6;">&times;</button>
+        <div class="modal-content" style="border:none;">
+            <div class="modal-header" style="background-color: #f8fafc; color: #333; border-bottom: 1px solid #e5e5e5;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #000 !important; opacity: 0.5 !important; font-size: 24px;"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"><i class="fa fa-user-plus"></i> Assign Student to Vehicle</h4>
             </div>
             <form id="assign_student_form" action="<?php echo site_url('admin/vehicle/assign_student_transport') ?>" method="post">
-                <div class="modal-body modern-body">
+                <div class="modal-body">
                     <?php echo $this->customlib->getCSRF(); ?>
                     <input type="hidden" name="vehicle_id" id="assign_vehicle_id" value="">
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="alert alert-warning">
+                                <strong>Note:</strong> Changing a student's vehicle assignment will safely remove any <b>unpaid</b> old transport fees and assign the new ones. Already paid fees will remain intact.
+                            </div>
+                        </div>
+                    </div>
                     
                     <div class="row">
                         <div class="col-md-12">

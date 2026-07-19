@@ -253,13 +253,15 @@ class Studentcall_model extends MY_Model
         return $query->result_array();
     }
 
-    public function get_students_call_status($class_id = null, $section_id = null, $start = 0, $length = 10, $search_value = '')
+    public function get_students_call_status($class_id = null, $section_id = null, $start = 0, $length = 10, $search_value = '', $admission_type = '', $shrestha = '', $rte = '', $is_staff_kid = '', $order_by = 'students.firstname', $order_dir = 'asc')
     {
-        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.admission_no, students.father_name, students.mobileno, students.father_phone, students.mother_phone, students.guardian_phone, classes.class, sections.section, sc.date as last_call_date, sc.call_status as last_call_status');
+        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.admission_no, students.father_name, students.mobileno, students.father_phone, students.mother_phone, students.guardian_phone, students.admission_type, classes.class, sections.section, sc.date as last_call_date, sc.call_status as last_call_status, pickup_point.name as pickup_point_name');
         $this->db->from('student_session');
         $this->db->join('students', 'students.id = student_session.student_id');
         $this->db->join('classes', 'student_session.class_id = classes.id');
         $this->db->join('sections', 'student_session.section_id = sections.id');
+        $this->db->join('route_pickup_point', 'student_session.route_pickup_point_id = route_pickup_point.id', 'left');
+        $this->db->join('pickup_point', 'route_pickup_point.pickup_point_id = pickup_point.id', 'left');
         
         // Join with subquery to get the most recent call status
         $this->db->join('(SELECT student_session_id, MAX(date) as max_date FROM student_calls GROUP BY student_session_id) as latest_call', 'latest_call.student_session_id = student_session.id', 'left', false);
@@ -283,7 +285,24 @@ class Studentcall_model extends MY_Model
             $this->db->group_end();
         }
 
-        $this->db->order_by('students.firstname', 'asc');
+        if (!empty($admission_type)) {
+            $this->db->where('students.admission_type', $admission_type);
+        }
+        if ($shrestha !== '' && $shrestha !== null) {
+            $this->db->where('students.shrestha', $shrestha);
+        }
+        if ($rte !== '' && $rte !== null) {
+            $this->db->where('students.rte', $rte);
+        }
+        if ($is_staff_kid !== '' && $is_staff_kid !== null) {
+            $this->db->where('students.is_staff_kid', $is_staff_kid);
+        }
+
+        if ($order_by && $order_dir) {
+            $this->db->order_by($order_by, $order_dir);
+        } else {
+            $this->db->order_by('students.firstname', 'asc');
+        }
         
         if ($length != -1) {
             $this->db->limit($length, $start);
@@ -293,7 +312,7 @@ class Studentcall_model extends MY_Model
         return $query->result_array();
     }
 
-    public function get_students_call_status_count($class_id = null, $section_id = null, $search_value = '')
+    public function get_students_call_status_count($class_id = null, $section_id = null, $search_value = '', $admission_type = '', $shrestha = '', $rte = '', $is_staff_kid = '')
     {
         $this->db->select('students.id');
         $this->db->from('student_session');
@@ -315,6 +334,19 @@ class Studentcall_model extends MY_Model
             $this->db->or_like('students.lastname', $search_value);
             $this->db->or_like('students.admission_no', $search_value);
             $this->db->group_end();
+        }
+
+        if (!empty($admission_type)) {
+            $this->db->where('students.admission_type', $admission_type);
+        }
+        if ($shrestha !== '' && $shrestha !== null) {
+            $this->db->where('students.shrestha', $shrestha);
+        }
+        if ($rte !== '' && $rte !== null) {
+            $this->db->where('students.rte', $rte);
+        }
+        if ($is_staff_kid !== '' && $is_staff_kid !== null) {
+            $this->db->where('students.is_staff_kid', $is_staff_kid);
         }
         
         $query = $this->db->get();

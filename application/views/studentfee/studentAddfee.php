@@ -428,8 +428,14 @@ foreach ($categorylist as $value) {
                                 <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_add')) { ?>
                                 <button type="button" class="btn btn-sm btn-warning collectSelected" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="fa fa-money"></i> <?php echo $this->lang->line('collect_selected'); ?></button><?php } ?>
                                 <?php if ($student['route_pickup_point_id']) { ?>
-                                <button type="button" class="btn btn-sm btn-info route_fees" id="load" data-recordid="<?php echo $student['student_session_id']; ?>" data-route_pickup_point_id="<?php echo $student['route_pickup_point_id']; ?>" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>" title="Assign Transport Fee"><i class="fa fa-tag"></i> Assign Transport Fee</button>
+                                <button type="button" class="btn btn-sm btn-info route_fees" id="load" data-recordid="<?php echo $student['student_session_id']; ?>" data-route_pickup_point_id="<?php echo $student['route_pickup_point_id']; ?>" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>" title="Assign Transport Fee" style="display:none;"><i class="fa fa-tag"></i> Assign Transport Fee</button>
                                 <?php } ?>
+                                
+                                <?php if (empty($student['hostel_room_id']) || $student['hostel_room_id'] == 0) { ?>
+                                <?php $btn_text = ($student['vehroute_id'] && $student['vehroute_id'] != '0') ? 'Change Assigned Vehicle' : 'Assign Vehicle to Student'; ?>
+                                <button type="button" class="btn btn-sm" style="background-color: #0b2e13; color: white;" data-toggle="modal" data-target="#assignStudentModal" onclick="$('#search_student_text_vehicle').val('<?php echo addslashes($student['firstname'].' '.$student['lastname'].' ('.$student['admission_no'].')'); ?>'); $('#assign_student_id').val('<?php echo $student['id']; ?>'); $('#assign_student_session_id').val('<?php echo $student['student_session_id']; ?>'); $('#assign_class_id').val('<?php echo $student['class_id']; ?>'); $('#selected_student_name').text('<?php echo addslashes($student['firstname'].' '.$student['lastname']); ?>'); $('#selected_student_admission_no').text('<?php echo addslashes($student['admission_no']); ?>'); $('#selected_student_class').text('<?php echo addslashes($student['class'].' ('.$student['section'].')'); ?>'); $('#selected_student_details').show(); $('#vehroute_id').val('<?php echo $student['vehroute_id']; ?>'); if('<?php echo $student['vehroute_id']; ?>' != '' && '<?php echo $student['vehroute_id']; ?>' != '0'){ get_pickup_point('<?php echo $student['vehroute_id']; ?>', '<?php echo $student['route_pickup_point_id']; ?>'); }"><i class="fa fa-bus"></i> <?php echo $btn_text; ?></button>
+                                <?php } ?>
+
                                 <?php if ($student_processing_fee) {?>
                                     <a  href="javascript:void(0)" class="btn btn-sm btn-primary getProcessingfees" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="fa fa-money"></i> <?php echo $this->lang->line('processing_fees') ?></a>
                                 <?php } ?>
@@ -691,6 +697,7 @@ if (!empty($transport_fees)) {
         }
 
         $feetype_balance = $transport_fee_value->fees - ($fee_paid + $fee_discount);
+        if ($feetype_balance < 0) { $feetype_balance = 0; }
         if (($transport_fee_value->due_date != "0000-00-00" && $transport_fee_value->due_date != null) && (strtotime($transport_fee_value->due_date) < strtotime(date('Y-m-d')))) {
             $fees_fine_amount       = is_null($transport_fee_value->fine_percentage) ? $transport_fee_value->fine_amount : percentageAmount($transport_fee_value->fees, $transport_fee_value->fine_percentage);
             $total_fees_fine_amount = $total_fees_fine_amount + $fees_fine_amount;
@@ -2017,3 +2024,5 @@ function printFeesCertificate(student_session_id) {
         </div>
     </div>
 </div>
+
+<?php $this->load->view('admin/vehicle/assign_student_modal'); ?>

@@ -590,6 +590,9 @@ class Studentfee extends Admin_Controller
 
         $this->load->model('feediscountrequest_model');
         $data['discount_requests'] = $this->feediscountrequest_model->getByStudent($student_session_id);
+        
+        $this->load->model('vehroute_model');
+        $data['vehroutelist'] = $this->vehroute_model->get();
 
         $this->load->view('layout/header', $data);
         $this->load->view('studentfee/studentAddfee', $data);
@@ -1337,6 +1340,7 @@ class Studentfee extends Admin_Controller
         }
 
         $amount_balance = $due_amt - ($amount + $amount_discount);
+        if ($amount_balance < 0) { $amount_balance = 0; }
         $fine_amount    = abs($amount_fine - $fee_fine_amount);
         $array          = array('status' => 'success', 'error' => '', 'student_fees' => $due_amt, 'balance' => $amount_balance, 'fine_amount' => $fine_amount);
         return json_encode($array);

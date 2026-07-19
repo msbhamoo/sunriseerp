@@ -436,9 +436,16 @@ class Vehicle extends Admin_Controller
         $yearly_fees = $this->transportyearlyfee_model->getApplicableYearlyFees($class_id, $route_pickup_point_id);
         
         if (!empty($yearly_fees)) {
+            $used_paid_fee = false;
             foreach($yearly_fees as $yf) {
-                // Prevent duplicate assignment if they already paid for this exact fee master ID!
-                if(!in_array($yf['id'], $paid_master_ids)) {
+                if (count($paid_yearly_fees) > 0 && !$used_paid_fee) {
+                    // Update the existing partially/fully paid fee to point to the new fee master. 
+                    // This naturally transfers any already paid amount towards the new fee!
+                    $this->db->where('id', $paid_yearly_fees[0]['id']);
+                    $this->db->update('student_transport_yearly_fees', ['transport_yearly_feemaster_id' => $yf['id']]);
+                    $used_paid_fee = true;
+                } else {
+                    // No paid fees exist, so we do a fresh insert
                     $insert_val = array(
                         'student_session_id' => $student_session_id,
                         'transport_yearly_feemaster_id' => $yf['id'],

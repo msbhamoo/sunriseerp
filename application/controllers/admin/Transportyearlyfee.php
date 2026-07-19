@@ -357,4 +357,76 @@ class Transportyearlyfee extends Admin_Controller
         
         echo json_encode(array('status' => 1, 'msg' => 'Successfully assigned transport to '.$success_count.' students.'));
     }
+
+    public function migrate_legacy_fees()
+    {
+        // 1. Get all legacy fees (where route_pickup_point_id != 0)
+        $legacy_fees = $this->db->query("
+            SELECT tyf.*, rpp.pickup_point_id as actual_pickup_point_id 
+            FROM transport_yearly_feemaster tyf 
+            JOIN route_pickup_point rpp ON tyf.route_pickup_point_id = rpp.id 
+            WHERE tyf.route_pickup_point_id != 0
+        ")->result_array();
+        
+        $grouped_fees = [];
+        
+        // Group by pickup_point_id, class_id, and feetype_id
+        foreach ($legacy_fees as $fee) {
+            $key = $fee['actual_pickup_point_id'] . '_' . $fee['class_id'] . '_' . $fee['feetype_id'];
+            if (!isset($grouped_fees[$key])) {
+                $grouped_fees[$key] = [];
+            }
+            $grouped_fees[$key][] = $fee;
+        }
+        
+        $updated_count = 0;
+        $deleted_count = 0;
+        $relinked_count = 0;
+        
+        $this->db->trans_start();
+        
+        foreach ($grouped_fees as $key => $fees) {
+            // The first fee becomes the "Master" fee for this pickup point/class/feetype
+            $master_fee = $fees[0];
+            
+            // Update the Master fee to become Universal
+            $this->db->where('id', $master_fee['id']);
+            $this->db->update('transport_yearly_feemaster', [
+                'pickup_point_id' => $master_fee['actual_pickup_point_id'],
+                'route_pickup_point_id' => 0
+            ]);
+            $updated_count++;
+            
+            // If there are duplicates across different routes, re-link their student records and delete them
+            if (count($fees) > 1) {
+                for ($i = 1; $i < count($fees); $i++) {
+                    $duplicate_fee = $fees[$i];
+                    
+                    // Re-link any student fee records pointing to the duplicate
+                    $this->db->where('transport_yearly_feemaster_id', $duplicate_fee['id']);
+                    $this->db->update('student_transport_yearly_fees', [
+                        'transport_yearly_feemaster_id' => $master_fee['id']
+                    ]);
+                    $relinked_count += $this->db->affected_rows();
+                    
+                    // Delete the duplicate fee
+                    $this->db->where('id', $duplicate_fee['id']);
+                    $this->db->delete('transport_yearly_feemaster');
+                    $deleted_count++;
+                }
+            }
+        }
+        
+        $this->db->trans_complete();
+        
+        if ($this->db->trans_status() === FALSE) {
+            echo "Migration failed. Rolled back.<br>";
+        } else {
+            echo "<b>Migration successful!</b><br>";
+            echo "- Converted $updated_count fees to Universal Fees.<br>";
+            echo "- Deleted $deleted_count duplicate fees.<br>";
+            echo "- Re-linked $relinked_count student fee assignments to the master fees.<br>";
+        }
+    }
 }
+

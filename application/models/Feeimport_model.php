@@ -43,7 +43,7 @@ class Feeimport_model extends CI_Model
         return $this->db->where('batch_id', $batch_id)->get('fee_import_rows')->result();
     }
 
-    public function parseAndValidateCSV($batch_id, $file_path)
+    public function parseAndValidateCSV($file_path, $batch_id, $fallback_route_id = null)
     {
         if (($handle = fopen($file_path, "r")) !== FALSE) {
             $header = fgetcsv($handle);
@@ -94,6 +94,7 @@ class Feeimport_model extends CI_Model
                     'student_fees_master_id' => null,
                     'fee_groups_feetype_id' => null,
                     'student_transport_fee_id' => null,
+                    'student_transport_yearly_fee_id' => null,
                     'amount' => $net_amount,
                     'discount' => $discount,
                     'fine' => $fine,
@@ -125,19 +126,87 @@ class Feeimport_model extends CI_Model
                     $is_hostel = stripos($fee_category, 'hostel') !== false;
                     
                     if ($is_transport) {
-                        // Find transport fee
-                        $this->db->select('student_transport_fees.id');
-                        $this->db->from('student_transport_fees');
-                        $this->db->join('transport_feemaster', 'transport_feemaster.id = student_transport_fees.transport_feemaster_id');
-                        $this->db->where('student_transport_fees.student_session_id', $student->student_session_id);
-                        $t_fee = $this->db->get()->row();
+                        $is_yearly = stripos($fee_category, 'yearly') !== false;
                         
-                        if ($t_fee) {
-                            $row['student_transport_fee_id'] = $t_fee->id;
-                            $row['status'] = 'matched';
+                        // Auto-detect if school exclusively uses yearly transport
+                        if (!$is_yearly) {
+                            $has_yearly = $this->db->count_all('transport_yearly_feemaster') > 0;
+                            $has_monthly = $this->db->count_all('transport_feemaster') > 0;
+                            if ($has_yearly && !$has_monthly) {
+                                $is_yearly = true;
+                            }
+                        }
+
+                        if ($is_yearly) {
+                            $this->db->select('id');
+                            $this->db->where('student_session_id', $student->student_session_id);
+                            $t_fee = $this->db->get('student_transport_yearly_fees')->row();
+                            
+                            // AUTO-ASSIGN if missing
+                            if (!$t_fee) {
+                                if ($fallback_route_id) {
+                                    $this->db->where('route_pickup_point_id', $fallback_route_id);
+                                }
+                                $master = $this->db->get('transport_yearly_feemaster')->row();
+                                
+                                // Bulletproof fallback: if the selected route has no master, just pick ANY master to satisfy DB constraints
+                                if (!$master) {
+                                    $master = $this->db->get('transport_yearly_feemaster')->row();
+                                }
+                                
+                                if ($master) {
+                                    $this->db->insert('student_transport_yearly_fees', [
+                                        'student_session_id' => $student->student_session_id,
+                                        'transport_yearly_feemaster_id' => $master->id
+                                    ]);
+                                    $new_id = $this->db->insert_id();
+                                    $t_fee = (object)['id' => $new_id];
+                                }
+                            }
+
+                            if ($t_fee) {
+                                $row['student_transport_yearly_fee_id'] = $t_fee->id;
+                                $row['status'] = 'matched';
+                            } else {
+                                $row['status'] = 'failed';
+                                $row['error_message'] = "No Yearly Transport Master found to auto-assign.";
+                            }
                         } else {
-                            $row['status'] = 'failed';
-                            $row['error_message'] = "Transport fee not assigned to student.";
+                            // Monthly transport
+                            $this->db->select('student_transport_fees.id');
+                            $this->db->from('student_transport_fees');
+                            $this->db->join('transport_feemaster', 'transport_feemaster.id = student_transport_fees.transport_feemaster_id');
+                            $this->db->where('student_transport_fees.student_session_id', $student->student_session_id);
+                            $t_fee = $this->db->get()->row();
+                            
+                            // AUTO-ASSIGN if missing
+                            if (!$t_fee) {
+                                if ($fallback_route_id) {
+                                    $route_pickup_point = $this->db->where('id', $fallback_route_id)->get('route_pickup_point')->row();
+                                    $master = $this->db->get('transport_feemaster')->row();
+                                    $route = clone $route_pickup_point;
+                                } else {
+                                    $master = $this->db->get('transport_feemaster')->row();
+                                    $route = $this->db->get('route_pickup_point')->row();
+                                }
+                                if ($master && $route) {
+                                    $this->db->insert('student_transport_fees', [
+                                        'student_session_id' => $student->student_session_id,
+                                        'transport_feemaster_id' => $master->id,
+                                        'route_pickup_point_id' => $route->id
+                                    ]);
+                                    $new_id = $this->db->insert_id();
+                                    $t_fee = (object)['id' => $new_id];
+                                }
+                            }
+                            
+                            if ($t_fee) {
+                                $row['student_transport_fee_id'] = $t_fee->id;
+                                $row['status'] = 'matched';
+                            } else {
+                                $row['status'] = 'failed';
+                                $row['error_message'] = "Transport fee not assigned and no default route found.";
+                            }
                         }
                     } else {
                         // Find academic fee by matching the type name
@@ -207,6 +276,13 @@ class Feeimport_model extends CI_Model
                 $fee_data['student_transport_fee_id'] = $row->student_transport_fee_id;
                 $fee_category = 'transport';
                 $this->db->where('student_transport_fee_id', $row->student_transport_fee_id);
+                $this->db->where('student_transport_yearly_fee_id', null);
+            } elseif ($row->student_transport_yearly_fee_id) {
+                $fee_data['student_transport_yearly_fee_id'] = $row->student_transport_yearly_fee_id;
+                $fee_category = 'transport';
+                $this->db->where('student_fees_master_id', null);
+                $this->db->where('student_transport_fee_id', null);
+                $this->db->where('student_transport_yearly_fee_id', $row->student_transport_yearly_fee_id);
             } else {
                 $fee_data['student_fees_master_id'] = $row->student_fees_master_id;
                 $fee_data['fee_groups_feetype_id'] = $row->fee_groups_feetype_id;

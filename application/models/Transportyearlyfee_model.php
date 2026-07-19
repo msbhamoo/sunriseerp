@@ -103,10 +103,19 @@ class Transportyearlyfee_model extends MY_Model
         $this->db->select('transport_yearly_feemaster.*, feetype.type, feetype.code');
         $this->db->from('transport_yearly_feemaster');
         $this->db->join('feetype', 'feetype.id = transport_yearly_feemaster.feetype_id');
+        
         $this->db->group_start();
-        $this->db->where('(transport_yearly_feemaster.class_id = ' . (int)$class_id . ' AND transport_yearly_feemaster.route_pickup_point_id = ' . (int)$route_pickup_point_id . ')');
-        $this->db->or_where('transport_yearly_feemaster.pickup_point_id', $pickup_point_id);
+            $this->db->group_start();
+                $this->db->where('transport_yearly_feemaster.class_id', $class_id);
+                $this->db->or_where('transport_yearly_feemaster.class_id', 0);
+            $this->db->group_end();
+            
+            $this->db->group_start();
+                $this->db->where('transport_yearly_feemaster.route_pickup_point_id', $route_pickup_point_id);
+                $this->db->or_where('transport_yearly_feemaster.pickup_point_id', $pickup_point_id);
+            $this->db->group_end();
         $this->db->group_end();
+        
         $this->db->where('transport_yearly_feemaster.session_id', $this->current_session);
         $query = $this->db->get();
         return $query->result_array();

@@ -250,28 +250,70 @@
                                     <h3 class="box-title"><i class="fa fa-search"></i> Filter Students</h3>
                                 </div>
                                 <div class="box-body row">
-                                    <div class="col-sm-3 col-md-3">
+                                    <div class="col-sm-2 col-md-2">
                                         <div class="form-group">
                                             <label><?php echo $this->lang->line('class'); ?></label>
                                             <select id="status_class_id" name="status_class_id" class="form-control" >
                                                 <option value=""><?php echo $this->lang->line('select'); ?></option>
                                                 <?php foreach ($class_list as $class) { ?>
-                                                    <option value="<?php echo $class['id'] ?>"><?php echo $class['class'] ?></option>
+                                                    <option value="<?php echo $class['id'] ?>" <?php echo (isset($saved_filters['class_id']) && $saved_filters['class_id'] == $class['id']) ? 'selected' : ''; ?>><?php echo $class['class'] ?></option>
                                                 <?php } ?>
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-sm-3 col-md-3">
+                                    <div class="col-sm-2 col-md-2">
                                         <div class="form-group">
                                             <label><?php echo $this->lang->line('section'); ?></label>
-                                            <select id="status_section_id" name="status_section_id" class="form-control" >
+                                            <select id="status_section_id" name="status_section_id" class="form-control" data-saved="<?php echo isset($saved_filters['section_id']) ? $saved_filters['section_id'] : ''; ?>">
                                                 <option value=""><?php echo $this->lang->line('select'); ?></option>
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-sm-6 col-md-6">
-                                        <div class="form-group" style="margin-top: 25px;">
-                                            <button type="button" id="btn_status_search" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                                    <div class="col-sm-2 col-md-2">
+                                        <div class="form-group">
+                                            <label>Admission Type</label>
+                                            <select id="status_admission_type" name="status_admission_type" class="form-control">
+                                                <option value="">All</option>
+                                                <option value="New" <?php echo (isset($saved_filters['admission_type']) && $saved_filters['admission_type'] == 'New') ? 'selected' : ''; ?>>New</option>
+                                                <option value="Old" <?php echo (isset($saved_filters['admission_type']) && $saved_filters['admission_type'] == 'Old') ? 'selected' : ''; ?>>Old</option>
+                                                <option value="Added" <?php echo (isset($saved_filters['admission_type']) && $saved_filters['admission_type'] == 'Added') ? 'selected' : ''; ?>>Added</option>
+                                                <option value="Promotion" <?php echo (isset($saved_filters['admission_type']) && $saved_filters['admission_type'] == 'Promotion') ? 'selected' : ''; ?>>Promotion</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-2 col-md-2">
+                                        <div class="form-group">
+                                            <label>Shrestha</label>
+                                            <select id="status_shrestha" name="status_shrestha" class="form-control">
+                                                <option value="">All</option>
+                                                <option value="Yes" <?php echo (isset($saved_filters['shrestha']) && $saved_filters['shrestha'] == 'Yes') ? 'selected' : ''; ?>>Yes</option>
+                                                <option value="No" <?php echo (isset($saved_filters['shrestha']) && $saved_filters['shrestha'] == 'No') ? 'selected' : ''; ?>>No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-2 col-md-2">
+                                        <div class="form-group">
+                                            <label>RTE</label>
+                                            <select id="status_rte" name="status_rte" class="form-control">
+                                                <option value="">All</option>
+                                                <option value="Yes" <?php echo (isset($saved_filters['rte']) && $saved_filters['rte'] == 'Yes') ? 'selected' : ''; ?>>Yes</option>
+                                                <option value="No" <?php echo (isset($saved_filters['rte']) && $saved_filters['rte'] == 'No') ? 'selected' : ''; ?>>No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-2 col-md-2">
+                                        <div class="form-group">
+                                            <label>Is Staff Kid</label>
+                                            <select id="status_is_staff_kid" name="status_is_staff_kid" class="form-control">
+                                                <option value="">All</option>
+                                                <option value="1" <?php echo (isset($saved_filters['is_staff_kid']) && $saved_filters['is_staff_kid'] == '1') ? 'selected' : ''; ?>>Yes</option>
+                                                <option value="0" <?php echo (isset($saved_filters['is_staff_kid']) && $saved_filters['is_staff_kid'] == '0') ? 'selected' : ''; ?>>No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12 col-md-12">
+                                        <div class="form-group">
+                                            <button type="button" id="btn_status_search" class="btn btn-primary btn-sm pull-right"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
                                         </div>
                                     </div>
                                 </div>
@@ -289,6 +331,8 @@
                                                     <th><?php echo $this->lang->line('student'); ?></th>
                                                     <th>Father Name</th>
                                                     <th>Class (Section)</th>
+                                                    <th>Pickup Point</th>
+                                                    <th>Admission Type</th>
                                                     <th><?php echo $this->lang->line('phone'); ?></th>
                                                     <th>Last Call Date</th>
                                                     <th>Last Call Status</th>
@@ -814,16 +858,22 @@
                 "data": function (d) {
                     d.class_id = $('#status_class_id').val();
                     d.section_id = $('#status_section_id').val();
+                    d.admission_type = $('#status_admission_type').val();
+                    d.shrestha = $('#status_shrestha').val();
+                    d.rte = $('#status_rte').val();
+                    d.is_staff_kid = $('#status_is_staff_kid').val();
                     d.<?php echo $this->security->get_csrf_token_name(); ?> = "<?php echo $this->security->get_csrf_hash(); ?>";
                 }
             },
             "columns": [
                 { "orderable": true },
-                { "orderable": false },
-                { "orderable": false },
-                { "orderable": false },
-                { "orderable": false },
-                { "orderable": false },
+                { "orderable": true },
+                { "orderable": true },
+                { "orderable": true },
+                { "orderable": true },
+                { "orderable": true },
+                { "orderable": true },
+                { "orderable": true },
                 { "orderable": false }
             ]
         });
@@ -831,6 +881,28 @@
         $('#btn_status_search').on('click', function() {
             student_status_table.ajax.reload();
         });
+
+        // Trigger section load if class is already selected (from saved session filters)
+        if ($('#status_class_id').val() !== '') {
+            var class_id = $('#status_class_id').val();
+            var saved_section = $('#status_section_id').data('saved');
+            var base_url = '<?php echo base_url() ?>';
+            $.ajax({
+                type: "GET",
+                url: base_url + "sections/getByClass",
+                data: {'class_id': class_id},
+                dataType: "json",
+                success: function (data) {
+                    $('#status_section_id').empty();
+                    $('#status_section_id').append('<option value=""><?php echo $this->lang->line('select'); ?></option>');
+                    $.each(data, function (i, obj)
+                    {
+                        var sel = (saved_section == obj.section_id) ? 'selected' : '';
+                        $('#status_section_id').append("<option value=" + obj.section_id + " " + sel + ">" + obj.section + "</option>");
+                    });
+                }
+            });
+        }
     });
 
     function follow_up(id) {

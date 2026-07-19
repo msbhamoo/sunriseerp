@@ -35,6 +35,20 @@
                                 </div>
                             </div>
                             <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="fallback_route_id">Fallback Transport Route (Optional)</label>
+                                        <select name="fallback_route_id" id="fallback_route_id" class="form-control">
+                                            <option value="">-- Auto-Assign to Default if Missing --</option>
+                                            <?php foreach ($route_pickup_points as $r): ?>
+                                                <option value="<?php echo $r->id; ?>"><?php echo $r->route_title . ' - ' . $r->pickup_name; ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <small class="text-muted">If a student has a transport fee but no assigned route, they will be assigned to this route.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-md-12">
                                     <button type="submit" class="btn btn-info pull-right"><i class="fa fa-upload"></i> Upload & Preview</button>
                                 </div>

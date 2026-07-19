@@ -55,6 +55,8 @@ class Studentcall extends Admin_Controller
         $data['not_connected_today'] = $not_connected_today;
         $data['pending_followups'] = $pending_followups;
 
+        $data['saved_filters'] = $this->session->userdata('studentcall_status_filters');
+
         $this->load->view('layout/header');
         $this->load->view('admin/studentcall/index', $data);
         $this->load->view('layout/footer');
@@ -420,14 +422,46 @@ class Studentcall extends Admin_Controller
     {
         $class_id = $this->input->post('class_id');
         $section_id = $this->input->post('section_id');
+        $admission_type = $this->input->post('admission_type');
+        $shrestha = $this->input->post('shrestha');
+        $rte = $this->input->post('rte');
+        $is_staff_kid = $this->input->post('is_staff_kid');
+
         $start = $this->input->post('start') ? $this->input->post('start') : 0;
         $length = $this->input->post('length') ? $this->input->post('length') : 10;
         
         $search = $this->input->post('search');
         $search_value = isset($search['value']) ? $search['value'] : '';
 
-        $students = $this->studentcall_model->get_students_call_status($class_id, $section_id, $start, $length, $search_value);
-        $total_count = $this->studentcall_model->get_students_call_status_count($class_id, $section_id, $search_value);
+        $order = $this->input->post('order');
+        $order_col_index = isset($order[0]['column']) ? $order[0]['column'] : 0;
+        $order_dir = isset($order[0]['dir']) ? $order[0]['dir'] : 'asc';
+        
+        $db_columns = array(
+            0 => 'students.firstname',
+            1 => 'students.father_name',
+            2 => 'classes.class',
+            3 => 'pickup_point.name',
+            4 => 'students.admission_type',
+            5 => 'students.mobileno',
+            6 => 'sc.date',
+            7 => 'sc.call_status',
+        );
+        $order_by = isset($db_columns[$order_col_index]) ? $db_columns[$order_col_index] : 'students.firstname';
+
+        // Save filters to session
+        $filters = array(
+            'class_id' => $class_id,
+            'section_id' => $section_id,
+            'admission_type' => $admission_type,
+            'shrestha' => $shrestha,
+            'rte' => $rte,
+            'is_staff_kid' => $is_staff_kid
+        );
+        $this->session->set_userdata('studentcall_status_filters', $filters);
+
+        $students = $this->studentcall_model->get_students_call_status($class_id, $section_id, $start, $length, $search_value, $admission_type, $shrestha, $rte, $is_staff_kid, $order_by, $order_dir);
+        $total_count = $this->studentcall_model->get_students_call_status_count($class_id, $section_id, $search_value, $admission_type, $shrestha, $rte, $is_staff_kid);
 
         $data = [];
         if (!empty($students)) {
@@ -450,6 +484,8 @@ class Studentcall extends Admin_Controller
                     $student['firstname'] . ' ' . $student['lastname'] . ' (' . $student['admission_no'] . ')',
                     $student['father_name'],
                     $student['class'] . ' (' . $student['section'] . ')',
+                    $student['pickup_point_name'] ? $student['pickup_point_name'] : '-',
+                    $student['admission_type'] ? $student['admission_type'] : '-',
                     $phone,
                     $last_call,
                     $status,

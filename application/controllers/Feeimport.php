@@ -23,6 +23,14 @@ class Feeimport extends Admin_Controller
         $data['title'] = 'Historical Fee Import';
         $data['batches'] = $this->feeimport_model->getBatchHistory();
         
+        // Fetch all route pickup points for the fallback dropdown
+        $this->db->select('route_pickup_point.id, transport_route.route_title, pickup_point.name as pickup_name');
+        $this->db->from('route_pickup_point');
+        $this->db->join('transport_route', 'transport_route.id = route_pickup_point.transport_route_id');
+        $this->db->join('pickup_point', 'pickup_point.id = route_pickup_point.pickup_point_id');
+        $this->db->order_by('transport_route.route_title', 'asc');
+        $data['route_pickup_points'] = $this->db->get()->result();
+        
         $this->load->view('layout/header', $data);
         $this->load->view('feeimport/index', $data);
         $this->load->view('layout/footer', $data);
@@ -45,9 +53,16 @@ class Feeimport extends Admin_Controller
 
         if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
             $ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
-            if ($ext == 'csv') {
-                $file = $_FILES['file']['tmp_name'];
-                $batch_code = 'IMP-' . date('YmdHis');
+            if (strtolower($ext) == 'csv') {
+                $upload_path = FCPATH . 'uploads/temp/';
+                if (!is_dir($upload_path)) {
+                    mkdir($upload_path, 0777, true);
+                }
+                $file_name = time() . '_' . $_FILES['file']['name'];
+                $file_path = $upload_path . $file_name;
+                
+                if (move_uploaded_file($_FILES['file']['tmp_name'], $file_path)) {
+                    $batch_code = 'IMP-' . date('YmdHis');
                 
                 $data = [
                     'batch_code' => $batch_code,
@@ -59,7 +74,14 @@ class Feeimport extends Admin_Controller
                 
                 $batch_id = $this->feeimport_model->createBatch($data);
                 if ($batch_id) {
-                    $result = $this->feeimport_model->parseAndValidateCSV($batch_id, $file);
+                    $fallback_route_id = $this->input->post('fallback_route_id');
+                    $result = $this->feeimport_model->parseAndValidateCSV($file_path, $batch_id, $fallback_route_id);
+                    
+                    // Cleanup uploaded file
+                    if (file_exists($file_path)) {
+                        unlink($file_path);
+                    }
+
                     if ($result['status'] == 'success') {
                         $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">' . $this->lang->line('success_message') . '</div>');
                         redirect('feeimport/preview/' . $batch_id);
@@ -68,11 +90,17 @@ class Feeimport extends Admin_Controller
                         $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">' . $result['message'] . '</div>');
                         redirect('feeimport/index');
                     }
+                } else {
+                    if (file_exists($file_path)) unlink($file_path);
                 }
             } else {
-                $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">Please upload a valid CSV file.</div>');
+                $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">Could not move the uploaded file. Please check folder permissions.</div>');
                 redirect('feeimport/index');
             }
+        } else {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">Please upload a valid CSV file.</div>');
+            redirect('feeimport/index');
+        }
         }
         redirect('feeimport/index');
     }
