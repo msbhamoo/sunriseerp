@@ -201,4 +201,39 @@ class Feeimport extends Admin_Controller
         }
         redirect('feeimport/batch_detail/' . $batch_id);
     }
+
+    public function fix_dates($batch_id)
+    {
+        if (!$this->rbac->hasPrivilege('fee_import', 'can_add')) {
+            access_denied();
+        }
+
+        $batch = $this->feeimport_model->getBatch($batch_id);
+        if (!$batch || $batch->status != 'imported') {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">Invalid batch or batch is not imported.</div>');
+            redirect('feeimport/index');
+        }
+
+        if ($this->input->server('REQUEST_METHOD') == 'POST' && $this->input->post('execute') == '1') {
+            $result = $this->feeimport_model->fixBatchDates($batch_id);
+            if ($result['status'] == 'success') {
+                $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">Dates corrected successfully. Updated ' . $result['count'] . ' rows.</div>');
+                redirect('feeimport/batch_detail/' . $batch_id);
+            } else {
+                $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">Date correction failed: ' . $result['message'] . '</div>');
+                redirect('feeimport/fix_dates/' . $batch_id);
+            }
+        }
+
+        $this->session->set_userdata('top_menu', 'Fees Collection');
+        $this->session->set_userdata('sub_menu', 'historical_fee_import');
+
+        $data['title'] = 'Fix Date Format';
+        $data['batch'] = $batch;
+        $data['rows'] = $this->feeimport_model->getBatchDetail($batch_id);
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('feeimport/fix_dates', $data);
+        $this->load->view('layout/footer', $data);
+    }
 }

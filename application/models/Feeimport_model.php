@@ -78,11 +78,22 @@ class Feeimport_model extends CI_Model
                 $payment_mode = trim($data[6]);
                 $reference_no = isset($data[7]) ? trim($data[7]) : '';
                 
-                // Parse date carefully
-                $parsed_date = date('Y-m-d', strtotime($payment_date));
+                // Parse date carefully (handle both d-m-Y and Y-m-d formats robustly)
+                $payment_date_clean = str_replace('/', '-', $payment_date);
+                $date_obj = DateTime::createFromFormat('d-m-Y', $payment_date_clean);
+                if (!$date_obj) {
+                    $date_obj = DateTime::createFromFormat('Y-m-d', $payment_date_clean);
+                }
+                
+                if ($date_obj) {
+                    $parsed_date = $date_obj->format('Y-m-d');
+                } else {
+                    $parsed_date = date('Y-m-d', strtotime($payment_date_clean));
+                }
+                
                 if (!$parsed_date || $parsed_date == '1970-01-01') {
                     $row['status'] = 'failed';
-                    $row['error_message'] = 'Invalid date format. Use YYYY-MM-DD.';
+                    $row['error_message'] = 'Invalid date format. Use DD-MM-YYYY or YYYY-MM-DD.';
                 }
 
                 $row = [
@@ -451,6 +462,93 @@ class Feeimport_model extends CI_Model
             return ['status' => 'error', 'message' => 'Database transaction failed during revert.'];
         } else {
             return ['status' => 'success'];
+        }
+    }
+
+    public function fixBatchDates($batch_id)
+    {
+        $this->db->trans_start();
+        $this->db->trans_strict(TRUE);
+
+        $rows = $this->db->where('batch_id', $batch_id)->get('fee_import_rows')->result();
+        $fix_count = 0;
+
+        foreach ($rows as $row) {
+            $csv_data = json_decode($row->csv_data, true);
+            if (empty($csv_data)) continue;
+
+            $raw_date = isset($csv_data[2]) ? trim($csv_data[2]) : '';
+            if (empty($raw_date)) continue;
+
+            $payment_date_clean = str_replace('/', '-', $raw_date);
+            $date_obj = DateTime::createFromFormat('d-m-Y', $payment_date_clean);
+            if (!$date_obj) {
+                $date_obj = DateTime::createFromFormat('Y-m-d', $payment_date_clean);
+            }
+
+            if (!$date_obj) continue;
+
+            $correct_date = $date_obj->format('Y-m-d');
+            $wrong_date_stored = $row->original_date;
+
+            if ($correct_date === $wrong_date_stored) continue;
+
+            // 1. Update fee_import_rows
+            $this->db->where('id', $row->id)->update('fee_import_rows', ['original_date' => $correct_date]);
+
+            // 2. Update student_fees_deposite
+            $deposite_id = $row->student_fees_deposite_id;
+            $sub_invoice_id = $row->sub_invoice_id;
+
+            if ($deposite_id && $sub_invoice_id) {
+                $deposit = $this->db->where('id', $deposite_id)->get('student_fees_deposite')->row();
+                if ($deposit) {
+                    $amount_detail = json_decode($deposit->amount_detail, true);
+                    if (isset($amount_detail[$sub_invoice_id])) {
+                        $amount_detail[$sub_invoice_id]['date'] = $correct_date;
+                        if (isset($amount_detail[$sub_invoice_id]['cheque_date'])) {
+                            $amount_detail[$sub_invoice_id]['cheque_date'] = $correct_date;
+                        }
+                        $this->db->where('id', $deposite_id)->update('student_fees_deposite', [
+                            'amount_detail' => json_encode($amount_detail)
+                        ]);
+                    }
+                }
+
+                // 3. Update custom_receipt_logs
+                if ($row->custom_receipt_log_id) {
+                    $this->db->where('id', $row->custom_receipt_log_id)->update('custom_receipt_logs', [
+                        'created_at' => $correct_date . ' 12:00:00'
+                    ]);
+                }
+
+                // 4. Update Accounting Vouchers (acc_vouchers)
+                $ref_id = $deposite_id . '_' . $sub_invoice_id;
+                
+                $vouchers = $this->db->where_in('reference_module', ['fee_collection', 'fee_discount'])
+                                     ->group_start()
+                                         ->where('reference_id', $ref_id)
+                                         ->or_where('reference_id', $ref_id . '_disc')
+                                     ->group_end()
+                                     ->get('acc_vouchers')
+                                     ->result();
+
+                foreach ($vouchers as $voucher) {
+                    $this->db->where('id', $voucher->id)->update('acc_vouchers', [
+                        'voucher_date' => $correct_date,
+                        'cheque_date' => ($voucher->cheque_date) ? $correct_date : null
+                    ]);
+                }
+            }
+            $fix_count++;
+        }
+
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === false) {
+            $this->db->trans_rollback();
+            return ['status' => 'error', 'message' => 'Database transaction failed during execution.'];
+        } else {
+            return ['status' => 'success', 'count' => $fix_count];
         }
     }
 }

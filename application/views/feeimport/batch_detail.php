@@ -14,6 +14,7 @@
                         <div class="box-tools pull-right">
                             <a href="<?php echo site_url('feeimport/index') ?>" class="btn btn-default btn-sm"><i class="fa fa-arrow-left"></i> Back to History</a>
                             <?php if ($batch->status == 'imported') { ?>
+                                <a href="<?php echo site_url('feeimport/fix_dates/' . $batch->id) ?>" class="btn btn-warning btn-sm" style="margin-right: 5px;"><i class="fa fa-calendar"></i> Fix Date Format</a>
                                 <a href="<?php echo site_url('feeimport/revert/' . $batch->id) ?>" class="btn btn-danger btn-sm" onclick="return confirm('CRITICAL: Are you sure you want to REVERT this entire batch? This will delete all fee deposits and reverse all accounting vouchers for this batch. This action cannot be undone.');"><i class="fa fa-undo"></i> Revert Entire Batch</a>
                             <?php } ?>
                         </div>
