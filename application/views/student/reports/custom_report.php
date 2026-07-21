@@ -49,6 +49,18 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
+                                        <label>Select RTE</label>
+                                        <select id="rte" name="rte[]" class="form-control select2" multiple="multiple" data-placeholder="Select RTE (Leave empty for All)">
+                                            <option value="all">All</option>
+                                            <option value="Yes">Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
                                         <label>Select Sort By</label>
                                         <select id="sort_by" name="sort_by" class="form-control">
                                             <option value="">Select</option>
@@ -106,6 +118,7 @@
                                     'apaar_id' => 'APAAR ID',
                                     'pen' => 'PEN',
                                     'aadhaar_id' => 'Aadhaar ID',
+                                    'rte' => 'RTE',
                                     'admission_type' => 'Admission Type',
                                     'shrestha' => 'Shrestha',
                                     'is_active' => 'Is Active',
@@ -126,19 +139,21 @@
                                 }
 
                                 // Fee totals
-                                $fee_columns = [
-                                    'total_fee' => 'Total Fee',
-                                    'total_paid' => 'Total Paid',
-                                    'total_balance' => 'Total Balance',
-                                ];
-                                foreach ($fee_columns as $col_key => $col_name) {
-                                    ?>
-                                    <div class="col-md-3 col-sm-4">
-                                        <div class="checkbox">
-                                            <label><input type="checkbox" name="columns[]" value="<?php echo $col_key; ?>" class="column-checkbox"> <?php echo $col_name; ?></label>
+                                if ($this->rbac->hasPrivilege('collect_fees', 'can_view')) {
+                                    $fee_columns = [
+                                        'total_fee' => 'Total Fee',
+                                        'total_paid' => 'Total Paid',
+                                        'total_balance' => 'Total Balance',
+                                    ];
+                                    foreach ($fee_columns as $col_key => $col_name) {
+                                        ?>
+                                        <div class="col-md-3 col-sm-4">
+                                            <div class="checkbox">
+                                                <label><input type="checkbox" name="columns[]" value="<?php echo $col_key; ?>" class="column-checkbox"> <?php echo $col_name; ?></label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <?php
+                                        <?php
+                                    }
                                 }
 
                                 // Custom fields

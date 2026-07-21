@@ -470,6 +470,7 @@ class Studentreport extends Admin_Controller
             $class_ids = $this->input->post('class_id') ? $this->input->post('class_id') : [];
             $section_ids = $this->input->post('section_id') ? $this->input->post('section_id') : [];
             $admission_types = $this->input->post('admission_type') ? $this->input->post('admission_type') : [];
+            $rtes = $this->input->post('rte') ? $this->input->post('rte') : [];
             $selected_columns = $this->input->post('columns') ? $this->input->post('columns') : [];
 
             // Get students
@@ -491,19 +492,14 @@ class Studentreport extends Admin_Controller
                 
                 // Filter by Admission Type
                 if (!empty($admission_types) && !in_array('all', $admission_types)) {
-                    $has_admission_type = false;
-                    if (isset($student['admission_type']) && in_array($student['admission_type'], $admission_types)) {
-                        $has_admission_type = true;
-                    } else if (!empty($student_custom_fields)) {
-                        foreach ($student_custom_fields as $scf) {
-                            // Match if any custom field value is in the selected admission types
-                            if (in_array($scf->field_value, $admission_types)) {
-                                $has_admission_type = true;
-                                break;
-                            }
-                        }
+                    if (!isset($student['admission_type']) || !in_array($student['admission_type'], $admission_types)) {
+                        continue;
                     }
-                    if (!$has_admission_type) {
+                }
+                
+                // Filter by RTE
+                if (!empty($rtes) && !in_array('all', $rtes)) {
+                    if (!isset($student['rte']) || !in_array($student['rte'], $rtes)) {
                         continue;
                     }
                 }
@@ -515,28 +511,34 @@ class Studentreport extends Admin_Controller
             }
 
             // Custom fields and fees
-            foreach ($results as &$res) {
-                // Fetch fee info
+            $has_fee_privilege = $this->rbac->hasPrivilege('collect_fees', 'can_view');
+            if ($has_fee_privilege) {
                 $this->load->model('studentfeemaster_model');
-                $student_due_fee = $this->studentfeemaster_model->getStudentFees($res['student_session_id']);
-                $total_fee = 0;
-                $total_paid = 0;
-                if (!empty($student_due_fee)) {
-                    foreach ($student_due_fee as $fee_key => $fee_value) {
-                        $total_fee += $fee_value->amount;
-                        if (is_string($fee_value->amount_detail)) {
-                            $amount_detail = json_decode($fee_value->amount_detail);
-                            if (is_array($amount_detail)) {
-                                foreach ($amount_detail as $amount_detail_val) {
-                                    $total_paid += $amount_detail_val->amount;
+            }
+
+            foreach ($results as &$res) {
+                if ($has_fee_privilege) {
+                    // Fetch fee info
+                    $student_due_fee = $this->studentfeemaster_model->getStudentFees($res['student_session_id']);
+                    $total_fee = 0;
+                    $total_paid = 0;
+                    if (!empty($student_due_fee)) {
+                        foreach ($student_due_fee as $fee_key => $fee_value) {
+                            $total_fee += $fee_value->amount;
+                            if (is_string($fee_value->amount_detail)) {
+                                $amount_detail = json_decode($fee_value->amount_detail);
+                                if (is_array($amount_detail)) {
+                                    foreach ($amount_detail as $amount_detail_val) {
+                                        $total_paid += $amount_detail_val->amount;
+                                    }
                                 }
                             }
                         }
                     }
+                    $res['total_fee'] = $total_fee;
+                    $res['total_paid'] = $total_paid;
+                    $res['total_balance'] = $total_fee - $total_paid;
                 }
-                $res['total_fee'] = $total_fee;
-                $res['total_paid'] = $total_paid;
-                $res['total_balance'] = $total_fee - $total_paid;
             }
 
             $data['results'] = $results;

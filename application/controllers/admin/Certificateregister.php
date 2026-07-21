@@ -117,10 +117,13 @@ class Certificateregister extends Admin_Controller {
                     $cert_id = $this->certificateregister_model->add($insert_data);
                     $this->certificatetypes_model->update_current_number($type_id, $next_num);
                     
-                    // Disable student if it is a Transfer Certificate
+                    // Disable student and mark as alumni if it is a Transfer Certificate
                     if (strpos(strtolower($type['certificate_name']), 'transfer') !== false || strpos(strtolower($type['certificate_name']), 'tc') !== false) {
                         $this->db->where('id', $student_id);
                         $this->db->update('students', ['is_active' => 'no', 'disable_at' => date('Y-m-d')]);
+
+                        $this->db->where('student_id', $student_id);
+                        $this->db->update('student_session', ['is_alumni' => 1]);
                     }
 
                     $this->session->set_flashdata('msg', '<div class="alert alert-success">Certificate Generated Successfully. <a href="'.base_url('admin/certificateregister/download/'.$cert_id).'" target="_blank">Download PDF</a></div>');
@@ -272,63 +275,68 @@ class Certificateregister extends Admin_Controller {
             $student_session_id = $this->input->get('student_session_id');
         }
         
-        $academic_fees = $this->studentfeemaster_model->getStudentFees($student_session_id);
+        $has_fee_privilege = $this->rbac->hasPrivilege('collect_fees', 'can_view');
+        
         $academic_total = 0;
         $academic_collected = 0;
-        
         $hostel_total = 0;
         $hostel_collected = 0;
-
-        $mapped_hostel_fees = $this->db->get('hostel_fee_groups')->result_array();
-        $hostel_fee_group_ids = array_column($mapped_hostel_fees, 'fee_groups_id');
-
-        if (!empty($academic_fees)) {
-            foreach ($academic_fees as $fee_master) {
-                if (!empty($fee_master->fees)) {
-                    foreach ($fee_master->fees as $fee) {
-                        $fee_amount = (isset($fee->amount)) ? $fee->amount : 0;
-                        $collected = 0;
-                        $amount_detail = json_decode($fee->amount_detail);
-                        if (!empty($amount_detail)) {
-                            foreach ($amount_detail as $detail) {
-                                $collected += $detail->amount + $detail->amount_discount;
-                            }
-                        }
-                        
-                        if (isset($fee->fee_groups_id) && in_array($fee->fee_groups_id, $hostel_fee_group_ids)) {
-                            $hostel_total += $fee_amount;
-                            $hostel_collected += $collected;
-                        } else {
-                            $academic_total += $fee_amount;
-                            $academic_collected += $collected;
-                        }
-                    }
-                }
-            }
-        }
-        
-        file_put_contents('hostel_api_debug.txt', $debug_log);
-
-        $academic_due = $academic_total - $academic_collected;
-        $hostel_due = $hostel_total - $hostel_collected;
-        
-        $student = $this->student_model->getByStudentSession($student_session_id);
-        $transport_fees = $this->studentfeemaster_model->getStudentTransportFees($student_session_id, $student['route_pickup_point_id']);
         $transport_total = 0;
         $transport_collected = 0;
-        
-        if (!empty($transport_fees)) {
-            foreach ($transport_fees as $tfee) {
-                $transport_total += $tfee->fees;
-                $amount_detail = json_decode($tfee->amount_detail);
-                if (!empty($amount_detail)) {
-                    foreach ($amount_detail as $detail) {
-                        $transport_collected += $detail->amount + $detail->amount_discount;
+        $academic_due = 0;
+        $hostel_due = 0;
+        $transport_due = 0;
+
+        if ($has_fee_privilege) {
+            $academic_fees = $this->studentfeemaster_model->getStudentFees($student_session_id);
+
+            $mapped_hostel_fees = $this->db->get('hostel_fee_groups')->result_array();
+            $hostel_fee_group_ids = array_column($mapped_hostel_fees, 'fee_groups_id');
+
+            if (!empty($academic_fees)) {
+                foreach ($academic_fees as $fee_master) {
+                    if (!empty($fee_master->fees)) {
+                        foreach ($fee_master->fees as $fee) {
+                            $fee_amount = (isset($fee->amount)) ? $fee->amount : 0;
+                            $collected = 0;
+                            $amount_detail = json_decode($fee->amount_detail);
+                            if (!empty($amount_detail)) {
+                                foreach ($amount_detail as $detail) {
+                                    $collected += $detail->amount + $detail->amount_discount;
+                                }
+                            }
+                            
+                            if (isset($fee->fee_groups_id) && in_array($fee->fee_groups_id, $hostel_fee_group_ids)) {
+                                $hostel_total += $fee_amount;
+                                $hostel_collected += $collected;
+                            } else {
+                                $academic_total += $fee_amount;
+                                $academic_collected += $collected;
+                            }
+                        }
                     }
                 }
             }
+            
+            $academic_due = $academic_total - $academic_collected;
+            $hostel_due = $hostel_total - $hostel_collected;
+            
+            $student = $this->student_model->getByStudentSession($student_session_id);
+            $transport_fees = $this->studentfeemaster_model->getStudentTransportFees($student_session_id, $student['route_pickup_point_id']);
+            
+            if (!empty($transport_fees)) {
+                foreach ($transport_fees as $tfee) {
+                    $transport_total += $tfee->fees;
+                    $amount_detail = json_decode($tfee->amount_detail);
+                    if (!empty($amount_detail)) {
+                        foreach ($amount_detail as $detail) {
+                            $transport_collected += $detail->amount + $detail->amount_discount;
+                        }
+                    }
+                }
+            }
+            $transport_due = $transport_total - $transport_collected;
         }
-        $transport_due = $transport_total - $transport_collected;
         
         $this->db->where('student_session_id', $student_session_id);
         $history = $this->db->get('student_scholar_register_history')->row_array();

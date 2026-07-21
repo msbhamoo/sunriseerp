@@ -148,6 +148,34 @@ class Alumni_model extends MY_Model
         }
     }
 
+    public function get_education($student_id)
+    {
+        return $this->db->select('*')->from('alumni_education')->where('student_id', $student_id)->order_by('id', 'asc')->get()->result_array();
+    }
+
+    public function get_work_experience($student_id)
+    {
+        return $this->db->select('*')->from('alumni_work_experience')->where('student_id', $student_id)->order_by('id', 'asc')->get()->result_array();
+    }
+
+    public function save_education($student_id, $education_batch)
+    {
+        $this->db->where('student_id', $student_id);
+        $this->db->delete('alumni_education');
+        if (!empty($education_batch)) {
+            $this->db->insert_batch('alumni_education', $education_batch);
+        }
+    }
+
+    public function save_work_experience($student_id, $work_batch)
+    {
+        $this->db->where('student_id', $student_id);
+        $this->db->delete('alumni_work_experience');
+        if (!empty($work_batch)) {
+            $this->db->insert_batch('alumni_work_experience', $work_batch);
+        }
+    }
+
     public function deletestudent($id)
     {
         $this->db->trans_start(); # Starting Transaction
@@ -155,6 +183,12 @@ class Alumni_model extends MY_Model
         //=======================Code Start===========================
         $this->db->where('student_id', $id);
         $this->db->delete('alumni_students');
+        $this->db->where('student_id', $id);
+        $this->db->delete('alumni_education');
+        $this->db->where('student_id', $id);
+        $this->db->delete('alumni_work_experience');
+        $this->db->where('student_id', $id);
+        $this->db->delete('alumni_stories');
 
         $message   = DELETE_RECORD_CONSTANT . " On  alumni students  id " . $id;
         $action    = "Delete";
@@ -172,6 +206,24 @@ class Alumni_model extends MY_Model
             return false;
         } else {
             return $record_id;
+        }
+    }
+
+    public function get_story($student_id)
+    {
+        return $this->db->select('*')->from('alumni_stories')->where('student_id', $student_id)->get()->row_array();
+    }
+
+    public function save_story($data)
+    {
+        $existing = $this->get_story($data['student_id']);
+        if (!empty($existing)) {
+            $this->db->where('student_id', $data['student_id']);
+            $this->db->update('alumni_stories', $data);
+            return $existing['id'];
+        } else {
+            $this->db->insert('alumni_stories', $data);
+            return $this->db->insert_id();
         }
     }
 

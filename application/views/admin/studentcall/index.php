@@ -404,6 +404,7 @@
                                 <!-- Fee & Attendance Summary Section (Hidden by default) -->
                                 <div id="fee_attendance_section" style="display:none; background: #f9f9f9; padding: 15px; border: 1px solid #ddd; margin-bottom: 15px; border-radius: 4px;">
                                     <div class="row">
+                                        <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_view')) { ?>
                                         <div class="col-md-12">
                                             <h5 style="font-weight:bold; margin-top:0;">Fees Summary</h5>
                                             <table class="table table-bordered table-striped" style="font-size:12px; margin-bottom: 10px;">
@@ -420,6 +421,7 @@
                                                 </tbody>
                                             </table>
                                         </div>
+                                        <?php } ?>
                                     </div>
                                     <div class="row">
                                         <div class="col-md-12">

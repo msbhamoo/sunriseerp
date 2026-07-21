@@ -54,6 +54,7 @@
                                             'apaar_id' => 'APAAR ID',
                                             'pen' => 'PEN',
                                             'aadhaar_id' => 'Aadhaar ID',
+                                            'rte' => 'RTE',
                                             'admission_type' => 'Admission Type',
                                             'shrestha' => 'Shrestha',
                                             'is_active' => 'Is Active',
@@ -61,11 +62,13 @@
                                             'hostel_name' => 'Hostel',
                                             'room_no' => 'Room No',
                                             'pickup_point_name' => 'Pick Point',
-                                            'total_fee' => 'Total Fee',
-                                            'total_paid' => 'Total Paid',
-                                            'total_balance' => 'Total Balance',
                                         ];
-
+                                        
+                                        if ($this->rbac->hasPrivilege('collect_fees', 'can_view')) {
+                                            $standard_columns['total_fee'] = 'Total Fee';
+                                            $standard_columns['total_paid'] = 'Total Paid';
+                                            $standard_columns['total_balance'] = 'Total Balance';
+                                        }
                                         // Custom fields mapping
                                         $cf_mappings = [];
                                         if (!empty($custom_fields)) {
