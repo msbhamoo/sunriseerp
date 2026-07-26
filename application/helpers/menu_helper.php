@@ -221,6 +221,7 @@ if (!function_exists('main_menu_array')) {
                 'leavetypes'        => array('index','leaveedit','createleavetype'),  
                 'department'        => array('department','departmentedit'),  
                 'designation'       => array('designation','designationedit'),            
+                'jobposting'        => array('index','save','delete','change_status','get_details'),            
             ), 
             
             'communicate' => array(          

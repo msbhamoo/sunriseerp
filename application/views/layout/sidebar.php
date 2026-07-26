@@ -153,6 +153,14 @@ foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
                         }
                     }
 
+                    if ($side_list_value->lang_key == 'human_resource') {
+                        if ($this->rbac->hasPrivilege('job_posting', 'can_view')) {
+                            ?>
+                            <li class="<?php echo set_Submenu('admin/jobposting'); ?>"><a href="<?php echo site_url('admin/jobposting'); ?>"><i class="icon-circle-small"></i>Job Posting</a></li>
+                            <?php
+                        }
+                    }
+
                     ?>
                         </ul>
                             <?php

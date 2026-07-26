@@ -12,6 +12,69 @@ class Studentcall_model extends MY_Model
     {
         parent::__construct();
         $this->current_session = $this->setting_model->getCurrentSession();
+        $this->merge_existing_duplicate_calls();
+    }
+
+    public function resolve_previous_followups($call_id)
+    {
+        $this->resolve_previous_followups_with_details($call_id, 'Resolved');
+    }
+
+    public function resolve_previous_followups_with_details($call_id, $status = 'Resolved', $call_status = null, $remarks = null)
+    {
+        if (!empty($call_id)) {
+            $data = array('status' => !empty($status) ? $status : 'Resolved');
+            if (!empty($call_status)) {
+                $data['call_status'] = $call_status;
+            }
+            if ($remarks !== null && $remarks !== '') {
+                $data['remarks'] = $remarks;
+            }
+            $this->db->where('student_call_id', $call_id);
+            $this->db->where('status', 'Pending');
+            $this->db->update('student_call_followups', $data);
+        }
+    }
+
+    public function merge_existing_duplicate_calls()
+    {
+        $sql = "SELECT student_id, call_purpose_id, COUNT(*) as cnt 
+                FROM student_calls 
+                GROUP BY student_id, call_purpose_id 
+                HAVING cnt > 1";
+        $query = $this->db->query($sql);
+        if ($query) {
+            $duplicates = $query->result_array();
+            foreach ($duplicates as $dup) {
+                $this->db->select('id');
+                $this->db->from('student_calls');
+                $this->db->where('student_id', $dup['student_id']);
+                if (is_null($dup['call_purpose_id']) || $dup['call_purpose_id'] === '' || $dup['call_purpose_id'] == 0) {
+                    $this->db->where('(call_purpose_id IS NULL OR call_purpose_id = 0 OR call_purpose_id = \'\')', NULL, FALSE);
+                } else {
+                    $this->db->where('call_purpose_id', $dup['call_purpose_id']);
+                }
+                $this->db->order_by('id', 'desc');
+                $q = $this->db->get();
+                $rows = $q->result_array();
+
+                if (count($rows) > 1) {
+                    $keep_id = $rows[0]['id'];
+                    $remove_ids = array();
+                    for ($i = 1; $i < count($rows); $i++) {
+                        $remove_ids[] = $rows[$i]['id'];
+                    }
+
+                    if (!empty($remove_ids)) {
+                        $this->db->where_in('student_call_id', $remove_ids);
+                        $this->db->update('student_call_followups', array('student_call_id' => $keep_id));
+
+                        $this->db->where_in('id', $remove_ids);
+                        $this->db->delete('student_calls');
+                    }
+                }
+            }
+        }
     }
 
     public function get_purposes()
@@ -50,8 +113,36 @@ class Studentcall_model extends MY_Model
 
     public function add_call($data)
     {
+        if (!empty($data['student_id'])) {
+            $this->db->where('student_id', $data['student_id']);
+            if (!empty($data['call_purpose_id'])) {
+                $this->db->where('call_purpose_id', $data['call_purpose_id']);
+            } else {
+                $this->db->group_start();
+                $this->db->where('call_purpose_id IS NULL', null, false);
+                $this->db->or_where('call_purpose_id', 0);
+                $this->db->or_where('call_purpose_id', '');
+                $this->db->group_end();
+            }
+            $this->db->order_by('id', 'desc');
+            $query = $this->db->get('student_calls');
+            $existing = $query->row_array();
+
+            if ($existing) {
+                $this->db->where('id', $existing['id']);
+                $this->db->update('student_calls', $data);
+                return $existing['id'];
+            }
+        }
+
         $this->db->insert('student_calls', $data);
         return $this->db->insert_id();
+    }
+
+    public function update_call($id, $data)
+    {
+        $this->db->where('id', $id);
+        $this->db->update('student_calls', $data);
     }
 
     public function add_followup($data)
@@ -90,12 +181,14 @@ class Studentcall_model extends MY_Model
 
     public function get_calls($class_id = null, $section_id = null, $date_from = null, $date_to = null, $purpose_id = null, $status = null, $follow_up_date_from = null, $follow_up_date_to = null, $assigned_to = null)
     {
-        $this->db->select('student_calls.*, students.firstname, students.lastname, students.admission_no, students.father_name, classes.class, sections.section, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname, (SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id ASC LIMIT 1) as next_follow_up_date, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending") as pending_count, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id) as total_followups, (SELECT CONCAT(staff.name, " ", staff.surname) FROM student_call_followups JOIN staff ON staff.id = student_call_followups.assigned_to WHERE student_call_id = student_calls.id AND student_call_followups.status = "Pending" ORDER BY student_call_followups.id ASC LIMIT 1) as assigned_to_name');
+        $this->db->select('student_calls.*, students.firstname, students.lastname, students.admission_no, students.father_name, classes.class, sections.section, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname, pickup_point.name as pickup_point_name, (SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id ASC LIMIT 1) as next_follow_up_date, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending") as pending_count, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id) as total_followups, (SELECT CONCAT(staff.name, " ", staff.surname) FROM student_call_followups JOIN staff ON staff.id = student_call_followups.assigned_to WHERE student_call_id = student_calls.id AND student_call_followups.status = "Pending" ORDER BY student_call_followups.id ASC LIMIT 1) as assigned_to_name');
         $this->db->from('student_calls');
         $this->db->join('student_session', 'student_session.id = student_calls.student_session_id');
         $this->db->join('students', 'students.id = student_calls.student_id');
         $this->db->join('classes', 'student_session.class_id = classes.id');
         $this->db->join('sections', 'student_session.section_id = sections.id');
+        $this->db->join('route_pickup_point', 'student_session.route_pickup_point_id = route_pickup_point.id', 'left');
+        $this->db->join('pickup_point', 'route_pickup_point.pickup_point_id = pickup_point.id', 'left');
         $this->db->join('student_call_purpose', 'student_call_purpose.id = student_calls.call_purpose_id', 'left');
         $this->db->join('staff', 'staff.id = student_calls.created_by', 'left');
 
@@ -128,6 +221,32 @@ class Studentcall_model extends MY_Model
         }
 
         $this->db->order_by('student_calls.id', 'desc');
+        $query = $this->db->get();
+        return $query->result_array();
+    }
+
+    public function get_pending_followup_calls($filter = 'due_today_and_overdue')
+    {
+        $this->db->select('student_calls.*, students.firstname, students.lastname, students.admission_no, students.father_name, classes.class, sections.section, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname, pickup_point.name as pickup_point_name, f.id as followup_id, f.due_date as next_follow_up_date, f.priority, f.assigned_to, f.remarks as followup_remarks, (SELECT CONCAT(s2.name, " ", s2.surname) FROM staff s2 WHERE s2.id = f.assigned_to) as assigned_to_name');
+        $this->db->from('student_call_followups f');
+        $this->db->join('student_calls', 'student_calls.id = f.student_call_id');
+        $this->db->join('student_session', 'student_session.id = student_calls.student_session_id');
+        $this->db->join('students', 'students.id = student_calls.student_id');
+        $this->db->join('classes', 'student_session.class_id = classes.id');
+        $this->db->join('sections', 'student_session.section_id = sections.id');
+        $this->db->join('route_pickup_point', 'student_session.route_pickup_point_id = route_pickup_point.id', 'left');
+        $this->db->join('pickup_point', 'route_pickup_point.pickup_point_id = pickup_point.id', 'left');
+        $this->db->join('student_call_purpose', 'student_call_purpose.id = student_calls.call_purpose_id', 'left');
+        $this->db->join('staff', 'staff.id = student_calls.created_by', 'left');
+        $this->db->where('f.status', 'Pending');
+        $this->db->where('student_session.session_id', $this->current_session);
+        $this->db->where('students.is_active', 'yes');
+
+        if ($filter == 'due_today_and_overdue') {
+            $this->db->where('DATE(f.due_date) <=', date('Y-m-d'));
+        }
+
+        $this->db->order_by('f.due_date', 'asc');
         $query = $this->db->get();
         return $query->result_array();
     }

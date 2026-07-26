@@ -62,13 +62,29 @@ class Stuattendence extends Admin_Controller
             $resultlist                  = $this->stuattendence_model->searchAttendenceClassSection($class, $section, date('Y-m-d', $this->customlib->datetostrtotime($date)));
             $data['resultlist']          = $resultlist;
 
+            $formatted_date = date('Y-m-d', $this->customlib->datetostrtotime($date));
             if (!empty($resultlist)) {
+                $session_ids = array_column($resultlist, 'student_session_id');
+                $bus_records = [];
+                if (!empty($session_ids)) {
+                    $this->db->where_in('student_session_id', $session_ids);
+                    $this->db->where('date', $formatted_date);
+                    $this->db->where('attendance_type', 'morning');
+                    $bus_query = $this->db->get('transport_attendance')->result_array();
+                    foreach ($bus_query as $bq) {
+                        $bus_records[$bq['student_session_id']] = $bq['status'];
+                    }
+                }
+
                 foreach ($resultlist as $key => $value) {
+                    $sid = $value['student_session_id'];
+                    $resultlist[$key]['bus_status'] = isset($bus_records[$sid]) ? $bus_records[$sid] : null;
                     if (!IsNullOrEmptyString($value['attendence_type_id'])) {
                         $is_first_time_attendance = false;
                     }
                 }
             }
+            $data['resultlist'] = $resultlist;
 
             if($this->input->post('search') == "saveattendence"){
       

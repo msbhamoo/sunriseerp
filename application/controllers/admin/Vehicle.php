@@ -18,6 +18,92 @@ class Vehicle extends Admin_Controller
         $this->load->model('transportyearlyfee_model');
     }
 
+    private function isSuperAdmin()
+    {
+        $getStaffRole = $this->customlib->getStaffRole();
+        $staffrole = json_decode($getStaffRole);
+        if (!empty($staffrole) && (strtolower($staffrole->name) == 'super admin' || $staffrole->id == 7)) {
+            return true;
+        }
+        return false;
+    }
+
+    private function getStaffAssignedVehicles($staff_id = null)
+    {
+        if (empty($staff_id)) {
+            $staff_id = $this->customlib->getStaffID();
+        }
+        
+        $all_vehicles = $this->vehicle_model->get();
+        if (empty($all_vehicles)) {
+            return array();
+        }
+
+        $this->load->model('staff_model');
+        $staff = $this->staff_model->get($staff_id);
+        if (empty($staff)) {
+            return array();
+        }
+
+        $staff_name = strtolower(trim((string)$staff['name']));
+        $staff_surname = strtolower(trim((string)$staff['surname']));
+        $staff_fullname = trim($staff_name . ' ' . $staff_surname);
+        $staff_emp_id = strtolower(trim((string)$staff['employee_id']));
+        $staff_phone = preg_replace('/[^0-9]/', '', (string)$staff['contact_no']);
+
+        $assigned_vehicles = array();
+        foreach ($all_vehicles as $v) {
+            $driver_name = strtolower(trim((string)$v['driver_name']));
+            $attendant_name = strtolower(trim((string)$v['attendant_name']));
+            $driver_phone = preg_replace('/[^0-9]/', '', (string)$v['driver_contact']);
+            $attendant_phone = preg_replace('/[^0-9]/', '', (string)$v['attendant_contact']);
+
+            $match = false;
+            
+            if (!empty($driver_name) && strlen($driver_name) > 1) {
+                if ($driver_name == $staff_fullname || 
+                    $driver_name == $staff_name || 
+                    (!empty($staff_emp_id) && $driver_name == $staff_emp_id) ||
+                    (!empty($staff_name) && strlen($staff_name) > 2 && strpos($driver_name, $staff_name) !== false) || 
+                    (!empty($staff_fullname) && strlen($staff_fullname) > 2 && strpos($staff_fullname, $driver_name) !== false)) {
+                    $match = true;
+                }
+            }
+
+            if (!empty($attendant_name) && strlen($attendant_name) > 1) {
+                if ($attendant_name == $staff_fullname || 
+                    $attendant_name == $staff_name || 
+                    (!empty($staff_emp_id) && $attendant_name == $staff_emp_id) ||
+                    (!empty($staff_name) && strlen($staff_name) > 2 && strpos($attendant_name, $staff_name) !== false) || 
+                    (!empty($staff_fullname) && strlen($staff_fullname) > 2 && strpos($staff_fullname, $attendant_name) !== false)) {
+                    $match = true;
+                }
+            }
+            
+            if (!empty($staff_phone) && strlen($staff_phone) >= 7) {
+                if ((!empty($driver_phone) && (strpos($driver_phone, $staff_phone) !== false || strpos($staff_phone, $driver_phone) !== false)) || 
+                    (!empty($attendant_phone) && (strpos($attendant_phone, $staff_phone) !== false || strpos($staff_phone, $attendant_phone) !== false))) {
+                    $match = true;
+                }
+            }
+
+            if ($match) {
+                $assigned_vehicles[] = $v;
+            }
+        }
+
+        if (empty($assigned_vehicles)) {
+            // If the staff member is NOT assigned as a driver or helper on any specific vehicle,
+            // but HAS explicit RBAC permissions (e.g. Transport Manager/Incharge/Staff), allow access to ALL vehicles.
+            if ($this->rbac->hasPrivilege('vehicle', 'can_view') || 
+                $this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
+                return $all_vehicles;
+            }
+        }
+
+        return $assigned_vehicles;
+    }
+
     public function index()
     {
         if (!$this->rbac->hasPrivilege('vehicle', 'can_view')) {
@@ -27,7 +113,13 @@ class Vehicle extends Admin_Controller
         $this->session->set_userdata('top_menu', 'Transport');
         $this->session->set_userdata('sub_menu', 'vehicle/index');
         $data['title']       = 'Add Vehicle';
-        $listVehicle         = $this->vehicle_model->get();
+        
+        if ($this->isSuperAdmin()) {
+            $listVehicle = $this->vehicle_model->get();
+        } else {
+            $listVehicle = $this->getStaffAssignedVehicles();
+        }
+
         $data['occupancy']   = $this->vehicle_model->getVehicleOccupancy();
         $data['listVehicle'] = $listVehicle;
         $data['vehroutelist'] = $this->vehroute_model->get();
@@ -176,7 +268,15 @@ class Vehicle extends Admin_Controller
 
     public function getsinglevehicledata()
     {
-        $vehicleid           = $this->input->post('vehicleid');
+        $vehicleid = $this->input->post('vehicleid');
+        if (!$this->isSuperAdmin()) {
+            $assigned = $this->getStaffAssignedVehicles();
+            $allowed_ids = array_column($assigned, 'id');
+            if (!in_array($vehicleid, $allowed_ids)) {
+                echo json_encode(array('page' => '<div class="alert alert-danger">Access Denied</div>'));
+                return;
+            }
+        }
         $data['editvehicle'] = $this->vehicle_model->get($vehicleid);
         
         $this->load->model('staff_model');
@@ -334,7 +434,15 @@ class Vehicle extends Admin_Controller
     
     public function vehicledetails()
     {
-        $vehicleid           = $this->input->post('vehicleid');
+        $vehicleid = $this->input->post('vehicleid');
+        if (!$this->isSuperAdmin()) {
+            $assigned = $this->getStaffAssignedVehicles();
+            $allowed_ids = array_column($assigned, 'id');
+            if (!in_array($vehicleid, $allowed_ids)) {
+                echo json_encode(array('page' => '<div class="alert alert-danger">Access Denied</div>'));
+                return;
+            }
+        }
         $data['editvehicle'] = $this->vehicle_model->get($vehicleid);
         $data['vehicle_routes'] = $this->vehicle_model->getVehicleRoutes($vehicleid);
         $page                = $this->load->view('admin/vehicle/_vehicledetails', $data, true);
@@ -470,6 +578,14 @@ class Vehicle extends Admin_Controller
             access_denied();
         }
         $vehicle_id = $this->input->post('vehicle_id');
+        if (!$this->isSuperAdmin()) {
+            $assigned = $this->getStaffAssignedVehicles();
+            $allowed_ids = array_column($assigned, 'id');
+            if (!in_array($vehicle_id, $allowed_ids)) {
+                echo json_encode(array('status' => 0, 'html' => '<div class="alert alert-danger">Access Denied</div>'));
+                return;
+            }
+        }
         $students = $this->vehicle_model->getVehicleStudents($vehicle_id);
         $data['students'] = $students;
         $data['vehicle_id'] = $vehicle_id;
@@ -516,6 +632,317 @@ class Vehicle extends Admin_Controller
             return true;
         }
         return true;
+    }
+
+    private function clean_csv_string($str)
+    {
+        if (empty($str)) {
+            return '';
+        }
+        
+        if (!mb_check_encoding($str, 'UTF-8')) {
+            $str = mb_convert_encoding($str, 'UTF-8', 'Windows-1252, ISO-8859-1, ASCII');
+        }
+
+        $search = [
+            "\x80", "\x82", "\x83", "\x84", "\x85", "\x86", "\x87", "\x88", "\x89", "\x8a", "\x8b", "\x8c", "\x8e",
+            "\x91", "\x92", "\x93", "\x94", "\x95", "\x96", "\x97", "\x98", "\x99", "\x9a", "\x9b", "\x9c", "\x9e", "\x9f",
+            "“", "”", "‘", "’", "–", "—", "…"
+        ];
+        $replace = [
+            "EUR", ",", "f", ",,", "...", "+", "++", "^", "%", "S", "<", "OE", "Z",
+            "'", "'", '"', '"', "*", "-", "--", "~", "TM", "s", ">", "oe", "z", "Y",
+            '"', '"', "'", "'", "-", "-", "..."
+        ];
+        $str = str_replace($search, $replace, $str);
+        $str = preg_replace('/[\x00-\x1F\x7F-\x9F]/u', '', $str);
+
+        return trim($str);
+    }
+
+    public function export_sample_csv()
+    {
+        if (!$this->rbac->hasPrivilege('vehicle', 'can_view')) {
+            access_denied();
+        }
+        
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=sample_transport_assignment.csv');
+        
+        $output = fopen('php://output', 'w');
+        fputcsv($output, array('admission_no', 'vehicle_no', 'pickup_point_name'));
+        fputcsv($output, array('4333', 'RJ14 PA 1234', 'Main Gate'));
+        fputcsv($output, array('4859', 'RJ14 PA 5678', 'Kailash Nagar'));
+        fclose($output);
+        exit();
+    }
+
+    public function preview_bulk_csv()
+    {
+        if (!$this->rbac->hasPrivilege('vehicle', 'can_edit') && !$this->rbac->hasPrivilege('vehicle', 'can_add')) {
+            echo json_encode(['status' => 0, 'message' => 'Access Denied']);
+            return;
+        }
+
+        if (!isset($_FILES['csv_file']['tmp_name']) || empty($_FILES['csv_file']['tmp_name'])) {
+            echo json_encode(['status' => 0, 'message' => 'Please select a valid CSV file to upload.']);
+            return;
+        }
+
+        $file = $_FILES['csv_file']['tmp_name'];
+        $handle = fopen($file, 'r');
+        if ($handle === false) {
+            echo json_encode(['status' => 0, 'message' => 'Failed to open CSV file.']);
+            return;
+        }
+
+        $header = fgetcsv($handle);
+        if (!$header) {
+            fclose($handle);
+            echo json_encode(['status' => 0, 'message' => 'CSV file is empty.']);
+            return;
+        }
+
+        $header_clean = array_map(function($h) {
+            return strtolower(trim(str_replace("\xEF\xBB\xBF", '', $h)));
+        }, $header);
+
+        $adm_idx = array_search('admission_no', $header_clean);
+        $veh_idx = array_search('vehicle_no', $header_clean);
+        if ($veh_idx === false) {
+            $veh_idx = array_search('route_name', $header_clean);
+        }
+        $pickup_idx = array_search('pickup_point_name', $header_clean);
+
+        if ($adm_idx === false || $veh_idx === false || $pickup_idx === false) {
+            fclose($handle);
+            echo json_encode(['status' => 0, 'message' => 'Invalid CSV headers. CSV must contain admission_no, vehicle_no (or route_name), and pickup_point_name columns.']);
+            return;
+        }
+
+        $current_session = $this->setting_model->getCurrentSession();
+        $preview_rows = [];
+        $line_num = 1;
+        $valid_count = 0;
+        $invalid_count = 0;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $line_num++;
+            if (empty(array_filter($row))) {
+                continue;
+            }
+
+            $admission_no  = isset($row[$adm_idx]) ? $this->clean_csv_string($row[$adm_idx]) : '';
+            $vehicle_input = isset($row[$veh_idx]) ? $this->clean_csv_string($row[$veh_idx]) : '';
+            $pickup_input  = isset($row[$pickup_idx]) ? $this->clean_csv_string($row[$pickup_idx]) : '';
+
+            $item = [
+                'line' => $line_num,
+                'admission_no' => $admission_no,
+                'vehicle_input' => $vehicle_input,
+                'pickup_input' => $pickup_input,
+                'student_name' => '-',
+                'class_section' => '-',
+                'student_id' => null,
+                'student_session_id' => null,
+                'class_id' => null,
+                'vehroute_id' => null,
+                'route_pickup_point_id' => null,
+                'vehicle_no' => '-',
+                'pickup_point_name' => '-',
+                'is_valid' => false,
+                'error_msg' => ''
+            ];
+
+            if (empty($admission_no)) {
+                $item['error_msg'] = 'Missing admission number';
+                $invalid_count++;
+                $preview_rows[] = $item;
+                continue;
+            }
+
+            $student = $this->db->query("
+                SELECT s.id as student_id, s.firstname, s.lastname, ss.id as student_session_id, ss.class_id, c.class, sec.section 
+                FROM students s 
+                JOIN student_session ss ON ss.student_id = s.id 
+                JOIN classes c ON c.id = ss.class_id 
+                JOIN sections sec ON sec.id = ss.section_id 
+                WHERE s.admission_no = ? AND ss.session_id = ? AND s.is_active = 'yes'
+                LIMIT 1
+            ", [$admission_no, $current_session])->row_array();
+
+            if (empty($student)) {
+                $item['error_msg'] = "Admission No '{$admission_no}' not found in active session";
+                $invalid_count++;
+                $preview_rows[] = $item;
+                continue;
+            }
+
+            $item['student_id'] = $student['student_id'];
+            $item['student_session_id'] = $student['student_session_id'];
+            $item['class_id'] = $student['class_id'];
+            $item['student_name'] = trim($student['firstname'] . ' ' . $student['lastname']);
+            $item['class_section'] = $student['class'] . ' (' . $student['section'] . ')';
+
+            if (empty($vehicle_input)) {
+                $item['error_msg'] = "Missing vehicle number or route name";
+                $invalid_count++;
+                $preview_rows[] = $item;
+                continue;
+            }
+
+            $veh_route_search = preg_replace('/[^a-zA-Z0-9\s\-\_\.\(\)\/]/', ' ', $vehicle_input);
+            $veh_route_search = trim(preg_replace('/\s+/', ' ', $veh_route_search));
+
+            $veh_route = $this->db->query("
+                SELECT vr.id as vehroute_id, v.vehicle_no, r.route_title 
+                FROM vehicle_routes vr 
+                JOIN vehicles v ON v.id = vr.vehicle_id 
+                JOIN transport_route r ON r.id = vr.route_id 
+                WHERE v.vehicle_no = ? OR r.route_title = ? OR v.vehicle_no LIKE ? OR r.route_title LIKE ?
+                LIMIT 1
+            ", [$vehicle_input, $vehicle_input, '%'.$veh_route_search.'%', '%'.$veh_route_search.'%'])->row_array();
+
+            if (empty($veh_route)) {
+                $item['error_msg'] = "Vehicle/Route '{$vehicle_input}' not found";
+                $invalid_count++;
+                $preview_rows[] = $item;
+                continue;
+            }
+
+            $item['vehroute_id'] = $veh_route['vehroute_id'];
+            $item['vehicle_no'] = $veh_route['vehicle_no'] . ' (' . $veh_route['route_title'] . ')';
+
+            if (empty($pickup_input)) {
+                $item['error_msg'] = "Missing pickup point name";
+                $invalid_count++;
+                $preview_rows[] = $item;
+                continue;
+            }
+
+            $pickup_search = preg_replace('/[^a-zA-Z0-9\s\-\_\.\(\)\/]/', ' ', $pickup_input);
+            $pickup_search = trim(preg_replace('/\s+/', ' ', $pickup_search));
+
+            $pickup = $this->db->query("
+                SELECT rpp.id as route_pickup_point_id, pp.name as pickup_point 
+                FROM route_pickup_point rpp 
+                JOIN pickup_point pp ON pp.id = rpp.pickup_point_id 
+                JOIN vehicle_routes vr ON vr.route_id = rpp.transport_route_id 
+                WHERE vr.id = ? AND (pp.name = ? OR pp.name LIKE ?)
+                LIMIT 1
+            ", [$veh_route['vehroute_id'], $pickup_input, '%'.$pickup_search.'%'])->row_array();
+
+            if (empty($pickup)) {
+                $item['error_msg'] = "Pickup point '{$pickup_input}' not found for route";
+                $invalid_count++;
+                $preview_rows[] = $item;
+                continue;
+            }
+
+            $item['route_pickup_point_id'] = $pickup['route_pickup_point_id'];
+            $item['pickup_point_name'] = $pickup['pickup_point'];
+            $item['is_valid'] = true;
+            $valid_count++;
+
+            $preview_rows[] = $item;
+        }
+
+        fclose($handle);
+
+        echo json_encode([
+            'status' => 1,
+            'rows' => $preview_rows,
+            'valid_count' => $valid_count,
+            'invalid_count' => $invalid_count,
+            'total_count' => count($preview_rows)
+        ]);
+    }
+
+    public function confirm_bulk_csv()
+    {
+        if (!$this->rbac->hasPrivilege('vehicle', 'can_edit') && !$this->rbac->hasPrivilege('vehicle', 'can_add')) {
+            echo json_encode(['status' => 0, 'message' => 'Access Denied']);
+            return;
+        }
+
+        $raw_rows = $this->input->post('valid_rows');
+        if (empty($raw_rows)) {
+            echo json_encode(['status' => 0, 'message' => 'No valid rows to process.']);
+            return;
+        }
+
+        $rows = is_string($raw_rows) ? json_decode($raw_rows, true) : $raw_rows;
+        if (empty($rows) || !is_array($rows)) {
+            echo json_encode(['status' => 0, 'message' => 'Invalid data payload.']);
+            return;
+        }
+
+        $this->db->trans_begin();
+        $processed_count = 0;
+
+        foreach ($rows as $item) {
+            if (empty($item['is_valid']) || empty($item['student_session_id']) || empty($item['vehroute_id']) || empty($item['route_pickup_point_id']) || empty($item['class_id'])) {
+                continue;
+            }
+
+            $student_session_id = $item['student_session_id'];
+            $vehroute_id = $item['vehroute_id'];
+            $route_pickup_point_id = $item['route_pickup_point_id'];
+            $class_id = $item['class_id'];
+
+            // 1. Check if student has paid Yearly fees
+            $paid_yearly_fees = $this->db->query("
+                SELECT syf.id, syf.transport_yearly_feemaster_id 
+                FROM student_transport_yearly_fees syf 
+                JOIN student_fees_deposite sfd ON sfd.student_transport_yearly_fee_id = syf.id 
+                WHERE syf.student_session_id = ?
+            ", [$student_session_id])->result_array();
+
+            // 2. Update Student Session Profile
+            $this->db->where('id', $student_session_id);
+            $this->db->update('student_session', [
+                'vehroute_id' => $vehroute_id,
+                'route_pickup_point_id' => $route_pickup_point_id
+            ]);
+
+            // 3. Safely Delete ALL UNPAID yearly fees for this student
+            $this->db->where('student_session_id', $student_session_id);
+            if (count($paid_yearly_fees) > 0) {
+                $paid_fee_ids = array_column($paid_yearly_fees, 'id');
+                $this->db->where_not_in('id', $paid_fee_ids);
+            }
+            $this->db->delete('student_transport_yearly_fees');
+
+            // 4. Automatically fetch and assign new Yearly Fees based on Class and Pickup Point
+            $yearly_fees = $this->transportyearlyfee_model->getApplicableYearlyFees($class_id, $route_pickup_point_id);
+            
+            if (!empty($yearly_fees)) {
+                $used_paid_fee = false;
+                foreach ($yearly_fees as $yf) {
+                    if (count($paid_yearly_fees) > 0 && !$used_paid_fee) {
+                        $this->db->where('id', $paid_yearly_fees[0]['id']);
+                        $this->db->update('student_transport_yearly_fees', ['transport_yearly_feemaster_id' => $yf['id']]);
+                        $used_paid_fee = true;
+                    } else {
+                        $insert_val = array(
+                            'student_session_id' => $student_session_id,
+                            'transport_yearly_feemaster_id' => $yf['id'],
+                        );
+                        $this->db->insert('student_transport_yearly_fees', $insert_val);
+                    }
+                }
+            }
+
+            $processed_count++;
+        }
+
+        if ($this->db->trans_status() === FALSE) {
+            $this->db->trans_rollback();
+            echo json_encode(['status' => 0, 'message' => 'Database transaction error occurred.']);
+        } else {
+            $this->db->trans_commit();
+            echo json_encode(['status' => 1, 'message' => "Successfully assigned {$processed_count} students to transport and updated fee structures!"]);
+        }
     }
 
 }

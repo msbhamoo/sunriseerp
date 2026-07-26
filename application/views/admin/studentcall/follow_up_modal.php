@@ -17,9 +17,9 @@
                     </tr>
                     <tr>
                         <th><?php echo $this->lang->line('purpose'); ?></th>
-                        <td><?php echo $call['purpose_name']; ?></td>
+                        <td><?php echo get_purpose_pill($call['purpose_name']); ?></td>
                         <th><?php echo $this->lang->line('status'); ?></th>
-                        <td><?php echo $call['call_status']; ?></td>
+                        <td><?php echo get_call_status_pill($call['call_status']); ?></td>
                     </tr>
                     <tr>
                         <th><?php echo $this->lang->line('date'); ?></th>
@@ -103,7 +103,7 @@
                         <div class="timeline-body">
                             <p><strong>Priority:</strong> <?php echo $fw['priority']; ?></p>
                             <p><strong>Assigned To:</strong> <?php echo $fw['assigned_name'] . " " . $fw['assigned_surname']; ?></p>
-                            <p><strong>Remarks:</strong> <?php echo $fw['remarks']; ?></p>
+                            <p><strong>Remarks:</strong> <?php echo !empty($fw['remarks']) ? $fw['remarks'] : (!empty($call['notes']) ? $call['notes'] : ''); ?></p>
                         </div>
                     </div>
                 </li>
@@ -200,7 +200,19 @@
                 <div class="col-md-12">
                     <div class="form-group">
                         <label>Remarks</label>
-                        <textarea name="remarks" id="fw_remarks" class="form-control" rows="2"></textarea>
+                        <textarea name="remarks" id="fw_remarks" class="form-control" rows="2" placeholder="Type remarks or click a quick preset below..."></textarea>
+                        <div class="quick-notes-preset-container" style="margin-top: 8px;">
+                            <small class="text-muted" style="font-weight:600; display:block; margin-bottom: 5px;"><i class="fa fa-bolt text-yellow"></i> Quick Presets (Click to insert):</small>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                <span class="btn btn-default btn-xs quick-note-chip" data-target="#fw_remarks" style="border-radius: 12px; font-size: 11px; background: #f0f4f8; border: 1px solid #cbd5e1; color: #334155; font-weight: 500; cursor:pointer;"><i class="fa fa-money text-success"></i> Fee Payment Tomorrow</span>
+                                <span class="btn btn-default btn-xs quick-note-chip" data-target="#fw_remarks" style="border-radius: 12px; font-size: 11px; background: #f0f4f8; border: 1px solid #cbd5e1; color: #334155; font-weight: 500; cursor:pointer;"><i class="fa fa-calendar text-info"></i> Payment in 2-4 days</span>
+                                <span class="btn btn-default btn-xs quick-note-chip" data-target="#fw_remarks" style="border-radius: 12px; font-size: 11px; background: #f0f4f8; border: 1px solid #cbd5e1; color: #334155; font-weight: 500; cursor:pointer;"><i class="fa fa-file-text-o text-primary"></i> Requested Fee Receipt</span>
+                                <span class="btn btn-default btn-xs quick-note-chip" data-target="#fw_remarks" style="border-radius: 12px; font-size: 11px; background: #f0f4f8; border: 1px solid #cbd5e1; color: #334155; font-weight: 500; cursor:pointer;"><i class="fa fa-clock-o text-warning"></i> Call back in Evening</span>
+                                <span class="btn btn-default btn-xs quick-note-chip" data-target="#fw_remarks" style="border-radius: 12px; font-size: 11px; background: #f0f4f8; border: 1px solid #cbd5e1; color: #334155; font-weight: 500; cursor:pointer;"><i class="fa fa-question-circle text-purple"></i> Exam / Syllabus Inquiry</span>
+                                <span class="btn btn-default btn-xs quick-note-chip" data-target="#fw_remarks" style="border-radius: 12px; font-size: 11px; background: #f0f4f8; border: 1px solid #cbd5e1; color: #334155; font-weight: 500; cursor:pointer;"><i class="fa fa-phone text-danger"></i> Wrong / Unreachable No.</span>
+                                <span class="btn btn-default btn-xs quick-note-chip" data-target="#fw_remarks" style="border-radius: 12px; font-size: 11px; background: #f0f4f8; border: 1px solid #cbd5e1; color: #334155; font-weight: 500; cursor:pointer;"><i class="fa fa-check text-success"></i> Issue Resolved</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 

@@ -62,11 +62,11 @@
                     <div class="d2-metric-value"><?php echo $not_connected_today; ?></div>
                 </div>
             </div>
-            <div class="d2-metric-box">
+            <div class="d2-metric-box" id="pending_metric_box" style="cursor:pointer;" title="Click to view all pending follow-ups">
                 <div class="d2-metric-icon pending"><i class="fa fa-clock-o"></i></div>
                 <div class="d2-metric-content">
                     <div class="d2-metric-label">Pending Follow-ups</div>
-                    <div class="d2-metric-value"><?php echo $pending_followups; ?></div>
+                    <div class="d2-metric-value"><?php echo count($pending_followup_calls); ?></div>
                 </div>
             </div>
         </div>
@@ -76,6 +76,7 @@
                 <div class="nav-tabs-custom">
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#tab_call_logs" data-toggle="tab"><i class="fa fa-list"></i> <?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Call Logs'); ?></a></li>
+                        <li id="tab_pending_followup_li"><a href="#tab_pending_followups" data-toggle="tab"><i class="fa fa-clock-o text-warning"></i> Pending Follow-ups <span class="label label-warning" style="border-radius:10px;"><?php echo count($pending_followup_calls); ?></span></a></li>
                         <li><a href="#tab_student_status" data-toggle="tab"><i class="fa fa-users"></i> Student Status</a></li>
                     </ul>
                     <div class="tab-content">
@@ -193,10 +194,12 @@
                                         <th><?php echo $this->lang->line('student'); ?></th>
                                         <th>Father Name</th>
                                         <th><?php echo $this->lang->line('class'); ?></th>
+                                        <th>Pickup Point</th>
                                         <th><?php echo $this->lang->line('phone'); ?></th>
                                         <th><?php echo $this->lang->line('purpose'); ?></th>
                                         <th><?php echo $this->lang->line('status'); ?></th>
                                         <th><?php echo $this->lang->line('date'); ?></th>
+                                        <th><?php echo $this->lang->line('note'); ?></th>
                                         <th>Follow-up Status</th>
                                         <th><?php echo ($this->lang->line('assign_to') ? $this->lang->line('assign_to') : 'Assigned To'); ?></th>
                                         <th><?php echo $this->lang->line('created_by'); ?></th>
@@ -210,10 +213,16 @@
                                                 <td><?php echo $call['firstname'] . " " . $call['lastname'] . " (" . $call['admission_no'] . ")"; ?></td>
                                                 <td><?php echo $call['father_name']; ?></td>
                                                 <td><?php echo $call['class'] . " (" . $call['section'] . ")"; ?></td>
+                                                <td><?php echo $call['pickup_point_name']; ?></td>
                                                 <td><?php echo $call['phone_number']; ?></td>
-                                                <td><?php echo $call['purpose_name']; ?></td>
-                                                <td><?php echo $call['call_status']; ?></td>
+                                                <td><?php echo get_purpose_pill($call['purpose_name']); ?></td>
+                                                <td><?php echo get_call_status_pill($call['call_status']); ?></td>
                                                 <td><?php echo date($this->customlib->getSchoolDateFormat(true, true), strtotime($call['date'])); ?></td>
+                                                <td>
+                                                    <div style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#444; font-size:12px;" data-toggle="tooltip" data-placement="top" title="<?php echo htmlspecialchars($call['notes'] ?? ''); ?>">
+                                                        <?php echo !empty($call['notes']) ? htmlspecialchars($call['notes']) : '<span style="color:#ccc;">-</span>'; ?>
+                                                    </div>
+                                                </td>
                                                 <td>
                                                     <?php 
                                                     if ($call['total_followups'] == 0) {
@@ -244,6 +253,89 @@
                 </div>
                         </div>
                         
+                        <div class="tab-pane" id="tab_pending_followups">
+                            <div class="box box-primary">
+                                <div class="box-header with-border">
+                                    <h3 class="box-title"><i class="fa fa-clock-o text-warning"></i> Today's & Overdue Pending Follow-ups</h3>
+                                    <div class="box-tools pull-right">
+                                        <span class="label label-danger"><i class="fa fa-exclamation-triangle"></i> Red = Overdue</span>
+                                        <span class="label label-warning" style="margin-left:5px;"><i class="fa fa-clock-o"></i> Yellow = Due Today</span>
+                                    </div>
+                                </div>
+                                <div class="box-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-bordered table-hover example" cellspacing="0" width="100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>Student</th>
+                                                    <th>Father Name</th>
+                                                    <th>Class</th>
+                                                    <th>Pickup Point</th>
+                                                    <th>Phone</th>
+                                                    <th>Purpose</th>
+                                                    <th>Due Date / Status</th>
+                                                    <th>Priority</th>
+                                                    <th>Assigned To</th>
+                                                    <th>Note / Remarks</th>
+                                                    <th class="text-right noExport">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php if (!empty($pending_followup_calls)) {
+                                                    $today_str = date('Y-m-d');
+                                                    foreach ($pending_followup_calls as $pfw) {
+                                                        $due_str = date('Y-m-d', strtotime($pfw['next_follow_up_date']));
+                                                        $is_overdue = ($due_str < $today_str);
+                                                        
+                                                        $due_badge = '';
+                                                        if ($is_overdue) {
+                                                            $diff_days = round((strtotime($today_str) - strtotime($due_str)) / 86400);
+                                                            $due_badge = '<span class="label label-danger"><i class="fa fa-exclamation-triangle"></i> Overdue (' . $diff_days . ' day' . ($diff_days > 1 ? 's' : '') . ' ago) - ' . date($this->customlib->getSchoolDateFormat(), strtotime($pfw['next_follow_up_date'])) . '</span>';
+                                                        } else {
+                                                            $due_badge = '<span class="label label-warning"><i class="fa fa-clock-o"></i> Due Today (' . date($this->customlib->getSchoolDateFormat(), strtotime($pfw['next_follow_up_date'])) . ')</span>';
+                                                        }
+
+                                                        $priority_pill = '<span class="label label-default">' . $pfw['priority'] . '</span>';
+                                                        if ($pfw['priority'] == 'High') {
+                                                            $priority_pill = '<span class="label label-danger">High</span>';
+                                                        } else if ($pfw['priority'] == 'Medium') {
+                                                            $priority_pill = '<span class="label label-warning">Medium</span>';
+                                                        } else if ($pfw['priority'] == 'Low') {
+                                                            $priority_pill = '<span class="label label-info">Low</span>';
+                                                        }
+
+                                                        $display_note = !empty($pfw['followup_remarks']) ? $pfw['followup_remarks'] : (!empty($pfw['notes']) ? $pfw['notes'] : '');
+                                                ?>
+                                                    <tr>
+                                                        <td><?php echo $pfw['firstname'] . " " . $pfw['lastname'] . " (" . $pfw['admission_no'] . ")"; ?></td>
+                                                        <td><?php echo $pfw['father_name']; ?></td>
+                                                        <td><?php echo $pfw['class'] . " (" . $pfw['section'] . ")"; ?></td>
+                                                        <td><?php echo $pfw['pickup_point_name']; ?></td>
+                                                        <td><?php echo $pfw['phone_number']; ?></td>
+                                                        <td><?php echo get_purpose_pill($pfw['purpose_name']); ?></td>
+                                                        <td><?php echo $due_badge; ?></td>
+                                                        <td><?php echo $priority_pill; ?></td>
+                                                        <td><?php echo $pfw['assigned_to_name']; ?></td>
+                                                        <td>
+                                                            <div style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#444; font-size:12px;" data-toggle="tooltip" data-placement="top" title="<?php echo htmlspecialchars($display_note); ?>">
+                                                                <?php echo !empty($display_note) ? htmlspecialchars($display_note) : '<span style="color:#ccc;">-</span>'; ?>
+                                                            </div>
+                                                        </td>
+                                                        <td class="pull-right">
+                                                            <a href="#" class="btn btn-primary btn-xs" onclick="follow_up('<?php echo $pfw['id']; ?>')" data-toggle="tooltip" title="Take Action / Complete Follow Up">
+                                                                <i class="fa fa-phone"></i> Take Action
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                <?php }
+                                                } ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="tab-pane" id="tab_student_status">
                             <div class="box box-primary">
                                 <div class="box-header with-border">
@@ -499,10 +591,22 @@
                                     </div>
                                 </div>
 
-                                <div class="form-group">
-                                    <label><?php echo $this->lang->line('note'); ?></label>
-                                    <textarea name="notes" class="form-control" rows="2"></textarea>
-                                </div>
+                                 <div class="form-group">
+                                     <label><?php echo $this->lang->line('note'); ?></label>
+                                     <textarea name="notes" class="form-control" rows="2" placeholder="Type call notes or click a quick preset below..."></textarea>
+                                     <div class="quick-notes-preset-container" style="margin-top: 8px;">
+                                         <small class="text-muted" style="font-weight:600; display:block; margin-bottom: 5px;"><i class="fa fa-bolt text-yellow"></i> Quick Presets (Click to insert):</small>
+                                         <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                             <span class="btn btn-default btn-xs quick-note-chip" data-target="textarea[name='notes']" style="border-radius: 12px; font-size: 11px; background: #f0f4f8; border: 1px solid #cbd5e1; color: #334155; font-weight: 500; cursor:pointer;"><i class="fa fa-money text-success"></i> Fee Payment Tomorrow</span>
+                                             <span class="btn btn-default btn-xs quick-note-chip" data-target="textarea[name='notes']" style="border-radius: 12px; font-size: 11px; background: #f0f4f8; border: 1px solid #cbd5e1; color: #334155; font-weight: 500; cursor:pointer;"><i class="fa fa-calendar text-info"></i> Payment in 2-4 days</span>
+                                             <span class="btn btn-default btn-xs quick-note-chip" data-target="textarea[name='notes']" style="border-radius: 12px; font-size: 11px; background: #f0f4f8; border: 1px solid #cbd5e1; color: #334155; font-weight: 500; cursor:pointer;"><i class="fa fa-file-text-o text-primary"></i> Requested Fee Receipt</span>
+                                             <span class="btn btn-default btn-xs quick-note-chip" data-target="textarea[name='notes']" style="border-radius: 12px; font-size: 11px; background: #f0f4f8; border: 1px solid #cbd5e1; color: #334155; font-weight: 500; cursor:pointer;"><i class="fa fa-clock-o text-warning"></i> Call back in Evening</span>
+                                             <span class="btn btn-default btn-xs quick-note-chip" data-target="textarea[name='notes']" style="border-radius: 12px; font-size: 11px; background: #f0f4f8; border: 1px solid #cbd5e1; color: #334155; font-weight: 500; cursor:pointer;"><i class="fa fa-question-circle text-purple"></i> Exam / Syllabus Inquiry</span>
+                                             <span class="btn btn-default btn-xs quick-note-chip" data-target="textarea[name='notes']" style="border-radius: 12px; font-size: 11px; background: #f0f4f8; border: 1px solid #cbd5e1; color: #334155; font-weight: 500; cursor:pointer;"><i class="fa fa-phone text-danger"></i> Wrong / Unreachable No.</span>
+                                             <span class="btn btn-default btn-xs quick-note-chip" data-target="textarea[name='notes']" style="border-radius: 12px; font-size: 11px; background: #f0f4f8; border: 1px solid #cbd5e1; color: #334155; font-weight: 500; cursor:pointer;"><i class="fa fa-check text-success"></i> Issue Resolved</span>
+                                         </div>
+                                     </div>
+                                 </div>
                                 
                                 <div class="form-group" id="sync_siblings_container" style="display:none; background: #fdfdfd; padding: 10px; border: 1px solid #eee; border-radius: 4px;">
                                     <label style="color:#337ab7;"><i class="fa fa-copy"></i> Sync Call to Siblings</label>
@@ -587,6 +691,25 @@
     var student_phones = {};
 
     $(document).ready(function () {
+        $(document).on('click', '#pending_metric_box', function () {
+            $('#tab_pending_followup_li a').tab('show');
+        });
+
+        $(document).on('click', '.quick-note-chip', function () {
+            var textToInsert = $(this).text().trim();
+            var targetSelector = $(this).data('target');
+            var $textarea = $(targetSelector);
+            if ($textarea.length) {
+                var currentText = $textarea.val().trim();
+                if (currentText.length > 0) {
+                    $textarea.val(currentText + ", " + textToInsert);
+                } else {
+                    $textarea.val(textToInsert);
+                }
+                $textarea.focus();
+            }
+        });
+
         $('#search_student_keyword').on('keyup', function () {
             var keyword = $(this).val();
             if (keyword.length >= 2) {

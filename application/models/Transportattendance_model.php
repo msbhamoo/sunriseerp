@@ -36,7 +36,7 @@ class Transportattendance_model extends MY_Model
         if ($session_id == null) {
             $session_id = $this->current_session;
         }
-        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.admission_no, classes.class, sections.section, transport_route.route_title, pickup_point.name as pickup_point_name');
+        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.image, students.admission_no, classes.class, sections.section, transport_route.route_title, pickup_point.name as pickup_point_name');
         $this->db->from('student_session');
         $this->db->join('students', 'students.id = student_session.student_id');
         $this->db->join('classes', 'classes.id = student_session.class_id');
@@ -71,7 +71,7 @@ class Transportattendance_model extends MY_Model
 
     public function get_custom_riders($vehicle_id, $date, $attendance_type)
     {
-        $this->db->select('transport_attendance.*, students.id as student_id, students.firstname, students.lastname, students.admission_no, classes.class, sections.section, students.hostel_room_id, vehicles.vehicle_no as original_vehicle_no');
+        $this->db->select('transport_attendance.*, students.id as student_id, students.firstname, students.lastname, students.image, students.admission_no, classes.class, sections.section, students.hostel_room_id, vehicles.vehicle_no as original_vehicle_no');
         $this->db->from('transport_attendance');
         $this->db->join('student_session', 'student_session.id = transport_attendance.student_session_id');
         $this->db->join('students', 'students.id = student_session.student_id');

@@ -9,6 +9,7 @@ class Studentcall extends Admin_Controller
     {
         parent::__construct();
         $this->load->model(array('studentcall_model', 'staff_model', 'class_model', 'notification_model'));
+        $this->load->helper('custom');
     }
 
     public function index()
@@ -54,6 +55,7 @@ class Studentcall extends Admin_Controller
         $data['connected_today'] = $connected_today;
         $data['not_connected_today'] = $not_connected_today;
         $data['pending_followups'] = $pending_followups;
+        $data['pending_followup_calls'] = $this->studentcall_model->get_pending_followup_calls('due_today_and_overdue');
 
         $data['saved_filters'] = $this->session->userdata('studentcall_status_filters');
 
@@ -109,10 +111,12 @@ class Studentcall extends Admin_Controller
                     $call['firstname'] . ' ' . $call['lastname'] . ' (' . $call['admission_no'] . ')',
                     $call['father_name'],
                     $call['class'] . ' (' . $call['section'] . ')',
+                    $call['pickup_point_name'],
                     $call['phone_number'],
-                    $call['purpose_name'],
-                    $call['call_status'],
+                    get_purpose_pill($call['purpose_name']),
+                    get_call_status_pill($call['call_status']),
                     date($this->customlib->getSchoolDateFormat(true, true), strtotime($call['date'])),
+                    '<div style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#444; font-size:12px;" data-toggle="tooltip" data-placement="top" title="' . htmlspecialchars($call['notes'] ?? '') . '">' . (!empty($call['notes']) ? htmlspecialchars($call['notes']) : '<span style="color:#ccc;">-</span>') . '</div>',
                     $followup_status,
                     $call['assigned_to_name'],
                     $call['staff_name'] . ' ' . $call['staff_surname'],
@@ -165,12 +169,14 @@ class Studentcall extends Admin_Controller
             $call_id = $this->studentcall_model->add_call($data);
 
             if ($this->input->post('follow_up_date')) {
+                $this->studentcall_model->resolve_previous_followups($call_id);
                 $followup = array(
                     'student_call_id' => $call_id,
                     'student_id'      => $this->input->post('student_id'),
                     'due_date'        => $this->customlib->dateFormatToYYYYMMDD($this->input->post('follow_up_date')),
                     'priority'        => $this->input->post('priority') ? $this->input->post('priority') : 'Medium',
                     'assigned_to'     => empty2null($this->input->post('assigned_to')),
+                    'remarks'         => $this->input->post('notes'),
                     'status'          => 'Pending',
                     'created_by'      => $userdata["id"]
                 );
@@ -194,6 +200,7 @@ class Studentcall extends Admin_Controller
                         $sib_call_id = $this->studentcall_model->add_call($sib_data);
                         
                         if ($this->input->post('follow_up_date')) {
+                            $this->studentcall_model->resolve_previous_followups($sib_call_id);
                             $sib_followup = $followup;
                             $sib_followup['student_call_id'] = $sib_call_id;
                             $sib_followup['student_id'] = $sib_parts[1];
@@ -293,8 +300,11 @@ class Studentcall extends Admin_Controller
             $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
         } else {
             $userdata = $this->customlib->getUserData();
+            $call_id = $this->input->post('student_call_id');
+            $this->studentcall_model->resolve_previous_followups($call_id);
+
             $data = array(
-                'student_call_id' => $this->input->post('student_call_id'),
+                'student_call_id' => $call_id,
                 'student_id'      => $this->input->post('student_id'),
                 'due_date'        => $this->customlib->dateFormatToYYYYMMDD($this->input->post('due_date')),
                 'priority'        => $this->input->post('priority'),
@@ -321,18 +331,33 @@ class Studentcall extends Admin_Controller
         
         $userdata = $this->customlib->getUserData();
         $id = $this->input->post('followup_id');
+        $remarks = $this->input->post('remarks');
+        $call_status = $this->input->post('call_status');
         
         $data = array(
             'status'      => $this->input->post('status'),
-            'call_status' => $this->input->post('call_status'),
-            'remarks'     => $this->input->post('remarks')
+            'call_status' => $call_status,
+            'remarks'     => $remarks
         );
         $this->studentcall_model->update_followup($id, $data);
 
         $followup_db = $this->studentcall_model->get_followup($id);
         
+        // Update main call log with the latest followup note, call_status and date
+        $update_main_call = array(
+            'date' => date('Y-m-d')
+        );
+        if ($remarks !== null && $remarks !== '') {
+            $update_main_call['notes'] = $remarks;
+        }
+        if (!empty($call_status)) {
+            $update_main_call['call_status'] = $call_status;
+        }
+        $this->studentcall_model->update_call($followup_db['student_call_id'], $update_main_call);
+
         // Check if next follow up date is set
         if ($this->input->post('next_follow_up_date')) {
+            $this->studentcall_model->resolve_previous_followups($followup_db['student_call_id']);
             $next = array(
                 'student_call_id' => $followup_db['student_call_id'],
                 'student_id'      => $followup_db['student_id'],
@@ -362,12 +387,21 @@ class Studentcall extends Admin_Controller
                         'contact_person'     => $original_call['contact_person'],
                         'phone_number'       => $original_call['phone_number'],
                         'call_purpose_id'    => $original_call['call_purpose_id'],
-                        'call_status'        => $this->input->post('call_status') ? $this->input->post('call_status') : 'Completed',
+                        'call_status'        => !empty($call_status) ? $call_status : $original_call['call_status'],
                         'date'               => date('Y-m-d'),
-                        'notes'              => $this->input->post('remarks'),
+                        'duration'           => isset($original_call['duration']) ? $original_call['duration'] : null,
+                        'notes'              => ($remarks !== null && $remarks !== '') ? $remarks : $original_call['notes'],
                         'created_by'         => $userdata["id"]
                     );
                     $sib_call_id = $this->studentcall_model->add_call($sib_call);
+                    
+                    // Update and resolve sibling's previous pending followups with the updated status, outcome and remarks
+                    $this->studentcall_model->resolve_previous_followups_with_details(
+                        $sib_call_id,
+                        $this->input->post('status') ? $this->input->post('status') : 'Completed',
+                        !empty($call_status) ? $call_status : null,
+                        ($remarks !== null && $remarks !== '') ? $remarks : null
+                    );
                     
                     if ($this->input->post('next_follow_up_date')) {
                         $sib_next = array(
@@ -488,7 +522,7 @@ class Studentcall extends Admin_Controller
                     $student['admission_type'] ? $student['admission_type'] : '-',
                     $phone,
                     $last_call,
-                    $status,
+                    get_call_status_pill($status),
                     '<div class="pull-right">' . $action . '</div>'
                 ];
                 $data[] = $row;

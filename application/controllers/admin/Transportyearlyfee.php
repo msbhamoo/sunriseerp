@@ -14,7 +14,7 @@ class Transportyearlyfee extends Admin_Controller
 
     public function index()
     {
-        if (!($this->rbac->hasPrivilege('transport_fees_master', 'can_view'))) {
+        if (!($this->rbac->hasPrivilege('yearly_fees_define', 'can_view') || $this->rbac->hasPrivilege('transport_fees_master', 'can_view'))) {
             access_denied();
         }
         $this->session->set_userdata('top_menu', 'Transport');
@@ -54,7 +54,7 @@ class Transportyearlyfee extends Admin_Controller
             $this->load->view('admin/transport/yearlyfeemaster', $data);
             $this->load->view('layout/footer', $data);
         } else {
-            if (!($this->rbac->hasPrivilege('transport_fees_master', 'can_add'))) {
+            if (!($this->rbac->hasPrivilege('yearly_fees_define', 'can_add') || $this->rbac->hasPrivilege('transport_fees_master', 'can_add'))) {
                 access_denied();
             }
 
@@ -113,7 +113,7 @@ class Transportyearlyfee extends Admin_Controller
 
     public function delete($id)
     {
-        if (!($this->rbac->hasPrivilege('transport_fees_master', 'can_delete'))) {
+        if (!($this->rbac->hasPrivilege('yearly_fees_define', 'can_delete') || $this->rbac->hasPrivilege('transport_fees_master', 'can_delete'))) {
             access_denied();
         }
 
@@ -129,7 +129,7 @@ class Transportyearlyfee extends Admin_Controller
 
     public function delete_bulk($ids_string)
     {
-        if (!($this->rbac->hasPrivilege('transport_fees_master', 'can_delete'))) {
+        if (!($this->rbac->hasPrivilege('yearly_fees_define', 'can_delete') || $this->rbac->hasPrivilege('transport_fees_master', 'can_delete'))) {
             access_denied();
         }
 
@@ -190,7 +190,7 @@ class Transportyearlyfee extends Admin_Controller
 
     public function bulk_assign()
     {
-        if (!($this->rbac->hasPrivilege('transport_fees_master', 'can_add'))) {
+        if (!($this->rbac->hasPrivilege('yearly_fees_define', 'can_add') || $this->rbac->hasPrivilege('transport_fees_master', 'can_add'))) {
             access_denied();
         }
         $this->session->set_userdata('top_menu', 'Transport');
@@ -203,7 +203,7 @@ class Transportyearlyfee extends Admin_Controller
 
     public function preview_bulk_assign()
     {
-        if (!($this->rbac->hasPrivilege('transport_fees_master', 'can_add'))) {
+        if (!($this->rbac->hasPrivilege('yearly_fees_define', 'can_add') || $this->rbac->hasPrivilege('transport_fees_master', 'can_add'))) {
             access_denied();
         }
         $adm_col = (int)$this->input->post('adm_col') - 1;
@@ -325,7 +325,7 @@ class Transportyearlyfee extends Admin_Controller
 
     public function save_bulk_assign()
     {
-        if (!($this->rbac->hasPrivilege('transport_fees_master', 'can_add'))) {
+        if (!($this->rbac->hasPrivilege('yearly_fees_define', 'can_add') || $this->rbac->hasPrivilege('transport_fees_master', 'can_add'))) {
             access_denied();
         }
         

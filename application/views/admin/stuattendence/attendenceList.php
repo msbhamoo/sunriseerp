@@ -321,6 +321,13 @@
                                                             <td>
                                                                 <?php
                                                                 echo $this->customlib->getFullName($value['firstname'], $value['middlename'], $value['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?>
+                                                                <?php if (isset($value['bus_status']) && !empty($value['bus_status'])) { 
+                                                                    if ($value['bus_status'] == 'Present' || $value['bus_status'] == 'Switched Bus') {
+                                                                        echo '<span class="label label-success pull-right" style="font-size:10px;"><i class="fa fa-bus"></i> Bus: Present</span>';
+                                                                    } elseif ($value['bus_status'] == 'Absent') {
+                                                                        echo '<span class="label label-danger pull-right" style="font-size:10px;"><i class="fa fa-bus"></i> Bus: Absent</span>';
+                                                                    }
+                                                                } ?>
                                                             </td>
                                                             <td>
                                                                 <?php

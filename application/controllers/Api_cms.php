@@ -7,8 +7,8 @@ class Api_cms extends MY_Controller {
         parent::__construct();
         // Allow CORS for Next.js frontend
         header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Methods: GET, OPTIONS");
-        header("Access-Control-Allow-Headers: Content-Type, Content-Length, Accept-Encoding");
+        header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+        header("Access-Control-Allow-Headers: Content-Type, Content-Length, Accept-Encoding, X-Requested-With");
         header("Content-Type: application/json");
         
         // Handle OPTIONS request for preflight
@@ -18,6 +18,8 @@ class Api_cms extends MY_Controller {
         
         $this->load->model('cms_program_model');
         $this->load->model('cms_page_model');
+        $this->load->model('job_posting_model');
+        $this->load->model('job_application_model');
         $this->load->config('ci-blog');
     }
 
@@ -107,9 +109,10 @@ class Api_cms extends MY_Controller {
         $has_filters = false;
         
         if (!empty($tc_no)) {
-            // Attempt to search by certificate or admission number just in case
-            // The exact TC No column might vary, assuming it might be in students.admission_no or similar for now
-            $this->db->where('students.admission_no', $tc_no);
+            $this->db->group_start();
+            $this->db->where('student_certificate_register.certificate_number', $tc_no);
+            $this->db->or_where('students.admission_no', $tc_no);
+            $this->db->group_end();
             $has_filters = true;
         }
 
@@ -117,6 +120,7 @@ class Api_cms extends MY_Controller {
             $this->db->group_start();
             $this->db->like('students.firstname', $name);
             $this->db->or_like('students.lastname', $name);
+            $this->db->or_like("CONCAT(students.firstname, ' ', students.lastname)", $name);
             $this->db->group_end();
             $has_filters = true;
         }
@@ -244,5 +248,154 @@ class Api_cms extends MY_Controller {
         }
         
         echo json_encode(['status' => 'success', 'data' => $results]);
+    }
+
+    // Get Active & Open Job Postings for Website
+    public function job_postings() {
+        $this->db->select('job_postings.*, staff_designation.designation as designation_title');
+        $this->db->from('job_postings');
+        $this->db->join('staff_designation', 'staff_designation.id = job_postings.designation_id', 'left');
+        $this->db->where('job_postings.is_active', 1);
+        $this->db->where('job_postings.is_closed', 0);
+        $this->db->order_by('job_postings.id', 'DESC');
+        
+        $query = $this->db->get();
+        $jobs = $query->result_array();
+        
+        echo json_encode(['status' => 'success', 'data' => $jobs]);
+    }
+
+    // Get Single Job Posting and Increment View Count
+    public function job_item($id) {
+        if (empty($id)) {
+            echo json_encode(['status' => 'error', 'message' => 'Invalid Job ID']);
+            return;
+        }
+
+        // Increment view counter
+        $this->job_posting_model->incrementViews($id);
+
+        $this->db->select('job_postings.*, staff_designation.designation as designation_title');
+        $this->db->from('job_postings');
+        $this->db->join('staff_designation', 'staff_designation.id = job_postings.designation_id', 'left');
+        $this->db->where('job_postings.id', $id);
+        $this->db->where('job_postings.is_active', 1);
+        $this->db->where('job_postings.is_closed', 0);
+
+        $query = $this->db->get();
+        $job = $query->row_array();
+
+        if ($job) {
+            echo json_encode(['status' => 'success', 'data' => $job]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Job posting not found or closed']);
+        }
+    }
+
+    // Explicitly Increment Job View Count
+    public function track_job_view() {
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!$input) {
+            $input = $this->input->post();
+        }
+
+        $job_id = isset($input['job_id']) ? intval($input['job_id']) : 0;
+        if ($job_id > 0) {
+            $this->job_posting_model->incrementViews($job_id);
+            echo json_encode(['status' => 'success', 'message' => 'View tracked']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Invalid job_id']);
+        }
+    }
+
+    // Submit Job Application
+    public function submit_job_application() {
+        // Read input from POST or JSON
+        $job_id = $this->input->post('job_id');
+        $name = trim($this->input->post('name'));
+        $email = trim($this->input->post('email'));
+        $phone = trim($this->input->post('phone'));
+        $experience_years = trim($this->input->post('experience_years'));
+        $qualification = trim($this->input->post('qualification'));
+        $cover_letter = trim($this->input->post('cover_letter'));
+
+        if (!$job_id || !$name || !$email || !$phone) {
+            // Check if JSON payload was sent
+            $input = json_decode(file_get_contents('php://input'), true);
+            if ($input) {
+                $job_id = isset($input['job_id']) ? $input['job_id'] : '';
+                $name = isset($input['name']) ? trim($input['name']) : '';
+                $email = isset($input['email']) ? trim($input['email']) : '';
+                $phone = isset($input['phone']) ? trim($input['phone']) : '';
+                $experience_years = isset($input['experience_years']) ? trim($input['experience_years']) : '';
+                $qualification = isset($input['qualification']) ? trim($input['qualification']) : '';
+                $cover_letter = isset($input['cover_letter']) ? trim($input['cover_letter']) : '';
+            }
+        }
+
+        if (empty($job_id) || empty($name) || empty($email) || empty($phone)) {
+            echo json_encode(['status' => 'error', 'message' => 'Please fill in all required fields (Name, Email, Phone).']);
+            return;
+        }
+
+        // Verify Job exists and is open
+        $job = $this->db->get_where('job_postings', ['id' => $job_id, 'is_active' => 1, 'is_closed' => 0])->row_array();
+        if (!$job) {
+            echo json_encode(['status' => 'error', 'message' => 'This job posting is no longer accepting applications.']);
+            return;
+        }
+
+        // Handle Resume File Upload if present
+        $resume_file_path = '';
+        if (!empty($_FILES['resume']['name'])) {
+            $upload_dir = './uploads/job_applications/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+
+            $config['upload_path']   = $upload_dir;
+            $config['allowed_types'] = 'pdf|doc|docx|jpg|png';
+            $config['max_size']      = 10240; // 10MB
+            $config['file_name']     = 'resume_' . time() . '_' . rand(1000, 9999);
+
+            $this->load->library('upload', $config);
+            if ($this->upload->do_upload('resume')) {
+                $upload_data = $this->upload->data();
+                $resume_file_path = 'uploads/job_applications/' . $upload_data['file_name'];
+            } else {
+                $upload_error = $this->upload->display_errors('', '');
+                echo json_encode(['status' => 'error', 'message' => 'Resume upload failed: ' . $upload_error]);
+                return;
+            }
+        }
+
+        // Auto-generate Application Number
+        $app_no = 'APP-' . date('Y') . '-' . sprintf('%04d', rand(1000, 9999));
+
+        $data = [
+            'job_id' => $job_id,
+            'application_no' => $app_no,
+            'name' => $name,
+            'email' => $email,
+            'phone' => $phone,
+            'experience_years' => $experience_years,
+            'qualification' => $qualification,
+            'cover_letter' => $cover_letter,
+            'resume_file' => $resume_file_path,
+            'stage' => 'Submitted'
+        ];
+
+        $insert_id = $this->job_application_model->add($data);
+
+        if ($insert_id) {
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Your job application has been submitted successfully!',
+                'application_no' => $app_no,
+                'application_id' => $insert_id
+            ]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Failed to save application. Please try again.']);
+        }
     }
 }

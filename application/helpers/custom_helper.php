@@ -776,3 +776,57 @@ if (!function_exists('check_login_token')) {
         return true;
     }
 }
+
+if (!function_exists('get_purpose_pill')) {
+    function get_purpose_pill($purpose_name)
+    {
+        if (empty($purpose_name)) {
+            return '<span class="label label-default" style="border-radius:12px; padding:4px 10px; font-weight:600; font-size:11px;">-</span>';
+        }
+        $colors = [
+            ['bg' => '#e0f2fe', 'color' => '#0369a1', 'border' => '#bae6fd'], // Sky Blue
+            ['bg' => '#f3e8ff', 'color' => '#6b21a8', 'border' => '#e9d5ff'], // Purple
+            ['bg' => '#dcfce7', 'color' => '#15803d', 'border' => '#bbf7d0'], // Emerald Green
+            ['bg' => '#fef3c7', 'color' => '#b45309', 'border' => '#fde68a'], // Amber
+            ['bg' => '#ffe4e6', 'color' => '#be123c', 'border' => '#fecdd3'], // Rose
+            ['bg' => '#ccfbf1', 'color' => '#0f766e', 'border' => '#99f6e4'], // Teal
+            ['bg' => '#fae8ff', 'color' => '#86198f', 'border' => '#f5d0fe'], // Fuchsia
+            ['bg' => '#e0e7ff', 'color' => '#3730a3', 'border' => '#c7d2fe'], // Indigo
+            ['bg' => '#ffedd5', 'color' => '#c2410c', 'border' => '#fed7aa'], // Warm Orange
+            ['bg' => '#f1f5f9', 'color' => '#334155', 'border' => '#cbd5e1']  // Slate
+        ];
+        $hash = abs(crc32($purpose_name));
+        $style = $colors[$hash % count($colors)];
+        return '<span class="label" style="background-color:' . $style['bg'] . '; color:' . $style['color'] . '; border:1px solid ' . $style['border'] . '; padding:4px 10px; border-radius:12px; font-weight:600; font-size:11px; display:inline-block;">' . htmlspecialchars($purpose_name) . '</span>';
+    }
+}
+
+if (!function_exists('get_call_status_pill')) {
+    function get_call_status_pill($status)
+    {
+        if (empty($status)) {
+            return '<span class="label label-default" style="border-radius:12px; padding:4px 10px; font-weight:600; font-size:11px;">-</span>';
+        }
+        $status_map = [
+            'Connected'          => ['bg' => '#dcfce7', 'color' => '#15803d', 'border' => '#bbf7d0'], // Emerald Green
+            'Not Answered'       => ['bg' => '#ffe4e6', 'color' => '#be123c', 'border' => '#fecdd3'], // Rose Red
+            'Not connected'      => ['bg' => '#f1f5f9', 'color' => '#64748b', 'border' => '#cbd5e1'], // Slate Gray
+            'Busy'               => ['bg' => '#fef3c7', 'color' => '#b45309', 'border' => '#fde68a'], // Amber
+            'Switched Off'       => ['bg' => '#f1f5f9', 'color' => '#475569', 'border' => '#cbd5e1'], // Slate Gray
+            'Wrong Number'       => ['bg' => '#ffedd5', 'color' => '#c2410c', 'border' => '#fed7aa'], // Warm Orange
+            'Callback Requested' => ['bg' => '#f3e8ff', 'color' => '#6b21a8', 'border' => '#e9d5ff'], // Purple
+        ];
+        if (isset($status_map[$status])) {
+            $style = $status_map[$status];
+        } else {
+            $colors = [
+                ['bg' => '#e0f2fe', 'color' => '#0369a1', 'border' => '#bae6fd'],
+                ['bg' => '#ccfbf1', 'color' => '#0f766e', 'border' => '#99f6e4'],
+                ['bg' => '#e0e7ff', 'color' => '#3730a3', 'border' => '#c7d2fe']
+            ];
+            $hash = abs(crc32($status));
+            $style = $colors[$hash % count($colors)];
+        }
+        return '<span class="label" style="background-color:' . $style['bg'] . '; color:' . $style['color'] . '; border:1px solid ' . $style['border'] . '; padding:4px 10px; border-radius:12px; font-weight:600; font-size:11px; display:inline-block;">' . htmlspecialchars($status) . '</span>';
+    }
+}

@@ -15,6 +15,92 @@ class Transportattendance extends Admin_Controller
         $this->config->load('app-config');
     }
 
+    private function isSuperAdmin()
+    {
+        $getStaffRole = $this->customlib->getStaffRole();
+        $staffrole = json_decode($getStaffRole);
+        if (!empty($staffrole) && (strtolower($staffrole->name) == 'super admin' || $staffrole->id == 7)) {
+            return true;
+        }
+        return false;
+    }
+
+    private function getStaffAssignedVehicles($staff_id = null)
+    {
+        if (empty($staff_id)) {
+            $staff_id = $this->customlib->getStaffID();
+        }
+        
+        $all_vehicles = $this->vehicle_model->get();
+        if (empty($all_vehicles)) {
+            return array();
+        }
+
+        $this->load->model('staff_model');
+        $staff = $this->staff_model->get($staff_id);
+        if (empty($staff)) {
+            return array();
+        }
+
+        $staff_name = strtolower(trim((string)$staff['name']));
+        $staff_surname = strtolower(trim((string)$staff['surname']));
+        $staff_fullname = trim($staff_name . ' ' . $staff_surname);
+        $staff_emp_id = strtolower(trim((string)$staff['employee_id']));
+        $staff_phone = preg_replace('/[^0-9]/', '', (string)$staff['contact_no']);
+
+        $assigned_vehicles = array();
+        foreach ($all_vehicles as $v) {
+            $driver_name = strtolower(trim((string)$v['driver_name']));
+            $attendant_name = strtolower(trim((string)$v['attendant_name']));
+            $driver_phone = preg_replace('/[^0-9]/', '', (string)$v['driver_contact']);
+            $attendant_phone = preg_replace('/[^0-9]/', '', (string)$v['attendant_contact']);
+
+            $match = false;
+            
+            if (!empty($driver_name) && strlen($driver_name) > 1) {
+                if ($driver_name == $staff_fullname || 
+                    $driver_name == $staff_name || 
+                    (!empty($staff_emp_id) && $driver_name == $staff_emp_id) ||
+                    (!empty($staff_name) && strlen($staff_name) > 2 && strpos($driver_name, $staff_name) !== false) || 
+                    (!empty($staff_fullname) && strlen($staff_fullname) > 2 && strpos($staff_fullname, $driver_name) !== false)) {
+                    $match = true;
+                }
+            }
+
+            if (!empty($attendant_name) && strlen($attendant_name) > 1) {
+                if ($attendant_name == $staff_fullname || 
+                    $attendant_name == $staff_name || 
+                    (!empty($staff_emp_id) && $attendant_name == $staff_emp_id) ||
+                    (!empty($staff_name) && strlen($staff_name) > 2 && strpos($attendant_name, $staff_name) !== false) || 
+                    (!empty($staff_fullname) && strlen($staff_fullname) > 2 && strpos($staff_fullname, $attendant_name) !== false)) {
+                    $match = true;
+                }
+            }
+            
+            if (!empty($staff_phone) && strlen($staff_phone) >= 7) {
+                if ((!empty($driver_phone) && (strpos($driver_phone, $staff_phone) !== false || strpos($staff_phone, $driver_phone) !== false)) || 
+                    (!empty($attendant_phone) && (strpos($attendant_phone, $staff_phone) !== false || strpos($staff_phone, $attendant_phone) !== false))) {
+                    $match = true;
+                }
+            }
+
+            if ($match) {
+                $assigned_vehicles[] = $v;
+            }
+        }
+
+        if (empty($assigned_vehicles)) {
+            // If the staff member is NOT assigned as a driver or helper on any specific vehicle,
+            // but HAS explicit RBAC permissions (e.g. Transport Manager/Incharge/Staff), allow access to ALL vehicles.
+            if ($this->rbac->hasPrivilege('vehicle', 'can_view') || 
+                $this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
+                return $all_vehicles;
+            }
+        }
+
+        return $assigned_vehicles;
+    }
+
     public function index()
     {
         if (!$this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
@@ -24,7 +110,12 @@ class Transportattendance extends Admin_Controller
         $this->session->set_userdata('sub_menu', 'transportattendance/index');
         
         $data['title'] = 'Bus Attendance';
-        $data['vehiclelist'] = $this->vehicle_model->get();
+        
+        if ($this->isSuperAdmin()) {
+            $data['vehiclelist'] = $this->vehicle_model->get();
+        } else {
+            $data['vehiclelist'] = $this->getStaffAssignedVehicles();
+        }
         
         $this->form_validation->set_rules('date', $this->lang->line('date'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('vehicle_id', 'Vehicle', 'trim|required|xss_clean');
@@ -39,6 +130,13 @@ class Transportattendance extends Admin_Controller
             $vehicle_id = $this->input->post('vehicle_id');
             $attendance_type = $this->input->post('attendance_type');
             
+            if (!$this->isSuperAdmin()) {
+                $allowed_ids = array_column($data['vehiclelist'], 'id');
+                if (!in_array($vehicle_id, $allowed_ids)) {
+                    access_denied();
+                }
+            }
+
             $data['date'] = $date;
             $data['vehicle_id'] = $vehicle_id;
             $data['attendance_type'] = $attendance_type;
@@ -47,6 +145,12 @@ class Transportattendance extends Admin_Controller
             $saved_attendance = $this->transportattendance_model->get_attendance($vehicle_id, $date, $attendance_type);
             $custom_riders = $this->transportattendance_model->get_custom_riders($vehicle_id, $date, $attendance_type);
             
+            // Determine opposite shift to display context (Morning vs Evening)
+            $opposite_shift = (strtolower($attendance_type) == 'evening') ? 'morning' : 'evening';
+            $opposite_attendance = $this->transportattendance_model->get_attendance($vehicle_id, $date, $opposite_shift);
+            $opposite_presence = $this->transportattendance_model->check_transport_presence($date, $opposite_shift);
+            $data['opposite_shift'] = ucfirst($opposite_shift);
+
             // Merge custom riders into the main list so they can be managed
             if (!empty($custom_riders)) {
                 $students = array_merge($students, $custom_riders);
@@ -63,6 +167,15 @@ class Transportattendance extends Admin_Controller
                     $students[$key]['remark'] = '';
                 }
                 
+                // Opposite shift status check
+                if (isset($opposite_attendance[$student['student_session_id']])) {
+                    $students[$key]['opposite_shift_status'] = $opposite_attendance[$student['student_session_id']]['status'];
+                } elseif (isset($opposite_presence[$student['student_session_id']])) {
+                    $students[$key]['opposite_shift_status'] = 'Present (Bus #' . $opposite_presence[$student['student_session_id']] . ')';
+                } else {
+                    $students[$key]['opposite_shift_status'] = 'Not Marked';
+                }
+
                 // If they have a gatepass today, mark it
                 $students[$key]['has_gatepass'] = in_array($student['student_id'], $gatepasses) ? true : false;
                 if ($students[$key]['has_gatepass'] && !isset($saved_attendance[$student['student_session_id']])) {
@@ -87,6 +200,14 @@ class Transportattendance extends Admin_Controller
         $vehicle_id = $this->input->post('vehicle_id');
         $attendance_type = $this->input->post('attendance_type');
         $student_session = $this->input->post('student_session');
+
+        if (!$this->isSuperAdmin()) {
+            $assigned_vehicles = $this->getStaffAssignedVehicles();
+            $allowed_ids = array_column($assigned_vehicles, 'id');
+            if (!in_array($vehicle_id, $allowed_ids)) {
+                access_denied();
+            }
+        }
         
         $insert_data = [];
         if (!empty($student_session)) {
@@ -94,10 +215,7 @@ class Transportattendance extends Admin_Controller
                 $status = $this->input->post('attendencetype' . $session_id);
                 $remark = $this->input->post('remark' . $session_id);
                 
-                // A hidden field indicates if this is a custom rider, to keep their status as 'Switched Bus' if they were added.
-                // We'll trust the form submission for standard statuses.
                 if ($status == 'Switched Bus' || $this->input->post('is_custom_rider' . $session_id) == 'yes') {
-                    // Force their status to Switched Bus so we know they don't belong to this bus permanently
                     $status = 'Switched Bus';
                 }
 
@@ -112,10 +230,46 @@ class Transportattendance extends Admin_Controller
             }
             
             $this->transportattendance_model->save_attendance($insert_data);
+            
+            if ($attendance_type == 'morning') {
+                $this->syncMorningBusToClassAttendance($insert_data);
+            }
+
             $this->session->set_flashdata('msg', '<div class="alert alert-success">Attendance saved successfully</div>');
         }
         
         redirect('admin/transportattendance');
+    }
+
+    private function syncMorningBusToClassAttendance($insert_data)
+    {
+        if (empty($insert_data)) {
+            return;
+        }
+
+        foreach ($insert_data as $row) {
+            $session_id = $row['student_session_id'];
+            $status = $row['status'];
+            $date = $row['date'];
+
+            // Only sync if student was Present or Switched Bus on the morning bus
+            if ($status == 'Present' || $status == 'Switched Bus') {
+                $this->db->where('student_session_id', $session_id);
+                $this->db->where('date', $date);
+                $query = $this->db->get('student_attendences');
+
+                if ($query->num_rows() == 0) {
+                    $sync_data = [
+                        'student_session_id' => $session_id,
+                        'attendence_type_id' => 1, // 1 = Present
+                        'date'               => $date,
+                        'remark'             => 'Auto-synced from Morning Bus',
+                        'created_at'         => date('Y-m-d H:i:s')
+                    ];
+                    $this->db->insert('student_attendences', $sync_data);
+                }
+            }
+        }
     }
 
     public function search_student()
@@ -135,6 +289,15 @@ class Transportattendance extends Admin_Controller
         $vehicle_id = $this->input->post('vehicle_id');
         $date = $this->customlib->dateFormatToYYYYMMDD($this->input->post('date'));
         $attendance_type = $this->input->post('attendance_type');
+
+        if (!$this->isSuperAdmin()) {
+            $assigned_vehicles = $this->getStaffAssignedVehicles();
+            $allowed_ids = array_column($assigned_vehicles, 'id');
+            if (!in_array($vehicle_id, $allowed_ids)) {
+                echo json_encode(['status' => 0, 'msg' => 'Access Denied']);
+                return;
+            }
+        }
         
         // Get student session
         $session_id = $this->setting_model->getCurrentSession();
@@ -184,6 +347,15 @@ class Transportattendance extends Admin_Controller
         $date = $this->customlib->dateFormatToYYYYMMDD($this->input->post('date'));
         $attendance_type = $this->input->post('attendance_type');
 
+        if (!$this->isSuperAdmin()) {
+            $assigned_vehicles = $this->getStaffAssignedVehicles();
+            $allowed_ids = array_column($assigned_vehicles, 'id');
+            if (!in_array($vehicle_id, $allowed_ids)) {
+                echo json_encode(['status' => 0, 'msg' => 'Access Denied']);
+                return;
+            }
+        }
+
         if ($student_session_id && $vehicle_id && $date) {
             $this->db->where('student_session_id', $student_session_id);
             $this->db->where('vehicle_id', $vehicle_id);
@@ -200,7 +372,7 @@ class Transportattendance extends Admin_Controller
 
     public function daily_summary()
     {
-        if (!$this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
+        if (!$this->rbac->hasPrivilege('daily_bus_summary', 'can_view') && !$this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
             access_denied();
         }
 
@@ -215,7 +387,23 @@ class Transportattendance extends Admin_Controller
         $search_date = $this->customlib->dateFormatToYYYYMMDD($date);
         
         $data['date'] = $date;
-        $data['summary'] = $this->transportattendance_model->get_daily_summary($search_date);
+        $summary = $this->transportattendance_model->get_daily_summary($search_date);
+        
+        if (!$this->isSuperAdmin()) {
+            $assigned_vehicles = $this->getStaffAssignedVehicles();
+            $allowed_ids = array_column($assigned_vehicles, 'id');
+            $filtered = array();
+            if (!empty($summary)) {
+                foreach ($summary as $row) {
+                    if (in_array($row['vehicle_id'], $allowed_ids)) {
+                        $filtered[] = $row;
+                    }
+                }
+            }
+            $summary = $filtered;
+        }
+        
+        $data['summary'] = $summary;
         
         $this->load->view('layout/header');
         $this->load->view('admin/transport/daily_summary', $data);
@@ -224,7 +412,7 @@ class Transportattendance extends Admin_Controller
 
     public function monthly_summary()
     {
-        if (!$this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
+        if (!$this->rbac->hasPrivilege('monthly_bus_summary', 'can_view') && !$this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
             access_denied();
         }
 
@@ -241,7 +429,23 @@ class Transportattendance extends Admin_Controller
         
         $data['month'] = $month;
         $data['year'] = $year;
-        $data['summary'] = $this->transportattendance_model->get_monthly_summary($month, $year);
+        $summary = $this->transportattendance_model->get_monthly_summary($month, $year);
+        
+        if (!$this->isSuperAdmin()) {
+            $assigned_vehicles = $this->getStaffAssignedVehicles();
+            $allowed_ids = array_column($assigned_vehicles, 'id');
+            $filtered = array();
+            if (!empty($summary)) {
+                foreach ($summary as $row) {
+                    if (in_array($row['vehicle_id'], $allowed_ids)) {
+                        $filtered[] = $row;
+                    }
+                }
+            }
+            $summary = $filtered;
+        }
+        
+        $data['summary'] = $summary;
         
         $this->load->view('layout/header');
         $this->load->view('admin/transport/monthly_summary', $data);
@@ -250,7 +454,7 @@ class Transportattendance extends Admin_Controller
     
     public function get_summary_detail()
     {
-        if (!$this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
+        if (!$this->rbac->hasPrivilege('daily_bus_summary', 'can_view') && !$this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
             echo json_encode(['status' => 0, 'msg' => 'Access Denied']);
             return;
         }
@@ -258,6 +462,15 @@ class Transportattendance extends Admin_Controller
         $vehicle_id = $this->input->post('vehicle_id');
         $date_str = $this->input->post('date');
         $date = $this->customlib->dateFormatToYYYYMMDD($date_str);
+
+        if (!$this->isSuperAdmin()) {
+            $assigned_vehicles = $this->getStaffAssignedVehicles();
+            $allowed_ids = array_column($assigned_vehicles, 'id');
+            if (!in_array($vehicle_id, $allowed_ids)) {
+                echo json_encode(['status' => 0, 'msg' => 'Access Denied']);
+                return;
+            }
+        }
         
         $details = $this->transportattendance_model->get_attendance_detail($vehicle_id, $date);
         
@@ -288,7 +501,7 @@ class Transportattendance extends Admin_Controller
     
     public function get_monthly_summary_detail()
     {
-        if (!$this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
+        if (!$this->rbac->hasPrivilege('monthly_bus_summary', 'can_view') && !$this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
             echo json_encode(['status' => 0, 'msg' => 'Access Denied']);
             return;
         }
@@ -296,6 +509,15 @@ class Transportattendance extends Admin_Controller
         $vehicle_id = $this->input->post('vehicle_id');
         $month = $this->input->post('month');
         $year = $this->input->post('year');
+
+        if (!$this->isSuperAdmin()) {
+            $assigned_vehicles = $this->getStaffAssignedVehicles();
+            $allowed_ids = array_column($assigned_vehicles, 'id');
+            if (!in_array($vehicle_id, $allowed_ids)) {
+                echo json_encode(['status' => 0, 'msg' => 'Access Denied']);
+                return;
+            }
+        }
         
         $details = $this->transportattendance_model->get_monthly_attendance_detail($vehicle_id, $month, $year);
         

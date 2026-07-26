@@ -1361,20 +1361,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
 
                         <?php
                         if ($this->module_lib->hasActive('fees_collection')) {
-                            if (($this->rbac->hasPrivilege('collect_fees', 'can_view') ||
-                                $this->rbac->hasPrivilege('search_fees_payment', 'can_view') ||
-                                $this->rbac->hasPrivilege('search_due_fees', 'can_view') ||
-                                $this->rbac->hasPrivilege('fees_statement', 'can_view') ||
-                                $this->rbac->hasPrivilege('balance_fees_report', 'can_view') ||
-                                $this->rbac->hasPrivilege('fees_carry_forward', 'can_view') ||
-                                $this->rbac->hasPrivilege('fees_master', 'can_view') ||
-                                $this->rbac->hasPrivilege('fees_group', 'can_view') ||
-                                $this->rbac->hasPrivilege('fees_type', 'can_view') ||
-                                $this->rbac->hasPrivilege('fees_discount', 'can_view') ||
-                                $this->rbac->hasPrivilege('accountants', 'can_view') ||
-                                $this->rbac->hasPrivilege('student_timeline', 'can_view')
-
-                            )) {
+                            if ($this->rbac->hasPrivilege('collect_fees', 'can_view')) {
                         ?>
                                 <li class=""><a href="#fee" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('fees'); ?></a></li>
                         <?php
@@ -2062,6 +2049,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                         <!------- CBSE Exam End--------->
 
 
+                        <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_view')) { ?>
                         <div class="tab-pane" id="fee">
                            
                             <?php
@@ -2497,6 +2485,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                             ?>
 
                         </div>
+                        <?php } ?>
                         <div class="tab-pane" id="documents">
                             <div class="timeline-header no-border">
                                 <?php if ($this->session->flashdata('msg') != '') {
