@@ -120,6 +120,12 @@
                 border-radius: 8px !important;
                 text-align: center !important;
             }
+
+            /* HIDE FILTERS BY DEFAULT ON MOBILE (UNLESS FILTER-OPEN IS PRESENT) */
+            .collapse-box-mobile:not(.filter-open) form,
+            .collapse-box-mobile:not(.filter-open) .box-body.row {
+                display: none;
+            }
         }
     </style>
 
@@ -165,14 +171,20 @@
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane active" id="tab_call_logs">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
+                <?php
+                    $has_active_filters = (!empty($_POST['class_id']) || !empty($_POST['section_id']) || !empty($_POST['purpose_id']) || !empty($_POST['status']) || !empty($_POST['date_from']) || !empty($_POST['date_to']) || !empty($_POST['follow_up_date_from']) || !empty($_POST['follow_up_date_to']) || !empty($_POST['assigned_to']));
+                ?>
+                <div class="box box-primary collapse-box-mobile <?php echo $has_active_filters ? 'filter-open' : ''; ?>">
+                    <div class="box-header with-border" style="cursor:pointer;">
                         <h3 class="box-title"><i class="fa fa-search"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
-                        <?php if ($this->rbac->hasPrivilege('student_call_log', 'can_add')) { ?>
-                            <div class="box-tools pull-right">
+                        <div class="box-tools pull-right">
+                            <button type="button" class="btn btn-box-tool mobile-filter-toggle-btn" style="padding: 4px 8px; font-weight:600; color:#337ab7;" title="Toggle Filters">
+                                <i class="fa fa-filter"></i> Filters
+                            </button>
+                            <?php if ($this->rbac->hasPrivilege('student_call_log', 'can_add')) { ?>
                                 <a data-toggle="modal" data-target="#addCallModal" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> <?php echo ($this->lang->line('add_call') ? $this->lang->line('add_call') : 'Add Call'); ?></a>
-                            </div>
-                        <?php } ?>
+                            <?php } ?>
+                        </div>
                     </div>
                     
                     <form id="searchForm" role="form" action="<?php echo site_url('admin/studentcall') ?>" method="post" class="">
@@ -442,9 +454,14 @@
                         </div>
 
                         <div class="tab-pane" id="tab_student_status">
-                            <div class="box box-primary">
-                                <div class="box-header with-border">
+                            <div class="box box-primary collapse-box-mobile">
+                                <div class="box-header with-border" style="cursor:pointer;">
                                     <h3 class="box-title"><i class="fa fa-search"></i> Filter Students</h3>
+                                    <div class="box-tools pull-right">
+                                        <button type="button" class="btn btn-box-tool mobile-filter-toggle-btn" style="padding: 4px 8px; font-weight:600; color:#337ab7;" title="Toggle Filters">
+                                            <i class="fa fa-filter"></i> Filters
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="box-body row">
                                     <div class="col-sm-2 col-md-2">
@@ -878,6 +895,26 @@
             });
         }
         applyMobileCardLabels();
+
+        // Auto-collapse filters on mobile by default
+        if ($(window).width() < 768) {
+            $('.collapse-box-mobile').addClass('collapsed-box');
+            $('.collapse-box-mobile form, .collapse-box-mobile .box-body.row').hide();
+        }
+
+        $(document).on('click', '.mobile-filter-toggle-btn, .collapse-box-mobile .box-header', function(e) {
+            if ($(e.target).closest('a[data-target="#addCallModal"]').length) {
+                return; // don't toggle filter when clicking add call button
+            }
+            var $box = $(this).closest('.box');
+            var $target = $box.find('form, .box-body.row').first();
+            $box.toggleClass('filter-open');
+            if ($box.hasClass('filter-open')) {
+                $target.slideDown(200);
+            } else {
+                $target.slideUp(200);
+            }
+        });
 
         $(document).on('click', '#pending_metric_box', function () {
         $(document).on('click', '#pending_metric_box', function () {
