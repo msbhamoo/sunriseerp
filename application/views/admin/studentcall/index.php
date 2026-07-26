@@ -37,6 +37,90 @@
         .d2-metric-content { flex: 1; }
         .d2-metric-label { font-size: 12px; color: #888; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
         .d2-metric-value { font-size: 26px; font-weight: 800; color: #1f2937; line-height: 1.2; }
+
+        @media (max-width: 767px) {
+            .mobile-card-table, 
+            .mobile-card-table thead, 
+            .mobile-card-table tbody, 
+            .mobile-card-table th, 
+            .mobile-card-table td, 
+            .mobile-card-table tr { 
+                display: block !important; 
+            }
+            .mobile-card-table thead tr { 
+                position: absolute !important;
+                top: -9999px !important;
+                left: -9999px !important;
+            }
+            .mobile-card-table tbody tr {
+                background: #ffffff !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 12px !important;
+                margin-bottom: 12px !important;
+                padding: 12px 14px !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+            }
+            .mobile-card-table td {
+                border: none !important;
+                padding: 4px 0 !important;
+                position: relative !important;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                font-size: 12px !important;
+                border-bottom: 1px dashed #f1f5f9 !important;
+                text-align: right !important;
+            }
+            .mobile-card-table td.mobile-hide-empty {
+                display: none !important;
+            }
+            .mobile-card-table td::before {
+                content: attr(data-label) !important;
+                font-weight: 600 !important;
+                color: #64748b !important;
+                font-size: 10px !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.5px !important;
+                margin-right: 12px !important;
+                text-align: left !important;
+                flex-shrink: 0 !important;
+            }
+            /* FULL-WIDTH SIDE-BY-SIDE BUTTONS AT BOTTOM */
+            .mobile-card-table td[data-label="Action"],
+            .mobile-card-table td:last-child {
+                display: flex !important;
+                width: 100% !important;
+                border-bottom: none !important;
+                border-top: 1px solid #e2e8f0 !important;
+                margin-top: 8px !important;
+                padding-top: 10px !important;
+                padding-bottom: 0 !important;
+            }
+            .mobile-card-table td[data-label="Action"]::before,
+            .mobile-card-table td:last-child::before {
+                display: none !important;
+            }
+            .mobile-card-table td[data-label="Action"] .pull-right,
+            .mobile-card-table td:last-child .pull-right {
+                width: 100% !important;
+                display: flex !important;
+                gap: 8px !important;
+                float: none !important;
+            }
+            .mobile-card-table td[data-label="Action"] .btn,
+            .mobile-card-table td:last-child .btn {
+                flex: 1 !important;
+                width: 50% !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 8px 10px !important;
+                font-size: 12px !important;
+                font-weight: 700 !important;
+                border-radius: 8px !important;
+                text-align: center !important;
+            }
+        }
     </style>
 
     <section class="content">
@@ -188,7 +272,7 @@
                     </div>
                     <div class="box-body">
                         <div class="table-responsive">
-                            <table class="table table-striped table-bordered table-hover example" cellspacing="0" width="100%">
+                            <table class="table table-striped table-bordered table-hover example mobile-card-table" cellspacing="0" width="100%">
                                 <thead>
                                     <tr>
                                         <th><?php echo $this->lang->line('student'); ?></th>
@@ -210,20 +294,20 @@
                                     <?php if (!empty($calls)) {
                                         foreach ($calls as $call) { ?>
                                             <tr>
-                                                <td><?php echo $call['firstname'] . " " . $call['lastname'] . " (" . $call['admission_no'] . ")"; ?></td>
-                                                <td><?php echo $call['father_name']; ?></td>
-                                                <td><?php echo $call['class'] . " (" . $call['section'] . ")"; ?></td>
-                                                <td><?php echo $call['pickup_point_name']; ?></td>
-                                                <td><?php echo $call['phone_number']; ?></td>
-                                                <td><?php echo get_purpose_pill($call['purpose_name']); ?></td>
-                                                <td><?php echo get_call_status_pill($call['call_status']); ?></td>
-                                                <td><?php echo date($this->customlib->getSchoolDateFormat(true, true), strtotime($call['date'])); ?></td>
-                                                <td>
+                                                <td data-label="Student"><?php echo $call['firstname'] . " " . $call['lastname'] . " (" . $call['admission_no'] . ")"; ?></td>
+                                                <td data-label="Father Name"><?php echo $call['father_name']; ?></td>
+                                                <td data-label="Class"><?php echo $call['class'] . " (" . $call['section'] . ")"; ?></td>
+                                                <td data-label="Pickup Point"><?php echo $call['pickup_point_name']; ?></td>
+                                                <td data-label="Phone"><?php echo $call['phone_number']; ?></td>
+                                                <td data-label="Purpose"><?php echo get_purpose_pill($call['purpose_name']); ?></td>
+                                                <td data-label="Status"><?php echo get_call_status_pill($call['call_status']); ?></td>
+                                                <td data-label="Date"><?php echo date($this->customlib->getSchoolDateFormat(true, true), strtotime($call['date'])); ?></td>
+                                                <td data-label="Note">
                                                     <div style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#444; font-size:12px;" data-toggle="tooltip" data-placement="top" title="<?php echo htmlspecialchars($call['notes'] ?? ''); ?>">
                                                         <?php echo !empty($call['notes']) ? htmlspecialchars($call['notes']) : '<span style="color:#ccc;">-</span>'; ?>
                                                     </div>
                                                 </td>
-                                                <td>
+                                                <td data-label="Follow-up Status">
                                                     <?php 
                                                     if ($call['total_followups'] == 0) {
                                                         echo "<span class='label label-default'>None</span>";
@@ -234,13 +318,22 @@
                                                     }
                                                     ?>
                                                 </td>
-                                                <td><?php echo $call['assigned_to_name']; ?></td>
-                                                <td><?php echo $call['staff_name'] . " " . $call['staff_surname']; ?></td>
-                                                <td class="pull-right">
-                                                    <?php if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) { ?>
-                                                        <a href="#" class="btn btn-default btn-xs" onclick="follow_up('<?php echo $call['id']; ?>')" data-toggle="tooltip" title="<?php echo ($this->lang->line('follow_up') ? $this->lang->line('follow_up') : 'Follow Up'); ?>">
-                                                            <i class="fa fa-phone"></i>
-                                                        </a>
+                                                <td data-label="Assigned To"><?php echo $call['assigned_to_name']; ?></td>
+                                                <td data-label="Created By"><?php echo $call['staff_name'] . " " . $call['staff_surname']; ?></td>
+                                                <td data-label="Action" class="pull-right">
+                                                    <?php if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) { 
+                                                        $dial_phone = !empty($call['father_phone']) ? $call['father_phone'] : (!empty($call['mother_phone']) ? $call['mother_phone'] : (!empty($call['guardian_phone']) ? $call['guardian_phone'] : (!empty($call['mobileno']) ? $call['mobileno'] : $call['phone_number'])));
+                                                        $clean_dial_phone = preg_replace('/[^0-9]/', '', $dial_phone);
+                                                        $normalized_date = !empty($call['date']) ? str_replace('/', '-', $call['date']) : '';
+                                                        $called_today = (!empty($normalized_date) && date('Y-m-d', strtotime($normalized_date)) == date('Y-m-d')) ? '1' : '0';
+                                                        $last_call_date = !empty($call['date']) ? date($this->customlib->getSchoolDateFormat(true, true), strtotime($normalized_date)) : '';
+                                                    ?>
+                                                        <div class="pull-right" style="width:100%;">
+                                                            <a href="javascript:void(0)" class="btn btn-success btn-xs trigger-direct-call" data-call-id="<?php echo $call['id']; ?>" data-student-name="<?php echo htmlspecialchars($call['firstname'] . ' ' . $call['lastname']); ?>" data-phone="<?php echo $clean_dial_phone; ?>" data-called-today="<?php echo $called_today; ?>" data-last-call-date="<?php echo $last_call_date; ?>" data-toggle="tooltip" title="Dial Father/Mother (<?php echo $dial_phone; ?>)"><i class="fa fa-phone"></i> Call</a>
+                                                            <a href="#" class="btn btn-default btn-xs" onclick="follow_up('<?php echo $call['id']; ?>')" data-toggle="tooltip" title="<?php echo ($this->lang->line('follow_up') ? $this->lang->line('follow_up') : 'Follow Up'); ?>">
+                                                                <i class="fa fa-pencil"></i> Log
+                                                            </a>
+                                                        </div>
                                                     <?php } ?>
                                                 </td>
                                             </tr>
@@ -264,7 +357,7 @@
                                 </div>
                                 <div class="box-body">
                                     <div class="table-responsive">
-                                        <table class="table table-striped table-bordered table-hover example" cellspacing="0" width="100%">
+                                        <table class="table table-striped table-bordered table-hover example mobile-card-table" cellspacing="0" width="100%">
                                             <thead>
                                                 <tr>
                                                     <th>Student</th>
@@ -307,24 +400,36 @@
                                                         $display_note = !empty($pfw['followup_remarks']) ? $pfw['followup_remarks'] : (!empty($pfw['notes']) ? $pfw['notes'] : '');
                                                 ?>
                                                     <tr>
-                                                        <td><?php echo $pfw['firstname'] . " " . $pfw['lastname'] . " (" . $pfw['admission_no'] . ")"; ?></td>
-                                                        <td><?php echo $pfw['father_name']; ?></td>
-                                                        <td><?php echo $pfw['class'] . " (" . $pfw['section'] . ")"; ?></td>
-                                                        <td><?php echo $pfw['pickup_point_name']; ?></td>
-                                                        <td><?php echo $pfw['phone_number']; ?></td>
-                                                        <td><?php echo get_purpose_pill($pfw['purpose_name']); ?></td>
-                                                        <td><?php echo $due_badge; ?></td>
-                                                        <td><?php echo $priority_pill; ?></td>
-                                                        <td><?php echo $pfw['assigned_to_name']; ?></td>
-                                                        <td>
+                                                        <td data-label="Student"><?php echo $pfw['firstname'] . " " . $pfw['lastname'] . " (" . $pfw['admission_no'] . ")"; ?></td>
+                                                        <td data-label="Father Name"><?php echo $pfw['father_name']; ?></td>
+                                                        <td data-label="Class"><?php echo $pfw['class'] . " (" . $pfw['section'] . ")"; ?></td>
+                                                        <td data-label="Pickup Point"><?php echo $pfw['pickup_point_name']; ?></td>
+                                                        <td data-label="Phone"><?php echo $pfw['phone_number']; ?></td>
+                                                        <td data-label="Purpose"><?php echo get_purpose_pill($pfw['purpose_name']); ?></td>
+                                                        <td data-label="Due Date"><?php echo $due_badge; ?></td>
+                                                        <td data-label="Priority"><?php echo $priority_pill; ?></td>
+                                                        <td data-label="Assigned To"><?php echo $pfw['assigned_to_name']; ?></td>
+                                                        <td data-label="Note / Remarks">
                                                             <div style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#444; font-size:12px;" data-toggle="tooltip" data-placement="top" title="<?php echo htmlspecialchars($display_note); ?>">
                                                                 <?php echo !empty($display_note) ? htmlspecialchars($display_note) : '<span style="color:#ccc;">-</span>'; ?>
                                                             </div>
                                                         </td>
-                                                        <td class="pull-right">
-                                                            <a href="#" class="btn btn-primary btn-xs" onclick="follow_up('<?php echo $pfw['id']; ?>')" data-toggle="tooltip" title="Take Action / Complete Follow Up">
-                                                                <i class="fa fa-phone"></i> Take Action
-                                                            </a>
+                                                        <td data-label="Action" class="pull-right">
+                                                            <?php 
+                                                                $dial_phone = !empty($pfw['father_phone']) ? $pfw['father_phone'] : (!empty($pfw['mother_phone']) ? $pfw['mother_phone'] : (!empty($pfw['guardian_phone']) ? $pfw['guardian_phone'] : (!empty($pfw['mobileno']) ? $pfw['mobileno'] : $pfw['phone_number'])));
+                                                                $clean_dial_phone = preg_replace('/[^0-9]/', '', $dial_phone);
+                                                                $normalized_date = !empty($pfw['date']) ? str_replace('/', '-', $pfw['date']) : '';
+                                                                $called_today = (!empty($normalized_date) && date('Y-m-d', strtotime($normalized_date)) == date('Y-m-d')) ? '1' : '0';
+                                                                $last_call_date = !empty($pfw['date']) ? date($this->customlib->getSchoolDateFormat(true, true), strtotime($normalized_date)) : '';
+                                                            ?>
+                                                            <div class="pull-right" style="width:100%;">
+                                                                <a href="javascript:void(0)" class="btn btn-success btn-xs trigger-direct-call" data-call-id="<?php echo $pfw['id']; ?>" data-student-name="<?php echo htmlspecialchars($pfw['firstname'] . ' ' . $pfw['lastname']); ?>" data-phone="<?php echo $clean_dial_phone; ?>" data-called-today="<?php echo $called_today; ?>" data-last-call-date="<?php echo $last_call_date; ?>" data-toggle="tooltip" title="Dial Father/Mother (<?php echo $dial_phone; ?>)">
+                                                                    <i class="fa fa-phone"></i> Call
+                                                                </a>
+                                                                <a href="#" class="btn btn-default btn-xs" onclick="follow_up('<?php echo $pfw['id']; ?>')" data-toggle="tooltip" title="Take Action / Complete Follow Up">
+                                                                    <i class="fa fa-pencil"></i> Log
+                                                                </a>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 <?php }
@@ -691,6 +796,90 @@
     var student_phones = {};
 
     $(document).ready(function () {
+        var pendingCallIdToOpen = null;
+        var pendingPhoneToDial = null;
+
+        $(document).on('click', '.trigger-direct-call', function (e) {
+            e.preventDefault();
+            var callId = $(this).attr('data-call-id');
+            var studentName = $(this).attr('data-student-name');
+            var phone = $(this).attr('data-phone');
+            var calledToday = $(this).attr('data-called-today');
+            var lastCallDate = $(this).attr('data-last-call-date');
+
+            pendingCallIdToOpen = callId;
+            pendingPhoneToDial = phone;
+
+            if (calledToday == '1' || calledToday === 1 || calledToday === 'true' || calledToday === true) {
+                var msg = "A call was already logged for <strong>" + studentName + "</strong> today (" + (lastCallDate || 'Today') + ").<br><br>Do you want to call again?";
+                $('#repeat_call_warning_text').html(msg);
+                $('#repeatCallWarningModal').modal('show');
+            } else {
+                execDialAndTrack(phone, callId);
+            }
+        });
+
+        $(document).on('click', '#confirm_dial_btn', function () {
+            $('#repeatCallWarningModal').modal('hide');
+            if (pendingPhoneToDial && pendingCallIdToOpen) {
+                execDialAndTrack(pendingPhoneToDial, pendingCallIdToOpen);
+            }
+        });
+
+        function execDialAndTrack(phone, callId) {
+            if (!phone) {
+                alert("No valid phone number found for Father/Mother/Guardian.");
+                return;
+            }
+            sessionStorage.setItem('pending_followup_auto_open', callId);
+            window.location.href = 'tel:' + phone;
+        }
+
+        function checkAndOpenPendingFollowup() {
+            var callId = sessionStorage.getItem('pending_followup_auto_open');
+            if (callId) {
+                sessionStorage.removeItem('pending_followup_auto_open');
+                setTimeout(function () {
+                    if (typeof follow_up === 'function') {
+                        follow_up(callId);
+                    }
+                }, 500);
+            }
+        }
+
+        $(window).on('focus', function () {
+            checkAndOpenPendingFollowup();
+        });
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') {
+                checkAndOpenPendingFollowup();
+            }
+        });
+
+        $(document).ajaxComplete(function() {
+            applyMobileCardLabels();
+        });
+
+        function applyMobileCardLabels() {
+            var labels = ['Student', 'Father Name', 'Class', 'Pickup Point', 'Phone', 'Purpose', 'Status', 'Date', 'Note', 'Follow-up Status', 'Assigned To', 'Created By', 'Action'];
+            $('.mobile-card-table tbody tr').each(function() {
+                $(this).find('td').each(function(i) {
+                    if (labels[i] && !$(this).attr('data-label')) {
+                        $(this).attr('data-label', labels[i]);
+                    }
+                    var text = $(this).text().trim();
+                    if (text === '' || text === '-' || text === 'None' || text === '<span style="color:#ccc;">-</span>') {
+                        $(this).addClass('mobile-hide-empty');
+                    } else {
+                        $(this).removeClass('mobile-hide-empty');
+                    }
+                });
+            });
+        }
+        applyMobileCardLabels();
+
+        $(document).on('click', '#pending_metric_box', function () {
         $(document).on('click', '#pending_metric_box', function () {
             $('#tab_pending_followup_li a').tab('show');
         });

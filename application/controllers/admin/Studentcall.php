@@ -102,9 +102,16 @@ class Studentcall extends Admin_Controller
                     $followup_status = "<span class='label label-success'>Resolved</span>";
                 }
 
+                $dial_phone = !empty($call['father_phone']) ? $call['father_phone'] : (!empty($call['mother_phone']) ? $call['mother_phone'] : (!empty($call['guardian_phone']) ? $call['guardian_phone'] : (!empty($call['mobileno']) ? $call['mobileno'] : $call['phone_number'])));
+                $clean_dial_phone = preg_replace('/[^0-9]/', '', $dial_phone);
+                $normalized_date = !empty($call['date']) ? str_replace('/', '-', $call['date']) : '';
+                $called_today = (!empty($normalized_date) && date('Y-m-d', strtotime($normalized_date)) == date('Y-m-d')) ? '1' : '0';
+                $last_call_date = !empty($call['date']) ? date($this->customlib->getSchoolDateFormat(true, true), strtotime($normalized_date)) : '';
+
                 $action = '';
                 if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) {
-                    $action = '<a href="#" class="btn btn-default btn-xs" onclick="follow_up(' . $call['id'] . ')" data-toggle="tooltip" title="' . ($this->lang->line('follow_up') ? $this->lang->line('follow_up') : 'Follow Up') . '"><i class="fa fa-phone"></i></a>';
+                    $action = '<a href="javascript:void(0)" class="btn btn-success btn-xs trigger-direct-call" data-call-id="' . $call['id'] . '" data-student-name="' . htmlspecialchars($call['firstname'] . ' ' . $call['lastname']) . '" data-phone="' . $clean_dial_phone . '" data-called-today="' . $called_today . '" data-last-call-date="' . $last_call_date . '" data-toggle="tooltip" title="Dial (' . $dial_phone . ')"><i class="fa fa-phone"></i> Call</a> ';
+                    $action .= '<a href="#" class="btn btn-default btn-xs" onclick="follow_up(' . $call['id'] . ')" data-toggle="tooltip" title="' . ($this->lang->line('follow_up') ? $this->lang->line('follow_up') : 'Follow Up') . '"><i class="fa fa-pencil"></i> Log</a>';
                 }
 
                 $row = [

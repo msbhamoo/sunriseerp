@@ -72,9 +72,11 @@ body .main-sidebar form.sidebar-form {
         top: 50px !important; /* Start under the mobile header */
         height: calc(100vh - 50px) !important;
         width: calc(100vw - 150px) !important; /* Fill remaining screen */
+        max-width: 280px !important; /* Prevent over-stretching on tablets/larger screens */
         left: 150px !important; /* Start at the edge of the 150px sidebar */
-        z-index: 9999 !important; /* Ensure it stays above everything */
+        z-index: 99999 !important; /* Ensure it stays above everything */
         position: fixed !important;
+        box-sizing: border-box !important;
     }
     
     /* Make SURE the header is always visible on mobile */

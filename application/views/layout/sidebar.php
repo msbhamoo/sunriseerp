@@ -133,7 +133,7 @@ foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
 
                             ?>
 
-                        <li class="<?php echo activate_submenu($submenu_value->activate_controller, explode(',', (string)$submenu_value->activate_methods)); ?>"><a href="<?php echo site_url($submenu_value->url); ?>"><i class="icon-circle-small"></i><?php echo $this->lang->line($submenu_value->lang_key); ?></a></li>
+                        <li class="<?php echo activate_submenu($submenu_value->activate_controller, explode(',', (string)$submenu_value->activate_methods)); ?>"><a href="<?php echo site_url($submenu_value->url); ?>"><i class="icon-circle-small"></i><?php echo !empty($this->lang->line($submenu_value->lang_key)) ? $this->lang->line($submenu_value->lang_key) : $submenu_value->menu; ?></a></li>
 
                           <?php
 }
@@ -149,14 +149,6 @@ foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
                         if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) {
                             ?>
                             <li class="<?php echo set_Submenu('admin/studentcall'); ?>"><a href="<?php echo site_url('admin/studentcall'); ?>"><i class="icon-circle-small"></i>Student Call Log</a></li>
-                            <?php
-                        }
-                    }
-
-                    if ($side_list_value->lang_key == 'human_resource') {
-                        if ($this->rbac->hasPrivilege('job_posting', 'can_view')) {
-                            ?>
-                            <li class="<?php echo set_Submenu('admin/jobposting'); ?>"><a href="<?php echo site_url('admin/jobposting'); ?>"><i class="icon-circle-small"></i>Job Posting</a></li>
                             <?php
                         }
                     }
@@ -295,7 +287,12 @@ div.slimScrollRail {
     padding: 8px 0 !important;
     margin: 0 0 0 -1px !important; /* Close the gap and overlap the border slightly */
     background: #ffffff !important;
-    min-width: 240px !important; /* Ensure it has enough width so header doesn't wrap */
+}
+
+@media (min-width: 768px) {
+    .sidebar-menu .treeview-menu {
+        min-width: 240px !important; /* Ensure it has enough width on desktop so header doesn't wrap */
+    }
 }
 
 /* Submenu Flyout Header */
