@@ -342,7 +342,7 @@
                                                     ?>
                                                         <div class="pull-right" style="width:100%;">
                                                             <a href="javascript:void(0)" class="btn btn-success btn-xs trigger-direct-call" data-call-id="<?php echo $call['id']; ?>" data-student-name="<?php echo htmlspecialchars($call['firstname'] . ' ' . $call['lastname']); ?>" data-phone="<?php echo $clean_dial_phone; ?>" data-called-today="<?php echo $called_today; ?>" data-last-call-date="<?php echo $last_call_date; ?>" data-toggle="tooltip" title="Dial Father/Mother (<?php echo $dial_phone; ?>)"><i class="fa fa-phone"></i> Call</a>
-                                                            <a href="#" class="btn btn-default btn-xs" onclick="follow_up('<?php echo $call['id']; ?>')" data-toggle="tooltip" title="<?php echo ($this->lang->line('follow_up') ? $this->lang->line('follow_up') : 'Follow Up'); ?>">
+                                                            <a href="javascript:void(0)" class="btn btn-default btn-xs btn-follow-up-log" data-id="<?php echo $call['id']; ?>" onclick="follow_up('<?php echo $call['id']; ?>'); return false;" data-toggle="tooltip" title="<?php echo ($this->lang->line('follow_up') ? $this->lang->line('follow_up') : 'Follow Up'); ?>">
                                                                 <i class="fa fa-pencil"></i> Log
                                                             </a>
                                                         </div>
@@ -438,7 +438,7 @@
                                                                 <a href="javascript:void(0)" class="btn btn-success btn-xs trigger-direct-call" data-call-id="<?php echo $pfw['id']; ?>" data-student-name="<?php echo htmlspecialchars($pfw['firstname'] . ' ' . $pfw['lastname']); ?>" data-phone="<?php echo $clean_dial_phone; ?>" data-called-today="<?php echo $called_today; ?>" data-last-call-date="<?php echo $last_call_date; ?>" data-toggle="tooltip" title="Dial Father/Mother (<?php echo $dial_phone; ?>)">
                                                                     <i class="fa fa-phone"></i> Call
                                                                 </a>
-                                                                <a href="#" class="btn btn-default btn-xs" onclick="follow_up('<?php echo $pfw['id']; ?>')" data-toggle="tooltip" title="Take Action / Complete Follow Up">
+                                                                <a href="javascript:void(0)" class="btn btn-default btn-xs btn-follow-up-log" data-id="<?php echo $pfw['id']; ?>" onclick="follow_up('<?php echo $pfw['id']; ?>'); return false;" data-toggle="tooltip" title="Take Action / Complete Follow Up">
                                                                     <i class="fa fa-pencil"></i> Log
                                                                 </a>
                                                             </div>
@@ -844,29 +844,15 @@
         });
 
         function execDialAndTrack(phone, callId) {
-            if (!phone) {
-                alert("No valid phone number found for Father/Mother/Guardian.");
-                return;
+            if (phone) {
+                try {
+                    window.location.href = 'tel:' + phone;
+                } catch(e) {}
             }
-            sessionStorage.setItem('pending_followup_auto_open', callId);
-            window.location.href = 'tel:' + phone;
-        }
-
-        function checkAndOpenPendingFollowup() {
-            var callId = sessionStorage.getItem('pending_followup_auto_open');
-            if (callId) {
-                sessionStorage.removeItem('pending_followup_auto_open');
-                setTimeout(function () {
-                    if (typeof follow_up === 'function') {
-                        follow_up(callId);
-                    }
-                }, 500);
+            if (callId && typeof follow_up === 'function') {
+                follow_up(callId);
             }
         }
-
-        $(window).on('focus', function () {
-            checkAndOpenPendingFollowup();
-        });
 
         document.addEventListener('visibilitychange', function () {
             if (document.visibilityState === 'visible') {
@@ -902,10 +888,9 @@
             $('.collapse-box-mobile form, .collapse-box-mobile .box-body.row').hide();
         }
 
-        $(document).on('click', '.mobile-filter-toggle-btn, .collapse-box-mobile .box-header', function(e) {
-            if ($(e.target).closest('a[data-target="#addCallModal"]').length) {
-                return; // don't toggle filter when clicking add call button
-            }
+        $(document).on('click', '.mobile-filter-toggle-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             var $box = $(this).closest('.box');
             var $target = $box.find('form, .box-body.row').first();
             $box.toggleClass('filter-open');
@@ -916,7 +901,14 @@
             }
         });
 
-        $(document).on('click', '#pending_metric_box', function () {
+        $(document).on('click', '.btn-follow-up-log', function(e) {
+            e.preventDefault();
+            var id = $(this).data('id');
+            if (id) {
+                follow_up(id);
+            }
+        });
+
         $(document).on('click', '#pending_metric_box', function () {
             $('#tab_pending_followup_li a').tab('show');
         });

@@ -111,7 +111,7 @@ class Studentcall extends Admin_Controller
                 $action = '';
                 if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) {
                     $action = '<a href="javascript:void(0)" class="btn btn-success btn-xs trigger-direct-call" data-call-id="' . $call['id'] . '" data-student-name="' . htmlspecialchars($call['firstname'] . ' ' . $call['lastname']) . '" data-phone="' . $clean_dial_phone . '" data-called-today="' . $called_today . '" data-last-call-date="' . $last_call_date . '" data-toggle="tooltip" title="Dial (' . $dial_phone . ')"><i class="fa fa-phone"></i> Call</a> ';
-                    $action .= '<a href="#" class="btn btn-default btn-xs" onclick="follow_up(' . $call['id'] . ')" data-toggle="tooltip" title="' . ($this->lang->line('follow_up') ? $this->lang->line('follow_up') : 'Follow Up') . '"><i class="fa fa-pencil"></i> Log</a>';
+                    $action .= '<a href="javascript:void(0)" class="btn btn-default btn-xs btn-follow-up-log" data-id="' . $call['id'] . '" onclick="follow_up(' . $call['id'] . '); return false;" data-toggle="tooltip" title="' . ($this->lang->line('follow_up') ? $this->lang->line('follow_up') : 'Follow Up') . '"><i class="fa fa-pencil"></i> Log</a>';
                 }
 
                 $row = [
