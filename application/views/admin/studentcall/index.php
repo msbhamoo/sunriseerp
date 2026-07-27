@@ -1249,11 +1249,17 @@
     });
 
     function follow_up(id) {
+        var ajaxUrl = '<?php echo site_url("admin/studentcall/follow_up/") ?>' + id;
+        ajaxUrl = ajaxUrl.replace(/^http:/, window.location.protocol);
         $.ajax({
-            url: '<?php echo site_url("admin/studentcall/follow_up/") ?>' + id,
+            url: ajaxUrl,
             success: function (res) {
                 $('#followUpModalBody').html(res);
                 $('#followUpModal').modal('show');
+            },
+            error: function(xhr, status, err) {
+                console.error("Follow up load error:", status, err);
+                alert("Could not load follow up form. Please refresh or try again.");
             }
         });
     }
