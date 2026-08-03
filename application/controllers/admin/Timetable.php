@@ -422,6 +422,7 @@ class Timetable extends Admin_Controller
         $class_id             = $this->input->post('class_id');
         $section_id           = $this->input->post('section_id');
         $subject_group_id     = $this->input->post('subject_group_id');
+        $apply_scope          = $this->input->post('apply_scope'); // 'current' or 'all'
         
         $start_time           = $this->input->post('start_time');
         $duration             = $this->input->post('duration');
@@ -438,79 +439,204 @@ class Timetable extends Admin_Controller
         $days = $this->customlib->getDaysname();
         unset($days['Sunday']); // Remove Sunday
 
+        $target_combos = array();
+        if ($apply_scope == 'all') {
+            // Get all class section subject group combinations
+            $this->load->model('subjectgroup_model');
+            $all_sections = $this->section_model->get();
+            foreach ($all_sections as $sec_val) {
+                $c_id = $sec_val['class_id'];
+                $s_id = $sec_val['section_id'];
+                $groups = $this->subjectgroup_model->getGroupByClassandSection($c_id, $s_id);
+                if (!empty($groups)) {
+                    foreach ($groups as $g_val) {
+                        $target_combos[] = array(
+                            'class_id' => $c_id,
+                            'section_id' => $s_id,
+                            'subject_group_id' => $g_val['subject_group_id']
+                        );
+                    }
+                }
+            }
+        } else {
+            $target_combos[] = array(
+                'class_id' => $class_id,
+                'section_id' => $section_id,
+                'subject_group_id' => $subject_group_id
+            );
+        }
+
+        if (empty($target_combos)) {
+            $json_array = array('status' => '0', 'error' => "No class section combinations found.");
+            $this->output->set_content_type('application/json')->set_output(json_encode($json_array));
+            return;
+        }
+
         $insert_array = array();
 
-        foreach ($days as $day_key => $day_value) {
-            
-            // Delete existing records for this day
-            $this->db->where('class_id', $class_id);
-            $this->db->where('section_id', $section_id);
-            $this->db->where('subject_group_id', $subject_group_id);
-            $this->db->where('day', $day_value);
-            $this->db->where('session_id', $session);
-            $this->db->delete('subject_timetable');
-            
-            // Calculate periods
-            $current_start_time = $start_time;
-            $period_counter = 0;
-            
-            for ($i = 0; $i < $total_periods; $i++) {
+        foreach ($target_combos as $combo) {
+            $c_id = $combo['class_id'];
+            $s_id = $combo['section_id'];
+            $sg_id = $combo['subject_group_id'];
+
+            foreach ($days as $day_key => $day_value) {
                 
-                // insert teaching period
-                $new_time = date('h:i A', strtotime($current_start_time . " +$duration minutes"));
+                // Delete existing records for this day
+                $this->db->where('class_id', $c_id);
+                $this->db->where('section_id', $s_id);
+                $this->db->where('subject_group_id', $sg_id);
+                $this->db->where('day', $day_value);
+                $this->db->where('session_id', $session);
+                $this->db->delete('subject_timetable');
                 
-                $insert_array[] = array(
-                    'day'                      => $day_value,
-                    'class_id'                 => $class_id,
-                    'section_id'               => $section_id,
-                    'subject_group_id'         => $subject_group_id,
-                    'subject_group_subject_id' => null, // empty initially
-                    'staff_id'                 => null, // empty initially
-                    'time_from'                => $current_start_time,
-                    'time_to'                  => $new_time,
-                    'start_time'               => $this->customlib->timeFormat($current_start_time, true),
-                    'end_time'                 => $this->customlib->timeFormat($new_time, true),
-                    'room_no'                  => $room_no,
-                    'period_type'              => 'period',
-                    'break_label'              => null,
-                    'session_id'               => $session,
-                );
+                // Calculate periods
+                $current_start_time = $start_time;
+                $period_counter = 0;
                 
-                $current_start_time = date('h:i A', strtotime($new_time . " +$interval minutes"));
-                $period_counter++;
-                
-                if (!empty($periods_before_break) && $periods_before_break > 0 && $period_counter == $periods_before_break) {
-                    // insert break
-                    if (!empty($break_duration) && $break_duration > 0) {
-                        $break_new_time = date('h:i A', strtotime($current_start_time . " +$break_duration minutes"));
-                        $insert_array[] = array(
-                            'day'                      => $day_value,
-                            'class_id'                 => $class_id,
-                            'section_id'               => $section_id,
-                            'subject_group_id'         => $subject_group_id,
-                            'subject_group_subject_id' => null,
-                            'staff_id'                 => null,
-                            'time_from'                => $current_start_time,
-                            'time_to'                  => $break_new_time,
-                            'start_time'               => $this->customlib->timeFormat($current_start_time, true),
-                            'end_time'                 => $this->customlib->timeFormat($break_new_time, true),
-                            'room_no'                  => null,
-                            'period_type'              => 'break',
-                            'break_label'              => !empty($break_label) ? $break_label : 'Lunch Break',
-                            'session_id'               => $session,
-                        );
-                        $current_start_time = $break_new_time; // no interval after break usually
+                for ($i = 0; $i < $total_periods; $i++) {
+                    
+                    // insert teaching period
+                    $new_time = date('h:i A', strtotime($current_start_time . " +$duration minutes"));
+                    
+                    $insert_array[] = array(
+                        'day'                      => $day_value,
+                        'class_id'                 => $c_id,
+                        'section_id'               => $s_id,
+                        'subject_group_id'         => $sg_id,
+                        'subject_group_subject_id' => null, // empty initially
+                        'staff_id'                 => null, // empty initially
+                        'time_from'                => $current_start_time,
+                        'time_to'                  => $new_time,
+                        'start_time'               => $this->customlib->timeFormat($current_start_time, true),
+                        'end_time'                 => $this->customlib->timeFormat($new_time, true),
+                        'room_no'                  => $room_no,
+                        'period_type'              => 'period',
+                        'break_label'              => null,
+                        'session_id'               => $session,
+                    );
+                    
+                    $current_start_time = date('h:i A', strtotime($new_time . " +$interval minutes"));
+                    $period_counter++;
+                    
+                    if (!empty($periods_before_break) && $periods_before_break > 0 && $period_counter == $periods_before_break) {
+                        // insert break
+                        if (!empty($break_duration) && $break_duration > 0) {
+                            $break_new_time = date('h:i A', strtotime($current_start_time . " +$break_duration minutes"));
+                            $insert_array[] = array(
+                                'day'                      => $day_value,
+                                'class_id'                 => $c_id,
+                                'section_id'               => $s_id,
+                                'subject_group_id'         => $sg_id,
+                                'subject_group_subject_id' => null,
+                                'staff_id'                 => null,
+                                'time_from'                => $current_start_time,
+                                'time_to'                  => $break_new_time,
+                                'start_time'               => $this->customlib->timeFormat($current_start_time, true),
+                                'end_time'                 => $this->customlib->timeFormat($break_new_time, true),
+                                'room_no'                  => null,
+                                'period_type'              => 'break',
+                                'break_label'              => !empty($break_label) ? $break_label : 'Lunch Break',
+                                'session_id'               => $session,
+                            );
+                            $current_start_time = $break_new_time; // no interval after break usually
+                        }
+                        $period_counter = 0; // reset
                     }
-                    $period_counter = 0; // reset
                 }
             }
         }
 
         if (!empty($insert_array)) {
-            $this->db->insert_batch('subject_timetable', $insert_array);
+            // Insert in chunks of 500
+            $chunks = array_chunk($insert_array, 500);
+            foreach ($chunks as $chunk) {
+                $this->db->insert_batch('subject_timetable', $chunk);
+            }
         }
 
         $json_array = array('status' => '1', 'error' => '', 'message' => $this->lang->line('success_message'));
+        $this->output->set_content_type('application/json')->set_output(json_encode($json_array));
+    }
+
+    public function shift_timetable_time()
+    {
+        if (!$this->rbac->hasPrivilege('class_timetable', 'can_edit')) {
+            $json_array = array('status' => '0', 'error' => $this->lang->line('access_denied'));
+            $this->output->set_content_type('application/json')->set_output(json_encode($json_array));
+            return;
+        }
+
+        $scope         = $this->input->post('shift_scope'); // 'current' or 'all'
+        $class_id      = $this->input->post('class_id');
+        $section_id    = $this->input->post('section_id');
+        $shift_direction = $this->input->post('shift_direction'); // 'forward' (+) or 'backward' (-)
+        $shift_minutes = (int)$this->input->post('shift_minutes');
+        $target_day    = $this->input->post('shift_day'); // 'all' or day name
+
+        if ($shift_minutes <= 0) {
+            $json_array = array('status' => '0', 'error' => 'Please enter a valid number of minutes (> 0).');
+            $this->output->set_content_type('application/json')->set_output(json_encode($json_array));
+            return;
+        }
+
+        $session = $this->setting_model->getCurrentSession();
+
+        $this->db->where('session_id', $session);
+
+        if ($scope == 'current') {
+            if (empty($class_id) || empty($section_id)) {
+                $json_array = array('status' => '0', 'error' => 'Class and Section are required for current scope.');
+                $this->output->set_content_type('application/json')->set_output(json_encode($json_array));
+                return;
+            }
+            $this->db->where('class_id', $class_id);
+            $this->db->where('section_id', $section_id);
+        }
+
+        if ($target_day != 'all' && !empty($target_day)) {
+            $this->db->where('day', $target_day);
+        }
+
+        $records = $this->db->get('subject_timetable')->result_array();
+
+        if (empty($records)) {
+            $json_array = array('status' => '0', 'error' => 'No timetable entries found to shift.');
+            $this->output->set_content_type('application/json')->set_output(json_encode($json_array));
+            return;
+        }
+
+        $sign = ($shift_direction == 'backward') ? '-' : '+';
+        $update_batch = array();
+
+        foreach ($records as $row) {
+            $orig_from = $row['time_from'];
+            $orig_to   = $row['time_to'];
+
+            $new_from_ts = strtotime($orig_from . " {$sign}{$shift_minutes} minutes");
+            $new_to_ts   = strtotime($orig_to . " {$sign}{$shift_minutes} minutes");
+
+            $new_time_from  = date('h:i A', $new_from_ts);
+            $new_time_to    = date('h:i A', $new_to_ts);
+            $new_start_time = $this->customlib->timeFormat($new_time_from, true);
+            $new_end_time   = $this->customlib->timeFormat($new_time_to, true);
+
+            $update_batch[] = array(
+                'id'         => $row['id'],
+                'time_from'  => $new_time_from,
+                'time_to'    => $new_time_to,
+                'start_time' => $new_start_time,
+                'end_time'   => $new_end_time
+            );
+        }
+
+        if (!empty($update_batch)) {
+            $chunks = array_chunk($update_batch, 500);
+            foreach ($chunks as $chunk) {
+                $this->db->update_batch('subject_timetable', $chunk, 'id');
+            }
+        }
+
+        $json_array = array('status' => '1', 'error' => '', 'message' => "Timetable timings shifted successfully by {$sign}{$shift_minutes} minutes!");
         $this->output->set_content_type('application/json')->set_output(json_encode($json_array));
     }
 
@@ -525,17 +651,20 @@ class Timetable extends Admin_Controller
         $class_id             = $this->input->post('class_id');
         $section_id           = $this->input->post('section_id');
         $subject_group_id     = $this->input->post('subject_group_id');
+        $copy_scope           = $this->input->post('copy_scope'); // 'current' or 'all'
+        $preserve_existing    = $this->input->post('preserve_existing'); // 1 or 0
         $source_day           = $this->input->post('source_day');
         $target_day           = $this->input->post('target_day');
         
         $session              = $this->setting_model->getCurrentSession();
 
-        // fetch source day records
+        // fetch source day records ordered by start_time
         $this->db->where('class_id', $class_id);
         $this->db->where('section_id', $section_id);
         $this->db->where('subject_group_id', $subject_group_id);
         $this->db->where('day', $source_day);
         $this->db->where('session_id', $session);
+        $this->db->order_by('start_time', 'asc');
         $source_records = $this->db->get('subject_timetable')->result_array();
 
         if (empty($source_records)) {
@@ -544,41 +673,135 @@ class Timetable extends Admin_Controller
             return;
         }
 
+        $target_combos = array();
+        if ($copy_scope == 'all') {
+            $this->load->model('subjectgroup_model');
+            $all_sections = $this->section_model->get();
+            foreach ($all_sections as $sec_val) {
+                $c_id = $sec_val['class_id'];
+                $s_id = $sec_val['section_id'];
+                $groups = $this->subjectgroup_model->getGroupByClassandSection($c_id, $s_id);
+                if (!empty($groups)) {
+                    foreach ($groups as $g_val) {
+                        $target_combos[] = array(
+                            'class_id' => $c_id,
+                            'section_id' => $s_id,
+                            'subject_group_id' => $g_val['subject_group_id']
+                        );
+                    }
+                }
+            }
+        } else {
+            $target_combos[] = array(
+                'class_id' => $class_id,
+                'section_id' => $section_id,
+                'subject_group_id' => $subject_group_id
+            );
+        }
+
         $target_days = array();
         if ($target_day == 'all') {
             $days = $this->customlib->getDaysname();
             unset($days['Sunday']);
-            unset($days[$source_day]);
+            if ($copy_scope == 'current') {
+                unset($days[$source_day]);
+            }
             $target_days = array_keys($days);
         } else {
-            if ($target_day != $source_day) {
-                $target_days = array($target_day);
-            }
+            $target_days = array($target_day);
         }
 
         $insert_array = array();
 
-        foreach ($target_days as $t_day) {
-            $this->db->where('class_id', $class_id);
-            $this->db->where('section_id', $section_id);
-            $this->db->where('subject_group_id', $subject_group_id);
-            $this->db->where('day', $t_day);
-            $this->db->where('session_id', $session);
-            $this->db->delete('subject_timetable');
-            
-            foreach ($source_records as $rec) {
-                $new_rec = $rec;
-                unset($new_rec['id']);
-                $new_rec['day'] = $t_day;
-                $insert_array[] = $new_rec;
+        foreach ($target_combos as $combo) {
+            $c_id = $combo['class_id'];
+            $s_id = $combo['section_id'];
+            $sg_id = $combo['subject_group_id'];
+
+            foreach ($target_days as $t_day) {
+                // If it's the exact same day in current class, skip to avoid self-overwrite
+                if ($copy_scope == 'current' && $t_day == $source_day) {
+                    continue;
+                }
+
+                // Fetch existing records for this target combo & day before deleting
+                $this->db->where('class_id', $c_id);
+                $this->db->where('section_id', $s_id);
+                $this->db->where('subject_group_id', $sg_id);
+                $this->db->where('day', $t_day);
+                $this->db->where('session_id', $session);
+                $this->db->order_by('start_time', 'asc');
+                $existing_target_records = $this->db->get('subject_timetable')->result_array();
+
+                // Build a queue of existing teaching period assignments (subject & teacher) for target class
+                $existing_teaching_slots = array();
+                if ($preserve_existing == 1 && !empty($existing_target_records)) {
+                    foreach ($existing_target_records as $ex_rec) {
+                        if (empty($ex_rec['period_type']) || $ex_rec['period_type'] == 'period') {
+                            if (!empty($ex_rec['subject_group_subject_id']) || !empty($ex_rec['staff_id'])) {
+                                $existing_teaching_slots[] = array(
+                                    'subject_group_subject_id' => $ex_rec['subject_group_subject_id'],
+                                    'staff_id'                 => $ex_rec['staff_id'],
+                                    'room_no'                  => $ex_rec['room_no']
+                                );
+                            }
+                        }
+                    }
+                }
+
+                // Delete existing records
+                $this->db->where('class_id', $c_id);
+                $this->db->where('section_id', $s_id);
+                $this->db->where('subject_group_id', $sg_id);
+                $this->db->where('day', $t_day);
+                $this->db->where('session_id', $session);
+                $this->db->delete('subject_timetable');
+                
+                $teaching_slot_index = 0;
+
+                foreach ($source_records as $rec) {
+                    $new_rec = $rec;
+                    unset($new_rec['id']);
+                    $new_rec['class_id']         = $c_id;
+                    $new_rec['section_id']       = $s_id;
+                    $new_rec['subject_group_id'] = $sg_id;
+                    $new_rec['day']              = $t_day;
+                    
+                    if ($c_id != $class_id || $s_id != $section_id) {
+                        // Target class is different from source class
+                        if ($new_rec['period_type'] == 'break') {
+                            $new_rec['subject_group_subject_id'] = null;
+                            $new_rec['staff_id']                 = null;
+                            $new_rec['room_no']                  = null;
+                        } else {
+                            // Teaching period
+                            if ($preserve_existing == 1 && isset($existing_teaching_slots[$teaching_slot_index])) {
+                                $new_rec['subject_group_subject_id'] = $existing_teaching_slots[$teaching_slot_index]['subject_group_subject_id'];
+                                $new_rec['staff_id']                 = $existing_teaching_slots[$teaching_slot_index]['staff_id'];
+                                if (!empty($existing_teaching_slots[$teaching_slot_index]['room_no'])) {
+                                    $new_rec['room_no'] = $existing_teaching_slots[$teaching_slot_index]['room_no'];
+                                }
+                                $teaching_slot_index++;
+                            } else {
+                                $new_rec['subject_group_subject_id'] = null;
+                                $new_rec['staff_id']                 = null;
+                            }
+                        }
+                    }
+
+                    $insert_array[] = $new_rec;
+                }
             }
         }
 
         if (!empty($insert_array)) {
-            $this->db->insert_batch('subject_timetable', $insert_array);
+            $chunks = array_chunk($insert_array, 500);
+            foreach ($chunks as $chunk) {
+                $this->db->insert_batch('subject_timetable', $chunk);
+            }
         }
 
-        $json_array = array('status' => '1', 'error' => '', 'message' => "Timetable copied successfully!");
+        $json_array = array('status' => '1', 'error' => '', 'message' => "Timetable structure synced successfully across classes!");
         $this->output->set_content_type('application/json')->set_output(json_encode($json_array));
     }
 

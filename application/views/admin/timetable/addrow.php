@@ -34,24 +34,24 @@
                 <table class="table table-bordered table-hover order-list tablewidthRS" id="tab_logic">
                     <thead>
                         <tr>
-
-                            <th width="19%">
+                            <th width="3%" class="text-center"><i class="fa fa-arrows"></i></th>
+                            <th width="18%">
                                 <?php echo $this->lang->line('subject') ?>
                             </th>
 
-                            <th width="19%">
+                            <th width="18%">
                                 <?php echo $this->lang->line('time_from'); ?><small class="astrike"> *</small>
                             </th>
-                            <th width="19%">
+                            <th width="18%">
                                 <?php echo $this->lang->line('time_to'); ?><small class="astrike"> *</small>
                             </th>
-                            <th width="19%">
+                            <th width="18%">
                                 <?php echo $this->lang->line('teacher'); ?>
                             </th>
-                            <th width="19%">
+                            <th width="18%">
                                 <?php echo $this->lang->line('room_no'); ?>
                             </th>
-                            <th width="5%" class="text-right">
+                            <th width="7%" class="text-right">
                                 <?php echo $this->lang->line('action') ?>
                             </th>
                         </tr>
@@ -65,7 +65,7 @@
                                 <input type="hidden" name="prev_array[]" value="<?php echo $prev_rec_value->id; ?>">
 
                                 <tr id='addr0'>
-
+                                    <td class="text-center v-align-middle drag-handle" style="cursor: move;"><i class="fa fa-ellipsis-v text-muted"></i> <i class="fa fa-ellipsis-v text-muted"></i></td>
                                     <td>
                                         <input type="hidden" name="total_row[]" value="<?php echo $counter; ?>">
                                         <input type="hidden" name="prev_id_<?php echo $counter; ?>" value="<?php echo $prev_rec_value->id; ?>">
@@ -97,34 +97,20 @@
                                     </td>
 
                                     <td>
-
-
-
-
-
-
                                         <div class="input-group">
                                             <input type="text" name="time_from_<?php echo $counter; ?>" class="form-control datetimepicker3 time_from" id="time_from_<?php echo $counter; ?>" value="<?php echo ($prev_rec_value->start_time != "") ? $prev_rec_value->time_from :  $this->customlib->timeFormat($prev_rec_value->start_time); ?>">
                                             <div class="input-group-addon">
                                                 <span class="fa fa-clock-o"></span>
                                             </div>
                                         </div>
-
                                     </td>
                                     <td>
-
-
                                         <div class='input-group'>
-                                            <input type='text' class="form-control datetimepicker3 time_to" name="time_to_<?php echo $counter; ?>" value="<?php echo ($prev_rec_value->end_time != "") ? $prev_rec_value->time_to :  $this->customlib->timeFormat($prev_rec_value->end_time); ?>" />
+                                            <input type='text' class="form-control datetimepicker3 time_to" id="time_to_<?php echo $counter; ?>" name="time_to_<?php echo $counter; ?>" value="<?php echo ($prev_rec_value->end_time != "") ? $prev_rec_value->time_to :  $this->customlib->timeFormat($prev_rec_value->end_time); ?>" />
                                             <span class="input-group-addon">
                                                 <span class="fa fa-clock-o"></span>
                                             </span>
                                         </div>
-
-
-
-
-
                                     </td>
 
                                     <td>
@@ -152,7 +138,11 @@
                                             <input type="text" name='room_no_<?php echo $counter; ?>' value="<?php echo $prev_rec_value->room_no; ?>" placeholder='Room no' class="form-control room_no" id="room_no_<?php echo $counter; ?>" />
                                         <?php } ?>
                                     </td>
-                                    <td class="text-right"><button class="ibtnDel btn btn-danger btn-danger"> <i class="fa fa-trash"></i></button></td>
+                                    <td class="text-right" style="white-space: nowrap;">
+                                        <button type="button" class="btn btn-default btn-xs insert_row_below" title="Insert Period Below"><i class="fa fa-plus text-primary"></i></button>
+                                        <button type="button" class="btn btn-default btn-xs insert_break_below" title="Insert Break Below"><i class="fa fa-coffee text-info"></i></button>
+                                        <button type="button" class="ibtnDel btn btn-danger btn-xs" title="Delete Row"><i class="fa fa-trash"></i></button>
+                                    </td>
 
                                 </tr>
 
@@ -163,7 +153,7 @@
                             ?>
 
                             <tr id='addr0'>
-
+                                <td class="text-center v-align-middle drag-handle" style="cursor: move;"><i class="fa fa-ellipsis-v text-muted"></i> <i class="fa fa-ellipsis-v text-muted"></i></td>
                                 <td class="relative">
                                     <input type="hidden" name="total_row[]" value="<?php echo $total_count; ?>">
                                     <input type="hidden" name="prev_id_<?php echo $total_count; ?>" value="0">
@@ -183,32 +173,20 @@
                                 </td>
 
                                 <td>
-
-
                                     <div class='input-group'>
                                         <input type='text' class="form-control datetimepicker3 time_from" id="time_from_<?php echo $total_count; ?>" name="time_from_<?php echo $total_count; ?>" />
                                         <span class="input-group-addon">
                                             <span class="fa fa-clock-o"></span>
                                         </span>
                                     </div>
-
-
-
-
                                 </td>
                                 <td>
-
-
                                     <div class='input-group'>
                                         <input type='text' class="form-control datetimepicker3 time_to" id="time_to_<?php echo $total_count; ?>" name="time_to_<?php echo $total_count; ?>" />
                                         <span class="input-group-addon">
                                             <span class="fa fa-clock-o"></span>
                                         </span>
                                     </div>
-
-
-
-
                                 </td>
                                 <td class="relative">
                                     <select class="form-control staff" onchange="check_class_dublicate_recored(<?php echo $total_count; ?>,this.value)" id="staff_id_<?php echo $total_count; ?>" name="staff_<?php echo $total_count; ?>">
@@ -228,7 +206,11 @@
                                     <input type="text" name='room_no_<?php echo $total_count; ?>' id='room_no_<?php echo $total_count; ?>' placeholder='<?php echo $this->lang->line('room_no'); ?>' class="form-control room_no" />
 
                                 </td>
-                                <td class="text-right"><button class="ibtnDel btn btn-danger btn-danger"> <i class="fa fa-trash"></i></button></td>
+                                <td class="text-right" style="white-space: nowrap;">
+                                    <button type="button" class="btn btn-default btn-xs insert_row_below" title="Insert Period Below"><i class="fa fa-plus text-primary"></i></button>
+                                    <button type="button" class="btn btn-default btn-xs insert_break_below" title="Insert Break Below"><i class="fa fa-coffee text-info"></i></button>
+                                    <button type="button" class="ibtnDel btn btn-danger btn-xs" title="Delete Row"><i class="fa fa-trash"></i></button>
+                                </td>
 
                             </tr>
                         <?php
@@ -243,6 +225,7 @@
             ?>
                 <button class="btn btn-primary pull-right" type="submit"><i class="fa fa-save"></i> <?php echo $this->lang->line('save'); ?></button>
                 <button type="button" class="btn btn-info pull-right mr-1" style="margin-right: 5px;" onclick="openCopyModal('<?php echo $day; ?>')"><i class="fa fa-copy"></i> Copy Timetable</button>
+                <button type="button" class="btn btn-warning pull-right mr-1" style="margin-right: 5px;" onclick="$('#shiftTimetableModal').modal('show')"><i class="fa fa-clock-o"></i> Shift Timings (+/- Mins)</button>
             <?php }
             ?>
 

@@ -193,6 +193,15 @@
                                     </div>
                                     <div class="col-sm-2">
                                         <div class="form-group">
+                                            <label for="apply_scope">Apply Scope</label>
+                                            <select class="form-control" name="apply_scope" id="apply_scope">
+                                                <option value="current">Selected Class</option>
+                                                <option value="all">All Classes & Sections</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <div class="form-group">
                                             <label for="form_phone" class="displayblock opacity d-sm-none">&nbsp;</label>
                                             <button type="button" class="btn btn-primary btn-send smallbtn28" id="quick_generate_btn"><?php echo $this->lang->line('apply'); ?></button>
                                         </div>
@@ -243,32 +252,106 @@
     </section>
 </div>
 
+<!-- Shift Timetable Modal -->
+<div class="modal fade" id="shiftTimetableModal" tabindex="-1" role="dialog" aria-labelledby="shiftModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="shiftModalLabel"><i class="fa fa-clock-o"></i> Shift Timetable Timings (+/- Minutes)</h4>
+            </div>
+            <div class="modal-body">
+                <form id="shiftTimetableForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Target Scope <small class="req">*</small></label>
+                                <select class="form-control" name="shift_scope" id="shift_scope">
+                                    <option value="current">Current Selected Class & Section</option>
+                                    <option value="all">ALL Classes & Sections (Whole School)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Target Day <small class="req">*</small></label>
+                                <select class="form-control" name="shift_day" id="shift_day">
+                                    <option value="all">All Days</option>
+                                    <?php if(isset($getDaysnameList)) { foreach ($getDaysnameList as $day_key => $day_value) { ?>
+                                        <option value="<?php echo $day_key; ?>"><?php echo $day_value; ?></option>
+                                    <?php } } ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Shift Direction <small class="req">*</small></label>
+                                <select class="form-control" name="shift_direction" id="shift_direction">
+                                    <option value="forward">Forward / Later (+)</option>
+                                    <option value="backward">Backward / Earlier (-)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Minutes to Shift <small class="req">*</small></label>
+                                <input type="number" class="form-control" name="shift_minutes" id="shift_minutes" value="15" min="1" required>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo $this->lang->line('cancel'); ?></button>
+                <button type="button" class="btn btn-primary" id="btnApplyShiftTime"><i class="fa fa-exchange"></i> Shift Timings Now</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Copy Timetable Modal -->
 <div class="modal fade" id="copyTimetableModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog modal-sm" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="myModalLabel">Copy Timetable</h4>
+                <h4 class="modal-title" id="myModalLabel"><i class="fa fa-copy"></i> Copy Timetable Layout</h4>
             </div>
             <div class="modal-body">
                 <form id="copyTimetableForm">
                     <input type="hidden" name="source_day" id="copy_source_day" value="">
                     <div class="form-group">
-                        <label>Copy To</label>
+                        <label>Scope</label>
+                        <select class="form-control" name="copy_scope" id="copy_scope">
+                            <option value="current">Current Selected Class</option>
+                            <option value="all">All Classes & Sections</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Copy To Day(s)</label>
                         <select class="form-control" name="target_day" id="copy_target_day">
                             <option value="all">All Days (except Sunday)</option>
-                            <?php foreach ($getDaysnameList as $day_key => $day_value) { 
+                            <?php if(isset($getDaysnameList)) { foreach ($getDaysnameList as $day_key => $day_value) { 
                                 if($day_key != 'Sunday') { ?>
                                 <option value="<?php echo $day_key; ?>"><?php echo $day_value; ?></option>
-                            <?php } } ?>
+                            <?php } } } ?>
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="preserve_existing" id="preserve_existing" value="1" checked>
+                                <strong>Keep existing subjects & teachers in target classes</strong>
+                            </label>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo $this->lang->line('cancel'); ?></button>
-                <button type="button" class="btn btn-primary" id="btnCopyTimetable">Copy</button>
+                <button type="button" class="btn btn-primary" id="btnCopyTimetable"><i class="fa fa-copy"></i> Copy Now</button>
             </div>
         </div>
     </div>
@@ -285,10 +368,12 @@
         var class_id = $('#class_id').val();
         var section_id = $('#section_id').val();
         var subject_group_id = $('#subject_group_id').val();
+        var copy_scope = $('#copy_scope').val();
+        var preserve_existing = $('#preserve_existing').is(':checked') ? 1 : 0;
         var source_day = $('#copy_source_day').val();
         var target_day = $('#copy_target_day').val();
 
-        if (!class_id || !section_id || !subject_group_id) {
+        if (copy_scope == 'current' && (!class_id || !section_id || !subject_group_id)) {
             errorMsg("Please select Class, Section, and Subject Group first.");
             return;
         }
@@ -300,6 +385,8 @@
                 class_id: class_id,
                 section_id: section_id,
                 subject_group_id: subject_group_id,
+                copy_scope: copy_scope,
+                preserve_existing: preserve_existing,
                 source_day: source_day,
                 target_day: target_day
             },
@@ -308,7 +395,13 @@
                 if (res.status == 1) {
                     successMsg(res.message);
                     $('#copyTimetableModal').modal('hide');
-                    // Optionally refresh the current tab or let the user do it
+                    var target = $('.nav-tabs .active a').attr("href");
+                    if (target) {
+                        var target_id = $('.nav-tabs .active a').attr("id");
+                        var ajax_data = $('.nav-tabs .active a').data();
+                        $(target).html("");
+                        getGroupdata(target, target_id, ajax_data);
+                    }
                 } else {
                     errorMsg(res.error);
                 }
@@ -497,6 +590,7 @@
                     width: '100%'
                 });
                 tot_count = data.total_count + 1;
+                initSortableTable(target);
             },
             error: function(xhr) { // if error occured
 
@@ -508,84 +602,192 @@
     }
 
 
+    function parseTimeString(timeStr) {
+        if (!timeStr) return null;
+        timeStr = timeStr.trim();
+        // Extract time parts e.g. "09:45 AM" or "9:45 AM" or "10:05:00 AM"
+        var match = timeStr.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
+        if (!match) return null;
+        var hours = parseInt(match[1], 10);
+        var minutes = parseInt(match[2], 10);
+        var ampm = match[3] ? match[3].toUpperCase() : null;
+
+        if (ampm) {
+            if (ampm === 'PM' && hours < 12) hours += 12;
+            if (ampm === 'AM' && hours === 12) hours = 0;
+        }
+        var d = new Date(2000, 0, 1, hours, minutes, 0);
+        return d;
+    }
+
+    function calculateTimeAddMinutes(timeStr, minsToAdd) {
+        var d = parseTimeString(timeStr);
+        if (!d) return "";
+        d.setMinutes(d.getMinutes() + parseInt(minsToAdd));
+        var hours = d.getHours();
+        var minutes = d.getMinutes();
+        var ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        var strHours = hours < 10 ? '0' + hours : hours;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        return strHours + ':' + minutes + ' ' + ampm;
+    }
+
+    function getNextCalculatedTimes(targetRow) {
+        var prevRow = targetRow ? $(targetRow) : $("table.order-list tbody tr:last");
+        var nextTimeFrom = "";
+        var nextTimeTo = "";
+
+        if (prevRow && prevRow.length > 0) {
+            var prevTimeTo = prevRow.find('.time_to').val();
+            if (prevTimeTo) {
+                nextTimeFrom = prevTimeTo;
+                var prevTimeFrom = prevRow.find('.time_from').val();
+                if (prevTimeFrom && prevTimeTo) {
+                    var dFrom = parseTimeString(prevTimeFrom);
+                    var dTo = parseTimeString(prevTimeTo);
+                    if (dFrom && dTo) {
+                        var diffMins = Math.round((dTo - dFrom) / 60000);
+                        if (diffMins > 0) {
+                            nextTimeTo = calculateTimeAddMinutes(nextTimeFrom, diffMins);
+                        }
+                    }
+                }
+            }
+        }
+        if (!nextTimeTo && nextTimeFrom) {
+            nextTimeTo = calculateTimeAddMinutes(nextTimeFrom, 45); // default 45 min slot
+        }
+        return { time_from: nextTimeFrom, time_to: nextTimeTo };
+    }
+
+    function buildRowHtml(type, count, defaultFrom, defaultTo) {
+        var cols = '<tr id="addr0">';
+        cols += '<td class="text-center v-align-middle drag-handle" style="cursor: move;"><i class="fa fa-ellipsis-v text-muted"></i> <i class="fa fa-ellipsis-v text-muted"></i></td>';
+
+        if (type === 'break') {
+            cols += '<td class="relative"><input type="hidden" name="total_row[]" value="' + count + '"><input type="hidden" name="prev_id_' + count + '" value="0"><input type="hidden" class="period_type" name="period_type_' + count + '" value="break"><input type="text" class="form-control break_label" name="break_label_' + count + '" placeholder="Break Label" value="Lunch Break"></td>';
+        } else {
+            cols += '<td class="relative"><input type="hidden" name="total_row[]" value="' + count + '"><input type="hidden" name="prev_id_' + count + '" value="0"><input type="hidden" class="period_type" name="period_type_' + count + '" value="period"><select class="form-control subject" id="subject_id_' + count + '" name="subject_' + count + '">' + $("#subject_dropdown").text() + '</select></td>';
+        }
+
+        cols += '<td><div class="input-group"><input type="text" name="time_from_' + count + '" class="form-control datetimepicker3 time_from" id="time_from_' + count + '" value="' + (defaultFrom || '') + '"><span class="input-group-addon"><span class="fa fa-clock-o"></span></span></div></td>';
+        cols += '<td><div class="input-group"><input type="text" name="time_to_' + count + '" class="form-control datetimepicker3 time_to" id="time_to_' + count + '" value="' + (defaultTo || '') + '"><span class="input-group-addon"><span class="fa fa-clock-o"></span></span></div></td>';
+
+        if (type === 'break') {
+            cols += '<td class="relative"><span class="text-muted">N/A</span></td>';
+            cols += '<td><span class="text-muted">N/A</span></td>';
+        } else {
+            cols += '<td class="relative"><select class="form-control staff" onchange="check_class_dublicate_recored(' + count + ', this.value)" id="staff_id_' + count + '" name="staff_' + count + '">' + $("#staff_dropdown").text() + '</select></td>';
+            cols += '<td><input type="text" class="form-control room_no" name="room_no_' + count + '" id="room_no_' + count + '"/></td>';
+        }
+
+        cols += '<td class="text-right" style="white-space: nowrap;"><button type="button" class="btn btn-default btn-xs insert_row_below" title="Insert Period Below"><i class="fa fa-plus text-primary"></i></button> <button type="button" class="btn btn-default btn-xs insert_break_below" title="Insert Break Below"><i class="fa fa-coffee text-info"></i></button> <button type="button" class="ibtnDel btn btn-danger btn-xs" title="Delete Row"><i class="fa fa-trash"></i></button></td>';
+        cols += '</tr>';
+        return cols;
+    }
+
+    function initRowPlugins(newRow) {
+        $('.staff', newRow).select2({ dropdownAutoWidth: true, width: '100%' });
+        $('.subject', newRow).select2({ dropdownAutoWidth: true, width: '100%' });
+    }
+
+    function initSortableTable(container) {
+        var tbody = $("table.order-list tbody", container || document);
+        if (tbody.length > 0) {
+            tbody.sortable({
+                handle: '.drag-handle',
+                placeholder: 'ui-state-highlight',
+                axis: 'y',
+                update: function(event, ui) {
+                    autoRecalculateDownstreamTimes();
+                }
+            });
+        }
+    }
+
+    function autoRecalculateDownstreamTimes(startRow) {
+        var rows = $("table.order-list tbody tr");
+        if (rows.length === 0) return;
+
+        // First pass: extract existing duration of each row
+        var durations = [];
+        for (var k = 0; k < rows.length; k++) {
+            var r = $(rows[k]);
+            var cF = r.find(".time_from").val();
+            var cT = r.find(".time_to").val();
+            var dur = 45;
+            if (cF && cT) {
+                var dF = parseTimeString(cF);
+                var dT = parseTimeString(cT);
+                if (dF && dT) {
+                    var diff = Math.round((dT - dF) / 60000);
+                    if (diff > 0) dur = diff;
+                }
+            }
+            durations[k] = dur;
+        }
+
+        // Second pass: update sequentially
+        for (var i = 1; i < rows.length; i++) {
+            var currRow = $(rows[i]);
+            var prevRow = $(rows[i - 1]);
+            var prevTimeTo = prevRow.find(".time_to").val();
+
+            if (prevTimeTo) {
+                var newTimeFrom = prevTimeTo;
+                var newTimeTo = calculateTimeAddMinutes(newTimeFrom, durations[i]);
+                currRow.find(".time_from").val(newTimeFrom);
+                currRow.find(".time_to").val(newTimeTo);
+            }
+        }
+    }
+
     $(document).ready(function() {
         var counter = 0;
+        
+        initSortableTable();
+
         $(document).on("click", ".addrow", function() {
-            var newRow = $("<tr>");
-            var cols = "";
-            cols += '<td class="relative"><input type="hidden" name="total_row[]" value="' + tot_count + '"><input type="hidden" name="prev_id_' + tot_count + '" value="0"><input type="hidden" class="period_type" name="period_type_' + tot_count + '" value="period"><select class="form-control subject" id="subject_id_' + tot_count + '" name="subject_' + tot_count + '">' + $("#subject_dropdown").text() + '</select></td>';
-
-            cols += '<td>' +
-            '<div class="input-group">' +
-                '<input type="text" name="time_from_' + tot_count + '" class="form-control datetimepicker3 time_from" id="time_from_' + tot_count + '">' +
-                '<span class="input-group-addon">' +
-                    '<span class="fa fa-clock-o"></span>' +
-                '</span>' +
-            '</div>' +
-        '</td>';
-
-cols += '<td>' +
-            '<div class="input-group">' +
-                '<input type="text" name="time_to_' + tot_count + '" class="form-control datetimepicker3 time_to" id="time_to_' + tot_count + '">' +
-                '<span class="input-group-addon">' +
-                    '<span class="fa fa-clock-o"></span>' +
-                '</span>' +
-            '</div>' +
-        '</td>';
-
-
-            cols += '<td class="relative"><select class="form-control staff"  onchange="check_class_dublicate_recored(' + tot_count + ', this.value)"   id="staff_id_' + tot_count + '" name="staff_' + tot_count + '">' + $("#staff_dropdown").text() + '</select></span></td>';
-
-            cols += '<td><input type="text" class="form-control room_no" name="room_no_' + tot_count + '" id="room_no_' + tot_count + '"/> </td>';
-            cols += '<td class="text-right"><button type="button" class="ibtnDel btn btn-danger"><i class="fa fa-trash"></i></button></td>';
-            newRow.append(cols);
-
-            $("table.order-list").append(newRow);
-
-
-            $('.staff', newRow).select2({
-                dropdownAutoWidth: true,
-                width: '100%'
-            });
-
-            $('.subject', newRow).select2({
-                dropdownAutoWidth: true,
-                width: '100%'
-            });
+            var times = getNextCalculatedTimes();
+            var newRow = $(buildRowHtml('period', tot_count, times.time_from, times.time_to));
+            $("table.order-list tbody").append(newRow);
+            initRowPlugins(newRow);
             tot_count++;
+            autoRecalculateDownstreamTimes(newRow);
         });
 
         $(document).on("click", ".addbreakrow", function() {
-            var newRow = $("<tr>");
-            var cols = "";
-            cols += '<td class="relative"><input type="hidden" name="total_row[]" value="' + tot_count + '"><input type="hidden" name="prev_id_' + tot_count + '" value="0"><input type="hidden" class="period_type" name="period_type_' + tot_count + '" value="break"><input type="text" class="form-control break_label" name="break_label_' + tot_count + '" placeholder="Break Label"></td>';
-
-            cols += '<td>' +
-            '<div class="input-group">' +
-                '<input type="text" name="time_from_' + tot_count + '" class="form-control datetimepicker3 time_from" id="time_from_' + tot_count + '">' +
-                '<span class="input-group-addon">' +
-                    '<span class="fa fa-clock-o"></span>' +
-                '</span>' +
-            '</div>' +
-        '</td>';
-
-        cols += '<td>' +
-            '<div class="input-group">' +
-                '<input type="text" name="time_to_' + tot_count + '" class="form-control datetimepicker3 time_to" id="time_to_' + tot_count + '">' +
-                '<span class="input-group-addon">' +
-                    '<span class="fa fa-clock-o"></span>' +
-                '</span>' +
-            '</div>' +
-        '</td>';
-
-            cols += '<td class="relative"><span class="text-muted">N/A</span></td>';
-            cols += '<td><span class="text-muted">N/A</span></td>';
-            cols += '<td class="text-right"><button type="button" class="ibtnDel btn btn-danger"><i class="fa fa-trash"></i></button></td>';
-            newRow.append(cols);
-
-            $("table.order-list").append(newRow);
-
+            var times = getNextCalculatedTimes();
+            var newRow = $(buildRowHtml('break', tot_count, times.time_from, times.time_to));
+            $("table.order-list tbody").append(newRow);
             tot_count++;
+            autoRecalculateDownstreamTimes(newRow);
+        });
+
+        $(document).on("click", ".insert_row_below", function() {
+            var parentRow = $(this).closest("tr");
+            var times = getNextCalculatedTimes(parentRow);
+            var newRow = $(buildRowHtml('period', tot_count, times.time_from, times.time_to));
+            parentRow.after(newRow);
+            initRowPlugins(newRow);
+            tot_count++;
+            autoRecalculateDownstreamTimes(newRow);
+        });
+
+        $(document).on("click", ".insert_break_below", function() {
+            var parentRow = $(this).closest("tr");
+            var times = getNextCalculatedTimes(parentRow);
+            var newRow = $(buildRowHtml('break', tot_count, times.time_from, times.time_to));
+            parentRow.after(newRow);
+            tot_count++;
+            autoRecalculateDownstreamTimes(newRow);
+        });
+
+        $(document).on("change keyup dp.change", ".time_from, .time_to", function() {
+            var row = $(this).closest("tr");
+            autoRecalculateDownstreamTimes(row);
         });
 
         $(document).on("click", ".ibtnDel", function(event) {
@@ -692,8 +894,9 @@ cols += '<td>' +
             var class_id = $('#class_id').val();
             var section_id = $('#section_id').val();
             var subject_group_id = $('#subject_group_id').val();
+            var apply_scope = $('#apply_scope').val();
 
-            if (!class_id || !section_id || !subject_group_id) {
+            if (apply_scope == 'current' && (!class_id || !section_id || !subject_group_id)) {
                 errorMsg("Please select Class, Section, and Subject Group first.");
                 return;
             }
@@ -708,7 +911,11 @@ cols += '<td>' +
                 return;
             }
 
-            if (confirm("This will overwrite existing timetable empty rows for all days except Sunday. Do you want to continue?")) {
+            var confirm_msg = (apply_scope == 'all') 
+                ? "This will overwrite existing timetable empty rows for ALL classes and sections in the school. Do you want to continue?"
+                : "This will overwrite existing timetable empty rows for all days except Sunday. Do you want to continue?";
+
+            if (confirm(confirm_msg)) {
                 $.ajax({
                     type: 'POST',
                     url: base_url + "admin/timetable/quick_generate",
@@ -716,6 +923,7 @@ cols += '<td>' +
                         class_id: class_id,
                         section_id: section_id,
                         subject_group_id: subject_group_id,
+                        apply_scope: apply_scope,
                         start_time: start_time,
                         duration: duration,
                         interval: interval,
@@ -729,12 +937,67 @@ cols += '<td>' +
                     success: function(res) {
                         if (res.status == 1) {
                             successMsg(res.message);
-                            // Refresh the current active tab
+                            // Refresh the current active tab if set
                             var target = $('.nav-tabs .active a').attr("href");
-                            var target_id = $('.nav-tabs .active a').attr("id");
-                            var ajax_data = $('.nav-tabs .active a').data();
-                            $(target).html("");
-                            getGroupdata(target, target_id, ajax_data);
+                            if (target) {
+                                var target_id = $('.nav-tabs .active a').attr("id");
+                                var ajax_data = $('.nav-tabs .active a').data();
+                                $(target).html("");
+                                getGroupdata(target, target_id, ajax_data);
+                            }
+                        } else {
+                            errorMsg(res.error);
+                        }
+                    }
+                });
+            }
+        });
+
+        $(document).on('click', '#btnApplyShiftTime', function() {
+            var shift_scope = $('#shift_scope').val();
+            var class_id = $('#class_id').val();
+            var section_id = $('#section_id').val();
+            var shift_direction = $('#shift_direction').val();
+            var shift_minutes = $('#shift_minutes').val();
+            var shift_day = $('#shift_day').val();
+
+            if (shift_scope == 'current' && (!class_id || !section_id)) {
+                errorMsg("Please select Class and Section first for current scope.");
+                return;
+            }
+
+            if (!shift_minutes || parseInt(shift_minutes) <= 0) {
+                errorMsg("Please enter a valid number of minutes (> 0).");
+                return;
+            }
+
+            var dir_text = (shift_direction == 'forward') ? 'later (+)' : 'earlier (-)';
+            var scope_text = (shift_scope == 'all') ? 'ALL classes across the school' : 'the currently selected class';
+            
+            if (confirm("Are you sure you want to shift timetable timings " + dir_text + " by " + shift_minutes + " minutes for " + scope_text + "?")) {
+                $.ajax({
+                    type: 'POST',
+                    url: base_url + "admin/timetable/shift_timetable_time",
+                    data: {
+                        shift_scope: shift_scope,
+                        class_id: class_id,
+                        section_id: section_id,
+                        shift_direction: shift_direction,
+                        shift_minutes: shift_minutes,
+                        shift_day: shift_day
+                    },
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.status == 1) {
+                            successMsg(res.message);
+                            $('#shiftTimetableModal').modal('hide');
+                            var target = $('.nav-tabs .active a').attr("href");
+                            if (target) {
+                                var target_id = $('.nav-tabs .active a').attr("id");
+                                var ajax_data = $('.nav-tabs .active a').data();
+                                $(target).html("");
+                                getGroupdata(target, target_id, ajax_data);
+                            }
                         } else {
                             errorMsg(res.error);
                         }
@@ -748,30 +1011,20 @@ cols += '<td>' +
 
 <script>
 $(document).on("focus", ".datetimepicker3", function () {
-    if (!$(this).data("DateTimePicker")) {
-
-        $(this).datetimepicker({
+    var $el = $(this);
+    if (!$el.data("DateTimePicker")) {
+        $el.datetimepicker({
             format: 'LT',
-       
-            widgetPositioning: {
-                // horizontal: 'auto',
-                // vertical: 'bottom'
-            }
+            widgetPositioning: {}
+        }).on('dp.change dp.hide', function(e) {
+            autoRecalculateDownstreamTimes();
         });
-
     }
 });
 
-
-    
-
-// $(document).on('dp.show', '.datetimepicker3', function () {
-//     $(".table-responsive").removeClass("table-responsive").addClass("temp");
-// });
-
-// $(document).on('dp.hide', '.datetimepicker3', function () {
-//     $(".temp").addClass("table-responsive").removeClass("temp");
-// });
+$(document).on("change blur input", ".time_from, .time_to", function () {
+    autoRecalculateDownstreamTimes();
+});
 </script>
 
 
