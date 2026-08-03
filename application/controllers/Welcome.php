@@ -1780,4 +1780,13 @@ class Welcome extends Front_Controller
         $pdf->WriteHTML($html);
         $pdf->Output("Receipt_" . $invoice_id . "_" . $sub_invoice_id . ".pdf", "D");
     }
+
+    public function cbse_disclosure()
+    {
+        $this->load->model('cbse_disclosure_model');
+        $data['disclosure_data'] = $this->cbse_disclosure_model->get_all_disclosures();
+        $data['sch_setting']     = $this->sch_setting_detail;
+        
+        $this->load->view('cbse_disclosure/index', $data);
+    }
 }

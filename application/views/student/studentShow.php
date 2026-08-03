@@ -1424,9 +1424,78 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                         <?php if ($this->rbac->hasPrivilege('absentee_followup', 'can_view')) { ?>
                             <li class=""><a href="#absentee_followup" data-toggle="tab" aria-expanded="true"><?php echo ($this->lang->line('absentee_followup') ? $this->lang->line('absentee_followup') : 'Absentee Follow Up'); ?></a></li>
                         <?php } ?>
+                        <li class=""><a href="#ptm_history_tab" data-toggle="tab" aria-expanded="true"><i class="fa fa-calendar-check-o"></i> PTM History</a></li>
                     </ul>
 
                     <div class="tab-content">
+                        <div class="tab-pane" id="ptm_history_tab">
+                            <div class="sp2-card">
+                                <div class="sp2-section-title"><i class="fa fa-comments-o"></i> Parent Teacher Meeting (PTM) History</div>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered table-hover example" cellspacing="0" width="100%">
+                                        <thead>
+                                            <tr>
+                                                <th>PTM Event</th>
+                                                <th>Date</th>
+                                                <th>Status</th>
+                                                <th>Attendee</th>
+                                                <th>Arrival / Departure</th>
+                                                <th>Discussion Points</th>
+                                                <th>Parent Remarks</th>
+                                                <th>Teacher Remarks</th>
+                                                <th>Concerns</th>
+                                                <th>Action Items</th>
+                                                <th>Follow-up Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php if (isset($ptm_history) && !empty($ptm_history)) { 
+                                                foreach ($ptm_history as $ptm_item) { 
+                                                    $concerns = [];
+                                                    if (!empty($ptm_item['concerns_academics'])) $concerns[] = "Academics";
+                                                    if (!empty($ptm_item['concerns_attendance'])) $concerns[] = "Attendance";
+                                                    if (!empty($ptm_item['concerns_behavior'])) $concerns[] = "Behavior";
+                                                    if (!empty($ptm_item['concerns_discipline'])) $concerns[] = "Discipline";
+                                                ?>
+                                                <tr>
+                                                    <td><strong><?php echo $ptm_item['ptm_title']; ?></strong></td>
+                                                    <td><?php echo date($this->customlib->getSchoolDateFormat(), strtotime($ptm_item['ptm_date'])); ?></td>
+                                                    <td>
+                                                        <?php if ($ptm_item['status'] == 'present'): ?>
+                                                            <span class="label label-success">Present</span>
+                                                        <?php else: ?>
+                                                            <span class="label label-danger">Absent</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td><?php echo ucfirst($ptm_item['attendee_type'] ?: '-'); ?></td>
+                                                    <td><?php echo (!empty($ptm_item['arrival_time']) ? $ptm_item['arrival_time'] : '--:--') . ' - ' . (!empty($ptm_item['departure_time']) ? $ptm_item['departure_time'] : '--:--'); ?></td>
+                                                    <td><?php echo nl2br(htmlspecialchars($ptm_item['discussion_points'] ?: '-')); ?></td>
+                                                    <td><?php echo nl2br(htmlspecialchars($ptm_item['parent_remarks'] ?: '-')); ?></td>
+                                                    <td><?php echo nl2br(htmlspecialchars($ptm_item['teacher_remarks'] ?: '-')); ?></td>
+                                                    <td><?php echo !empty($concerns) ? implode(', ', $concerns) : '-'; ?></td>
+                                                    <td><?php echo nl2br(htmlspecialchars($ptm_item['action_items'] ?: '-')); ?></td>
+                                                    <td>
+                                                        <?php if (!empty($ptm_item['followup_required']) && $ptm_item['followup_required'] == 1): ?>
+                                                            <span class="label label-warning">Required</span><br>
+                                                            <?php if (!empty($ptm_item['assigned_staff_name'])): ?>
+                                                                <small><strong>Assigned:</strong> <?php echo $ptm_item['assigned_staff_name'] . ' ' . $ptm_item['assigned_staff_surname']; ?></small><br>
+                                                            <?php endif; ?>
+                                                            <?php if (!empty($ptm_item['followup_date'])): ?>
+                                                                <small><strong>Date:</strong> <?php echo date('d-m-Y', strtotime($ptm_item['followup_date'])); ?></small>
+                                                            <?php endif; ?>
+                                                        <?php else: ?>
+                                                            <span class="text-muted">No</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php } } else { ?>
+                                                <tr><td colspan="11" class="text-center text-muted">No PTM records found for this student.</td></tr>
+                                            <?php } ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                                                 <div class="tab-pane" id="absentee_followup">
                             <div class="sp2-card">
                                 <div class="sp2-section-title"><i class="fa fa-phone"></i> <?php echo ($this->lang->line('absentee_followup') ? $this->lang->line('absentee_followup') : 'Absentee Follow Up'); ?></div>

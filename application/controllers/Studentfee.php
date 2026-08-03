@@ -44,9 +44,21 @@ class Studentfee extends Admin_Controller
         $data['sch_setting'] = $this->sch_setting_detail;
         $data['title']       = $this->lang->line('fees_dashboard');
 
-        // Fetch aggregated dashboard stats
+        // Fetch aggregated dashboard stats with 5-minute transient cache
         $this->load->model('studentfeemaster_model');
-        $stats = $this->studentfeemaster_model->getFeesDashboardStats();
+        $cache_file = sys_get_temp_dir() . '/lms_fee_dashboard_stats_' . $this->current_session . '.json';
+        $cache_ttl = 300; // 5 minutes cache
+        $stats = null;
+
+        if (file_exists($cache_file) && (time() - filemtime($cache_file) < $cache_ttl)) {
+            $stats = json_decode(@file_get_contents($cache_file), true);
+        }
+
+        if (!$stats || !is_array($stats)) {
+            $stats = $this->studentfeemaster_model->getFeesDashboardStats();
+            @file_put_contents($cache_file, json_encode($stats));
+        }
+
         $data['stats'] = $stats;
 
         $this->load->view('layout/header', $data);

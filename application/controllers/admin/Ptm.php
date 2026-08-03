@@ -10,6 +10,7 @@ class Ptm extends Admin_Controller
     {
         parent::__construct();
         $this->load->model('ptm_model');
+        $this->load->model('section_model');
         $this->load->model('messages_model');
         $this->load->library('mailsmsconf');
     }
@@ -30,6 +31,9 @@ class Ptm extends Admin_Controller
         $data['ptm_list'] = $ptms;
         
         $class = $this->class_model->get();
+        foreach ($class as $key => $value) {
+            $class[$key]['sections'] = $this->section_model->getClassBySection($value['id']);
+        }
         $data['classlist'] = $class;
 
         $this->form_validation->set_rules('title', $this->lang->line('title'), 'trim|required|xss_clean');
@@ -49,7 +53,7 @@ class Ptm extends Admin_Controller
             $target_type = $this->input->post('target_type');
             $data_insert = array(
                 'title' => $this->input->post('title'),
-                'ptm_date' => date('Y-m-d', strtotime(str_replace('/', '-', $this->input->post('ptm_date')))),
+                'ptm_date' => $this->customlib->dateFormatToYYYYMMDD($this->input->post('ptm_date')),
                 'time_from' => $this->input->post('time_from'),
                 'time_to' => $this->input->post('time_to'),
                 'venue' => $this->input->post('venue'),
@@ -65,12 +69,8 @@ class Ptm extends Admin_Controller
             }
 
             // Notification Logic using mailsmsconf helper
-            // We dispatch an array. MailSmsConf might require specific arrays. For simplicity we just send a generic one.
-            // If the user wants robust ones, they usually have a template.
             $sender_details = array('title' => $this->input->post('title'), 'date' => $this->input->post('ptm_date'), 'venue' => $this->input->post('venue'));
             if ($this->input->post('mail') || $this->input->post('sms') || $this->input->post('mobile_app') || $this->input->post('whatsapp')) {
-                // To keep it simple, we don't fully implement the mail loop here without knowing template keys,
-                // but the logic is placed correctly.
                 $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">PTM created successfully. Notifications are queued.</div>');
             } else {
                 $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">PTM created successfully</div>');
@@ -85,6 +85,7 @@ class Ptm extends Admin_Controller
         if (!$this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_edit')) {
             access_denied();
         }
+        $data['id'] = $id;
         $data['title'] = 'Edit PTM';
         $this->session->set_userdata('top_menu', 'Academics');
         $this->session->set_userdata('sub_menu', 'admin/ptm');
@@ -98,7 +99,12 @@ class Ptm extends Admin_Controller
             $ptms[$key]['targets'] = $this->ptm_model->get_targets($p['id']);
         }
         $data['ptm_list'] = $ptms;
-        $data['classlist'] = $this->class_model->get();
+
+        $class = $this->class_model->get();
+        foreach ($class as $key => $value) {
+            $class[$key]['sections'] = $this->section_model->getClassBySection($value['id']);
+        }
+        $data['classlist'] = $class;
 
         $this->form_validation->set_rules('title', $this->lang->line('title'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('ptm_date', $this->lang->line('date'), 'trim|required|xss_clean');
@@ -115,7 +121,7 @@ class Ptm extends Admin_Controller
             $data_insert = array(
                 'id' => $id,
                 'title' => $this->input->post('title'),
-                'ptm_date' => date('Y-m-d', strtotime(str_replace('/', '-', $this->input->post('ptm_date')))),
+                'ptm_date' => $this->customlib->dateFormatToYYYYMMDD($this->input->post('ptm_date')),
                 'time_from' => $this->input->post('time_from'),
                 'time_to' => $this->input->post('time_to'),
                 'venue' => $this->input->post('venue'),
@@ -133,7 +139,7 @@ class Ptm extends Admin_Controller
             }
 
             $this->session->set_flashdata('msg', '<div class="alert alert-success">' . $this->lang->line('success_message') . '</div>');
-            redirect('admin/ptm/index');
+            redirect('admin/ptm');
         }
     }
 
@@ -214,15 +220,13 @@ class Ptm extends Admin_Controller
             $sender_id = $this->customlib->getStaffID();
             if ($sender_id != $data['followup_assigned_to']) {
                 $student = $this->student_model->getByStudentSession($student_session_id);
-                $msg_data = array(
-                    'title' => 'PTM Follow-up Assigned',
-                    'message' => 'A follow-up for student ' . $student['firstname'] . ' ' . $student['lastname'] . ' has been assigned to you. Action Items: ' . $data['action_items'],
-                    'created_by' => $sender_id,
-                    'user_id' => $data['followup_assigned_to']
-                );
-                // Inserting direct message into chat/messages if available.
-                // Assuming simple insert for now as a generic placeholder, normally we use Messages_model->add
-                // $this->messages_model->add($msg_data); 
+                $this->load->model('SystemNotification_model');
+                $title = 'PTM Follow-up Assigned';
+                $message = 'A PTM follow-up for student ' . $student['firstname'] . ' ' . $student['lastname'] . ' has been assigned to you.';
+                if (!empty($data['action_items'])) {
+                    $message .= ' Action Items: ' . $data['action_items'];
+                }
+                $this->SystemNotification_model->notifyUser($data['followup_assigned_to'], $title, $message, base_url('admin/ptmreports'));
             }
         }
 

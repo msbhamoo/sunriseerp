@@ -4,7 +4,7 @@
     </section>
     <section class="content">
         <div class="row">
-            <?php if ($this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_add')) { ?>
+            <?php if ($this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_add') || $this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_edit')) { ?>
                 <div class="col-md-4">
                     <div class="box box-primary">
                         <div class="box-header with-border">
@@ -27,7 +27,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="ptm_date"><?php echo $this->lang->line('date'); ?></label><small class="req"> *</small>
-                                    <input id="ptm_date" name="ptm_date" type="text" class="form-control date" value="<?php echo set_value('ptm_date', isset($ptm) ? date('d-m-Y', strtotime($ptm['ptm_date'])) : ''); ?>" readonly="readonly"/>
+                                    <input id="ptm_date" name="ptm_date" type="text" class="form-control date" value="<?php echo set_value('ptm_date', isset($ptm) ? $this->customlib->dateformat($ptm['ptm_date']) : ''); ?>" readonly="readonly"/>
                                     <span class="text-danger"><?php echo form_error('ptm_date'); ?></span>
                                 </div>
                                 <div class="row">
@@ -56,7 +56,7 @@
                                     <label for="venue"><?php echo $this->lang->line('venue'); ?></label><small class="req"> *</small>
                                     <?php 
                                     $school_setting = $this->setting_model->get();
-                                    $default_venue = $school_setting[0]['name'];
+                                    $default_venue = isset($school_setting[0]['name']) ? $school_setting[0]['name'] : '';
                                     ?>
                                     <input id="venue" name="venue" type="text" class="form-control" value="<?php echo set_value('venue', isset($ptm) ? $ptm['venue'] : $default_venue); ?>" />
                                     <span class="text-danger"><?php echo form_error('venue'); ?></span>
@@ -72,24 +72,32 @@
 
                                 <div class="form-group" id="class_section_div" style="<?php echo (isset($ptm) && $ptm['target_type'] == 'class') ? '' : 'display: none;'; ?>">
                                     <label><?php echo $this->lang->line('class'); ?> & <?php echo $this->lang->line('section'); ?></label>
-                                    <div class="scroll-area">
+                                    <div class="scroll-area" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
                                         <?php foreach ($classlist as $class_key => $class_value) { ?>
-                                            <div class="checkbox">
-                                                <label>
-                                                    <?php 
-                                                    $checked = '';
-                                                    if (isset($ptm) && isset($ptm['targets'])) {
-                                                        foreach($ptm['targets'] as $t) {
-                                                            if ($t['class_id'] == $class_value['id']) $checked = 'checked';
-                                                        }
-                                                    }
-                                                    ?>
-                                                    <input type="checkbox" name="class_section_id[]" value="<?php echo $class_value['id'].'-0'; ?>" class="chk_class" data-class="<?php echo $class_value['id']; ?>" <?php echo $checked; ?>>
-                                                    <b><?php echo $class_value['class']; ?></b>
-                                                </label>
+                                            <div class="class-group" style="margin-bottom: 8px;">
+                                                <div style="font-weight: bold; background: #f7f7f7; padding: 2px 5px; margin-bottom: 3px;">
+                                                    <?php echo $class_value['class']; ?>
+                                                </div>
+                                                <div style="padding-left: 10px;">
+                                                    <?php if (!empty($class_value['sections'])) {
+                                                        foreach ($class_value['sections'] as $sec) {
+                                                            $checked = '';
+                                                            if (isset($ptm) && isset($ptm['targets'])) {
+                                                                foreach ($ptm['targets'] as $t) {
+                                                                    if ($t['class_id'] == $class_value['id'] && $t['section_id'] == $sec['section_id']) {
+                                                                        $checked = 'checked';
+                                                                    }
+                                                                }
+                                                            }
+                                                            ?>
+                                                            <label class="checkbox-inline" style="margin-left: 0; margin-right: 10px;">
+                                                                <input type="checkbox" name="class_section_id[]" value="<?php echo $class_value['id'] . '-' . $sec['section_id']; ?>" <?php echo $checked; ?>>
+                                                                <?php echo $sec['section']; ?>
+                                                            </label>
+                                                        <?php }
+                                                    } ?>
+                                                </div>
                                             </div>
-                                            <!-- Dynamically load sections via ajax or print all if available in scope. 
-                                            For brevity, assuming typical class-section checkboxes. -->
                                         <?php } ?>
                                     </div>
                                 </div>
@@ -115,7 +123,7 @@
                     </div>
                 </div>
             <?php } ?>
-            <div class="col-md-<?php echo ($this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_add')) ? '8' : '12'; ?>">
+            <div class="col-md-<?php echo ($this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_add') || $this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_edit')) ? '8' : '12'; ?>">
                 <div class="box box-primary">
                     <div class="box-header ptbnull">
                         <h3 class="box-title titlefix"><?php echo $this->lang->line('ptm_list'); ?></h3>
@@ -141,7 +149,7 @@
                                         foreach ($ptm_list as $ptm) { ?>
                                         <tr>
                                             <td><?php echo $ptm['title']; ?></td>
-                                            <td><?php echo date('d-m-Y', strtotime($ptm['ptm_date'])); ?></td>
+                                            <td><?php echo $this->customlib->dateformat($ptm['ptm_date']); ?></td>
                                             <td><?php echo $ptm['time_from'] . ' - ' . $ptm['time_to']; ?></td>
                                             <td><?php echo $ptm['venue']; ?></td>
                                             <td><?php 
@@ -178,11 +186,6 @@
 </div>
 <script type="text/javascript">
     $(document).ready(function () {
-        // Restrict datepicker to today and future dates
-        setTimeout(function(){
-            $('#ptm_date').datepicker('setStartDate', new Date());
-        }, 500);
-
         // Initialize timepicker properly if not already done
         $('.timepicker').datetimepicker({
             format: 'LT'

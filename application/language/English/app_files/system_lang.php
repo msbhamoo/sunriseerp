@@ -2756,3 +2756,4 @@ $lang['historical_fee_import'] = 'Historical Fee Import';
 $lang['daily_bus_summary'] = 'Daily Bus Summary';
 $lang['monthly_bus_summary'] = 'Monthly Bus Summary';
 $lang['job_posting'] = 'Job Posting';
+$lang['scholarship_exam'] = 'Scholarship & Olympiad Exams';

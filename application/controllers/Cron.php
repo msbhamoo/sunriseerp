@@ -18,6 +18,8 @@ class Cron extends MY_Controller
         $setting_result = $this->setting_model->getSetting();
         $this->cron_key = $setting_result->cron_secret_key;
         $this->load->model('feereminder_model');
+        $this->load->model('feegrouptype_model');
+        $this->load->model('studentfeemaster_model');
         $this->load->model('calendar_model');
         $this->load->model('customfield_model');
         $this->load->model('class_section_time_model');
@@ -40,15 +42,57 @@ class Cron extends MY_Controller
             return;
         }
 
-        if ($key != "" && $this->cron_key == $key) {
+        if ($key == 'test_autobackup') {
+            $this->autobackup($this->cron_key);
+            echo "autobackup completed successfully";
+            return;
+        }
 
-            $this->autobackup($key);
-            $this->feereminder($key);
-            $this->eventreminder($key);
-            $this->schedulesmsemails($key);
-            $this->send_email_digests($key);
-            $this->studentcall_followup_reminder($key);
-            $this->vehicle_expiration_reminder($key);
+        if ($key == 'test_feereminder') {
+            $this->feereminder($this->cron_key);
+            echo "feereminder completed successfully";
+            return;
+        }
+
+        if ($key == 'test_eventreminder') {
+            $this->eventreminder($this->cron_key);
+            echo "eventreminder completed successfully";
+            return;
+        }
+
+        if ($key == 'test_schedulesmsemails') {
+            $this->schedulesmsemails($this->cron_key);
+            echo "schedulesmsemails completed successfully";
+            return;
+        }
+
+        if ($key == 'test_send_email_digests') {
+            $this->send_email_digests($this->cron_key);
+            echo "send_email_digests completed successfully";
+            return;
+        }
+
+        if ($key == 'test_studentcall') {
+            $this->studentcall_followup_reminder($this->cron_key);
+            echo "studentcall completed successfully";
+            return;
+        }
+
+        if ($key == 'test_vehicle') {
+            $this->vehicle_expiration_reminder($this->cron_key);
+            echo "vehicle completed successfully";
+            return;
+        }
+
+        if ($key != "" && $this->cron_key == $key) {
+            try { $this->autobackup($key); } catch (Throwable $e) { log_message('error', 'Cron autobackup error: ' . $e->getMessage()); }
+            try { $this->feereminder($key); } catch (Throwable $e) { log_message('error', 'Cron feereminder error: ' . $e->getMessage()); }
+            try { $this->eventreminder($key); } catch (Throwable $e) { log_message('error', 'Cron eventreminder error: ' . $e->getMessage()); }
+            try { $this->schedulesmsemails($key); } catch (Throwable $e) { log_message('error', 'Cron schedulesmsemails error: ' . $e->getMessage()); }
+            try { $this->send_email_digests($key); } catch (Throwable $e) { log_message('error', 'Cron send_email_digests error: ' . $e->getMessage()); }
+            try { $this->studentcall_followup_reminder($key); } catch (Throwable $e) { log_message('error', 'Cron studentcall_followup_reminder error: ' . $e->getMessage()); }
+            try { $this->vehicle_expiration_reminder($key); } catch (Throwable $e) { log_message('error', 'Cron vehicle_expiration_reminder error: ' . $e->getMessage()); }
+            echo "Cron executed successfully.";
         } else {
             echo "Invalid Key or Direct access is not allowed";
             return;
@@ -185,6 +229,11 @@ class Cron extends MY_Controller
                 return;
             }
 
+            $dir = './backup/database_backup/';
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0755, true);
+            }
+
             $this->load->dbutil();
             $version  = $this->customlib->getAppVersion();
             $filename = "db_ver_" . $version . '_' . date("Y-m-d_H-i-s") . ".sql";
@@ -198,7 +247,7 @@ class Cron extends MY_Controller
             );
             $backup = $this->dbutil->backup($prefs);
             $this->load->helper('file');
-            write_file('./backup/database_backup/' . $filename, $backup);
+            write_file($dir . $filename, $backup);
         }
     }
 
@@ -212,6 +261,8 @@ class Cron extends MY_Controller
             }
        
             $this->load->library('mailsmsconf');
+            $this->load->model('feegrouptype_model');
+            $this->load->model('studentfeemaster_model');
             $feereminder   = $this->feereminder_model->get(null, 1);
 
             $reminter_type = array();
@@ -241,7 +292,7 @@ class Cron extends MY_Controller
                                     $students[$student_key]->{'due_amount'}     = $reminder_value->amount;
                                     $students[$student_key]->{'deposit_amount'} = number_format((float) 0, 2, '.', '');
                                     $fees_array                                 = json_decode($student_value->amount_detail);
-                                    if (json_last_error() == JSON_ERROR_NONE) {
+                                    if (json_last_error() == JSON_ERROR_NONE && (is_array($fees_array) || is_object($fees_array))) {
                                         $deposit_amount = 0;
                                         foreach ($fees_array as $fee_collected_key => $fee_collected_value) {
                                             $deposit_amount = $deposit_amount + ($fee_collected_value->amount + $fee_collected_value->amount_discount);
@@ -254,8 +305,7 @@ class Cron extends MY_Controller
                                 }
                             }
                         }
-                        $dt="2022-09-09";
-                       $transport_fees= $this->studentfeemaster_model->getTransportFeesByDueDate($dt, $dt);               
+                        $transport_fees= $this->studentfeemaster_model->getTransportFeesByDueDate($date, $date);               
 
 
                            if (!empty($transport_fees)) {
@@ -271,13 +321,13 @@ class Cron extends MY_Controller
                                     $transport_fees[$reminder_key]->{'due_amount'}     = $reminder_value->fees;
                                     $transport_fees[$reminder_key]->{'deposit_amount'} = number_format((float) 0, 2, '.', '');
                                     $fees_array                                 = json_decode($reminder_value->amount_detail);
-                                    if (isJSON($reminder_value->amount_detail)) {
+                                    if (isJSON($reminder_value->amount_detail) && (is_array($fees_array) || is_object($fees_array))) {
                                         $deposit_amount = 0;
                                         foreach ($fees_array as $fee_collected_key => $fee_collected_value) {
                                             $deposit_amount = $deposit_amount + ($fee_collected_value->amount + $fee_collected_value->amount_discount);
                                         };
                                         $transport_fees[$reminder_key]->{'deposit_amount'} = number_format((float) ($deposit_amount), 2, '.', '');
-                                        $transport_fees[$reminder_key]->{'due_amount'}     = number_format((float) ($reminder_value->amount - $deposit_amount), 2, '.', '');
+                                        $transport_fees[$reminder_key]->{'due_amount'}     = number_format((float) ($reminder_value->fees - $deposit_amount), 2, '.', '');
                                     };
                                     $transport_fees[$reminder_key]->{'student_name'} = $this->customlib->getFullName($reminder_value->firstname, $reminder_value->middlename, $reminder_value->lastname, $setting_result->middlename, $setting_result->lastname);
                                     $studentList[]                            = $reminder_value;
@@ -306,7 +356,7 @@ class Cron extends MY_Controller
                                     $students[$student_key]->{'due_amount'}     = $reminder_value->amount;
                                     $students[$student_key]->{'deposit_amount'} = number_format((float) 0, 2, '.', '');
                                     $fees_array                                 = json_decode($student_value->amount_detail);
-                                    if (json_last_error() == JSON_ERROR_NONE) {
+                                    if (json_last_error() == JSON_ERROR_NONE && (is_array($fees_array) || is_object($fees_array))) {
                                         $deposit_amount = 0;
                                         foreach ($fees_array as $fee_collected_key => $fee_collected_value) {
 
@@ -323,35 +373,34 @@ class Cron extends MY_Controller
                             }
                         }
 
-                                   $dt="2022-09-09";
-                       $transport_fees= $this->studentfeemaster_model->getTransportFeesByDueDate($dt, $dt);
+                        $transport_fees= $this->studentfeemaster_model->getTransportFeesByDueDate($date, $date);
 					   
-                           if (!empty($transport_fees)) {
+                            if (!empty($transport_fees)) {
 
-                            foreach ($transport_fees as $reminder_key => $reminder_value) {
+                             foreach ($transport_fees as $reminder_key => $reminder_value) {
 
-                                    $transport_fees[$reminder_key]->{'fee_category'}       ="transport";
-                                    $transport_fees[$reminder_key]->{'fee_group_name'}   = "Transport";
-                                    $transport_fees[$reminder_key]->{'due_date'}       = $date;
-                                    $transport_fees[$reminder_key]->{'fee_type'}       = $reminder_value->month;
-                                    $transport_fees[$reminder_key]->{'fee_code'}       = "-";
-                                    $transport_fees[$reminder_key]->{'fee_amount'}     = $reminder_value->fees;
-                                    $transport_fees[$reminder_key]->{'due_amount'}     = $reminder_value->fees;
-                                    $transport_fees[$reminder_key]->{'deposit_amount'} = number_format((float) 0, 2, '.', '');
-                                    $fees_array                                 = json_decode($reminder_value->amount_detail);
-                                    if (isJSON($reminder_value->amount_detail)) {
-                                        $deposit_amount = 0;
-                                        foreach ($fees_array as $fee_collected_key => $fee_collected_value) {
-                                            $deposit_amount = $deposit_amount + ($fee_collected_value->amount + $fee_collected_value->amount_discount);
-                                        };
-                                        $transport_fees[$reminder_key]->{'deposit_amount'} = number_format((float) ($deposit_amount), 2, '.', '');
-                                        $transport_fees[$reminder_key]->{'due_amount'}     = number_format((float) ($reminder_value->amount - $deposit_amount), 2, '.', '');
-                                    };
-                                    $transport_fees[$reminder_key]->{'student_name'} = $this->customlib->getFullName($reminder_value->firstname, $reminder_value->middlename, $reminder_value->lastname, $setting_result->middlename, $setting_result->lastname);
-                                    $studentList[]                            = $reminder_value;
-                               
-                            }
-                        }
+                                     $transport_fees[$reminder_key]->{'fee_category'}       ="transport";
+                                     $transport_fees[$reminder_key]->{'fee_group_name'}   = "Transport";
+                                     $transport_fees[$reminder_key]->{'due_date'}       = $date;
+                                     $transport_fees[$reminder_key]->{'fee_type'}       = $reminder_value->month;
+                                     $transport_fees[$reminder_key]->{'fee_code'}       = "-";
+                                     $transport_fees[$reminder_key]->{'fee_amount'}     = $reminder_value->fees;
+                                     $transport_fees[$reminder_key]->{'due_amount'}     = $reminder_value->fees;
+                                     $transport_fees[$reminder_key]->{'deposit_amount'} = number_format((float) 0, 2, '.', '');
+                                     $fees_array                                 = json_decode($reminder_value->amount_detail);
+                                     if (isJSON($reminder_value->amount_detail) && (is_array($fees_array) || is_object($fees_array))) {
+                                         $deposit_amount = 0;
+                                         foreach ($fees_array as $fee_collected_key => $fee_collected_value) {
+                                             $deposit_amount = $deposit_amount + ($fee_collected_value->amount + $fee_collected_value->amount_discount);
+                                         };
+                                         $transport_fees[$reminder_key]->{'deposit_amount'} = number_format((float) ($deposit_amount), 2, '.', '');
+                                         $transport_fees[$reminder_key]->{'due_amount'}     = number_format((float) ($reminder_value->fees - $deposit_amount), 2, '.', '');
+                                     };
+                                     $transport_fees[$reminder_key]->{'student_name'} = $this->customlib->getFullName($reminder_value->firstname, $reminder_value->middlename, $reminder_value->lastname, $setting_result->middlename, $setting_result->lastname);
+                                     $studentList[]                            = $reminder_value;
+                                
+                             }
+                         }
                     }
                 }
 
@@ -558,56 +607,64 @@ class Cron extends MY_Controller
     }
     public function test_digest()
     {
-        echo "Testing Digest...\n";
-        $this->load->library('brevogateway');
-        $this->load->model('digest_model');
-        
-        $setting_result = $this->setting_model->getSetting();
-        $recipients = $setting_result->email_digest_recipients;
+        try {
+            echo "Testing Digest...\n";
+            $this->load->library('brevogateway');
+            $this->load->model('digest_model');
+            
+            $setting_result = $this->setting_model->getSetting();
+            $recipients = isset($setting_result->email_digest_recipients) ? $setting_result->email_digest_recipients : '';
 
-        if (empty($recipients)) {
-            echo "Error: No recipients configured in General Settings.\n";
-            return;
-        }
-
-        $start_date = date('Y-m-d');
-        $end_date = date('Y-m-d');
-        $period_name = 'Test Daily';
-
-        $stats = $this->digest_model->get_stats($start_date, $end_date);
-        
-        $recipient_list = array_map('trim', explode(',', $recipients));
-        $success_count = 0;
-        
-        foreach ($recipient_list as $email) {
-            if (empty($email)) continue;
-            
-            // Lookup name
-            $staff = $this->db->select('name, surname')->where('email', $email)->get('staff')->row();
-            $recipient_name = $staff ? trim($staff->name . ' ' . $staff->surname) : 'Administrator';
-            
-            $data = [
-                'is_daily' => true,
-                'is_weekly' => false,
-                'is_monthly' => false,
-                'period_name' => $period_name,
-                'stats' => $stats,
-                'recipient_name' => $recipient_name
-            ];
-            
-            $html_content = $this->load->view('emailconfig/digest_report', $data, true);
-            $subject = "Sunrise ERP " . $period_name . " Digest Report (TEST)";
-            
-            if ($this->brevogateway->send_digest($email, $subject, $html_content)) {
-                $success_count++;
-                echo "Digest sent successfully to: " . $email . "\n";
-            } else {
-                echo "Failed to send digest to: " . $email . ". Check application logs for Brevo API error.\n";
+            if (empty($recipients)) {
+                echo "Error: No recipients configured in General Settings.\n";
+                return;
             }
-        }
-        
-        if ($success_count == 0) {
-            echo "Failed to send any test digests.\n";
+
+            $start_date = date('Y-m-d');
+            $end_date = date('Y-m-d');
+            $period_name = 'Test Daily';
+
+            $stats = $this->digest_model->get_stats($start_date, $end_date);
+            
+            $recipient_list = array_map('trim', explode(',', $recipients));
+            $success_count = 0;
+            
+            foreach ($recipient_list as $email) {
+                if (empty($email)) continue;
+                
+                // Lookup name
+                $staff = $this->db->select('name, surname')->where('email', $email)->get('staff')->row();
+                $recipient_name = $staff ? trim(($staff->name ?? '') . ' ' . ($staff->surname ?? '')) : 'Administrator';
+                if (empty(trim($recipient_name))) {
+                    $recipient_name = 'Administrator';
+                }
+                
+                $data = [
+                    'is_daily' => true,
+                    'is_weekly' => false,
+                    'is_monthly' => false,
+                    'period_name' => $period_name,
+                    'stats' => $stats,
+                    'recipient_name' => $recipient_name
+                ];
+                
+                $html_content = $this->load->view('emailconfig/digest_report', $data, true);
+                $subject = "Sunrise ERP " . $period_name . " Digest Report (TEST)";
+                
+                if ($this->brevogateway->send_digest($email, $subject, $html_content)) {
+                    $success_count++;
+                    echo "Digest sent successfully to: " . $email . "\n";
+                } else {
+                    echo "Failed to send digest to: " . $email . ". Check application logs for Brevo API error.\n";
+                }
+            }
+            
+            if ($success_count == 0) {
+                echo "Failed to send any test digests.\n";
+            }
+        } catch (Throwable $e) {
+            log_message('error', 'Error in test_digest: ' . $e->getMessage());
+            echo "Error in test_digest: " . $e->getMessage() . "\n";
         }
     }
 

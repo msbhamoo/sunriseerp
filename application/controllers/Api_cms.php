@@ -20,6 +20,7 @@ class Api_cms extends MY_Controller {
         $this->load->model('cms_page_model');
         $this->load->model('job_posting_model');
         $this->load->model('job_application_model');
+        $this->load->model('scholarshipexam_model');
         $this->load->config('ci-blog');
     }
 
@@ -397,5 +398,190 @@ class Api_cms extends MY_Controller {
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Failed to save application. Please try again.']);
         }
+    }
+
+    /* ================= Scholarship & Olympiad Exam APIs ================= */
+
+    // Get the single active scholarship exam
+    public function active_scholarship_exam() {
+        $exam = $this->scholarshipexam_model->getActiveExam();
+        if ($exam) {
+            echo json_encode(['status' => 'success', 'data' => $exam]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'No active scholarship exam found']);
+        }
+    }
+
+    // Get all active scholarship exams
+    public function scholarship_exams() {
+        $exams = $this->scholarshipexam_model->getExams();
+        $active_exams = array();
+        if (!empty($exams)) {
+            foreach ($exams as $e) {
+                if (isset($e['status']) && $e['status'] == 1) {
+                    $active_exams[] = $e;
+                }
+            }
+        }
+        echo json_encode(['status' => 'success', 'data' => $active_exams]);
+    }
+
+    // Get single scholarship exam details
+    public function scholarship_exam_item($id = null) {
+        if (!$id) {
+            $id = $this->input->get('id');
+        }
+        if (!$id) {
+            echo json_encode(['status' => 'error', 'message' => 'Exam ID or Code required']);
+            return;
+        }
+
+        $exam = $this->scholarshipexam_model->getExamByCodeOrId($id);
+        if ($exam) {
+            echo json_encode(['status' => 'success', 'data' => $exam]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Exam not found']);
+        }
+    }
+
+    // Register external candidate for scholarship exam
+    public function register_scholarship_candidate() {
+        $raw_input = file_get_contents('php://input');
+        $json_data = json_decode($raw_input, true);
+
+        $exam_id = $this->input->post('exam_id') ?: ($json_data['exam_id'] ?? null);
+        $name = $this->input->post('name') ?: ($json_data['name'] ?? null);
+        $father_name = $this->input->post('father_name') ?: ($json_data['father_name'] ?? '');
+        $mobile = $this->input->post('mobile') ?: ($json_data['mobile'] ?? null);
+        $email = $this->input->post('email') ?: ($json_data['email'] ?? '');
+        $school_name = $this->input->post('school_name') ?: ($json_data['school_name'] ?? '');
+        $class_name = $this->input->post('class_name') ?: ($json_data['class_name'] ?? 'General');
+        $test_mode = $this->input->post('test_mode') ?: ($json_data['test_mode'] ?? 'offline');
+
+        if (!$name || !$mobile) {
+            echo json_encode(['status' => 'error', 'message' => 'Student Name and Mobile Number are required.']);
+            return;
+        }
+
+        // Default to first active exam if exam_id not supplied
+        if (!$exam_id) {
+            $all_exams = $this->scholarshipexam_model->getExams();
+            if (!empty($all_exams)) {
+                $exam_id = $all_exams[0]['id'];
+            } else {
+                $exam_id = 1;
+            }
+        }
+
+        $exam = $this->scholarshipexam_model->getExams($exam_id);
+        $prefix = ($exam && !empty($exam['roll_no_prefix'])) ? $exam['roll_no_prefix'] : 'OLY-';
+
+        // Find highest existing roll number
+        $this->db->select('roll_no');
+        $this->db->from('scholarship_exam_candidates');
+        $this->db->where('scholarship_exam_id', $exam_id);
+        $this->db->order_by('id', 'DESC');
+        $this->db->limit(1);
+        $last_cand = $this->db->get()->row();
+
+        $start_counter = 1001;
+        if ($last_cand && !empty($last_cand->roll_no)) {
+            $num_str = preg_replace('/[^0-9]/', '', str_replace($prefix, '', $last_cand->roll_no));
+            if (is_numeric($num_str) && intval($num_str) >= 1000) {
+                $start_counter = intval($num_str) + 1;
+            }
+        }
+
+        $roll_no = $prefix . $start_counter;
+        $admit_card_no = 'ADM-' . str_replace('-', '', $prefix) . '-' . sprintf('%04d', rand(1000, 9999));
+        $schedule_id = (!empty($exam['schedules']) && isset($exam['schedules'][0]['id'])) ? $exam['schedules'][0]['id'] : null;
+
+        $candidate_data = array(
+            'scholarship_exam_id' => $exam_id,
+            'schedule_id' => $schedule_id,
+            'student_id' => 0,
+            'student_session_id' => 0,
+            'roll_no' => $roll_no,
+            'admit_card_no' => $admit_card_no,
+            'is_external' => 1,
+            'external_candidate_name' => $name,
+            'external_school_name' => $school_name . ($class_name ? ' (' . $class_name . ')' : ''),
+            'external_mobile' => $mobile,
+            'external_email' => $email,
+            'payment_status' => ($exam && isset($exam['is_paid']) && $exam['is_paid'] == 1) ? 'unpaid' : 'free',
+            'attendance_status' => 'pending',
+            'result_status' => 'pending',
+            'remarks' => 'Mode: ' . $test_mode . ' | Father: ' . $father_name
+        );
+
+        $this->db->insert('scholarship_exam_candidates', $candidate_data);
+        $insert_id = $this->db->insert_id();
+
+        if ($insert_id) {
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Candidate registered successfully for ' . ($exam['title'] ?? 'Scholarship Exam') . '!',
+                'registration_no' => $roll_no,
+                'admit_card_no' => $admit_card_no,
+                'candidate_id' => $insert_id
+            ]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Failed to complete registration. Please try again.']);
+        }
+    }
+
+    // Search scholarship exam results
+    public function scholarship_result_search() {
+        $query_str = $this->input->get('query') ?: $this->input->post('query');
+        if (!$query_str) {
+            $raw_input = file_get_contents('php://input');
+            $json_data = json_decode($raw_input, true);
+            $query_str = $json_data['query'] ?? null;
+        }
+
+        if (!$query_str) {
+            echo json_encode(['status' => 'error', 'message' => 'Please enter Roll Number, Admit Card No, or Mobile Number.']);
+            return;
+        }
+
+        $this->db->select('scholarship_exam_candidates.*, scholarship_exams.title as exam_title, scholarship_exams.result_status_published');
+        $this->db->from('scholarship_exam_candidates');
+        $this->db->join('scholarship_exams', 'scholarship_exams.id = scholarship_exam_candidates.scholarship_exam_id', 'inner');
+        $this->db->group_start();
+        $this->db->where('scholarship_exam_candidates.roll_no', trim($query_str));
+        $this->db->or_where('scholarship_exam_candidates.admit_card_no', trim($query_str));
+        $this->db->or_where('scholarship_exam_candidates.external_mobile', trim($query_str));
+        $this->db->group_end();
+        
+        $candidate = $this->db->get()->row_array();
+
+        if ($candidate) {
+            if ($candidate['result_status_published'] == 1 || $candidate['result_status'] != 'pending') {
+                echo json_encode(['status' => 'success', 'data' => $candidate]);
+            } else {
+                echo json_encode(['status' => 'pending', 'message' => 'Exam result is under evaluation. Please check back after official announcement.', 'data' => $candidate]);
+            }
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'No registration record found for ' . $query_str]);
+        }
+    }
+
+    // Get CBSE Mandatory Disclosure data
+    public function cbse_disclosure() {
+        $this->load->model('cbse_disclosure_model');
+        $raw_data = $this->cbse_disclosure_model->get_all_disclosures();
+        
+        $base_url = base_url();
+
+        // Attach full URL for uploaded files
+        foreach ($raw_data as $section_key => &$fields) {
+            foreach ($fields as $field_key => &$field_val) {
+                if (!empty($field_val['file_path'])) {
+                    $field_val['full_file_url'] = $base_url . $field_val['file_path'];
+                }
+            }
+        }
+
+        echo json_encode(['status' => 'success', 'data' => $raw_data]);
     }
 }

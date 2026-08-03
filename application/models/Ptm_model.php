@@ -117,8 +117,9 @@ class Ptm_model extends MY_Model
 
     public function get_student_attendances($ptm_id)
     {
-        $this->db->select('*');
+        $this->db->select('ptm_attendances.*, staff.name as assigned_staff_name, staff.surname as assigned_staff_surname, staff.employee_id');
         $this->db->from('ptm_attendances');
+        $this->db->join('staff', 'staff.id = ptm_attendances.followup_assigned_to', 'left');
         $this->db->where('ptm_id', $ptm_id);
         $query = $this->db->get();
         $result = $query->result_array();
@@ -127,6 +128,25 @@ class Ptm_model extends MY_Model
             $return_array[$row['student_session_id']] = $row;
         }
         return $return_array;
+    }
+
+    public function get_assigned_followups($staff_id = null)
+    {
+        $this->db->select('ptm_attendances.*, ptms.title as ptm_title, ptms.ptm_date, students.firstname, students.lastname, students.admission_no, classes.class, sections.section, staff.name as assigned_staff_name, staff.surname as assigned_staff_surname, staff.employee_id');
+        $this->db->from('ptm_attendances');
+        $this->db->join('ptms', 'ptms.id = ptm_attendances.ptm_id');
+        $this->db->join('student_session', 'student_session.id = ptm_attendances.student_session_id');
+        $this->db->join('students', 'students.id = student_session.student_id');
+        $this->db->join('classes', 'classes.id = student_session.class_id');
+        $this->db->join('sections', 'sections.id = student_session.section_id');
+        $this->db->join('staff', 'staff.id = ptm_attendances.followup_assigned_to', 'left');
+        $this->db->where('ptm_attendances.followup_required', 1);
+        if ($staff_id != null) {
+            $this->db->where('ptm_attendances.followup_assigned_to', $staff_id);
+        }
+        $this->db->order_by('ptm_attendances.followup_date', 'asc');
+        $query = $this->db->get();
+        return $query->result_array();
     }
 
     public function save_attendance($data)

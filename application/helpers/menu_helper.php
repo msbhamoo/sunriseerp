@@ -480,6 +480,9 @@ function side_menu_list($list = -1)
 
     $CI = &get_instance();
     $CI->load->model('sidebarmenu_model');
+    if (class_exists('Scholarshipexam_model') || file_exists(APPPATH . 'models/Scholarshipexam_model.php')) {
+        $CI->load->model('scholarshipexam_model');
+    }
     $result = $CI->sidebarmenu_model->getMenuwithSubmenus($list);
     return $result;
 

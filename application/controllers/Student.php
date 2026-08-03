@@ -329,6 +329,15 @@ class Student extends Admin_Controller
 
         $data['student'] = $student;
 
+        // Load PTM History
+        $this->db->select('ptm_attendances.*, ptms.title as ptm_title, ptms.ptm_date, ptms.venue, staff.name as assigned_staff_name, staff.surname as assigned_staff_surname');
+        $this->db->from('ptm_attendances');
+        $this->db->join('ptms', 'ptms.id = ptm_attendances.ptm_id');
+        $this->db->join('staff', 'staff.id = ptm_attendances.followup_assigned_to', 'left');
+        $this->db->where('ptm_attendances.student_session_id', $student['student_session_id']);
+        $this->db->order_by('ptms.ptm_date', 'desc');
+        $data['ptm_history'] = $this->db->get()->result_array();
+
         $data["class_section"] = $this->student_model->getClassSection($student["class_id"]);
         $session               = $this->setting_model->getCurrentSession();
 

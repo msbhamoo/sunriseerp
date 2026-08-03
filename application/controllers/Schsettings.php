@@ -1555,5 +1555,97 @@ class Schsettings extends Admin_Controller
         }
     }
 
-    
+    public function cbse_disclosure()
+    {
+        if (!$this->rbac->hasPrivilege('general_setting', 'can_view')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'System Settings');
+        $this->session->set_userdata('sub_menu', 'schsettings/index');
+        $this->session->set_userdata('subsub_menu', 'schsettings/cbse_disclosure');
+
+        $this->load->model('cbse_disclosure_model');
+        $data['disclosure_data'] = $this->cbse_disclosure_model->get_all_disclosures();
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('setting/cbseDisclosure', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    public function ajax_save_cbse_disclosure()
+    {
+        if (!$this->rbac->hasPrivilege('general_setting', 'can_edit')) {
+            echo json_encode(array('status' => 'fail', 'message' => 'Access Denied'));
+            return;
+        }
+
+        $this->load->model('cbse_disclosure_model');
+        $section = $this->input->post('section');
+
+        if (empty($section)) {
+            echo json_encode(array('status' => 'fail', 'message' => 'Invalid section'));
+            return;
+        }
+
+        // Handle text fields
+        $fields = $this->input->post('fields');
+        if (!empty($fields) && is_array($fields)) {
+            foreach ($fields as $key => $val) {
+                $this->cbse_disclosure_model->save_field($section, $key, $val);
+            }
+        }
+
+        // Handle File Uploads
+        if (!empty($_FILES)) {
+            $upload_path = './uploads/cbse_disclosure/';
+            if (!is_dir($upload_path)) {
+                mkdir($upload_path, 0777, true);
+            }
+
+            // Explicit filename mapping as per CBSE disclosure naming standard
+            $filename_map = array(
+                'doc_affiliation'       => 'AffiliationExtension',
+                'doc_trust_registration'=> 'registration',
+                'doc_noc'               => 'NOC',
+                'doc_rte'               => 'RTE',
+                'doc_building_safety'   => 'BuildingSafety',
+                'doc_fire_safety'       => 'fire',
+                'doc_deo_letter'        => 'DEOletter',
+                'doc_water_sanitation'  => 'drinkingwater',
+                'doc_fee_structure'     => 'fee',
+                'doc_academic_calendar' => 'calender',
+                'doc_smc_list'          => 'SMC',
+                'doc_pta_members'       => 'PTA',
+                'doc_board_results_file'=> 'result',
+            );
+
+            $this->load->library('upload');
+
+            foreach ($_FILES as $field_key => $file_info) {
+                if (!empty($file_info['name'])) {
+                    $ext = pathinfo($file_info['name'], PATHINFO_EXTENSION);
+                    $clean_name = isset($filename_map[$field_key]) ? $filename_map[$field_key] : $field_key;
+
+                    $config['upload_path']   = $upload_path;
+                    $config['allowed_types'] = 'pdf|jpg|jpeg|png';
+                    $config['max_size']      = 10240; // 10MB
+                    $config['file_name']     = $clean_name . '.' . $ext;
+                    $config['overwrite']     = TRUE;
+
+                    $this->upload->initialize($config);
+                    if ($this->upload->do_upload($field_key)) {
+                        $upload_data = $this->upload->data();
+                        $file_path   = 'uploads/cbse_disclosure/' . $upload_data['file_name'];
+                        
+                        $field_val = isset($fields[$field_key]) ? $fields[$field_key] : '';
+                        $this->cbse_disclosure_model->save_field($section, $field_key, $field_val, $file_path);
+                    }
+                }
+            }
+        }
+
+        echo json_encode(array('status' => 'success', 'message' => 'CBSE Mandatory Disclosure updated successfully!'));
+    }
 }
+

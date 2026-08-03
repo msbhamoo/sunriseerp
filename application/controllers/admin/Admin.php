@@ -487,43 +487,32 @@ class Admin extends Admin_Controller
                 $data['fee_recovery'] = round(($total_paid / $total_fess) * 100, 2);
             }
 
-            // Move queries from view to controller
+            // Move queries from view to controller with 5-minute transient cache
             $this->load->model('studentfeemaster_model');
             $this->load->model('module_model');
             
-            $total_coll = 0;
-            $all_collections = $this->studentfeemaster_model->getFeeCollectionReport('1970-01-01', '2099-12-31', null, null, null, null, null);
-            if(!empty($all_collections)){
-                foreach($all_collections as $col){
-                    $total_coll += (float)$col['amount'] + (float)$col['amount_fine'];
-                }
+            $cache_file = sys_get_temp_dir() . '/lms_dashboard2_fee_stats_' . $current_session . '.json';
+            $cache_ttl = 300; // 5 minutes cache
+            $fee_stats = null;
+
+            if (file_exists($cache_file) && (time() - filemtime($cache_file) < $cache_ttl)) {
+                $fee_stats = json_decode(@file_get_contents($cache_file), true);
             }
 
-            $outstanding = 0;
-            $all_due = $this->studentfeemaster_model->getFeesAwaiting('1970-01-01', '2099-12-31');
-            if(!empty($all_due)){
-                foreach($all_due as $f){
-                    $amt = isset($f->is_system) && $f->is_system ? $f->amount : $f->fee_amount;
-                    $paid = 0;
-                    $discount = 0;
-                    if(!empty($f->amount_detail)){
-                        $details = json_decode($f->amount_detail, true);
-                        if(is_array($details)){
-                            foreach($details as $d){
-                                $paid += (float)$d['amount'];
-                                $discount += (float)$d['amount_discount'];
-                            }
-                        }
+            if (!$fee_stats || !is_array($fee_stats)) {
+                $total_coll = 0;
+                $all_collections = $this->studentfeemaster_model->getFeeCollectionReport('1970-01-01', '2099-12-31', null, null, null, null, null);
+                if(!empty($all_collections)){
+                    foreach($all_collections as $col){
+                        $total_coll += (float)$col['amount'] + (float)$col['amount_fine'];
                     }
-                    $bal = (float)$amt - ($paid + $discount);
-                    if($bal > 0) $outstanding += $bal;
                 }
-            }
-            if ($this->module_model->hasModule('transport')) {
-                $all_transport = $this->studentfeemaster_model->getTransportFeesByDueDate('1970-01-01', '2099-12-31');
-                if(!empty($all_transport)){
-                    foreach($all_transport as $f){
-                        $amt = isset($f->fees) ? $f->fees : (isset($f->fee_amount) ? $f->fee_amount : 0);
+
+                $outstanding = 0;
+                $all_due = $this->studentfeemaster_model->getFeesAwaiting('1970-01-01', '2099-12-31');
+                if(!empty($all_due)){
+                    foreach($all_due as $f){
+                        $amt = isset($f->is_system) && $f->is_system ? $f->amount : $f->fee_amount;
                         $paid = 0;
                         $discount = 0;
                         if(!empty($f->amount_detail)){
@@ -539,28 +528,57 @@ class Admin extends Admin_Controller
                         if($bal > 0) $outstanding += $bal;
                     }
                 }
-            }
-
-            $this_month_coll = 0;
-            $month_collections = $this->studentfeemaster_model->getFeeCollectionReport(date('Y-m-01'), date('Y-m-t'), null, null, null, null, null);
-            if(!empty($month_collections)){
-                foreach($month_collections as $col){
-                    $this_month_coll += (float)$col['amount'] + (float)$col['amount_fine'];
+                if ($this->module_model->hasModule('transport')) {
+                    $all_transport = $this->studentfeemaster_model->getTransportFeesByDueDate('1970-01-01', '2099-12-31');
+                    if(!empty($all_transport)){
+                        foreach($all_transport as $f){
+                            $amt = isset($f->fees) ? $f->fees : (isset($f->fee_amount) ? $f->fee_amount : 0);
+                            $paid = 0;
+                            $discount = 0;
+                            if(!empty($f->amount_detail)){
+                                $details = json_decode($f->amount_detail, true);
+                                if(is_array($details)){
+                                    foreach($details as $d){
+                                        $paid += (float)$d['amount'];
+                                        $discount += (float)$d['amount_discount'];
+                                    }
+                                }
+                            }
+                            $bal = (float)$amt - ($paid + $discount);
+                            if($bal > 0) $outstanding += $bal;
+                        }
+                    }
                 }
-            }
 
-            $today_coll = 0;
-            $today_collections = $this->studentfeemaster_model->getFeeCollectionReport(date('Y-m-d'), date('Y-m-d'), null, null, null, null, null);
-            if(!empty($today_collections)){
-                foreach($today_collections as $col){
-                    $today_coll += (float)$col['amount'] + (float)$col['amount_fine'];
+                $this_month_coll = 0;
+                $month_collections = $this->studentfeemaster_model->getFeeCollectionReport(date('Y-m-01'), date('Y-m-t'), null, null, null, null, null);
+                if(!empty($month_collections)){
+                    foreach($month_collections as $col){
+                        $this_month_coll += (float)$col['amount'] + (float)$col['amount_fine'];
+                    }
                 }
+
+                $today_coll = 0;
+                $today_collections = $this->studentfeemaster_model->getFeeCollectionReport(date('Y-m-d'), date('Y-m-d'), null, null, null, null, null);
+                if(!empty($today_collections)){
+                    foreach($today_collections as $col){
+                        $today_coll += (float)$col['amount'] + (float)$col['amount_fine'];
+                    }
+                }
+
+                $fee_stats = array(
+                    'total_coll' => $total_coll,
+                    'outstanding' => $outstanding,
+                    'this_month_coll' => $this_month_coll,
+                    'today_coll' => $today_coll
+                );
+                @file_put_contents($cache_file, json_encode($fee_stats));
             }
 
-            $data['total_coll'] = $total_coll;
-            $data['outstanding'] = $outstanding;
-            $data['this_month_coll'] = $this_month_coll;
-            $data['today_coll'] = $today_coll;
+            $data['total_coll'] = $fee_stats['total_coll'];
+            $data['outstanding'] = $fee_stats['outstanding'];
+            $data['this_month_coll'] = $fee_stats['this_month_coll'];
+            $data['today_coll'] = $fee_stats['today_coll'];
 
             $this->load->model('studentcall_model');
             $staff_id = $this->customlib->getUserData()["id"];

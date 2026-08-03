@@ -23,25 +23,42 @@ class Ptmreports extends Admin_Controller
         
         $data['title'] = 'PTM Report';
         $data['ptm_list'] = $this->ptm_model->get();
+        $this->load->model('staff_model');
+        $data['staff_list'] = $this->staff_model->get();
+        
+        $current_staff_id = $this->customlib->getStaffID();
+        $data['current_staff_id'] = $current_staff_id;
+        $data['my_followups'] = $this->ptm_model->get_assigned_followups($current_staff_id);
 
-        if ($this->input->post('search')) {
+        $search_type = $this->input->post('search_type');
+        $data['search_type'] = $search_type ? $search_type : 'ptm_report';
+
+        if ($search_type == 'followup_report') {
+            $staff_id = $this->input->post('staff_id');
+            $data['selected_staff'] = $staff_id;
+            $data['followup_list'] = $this->ptm_model->get_assigned_followups($staff_id != '' ? $staff_id : null);
+        } else if ($this->input->post('search') || $search_type == 'ptm_report') {
             $ptm_id = $this->input->post('ptm_id');
-            $data['selected_ptm'] = $ptm_id;
-            
-            $data['ptm'] = $this->ptm_model->get($ptm_id);
-            $data['targets'] = $this->ptm_model->get_targets($ptm_id);
-            
-            $students = [];
-            if ($data['ptm']['target_type'] == 'whole_school') {
-                $students = $this->student_model->get();
-            } else {
-                foreach ($data['targets'] as $target) {
-                    $class_students = $this->student_model->searchByClassSection($target['class_id'], $target['section_id']);
-                    $students = array_merge($students, $class_students);
+            if ($ptm_id) {
+                $data['selected_ptm'] = $ptm_id;
+                
+                $data['ptm'] = $this->ptm_model->get($ptm_id);
+                $data['targets'] = $this->ptm_model->get_targets($ptm_id);
+                
+                $students = [];
+                if (!empty($data['ptm'])) {
+                    if ($data['ptm']['target_type'] == 'whole_school') {
+                        $students = $this->student_model->get();
+                    } else {
+                        foreach ($data['targets'] as $target) {
+                            $class_students = $this->student_model->searchByClassSection($target['class_id'], $target['section_id']);
+                            $students = array_merge($students, $class_students);
+                        }
+                    }
                 }
+                $data['students'] = $students;
+                $data['attendances'] = $this->ptm_model->get_student_attendances($ptm_id);
             }
-            $data['students'] = $students;
-            $data['attendances'] = $this->ptm_model->get_student_attendances($ptm_id);
         }
 
         $this->load->view('layout/header', $data);

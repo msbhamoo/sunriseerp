@@ -795,6 +795,24 @@
     </div>
 </div>
 
+<div class="modal fade" id="repeatCallWarningModal" tabindex="-1" role="dialog" aria-labelledby="repeatCallWarningModalLabel" style="z-index: 1060;">
+    <div class="modal-dialog" role="document" style="max-width: 420px; margin: 80px auto;">
+        <div class="modal-content" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); border: none;">
+            <div class="modal-header" style="background: #fff3cd; color: #856404; border-top-left-radius: 12px; border-top-right-radius: 12px; border-bottom: 1px solid #ffeeba;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="opacity: 0.8;"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="repeatCallWarningModalLabel" style="font-weight: 700; font-size: 15px;"><i class="fa fa-exclamation-triangle text-warning"></i> Already Called Today</h4>
+            </div>
+            <div class="modal-body" style="padding: 20px; font-size: 14px; color: #334155; text-align: center;">
+                <p id="repeat_call_warning_text" style="margin-bottom: 0; line-height: 1.5;"></p>
+            </div>
+            <div class="modal-footer" style="background: #f8fafc; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 20px; text-align: center; border-top: 1px solid #e2e8f0; display:flex; justify-content:center; gap:10px;">
+                <button type="button" class="btn btn-default btn-sm" data-dismiss="modal" style="border-radius: 6px; font-weight: 600; padding: 6px 16px;">Cancel</button>
+                <button type="button" class="btn btn-warning btn-sm" id="confirm_dial_btn" style="border-radius: 6px; font-weight: 700; padding: 6px 16px;"><i class="fa fa-phone"></i> Yes, Call Again</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="followUpModal" tabindex="-1" role="dialog" aria-labelledby="followUpModalLabel">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -854,11 +872,7 @@
             }
         }
 
-        document.addEventListener('visibilitychange', function () {
-            if (document.visibilityState === 'visible') {
-                checkAndOpenPendingFollowup();
-            }
-        });
+
 
         $(document).ajaxComplete(function() {
             applyMobileCardLabels();

@@ -55,93 +55,101 @@
         </div>
     </div>
 
+    <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_view')) { ?>
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-12">
             <!-- Fee Summary -->
             <h5 style="font-weight:bold; margin-top:20px;">Fee Summary (Total)</h5>
-            <table class="table table-bordered table-striped" style="font-size:12px;">
-                <thead style="background-color:#4CAF50; color:white;">
-                    <tr>
-                        <th>TYPE</th>
-                        <th>TOTAL FEES</th>
-                        <th>COLLECTED</th>
-                        <th>DUE FEE</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php 
-                        $total_fee = 0; $total_paid = 0;
-                        if (!empty($fees)) {
-                            foreach ($fees as $fee_group) {
-                                if (!empty($fee_group->fees)) {
-                                    foreach ($fee_group->fees as $fee) {
-                                        $total_fee += $fee->amount;
-                                        $paid = 0;
-                                        if (is_string($fee->amount_detail)) {
-                                            $amount_detail = json_decode($fee->amount_detail);
-                                            if (is_object($amount_detail) || is_array($amount_detail)) {
-                                                foreach ($amount_detail as $ad) {
-                                                    $paid += $ad->amount;
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" style="font-size:12px;">
+                    <thead style="background-color:#4CAF50; color:white;">
+                        <tr>
+                            <th>TYPE</th>
+                            <th>TOTAL FEES</th>
+                            <th>COLLECTED</th>
+                            <th>DUE FEE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                            $total_fee = 0; $total_paid = 0;
+                            if (!empty($fees)) {
+                                foreach ($fees as $fee_group) {
+                                    if (!empty($fee_group->fees)) {
+                                        foreach ($fee_group->fees as $fee) {
+                                            $total_fee += $fee->amount;
+                                            $paid = 0;
+                                            if (is_string($fee->amount_detail)) {
+                                                $amount_detail = json_decode($fee->amount_detail);
+                                                if (is_object($amount_detail) || is_array($amount_detail)) {
+                                                    foreach ($amount_detail as $ad) {
+                                                        $paid += $ad->amount;
+                                                    }
                                                 }
                                             }
+                                            $total_paid += $paid;
+                        ?>
+                        <tr>
+                            <td><?php echo $fee->name ?? 'Fee'; ?> (<?php echo $fee->type ?? ''; ?>)</td>
+                            <td><?php echo $settinglist[0]['currency_symbol'] . $fee->amount; ?></td>
+                            <td><?php echo $settinglist[0]['currency_symbol'] . $paid; ?></td>
+                            <td><?php echo $settinglist[0]['currency_symbol'] . ($fee->amount - $paid); ?></td>
+                        </tr>
+                        <?php 
                                         }
-                                        $total_paid += $paid;
-                    ?>
-                    <tr>
-                        <td><?php echo $fee->name ?? 'Fee'; ?> (<?php echo $fee->type ?? ''; ?>)</td>
-                        <td><?php echo $settinglist[0]['currency_symbol'] . $fee->amount; ?></td>
-                        <td><?php echo $settinglist[0]['currency_symbol'] . $paid; ?></td>
-                        <td><?php echo $settinglist[0]['currency_symbol'] . ($fee->amount - $paid); ?></td>
-                    </tr>
-                    <?php 
                                     }
                                 }
+                            } else {
+                                echo "<tr><td colspan='4' class='text-center'>No fee data available.</td></tr>";
                             }
-                        } else {
-                            echo "<tr><td colspan='4' class='text-center'>No fee data available.</td></tr>";
-                        }
-                    ?>
-                    <tr style="font-weight:bold; background-color:#f9f9f9;">
-                        <td>TOTAL</td>
-                        <td><?php echo $settinglist[0]['currency_symbol'] . number_format($total_fee, 2); ?></td>
-                        <td><?php echo $settinglist[0]['currency_symbol'] . number_format($total_paid, 2); ?></td>
-                        <td><?php echo $settinglist[0]['currency_symbol'] . number_format($total_fee - $total_paid, 2); ?></td>
-                    </tr>
-                </tbody>
-            </table>
+                        ?>
+                        <tr style="font-weight:bold; background-color:#f9f9f9;">
+                            <td>TOTAL</td>
+                            <td><?php echo $settinglist[0]['currency_symbol'] . number_format($total_fee, 2); ?></td>
+                            <td><?php echo $settinglist[0]['currency_symbol'] . number_format($total_paid, 2); ?></td>
+                            <td><?php echo $settinglist[0]['currency_symbol'] . number_format($total_fee - $total_paid, 2); ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        
-        <div class="col-md-6">
+    </div>
+    <?php } ?>
+    
+    <div class="row">
+        <div class="col-md-12">
             <!-- CBSE Exam Summary -->
-            <h5 style="font-weight:bold; margin-top:20px;">CBSE Exam Details</h5>
-            <table class="table table-bordered table-striped" style="font-size:12px;">
-                <thead style="background-color:#4CAF50; color:white;">
-                    <tr>
-                        <th>EXAM NAME</th>
-                        <th>TOTAL MARKS</th>
-                        <th>OBTAINED MARKS</th>
-                        <th>PERCENTAGE / GRADE</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php 
-                        if (!empty($cbse_exams)) {
-                            foreach ($cbse_exams as $exam) {
-                    ?>
-                    <tr>
-                        <td><?php echo isset($exam['exam_name']) ? $exam['exam_name'] : (isset($exam['name']) ? $exam['name'] : '-'); ?></td>
-                        <td><?php echo isset($exam['total_marks']) ? $exam['total_marks'] : '-'; ?></td>
-                        <td><?php echo isset($exam['obtained_marks']) ? $exam['obtained_marks'] : '-'; ?></td>
-                        <td><?php echo isset($exam['percentage']) ? $exam['percentage'].'%' : '-'; ?></td>
-                    </tr>
-                    <?php 
+            <h5 style="font-weight:bold; margin-top:15px;">CBSE Exam Details</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" style="font-size:12px;">
+                    <thead style="background-color:#4CAF50; color:white;">
+                        <tr>
+                            <th>EXAM NAME</th>
+                            <th>TOTAL MARKS</th>
+                            <th>OBTAINED MARKS</th>
+                            <th>PERCENTAGE / GRADE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                            if (!empty($cbse_exams)) {
+                                foreach ($cbse_exams as $exam) {
+                        ?>
+                        <tr>
+                            <td><?php echo isset($exam['exam_name']) ? $exam['exam_name'] : (isset($exam['name']) ? $exam['name'] : '-'); ?></td>
+                            <td><?php echo isset($exam['total_marks']) ? $exam['total_marks'] : '-'; ?></td>
+                            <td><?php echo isset($exam['obtained_marks']) ? $exam['obtained_marks'] : '-'; ?></td>
+                            <td><?php echo isset($exam['percentage']) ? $exam['percentage'].'%' : '-'; ?></td>
+                        </tr>
+                        <?php 
+                                }
+                            } else {
+                                echo "<tr><td colspan='4' class='text-center'><i>No Exam data available.</i></td></tr>";
                             }
-                        } else {
-                            echo "<tr><td colspan='4' class='text-center'><i>No Exam data available.</i></td></tr>";
-                        }
-                    ?>
-                </tbody>
-            </table>
+                        ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
     
@@ -181,7 +189,23 @@
                     </tr>
                     <tr>
                         <th>Action Items</th>
-                        <td colspan="3"><?php echo nl2br(htmlspecialchars($ptm_remarks['agreed_action_items'])); ?></td>
+                        <td colspan="3"><?php echo nl2br(htmlspecialchars(isset($ptm_remarks['action_items']) ? $ptm_remarks['action_items'] : (isset($ptm_remarks['agreed_action_items']) ? $ptm_remarks['agreed_action_items'] : ''))); ?></td>
+                    </tr>
+                    <tr>
+                        <th>Follow-up Status</th>
+                        <td colspan="3">
+                            <?php if (!empty($ptm_remarks['followup_required']) && $ptm_remarks['followup_required'] == 1): ?>
+                                <span class="label label-warning" style="font-size: 11px;">Follow-up Required</span>
+                                <?php if (!empty($ptm_remarks['assigned_staff_name'])): ?>
+                                    &nbsp;|&nbsp; <strong>Assigned Staff:</strong> <?php echo $ptm_remarks['assigned_staff_name'] . ' ' . $ptm_remarks['assigned_staff_surname'] . ($ptm_remarks['employee_id'] ? ' (' . $ptm_remarks['employee_id'] . ')' : ''); ?>
+                                <?php endif; ?>
+                                <?php if (!empty($ptm_remarks['followup_date'])): ?>
+                                    &nbsp;|&nbsp; <strong>Target Date:</strong> <?php echo date('d-m-Y', strtotime($ptm_remarks['followup_date'])); ?>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <span class="text-muted">No follow-up required</span>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                     <?php else: ?>
                     <tr><td colspan="4" class="text-center text-muted">No remarks entered for this PTM yet.</td></tr>

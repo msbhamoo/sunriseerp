@@ -41,6 +41,7 @@ $route['online_course'] = 'course';
 $route['annual_calendar'] = 'welcome/annual_calendar'; 
 
 
+$route['cbse_disclosure'] = 'welcome/cbse_disclosure';
 $route['download-receipt/(:any)'] = 'site/download_fee_receipt_token/$1';
 $route['download-marksheet/(:any)'] = 'site/download_cbseexam_marksheet_token/$1';
 $route['download-exam-marksheet/(:any)'] = 'site/download_marksheet_token/$1';

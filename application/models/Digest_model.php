@@ -49,16 +49,24 @@ class Digest_model extends MY_Model
         // Let's check table name. It's usually `student_fees_deposite` or we can query `student_fee_items`? Wait, I'll just check if it exists.
         if ($this->db->table_exists('student_fees_deposite')) {
             $this->db->select('amount_detail');
-            // 'amount_detail' JSON might not have standard date. The table uses created_at or we can just fetch all in date range if 'date' column doesn't exist. Wait, does 'student_fees_deposite' have a 'date' column? It might not!
-            // Let's just do a safer approach, try-catch or check fields.
+            if ($this->db->field_exists('created_at', 'student_fees_deposite')) {
+                $this->db->where('created_at >=', $start_date . ' 00:00:00');
+                $this->db->where('created_at <=', $end_date . ' 23:59:59');
+            }
             if ($this->db->field_exists('amount_detail', 'student_fees_deposite')) {
                 $query = $this->db->get('student_fees_deposite');
-                foreach ($query->result() as $row) {
-                    $details = json_decode($row->amount_detail, true);
-                    if (is_array($details)) {
-                        foreach ($details as $detail) {
-                            if (isset($detail['date']) && $detail['date'] >= $start_date && $detail['date'] <= $end_date) {
-                                $stats['fee_collection'] += (isset($detail['amount']) ? $detail['amount'] : 0);
+                if ($query && $query->num_rows() > 0) {
+                    foreach ($query->result() as $row) {
+                        $details = json_decode($row->amount_detail, true);
+                        if (is_array($details)) {
+                            foreach ($details as $detail) {
+                                if (isset($detail['date'])) {
+                                    if ($detail['date'] >= $start_date && $detail['date'] <= $end_date) {
+                                        $stats['fee_collection'] += (isset($detail['amount']) ? (float)$detail['amount'] : 0);
+                                    }
+                                } else {
+                                    $stats['fee_collection'] += (isset($detail['amount']) ? (float)$detail['amount'] : 0);
+                                }
                             }
                         }
                     }

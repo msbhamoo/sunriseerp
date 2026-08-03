@@ -72,7 +72,8 @@ if (!empty($side_list)) {
                     'qr_code_attendance' => ['icon' => 'icon-maximize', 'color' => '#10b981'], // Emerald
                     'holiday' => ['icon' => 'icon-sun', 'color' => '#eab308'], // Yellow
                     'student_cv' => ['icon' => 'icon-file-text', 'color' => '#6366f1'], // Indigo
-                    'accounts' => ['icon' => 'icon-calculator', 'color' => '#10b981'] // Emerald
+                    'accounts' => ['icon' => 'icon-calculator', 'color' => '#10b981'], // Emerald
+                    'scholarship_exam' => ['icon' => 'icon-award', 'color' => '#f59e0b'] // Amber/Gold
                 ];
 
                 $icon_data = isset($modern_icons[$side_list_value->lang_key]) ? $modern_icons[$side_list_value->lang_key] : ['icon' => $side_list_value->icon, 'color' => '#6b7280'];
@@ -88,7 +89,7 @@ if (!empty($side_list)) {
                     <li class="treeview <?php echo activate_main_menu($side_list_value->activate_menu); ?>">
 
                         <a href="#">
-                            <i class="<?php echo $icon_class; ?>" style="color: <?php echo $icon_color; ?>;"></i> <span><?php echo $this->lang->line($side_list_value->lang_key); ?></span> <i class="icon-chevron-left pull-right"></i>
+                            <i class="<?php echo $icon_class; ?>" style="color: <?php echo $icon_color; ?>;"></i> <span><?php echo !empty($this->lang->line($side_list_value->lang_key)) ? $this->lang->line($side_list_value->lang_key) : $side_list_value->menu; ?></span> <i class="icon-chevron-left pull-right"></i>
                         </a>
 
                                                     <?php
@@ -96,7 +97,7 @@ if (!empty($side_list_value->submenus)) {
                     ?>
                         <ul class="treeview-menu custom-secondary-panel">
                             <li class="submenu-header">
-                                <span class="submenu-title"><?php echo $this->lang->line($side_list_value->lang_key); ?></span>
+                                <span class="submenu-title"><?php echo !empty($this->lang->line($side_list_value->lang_key)) ? $this->lang->line($side_list_value->lang_key) : $side_list_value->menu; ?></span>
                                 <button type="button" class="close-submenu"><i class="fa fa-times"></i></button>
                             </li>
                             <?php

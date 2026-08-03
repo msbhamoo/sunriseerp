@@ -49,6 +49,9 @@
             <li class="<?php echo set_SubSubmenu('schsettings/miscellaneous'); ?>">
                 <a class="<?php echo set_SubSubmenu('schsettings/miscellaneous'); ?>" href="<?php echo site_url('schsettings/miscellaneous') ?>"><?php echo $this->lang->line('miscellaneous'); ?></a>
             </li>
+            <li class="<?php echo set_SubSubmenu('schsettings/cbse_disclosure'); ?>">
+                <a class="<?php echo set_SubSubmenu('schsettings/cbse_disclosure'); ?>" href="<?php echo site_url('schsettings/cbse_disclosure') ?>">CBSE Mandatory Disclosure</a>
+            </li>
             <li class="<?php echo set_SubSubmenu('admin/systemnotificationsetting'); ?>">
                 <a class="<?php echo set_SubSubmenu('admin/systemnotificationsetting'); ?>" href="<?php echo site_url('admin/systemnotificationsetting') ?>">System Notifications</a>
             </li>
