@@ -89,8 +89,20 @@ class Ptm extends Admin_Controller
         $data['title'] = 'Edit PTM';
         $this->session->set_userdata('top_menu', 'Academics');
         $this->session->set_userdata('sub_menu', 'admin/ptm');
-        
+
+        $staff_id = $this->customlib->getStaffID();
+        $is_superadmin = ($this->customlib->getStaffRole() == '{"id":"7","name":"Super Admin"}') || ($this->rbac->hasPrivilege('superadmin', 'can_view'));
+
         $ptm = $this->ptm_model->get($id);
+        if (empty($ptm)) {
+            redirect('admin/ptm');
+        }
+
+        // Only creator or Super Admin can edit PTM schedule
+        if (!$is_superadmin && $ptm['created_by'] != $staff_id) {
+            access_denied();
+        }
+
         $ptm['targets'] = $this->ptm_model->get_targets($id);
         $data['ptm'] = $ptm;
 
@@ -127,7 +139,6 @@ class Ptm extends Admin_Controller
                 'venue' => $this->input->post('venue'),
                 'description' => $this->input->post('description'),
                 'target_type' => $target_type,
-                'created_by' => $this->customlib->getStaffID() ? $this->customlib->getStaffID() : 1,
             );
             $this->ptm_model->add($data_insert);
             
@@ -148,13 +159,22 @@ class Ptm extends Admin_Controller
         if (!$this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_delete')) {
             access_denied();
         }
-        $this->ptm_model->remove($id);
+        $staff_id = $this->customlib->getStaffID();
+        $is_superadmin = ($this->customlib->getStaffRole() == '{"id":"7","name":"Super Admin"}') || ($this->rbac->hasPrivilege('superadmin', 'can_view'));
+
+        $ptm = $this->ptm_model->get($id);
+        if (!empty($ptm)) {
+            if (!$is_superadmin && $ptm['created_by'] != $staff_id) {
+                access_denied();
+            }
+            $this->ptm_model->remove($id);
+        }
         redirect('admin/ptm');
     }
 
     public function attendance($ptm_id)
     {
-        if (!$this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_add')) {
+        if (!$this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_view')) {
             access_denied();
         }
         $this->session->set_userdata('top_menu', 'Academics');
@@ -184,7 +204,7 @@ class Ptm extends Admin_Controller
 
     public function save_attendance()
     {
-        if (!$this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_add')) {
+        if (!$this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_view') && !$this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_add')) {
             $json_array = array('status' => 'fail', 'error' => '', 'message' => $this->lang->line('access_denied'));
             echo json_encode($json_array);
             return;

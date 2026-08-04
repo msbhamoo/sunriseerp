@@ -1,10 +1,90 @@
+<?php 
+$logged_in_staff_id = $this->customlib->getStaffID();
+$is_superadmin = ($this->customlib->getStaffRole() == '{"id":"7","name":"Super Admin"}') || ($this->rbac->hasPrivilege('superadmin', 'can_view'));
+
+$can_show_form = false;
+if (isset($ptm)) {
+    if ($is_superadmin || $ptm['created_by'] == $logged_in_staff_id) {
+        $can_show_form = $this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_edit');
+    }
+} else {
+    $can_show_form = $this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_add');
+}
+?>
+<style type="text/css">
+    @media (max-width: 767px) {
+        .mobile-card-table thead {
+            display: none !important;
+        }
+        .mobile-card-table, 
+        .mobile-card-table tbody, 
+        .mobile-card-table tr, 
+        .mobile-card-table td {
+            display: block !important;
+            width: 100% !important;
+        }
+        .mobile-card-table tr {
+            background: #fff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 12px !important;
+            margin-bottom: 15px !important;
+            padding: 12px 15px !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+        }
+        .mobile-card-table td {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 8px 0 !important;
+            border: none !important;
+            border-bottom: 1px dashed #edf2f7 !important;
+            text-align: right !important;
+            font-size: 13px !important;
+        }
+        .mobile-card-table td:last-child {
+            border-bottom: none !important;
+            padding-top: 12px !important;
+        }
+        .mobile-card-table td::before {
+            content: attr(data-label);
+            font-weight: 700;
+            color: #64748b;
+            text-align: left;
+            padding-right: 10px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .mobile-card-table td.pull-right,
+        .mobile-card-table td[data-label="Action"] {
+            justify-content: flex-end !important;
+        }
+        .mobile-card-table td[data-label="Action"] .btn {
+            padding: 6px 12px !important;
+            font-size: 13px !important;
+            margin-left: 5px !important;
+            border-radius: 6px !important;
+        }
+        .box-header .box-tools {
+            position: relative !important;
+            top: auto !important;
+            right: auto !important;
+            margin-top: 10px !important;
+            float: none !important;
+        }
+        .box-header .box-tools .btn {
+            width: 100% !important;
+            display: block !important;
+            margin-bottom: 5px !important;
+        }
+    }
+</style>
 <div class="content-wrapper" style="min-height: 946px;">
     <section class="content-header">
         <h1><i class="fa fa-calendar-check-o"></i> <?php echo $this->lang->line('parent_teacher_meeting'); ?></h1>
     </section>
     <section class="content">
         <div class="row">
-            <?php if ($this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_add') || $this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_edit')) { ?>
+            <?php if ($can_show_form) { ?>
                 <div class="col-md-4">
                     <div class="box box-primary">
                         <div class="box-header with-border">
@@ -31,7 +111,7 @@
                                     <span class="text-danger"><?php echo form_error('ptm_date'); ?></span>
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-xs-6 col-md-6">
                                         <div class="form-group">
                                             <label for="time_from"><?php echo $this->lang->line('time_from'); ?></label><small class="req"> *</small>
                                             <div class="input-group">
@@ -41,7 +121,7 @@
                                             <span class="text-danger"><?php echo form_error('time_from'); ?></span>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-xs-6 col-md-6">
                                         <div class="form-group">
                                             <label for="time_to"><?php echo $this->lang->line('time_to'); ?></label><small class="req"> *</small>
                                             <div class="input-group">
@@ -117,13 +197,13 @@
 
                             </div>
                             <div class="box-footer">
-                                <button type="submit" class="btn btn-info pull-right"><?php echo $this->lang->line('save'); ?></button>
+                                <button type="submit" class="btn btn-info pull-right btn-block-xs"><?php echo $this->lang->line('save'); ?></button>
                             </div>
                         </form>
                     </div>
                 </div>
             <?php } ?>
-            <div class="col-md-<?php echo ($this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_add') || $this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_edit')) ? '8' : '12'; ?>">
+            <div class="col-md-<?php echo ($can_show_form) ? '8' : '12'; ?>">
                 <div class="box box-primary">
                     <div class="box-header ptbnull">
                         <h3 class="box-title titlefix"><?php echo $this->lang->line('ptm_list'); ?></h3>
@@ -133,7 +213,7 @@
                     </div>
                     <div class="box-body">
                         <div class="table-responsive mailbox-messages overflow-visible">
-                            <table class="table table-striped table-bordered table-hover example">
+                            <table class="table table-striped table-bordered table-hover example mobile-card-table">
                                 <thead>
                                     <tr>
                                         <th><?php echo $this->lang->line('title'); ?></th>
@@ -146,31 +226,31 @@
                                 </thead>
                                 <tbody>
                                     <?php if (!empty($ptm_list)) {
-                                        foreach ($ptm_list as $ptm) { ?>
+                                        foreach ($ptm_list as $ptm_item) { ?>
                                         <tr>
-                                            <td><?php echo $ptm['title']; ?></td>
-                                            <td><?php echo $this->customlib->dateformat($ptm['ptm_date']); ?></td>
-                                            <td><?php echo $ptm['time_from'] . ' - ' . $ptm['time_to']; ?></td>
-                                            <td><?php echo $ptm['venue']; ?></td>
-                                            <td><?php 
-                                                if($ptm['target_type'] == 'whole_school') echo $this->lang->line('whole_school');
+                                            <td data-label="<?php echo $this->lang->line('title'); ?>"><?php echo $ptm_item['title']; ?></td>
+                                            <td data-label="<?php echo $this->lang->line('date'); ?>"><?php echo $this->customlib->dateformat($ptm_item['ptm_date']); ?></td>
+                                            <td data-label="<?php echo $this->lang->line('time'); ?>"><?php echo $ptm_item['time_from'] . ' - ' . $ptm_item['time_to']; ?></td>
+                                            <td data-label="<?php echo $this->lang->line('venue'); ?>"><?php echo $ptm_item['venue']; ?></td>
+                                            <td data-label="<?php echo $this->lang->line('target') ? $this->lang->line('target') : 'Target'; ?>"><?php 
+                                                if($ptm_item['target_type'] == 'whole_school') echo $this->lang->line('whole_school');
                                                 else {
                                                     $t_arr = [];
-                                                    foreach($ptm['targets'] as $t) {
+                                                    foreach($ptm_item['targets'] as $t) {
                                                         $t_arr[] = $t['class'] . " (" . $t['section'] . ")";
                                                     }
                                                     echo implode(", ", $t_arr);
                                                 }
                                             ?></td>
-                                            <td class="pull-right">
-                                                <?php if ($this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_add')) { ?>
-                                                    <a href="<?php echo base_url(); ?>admin/ptm/attendance/<?php echo $ptm['id'] ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('mark_attendance'); ?>"><i class="fa fa-calendar-check-o"></i></a>
+                                            <td data-label="Action" class="pull-right">
+                                                <?php if ($this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_view')) { ?>
+                                                    <a href="<?php echo base_url(); ?>admin/ptm/attendance/<?php echo $ptm_item['id'] ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('mark_attendance'); ?>"><i class="fa fa-calendar-check-o"></i></a>
                                                 <?php } ?>
-                                                <?php if ($this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_edit')) { ?>
-                                                    <a href="<?php echo base_url(); ?>admin/ptm/edit/<?php echo $ptm['id'] ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>"><i class="fa fa-pencil"></i></a>
+                                                <?php if ($this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_edit') && ($is_superadmin || $ptm_item['created_by'] == $logged_in_staff_id)) { ?>
+                                                    <a href="<?php echo base_url(); ?>admin/ptm/edit/<?php echo $ptm_item['id'] ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>"><i class="fa fa-pencil"></i></a>
                                                 <?php } ?>
-                                                <?php if ($this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_delete')) { ?>
-                                                    <a href="<?php echo base_url(); ?>admin/ptm/delete/<?php echo $ptm['id'] ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('delete'); ?>" onclick="return confirm('<?php echo $this->lang->line('delete_confirm'); ?>');"><i class="fa fa-remove"></i></a>
+                                                <?php if ($this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_delete') && ($is_superadmin || $ptm_item['created_by'] == $logged_in_staff_id)) { ?>
+                                                    <a href="<?php echo base_url(); ?>admin/ptm/delete/<?php echo $ptm_item['id'] ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('delete'); ?>" onclick="return confirm('<?php echo $this->lang->line('delete_confirm'); ?>');"><i class="fa fa-remove"></i></a>
                                                 <?php } ?>
                                             </td>
                                         </tr>

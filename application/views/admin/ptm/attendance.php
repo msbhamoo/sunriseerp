@@ -1,3 +1,66 @@
+<style type="text/css">
+    @media (max-width: 767px) {
+        .mobile-card-table thead {
+            display: none !important;
+        }
+        .mobile-card-table, 
+        .mobile-card-table tbody, 
+        .mobile-card-table tr, 
+        .mobile-card-table td {
+            display: block !important;
+            width: 100% !important;
+        }
+        .mobile-card-table tr {
+            background: #fff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 12px !important;
+            margin-bottom: 16px !important;
+            padding: 14px !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+        }
+        .mobile-card-table td {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 8px 0 !important;
+            border: none !important;
+            border-bottom: 1px dashed #edf2f7 !important;
+            text-align: right !important;
+            font-size: 13px !important;
+        }
+        .mobile-card-table td:last-child {
+            border-bottom: none !important;
+            padding-top: 12px !important;
+            display: flex !important;
+            gap: 8px !important;
+        }
+        .mobile-card-table td::before {
+            content: attr(data-label);
+            font-weight: 700;
+            color: #64748b;
+            text-align: left;
+            padding-right: 10px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .mobile-card-table td[data-label="Action"] .btn {
+            flex: 1;
+            padding: 8px !important;
+            font-size: 12px !important;
+            border-radius: 6px !important;
+        }
+        .mobile-card-table td .form-control {
+            max-width: 60% !important;
+            display: inline-block !important;
+            height: 34px !important;
+            font-size: 12px !important;
+        }
+        .view-snapshot {
+            margin-left: 6px;
+            padding: 2px 6px !important;
+        }
+    }
+</style>
 <div class="content-wrapper" style="min-height: 946px;">
     <section class="content-header">
         <h1><i class="fa fa-users"></i> <?php echo $this->lang->line('ptm_attendance'); ?> : <?php echo $ptm['title']; ?></h1>
@@ -8,7 +71,7 @@
                 <div class="box box-primary">
                     <div class="box-body">
                         <div class="table-responsive">
-                            <table class="table table-striped table-bordered table-hover example">
+                            <table class="table table-striped table-bordered table-hover example mobile-card-table">
                                 <thead>
                                     <tr>
                                         <th><?php echo $this->lang->line('admission_no'); ?></th>
@@ -24,19 +87,19 @@
                                         $att = isset($attendances[$student['student_session_id']]) ? $attendances[$student['student_session_id']] : [];
                                     ?>
                                         <tr>
-                                            <td><?php echo $student['admission_no']; ?></td>
-                                            <td>
-                                                <?php echo $student['firstname'] . ' ' . $student['lastname']; ?>
-                                                <a href="#" class="btn btn-xs btn-info pull-right view-snapshot" data-student="<?php echo $student['id']; ?>" data-session="<?php echo $student['student_session_id']; ?>"><i class="fa fa-line-chart"></i> <?php echo $this->lang->line('snapshot'); ?></a>
+                                            <td data-label="<?php echo $this->lang->line('admission_no'); ?>"><?php echo $student['admission_no']; ?></td>
+                                            <td data-label="<?php echo $this->lang->line('student_name'); ?>">
+                                                <span><?php echo $student['firstname'] . ' ' . $student['lastname']; ?></span>
+                                                <a href="#" class="btn btn-xs btn-info view-snapshot" data-student="<?php echo $student['id']; ?>" data-session="<?php echo $student['student_session_id']; ?>"><i class="fa fa-line-chart"></i> <?php echo $this->lang->line('snapshot'); ?></a>
                                             </td>
-                                            <td><?php echo $student['class'] . ' (' . $student['section'] . ')'; ?></td>
-                                            <td>
+                                            <td data-label="<?php echo $this->lang->line('class'); ?>"><?php echo $student['class'] . ' (' . $student['section'] . ')'; ?></td>
+                                            <td data-label="<?php echo $this->lang->line('status'); ?>">
                                                 <select class="form-control" id="status_<?php echo $student['student_session_id']; ?>">
                                                     <option value="absent" <?php echo (isset($att['status']) && $att['status']=='absent') ? 'selected' : ''; ?>>Absent</option>
                                                     <option value="present" <?php echo (isset($att['status']) && $att['status']=='present') ? 'selected' : ''; ?>>Present</option>
                                                 </select>
                                             </td>
-                                            <td>
+                                            <td data-label="<?php echo $this->lang->line('attendee'); ?>">
                                                 <select class="form-control" id="attendee_<?php echo $student['student_session_id']; ?>">
                                                     <option value="">-</option>
                                                     <?php $atts = ['father', 'mother', 'both', 'guardian', 'other']; 
@@ -45,7 +108,7 @@
                                                     <?php } ?>
                                                 </select>
                                             </td>
-                                            <td>
+                                            <td data-label="Action">
                                                 <button type="button" class="btn btn-primary btn-sm add-remarks" data-session="<?php echo $student['student_session_id']; ?>"><i class="fa fa-commenting-o"></i> <?php echo $this->lang->line('remarks'); ?></button>
                                                 
                                                 <!-- Hidden fields for remarks data -->
@@ -63,7 +126,7 @@
                                                 <input type="hidden" id="followup_ass_<?php echo $student['student_session_id']; ?>" value="<?php echo isset($att['followup_assigned_to']) ? $att['followup_assigned_to'] : ''; ?>">
                                                 <input type="hidden" id="followup_date_<?php echo $student['student_session_id']; ?>" value="<?php echo isset($att['followup_date']) ? $att['followup_date'] : ''; ?>">
                                                 
-                                                <button type="button" class="btn btn-success btn-sm save-attendance" data-session="<?php echo $student['student_session_id']; ?>"><i class="fa fa-save"></i></button>
+                                                <button type="button" class="btn btn-success btn-sm save-attendance" data-session="<?php echo $student['student_session_id']; ?>"><i class="fa fa-save"></i> Save</button>
                                             </td>
                                         </tr>
                                     <?php } ?>

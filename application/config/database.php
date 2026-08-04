@@ -10,7 +10,7 @@ if ($is_localhost) {
         'hostname' => '127.0.0.1',
         'username' => 'root',
         'password' => '',
-        'database' => 'schoolerp',
+        'database' => 'newerp',
         'dbdriver'     => 'mysqli',
         'dbprefix'     => '',
         'pconnect'     => false,

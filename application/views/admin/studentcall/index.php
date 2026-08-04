@@ -157,7 +157,7 @@
                 <div class="d2-metric-icon pending"><i class="fa fa-clock-o"></i></div>
                 <div class="d2-metric-content">
                     <div class="d2-metric-label">Pending Follow-ups</div>
-                    <div class="d2-metric-value"><?php echo count($pending_followup_calls); ?></div>
+                    <div class="d2-metric-value"><?php echo $pending_followups; ?></div>
                 </div>
             </div>
         </div>
@@ -317,7 +317,22 @@
                                             $called_today = (!empty($normalized_date) && date('Y-m-d', strtotime($normalized_date)) == date('Y-m-d')) ? '1' : '0';
                                         ?>
                                             <tr data-called-today="<?php echo $called_today; ?>">
-                                                <td data-label="Student"><?php echo $call['firstname'] . " " . $call['lastname'] . " (" . $call['admission_no'] . ")"; ?></td>
+                                                <td data-label="Student">
+                                                    <div style="font-weight:600; color:#1e293b;"><?php echo $call['firstname'] . " " . $call['lastname'] . " (" . $call['admission_no'] . ")"; ?></div>
+                                                    <div style="margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 10px;">
+                                                        <?php 
+                                                            $adm_type = !empty($call['admission_type']) ? $call['admission_type'] : 'New';
+                                                            $shrestha = !empty($call['shrestha']) ? $call['shrestha'] : 'No';
+                                                            $rte = !empty($call['rte']) ? $call['rte'] : 'No';
+                                                            $is_staff_kid = ($call['is_staff_kid'] == 1 || $call['is_staff_kid'] === '1' || strtolower($call['is_staff_kid'] ?? '') === 'yes') ? 'Yes' : 'No';
+                                                            $staff_name = $call['student_staff_name'] ?? '';
+                                                        ?>
+                                                        <span style="background:#e0f2fe; color:#0369a1; padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="Admission Type">Adm: <?php echo htmlspecialchars($adm_type); ?></span>
+                                                        <span style="background:<?php echo ($shrestha === 'Yes' ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#64748b;'); ?> padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="Shrestha">Shrestha: <?php echo $shrestha; ?></span>
+                                                        <span style="background:<?php echo ($rte === 'Yes' ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#64748b;'); ?> padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="RTE">RTE: <?php echo $rte; ?></span>
+                                                        <span style="background:<?php echo ($is_staff_kid === 'Yes' ? '#fef3c7; color:#b45309;' : '#f1f5f9; color:#64748b;'); ?> padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="Staff Kid">Staff Kid: <?php echo $is_staff_kid . ($is_staff_kid === 'Yes' && !empty($staff_name) ? " (<b>" . htmlspecialchars($staff_name) . "</b>)" : ""); ?></span>
+                                                    </div>
+                                                </td>
                                                 <td data-label="Father Name"><?php echo $call['father_name']; ?></td>
                                                 <td data-label="Class"><?php echo $call['class'] . " (" . $call['section'] . ")"; ?></td>
                                                 <td data-label="Pickup Point"><?php echo $call['pickup_point_name']; ?></td>

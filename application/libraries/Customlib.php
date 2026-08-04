@@ -1101,7 +1101,10 @@ class Customlib
             $month = date('m', strtotime($month_str));
         }
 
-        $date = $year . "-" . $month . "-" . $day;
+        if (isset($year) && isset($month) && isset($day)) {
+            $date = $year . "-" . $month . "-" . $day;
+            return strtotime($date);
+        }
 
         return strtotime($date);
     }

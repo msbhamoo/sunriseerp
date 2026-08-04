@@ -182,16 +182,19 @@ class Studentcall_model extends MY_Model
 
     public function get_calls($class_id = null, $section_id = null, $date_from = null, $date_to = null, $purpose_id = null, $status = null, $follow_up_date_from = null, $follow_up_date_to = null, $assigned_to = null)
     {
-        $this->db->select('student_calls.*, students.firstname, students.lastname, students.admission_no, students.father_name, students.father_phone, students.mother_phone, students.guardian_phone, students.mobileno, classes.class, sections.section, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname, pickup_point.name as pickup_point_name, (SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id ASC LIMIT 1) as next_follow_up_date, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending") as pending_count, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id) as total_followups, (SELECT CONCAT(staff.name, " ", staff.surname) FROM student_call_followups JOIN staff ON staff.id = student_call_followups.assigned_to WHERE student_call_id = student_calls.id AND student_call_followups.status = "Pending" ORDER BY student_call_followups.id ASC LIMIT 1) as assigned_to_name');
+        $this->db->select('student_calls.*, students.firstname, students.lastname, students.admission_no, students.father_name, students.father_phone, students.mother_phone, students.guardian_phone, students.mobileno, students.admission_type, students.shrestha, students.rte, students.is_staff_kid, students.staff_id, student_staff.name as student_staff_name, classes.class, sections.section, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname, pickup_point.name as pickup_point_name, (SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id ASC LIMIT 1) as next_follow_up_date, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending") as pending_count, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id) as total_followups, (SELECT CONCAT(staff.name, " ", staff.surname) FROM student_call_followups JOIN staff ON staff.id = student_call_followups.assigned_to WHERE student_call_id = student_calls.id AND student_call_followups.status = "Pending" ORDER BY student_call_followups.id ASC LIMIT 1) as assigned_to_name');
         $this->db->from('student_calls');
         $this->db->join('student_session', 'student_session.id = student_calls.student_session_id');
         $this->db->join('students', 'students.id = student_calls.student_id');
+        $this->db->join('staff as student_staff', 'student_staff.id = students.staff_id', 'left');
         $this->db->join('classes', 'student_session.class_id = classes.id');
         $this->db->join('sections', 'student_session.section_id = sections.id');
         $this->db->join('route_pickup_point', 'student_session.route_pickup_point_id = route_pickup_point.id', 'left');
         $this->db->join('pickup_point', 'route_pickup_point.pickup_point_id = pickup_point.id', 'left');
         $this->db->join('student_call_purpose', 'student_call_purpose.id = student_calls.call_purpose_id', 'left');
         $this->db->join('staff', 'staff.id = student_calls.created_by', 'left');
+        $this->db->where('student_session.session_id', $this->current_session);
+        $this->db->where('students.is_active', 'yes');
 
         if (!empty($class_id)) {
             $this->db->where('student_session.class_id', $class_id);
@@ -206,26 +209,31 @@ class Studentcall_model extends MY_Model
             $this->db->where('student_calls.call_status', $status);
         }
         if (!empty($date_from) && !empty($date_to)) {
-            $this->db->where('DATE(student_calls.date) >=', $date_from);
-            $this->db->where('DATE(student_calls.date) <=', $date_to);
+            $this->db->where('student_calls.date >=', $date_from . ' 00:00:00');
+            $this->db->where('student_calls.date <=', $date_to . ' 23:59:59');
         } elseif (!empty($date_from)) {
-            $this->db->where('DATE(student_calls.date) >=', $date_from);
+            $this->db->where('student_calls.date >=', $date_from . ' 00:00:00');
         } elseif (!empty($date_to)) {
-            $this->db->where('DATE(student_calls.date) <=', $date_to);
+            $this->db->where('student_calls.date <=', $date_to . ' 23:59:59');
         }
         
         if (!empty($assigned_to)) {
             $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND student_call_followups.assigned_to = '.(int)$assigned_to.')', NULL, FALSE);
         }
         if (!empty($follow_up_date_from) && !empty($follow_up_date_to)) {
-            $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND DATE(student_call_followups.due_date) >= '.$this->db->escape($follow_up_date_from).' AND DATE(student_call_followups.due_date) <= '.$this->db->escape($follow_up_date_to).')', NULL, FALSE);
+            $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND student_call_followups.due_date >= '.$this->db->escape($follow_up_date_from . ' 00:00:00').' AND student_call_followups.due_date <= '.$this->db->escape($follow_up_date_to . ' 23:59:59').')', NULL, FALSE);
         } elseif (!empty($follow_up_date_from)) {
-            $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND DATE(student_call_followups.due_date) >= '.$this->db->escape($follow_up_date_from).')', NULL, FALSE);
+            $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND student_call_followups.due_date >= '.$this->db->escape($follow_up_date_from . ' 00:00:00').')', NULL, FALSE);
         } elseif (!empty($follow_up_date_to)) {
-            $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND DATE(student_call_followups.due_date) <= '.$this->db->escape($follow_up_date_to).')', NULL, FALSE);
+            $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND student_call_followups.due_date <= '.$this->db->escape($follow_up_date_to . ' 23:59:59').')', NULL, FALSE);
         }
 
         $this->db->order_by('student_calls.id', 'desc');
+
+        if (empty($class_id) && empty($section_id) && empty($date_from) && empty($date_to) && empty($purpose_id) && empty($status) && empty($follow_up_date_from) && empty($follow_up_date_to) && empty($assigned_to)) {
+            $this->db->limit(100);
+        }
+
         $query = $this->db->get();
         return $query->result_array();
     }
@@ -248,7 +256,7 @@ class Studentcall_model extends MY_Model
         $this->db->where('students.is_active', 'yes');
 
         if ($filter == 'due_today_and_overdue') {
-            $this->db->where('DATE(f.due_date) <=', date('Y-m-d'));
+            $this->db->where('f.due_date <=', date('Y-m-d 23:59:59'));
         }
 
         if (!empty($assigned_to)) {
@@ -370,9 +378,12 @@ class Studentcall_model extends MY_Model
 
     public function get_today_call_statistics($staff_id = null)
     {
+        $today_start = date('Y-m-d 00:00:00');
+        $today_end = date('Y-m-d 23:59:59');
         $this->db->select('call_status, count(*) as count');
         $this->db->from('student_calls');
-        $this->db->where('DATE(date)', date('Y-m-d'));
+        $this->db->where('date >=', $today_start);
+        $this->db->where('date <=', $today_end);
         if ($staff_id) {
             $this->db->where('created_by', $staff_id);
         }

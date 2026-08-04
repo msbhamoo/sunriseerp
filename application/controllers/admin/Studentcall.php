@@ -58,7 +58,6 @@ class Studentcall extends Admin_Controller
         $data['connected_today'] = $connected_today;
         $data['not_connected_today'] = $not_connected_today;
         $data['pending_followups'] = $pending_followups;
-        $data['pending_followup_calls'] = $this->studentcall_model->get_pending_followup_calls('due_today_and_overdue');
 
         $data['saved_filters'] = $this->session->userdata('studentcall_status_filters');
 
