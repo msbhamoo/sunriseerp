@@ -675,22 +675,14 @@ class Timetable extends Admin_Controller
 
         $target_combos = array();
         if ($copy_scope == 'all') {
-            $this->load->model('subjectgroup_model');
-            $all_sections = $this->section_model->get();
-            foreach ($all_sections as $sec_val) {
-                $c_id = $sec_val['class_id'];
-                $s_id = $sec_val['section_id'];
-                $groups = $this->subjectgroup_model->getGroupByClassandSection($c_id, $s_id);
-                if (!empty($groups)) {
-                    foreach ($groups as $g_val) {
-                        $target_combos[] = array(
-                            'class_id' => $c_id,
-                            'section_id' => $s_id,
-                            'subject_group_id' => $g_val['subject_group_id']
-                        );
-                    }
-                }
-            }
+            // Query all active class sections and their associated subject groups
+            $sql = "SELECT class_sections.class_id, class_sections.section_id, subject_group_class_sections.subject_group_id 
+                    FROM class_sections 
+                    INNER JOIN subject_group_class_sections ON subject_group_class_sections.class_section_id = class_sections.id 
+                    INNER JOIN subject_groups ON subject_groups.id = subject_group_class_sections.subject_group_id 
+                    WHERE subject_group_class_sections.session_id = " . $this->db->escape($session);
+            $query = $this->db->query($sql);
+            $target_combos = $query->result_array();
         } else {
             $target_combos[] = array(
                 'class_id' => $class_id,
@@ -732,6 +724,24 @@ class Timetable extends Admin_Controller
                 $this->db->where('session_id', $session);
                 $this->db->order_by('start_time', 'asc');
                 $existing_target_records = $this->db->get('subject_timetable')->result_array();
+
+                // Map target class subject group subjects by subject_id
+                $target_sg_subjects = $this->db->where('subject_group_id', $sg_id)->get('subject_group_subjects')->result_array();
+                $target_subject_map = array();
+                if (!empty($target_sg_subjects)) {
+                    foreach ($target_sg_subjects as $tsg) {
+                        $target_subject_map[$tsg['subject_id']] = $tsg['id'];
+                    }
+                }
+
+                // Map source class subject group subjects to get subject_id for each source record
+                $source_sg_subjects = $this->db->where('subject_group_id', $subject_group_id)->get('subject_group_subjects')->result_array();
+                $source_subject_id_map = array();
+                if (!empty($source_sg_subjects)) {
+                    foreach ($source_sg_subjects as $ssg) {
+                        $source_subject_id_map[$ssg['id']] = $ssg['subject_id'];
+                    }
+                }
 
                 // Build a queue of existing teaching period assignments (subject & teacher) for target class
                 $existing_teaching_slots = array();
@@ -783,8 +793,18 @@ class Timetable extends Admin_Controller
                                 }
                                 $teaching_slot_index++;
                             } else {
-                                $new_rec['subject_group_subject_id'] = null;
-                                $new_rec['staff_id']                 = null;
+                                // If target class didn't have a filled slot, check if source subject exists in target class subject group
+                                $src_sg_sub_id = $new_rec['subject_group_subject_id'];
+                                if ($src_sg_sub_id && isset($source_subject_id_map[$src_sg_sub_id])) {
+                                    $sub_id = $source_subject_id_map[$src_sg_sub_id];
+                                    if (isset($target_subject_map[$sub_id])) {
+                                        $new_rec['subject_group_subject_id'] = $target_subject_map[$sub_id];
+                                    } else {
+                                        $new_rec['subject_group_subject_id'] = null;
+                                    }
+                                } else {
+                                    $new_rec['subject_group_subject_id'] = null;
+                                }
                             }
                         }
                     }

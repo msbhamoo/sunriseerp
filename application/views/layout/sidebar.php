@@ -73,7 +73,8 @@ if (!empty($side_list)) {
                     'holiday' => ['icon' => 'icon-sun', 'color' => '#eab308'], // Yellow
                     'student_cv' => ['icon' => 'icon-file-text', 'color' => '#6366f1'], // Indigo
                     'accounts' => ['icon' => 'icon-calculator', 'color' => '#10b981'], // Emerald
-                    'scholarship_exam' => ['icon' => 'icon-award', 'color' => '#f59e0b'] // Amber/Gold
+                    'scholarship_exam' => ['icon' => 'icon-award', 'color' => '#f59e0b'], // Amber/Gold
+                    'call_log' => ['icon' => 'icon-phone-call', 'color' => '#06b6d4'] // Cyan/Teal
                 ];
 
                 $icon_data = isset($modern_icons[$side_list_value->lang_key]) ? $modern_icons[$side_list_value->lang_key] : ['icon' => $side_list_value->icon, 'color' => '#6b7280'];
@@ -145,11 +146,6 @@ foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
                         if ($this->rbac->hasPrivilege('student_dashboard', 'can_view')) {
                             ?>
                             <li class="<?php echo set_Submenu('studentreport/custom_report'); ?>"><a href="<?php echo site_url('studentreport/custom_report'); ?>"><i class="icon-circle-small"></i>Custom Report</a></li>
-                            <?php
-                        }
-                        if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) {
-                            ?>
-                            <li class="<?php echo set_Submenu('admin/studentcall'); ?>"><a href="<?php echo site_url('admin/studentcall'); ?>"><i class="icon-circle-small"></i>Student Call Log</a></li>
                             <?php
                         }
                     }

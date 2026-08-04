@@ -2757,3 +2757,8 @@ $lang['daily_bus_summary'] = 'Daily Bus Summary';
 $lang['monthly_bus_summary'] = 'Monthly Bus Summary';
 $lang['job_posting'] = 'Job Posting';
 $lang['scholarship_exam'] = 'Scholarship & Olympiad Exams';
+$lang['call_log'] = 'Call Log';
+$lang['student_call_log'] = 'Student Call Log';
+$lang['assigned_to_me'] = 'Assigned To Me';
+$lang['call_purpose'] = 'Call Purpose';
+

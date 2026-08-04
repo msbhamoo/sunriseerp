@@ -130,6 +130,7 @@
     </style>
 
     <section class="content">
+        <?php if (empty($is_assigned_to_me_view)) { ?>
         <div class="d2-metric-grid">
             <div class="d2-metric-box">
                 <div class="d2-metric-icon calls"><i class="fa fa-phone"></i></div>
@@ -160,17 +161,10 @@
                 </div>
             </div>
         </div>
+        <?php } ?>
 
         <div class="row">
             <div class="col-md-12">
-                <div class="nav-tabs-custom">
-                    <ul class="nav nav-tabs">
-                        <li class="active"><a href="#tab_call_logs" data-toggle="tab"><i class="fa fa-list"></i> <?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Call Logs'); ?></a></li>
-                        <li id="tab_pending_followup_li"><a href="#tab_pending_followups" data-toggle="tab"><i class="fa fa-clock-o text-warning"></i> Pending Follow-ups <span class="label label-warning" style="border-radius:10px;"><?php echo count($pending_followup_calls); ?></span></a></li>
-                        <li><a href="#tab_student_status" data-toggle="tab"><i class="fa fa-users"></i> Student Status</a></li>
-                    </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane active" id="tab_call_logs">
                 <?php
                     $has_active_filters = (!empty($_POST['class_id']) || !empty($_POST['section_id']) || !empty($_POST['purpose_id']) || !empty($_POST['status']) || !empty($_POST['date_from']) || !empty($_POST['date_to']) || !empty($_POST['follow_up_date_from']) || !empty($_POST['follow_up_date_to']) || !empty($_POST['assigned_to']));
                 ?>
@@ -186,17 +180,27 @@
                             <?php } ?>
                         </div>
                     </div>
+                    <div class="box-body" style="padding:10px 15px 0 15px; border-bottom:1px solid #f4f4f4;">
+                        <div class="quick-filter-chips" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                            <span style="font-size:12px; font-weight:600; color:#666; margin-right:4px;"><i class="fa fa-flash"></i> Quick Views:</span>
+                            <button type="button" class="btn btn-default btn-xs chip-filter active" data-filter="all"><i class="fa fa-list"></i> All Calls</button>
+                            <button type="button" class="btn btn-danger btn-xs chip-filter" data-filter="overdue"><i class="fa fa-exclamation-triangle"></i> Overdue</button>
+                            <button type="button" class="btn btn-warning btn-xs chip-filter" data-filter="due_today"><i class="fa fa-clock-o"></i> Due Today</button>
+                            <button type="button" class="btn btn-success btn-xs chip-filter" data-filter="connected"><i class="fa fa-check-circle"></i> Connected Today</button>
+                            <button type="button" class="btn btn-info btn-xs chip-filter" data-filter="callback"><i class="fa fa-phone"></i> Callback Requested</button>
+                        </div>
+                    </div>
                     
-                    <form id="searchForm" role="form" action="<?php echo site_url('admin/studentcall') ?>" method="post" class="">
+                    <form id="searchForm" role="form" action="<?php echo site_url('admin/studentcall' . (!empty($is_assigned_to_me_view) ? '/assigned_to_me' : '')) ?>" method="post" class="">
                         <div class="box-body row">
                             <?php echo $this->customlib->getCSRF(); ?>
                             <div class="col-sm-2 col-md-2">
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('class'); ?></label>
-                                    <select autofocus="" id="class_id" name="class_id" class="form-control" >
+                                    <select id="class_id" name="class_id" class="form-control" >
                                         <option value=""><?php echo $this->lang->line('select'); ?></option>
                                         <?php foreach ($class_list as $class) { ?>
-                                            <option value="<?php echo $class['id'] ?>" <?php if (set_value('class_id') == $class['id']) echo "selected=selected" ?>><?php echo $class['class'] ?></option>
+                                            <option value="<?php echo $class['id'] ?>" <?php echo set_select('class_id', $class['id']); ?>><?php echo $class['class'] ?></option>
                                         <?php } ?>
                                     </select>
                                 </div>
@@ -204,7 +208,7 @@
                             <div class="col-sm-2 col-md-2">
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('section'); ?></label>
-                                    <select id="section_id" name="section_id" class="form-control" >
+                                    <select id="section_id" name="section_id" class="form-control" data-saved="<?php echo set_value('section_id'); ?>">
                                         <option value=""><?php echo $this->lang->line('select'); ?></option>
                                     </select>
                                 </div>
@@ -212,67 +216,71 @@
                             <div class="col-sm-2 col-md-2">
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('purpose'); ?></label>
-                                    <select name="purpose_id" class="form-control">
+                                    <select id="purpose_id" name="purpose_id" class="form-control" >
                                         <option value=""><?php echo $this->lang->line('select'); ?></option>
                                         <?php foreach ($purposes as $purpose) { ?>
-                                            <option value="<?php echo $purpose['id'] ?>" <?php if (set_value('purpose_id') == $purpose['id']) echo "selected=selected" ?>><?php echo $purpose['purpose'] ?></option>
+                                            <option value="<?php echo $purpose['id'] ?>" <?php echo set_select('purpose_id', $purpose['id']); ?>><?php echo $purpose['purpose'] ?></option>
                                         <?php } ?>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-sm-2 col-md-2">
                                 <div class="form-group">
-                                    <label><?php echo ($this->lang->line('status') ? $this->lang->line('status') : 'Status'); ?></label>
-                                    <select name="status" class="form-control">
+                                    <label><?php echo $this->lang->line('status'); ?></label>
+                                    <select id="status" name="status" class="form-control" >
                                         <option value=""><?php echo $this->lang->line('select'); ?></option>
-                                        <option value="Connected">Connected</option>
-                                        <option value="Not Answered">Not Answered</option>
-                                        <option value="Busy">Busy</option>
-                                        <option value="Switched Off">Switched Off</option>
-                                        <option value="Wrong Number">Wrong Number</option>
-                                        <option value="Callback Requested">Callback Requested</option>
+                                        <option value="Connected" <?php echo set_select('status', 'Connected'); ?>>Connected</option>
+                                        <option value="Not Connected" <?php echo set_select('status', 'Not Connected'); ?>>Not Connected</option>
+                                        <option value="Busy" <?php echo set_select('status', 'Busy'); ?>>Busy</option>
+                                        <option value="Switched Off" <?php echo set_select('status', 'Switched Off'); ?>>Switched Off</option>
+                                        <option value="Callback Requested" <?php echo set_select('status', 'Callback Requested'); ?>>Callback Requested</option>
+                                        <option value="Wrong Number" <?php echo set_select('status', 'Wrong Number'); ?>>Wrong Number</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-sm-2 col-md-2">
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('date_from'); ?></label>
-                                    <input type="text" name="date_from" class="form-control date" value="<?php echo set_value('date_from') ?>">
+                                    <input id="date_from" name="date_from" placeholder="" type="text" class="form-control date" value="<?php echo set_value('date_from'); ?>" readonly="readonly" />
                                 </div>
                             </div>
                             <div class="col-sm-2 col-md-2">
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('date_to'); ?></label>
-                                    <input type="text" name="date_to" class="form-control date" value="<?php echo set_value('date_to') ?>">
+                                    <input id="date_to" name="date_to" placeholder="" type="text" class="form-control date" value="<?php echo set_value('date_to'); ?>" readonly="readonly" />
                                 </div>
                             </div>
                             <div class="col-sm-2 col-md-2">
                                 <div class="form-group">
                                     <label>Follow-up Date From</label>
-                                    <input type="text" name="follow_up_date_from" class="form-control date" value="<?php echo set_value('follow_up_date_from') ?>">
+                                    <input id="follow_up_date_from" name="follow_up_date_from" placeholder="" type="text" class="form-control date" value="<?php echo set_value('follow_up_date_from'); ?>" readonly="readonly" />
                                 </div>
                             </div>
                             <div class="col-sm-2 col-md-2">
                                 <div class="form-group">
                                     <label>Follow-up Date To</label>
-                                    <input type="text" name="follow_up_date_to" class="form-control date" value="<?php echo set_value('follow_up_date_to') ?>">
+                                    <input id="follow_up_date_to" name="follow_up_date_to" placeholder="" type="text" class="form-control date" value="<?php echo set_value('follow_up_date_to'); ?>" readonly="readonly" />
                                 </div>
                             </div>
                             <div class="col-sm-2 col-md-2">
                                 <div class="form-group">
-                                    <label>Assigned To</label>
-                                    <select name="assigned_to" class="form-control">
-                                        <option value=""><?php echo $this->lang->line('select'); ?></option>
-                                        <?php foreach ($staff_list as $staff) { ?>
-                                            <option value="<?php echo $staff['id'] ?>" <?php if (set_value('assigned_to') == $staff['id']) echo "selected=selected" ?>><?php echo $staff['name'] . " " . $staff['surname'] . " (" . $staff['employee_id'] . ")" ?></option>
+                                    <label><?php echo ($this->lang->line('assign_to') ? $this->lang->line('assign_to') : 'Assigned To'); ?></label>
+                                    <select id="assigned_to" name="assigned_to" class="form-control" >
+                                        <?php if (empty($is_assigned_to_me_view)) { ?>
+                                            <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                        <?php } ?>
+                                        <?php foreach ($staff_list as $staff) { 
+                                            if (!empty($is_assigned_to_me_view) && isset($default_assigned_to) && $default_assigned_to != $staff['id']) {
+                                                continue;
+                                            }
+                                        ?>
+                                            <option value="<?php echo $staff['id'] ?>" <?php if ((isset($default_assigned_to) && $default_assigned_to == $staff['id']) || set_value('assigned_to') == $staff['id']) echo "selected=selected" ?>><?php echo $staff['name'] . " " . $staff['surname'] . " (" . $staff['employee_id'] . ")" ?></option>
                                         <?php } ?>
                                     </select>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <div class="col-sm-12">
-                                    <button type="submit" name="search" value="search_filter" class="btn btn-primary btn-sm checkbox-toggle pull-right"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
-                                </div>
+                            <div class="col-sm-12">
+                                <button type="submit" name="search" value="search_filter" class="btn btn-primary btn-sm checkbox-toggle pull-right"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
                             </div>
                         </div>
                     </form>
@@ -304,8 +312,11 @@
                                 </thead>
                                 <tbody>
                                     <?php if (!empty($calls)) {
-                                        foreach ($calls as $call) { ?>
-                                            <tr>
+                                        foreach ($calls as $call) { 
+                                            $normalized_date = !empty($call['date']) ? str_replace('/', '-', $call['date']) : '';
+                                            $called_today = (!empty($normalized_date) && date('Y-m-d', strtotime($normalized_date)) == date('Y-m-d')) ? '1' : '0';
+                                        ?>
+                                            <tr data-called-today="<?php echo $called_today; ?>">
                                                 <td data-label="Student"><?php echo $call['firstname'] . " " . $call['lastname'] . " (" . $call['admission_no'] . ")"; ?></td>
                                                 <td data-label="Father Name"><?php echo $call['father_name']; ?></td>
                                                 <td data-label="Class"><?php echo $call['class'] . " (" . $call['section'] . ")"; ?></td>
@@ -316,7 +327,17 @@
                                                 <td data-label="Date"><?php echo date($this->customlib->getSchoolDateFormat(true, true), strtotime($call['date'])); ?></td>
                                                 <td data-label="Note">
                                                     <div style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#444; font-size:12px;" data-toggle="tooltip" data-placement="top" title="<?php echo htmlspecialchars($call['notes'] ?? ''); ?>">
-                                                        <?php echo !empty($call['notes']) ? htmlspecialchars($call['notes']) : '<span style="color:#ccc;">-</span>'; ?>
+                                                        <?php 
+                                                        if (!empty($call['notes'])) {
+                                                            if (strpos($call['notes'], ' | ') !== false) {
+                                                                echo '<span class="label label-info" style="font-size:10px; padding:2px 6px;">Structured Notes</span> ' . htmlspecialchars(substr($call['notes'], 0, 30)) . '...';
+                                                            } else {
+                                                                echo htmlspecialchars($call['notes']);
+                                                            }
+                                                        } else {
+                                                            echo '<span style="color:#ccc;">-</span>';
+                                                        }
+                                                        ?>
                                                     </div>
                                                 </td>
                                                 <td data-label="Follow-up Status">
@@ -324,9 +345,19 @@
                                                     if ($call['total_followups'] == 0) {
                                                         echo "<span class='label label-default'>None</span>";
                                                     } else if ($call['pending_count'] > 0) {
-                                                        echo "<span class='label label-warning'>Pending (" . date($this->customlib->getSchoolDateFormat(), strtotime($call['next_follow_up_date'])) . ")</span>";
+                                                        $today_date = date('Y-m-d');
+                                                        $due_date_str = !empty($call['next_follow_up_date']) ? date('Y-m-d', strtotime($call['next_follow_up_date'])) : '';
+                                                        $formatted_due = !empty($call['next_follow_up_date']) ? date($this->customlib->getSchoolDateFormat(), strtotime($call['next_follow_up_date'])) : '';
+
+                                                        if (!empty($due_date_str) && $due_date_str < $today_date) {
+                                                            echo "<span class='label label-danger' data-toggle='tooltip' title='Overdue since " . $formatted_due . "'><i class='fa fa-exclamation-triangle'></i> Overdue (" . $formatted_due . ")</span>";
+                                                        } else if (!empty($due_date_str) && $due_date_str == $today_date) {
+                                                            echo "<span class='label label-warning' data-toggle='tooltip' title='Due Today!'><i class='fa fa-clock-o'></i> Due Today</span>";
+                                                        } else {
+                                                            echo "<span class='label label-info'><i class='fa fa-calendar'></i> Pending (" . $formatted_due . ")</span>";
+                                                        }
                                                     } else {
-                                                        echo "<span class='label label-success'>Resolved</span>";
+                                                        echo "<span class='label label-success'><i class='fa fa-check'></i> Resolved</span>";
                                                     }
                                                     ?>
                                                 </td>
@@ -339,12 +370,21 @@
                                                         $normalized_date = !empty($call['date']) ? str_replace('/', '-', $call['date']) : '';
                                                         $called_today = (!empty($normalized_date) && date('Y-m-d', strtotime($normalized_date)) == date('Y-m-d')) ? '1' : '0';
                                                         $last_call_date = !empty($call['date']) ? date($this->customlib->getSchoolDateFormat(true, true), strtotime($normalized_date)) : '';
+                                                        
+                                                        $wa_msg = "Hello, this is regarding student " . $call['firstname'] . " " . $call['lastname'] . " (" . $call['class'] . " - " . $call['section'] . "). Purpose: " . $call['purpose_name'] . ". Please get in touch with us.";
+                                                        $wa_link = "https://api.whatsapp.com/send?phone=" . $clean_dial_phone . "&text=" . urlencode($wa_msg);
                                                     ?>
-                                                        <div class="pull-right" style="width:100%;">
-                                                            <a href="javascript:void(0)" class="btn btn-success btn-xs trigger-direct-call" data-call-id="<?php echo $call['id']; ?>" data-student-name="<?php echo htmlspecialchars($call['firstname'] . ' ' . $call['lastname']); ?>" data-phone="<?php echo $clean_dial_phone; ?>" data-called-today="<?php echo $called_today; ?>" data-last-call-date="<?php echo $last_call_date; ?>" data-toggle="tooltip" title="Dial Father/Mother (<?php echo $dial_phone; ?>)"><i class="fa fa-phone"></i> Call</a>
-                                                            <a href="javascript:void(0)" class="btn btn-default btn-xs btn-follow-up-log" data-id="<?php echo $call['id']; ?>" onclick="follow_up('<?php echo $call['id']; ?>'); return false;" data-toggle="tooltip" title="<?php echo ($this->lang->line('follow_up') ? $this->lang->line('follow_up') : 'Follow Up'); ?>">
-                                                                <i class="fa fa-pencil"></i> Log
-                                                            </a>
+                                                        <div style="display:inline-flex; gap:3px; align-items:center; justify-content:flex-end; white-space:nowrap;">
+                                                            <a href="javascript:void(0)" class="btn btn-success btn-xs trigger-direct-call" data-call-id="<?php echo $call['id']; ?>" data-student-name="<?php echo htmlspecialchars($call['firstname'] . ' ' . $call['lastname']); ?>" data-phone="<?php echo $clean_dial_phone; ?>" data-called-today="<?php echo $called_today; ?>" data-last-call-date="<?php echo $last_call_date; ?>" data-toggle="tooltip" title="Dial (<?php echo $dial_phone; ?>)"><i class="fa fa-phone"></i></a>
+                                                            <?php if (!empty($clean_dial_phone)) { ?>
+                                                                <a href="<?php echo $wa_link; ?>" target="_blank" class="btn btn-xs" style="background-color:#25D366; color:#fff; border-color:#25D366;" data-toggle="tooltip" title="WhatsApp Parent (<?php echo $clean_dial_phone; ?>)"><i class="fa fa-whatsapp"></i></a>
+                                                            <?php } ?>
+                                                            <a href="javascript:void(0)" class="btn btn-info btn-xs btn-view-call-details" data-id="<?php echo $call['id']; ?>" data-toggle="tooltip" title="View Details"><i class="fa fa-eye"></i></a>
+                                                            <?php if ($this->rbac->hasPrivilege('student_call_log', 'can_edit') && $call['pending_count'] > 0) { ?>
+                                                                <a href="javascript:void(0)" class="btn btn-primary btn-xs btn-quick-resolve" data-id="<?php echo $call['id']; ?>" data-toggle="tooltip" title="Mark Done"><i class="fa fa-check"></i></a>
+                                                                <a href="javascript:void(0)" class="btn btn-warning btn-xs btn-quick-reschedule" data-id="<?php echo $call['id']; ?>" data-toggle="tooltip" title="Reschedule Date"><i class="fa fa-calendar"></i></a>
+                                                            <?php } ?>
+                                                            <a href="javascript:void(0)" class="btn btn-default btn-xs btn-follow-up-log" data-id="<?php echo $call['id']; ?>" onclick="follow_up('<?php echo $call['id']; ?>'); return false;" data-toggle="tooltip" title="Log Follow-up"><i class="fa fa-pencil"></i></a>
                                                         </div>
                                                     <?php } ?>
                                                 </td>
@@ -356,217 +396,6 @@
                         </div>
                     </div>
                 </div>
-                        </div>
-                        
-                        <div class="tab-pane" id="tab_pending_followups">
-                            <div class="box box-primary">
-                                <div class="box-header with-border">
-                                    <h3 class="box-title"><i class="fa fa-clock-o text-warning"></i> Today's & Overdue Pending Follow-ups</h3>
-                                    <div class="box-tools pull-right">
-                                        <span class="label label-danger"><i class="fa fa-exclamation-triangle"></i> Red = Overdue</span>
-                                        <span class="label label-warning" style="margin-left:5px;"><i class="fa fa-clock-o"></i> Yellow = Due Today</span>
-                                    </div>
-                                </div>
-                                <div class="box-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-striped table-bordered table-hover example mobile-card-table" cellspacing="0" width="100%">
-                                            <thead>
-                                                <tr>
-                                                    <th>Student</th>
-                                                    <th>Father Name</th>
-                                                    <th>Class</th>
-                                                    <th>Pickup Point</th>
-                                                    <th>Phone</th>
-                                                    <th>Purpose</th>
-                                                    <th>Due Date / Status</th>
-                                                    <th>Priority</th>
-                                                    <th>Assigned To</th>
-                                                    <th>Note / Remarks</th>
-                                                    <th class="text-right noExport">Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php if (!empty($pending_followup_calls)) {
-                                                    $today_str = date('Y-m-d');
-                                                    foreach ($pending_followup_calls as $pfw) {
-                                                        $due_str = date('Y-m-d', strtotime($pfw['next_follow_up_date']));
-                                                        $is_overdue = ($due_str < $today_str);
-                                                        
-                                                        $due_badge = '';
-                                                        if ($is_overdue) {
-                                                            $diff_days = round((strtotime($today_str) - strtotime($due_str)) / 86400);
-                                                            $due_badge = '<span class="label label-danger"><i class="fa fa-exclamation-triangle"></i> Overdue (' . $diff_days . ' day' . ($diff_days > 1 ? 's' : '') . ' ago) - ' . date($this->customlib->getSchoolDateFormat(), strtotime($pfw['next_follow_up_date'])) . '</span>';
-                                                        } else {
-                                                            $due_badge = '<span class="label label-warning"><i class="fa fa-clock-o"></i> Due Today (' . date($this->customlib->getSchoolDateFormat(), strtotime($pfw['next_follow_up_date'])) . ')</span>';
-                                                        }
-
-                                                        $priority_pill = '<span class="label label-default">' . $pfw['priority'] . '</span>';
-                                                        if ($pfw['priority'] == 'High') {
-                                                            $priority_pill = '<span class="label label-danger">High</span>';
-                                                        } else if ($pfw['priority'] == 'Medium') {
-                                                            $priority_pill = '<span class="label label-warning">Medium</span>';
-                                                        } else if ($pfw['priority'] == 'Low') {
-                                                            $priority_pill = '<span class="label label-info">Low</span>';
-                                                        }
-
-                                                        $display_note = !empty($pfw['followup_remarks']) ? $pfw['followup_remarks'] : (!empty($pfw['notes']) ? $pfw['notes'] : '');
-                                                ?>
-                                                    <tr>
-                                                        <td data-label="Student"><?php echo $pfw['firstname'] . " " . $pfw['lastname'] . " (" . $pfw['admission_no'] . ")"; ?></td>
-                                                        <td data-label="Father Name"><?php echo $pfw['father_name']; ?></td>
-                                                        <td data-label="Class"><?php echo $pfw['class'] . " (" . $pfw['section'] . ")"; ?></td>
-                                                        <td data-label="Pickup Point"><?php echo $pfw['pickup_point_name']; ?></td>
-                                                        <td data-label="Phone"><?php echo $pfw['phone_number']; ?></td>
-                                                        <td data-label="Purpose"><?php echo get_purpose_pill($pfw['purpose_name']); ?></td>
-                                                        <td data-label="Due Date"><?php echo $due_badge; ?></td>
-                                                        <td data-label="Priority"><?php echo $priority_pill; ?></td>
-                                                        <td data-label="Assigned To"><?php echo $pfw['assigned_to_name']; ?></td>
-                                                        <td data-label="Note / Remarks">
-                                                            <div style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#444; font-size:12px;" data-toggle="tooltip" data-placement="top" title="<?php echo htmlspecialchars($display_note); ?>">
-                                                                <?php echo !empty($display_note) ? htmlspecialchars($display_note) : '<span style="color:#ccc;">-</span>'; ?>
-                                                            </div>
-                                                        </td>
-                                                        <td data-label="Action" class="pull-right">
-                                                            <?php 
-                                                                $dial_phone = !empty($pfw['father_phone']) ? $pfw['father_phone'] : (!empty($pfw['mother_phone']) ? $pfw['mother_phone'] : (!empty($pfw['guardian_phone']) ? $pfw['guardian_phone'] : (!empty($pfw['mobileno']) ? $pfw['mobileno'] : $pfw['phone_number'])));
-                                                                $clean_dial_phone = preg_replace('/[^0-9]/', '', $dial_phone);
-                                                                $normalized_date = !empty($pfw['date']) ? str_replace('/', '-', $pfw['date']) : '';
-                                                                $called_today = (!empty($normalized_date) && date('Y-m-d', strtotime($normalized_date)) == date('Y-m-d')) ? '1' : '0';
-                                                                $last_call_date = !empty($pfw['date']) ? date($this->customlib->getSchoolDateFormat(true, true), strtotime($normalized_date)) : '';
-                                                            ?>
-                                                            <div class="pull-right" style="width:100%;">
-                                                                <a href="javascript:void(0)" class="btn btn-success btn-xs trigger-direct-call" data-call-id="<?php echo $pfw['id']; ?>" data-student-name="<?php echo htmlspecialchars($pfw['firstname'] . ' ' . $pfw['lastname']); ?>" data-phone="<?php echo $clean_dial_phone; ?>" data-called-today="<?php echo $called_today; ?>" data-last-call-date="<?php echo $last_call_date; ?>" data-toggle="tooltip" title="Dial Father/Mother (<?php echo $dial_phone; ?>)">
-                                                                    <i class="fa fa-phone"></i> Call
-                                                                </a>
-                                                                <a href="javascript:void(0)" class="btn btn-default btn-xs btn-follow-up-log" data-id="<?php echo $pfw['id']; ?>" onclick="follow_up('<?php echo $pfw['id']; ?>'); return false;" data-toggle="tooltip" title="Take Action / Complete Follow Up">
-                                                                    <i class="fa fa-pencil"></i> Log
-                                                                </a>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                <?php }
-                                                } ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="tab-pane" id="tab_student_status">
-                            <div class="box box-primary collapse-box-mobile">
-                                <div class="box-header with-border" style="cursor:pointer;">
-                                    <h3 class="box-title"><i class="fa fa-search"></i> Filter Students</h3>
-                                    <div class="box-tools pull-right">
-                                        <button type="button" class="btn btn-box-tool mobile-filter-toggle-btn" style="padding: 4px 8px; font-weight:600; color:#337ab7;" title="Toggle Filters">
-                                            <i class="fa fa-filter"></i> Filters
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="box-body row">
-                                    <div class="col-sm-2 col-md-2">
-                                        <div class="form-group">
-                                            <label><?php echo $this->lang->line('class'); ?></label>
-                                            <select id="status_class_id" name="status_class_id" class="form-control" >
-                                                <option value=""><?php echo $this->lang->line('select'); ?></option>
-                                                <?php foreach ($class_list as $class) { ?>
-                                                    <option value="<?php echo $class['id'] ?>" <?php echo (isset($saved_filters['class_id']) && $saved_filters['class_id'] == $class['id']) ? 'selected' : ''; ?>><?php echo $class['class'] ?></option>
-                                                <?php } ?>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-2 col-md-2">
-                                        <div class="form-group">
-                                            <label><?php echo $this->lang->line('section'); ?></label>
-                                            <select id="status_section_id" name="status_section_id" class="form-control" data-saved="<?php echo isset($saved_filters['section_id']) ? $saved_filters['section_id'] : ''; ?>">
-                                                <option value=""><?php echo $this->lang->line('select'); ?></option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-2 col-md-2">
-                                        <div class="form-group">
-                                            <label>Admission Type</label>
-                                            <select id="status_admission_type" name="status_admission_type" class="form-control">
-                                                <option value="">All</option>
-                                                <option value="New" <?php echo (isset($saved_filters['admission_type']) && $saved_filters['admission_type'] == 'New') ? 'selected' : ''; ?>>New</option>
-                                                <option value="Old" <?php echo (isset($saved_filters['admission_type']) && $saved_filters['admission_type'] == 'Old') ? 'selected' : ''; ?>>Old</option>
-                                                <option value="Added" <?php echo (isset($saved_filters['admission_type']) && $saved_filters['admission_type'] == 'Added') ? 'selected' : ''; ?>>Added</option>
-                                                <option value="Promotion" <?php echo (isset($saved_filters['admission_type']) && $saved_filters['admission_type'] == 'Promotion') ? 'selected' : ''; ?>>Promotion</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-2 col-md-2">
-                                        <div class="form-group">
-                                            <label>Shrestha</label>
-                                            <select id="status_shrestha" name="status_shrestha" class="form-control">
-                                                <option value="">All</option>
-                                                <option value="Yes" <?php echo (isset($saved_filters['shrestha']) && $saved_filters['shrestha'] == 'Yes') ? 'selected' : ''; ?>>Yes</option>
-                                                <option value="No" <?php echo (isset($saved_filters['shrestha']) && $saved_filters['shrestha'] == 'No') ? 'selected' : ''; ?>>No</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-2 col-md-2">
-                                        <div class="form-group">
-                                            <label>RTE</label>
-                                            <select id="status_rte" name="status_rte" class="form-control">
-                                                <option value="">All</option>
-                                                <option value="Yes" <?php echo (isset($saved_filters['rte']) && $saved_filters['rte'] == 'Yes') ? 'selected' : ''; ?>>Yes</option>
-                                                <option value="No" <?php echo (isset($saved_filters['rte']) && $saved_filters['rte'] == 'No') ? 'selected' : ''; ?>>No</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-2 col-md-2">
-                                        <div class="form-group">
-                                            <label>Is Staff Kid</label>
-                                            <select id="status_is_staff_kid" name="status_is_staff_kid" class="form-control">
-                                                <option value="">All</option>
-                                                <option value="1" <?php echo (isset($saved_filters['is_staff_kid']) && $saved_filters['is_staff_kid'] == '1') ? 'selected' : ''; ?>>Yes</option>
-                                                <option value="0" <?php echo (isset($saved_filters['is_staff_kid']) && $saved_filters['is_staff_kid'] == '0') ? 'selected' : ''; ?>>No</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12 col-md-12">
-                                        <div class="form-group">
-                                            <button type="button" id="btn_status_search" class="btn btn-primary btn-sm pull-right"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="box box-primary">
-                                <div class="box-header ptbnull">
-                                    <h3 class="box-title titlefix"><i class="fa fa-users"></i> Students Call Status</h3>
-                                </div>
-                                <div class="box-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-striped table-bordered table-hover" id="student_status_table" cellspacing="0" width="100%">
-                                            <thead>
-                                                <tr>
-                                                    <th><?php echo $this->lang->line('student'); ?></th>
-                                                    <th>Father Name</th>
-                                                    <th>Class (Section)</th>
-                                                    <th>Pickup Point</th>
-                                                    <th>Admission Type</th>
-                                                    <th><?php echo $this->lang->line('phone'); ?></th>
-                                                    <th>Last Call Date</th>
-                                                    <th>Last Call Status</th>
-                                                    <th class="text-right noExport"><?php echo $this->lang->line('action'); ?></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-</div>
-
 <!-- Add Call Modal -->
 <div id="addCallModal" class="modal fade" role="dialog">
     <div class="modal-dialog modal-dialog2 modal-lg">
@@ -601,6 +430,7 @@
                                                 <a href="javascript:void(0);" id="toggle_fee_attendance" style="display:none; margin-left: 5px; color: #333;" title="View Fee & Attendance"><i class="fa fa-eye"></i></a>
                                             </label>
                                             <input type="text" id="selected_student_name" class="form-control" readonly>
+                                            <div id="selected_student_details" style="margin-top: 5px; font-size: 12px; display: none;"></div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -953,6 +783,7 @@
                     success: function (res) {
                         var html = '';
                         student_phones = {};
+                        var student_details = {};
                         $.each(res, function (index, value) {
                             student_phones[value.student_id] = {
                                 Father: value.father_phone,
@@ -960,9 +791,17 @@
                                 Guardian: value.guardian_phone,
                                 Student: value.mobileno
                             };
+                            student_details[value.student_id] = {
+                                admission_type: value.admission_type || 'New',
+                                shrestha: value.shrestha || 'No',
+                                rte: value.rte || 'No',
+                                is_staff_kid: (value.is_staff_kid == 1 || value.is_staff_kid === '1') ? 'Yes' : 'No',
+                                staff_name: value.staff_name || ''
+                            };
                             html += '<li class="list-group-item student-item" style="cursor:pointer;" data-id="' + value.student_id + '" data-session="' + value.student_session_id + '" data-name="' + value.firstname + ' ' + value.lastname + ' (' + value.admission_no + ')' + (value.father_name ? ' - Father: ' + value.father_name : '') + ' - ' + value.class + ' (' + value.section + ')">' + value.firstname + ' ' + value.lastname + ' (' + value.admission_no + ')' + (value.father_name ? ' - Father: ' + value.father_name : '') + ' - ' + value.class + ' (' + value.section + ')</li>';
                         });
                         $('#student_search_results').html(html);
+                        window.student_details_map = student_details;
                     }
                 });
             } else {
@@ -977,6 +816,21 @@
             $('#selected_student_name').val($(this).data('name'));
             $('#search_student_keyword').val('');
             $('#student_search_results').html('');
+
+            if (window.student_details_map && window.student_details_map[selected_student_id]) {
+                var sd = window.student_details_map[selected_student_id];
+                
+                var detailsHtml = '<div style="margin-top: 6px; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 11px; color: #475569;">' +
+                    '<span><strong style="color:#1e293b;">Adm Type:</strong> <span style="background:#e0f2fe; color:#0369a1; padding:2px 7px; border-radius:12px; font-weight:600;">' + sd.admission_type + '</span></span>' +
+                    '<span><strong style="color:#1e293b;">Shrestha:</strong> <span style="background:' + (sd.shrestha === 'Yes' ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#64748b;') + ' padding:2px 7px; border-radius:12px; font-weight:600;">' + sd.shrestha + '</span></span>' +
+                    '<span><strong style="color:#1e293b;">RTE:</strong> <span style="background:' + (sd.rte === 'Yes' ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#64748b;') + ' padding:2px 7px; border-radius:12px; font-weight:600;">' + sd.rte + '</span></span>' +
+                    '<span><strong style="color:#1e293b;">Staff Kid:</strong> <span style="background:' + (sd.is_staff_kid === 'Yes' ? '#fef3c7; color:#b45309;' : '#f1f5f9; color:#64748b;') + ' padding:2px 7px; border-radius:12px; font-weight:600;">' + sd.is_staff_kid + '</span>' +
+                    (sd.is_staff_kid === 'Yes' && sd.staff_name ? ' <span style="color:#0f172a; font-weight:600; margin-left:2px;">(' + sd.staff_name + ')</span>' : '') + '</span>' +
+                    '</div>';
+                $('#selected_student_details').html(detailsHtml).show();
+            } else {
+                $('#selected_student_details').hide().html('');
+            }
             
             $('#toggle_fee_attendance').show();
             $('#fee_attendance_section').hide();
@@ -1128,6 +982,7 @@
                         if (logAnother) {
                             $('#addCallForm')[0].reset();
                             $('#call_details_section').hide();
+                            $('#selected_student_details').hide().html('');
                             $('#submitBtn, #saveAndNextBtn').hide();
                             $('#student_search_results').empty();
                             $('#search_student_keyword').focus();
@@ -1309,4 +1164,256 @@
             });
         }, 500);
     }
+
+    // --- QUICK FILTER CHIPS & DETAILS MODAL JS HANDLERS ---
+    $(document).ready(function() {
+        // Quick Filter Chips Handler using DataTables custom search
+        $('.chip-filter').on('click', function() {
+            $('.chip-filter').removeClass('active btn-primary').addClass('btn-default');
+            $(this).removeClass('btn-default').addClass('active btn-primary');
+            
+            var filter = $(this).data('filter');
+            var table = $('.example').DataTable();
+
+            // Clear previous custom search functions
+            $.fn.dataTable.ext.search = [];
+
+            if (filter === 'overdue') {
+                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                    var cellHtml = table.cell(dataIndex, 9).node().innerHTML;
+                    return cellHtml.indexOf('Overdue') !== -1 || cellHtml.indexOf('label-danger') !== -1;
+                });
+            } else if (filter === 'due_today') {
+                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                    var cellHtml = table.cell(dataIndex, 9).node().innerHTML;
+                    return cellHtml.indexOf('Due Today') !== -1 || cellHtml.indexOf('label-warning') !== -1;
+                });
+            } else if (filter === 'connected') {
+                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                    var statusHtml = table.cell(dataIndex, 6).node().innerHTML;
+                    var rowNode = table.row(dataIndex).node();
+                    var isConnected = statusHtml.indexOf('Connected') !== -1;
+                    var calledToday = $(rowNode).attr('data-called-today');
+                    if (!calledToday) {
+                        calledToday = $(rowNode).find('.trigger-direct-call').attr('data-called-today');
+                    }
+                    return isConnected && calledToday === '1';
+                });
+            } else if (filter === 'callback') {
+                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                    var cellHtml = table.cell(dataIndex, 6).node().innerHTML;
+                    return cellHtml.indexOf('Callback Requested') !== -1;
+                });
+            }
+
+            table.draw();
+        });
+
+        // View Details Modal Handler
+        $(document).on('click', '.btn-view-call-details', function() {
+            var callId = $(this).data('id');
+            $('#detailModalBody').html('<div class="text-center" style="padding:30px;"><i class="fa fa-spinner fa-spin fa-2x text-info"></i><p>Loading call details...</p></div>');
+            $('#callDetailModal').modal('show');
+
+            $.ajax({
+                url: '<?php echo site_url("admin/studentcall/get_call_details_ajax/") ?>' + callId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        var call = res.data;
+                        var html = '<div class="row" style="margin-bottom:15px;">';
+                        html += '<div class="col-md-6"><strong>Student:</strong> ' + call.firstname + ' ' + call.lastname + ' (' + call.admission_no + ')</div>';
+                        html += '<div class="col-md-6"><strong>Class:</strong> ' + call.class + ' (' + call.section + ')</div>';
+                        html += '<div class="col-md-6" style="margin-top:6px;"><strong>Contact Person:</strong> ' + (call.contact_person || '-') + '</div>';
+                        html += '<div class="col-md-6" style="margin-top:6px;"><strong>Phone:</strong> ' + call.phone_number + '</div>';
+                        html += '<div class="col-md-6" style="margin-top:6px;"><strong>Purpose:</strong> <span class="label label-info">' + call.purpose_name + '</span></div>';
+                        html += '<div class="col-md-6" style="margin-top:6px;"><strong>Status:</strong> <span class="label label-warning">' + call.call_status + '</span></div>';
+                        html += '</div><hr style="margin:10px 0;">';
+
+                        html += '<h5 style="font-weight:700; color:#333;"><i class="fa fa-file-text-o"></i> Notes & Remarks Breakdown:</h5>';
+                        if (call.parsed_notes && call.parsed_notes.length > 0) {
+                            html += '<div class="row">';
+                            $.each(call.parsed_notes, function(i, item) {
+                                html += '<div class="col-md-12" style="margin-bottom:8px;">';
+                                html += '<div style="background:#f8fafc; border-left:4px solid #0284c7; padding:8px 12px; border-radius:4px;">';
+                                html += '<strong style="color:#0369a1;">' + item.label + ':</strong> ' + item.value;
+                                html += '</div></div>';
+                            });
+                            html += '</div>';
+                        } else {
+                            html += '<p class="text-muted">No notes recorded.</p>';
+                        }
+
+                        if (call.followups && call.followups.length > 0) {
+                            html += '<hr style="margin:15px 0;"><h5 style="font-weight:700; color:#333;"><i class="fa fa-history"></i> Follow-up History:</h5><ul class="list-group">';
+                            $.each(call.followups, function(i, fw) {
+                                var badge = fw.status === 'Pending' ? '<span class="label label-warning pull-right">Pending</span>' : '<span class="label label-success pull-right">Resolved</span>';
+                                html += '<li class="list-group-item">' + badge + '<strong>Due:</strong> ' + fw.due_date + ' | <strong>Assigned:</strong> ' + (fw.assigned_name || '-') + ' ' + (fw.assigned_surname || '') + '<br><small class="text-muted">' + (fw.remarks || 'No remarks') + '</small></li>';
+                            });
+                            html += '</ul>';
+                        }
+
+                        $('#detailModalBody').html(html);
+                    } else {
+                        $('#detailModalBody').html('<div class="alert alert-danger">' + res.message + '</div>');
+                    }
+                },
+                error: function() {
+                    $('#detailModalBody').html('<div class="alert alert-danger">Error loading call details.</div>');
+                }
+            });
+        });
+
+        // Quick Resolve Handler
+        $(document).on('click', '.btn-quick-resolve', function() {
+            var callId = $(this).data('id');
+            $('#quick_resolve_call_id').val(callId);
+            $('#quick_resolve_remarks').val('');
+            $('#quickResolveModal').modal('show');
+        });
+
+        $('#quickResolveForm').on('submit', function(e) {
+            e.preventDefault();
+            var $btn = $(this).find('button[type="submit"]');
+            $btn.button('loading');
+            $.ajax({
+                url: '<?php echo site_url("admin/studentcall/quick_resolve_followup") ?>',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(res) {
+                    $btn.button('reset');
+                    if (res.status === 'success') {
+                        $('#quickResolveModal').modal('hide');
+                        $('#searchForm').submit();
+                    } else {
+                        alert(res.message);
+                    }
+                },
+                error: function() {
+                    $btn.button('reset');
+                    alert('Action failed. Please try again.');
+                }
+            });
+        });
+
+        // Quick Reschedule Handler
+        $(document).on('click', '.btn-quick-reschedule', function() {
+            var callId = $(this).data('id');
+            $('#quick_reschedule_call_id').val(callId);
+            $('#quickRescheduleModal').modal('show');
+        });
+
+        $('.shortcut-date-btn').on('click', function() {
+            var days = parseInt($(this).data('days'));
+            var d = new Date();
+            d.setDate(d.getDate() + days);
+            var dd = String(d.getDate()).padStart(2, '0');
+            var mm = String(d.getMonth() + 1).padStart(2, '0');
+            var yyyy = d.getFullYear();
+            var formatted = mm + '/' + dd + '/' + yyyy;
+            $('#quick_reschedule_date').val(formatted);
+        });
+
+        $('#quickRescheduleForm').on('submit', function(e) {
+            e.preventDefault();
+            var $btn = $(this).find('button[type="submit"]');
+            $btn.button('loading');
+            $.ajax({
+                url: '<?php echo site_url("admin/studentcall/quick_reschedule_followup") ?>',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(res) {
+                    $btn.button('reset');
+                    if (res.status === 'success') {
+                        $('#quickRescheduleModal').modal('hide');
+                        $('#searchForm').submit();
+                    } else {
+                        alert(res.message);
+                    }
+                },
+                error: function() {
+                    $btn.button('reset');
+                    alert('Action failed. Please try again.');
+                }
+            });
+        });
+    });
 </script>
+
+<!-- DETAILS MODAL -->
+<div class="modal fade" id="callDetailModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#0284c7; color:#fff;">
+                <button type="button" class="close" data-dismiss="modal" style="color:#fff;">&times;</button>
+                <h4 class="modal-title"><i class="fa fa-info-circle"></i> Call Log & PTM Details</h4>
+            </div>
+            <div class="modal-body" id="detailModalBody">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QUICK RESOLVE MODAL -->
+<div class="modal fade" id="quickResolveModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="quickResolveForm">
+                <?php echo $this->customlib->getCSRF(); ?>
+                <input type="hidden" name="call_id" id="quick_resolve_call_id">
+                <div class="modal-header" style="background:#10b981; color:#fff;">
+                    <button type="button" class="close" data-dismiss="modal" style="color:#fff;">&times;</button>
+                    <h4 class="modal-title"><i class="fa fa-check-circle"></i> Complete Follow-up</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Completion Remarks / Outcome</label>
+                        <textarea name="remarks" class="form-control" rows="3" placeholder="Enter resolution notes (e.g. Call connected, parent agreed)..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Mark Complete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- QUICK RESCHEDULE MODAL -->
+<div class="modal fade" id="quickRescheduleModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="quickRescheduleForm">
+                <?php echo $this->customlib->getCSRF(); ?>
+                <input type="hidden" name="call_id" id="quick_reschedule_call_id">
+                <div class="modal-header" style="background:#f59e0b; color:#fff;">
+                    <button type="button" class="close" data-dismiss="modal" style="color:#fff;">&times;</button>
+                    <h4 class="modal-title"><i class="fa fa-calendar"></i> Quick Reschedule Follow-up</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Quick Date Shortcuts:</label><br>
+                        <button type="button" class="btn btn-default btn-xs shortcut-date-btn" data-days="1">+1 Day (Tomorrow)</button>
+                        <button type="button" class="btn btn-default btn-xs shortcut-date-btn" data-days="3">+3 Days</button>
+                        <button type="button" class="btn btn-default btn-xs shortcut-date-btn" data-days="7">+1 Week</button>
+                    </div>
+                    <div class="form-group">
+                        <label>New Due Date</label>
+                        <input type="text" name="next_follow_up_date" id="quick_reschedule_date" class="form-control date" placeholder="MM/DD/YYYY" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning"><i class="fa fa-calendar"></i> Reschedule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

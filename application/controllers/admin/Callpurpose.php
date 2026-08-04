@@ -16,7 +16,7 @@ class Callpurpose extends Admin_Controller
         if (!$this->rbac->hasPrivilege('call_purpose_setup', 'can_view')) {
             access_denied();
         }
-        $this->session->set_userdata('top_menu', 'Student Information');
+        $this->session->set_userdata('top_menu', 'Call Log');
         $this->session->set_userdata('sub_menu', 'admin/callpurpose');
         $data['purpose_list'] = $this->studentcall_model->get_purposes();
         $this->load->view('layout/header');

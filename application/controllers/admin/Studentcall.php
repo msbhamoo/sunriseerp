@@ -17,7 +17,7 @@ class Studentcall extends Admin_Controller
         if (!$this->rbac->hasPrivilege('student_call_log', 'can_view')) {
             access_denied();
         }
-        $this->session->set_userdata('top_menu', 'Student Information');
+        $this->session->set_userdata('top_menu', 'Call Log');
         $this->session->set_userdata('sub_menu', 'admin/studentcall');
         
         $data['class_list'] = $this->class_model->get();
@@ -30,8 +30,11 @@ class Studentcall extends Admin_Controller
         $date_to = $this->input->post('date_to') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('date_to'))) : null;
         $purpose_id = $this->input->post('purpose_id');
         $status = $this->input->post('status');
+        $follow_up_date_from = $this->input->post('follow_up_date_from') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('follow_up_date_from'))) : null;
+        $follow_up_date_to = $this->input->post('follow_up_date_to') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('follow_up_date_to'))) : null;
+        $assigned_to = $this->input->post('assigned_to');
 
-        $data['calls'] = $this->studentcall_model->get_calls($class_id, $section_id, $date_from, $date_to, $purpose_id, $status);
+        $data['calls'] = $this->studentcall_model->get_calls($class_id, $section_id, $date_from, $date_to, $purpose_id, $status, $follow_up_date_from, $follow_up_date_to, $assigned_to);
 
         // Fetch widget stats
         $staff_id = $this->customlib->getUserData()["id"];
@@ -56,6 +59,63 @@ class Studentcall extends Admin_Controller
         $data['not_connected_today'] = $not_connected_today;
         $data['pending_followups'] = $pending_followups;
         $data['pending_followup_calls'] = $this->studentcall_model->get_pending_followup_calls('due_today_and_overdue');
+
+        $data['saved_filters'] = $this->session->userdata('studentcall_status_filters');
+
+        $this->load->view('layout/header');
+        $this->load->view('admin/studentcall/index', $data);
+        $this->load->view('layout/footer');
+    }
+
+    public function assigned_to_me()
+    {
+        if (!$this->rbac->hasPrivilege('student_call_log', 'can_view')) {
+            access_denied();
+        }
+        $this->session->set_userdata('top_menu', 'Call Log');
+        $this->session->set_userdata('sub_menu', 'admin/studentcall/assigned_to_me');
+        
+        $staff_id = $this->customlib->getUserData()["id"];
+        
+        $data['class_list'] = $this->class_model->get();
+        $data['purposes'] = $this->studentcall_model->get_purposes();
+        $data['staff_list'] = $this->staff_model->get();
+        $data['default_assigned_to'] = $staff_id;
+        $data['is_assigned_to_me_view'] = true;
+
+        $class_id = $this->input->post('class_id');
+        $section_id = $this->input->post('section_id');
+        $date_from = $this->input->post('date_from') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('date_from'))) : null;
+        $date_to = $this->input->post('date_to') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('date_to'))) : null;
+        $purpose_id = $this->input->post('purpose_id');
+        $status = $this->input->post('status');
+        $follow_up_date_from = $this->input->post('follow_up_date_from') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('follow_up_date_from'))) : null;
+        $follow_up_date_to = $this->input->post('follow_up_date_to') ? date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('follow_up_date_to'))) : null;
+
+        $data['calls'] = $this->studentcall_model->get_calls($class_id, $section_id, $date_from, $date_to, $purpose_id, $status, $follow_up_date_from, $follow_up_date_to, $staff_id);
+
+        // Fetch widget stats
+        $today_stats = $this->studentcall_model->get_today_call_statistics();
+        $pending_followups = count($this->studentcall_model->get_pending_followups_by_staff($staff_id));
+        
+        $total_calls_today = 0;
+        $connected_today = 0;
+        $not_connected_today = 0;
+        
+        foreach($today_stats as $stat) {
+            $total_calls_today += $stat['count'];
+            if ($stat['call_status'] == 'Connected') {
+                $connected_today += $stat['count'];
+            } elseif ($stat['call_status'] != 'Callback Requested') {
+                $not_connected_today += $stat['count'];
+            }
+        }
+        
+        $data['total_calls_today'] = $total_calls_today;
+        $data['connected_today'] = $connected_today;
+        $data['not_connected_today'] = $not_connected_today;
+        $data['pending_followups'] = $pending_followups;
+        $data['pending_followup_calls'] = $this->studentcall_model->get_pending_followup_calls('due_today_and_overdue', $staff_id);
 
         $data['saved_filters'] = $this->session->userdata('studentcall_status_filters');
 
@@ -92,14 +152,29 @@ class Studentcall extends Admin_Controller
 
         $data = [];
         if (!empty($calls)) {
+            $today_date = date('Y-m-d');
             foreach ($calls as $call) {
                 $followup_status = '';
+                $is_overdue = false;
+                $is_due_today = false;
+
                 if ($call['total_followups'] == 0) {
                     $followup_status = "<span class='label label-default'>None</span>";
                 } else if ($call['pending_count'] > 0) {
-                    $followup_status = "<span class='label label-warning'>Pending (" . date($this->customlib->getSchoolDateFormat(), strtotime($call['next_follow_up_date'])) . ")</span>";
+                    $due_date_str = !empty($call['next_follow_up_date']) ? date('Y-m-d', strtotime($call['next_follow_up_date'])) : '';
+                    $formatted_due = !empty($call['next_follow_up_date']) ? date($this->customlib->getSchoolDateFormat(), strtotime($call['next_follow_up_date'])) : '';
+
+                    if (!empty($due_date_str) && $due_date_str < $today_date) {
+                        $is_overdue = true;
+                        $followup_status = "<span class='label label-danger' data-toggle='tooltip' title='Overdue since " . $formatted_due . "'><i class='fa fa-exclamation-triangle'></i> Overdue (" . $formatted_due . ")</span>";
+                    } else if (!empty($due_date_str) && $due_date_str == $today_date) {
+                        $is_due_today = true;
+                        $followup_status = "<span class='label label-warning' data-toggle='tooltip' title='Due Today!'><i class='fa fa-clock-o'></i> Due Today</span>";
+                    } else {
+                        $followup_status = "<span class='label label-info'><i class='fa fa-calendar'></i> Pending (" . $formatted_due . ")</span>";
+                    }
                 } else {
-                    $followup_status = "<span class='label label-success'>Resolved</span>";
+                    $followup_status = "<span class='label label-success'><i class='fa fa-check'></i> Resolved</span>";
                 }
 
                 $dial_phone = !empty($call['father_phone']) ? $call['father_phone'] : (!empty($call['mother_phone']) ? $call['mother_phone'] : (!empty($call['guardian_phone']) ? $call['guardian_phone'] : (!empty($call['mobileno']) ? $call['mobileno'] : $call['phone_number'])));
@@ -108,11 +183,41 @@ class Studentcall extends Admin_Controller
                 $called_today = (!empty($normalized_date) && date('Y-m-d', strtotime($normalized_date)) == date('Y-m-d')) ? '1' : '0';
                 $last_call_date = !empty($call['date']) ? date($this->customlib->getSchoolDateFormat(true, true), strtotime($normalized_date)) : '';
 
-                $action = '';
+                // WhatsApp message template
+                $wa_msg = "Hello, this is regarding student " . $call['firstname'] . " " . $call['lastname'] . " (" . $call['class'] . " - " . $call['section'] . "). Purpose: " . $call['purpose_name'] . ". Please get in touch with us.";
+                $wa_link = "https://api.whatsapp.com/send?phone=" . $clean_dial_phone . "&text=" . urlencode($wa_msg);
+
+                $action = '<div style="display:inline-flex; gap:3px; align-items:center; justify-content:flex-end; white-space:nowrap;">';
                 if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) {
-                    $action = '<a href="javascript:void(0)" class="btn btn-success btn-xs trigger-direct-call" data-call-id="' . $call['id'] . '" data-student-name="' . htmlspecialchars($call['firstname'] . ' ' . $call['lastname']) . '" data-phone="' . $clean_dial_phone . '" data-called-today="' . $called_today . '" data-last-call-date="' . $last_call_date . '" data-toggle="tooltip" title="Dial (' . $dial_phone . ')"><i class="fa fa-phone"></i> Call</a> ';
-                    $action .= '<a href="javascript:void(0)" class="btn btn-default btn-xs btn-follow-up-log" data-id="' . $call['id'] . '" onclick="follow_up(' . $call['id'] . '); return false;" data-toggle="tooltip" title="' . ($this->lang->line('follow_up') ? $this->lang->line('follow_up') : 'Follow Up') . '"><i class="fa fa-pencil"></i> Log</a>';
+                    $action .= '<a href="javascript:void(0)" class="btn btn-success btn-xs trigger-direct-call" data-call-id="' . $call['id'] . '" data-student-name="' . htmlspecialchars($call['firstname'] . ' ' . $call['lastname']) . '" data-phone="' . $clean_dial_phone . '" data-called-today="' . $called_today . '" data-last-call-date="' . $last_call_date . '" data-toggle="tooltip" title="Dial (' . $dial_phone . ')"><i class="fa fa-phone"></i></a>';
+                    
+                    if (!empty($clean_dial_phone)) {
+                        $action .= '<a href="' . $wa_link . '" target="_blank" class="btn btn-xs" style="background-color:#25D366; color:#fff; border-color:#25D366;" data-toggle="tooltip" title="WhatsApp Parent (' . $clean_dial_phone . ')"><i class="fa fa-whatsapp"></i></a>';
+                    }
+
+                    $action .= '<a href="javascript:void(0)" class="btn btn-info btn-xs btn-view-call-details" data-id="' . $call['id'] . '" data-toggle="tooltip" title="View Details"><i class="fa fa-eye"></i></a>';
+
+                    if ($this->rbac->hasPrivilege('student_call_log', 'can_edit') && $call['pending_count'] > 0) {
+                        $action .= '<a href="javascript:void(0)" class="btn btn-primary btn-xs btn-quick-resolve" data-id="' . $call['id'] . '" data-toggle="tooltip" title="Mark Done"><i class="fa fa-check"></i></a>';
+                        $action .= '<a href="javascript:void(0)" class="btn btn-warning btn-xs btn-quick-reschedule" data-id="' . $call['id'] . '" data-toggle="tooltip" title="Reschedule Date"><i class="fa fa-calendar"></i></a>';
+                    }
+
+                    $action .= '<a href="javascript:void(0)" class="btn btn-default btn-xs btn-follow-up-log" data-id="' . $call['id'] . '" onclick="follow_up(' . $call['id'] . '); return false;" data-toggle="tooltip" title="Log Follow-up"><i class="fa fa-pencil"></i></a>';
                 }
+                $action .= '</div>';
+
+                // Notes cell formatting
+                $notes_cell = '<div style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#444; font-size:12px;" data-toggle="tooltip" data-placement="top" title="' . htmlspecialchars($call['notes'] ?? '') . '">';
+                if (!empty($call['notes'])) {
+                    if (strpos($call['notes'], ' | ') !== false) {
+                        $notes_cell .= '<span class="label label-info" style="font-size:10px; padding:2px 6px;">Structured Notes</span> ' . htmlspecialchars(substr($call['notes'], 0, 30)) . '...';
+                    } else {
+                        $notes_cell .= htmlspecialchars($call['notes']);
+                    }
+                } else {
+                    $notes_cell .= '<span style="color:#ccc;">-</span>';
+                }
+                $notes_cell .= '</div>';
 
                 $row = [
                     $call['firstname'] . ' ' . $call['lastname'] . ' (' . $call['admission_no'] . ')',
@@ -123,7 +228,7 @@ class Studentcall extends Admin_Controller
                     get_purpose_pill($call['purpose_name']),
                     get_call_status_pill($call['call_status']),
                     date($this->customlib->getSchoolDateFormat(true, true), strtotime($call['date'])),
-                    '<div style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#444; font-size:12px;" data-toggle="tooltip" data-placement="top" title="' . htmlspecialchars($call['notes'] ?? '') . '">' . (!empty($call['notes']) ? htmlspecialchars($call['notes']) : '<span style="color:#ccc;">-</span>') . '</div>',
+                    $notes_cell,
                     $followup_status,
                     $call['assigned_to_name'],
                     $call['staff_name'] . ' ' . $call['staff_surname'],
@@ -544,5 +649,84 @@ class Studentcall extends Admin_Controller
         ]);
         file_put_contents('ajax_debug.txt', $json_data . "\nJSON ERROR: " . json_last_error_msg());
         echo $json_data;
+    }
+
+    public function quick_resolve_followup()
+    {
+        if (!$this->rbac->hasPrivilege('student_call_log', 'can_edit')) {
+            echo json_encode(['status' => 'fail', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $call_id = $this->input->post('call_id');
+        $remarks = $this->input->post('remarks');
+
+        if (!empty($call_id)) {
+            $this->studentcall_model->resolve_previous_followups_with_details($call_id, 'Resolved', 'Connected', $remarks);
+            $this->studentcall_model->update_call($call_id, [
+                'call_status' => 'Connected',
+                'notes' => !empty($remarks) ? $remarks : 'Call Completed'
+            ]);
+            echo json_encode(['status' => 'success', 'message' => 'Follow-up marked as resolved successfully']);
+        } else {
+            echo json_encode(['status' => 'fail', 'message' => 'Invalid Call ID']);
+        }
+    }
+
+    public function quick_reschedule_followup()
+    {
+        if (!$this->rbac->hasPrivilege('student_call_log', 'can_edit')) {
+            echo json_encode(['status' => 'fail', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $call_id = $this->input->post('call_id');
+        $new_date = $this->input->post('next_follow_up_date');
+
+        if (!empty($call_id) && !empty($new_date)) {
+            $formatted_date = date('Y-m-d H:i:s', strtotime($this->customlib->dateFormatToYYYYMMDD($new_date)));
+            
+            // Update pending followups
+            $this->db->where('student_call_id', $call_id);
+            $this->db->where('status', 'Pending');
+            $this->db->update('student_call_followups', ['due_date' => $formatted_date]);
+
+            echo json_encode(['status' => 'success', 'message' => 'Follow-up rescheduled successfully']);
+        } else {
+            echo json_encode(['status' => 'fail', 'message' => 'Invalid parameters']);
+        }
+    }
+
+    public function get_call_details_ajax($call_id)
+    {
+        if (!$this->rbac->hasPrivilege('student_call_log', 'can_view')) {
+            echo json_encode(['status' => 'fail', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $call = $this->studentcall_model->get_call($call_id);
+        if (!empty($call)) {
+            $followups = $this->studentcall_model->get_followups_by_call($call_id);
+            $call['followups'] = $followups;
+            
+            // Parse notes into structured items if pipe-separated
+            $parsed_notes = [];
+            if (!empty($call['notes'])) {
+                $parts = explode(' | ', $call['notes']);
+                foreach ($parts as $part) {
+                    if (strpos($part, ': ') !== false) {
+                        list($label, $val) = explode(': ', $part, 2);
+                        $parsed_notes[] = ['label' => trim($label), 'value' => trim($val)];
+                    } else {
+                        $parsed_notes[] = ['label' => 'Notes', 'value' => trim($part)];
+                    }
+                }
+            }
+            $call['parsed_notes'] = $parsed_notes;
+
+            echo json_encode(['status' => 'success', 'data' => $call]);
+        } else {
+            echo json_encode(['status' => 'fail', 'message' => 'Call log record not found']);
+        }
     }
 }

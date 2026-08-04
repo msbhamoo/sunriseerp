@@ -129,10 +129,15 @@ if (!function_exists('main_menu_array')) {
     {  
         $array = array(
 
+            'call_log' => array(
+                'studentcall'     => array('index','assigned_to_me','edit','add_call','search_ajax'),
+                'generalcall'     => array('index','edit','details'),
+                'callpurpose'     => array('index','add','edit','update','delete'),
+            ),
+
             'front_office' => array(
                 'enquiry'         => array('index'),
                 'visitors'        => array('index'),
-                'generalcall'     => array('index','edit'),
                 'dispatch'        => array('index','editdispatch'),
                 'receive'         => array('index','editreceive'),
                 'complaint'       => array('index','edit'),
@@ -145,7 +150,6 @@ if (!function_exists('main_menu_array')) {
                 'category'        => array('index','edit'),               
                 'schoolhouse'     => array('index','edit'),               
                 'disable_reason'  => array('index','edit'),                              
-                'callpurpose'     => array('index','edit'),
                 'religion'        => array('index','edit'),
                 'cast'            => array('index','edit'),
             ),

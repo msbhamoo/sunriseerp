@@ -378,6 +378,28 @@
             return;
         }
 
+        // First save active day tab form so unsaved UI time/break changes are written to database
+        var active_form = $('.tab-pane.active form');
+        if (active_form.length > 0) {
+            $.ajax({
+                type: 'POST',
+                url: base_url + "admin/timetable/savegroup",
+                data: active_form.serialize(),
+                dataType: 'json',
+                success: function(saveRes) {
+                    // Proceed with copy after save succeeds
+                    performCopyTimetable(class_id, section_id, subject_group_id, copy_scope, preserve_existing, source_day, target_day);
+                },
+                error: function() {
+                    performCopyTimetable(class_id, section_id, subject_group_id, copy_scope, preserve_existing, source_day, target_day);
+                }
+            });
+        } else {
+            performCopyTimetable(class_id, section_id, subject_group_id, copy_scope, preserve_existing, source_day, target_day);
+        }
+    });
+
+    function performCopyTimetable(class_id, section_id, subject_group_id, copy_scope, preserve_existing, source_day, target_day) {
         $.ajax({
             type: 'POST',
             url: base_url + "admin/timetable/copy_timetable",
@@ -407,7 +429,7 @@
                 }
             }
         });
-    });
+    }
 
     $(document).on('change', '#class_id', function(e) {
         document.getElementById("insertbtn").disabled = true;

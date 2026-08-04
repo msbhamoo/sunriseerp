@@ -20,7 +20,7 @@ class Generalcall extends Admin_Controller
             access_denied();
         }
 
-        $this->session->set_userdata('top_menu', 'front_office');
+        $this->session->set_userdata('top_menu', 'Call Log');
         $this->session->set_userdata('sub_menu', 'admin/generalcall');
         $this->form_validation->set_rules('call_type', $this->lang->line('call_type'), 'required');
         $this->form_validation->set_rules('contact', $this->lang->line('phone'), 'required');

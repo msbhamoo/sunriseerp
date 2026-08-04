@@ -22,7 +22,7 @@ if (!empty($menus)) {
 
               <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse<?php echo $menu_value->id ?>" aria-expanded="true" aria-controls="collapse<?php echo $menu_value->id ?>">
 
-                                <?php echo $this->lang->line($menu_value->lang_key); ?>
+                                <?php echo ($this->lang->line($menu_value->lang_key)) ? $this->lang->line($menu_value->lang_key) : (!empty($menu_value->menu) ? $menu_value->menu : $menu_value->lang_key); ?>
                             </a>
 
                             <?php if ($this->rbac->hasPrivilege('sidebar_menu', 'can_view')) {?>
@@ -49,12 +49,12 @@ foreach ($menu_value->submenus as $submenu_key => $submenu_value) {
                                                                      <?php if ($this->rbac->hasPrivilege('sidebar_menu', 'can_view')) {?>
                                                                     <a href="javascript:void(0);" data-record-id="<?php echo $submenu_value->id; ?>" class="btn btn-xs edit_sub_menu hidden" data-toggle="tooltip"
                                                                        data-original-title="<?php echo $this->lang->line('edit'); ?>"  data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>"><i class="fa fa-pencil"></i>
-                                                                   </a>
+                                                                    </a>
                                                                      <?php }?>
 
 
                                                                 </span> <i class="fa fa-arrows"></i> <?php
-echo $this->lang->line($submenu_value->lang_key);
+echo ($this->lang->line($submenu_value->lang_key)) ? $this->lang->line($submenu_value->lang_key) : (!empty($submenu_value->menu) ? $submenu_value->menu : $submenu_value->lang_key);
                 ?>
                                                             </li>
                                                             <?php
@@ -101,7 +101,7 @@ if (!empty($active_menus)) {
           <div class="panel-heading" role="tab" id="headingOne">
             <h4 class="panel-title relative">
               <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse<?php echo $menu_value->id ?>" aria-expanded="true" aria-controls="collapse<?php echo $menu_value->id ?>">
-                                <?php echo $this->lang->line($menu_value->lang_key); ?>
+                                <?php echo ($this->lang->line($menu_value->lang_key)) ? $this->lang->line($menu_value->lang_key) : (!empty($menu_value->menu) ? $menu_value->menu : $menu_value->lang_key); ?>
                             </a>
                              <a href="javascript:void(0);" data-record-id="<?php echo $menu_value->id; ?>" class="btn btn-xs edit_menu more-less-right hidden" data-toggle="tooltip"
                                                                        data-original-title="<?php echo $this->lang->line('edit'); ?>"  data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>" ><i class="more-less fa fa-pencil"></i></a>
@@ -125,9 +125,9 @@ foreach ($menu_value->submenus as $submenu_key => $submenu_value) {
 
                                                                     <a href="javascript:void(0);" data-record-id="<?php echo $submenu_value->id; ?>" class="btn btn-xs edit_sub_menu hidden" data-toggle="tooltip"
                                                                        data-original-title="<?php echo $this->lang->line('edit'); ?>"  data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>"><i class="fa fa-pencil"></i>
-                                                                   </a>
+                                                                    </a>
                                                                 </span> <i class="fa fa-arrows"></i> <?php
-echo $this->lang->line($submenu_value->lang_key);
+echo ($this->lang->line($submenu_value->lang_key)) ? $this->lang->line($submenu_value->lang_key) : (!empty($submenu_value->menu) ? $submenu_value->menu : $submenu_value->lang_key);
                 ?>
                                                             </li>
                                                             <?php

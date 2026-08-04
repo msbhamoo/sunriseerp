@@ -215,6 +215,83 @@ class Ptm extends Admin_Controller
 
         $this->ptm_model->save_attendance($data);
 
+        // Sync with Student Call Log if follow-up is required
+        if ($data['followup_required'] == 1 && !empty($data['followup_assigned_to'])) {
+            $this->load->model('studentcall_model');
+            
+            // Find or create purpose "PTM Follow-up"
+            $purposes = $this->studentcall_model->get_purposes();
+            $ptm_purpose_id = null;
+            foreach ($purposes as $purp) {
+                if (strtolower($purp['purpose']) == 'ptm follow-up' || strtolower($purp['purpose']) == 'ptm') {
+                    $ptm_purpose_id = $purp['id'];
+                    break;
+                }
+            }
+            if (!$ptm_purpose_id) {
+                $ptm_purpose_id = $this->studentcall_model->add_purpose([
+                    'purpose' => 'PTM Follow-up',
+                    'description' => 'Follow-up assigned from PTM report'
+                ]);
+            }
+
+            // Build comprehensive PTM summary incorporating discussion, concerns, remarks & action items
+            $ptm_details = [];
+            if (!empty($data['action_items'])) {
+                $ptm_details[] = 'Action Items: ' . $data['action_items'];
+            }
+            if (!empty($data['discussion_points'])) {
+                $ptm_details[] = 'Discussion: ' . $data['discussion_points'];
+            }
+            if (!empty($data['concerns_academics'])) {
+                $ptm_details[] = 'Academics: ' . $data['concerns_academics'];
+            }
+            if (!empty($data['concerns_attendance'])) {
+                $ptm_details[] = 'Attendance: ' . $data['concerns_attendance'];
+            }
+            if (!empty($data['concerns_behavior'])) {
+                $ptm_details[] = 'Behavior: ' . $data['concerns_behavior'];
+            }
+            if (!empty($data['concerns_discipline'])) {
+                $ptm_details[] = 'Discipline: ' . $data['concerns_discipline'];
+            }
+            if (!empty($data['teacher_remarks'])) {
+                $ptm_details[] = 'Teacher Remarks: ' . $data['teacher_remarks'];
+            }
+            if (!empty($data['parent_remarks'])) {
+                $ptm_details[] = 'Parent Remarks: ' . $data['parent_remarks'];
+            }
+            $ptm_summary_notes = !empty($ptm_details) ? implode(' | ', $ptm_details) : 'PTM Follow-up';
+
+            // Fetch student session & info
+            $student = $this->student_model->getByStudentSession($student_session_id);
+            if (!empty($student)) {
+                $call_data = array(
+                    'student_id' => $student['id'],
+                    'student_session_id' => $student_session_id,
+                    'call_purpose_id' => $ptm_purpose_id,
+                    'call_type' => 'Outgoing',
+                    'contact_person' => !empty($student['father_name']) ? $student['father_name'] : $student['firstname'],
+                    'phone_number' => !empty($student['father_phone']) ? $student['father_phone'] : (!empty($student['mobileno']) ? $student['mobileno'] : $student['guardian_phone']),
+                    'date' => date('Y-m-d H:i:s'),
+                    'call_status' => 'Callback Requested',
+                    'notes' => $ptm_summary_notes,
+                    'created_by' => $this->customlib->getStaffID() ? $this->customlib->getStaffID() : 1
+                );
+                $call_id = $this->studentcall_model->add_call($call_data);
+
+                $followup_data = array(
+                    'student_call_id' => $call_id,
+                    'assigned_to' => $data['followup_assigned_to'],
+                    'due_date' => !empty($data['followup_date']) ? $data['followup_date'] . ' 09:00:00' : date('Y-m-d 09:00:00'),
+                    'priority' => 'High',
+                    'remarks' => $ptm_summary_notes,
+                    'status' => 'Pending'
+                );
+                $this->studentcall_model->add_followup($followup_data);
+            }
+        }
+
         // Internal notification to assigned staff
         if ($data['followup_required'] == 1 && $data['followup_assigned_to'] != NULL) {
             $sender_id = $this->customlib->getStaffID();
@@ -226,7 +303,7 @@ class Ptm extends Admin_Controller
                 if (!empty($data['action_items'])) {
                     $message .= ' Action Items: ' . $data['action_items'];
                 }
-                $this->SystemNotification_model->notifyUser($data['followup_assigned_to'], $title, $message, base_url('admin/ptmreports'));
+                $this->SystemNotification_model->notifyUser($data['followup_assigned_to'], $title, $message, base_url('admin/studentcall/assigned_to_me'));
             }
         }
 
