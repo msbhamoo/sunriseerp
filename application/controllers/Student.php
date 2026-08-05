@@ -685,9 +685,17 @@ class Student extends Admin_Controller
                     $hostel_room_id = 0;
                 }
 
+                $is_staff_kid = $this->input->post('is_staff_kid');
+                $staff_id     = ($is_staff_kid == '1') ? $this->input->post('staff_id') : null;
+                if (empty($staff_id)) {
+                    $staff_id = null;
+                }
+
                 $data_insert = array(
                     'firstname'         => $this->input->post('firstname'),
                     'rte'               => $this->input->post('rte'),
+                    'is_staff_kid'      => $is_staff_kid,
+                    'staff_id'          => $staff_id,
                     'state'             => $this->input->post('state'),
                     'city'              => $this->input->post('city'),
                     'pincode'           => $this->input->post('pincode'),
@@ -2360,10 +2368,18 @@ class Student extends Admin_Controller
                 if (empty($vehroute_id)) {
                     $vehroute_id = null;
                 }
+                $is_staff_kid = $this->input->post('is_staff_kid');
+                $staff_id     = ($is_staff_kid == '1') ? $this->input->post('staff_id') : null;
+                if (empty($staff_id)) {
+                    $staff_id = null;
+                }
+
                 $data = array(
                     'id'                => $id,
                     'firstname'         => $this->input->post('firstname'),
                     'rte'               => $this->input->post('rte'),
+                    'is_staff_kid'      => $is_staff_kid,
+                    'staff_id'          => $staff_id,
                     'state'             => $this->input->post('state'),
                     'city'              => $this->input->post('city'),
                     'pincode'           => $this->input->post('pincode'),

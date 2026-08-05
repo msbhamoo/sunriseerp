@@ -2,50 +2,181 @@
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
 <style type="text/css">
-    .dashboard2-wrapper { background-color: #f4f6f9; font-family: 'Inter', sans-serif; }
-    .d2-card { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #eaeaea; }
-    .d2-title { font-size: 14px; font-weight: 600; color: #8a8a8a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; border-bottom: 1px solid #f4f4f4; padding-bottom: 10px; }
-    .d2-pill { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
-    .pill-success { background: #e6f4ea; color: #1e8e3e; border: 1px solid #ceead6; }
-    .pill-danger { background: #fce8e6; color: #d93025; border: 1px solid #fad2cf; }
-    .btn-sleek { border-radius: 4px; box-shadow: none; border: none; padding: 6px 12px; font-weight: 600; }
-    .action-btn { width: 28px; height: 28px; line-height: 28px; text-align: center; padding: 0; border-radius: 50%; display: inline-block; margin: 0 2px; color: #fff; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: all 0.2s ease; }
-    .action-btn:hover { transform: translateY(-2px); box-shadow: 0 3px 6px rgba(0,0,0,0.15); color: #fff; }
-    .btn-print { background: #3b82f6; }
-    .table>thead>tr>th { border-bottom: 2px solid #eaeaea; color: #666; font-size: 12px; text-transform: uppercase; }
-    .table>tbody>tr>td { vertical-align: middle; border-top: 1px solid #f4f4f4; }
+    .dashboard2-wrapper { 
+        background-color: #f8fafc; 
+        font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+    }
+    .d2-card { 
+        background: #ffffff; 
+        border-radius: 14px; 
+        padding: 20px 24px; 
+        margin-bottom: 20px; 
+        box-shadow: 0 4px 18px rgba(0,0,0,0.02); 
+        border: 1px solid #f1f5f9; 
+    }
+    .d2-header-card {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 20px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        border: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .d2-header-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .d2-header-title i {
+        color: #059669;
+        font-size: 22px;
+    }
+
+    .d2-title { 
+        font-size: 15px; 
+        font-weight: 800; 
+        color: #0f172a; 
+        margin-bottom: 16px; 
+        border-bottom: 1px solid #f1f5f9; 
+        padding-bottom: 12px; 
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .d2-pill { 
+        padding: 4px 12px; 
+        border-radius: 20px; 
+        font-size: 11px; 
+        font-weight: 700; 
+        display: inline-block; 
+    }
+    .pill-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+    .pill-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .btn-sleek { 
+        border-radius: 8px; 
+        box-shadow: none; 
+        border: none; 
+        padding: 8px 18px; 
+        font-weight: 700; 
+        background: #059669;
+        color: #fff;
+        transition: all 0.2s ease;
+    }
+    .btn-sleek:hover {
+        background: #047857;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+    }
+    .action-btn { 
+        width: 32px; 
+        height: 32px; 
+        line-height: 32px; 
+        text-align: center; 
+        padding: 0; 
+        border-radius: 8px; 
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 2px; 
+        color: #fff; 
+        border: none; 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.06); 
+        transition: all 0.2s ease; 
+    }
+    .action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.12); color: #fff; }
+    .btn-print { background: #0284c7; }
+    
+    .table>thead>tr>th { 
+        border-bottom: 2px solid #f1f5f9; 
+        color: #64748b; 
+        font-size: 11px; 
+        font-weight: 700;
+        text-transform: uppercase; 
+        letter-spacing: 0.5px;
+        background: #f8fafc;
+        padding: 12px;
+    }
+    .table>tbody>tr>td { 
+        vertical-align: middle; 
+        border-top: 1px solid #f1f5f9; 
+        font-size: 13px;
+        color: #334155;
+        padding: 12px;
+    }
+
+    /* Summary Metrics Row */
+    .d2-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .d2-metric-box {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 16px 20px;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    .d2-metric-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+    .d2-metric-icon.emerald { background: #d1fae5; color: #047857; }
+    .d2-metric-icon.blue { background: #e0f2fe; color: #0284c7; }
+    .d2-metric-icon.purple { background: #f3e8ff; color: #7e22ce; }
+
+    .d2-metric-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .d2-metric-val { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.2; }
 </style>
-<div class="content-wrapper dashboard2-wrapper">
-    <section class="content-header">
-        <div class="row" style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px;">
-            <div class="col-md-6">
-                <h1 style="margin:0; font-size: 24px; font-weight:700;">Fee Collection List</h1>
-                <small style="color:#888;">Finance Reports / Collection List</small>
+<div class="content-wrapper dashboard2-wrapper" style="min-height: 946px;">
+    <section class="content">
+        <!-- Header Card -->
+        <div class="d2-header-card">
+            <div>
+                <div class="d2-header-title">
+                    <i class="fa fa-money"></i> Fee Collection Report
+                </div>
+                <small style="color: #64748b; font-weight: 500;">Finance Reports / Collection List</small>
             </div>
         </div>
-    </section>
-    <!-- Main content -->
-    <section class="content">
+
+        <!-- Main content -->
         <div class="row">
             <div class="col-md-12">
                 <div class="d2-card">
-                    <div class="d2-title"><i class="fa fa-search"></i> <?php echo $this->lang->line('select_criteria'); ?></div>
+                    <div class="d2-title"><i class="fa fa-search" style="color:#059669;"></i> <?php echo $this->lang->line('select_criteria'); ?></div>
                     <form role="form" action="<?php echo site_url('financereports/collection_list') ?>" method="post" class="">
-                        <div class="row" style="padding: 10px 0;">
+                        <div class="row" style="padding: 5px 0;">
                             <?php echo $this->customlib->getCSRF(); ?>
                             
                             <div class="col-sm-4 col-lg-4 col-md-4">
                                 <div class="form-group" style="position:relative;">
-                                    <label>Search to collect Fee</label>
-                                    <input type="text" name="search_student" id="search_student_ajax" class="form-control" placeholder="<?php echo $this->lang->line('search_by_student_name'); ?>" autocomplete="off">
+                                    <label style="font-weight: 700; color: #475569;">Search to collect Fee</label>
+                                    <input type="text" name="search_student" id="search_student_ajax" class="form-control" placeholder="<?php echo $this->lang->line('search_by_student_name'); ?>" autocomplete="off" style="border-radius: 8px;">
                                     <div id="ajax_student_search_results_container" class="custom-ajax-search-container"></div>
                                 </div>
                             </div>
 
                             <div class="col-sm-4 col-lg-4 col-md-4">
                                 <div class="form-group">
-                                    <label><?php echo $this->lang->line('search_duration'); ?><small class="req"> *</small></label>
-                                    <select class="form-control" name="search_type" onchange="showdate(this.value)">
+                                    <label style="font-weight: 700; color: #475569;"><?php echo $this->lang->line('search_duration'); ?><small class="req"> *</small></label>
+                                    <select class="form-control" name="search_type" onchange="showdate(this.value)" style="border-radius: 8px;">
 
                                         <?php foreach ($searchlist as $key => $search) { ?>
                                             <option value="<?php echo $key ?>" <?php
@@ -72,16 +203,85 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                 </div>
                     <?php if (empty($results)) { ?>
                         <div class="d2-card">
-                            <div class="alert alert-info" style="margin-bottom:0;">
+                            <div class="alert alert-info" style="margin-bottom:0; border-radius: 8px;">
                                <?php echo $this->lang->line('no_record_found'); ?>
                             </div>
                         </div>
-                    <?php } else { ?>
+                    <?php } else { 
+                        $total_records = count($results);
+                        $total_collected_val = 0;
+                        $reverted_count = 0;
+                        $fee_receipts_count = 0;
+                        $transport_receipts_count = 0;
+                        $unique_students = array();
+
+                        foreach ($results as $res_item) {
+                            if (!empty($res_item['student_id'])) {
+                                $unique_students[$res_item['student_id']] = true;
+                            } elseif (!empty($res_item['admission_no'])) {
+                                $unique_students[$res_item['admission_no']] = true;
+                            }
+
+                            if ($res_item['custom_receipt_status'] != 'Reversed') {
+                                $total_collected_val += (two_digit_float($res_item['amount']) + two_digit_float($res_item['amount_fine']));
+                            } else {
+                                $reverted_count++;
+                            }
+
+                            $type_lower = strtolower($res_item['type'] ?? '');
+                            if (strpos($type_lower, 'transport') !== false || strpos($type_lower, 'bus') !== false) {
+                                $transport_receipts_count++;
+                            } else {
+                                $fee_receipts_count++;
+                            }
+                        }
+                        $total_unique_students = count($unique_students);
+                    ?>
+                        <!-- Summary Metrics Grid -->
+                        <div class="d2-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                            <div class="d2-metric-box">
+                                <div class="d2-metric-icon blue">
+                                    <i class="fa fa-file-text-o"></i>
+                                </div>
+                                <div>
+                                    <div class="d2-metric-label">Total Fee Receipts</div>
+                                    <div class="d2-metric-val"><?php echo $fee_receipts_count; ?></div>
+                                </div>
+                            </div>
+                            <div class="d2-metric-box">
+                                <div class="d2-metric-icon amber" style="background:#fef3c7; color:#d97706;">
+                                    <i class="fa fa-bus"></i>
+                                </div>
+                                <div>
+                                    <div class="d2-metric-label">Total Transport Receipts</div>
+                                    <div class="d2-metric-val"><?php echo $transport_receipts_count; ?></div>
+                                </div>
+                            </div>
+                            <div class="d2-metric-box">
+                                <div class="d2-metric-icon teal" style="background:#ccfbf1; color:#0f766e;">
+                                    <i class="fa fa-users"></i>
+                                </div>
+                                <div>
+                                    <div class="d2-metric-label">Total Unique Students</div>
+                                    <div class="d2-metric-val"><?php echo $total_unique_students; ?></div>
+                                </div>
+                            </div>
+                            <div class="d2-metric-box">
+                                <div class="d2-metric-icon indigo" style="background:#e0e7ff; color:#4338ca;">
+                                    <i class="fa fa-list-alt"></i>
+                                </div>
+                                <div>
+                                    <div class="d2-metric-label">Total Transactions Count</div>
+                                    <div class="d2-metric-val"><?php echo $total_records; ?></div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="d2-card">
                             <div class="d2-title" style="display:flex; justify-content:space-between; align-items:center;">
-                                <span><i class="fa fa-money"></i> Fee Collection List</span>
+                                <span><i class="fa fa-table" style="color:#0284c7;"></i> Fee Collection List</span>
                                 <div class="box-tools">
-                                    <input type="text" id="table_filter" class="form-control input-sm" placeholder="Search in list..." style="width: 200px; display: inline-block;">
+                                    <input type="text" id="table_filter" class="form-control input-sm" placeholder="Search in list..." style="width: 220px; display: inline-block; border-radius: 8px;">
                                 </div>
                             </div>
                             
@@ -89,8 +289,8 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                 <div id="printhead"><center><b><h4>Fee Collection List<br><?php $this->customlib->get_postmessage(); ?></h4></b></center></div>
                                 <div class="download_label">Fee Collection List<br><?php $this->customlib->get_postmessage(); ?></div>
 
-                                <a class="btn btn-default btn-xs pull-right" id="print" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('print'); ?>" onclick="printDiv()" ><i class="fa fa-print"></i></a>
-                                <a class="btn btn-default btn-xs pull-right" id="btnExport" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('download_excel'); ?>"  onclick="fnExcelReport();"> <i class="fa fa-file-excel-o"></i> </a>
+                                <a class="btn btn-default btn-xs pull-right" id="print" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('print'); ?>" onclick="printDiv()" style="border-radius: 6px; padding: 4px 8px; margin-left: 5px;"><i class="fa fa-print"></i></a>
+                                <a class="btn btn-default btn-xs pull-right" id="btnExport" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('download_excel'); ?>"  onclick="fnExcelReport();" style="border-radius: 6px; padding: 4px 8px;"><i class="fa fa-file-excel-o"></i></a>
 
                                 <table class="table table-striped table-hover example" style="border: none;" id="headerTable">
                                     <thead class="header">
@@ -123,12 +323,12 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                         ?>
                                             <tr <?php echo $strike_class; ?>>
                                                 <td><?php echo $count++; ?></td>
-                                                <td><?php echo $collect['custom_receipt_no']; ?></td>                
+                                                <td><span style="font-weight: 700; color: #0f172a;"><?php echo $collect['custom_receipt_no']; ?></span></td>                
                                                 <td><?php echo $collect['admission_no']; ?></td>                
                                                 <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($collect['date'])); ?></td>                
-                                                <td><?php echo $this->customlib->getFullName($collect['firstname'], $collect['middlename'], $collect['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?></td>                
+                                                <td><span style="font-weight: 700; color: #1e293b;"><?php echo $this->customlib->getFullName($collect['firstname'], $collect['middlename'], $collect['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?></span></td>                
                                                 <td><?php echo isset($collect['father_name']) ? $collect['father_name'] : ''; ?></td>                
-                                                <td><?php echo $collect['class'] . " (" . $collect['section'] . ")";    ?></td>                
+                                                <td><span class="label label-info" style="border-radius: 4px; font-weight: 600;"><?php echo $collect['class'] . " (" . $collect['section'] . ")"; ?></span></td>                
                                                 <td>
                                                     <?php
                                                         if ( $collect['is_system']) {
@@ -139,10 +339,10 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                         }    
                                                     ?>
                                                 </td>
-                                                <td class="text text-right">
+                                                <td class="text text-right" style="font-weight: 800; color: #0f172a;">
                                                     <?php echo two_digit_float($t1); ?>
                                                 </td>                              
-                                                <td><?php echo $this->lang->line(strtolower($collect['payment_mode'])); ?></td>
+                                                <td><span class="label label-default" style="border-radius: 4px; text-transform: uppercase; font-size: 10px;"><?php echo $this->lang->line(strtolower($collect['payment_mode'])); ?></span></td>
                                                 <td>
                                                     <?php 
                                                         $tx_details = [];
@@ -170,7 +370,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                             </tr>                    
                                         <?php } ?>                            
                                         
-                                        <tr>
+                                        <tr style="background: #f8fafc; font-weight: 800;">
                                             <td></td>
                                             <td></td>
                                             <td></td>
@@ -179,8 +379,8 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                             <td></td>
                                             <td></td>
                                             <td></td>
-                                            <td style="font-weight:bold"><?php echo $this->lang->line('grand_total'); ?></td>
-                                            <td class="text text-right " style="font-weight:bold" ><?php echo $currency_symbol.amountFormat(array_sum($grdTotalLabel)); ?></td>
+                                            <td style="font-weight:800; color: #0f172a;"><?php echo $this->lang->line('grand_total'); ?></td>
+                                            <td class="text text-right" style="font-weight:800; color: #059669; font-size: 15px;"><?php echo $currency_symbol.amountFormat(array_sum($grdTotalLabel)); ?></td>
                                             <td></td>
                                             <td></td>
                                             <td></td>

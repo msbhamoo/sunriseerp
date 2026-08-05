@@ -55,51 +55,20 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
     background: #f0f0f0;
 }
 
-/* ---------- Hero Header ---------- */
+/* ---------- Hero Header (Clean Solid Card) ---------- */
 .sp2-hero {
-    background: linear-gradient(135deg, <?php echo $theme_color; ?> 0%, #3026ad 100%);
-    border-radius: 12px;
-    padding: 24px 24px 0 24px;
-    margin-bottom: 18px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
     position: relative;
-    box-shadow: 0 4px 20px rgba(79,70,229,0.25);
-}
-.sp2-hero-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 12px;
-    overflow: hidden;
-    z-index: 0;
-}
-.sp2-hero-bg::before {
-    content: '';
-    position: absolute;
-    top: -40px;
-    right: -40px;
-    width: 160px;
-    height: 160px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 50%;
-}
-.sp2-hero-bg::after {
-    content: '';
-    position: absolute;
-    bottom: -20px;
-    left: 30%;
-    width: 100px;
-    height: 100px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 50%;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.02);
+    border: 1px solid #f1f5f9;
 }
 .sp2-hero-body {
     display: flex;
-    align-items: flex-end;
-    gap: 20px;
-    position: relative;
-    z-index: 1;
+    align-items: center;
+    gap: 18px;
 }
 .sp2-hero-avatar-wrap {
     flex-shrink: 0;
@@ -107,108 +76,96 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
 .sp2-hero-avatar {
     width: 90px;
     height: 90px;
-    border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.8);
+    border-radius: 16px;
+    border: 2px solid #e2e8f0;
     object-fit: cover;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
     display: block;
-    margin-bottom: 0;
+    background: #f8fafc;
 }
 .sp2-hero-avatar-placeholder {
     width: 90px;
     height: 90px;
-    border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.5);
-    background: rgba(255,255,255,0.15);
+    border-radius: 16px;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 32px;
-    color: rgba(255,255,255,0.8);
-    margin-bottom: 0;
+    color: #94a3b8;
 }
 .sp2-hero-info {
     flex: 1;
-    padding-bottom: 20px;
 }
 .sp2-hero-name {
     font-size: 22px;
     font-weight: 800;
-    color: #fff;
+    color: #0f172a;
     margin: 0 0 8px 0;
     line-height: 1.2;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    letter-spacing: -0.3px;
 }
 .sp2-hero-pills {
     display: flex;
     flex-wrap: wrap;
-    gap: 7px;
-    margin-bottom: 10px;
+    gap: 6px;
 }
 .sp2-hero-pill {
-    padding: 3px 10px;
-    border-radius: 20px;
+    padding: 4px 10px;
+    border-radius: 8px;
     font-size: 11px;
-    font-weight: 600;
-    background: rgba(255,255,255,0.2);
-    color: rgba(255,255,255,0.95);
-    border: 1px solid rgba(255,255,255,0.25);
-    backdrop-filter: blur(4px);
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
 }
 .sp2-hero-pill.disabled-pill {
-    background: rgba(216,69,106,0.6);
-    border-color: rgba(216,69,106,0.8);
+    background: #ffe4e6;
+    border-color: #fecdd3;
+    color: #e11d48;
 }
-.sp2-hero-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding-bottom: 20px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 2;
-}
+
 .sp2-btn {
-    padding: 6px 13px;
-    border-radius: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
     font-size: 12px;
-    font-weight: 600;
-    border: 1px solid rgba(255,255,255,0.35);
-    background: rgba(255,255,255,0.15);
-    color: #fff;
+    font-weight: 700;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
     cursor: pointer;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    transition: all 0.2s;
+    gap: 6px;
+    transition: all 0.2s ease;
     white-space: nowrap;
-    backdrop-filter: blur(4px);
 }
 .sp2-btn:hover {
-    background: rgba(255,255,255,0.3);
-    color: #fff;
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #94a3b8;
     text-decoration: none;
     transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 .sp2-btn.sp2-btn-danger {
-    background: rgba(216,69,106,0.3);
-    border-color: rgba(216,69,106,0.6);
+    background: #fef2f2;
+    border-color: #fecdd3;
+    color: #e11d48;
+}
+.sp2-btn.sp2-btn-danger:hover {
+    background: #ffe4e6;
+    color: #be123c;
 }
 .sp2-btn.sp2-btn-success {
-    background: rgba(59,155,101,0.35);
-    border-color: rgba(59,155,101,0.6);
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #059669;
 }
-.sp2-btn.sp2-btn-solid {
-    background: rgba(255,255,255,0.9);
-    color: <?php echo $theme_color; ?>;
-    border-color: transparent;
-}
-.sp2-btn.sp2-btn-solid:hover {
-    background: #fff;
-    color: <?php echo $theme_color; ?>;
+.sp2-btn.sp2-btn-success:hover {
+    background: #d1fae5;
+    color: #047857;
 }
 
 /* Disabled student banner */
@@ -394,51 +351,87 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
     font-weight: 500;
 }
 
-/* ---------- Enhanced Tab Navigation (Light Pill Liquid Glass) ---------- */
-.sp2-tabs-nav {
-    border-bottom: none;
-    display: inline-flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    white-space: nowrap;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    padding: 8px;
-    border-radius: 50px;
-    margin-bottom: 32px !important;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    list-style: none;
-    max-width: 100%;
+/* ---------- Enhanced Tab Navigation (Segmented Responsive Card Tiles) ---------- */
+.sp2-tabs-wrapper {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 24px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
 }
-.sp2-tabs-nav::-webkit-scrollbar { display: none; }
-.sp2-tabs-nav > li { margin: 0; }
+.sp2-tabs-nav {
+    border-bottom: none !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+}
+
+.sp2-tabs-nav > li { 
+    margin: 0 !important; 
+    float: none !important;
+    flex: 1 1 calc(20% - 10px);
+    min-width: 140px;
+}
+@media (max-width: 1200px) {
+    .sp2-tabs-nav > li { flex: 1 1 calc(25% - 10px); }
+}
+@media (max-width: 991px) {
+    .sp2-tabs-nav > li { flex: 1 1 calc(33.33% - 10px); }
+}
+@media (max-width: 600px) {
+    .sp2-tabs-nav > li { flex: 1 1 calc(50% - 10px); }
+}
+
 .sp2-tabs-nav > li > a {
-    border: none !important;
-    border-radius: 40px !important;
-    padding: 10px 24px;
-    font-weight: 600;
-    color: #6b7280;
-    background: transparent;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: block;
-    white-space: nowrap;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 12px 14px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
+    background: #ffffff !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    text-decoration: none !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
+    text-align: center !important;
+}
+.sp2-tabs-nav > li > a i {
+    font-size: 16px !important;
+    color: #4f46e5 !important;
+    transition: transform 0.2s ease, color 0.2s ease !important;
 }
 .sp2-tabs-nav > li > a:hover {
-    color: #111827;
-    background: rgba(255, 255, 255, 0.5);
+    color: #4f46e5 !important;
+    background: #eef2ff !important;
+    border-color: #c7d2fe !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.12) !important;
 }
+.sp2-tabs-nav > li > a:hover i {
+    transform: scale(1.15) !important;
+}
+
 .sp2-tabs-nav > li.active > a, 
 .sp2-tabs-nav > li.active > a:hover, 
 .sp2-tabs-nav > li.active > a:focus {
-    background: #fff;
-    color: #111827;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
+    color: #ffffff !important;
+    border-color: #4338ca !important;
+    box-shadow: 0 6px 18px rgba(79, 70, 229, 0.3) !important;
 }
+.sp2-tabs-nav > li.active > a i {
+    color: #ffffff !important;
+}
+
 .sp2-tab-content {
-    /* Container for the tab content, removing old borders */
     background: transparent;
     border: none;
     padding: 0;
@@ -1185,10 +1178,9 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
         <div class="row">
             <div class="col-lg-3 col-md-4 col-sm-12" style="padding-top:6px;">
                 <!-- ===== SP2 HERO CARD ===== -->
-                <div class="sp2-hero" style="margin-bottom:14px;">
-                    <div class="sp2-hero-bg"></div>
+                <div class="sp2-hero">
                     <div class="sp2-hero-body">
-                        <div class="sp2-hero-avatar-wrap" style="padding-bottom:20px;">
+                        <div class="sp2-hero-avatar-wrap">
                             <?php if ($sch_setting->student_photo) {
                                 if (!empty($student["image"])) {
                                     $image_url = $this->media_storage->getImageURL($student["image"]);
@@ -1219,8 +1211,9 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                             </div>
                         </div>
                     </div>
+
                     <!-- Action Buttons Row -->
-                    <div style="display:flex; flex-wrap:wrap; gap:8px; padding:12px 0 16px 0; border-top:1px solid rgba(255,255,255,0.15); margin-top:4px; position:relative; z-index:2;">
+                    <div style="display:flex; flex-wrap:wrap; gap:8px; padding-top:16px; border-top:1px solid #f1f5f9; margin-top:16px;">
                         <?php if ($student["is_active"] == "yes") { ?>
                             <?php if ($this->rbac->hasPrivilege('student', 'can_edit')) { ?>
                             <a href="<?php echo base_url() . 'student/edit/' . $student['id'] ?>" class="sp2-btn" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>"><i class="fa fa-pencil"></i> <?php echo $this->lang->line('edit'); ?></a>
@@ -1355,29 +1348,30 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                 <?php } ?>
             </div>
             <div class="col-lg-9 col-md-8 col-sm-12" style="padding-top:6px;">
-                <!-- ===== SP2 TAB NAVIGATION ===== -->
-                <ul class="sp2-tabs-nav nav nav-tabs" style="margin-bottom:0;">
-                    <li class="active"><a href="#activity" data-toggle="tab"><?php echo $this->lang->line('profile'); ?></a></li>
+                <!-- ===== SP2 TAB NAVIGATION WRAPPER ===== -->
+                <div class="sp2-tabs-wrapper">
+                    <ul class="sp2-tabs-nav nav nav-tabs">
+                        <li class="active"><a href="#activity" data-toggle="tab"><i class="fa fa-user"></i> <?php echo $this->lang->line('profile'); ?></a></li>
 
                         <?php
                         if ($this->module_lib->hasActive('fees_collection')) {
                             if ($this->rbac->hasPrivilege('collect_fees', 'can_view')) {
                         ?>
-                                <li class=""><a href="#fee" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('fees'); ?></a></li>
+                                <li class=""><a href="#fee" data-toggle="tab" aria-expanded="true"><i class="fa fa-money"></i> <?php echo $this->lang->line('fees'); ?></a></li>
                         <?php
                             }
                         }
                         ?>
 
                         <?php if ($this->module_lib->hasActive('examination')) { ?>
-                            <li><a href="#exam" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('exam'); ?></a></li>
+                            <li><a href="#exam" data-toggle="tab" aria-expanded="true"><i class="fa fa-pencil-square-o"></i> <?php echo $this->lang->line('exam'); ?></a></li>
                         <?php } ?>
 
                         <!------- CBSE Exam Start-------->
                         <?php
                         if ($this->module_lib->hasModule('cbseexam')) {
                         ?>
-                            <li class=""><a href="#cbseexam" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('cbse_exam'); ?></a></li>
+                            <li class=""><a href="#cbseexam" data-toggle="tab" aria-expanded="true"><i class="fa fa-graduation-cap"></i> <?php echo $this->lang->line('cbse_exam'); ?></a></li>
                         <?php
                         }
                         ?>
@@ -1386,7 +1380,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                         <?php if ($this->module_lib->hasActive('student_attendance')) {
                             if (!$sch_setting->attendence_type) {
                         ?>
-                                <li class=""><a href="#attendance" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('attendance'); ?></a>
+                                <li class=""><a href="#attendance" data-toggle="tab" aria-expanded="true"><i class="fa fa-calendar-check-o"></i> <?php echo $this->lang->line('attendance'); ?></a>
                                 </li>
                         <?php
                             }
@@ -1394,13 +1388,13 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                         ?>
                         <?php if ($sch_setting->upload_documents) {
                         ?>
-                            <li class=""><a href="#documents" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('documents'); ?></a></li>
+                            <li class=""><a href="#documents" data-toggle="tab" aria-expanded="true"><i class="fa fa-folder-open-o"></i> <?php echo $this->lang->line('documents'); ?></a></li>
                         <?php
                         } ?>
 
                         <?php if ($this->rbac->hasPrivilege('student_timeline', 'can_view')) { ?>
 
-                            <li class=""><a href="#timelineh" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('timeline') ?></a></li>
+                            <li class=""><a href="#timelineh" data-toggle="tab" aria-expanded="true"><i class="fa fa-clock-o"></i> <?php echo $this->lang->line('timeline') ?></a></li>
                         <?php } ?>
 
                         <!------- Behaviour Report Start-------->
@@ -1409,7 +1403,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                             if ($this->rbac->hasPrivilege('behaviour_records_assign_incident', 'can_view')) {
 
                         ?>
-                                <li class=""><a href="#incident" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('student_behaviour'); ?></a></li>
+                                <li class=""><a href="#incident" data-toggle="tab" aria-expanded="true"><i class="fa fa-smile-o"></i> <?php echo $this->lang->line('student_behaviour'); ?></a></li>
                         <?php
 
                             }
@@ -1419,13 +1413,14 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
 
                         
                         <?php if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) { ?>
-                            <li class=""><a href="#call_log" data-toggle="tab" aria-expanded="true"><?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Call Log'); ?></a></li>
+                            <li class=""><a href="#call_log" data-toggle="tab" aria-expanded="true"><i class="fa fa-phone"></i> <?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Call Log'); ?></a></li>
                             <?php } ?>
                         <?php if ($this->rbac->hasPrivilege('absentee_followup', 'can_view')) { ?>
-                            <li class=""><a href="#absentee_followup" data-toggle="tab" aria-expanded="true"><?php echo ($this->lang->line('absentee_followup') ? $this->lang->line('absentee_followup') : 'Absentee Follow Up'); ?></a></li>
+                            <li class=""><a href="#absentee_followup" data-toggle="tab" aria-expanded="true"><i class="fa fa-user-times"></i> <?php echo ($this->lang->line('absentee_followup') ? $this->lang->line('absentee_followup') : 'Absentee Follow Up'); ?></a></li>
                         <?php } ?>
-                        <li class=""><a href="#ptm_history_tab" data-toggle="tab" aria-expanded="true"><i class="fa fa-calendar-check-o"></i> PTM History</a></li>
+                        <li class=""><a href="#ptm_history_tab" data-toggle="tab" aria-expanded="true"><i class="fa fa-comments-o"></i> PTM History</a></li>
                     </ul>
+                </div>
 
                     <div class="tab-content">
                         <div class="tab-pane" id="ptm_history_tab">

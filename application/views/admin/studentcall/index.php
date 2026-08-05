@@ -1,42 +1,97 @@
-<div class="content-wrapper" style="min-height: 348px;">
-    <section class="content-header">
-        <h1><i class="fa fa-phone"></i> <?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Student Call Log'); ?></h1>
+<div class="content-wrapper dashboard2-wrapper" style="min-height: 946px;">
+    <section class="content-header" style="padding: 15px 15px 5px 15px;">
+        <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0;"><i class="fa fa-phone" style="color: #0284c7;"></i> <?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Student Call Log'); ?></h1>
     </section>
 
     <style type="text/css">
+        .dashboard2-wrapper {
+            background-color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
         .d2-metric-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
         }
         .d2-metric-box {
-            background: #fff;
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid #eaeaea;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 16px 20px;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
             display: flex;
             align-items: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .d2-metric-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
         }
         .d2-metric-icon {
-            width: 60px;
-            height: 60px;
+            width: 48px;
+            height: 48px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
             margin-right: 16px;
         }
-        .d2-metric-icon.calls { background: #f0f9ff; color: #0ea5e9; }
-        .d2-metric-icon.connected { background: #ecfdf5; color: #10b981; }
-        .d2-metric-icon.not-connected { background: #fff1f2; color: #ef4444; }
-        .d2-metric-icon.pending { background: #fffbeb; color: #f59e0b; }
+        .d2-metric-icon.calls { background: #e0f2fe; color: #0284c7; }
+        .d2-metric-icon.connected { background: #d1fae5; color: #059669; }
+        .d2-metric-icon.not-connected { background: #ffe4e6; color: #e11d48; }
+        .d2-metric-icon.pending { background: #fef3c7; color: #d97706; }
         
         .d2-metric-content { flex: 1; }
-        .d2-metric-label { font-size: 12px; color: #888; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
-        .d2-metric-value { font-size: 26px; font-weight: 800; color: #1f2937; line-height: 1.2; }
+        .d2-metric-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .d2-metric-value { font-size: 24px; font-weight: 800; color: #0f172a; line-height: 1.2; }
+
+        /* Card Box Enhancements */
+        .sc-card {
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.02);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .sc-card-header {
+            background: #ffffff;
+            border-bottom: 1px solid #f1f5f9;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .sc-card-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Quick Filter Chips Styling */
+        .quick-filter-chips {
+            background: #f8fafc;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .chip-filter {
+            border-radius: 20px !important;
+            font-weight: 700 !important;
+            padding: 4px 12px !important;
+            font-size: 11px !important;
+            transition: all 0.2s ease !important;
+        }
 
         @media (max-width: 767px) {
             .mobile-card-table, 

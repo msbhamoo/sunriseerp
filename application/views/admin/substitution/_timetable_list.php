@@ -56,7 +56,7 @@
                                 <option value="">Select Substitute...</option>
                                 <?php foreach ($staff_list as $staff) { 
                                     if ($staff['id'] != $absent_staff_id && $staff['is_active'] == 1) { 
-                                        $selected = (isset($sub_map[$t->id]) && $sub_map[$t->id] == $staff['id']) ? 'selected' : '';
+                                        $selected = (isset($sub_map[$t->id]['substitute_staff_id']) && $sub_map[$t->id]['substitute_staff_id'] == $staff['id']) ? 'selected' : '';
                                 ?>
                                         <option value="<?php echo $staff['id']; ?>" <?php echo $selected; ?>><?php echo $staff['name'] . " " . $staff['surname'] . " (" . $staff['employee_id'] . ")"; ?></option>
                                 <?php } 

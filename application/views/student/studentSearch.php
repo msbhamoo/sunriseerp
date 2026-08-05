@@ -1,32 +1,183 @@
 <?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
-<div class="content-wrapper">
-    <section class="content-header">
+<style type="text/css">
+    .dashboard2-wrapper { 
+        background-color: #f8fafc; 
+        font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+    }
+    .sl-card { 
+        background: #ffffff; 
+        border-radius: 14px; 
+        padding: 20px 24px; 
+        margin-bottom: 20px; 
+        box-shadow: 0 4px 18px rgba(0,0,0,0.02); 
+        border: 1px solid #f1f5f9; 
+    }
+    .sl-header-card {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 20px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        border: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .sl-header-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .sl-header-title i {
+        color: #4f46e5;
+        font-size: 22px;
+    }
 
-    </section>
-    <!-- Main content -->
+    .sl-title { 
+        font-size: 15px; 
+        font-weight: 800; 
+        color: #0f172a; 
+        margin-bottom: 16px; 
+        border-bottom: 1px solid #f1f5f9; 
+        padding-bottom: 12px; 
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .sl-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .sl-metric-box {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 16px 20px;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    .sl-metric-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+    .sl-metric-icon.indigo { background: #e0e7ff; color: #4338ca; }
+    .sl-metric-icon.emerald { background: #d1fae5; color: #047857; }
+    .sl-metric-icon.blue { background: #e0f2fe; color: #0284c7; }
+
+    .sl-metric-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sl-metric-val { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.2; }
+
+    .btn-sleek { 
+        border-radius: 8px; 
+        box-shadow: none; 
+        border: none; 
+        padding: 8px 18px; 
+        font-weight: 700; 
+        background: #4f46e5;
+        color: #fff;
+        transition: all 0.2s ease;
+    }
+    .btn-sleek:hover {
+        background: #4338ca;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+
+    .table>thead>tr>th { 
+        border-bottom: 2px solid #f1f5f9; 
+        color: #64748b; 
+        font-size: 11px; 
+        font-weight: 700;
+        text-transform: uppercase; 
+        letter-spacing: 0.5px;
+        background: #f8fafc;
+        padding: 12px;
+    }
+    .table>tbody>tr>td { 
+        vertical-align: middle; 
+        border-top: 1px solid #f1f5f9; 
+        font-size: 13px;
+        color: #334155;
+        padding: 12px;
+    }
+
+    /* Detail View Card Styling */
+    .slide-row {
+        background: #ffffff;
+        border: 1px solid #f1f5f9;
+        border-radius: 14px;
+        margin-bottom: 16px;
+        padding: 16px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        display: flex;
+        gap: 16px;
+        align-items: center;
+    }
+    .slide-row .width150 {
+        border-radius: 12px;
+        border: 2px solid #e2e8f0;
+    }
+    .slide-content h4 a {
+        font-weight: 800;
+        color: #0f172a;
+    }
+</style>
+
+<div class="content-wrapper dashboard2-wrapper" style="min-height: 946px;">
     <section class="content">
+        <!-- Header Card -->
+        <div class="sl-header-card">
+            <div>
+                <div class="sl-header-title">
+                    <i class="fa fa-user-circle"></i> <?php echo $this->lang->line('student_information'); ?>
+                </div>
+                <small style="color: #64748b; font-weight: 500;"><?php echo $this->lang->line('student_details'); ?></small>
+            </div>
+            <div>
+                <?php if ($this->rbac->hasPrivilege('student', 'can_add')) { ?>
+                    <a href="<?php echo base_url(); ?>student/create" class="btn btn-sm btn-primary" style="border-radius: 8px; font-weight: 700;"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add_student'); ?></a>
+                <?php } ?>
+            </div>
+        </div>
+
+        <!-- Main content -->
         <div class="row">
             <div class="col-md-12">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title"><i class="fa fa-search"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
-                    </div>
-                    <div class="box-body">
+                <div class="sl-card">
+                    <div class="sl-title"><i class="fa fa-search" style="color:#4f46e5;"></i> <?php echo $this->lang->line('select_criteria'); ?></div>
+                    <div class="box-body" style="padding:0;">
 
-                        <?php if ($this->session->flashdata('msg')) { ?> <div class="alert alert-success"> <?php echo $this->session->flashdata('msg');
-                                                                                                            $this->session->unset_userdata('msg'); ?> </div> <?php } ?>
+                        <?php if ($this->session->flashdata('msg')) { ?> 
+                            <div class="alert alert-success" style="border-radius: 8px;"> 
+                                <?php echo $this->session->flashdata('msg'); $this->session->unset_userdata('msg'); ?> 
+                            </div> 
+                        <?php } ?>
+                        
                         <div class="row">
-                            
                             <form role="form" action="<?php echo site_url('student/searchvalidation') ?>" method="post" class="class_search_form">
                                 <div class="col-md-6">
                                     <div class="row">
                                         <?php echo $this->customlib->getCSRF(); ?>
                                         <div class="col-sm-6">
                                             <div class="form-group">
-                                                <label><?php echo $this->lang->line('class'); ?></label> <small class="req"> *</small>
-                                                <select autofocus="" id="class_id" name="class_id" class="form-control">
+                                                <label style="font-weight: 700; color: #475569;"><?php echo $this->lang->line('class'); ?> <small class="req">*</small></label>
+                                                <select autofocus="" id="class_id" name="class_id" class="form-control" style="border-radius: 8px;">
                                                     <option value=""><?php echo $this->lang->line('select'); ?></option>
                                                     <?php
                                                     $count = 0;
@@ -36,7 +187,6 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                             <?php if (set_value('class_id') == $class['id']) {
                                                                 echo "selected=selected";
                                                             }
-
                                                             ?>><?php echo $class['class'] ?></option>
                                                     <?php
                                                         $count++;
@@ -48,8 +198,8 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                         </div>
                                         <div class="col-sm-6">
                                             <div class="form-group">
-                                                <label><?php echo $this->lang->line('section'); ?></label>
-                                                <select id="section_id" name="section_id" class="form-control">
+                                                <label style="font-weight: 700; color: #475569;"><?php echo $this->lang->line('section'); ?></label>
+                                                <select id="section_id" name="section_id" class="form-control" style="border-radius: 8px;">
                                                     <option value=""><?php echo $this->lang->line('select'); ?></option>
                                                 </select>
                                                 <span class="text-danger"><?php echo form_error('section_id'); ?></span>
@@ -57,7 +207,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                         </div>
                                         <div class="col-sm-12">
                                             <div class="form-group">
-                                                <button type="submit" name="search" value="search_filter" class="btn btn-primary btn-sm pull-right checkbox-toggle"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                                                <button type="submit" name="search" value="search_filter" class="btn btn-primary btn-sleek pull-right"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
                                             </div>
                                         </div>
                                     </div>
@@ -67,29 +217,44 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                     <div class="row">
                                         <div class="col-sm-12">
                                             <div class="form-group">
-                                                <label><?php echo $this->lang->line('search_by_keyword'); ?></label>
-                                                <input type="text" name="search_text" id="search_text" class="form-control" value="<?php echo set_value('search_text'); ?>" placeholder="<?php echo $this->lang->line('search_by_student_name'); ?>">
+                                                <label style="font-weight: 700; color: #475569;"><?php echo $this->lang->line('search_by_keyword'); ?></label>
+                                                <input type="text" name="search_text" id="search_text" class="form-control" value="<?php echo set_value('search_text'); ?>" placeholder="<?php echo $this->lang->line('search_by_student_name'); ?>" style="border-radius: 8px;">
                                             </div>
                                         </div>
                                         <div class="col-sm-12">
                                             <div class="form-group">
-                                                <button type="submit" name="search" value="search_full" class="btn btn-primary pull-right btn-sm checkbox-toggle"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                                                <button type="submit" name="search" value="search_full" class="btn btn-primary btn-sleek pull-right"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
                                             </div>
                                         </div>
                                     </div>
                                 </div><!--./col-md-6-->
                             </form>
-                            
                         </div><!--./row-->
                     </div>
+                </div>
 
-                    <div class="nav-tabs-custom border0 navnoshadow">
-                        <div class="box-header ptbnull"></div>
-                        <ul class="nav nav-tabs">
-                            <li class="active"><a href="#tab_1" data-toggle="tab" aria-expanded="true"><i class="fa fa-list"></i> <?php echo $this->lang->line('list_view'); ?></a></li>
-                            <li class=""><a href="#tab_2" data-toggle="tab" aria-expanded="false"><i class="fa fa-newspaper-o"></i> <?php echo $this->lang->line('details_view'); ?></a></li>
+                <?php if (!empty($resultlist)) { ?>
+                    <!-- Summary Metrics Overview -->
+                    <div class="sl-metrics-grid">
+                        <div class="sl-metric-box">
+                            <div class="sl-metric-icon indigo">
+                                <i class="fa fa-users"></i>
+                            </div>
+                            <div>
+                                <div class="sl-metric-label">Total Students Found</div>
+                                <div class="sl-metric-val"><?php echo count($resultlist); ?></div>
+                            </div>
+                        </div>
+                    </div>
+                <?php } ?>
+
+                <div class="sl-card">
+                    <div class="nav-tabs-custom border0 navnoshadow" style="margin-bottom:0;">
+                        <ul class="nav nav-tabs" style="border-bottom: 1px solid #f1f5f9;">
+                            <li class="active"><a href="#tab_1" data-toggle="tab" aria-expanded="true" style="font-weight: 700;"><i class="fa fa-list"></i> <?php echo $this->lang->line('list_view'); ?></a></li>
+                            <li class=""><a href="#tab_2" data-toggle="tab" aria-expanded="false" style="font-weight: 700;"><i class="fa fa-newspaper-o"></i> <?php echo $this->lang->line('details_view'); ?></a></li>
                         </ul>
-                        <div class="tab-content">
+                        <div class="tab-content" style="padding-top: 16px;">
                             <div class="tab-pane active table-responsive no-padding overflow-scroll-lg" id="tab_1">
                                 <table class="table table-striped table-bordered table-hover student-list" id="student-list" data-export-title="<?php echo $this->lang->line('student_list'); ?>">
                                     <thead>
@@ -128,7 +293,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                             <div class="tab-pane detail_view_tab" id="tab_2">
                                 <?php if (empty($resultlist)) {
                                 ?>
-                                    <div class="alert alert-info"><?php echo $this->lang->line('no_record_found'); ?></div>
+                                    <div class="alert alert-info" style="border-radius: 8px;"><?php echo $this->lang->line('no_record_found'); ?></div>
                                     <?php
                                 } else {
                                     $count = 1;
@@ -159,9 +324,9 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                     <div class="row">
                                                         <div class="col-xs-6 col-md-6">
                                                             <address>
-                                                                <strong><b><?php echo $this->lang->line('class'); ?>: </b><?php echo $student['class'] . "(" . $student['section'] . ")" ?></strong><br>
+                                                                <strong><b><?php echo $this->lang->line('class'); ?>: </b><span class="label label-info" style="border-radius: 4px;"><?php echo $student['class'] . "(" . $student['section'] . ")" ?></span></strong><br>
                                                                 <b><?php echo $this->lang->line('admission_no'); ?>: </b><?php echo $student['admission_no'] ?><br />
-                                                                <b><?php echo $this->lang->line('date_of_birth'); ?>:
+                                                                <b><?php echo $this->lang->line('date_of_birth'); ?>: </b>
                                                                     <?php if ($student["dob"] != null && $student["dob"] != '0000-00-00') {
                                                                         echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob']));
                                                                     } ?><br>
@@ -181,20 +346,20 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                 </div>
                                                 <div class="slide-footer">
                                                     <span class="pull-right buttons">
-                                                        <a href="<?php echo base_url(); ?>student/view/<?php echo $student['id'] ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('view'); ?>">
+                                                        <a href="<?php echo base_url(); ?>student/view/<?php echo $student['id'] ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('view'); ?>" style="border-radius: 6px;">
                                                             <i class="fa fa-reorder"></i>
                                                         </a>
                                                         <?php
                                                         if ($this->rbac->hasPrivilege('student', 'can_edit')) {
                                                         ?>
-                                                            <a href="<?php echo base_url(); ?>student/edit/<?php echo $student['id'] ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>">
+                                                            <a href="<?php echo base_url(); ?>student/edit/<?php echo $student['id'] ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>" style="border-radius: 6px;">
                                                                 <i class="fa fa-pencil"></i>
                                                             </a>
                                                         <?php
                                                         }
                                                         if ($this->module_lib->hasActive('fees_collection') && $this->rbac->hasPrivilege('collect_fees', 'can_add')) {
                                                         ?>
-                                                            <a href="<?php echo base_url(); ?>studentfee/addfee/<?php echo $student['id'] ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="" data-original-title="<?php echo $this->lang->line('add_fees'); ?>">
+                                                            <a href="<?php echo base_url(); ?>studentfee/addfee/<?php echo $student['id'] ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="" data-original-title="<?php echo $this->lang->line('add_fees'); ?>" style="border-radius: 6px;">
                                                                 <?php echo $currency_symbol; ?>
                                                             </a>
                                                         <?php } ?>

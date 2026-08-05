@@ -15,14 +15,65 @@ class Substitution_model extends MY_Model
 
     public function get_approved_leave($staff_id, $date)
     {
-        $this->db->select('*');
+        $this->db->select('staff_leave_request.*, leave_types.type as leave_type');
         $this->db->from('staff_leave_request');
+        $this->db->join('leave_types', 'leave_types.id = staff_leave_request.leave_type_id', 'left');
         $this->db->where('staff_id', $staff_id);
-        $this->db->where('status', 'approve');
+        $this->db->where_in('staff_leave_request.status', ['approve', 'approved', 'pending']);
         $this->db->where("date(leave_from) <= ", $date);
         $this->db->where("date(leave_to) >= ", $date);
         $query = $this->db->get();
         return $query->row_array();
+    }
+
+    public function get_absent_staff_by_date($date)
+    {
+        $session_id = $this->current_session;
+
+        // 1. Staff with leave requests (approved or pending) covering $date
+        $sql_leave = "SELECT staff.id, staff.name, staff.surname, staff.employee_id, 1 as is_leave, staff_leave_request.status as leave_status, staff_leave_request.leave_type_id, leave_types.type as leave_type
+                      FROM staff_leave_request
+                      INNER JOIN staff ON staff.id = staff_leave_request.staff_id
+                      LEFT JOIN leave_types ON leave_types.id = staff_leave_request.leave_type_id
+                      WHERE staff_leave_request.status IN ('approve', 'approved', 'pending')
+                      AND DATE(staff_leave_request.leave_from) <= " . $this->db->escape($date) . "
+                      AND DATE(staff_leave_request.leave_to) >= " . $this->db->escape($date);
+        $leave_staff = $this->db->query($sql_leave)->result_array();
+
+        $absent_ids = [];
+        foreach ($leave_staff as $ls) {
+            $absent_ids[] = $ls['id'];
+        }
+
+        // 2. Staff marked absent / on leave in staff_attendance table for $date
+        $sql_att = "SELECT staff.id, staff.name, staff.surname, staff.employee_id, 0 as is_leave, staff_attendance.staff_attendance_type_id, staff_attendance_type.type as leave_type
+                    FROM staff_attendance
+                    INNER JOIN staff ON staff.id = staff_attendance.staff_id
+                    LEFT JOIN staff_attendance_type ON staff_attendance_type.id = staff_attendance.staff_attendance_type_id
+                    WHERE staff_attendance.date = " . $this->db->escape($date) . "
+                    AND staff_attendance.staff_attendance_type_id IN (3, 4, 5)"; // 3=Absent, 4=On Leave, 5=Half Day
+        $att_staff = $this->db->query($sql_att)->result_array();
+
+        foreach ($att_staff as $as) {
+            if (!in_array($as['id'], $absent_ids)) {
+                $leave_staff[] = $as;
+                $absent_ids[] = $as['id'];
+            }
+        }
+
+        // 3. Get remaining active staff
+        $this->db->select('id, name, surname, employee_id');
+        $this->db->from('staff');
+        $this->db->where('is_active', 1);
+        if (!empty($absent_ids)) {
+            $this->db->where_not_in('id', $absent_ids);
+        }
+        $other_staff = $this->db->get()->result_array();
+
+        return [
+            'absent_staff' => $leave_staff,
+            'other_staff'  => $other_staff
+        ];
     }
 
     public function insert_substitutions($data)

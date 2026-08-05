@@ -45,6 +45,14 @@ class Substitution extends Admin_Controller
         }
     }
 
+    public function get_absent_staff()
+    {
+        $date = $this->input->post('date');
+        $formatted_date = date('Y-m-d', $this->customlib->datetostrtotime($date));
+        $res = $this->substitution_model->get_absent_staff_by_date($formatted_date);
+        echo json_encode($res);
+    }
+
     public function get_staff_timetable()
     {
         ob_start();

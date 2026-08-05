@@ -60,11 +60,71 @@
 <script type="text/javascript">
     $(document).ready(function() {
         var base_url = '<?php echo base_url(); ?>';
+        var date_format = '<?php echo strtr($this->customlib->getSchoolDateFormat(), ['d' => 'dd', 'm' => 'mm', 'Y' => 'yyyy', 'M' => 'M']); ?>';
 
         $('.date').datepicker({
-            format: "<?php echo $this->customlib->getSchoolDateFormat(); ?>",
+            format: date_format,
             autoclose: true,
             todayHighlight: true
+        }).on('changeDate', function() {
+            loadAbsentStaffList();
+        });
+
+        function loadAbsentStaffList() {
+            var date = $('#date').val();
+            if(!date) return;
+
+            $.ajax({
+                type: "POST",
+                url: base_url + "admin/substitution/get_absent_staff",
+                data: {'date': date},
+                dataType: "json",
+                success: function(data) {
+                    var current_selected = $('#staff_id').val();
+                    var html = '<option value=""><?php echo $this->lang->line('select'); ?></option>';
+                    if(data.absent_staff && data.absent_staff.length > 0) {
+                        html += '<optgroup label="Absent / On Leave Staff (' + data.absent_staff.length + ')">';
+                        $.each(data.absent_staff, function(idx, staff) {
+                            var status_text = staff.leave_status === 'pending' ? ' (Pending Leave)' : (staff.is_leave ? ' (' + (staff.leave_type ? staff.leave_type : 'Leave') + ')' : ' (Unplanned Absence)');
+                            html += '<option value="' + staff.id + '">⚠️ ' + staff.name + ' ' + staff.surname + ' (' + staff.employee_id + ')' + status_text + '</option>';
+                        });
+                        html += '</optgroup>';
+                    }
+                    if(data.other_staff && data.other_staff.length > 0) {
+                        html += '<optgroup label="Other Active Staff">';
+                        $.each(data.other_staff, function(idx, staff) {
+                            html += '<option value="' + staff.id + '">' + staff.name + ' ' + staff.surname + ' (' + staff.employee_id + ')</option>';
+                        });
+                        html += '</optgroup>';
+                    }
+                    $('#staff_id').html(html);
+
+                    if(current_selected && $('#staff_id option[value="' + current_selected + '"]').length > 0) {
+                        $('#staff_id').val(current_selected);
+                    } else if(data.absent_staff && data.absent_staff.length > 0) {
+                        $('#staff_id').val(data.absent_staff[0].id);
+                    }
+                    
+                    if($('#staff_id').val() != '') {
+                        $('#search_btn').trigger('click');
+                    } else {
+                        $('#timetable_container').html('');
+                        $('#leave_status_container').hide();
+                    }
+                }
+            });
+        }
+
+        // Auto load absent staff on page load
+        loadAbsentStaffList();
+
+        $('#staff_id').on('change', function() {
+            if($(this).val() != '') {
+                $('#search_btn').trigger('click');
+            } else {
+                $('#timetable_container').html('');
+                $('#leave_status_container').hide();
+            }
         });
 
         $('#search_btn').on('click', function() {
@@ -85,9 +145,13 @@
                 success: function(data) {
                     $('#leave_status_container').show();
                     if(data.status == 1) {
-                        $('#leave_status_heading').html('<span class="label label-success"><i class="fa fa-check"></i> ' + data.msg + '</span>');
+                        var leave_type_name = data.leave.leave_type ? data.leave.leave_type : 'Leave';
+                        var is_pending = data.leave.status === 'pending';
+                        var badge_class = is_pending ? 'label-warning' : 'label-success';
+                        var status_label = is_pending ? 'Pending Leave Approval' : 'Approved Leave';
+                        $('#leave_status_heading').html('<span class="label ' + badge_class + '"><i class="fa fa-clock-o"></i> ' + leave_type_name + ' (' + status_label + ')</span>');
                     } else {
-                        $('#leave_status_heading').html('<span class="label label-danger"><i class="fa fa-warning"></i> ' + data.msg + '</span>');
+                        $('#leave_status_heading').html('<span class="label label-danger"><i class="fa fa-warning"></i> Unplanned Absence</span>');
                     }
                 }
             });
