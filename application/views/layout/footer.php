@@ -418,21 +418,26 @@ pdfMake.fonts = jsonData;
             var savedMenuState = localStorage.getItem('openSidebarMenuIndex');
             var $activeMenu = $('.sidebar-menu > li.active');
             
-            if (savedMenuState === "closed") {
-                // User explicitly closed it, do nothing
-            } else if (savedMenuState !== null) {
-                // Open the previously opened menu
-                var $savedMenu = $('.sidebar-menu > li.treeview').eq(savedMenuState);
-                if ($savedMenu.length) {
-                    $savedMenu.find('.treeview-menu').addClass('is-open');
+            if ($(window).width() <= 767) {
+                // MOBILE VIEW: Always start closed by default
+                $('body').removeClass('sidebar-open sidebar-collapse submenu-is-open');
+                $('.sidebar-menu > li .treeview-menu').removeClass('is-open');
+            } else {
+                // DESKTOP VIEW: Restore desktop open menu state
+                if (savedMenuState === "closed") {
+                    // User explicitly closed it, do nothing
+                } else if (savedMenuState !== null) {
+                    var $savedMenu = $('.sidebar-menu > li.treeview').eq(savedMenuState);
+                    if ($savedMenu.length) {
+                        $savedMenu.find('.treeview-menu').addClass('is-open');
+                        $('body').addClass('submenu-is-open');
+                    }
+                } else if ($activeMenu.length) {
+                    var $activeSubmenu = $activeMenu.find('.treeview-menu');
+                    $activeSubmenu.addClass('is-open');
                     $('body').addClass('submenu-is-open');
+                    localStorage.setItem('openSidebarMenuIndex', $('.sidebar-menu > li.treeview').index($activeMenu));
                 }
-            } else if ($activeMenu.length) {
-                // Default: open the active menu on first load
-                var $activeSubmenu = $activeMenu.find('.treeview-menu');
-                $activeSubmenu.addClass('is-open');
-                $('body').addClass('submenu-is-open');
-                localStorage.setItem('openSidebarMenuIndex', $('.sidebar-menu > li.treeview').index($activeMenu));
             }
 
             // Toggle submenu on click for the permanent dual-column design
@@ -443,21 +448,22 @@ pdfMake.fonts = jsonData;
                 var $parentLi = $(this).parent();
                 var $submenu = $parentLi.find('.treeview-menu');
                 
-                // If it is already open, do nothing (or close? The user said "only get hidden when clicked on cross")
-                // We will leave it open if they click it again, they must use the cross to close it.
                 if ($submenu.hasClass('is-open')) {
                     return;
                 }
 
-                // Close all other open submenus first
                 $('.sidebar-menu > li .treeview-menu').removeClass('is-open');
-                
-                // Mark as open and push body
                 $submenu.addClass('is-open');
                 $('body').addClass('submenu-is-open');
-                
-                // Save state
                 localStorage.setItem('openSidebarMenuIndex', $('.sidebar-menu > li.treeview').index($parentLi));
+            });
+
+            // Auto-hide mobile drawer when tapping any submenu item link to navigate
+            $(document).on('click', '.treeview-menu a', function() {
+                if ($(window).width() <= 767) {
+                    $('body').removeClass('sidebar-open submenu-is-open');
+                    $('.sidebar-menu > li .treeview-menu').removeClass('is-open');
+                }
             });
 
             // Close button click (The cross)
@@ -472,30 +478,38 @@ pdfMake.fonts = jsonData;
             // Restore desktop sidebar collapse state from localStorage
             if (localStorage.getItem('sidebar_collapsed') === '1' && $(window).width() >= 768) {
                 $('body').addClass('sidebar-collapse');
-                // When starting in collapsed mode, ensure flyout is closed
                 $('.sidebar-menu > li .treeview-menu').removeClass('is-open');
                 $('body').removeClass('submenu-is-open');
                 localStorage.setItem('openSidebarMenuIndex', 'closed');
             }
 
             // Sidebar toggle click handler (Desktop & Mobile)
-            $(document).on('click', '.sidebar-toggle', function(e) {
+            $(document).on('click touchstart', '.sidebar-toggle', function(e) {
                 e.preventDefault();
-                // Close flyout submenu when toggling sidebar
+                e.stopPropagation();
                 $('.sidebar-menu > li .treeview-menu').removeClass('is-open');
                 $('body').removeClass('submenu-is-open');
                 localStorage.setItem('openSidebarMenuIndex', 'closed');
 
-                if ($(window).width() >= 768) {
+                if (window.innerWidth < 768) {
+                    $('body').toggleClass('sidebar-open');
+                } else {
                     $('body').toggleClass('sidebar-collapse');
                     var isCollapsed = $('body').hasClass('sidebar-collapse');
                     localStorage.setItem('sidebar_collapsed', isCollapsed ? '1' : '0');
                 }
             });
 
-            // Close flyout menu when clicking outside on content wrapper
-            $(document).on('click', '.content-wrapper, .main-header .navbar', function() {
-                if ($('.sidebar-menu > li .treeview-menu.is-open').length) {
+            // Close flyout menu & mobile drawer when clicking/tapping outside on content wrapper
+            $(document).on('click touchstart', '.content-wrapper, .main-footer', function(e) {
+                if ($(e.target).closest('.main-sidebar, .sidebar-toggle').length > 0) {
+                    return;
+                }
+
+                if (window.innerWidth < 768 && $('body').hasClass('sidebar-open')) {
+                    $('body').removeClass('sidebar-open submenu-is-open');
+                    $('.sidebar-menu > li .treeview-menu').removeClass('is-open');
+                } else if ($('.sidebar-menu > li .treeview-menu.is-open').length) {
                     $('.sidebar-menu > li .treeview-menu').removeClass('is-open');
                     $('body').removeClass('submenu-is-open');
                     localStorage.setItem('openSidebarMenuIndex', 'closed');

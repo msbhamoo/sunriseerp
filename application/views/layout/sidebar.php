@@ -190,25 +190,27 @@ foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
    MODERN HORIZONTAL SIDEBAR (ICON & NAME IN SAME ROW)
    ========================================================= */
 
-/* Primary Sidebar Container */
-.main-sidebar {
-    position: fixed !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    height: 100vh !important;
-    width: 240px !important;
-    padding-top: 65px !important;
-    border-right: 1px solid #e2e8f0 !important;
-    background-color: #ffffff !important;
-    box-shadow: 2px 0 12px rgba(15, 23, 42, 0.03) !important;
-    z-index: 810 !important;
-}
+/* Primary Sidebar Container (Desktop Layout) */
+@media (min-width: 768px) {
+    .main-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        height: 100vh !important;
+        width: 240px !important;
+        padding-top: 65px !important;
+        border-right: 1px solid #e2e8f0 !important;
+        background-color: #ffffff !important;
+        box-shadow: 2px 0 12px rgba(15, 23, 42, 0.03) !important;
+        z-index: 810 !important;
+    }
 
-.sidebar {
-    height: calc(100vh - 65px) !important;
-    overflow-y: auto !important;
-    padding-bottom: 55px !important;
+    .sidebar {
+        height: calc(100vh - 65px) !important;
+        overflow-y: auto !important;
+        padding-bottom: 55px !important;
+    }
 }
 
 /* Elegant Scrollbars */
@@ -541,22 +543,24 @@ div.slimScrollRail {
     color: #ef4444 !important;
 }
 
-/* Bottom Sidebar Collapse Footer Bar (Statically Pinned to Bottom of Sidebar) */
-.sidebar-collapse-footer {
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    width: 240px !important;
-    height: 46px !important;
-    background: #ffffff !important;
-    border-top: 1px solid #f1f5f9 !important;
-    border-right: 1px solid #e2e8f0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    padding: 0 14px !important;
-    z-index: 1050 !important;
-    transition: width 0.3s ease-in-out !important;
+/* Desktop Bottom Sidebar Collapse Footer Bar */
+@media (min-width: 768px) {
+    .sidebar-collapse-footer {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 240px !important;
+        height: 46px !important;
+        background: #ffffff !important;
+        border-top: 1px solid #f1f5f9 !important;
+        border-right: 1px solid #e2e8f0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        padding: 0 14px !important;
+        z-index: 1050 !important;
+        transition: width 0.3s ease-in-out !important;
+    }
 }
 
 .sidebar-bottom-toggle {
@@ -594,15 +598,45 @@ body.sidebar-collapse .sidebar-bottom-toggle .collapse-icon {
     transform: rotate(180deg) !important;
 }
 
-body.sidebar-collapse .sidebar-collapse-footer {
-    width: 70px !important;
-    justify-content: center !important;
-    padding: 0 !important;
+@media (min-width: 768px) {
+    body.sidebar-collapse .sidebar-collapse-footer {
+        width: 70px !important;
+        justify-content: center !important;
+        padding: 0 !important;
+    }
 }
 
 body.sidebar-collapse .sidebar-bottom-toggle {
     margin-left: auto !important;
     margin-right: auto !important;
+}
+
+/* Mobile Layout Overrides (Strictly Hides Drawer Off-Screen) */
+@media (max-width: 767px) {
+    .sidebar-collapse-footer {
+        display: none !important;
+    }
+
+    .main-sidebar,
+    body.sidebar-collapse .main-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        left: -280px !important;
+        width: 280px !important;
+        height: 100vh !important;
+        padding-top: 50px !important;
+        background-color: #ffffff !important;
+        z-index: 99999 !important;
+        transition: left 0.3s ease-in-out !important;
+        box-shadow: none !important;
+    }
+
+    body.sidebar-open .main-sidebar,
+    body.sidebar-open.sidebar-collapse .main-sidebar {
+        left: 0 !important;
+        box-shadow: 4px 0 25px rgba(0, 0, 0, 0.25) !important;
+    }
 }
 
 /* Collapsed Mode Search Icon Button */
