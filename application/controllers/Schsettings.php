@@ -1596,53 +1596,92 @@ class Schsettings extends Admin_Controller
             }
         }
 
+        $upload_errors = array();
+
         // Handle File Uploads
         if (!empty($_FILES)) {
-            $upload_path = './uploads/cbse_disclosure/';
-            if (!is_dir($upload_path)) {
-                mkdir($upload_path, 0777, true);
+            $upload_path_relative = 'uploads/cbse_disclosure/';
+            $upload_dir = $this->customlib->getFolderPath() . $upload_path_relative;
+            if (!is_dir($upload_dir)) {
+                @mkdir($upload_dir, 0777, true);
             }
 
             // Explicit filename mapping as per CBSE disclosure naming standard
             $filename_map = array(
-                'doc_affiliation'       => 'AffiliationExtension',
-                'doc_trust_registration'=> 'registration',
-                'doc_noc'               => 'NOC',
-                'doc_rte'               => 'RTE',
-                'doc_building_safety'   => 'BuildingSafety',
-                'doc_fire_safety'       => 'fire',
-                'doc_deo_letter'        => 'DEOletter',
-                'doc_water_sanitation'  => 'drinkingwater',
-                'doc_fee_structure'     => 'fee',
-                'doc_academic_calendar' => 'calender',
-                'doc_smc_list'          => 'SMC',
-                'doc_pta_members'       => 'PTA',
-                'doc_board_results_file'=> 'result',
+                'doc_affiliation'        => 'AffiliationExtension',
+                'doc_society'            => 'registration',
+                'doc_trust_registration' => 'registration',
+                'doc_noc'                => 'NOC',
+                'doc_recognition'        => 'RTE',
+                'doc_rte'                => 'RTE',
+                'doc_building'           => 'BuildingSafety',
+                'doc_building_safety'    => 'BuildingSafety',
+                'doc_fire'               => 'fire',
+                'doc_fire_safety'        => 'fire',
+                'doc_deo'                => 'DEOletter',
+                'doc_deo_letter'         => 'DEOletter',
+                'doc_water'              => 'drinkingwater',
+                'doc_water_sanitation'   => 'drinkingwater',
+                'doc_fee_structure'      => 'fee',
+                'doc_academic_calendar'  => 'calender',
+                'doc_smc'                => 'SMC',
+                'doc_smc_list'           => 'SMC',
+                'doc_pta'                => 'PTA',
+                'doc_pta_members'        => 'PTA',
+                'doc_three_year_result'  => 'result',
+                'doc_board_results_file' => 'result',
             );
 
-            $this->load->library('upload');
+            $allowed_extensions = array('pdf', 'jpg', 'jpeg', 'png');
 
             foreach ($_FILES as $field_key => $file_info) {
                 if (!empty($file_info['name'])) {
-                    $ext = pathinfo($file_info['name'], PATHINFO_EXTENSION);
+                    if (isset($file_info['error']) && $file_info['error'] !== UPLOAD_ERR_OK) {
+                        if ($file_info['error'] === UPLOAD_ERR_INI_SIZE || $file_info['error'] === UPLOAD_ERR_FORM_SIZE) {
+                            $upload_errors[] = $field_key . ': File exceeds the server upload size limit (upload_max_filesize / post_max_size).';
+                        } elseif ($file_info['error'] !== UPLOAD_ERR_NO_FILE) {
+                            $upload_errors[] = $field_key . ': Upload failed (Error code: ' . $file_info['error'] . ')';
+                        }
+                        continue;
+                    }
+
+                    $ext = strtolower(pathinfo($file_info['name'], PATHINFO_EXTENSION));
+                    if (!in_array($ext, $allowed_extensions)) {
+                        $upload_errors[] = $field_key . ': Invalid file format (.' . $ext . '). Only PDF, JPG, JPEG, and PNG files are allowed.';
+                        continue;
+                    }
+
+                    if (isset($file_info['size']) && $file_info['size'] > 100 * 1024 * 1024) { // 100MB limit
+                        $upload_errors[] = $field_key . ': File size exceeds 100MB limit.';
+                        continue;
+                    }
+
                     $clean_name = isset($filename_map[$field_key]) ? $filename_map[$field_key] : $field_key;
+                    $target_filename = $clean_name . '.' . $ext;
+                    $target_file_path = $upload_dir . $target_filename;
 
-                    $config['upload_path']   = $upload_path;
-                    $config['allowed_types'] = 'pdf|jpg|jpeg|png';
-                    $config['max_size']      = 10240; // 10MB
-                    $config['file_name']     = $clean_name . '.' . $ext;
-                    $config['overwrite']     = TRUE;
-
-                    $this->upload->initialize($config);
-                    if ($this->upload->do_upload($field_key)) {
-                        $upload_data = $this->upload->data();
-                        $file_path   = 'uploads/cbse_disclosure/' . $upload_data['file_name'];
-                        
+                    if (move_uploaded_file($file_info['tmp_name'], $target_file_path)) {
+                        $saved_rel_path = $upload_path_relative . $target_filename;
                         $field_val = isset($fields[$field_key]) ? $fields[$field_key] : '';
-                        $this->cbse_disclosure_model->save_field($section, $field_key, $field_val, $file_path);
+                        $this->cbse_disclosure_model->save_field($section, $field_key, $field_val, $saved_rel_path);
+                    } else {
+                        // Fallback using media_storage library
+                        $img_name = $this->media_storage->fileupload($field_key, "./uploads/cbse_disclosure/");
+                        if (!empty($img_name)) {
+                            $saved_rel_path = 'uploads/cbse_disclosure/' . $img_name;
+                            $field_val = isset($fields[$field_key]) ? $fields[$field_key] : '';
+                            $this->cbse_disclosure_model->save_field($section, $field_key, $field_val, $saved_rel_path);
+                        } else {
+                            $upload_errors[] = $field_key . ': Failed to save file. Check directory permissions for ' . $upload_path_relative;
+                        }
                     }
                 }
             }
+        }
+
+        if (!empty($upload_errors)) {
+            echo json_encode(array('status' => 'fail', 'message' => implode('<br>', $upload_errors)));
+            return;
         }
 
         echo json_encode(array('status' => 'success', 'message' => 'CBSE Mandatory Disclosure updated successfully!'));

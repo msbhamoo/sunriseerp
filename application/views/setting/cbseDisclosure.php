@@ -317,8 +317,10 @@ $(document).ready(function() {
             success: function(data) {
                 submitBtn.prop('disabled', false).html('<i class="fa fa-save"></i> Save Section');
                 if (data.status === 'success') {
-                    errorMsg = false;
                     successMsg(data.message);
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
                 } else {
                     errorMsg(data.message);
                 }

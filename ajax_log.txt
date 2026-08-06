@@ -1,4 +1,4 @@
-Staff: 37, Day: Wednesday
+Staff: 5, Day: Thursday
 Page:
     <form id="substitution_form">
         <table class="table table-striped table-bordered">
@@ -14,33 +14,34 @@ Page:
             <tbody>
                                     <tr>
                         <td>
-                            <select name="substitute_subjects[8263]" class="form-control" style="width: 100%;">
-                                                                        <option value="1" selected>ENGLISH (ENGLISH)</option>
+                            <select name="substitute_subjects[9989]" class="form-control" style="width: 100%;">
+                                                                        <option value="1" >ENGLISH (ENGLISH)</option>
                                                                         <option value="2" >HINDI (HINDI)</option>
                                                                         <option value="3" >MATHEMATICS (MATHS)</option>
-                                                                        <option value="12" >ENVIRONMENTAL STUDIES (ENVIRONMENTAL STUDIES)</option>
-                                                                        <option value="27" >ENVIRONMENTAL STUDIES (ORAL) (ENVIRONMENTAL STUDIES (ORAL))</option>
-                                                                        <option value="28" >ENGLISH (ORAL) (ENGLISH (ORAL))</option>
-                                                                        <option value="29" >HINDI (ORAL) (HINDI (ORAL))</option>
-                                                                        <option value="30" >MATHEMATICS (ORAL) (MATHEMATICS (ORAL))</option>
+                                                                        <option value="4" selected>SCIENCE (SCIENCE)</option>
+                                                                        <option value="5" >SOCIAL STUDIES (SST)</option>
+                                                                        <option value="6" >THIRD LANGUAGE (THIRD LANGUAGE)</option>
+                                                                        <option value="18" >REASONING (REASONING)</option>
+                                                                        <option value="19" >GK-GS (GK-GS)</option>
+                                                                        <option value="26" >MOY (CREATIVE TYPE) (MOY (CREATIVE TYPE))</option>
+                                                                        <option value="11" >COMPUTER (COMPUTER)</option>
                                                             </select>
                         </td>
-                        <td>LKG (B)</td>
-                        <td>8:15 AM - 08:45 AM</td>
+                        <td>VIII (A)</td>
+                        <td>9:05 AM - 9:40 AM</td>
                         <td></td>
                         <td>
-                            <select name="substitutions[8263]" id="substitute_8263" 
+                            <select name="substitutions[9989]" id="substitute_9989" 
                                 class="form-control substitute_select" 
-                                data-timetable_id="8263" 
-                                data-day="Wednesday" 
-                                data-time_from="8:15 AM" 
-                                data-time_to="08:45 AM">
+                                data-timetable_id="9989" 
+                                data-day="Thursday" 
+                                data-time_from="9:05 AM" 
+                                data-time_to="9:40 AM">
                                 <option value="">Select Substitute...</option>
                                                                         <option value="1" >Mahaveer Prasad (9000)</option>
                                                                         <option value="2" >Anita Jangir (SEG001)</option>
                                                                         <option value="3" >Vikas Gora (SEG005)</option>
                                                                         <option value="4" >Alka Choudhary (SEG006)</option>
-                                                                        <option value="5" >Pratibha Choudhary (SEG061)</option>
                                                                         <option value="7" >Amisha Sharma (SEG002)</option>
                                                                         <option value="8" >Anjani Jangir (SEG003)</option>
                                                                         <option value="11" >Bajrang Lal  (SEG008)</option>
@@ -62,6 +63,7 @@ Page:
                                                                         <option value="31" >Parmeshwar Lal  (SEG028)</option>
                                                                         <option value="32" >Ruchi Swami (SEG029)</option>
                                                                         <option value="36" >Kamla Bhamu (SEG033)</option>
+                                                                        <option value="37" >Khushboo Kanwar (SEG034)</option>
                                                                         <option value="38" >Nisha Mor (SEG035)</option>
                                                                         <option value="40" >Pratibha Sharma (SEG037)</option>
                                                                         <option value="41" >Renuka  (SEG038)</option>
@@ -162,339 +164,29 @@ Page:
                                                                         <option value="150" >Mahaveer Prasad  (20007)</option>
                                                                         <option value="151" >BABITA MEEL  (657498)</option>
                                                             </select>
-                            <input type="hidden" name="overrides[8263]" id="override_8263" value="">
-                            <div id="conflict_8263"></div>
+                            <input type="hidden" name="overrides[9989]" id="override_9989" value="">
+                            <div id="conflict_9989"></div>
                         </td>
                     </tr>
                                     <tr>
                         <td>
-                            <select name="substitute_subjects[8264]" class="form-control" style="width: 100%;">
-                                                                        <option value="1" selected>ENGLISH (ENGLISH)</option>
+                            <select name="substitute_subjects[1156]" class="form-control" style="width: 100%;">
+                                                                        <option value="1" >ENGLISH (ENGLISH)</option>
                                                                         <option value="2" >HINDI (HINDI)</option>
                                                                         <option value="3" >MATHEMATICS (MATHS)</option>
-                                                                        <option value="12" >ENVIRONMENTAL STUDIES (ENVIRONMENTAL STUDIES)</option>
-                                                                        <option value="27" >ENVIRONMENTAL STUDIES (ORAL) (ENVIRONMENTAL STUDIES (ORAL))</option>
-                                                                        <option value="28" >ENGLISH (ORAL) (ENGLISH (ORAL))</option>
-                                                                        <option value="29" >HINDI (ORAL) (HINDI (ORAL))</option>
-                                                                        <option value="30" >MATHEMATICS (ORAL) (MATHEMATICS (ORAL))</option>
+                                                                        <option value="4" selected>SCIENCE (SCIENCE)</option>
+                                                                        <option value="5" >SOCIAL STUDIES (SST)</option>
+                                                                        <option value="11" >COMPUTER (COMPUTER)</option>
                                                             </select>
                         </td>
-                        <td>LKG (B)</td>
-                        <td>08:45 AM - 09:15 AM</td>
-                        <td></td>
-                        <td>
-                            <select name="substitutions[8264]" id="substitute_8264" 
-                                class="form-control substitute_select" 
-                                data-timetable_id="8264" 
-                                data-day="Wednesday" 
-                                data-time_from="08:45 AM" 
-                                data-time_to="09:15 AM">
-                                <option value="">Select Substitute...</option>
-                                                                        <option value="1" >Mahaveer Prasad (9000)</option>
-                                                                        <option value="2" >Anita Jangir (SEG001)</option>
-                                                                        <option value="3" >Vikas Gora (SEG005)</option>
-                                                                        <option value="4" >Alka Choudhary (SEG006)</option>
-                                                                        <option value="5" >Pratibha Choudhary (SEG061)</option>
-                                                                        <option value="7" >Amisha Sharma (SEG002)</option>
-                                                                        <option value="8" >Anjani Jangir (SEG003)</option>
-                                                                        <option value="11" >Bajrang Lal  (SEG008)</option>
-                                                                        <option value="12" >Boota Singh (SEG009)</option>
-                                                                        <option value="13" >Chawand Singh (SEG010)</option>
-                                                                        <option value="14" >Mahendra Bhanwariya (SEG011)</option>
-                                                                        <option value="15" >Mahesh Ranwa (SEG012)</option>
-                                                                        <option value="16" >Manoj Jangir (SEG013)</option>
-                                                                        <option value="17" >Mohd.Ilyas  (SEG014)</option>
-                                                                        <option value="18" >Monika Sharma (SEG015)</option>
-                                                                        <option value="19" >Mukesh Kok (SEG016)</option>
-                                                                        <option value="21" >Naveen Soni (SEG018)</option>
-                                                                        <option value="22" >Om Prakash Soni (SEG019)</option>
-                                                                        <option value="24" >Parwati  (SEG021)</option>
-                                                                        <option value="26" >Santosh Ruhela (SEG023)</option>
-                                                                        <option value="27" >Sarita Gadhwal (SEG024)</option>
-                                                                        <option value="28" >Saroj Choudhary (SEG025)</option>
-                                                                        <option value="29" >Surendra Siyak (SEG026)</option>
-                                                                        <option value="31" >Parmeshwar Lal  (SEG028)</option>
-                                                                        <option value="32" >Ruchi Swami (SEG029)</option>
-                                                                        <option value="36" >Kamla Bhamu (SEG033)</option>
-                                                                        <option value="38" >Nisha Mor (SEG035)</option>
-                                                                        <option value="40" >Pratibha Sharma (SEG037)</option>
-                                                                        <option value="41" >Renuka  (SEG038)</option>
-                                                                        <option value="43" >Geeta Sharma (SEG040)</option>
-                                                                        <option value="44" >Manisha  (SEG041)</option>
-                                                                        <option value="46" >Urmila Kumari (SEG043)</option>
-                                                                        <option value="47" >Khusboo Tailor (SEG044)</option>
-                                                                        <option value="49" >Shivani Dhaka (SEG046)</option>
-                                                                        <option value="50" >Narendra Kumar (SEG047)</option>
-                                                                        <option value="55" >Divya Bhakar (SEG052)</option>
-                                                                        <option value="56" >Gaytri Swami (SEG053)</option>
-                                                                        <option value="57" >Jyoti Gaur (SEG054)</option>
-                                                                        <option value="58" >Sarita Sain (SEG055)</option>
-                                                                        <option value="60" >Bhawana  (SEG057)</option>
-                                                                        <option value="62" >Nikita  (SEG059)</option>
-                                                                        <option value="64" >Nisha Sharma (SEG062)</option>
-                                                                        <option value="65" >Jyoti Kanwar (SEG063)</option>
-                                                                        <option value="66" >Renu Tank (SEG064)</option>
-                                                                        <option value="67" >Radhika  (359784)</option>
-                                                                        <option value="68" >Sonam Kanwar (SEG067)</option>
-                                                                        <option value="69" >Neetu Kanwar Rathor (SEG068)</option>
-                                                                        <option value="70" >Banwari Lal Bhamu (SEG069)</option>
-                                                                        <option value="71" >Aaina Ladha (SEG070)</option>
-                                                                        <option value="72" >Vidhya Sharma (SEG071)</option>
-                                                                        <option value="73" >Prabhati Kumari (SEG072)</option>
-                                                                        <option value="74" >Sangeeta Sharma (SEG073)</option>
-                                                                        <option value="75" >Bebi Kanwar (SEG074)</option>
-                                                                        <option value="76" >Rekha Shekhawat (SEG075)</option>
-                                                                        <option value="77" >Manoj  (SEG076)</option>
-                                                                        <option value="78" >Mahaveer Kumawat  (4001)</option>
-                                                                        <option value="79" >Manju Saran . (EMP0170)</option>
-                                                                        <option value="80" >Mamta Dhaka . (EMP0179)</option>
-                                                                        <option value="81" >Mahesh Jangir  (EMP0171)</option>
-                                                                        <option value="82" >M S Bhamu (EMP001)</option>
-                                                                        <option value="83" >Hem Lata (S10054)</option>
-                                                                        <option value="84" >Sanjay Dhaka (S10085)</option>
-                                                                        <option value="85" >Nirmala Bhukar (S10046)</option>
-                                                                        <option value="86" >Ajay Mor  (003002)</option>
-                                                                        <option value="87" >surendra rewar  (004)</option>
-                                                                        <option value="88" >sapna  (005)</option>
-                                                                        <option value="89" >vikram singh  (006)</option>
-                                                                        <option value="90" >Vikas Buglaiya (S10014)</option>
-                                                                        <option value="91" >DEEPENDRA SINGH  (007)</option>
-                                                                        <option value="92" >SURESH KUMAR SAHARAN  (008)</option>
-                                                                        <option value="93" >bhumi maheshwari  (009)</option>
-                                                                        <option value="94" >HARISH SHARMA  (1110)</option>
-                                                                        <option value="95" >zarina bano  (1111)</option>
-                                                                        <option value="96" >NEMICHAND PRAJAPAT  (1112)</option>
-                                                                        <option value="97" >PANKAJ  (1113)</option>
-                                                                        <option value="98" >CHHOTI DEVI  (1115)</option>
-                                                                        <option value="99" >BINDIYA  (1117)</option>
-                                                                        <option value="100" >kumkum sharma  (1119)</option>
-                                                                        <option value="101" >SANJAY KHAN  (1120)</option>
-                                                                        <option value="103" >pooja gora  (1125)</option>
-                                                                        <option value="104" >pooja jangir  (2226)</option>
-                                                                        <option value="105" >khushboo tak  (1127)</option>
-                                                                        <option value="106" >VIJENDRA SEWDA  (1128)</option>
-                                                                        <option value="107" >DEEPIKA SHARMA  (56)</option>
-                                                                        <option value="108" >BALVEER SINGH KARIR  (87)</option>
-                                                                        <option value="109" >JUGAL KISHOR  (97)</option>
-                                                                        <option value="110" >HARI PRAKASH  (100)</option>
-                                                                        <option value="111" >SANJAY SWEEPAR  (001)</option>
-                                                                        <option value="112" >SANDEEP  (002)</option>
-                                                                        <option value="113" >shankar lal  (003)</option>
-                                                                        <option value="114" >siyan singh  (0004)</option>
-                                                                        <option value="115" >sanjay chahar  (00006)</option>
-                                                                        <option value="116" >rajkumar  (1234)</option>
-                                                                        <option value="117" >ramswaroop moond  (22222)</option>
-                                                                        <option value="119" >saroj  (088)</option>
-                                                                        <option value="121" >DEVENDRA SINGH KHEDAR  (55)</option>
-                                                                        <option value="122" >SUSHILA  (7012)</option>
-                                                                        <option value="123" >REKHA GODARA  (8010)</option>
-                                                                        <option value="124" >PRIYA  (899)</option>
-                                                                        <option value="125" >GAYATRI  (578)</option>
-                                                                        <option value="126" >RAJU REWAR  (1023)</option>
-                                                                        <option value="128" >Dhanesh Sunda (100122)</option>
-                                                                        <option value="129" >APURWA SHARMA  (5025)</option>
-                                                                        <option value="130" >APURVA SHARMA  (55835468)</option>
-                                                                        <option value="131" >PRACHI MAAN  (6655788)</option>
-                                                                        <option value="132" >Ishwar Ram (20103)</option>
-                                                                        <option value="133" >Mahaveer Fageriya Fageriya (20104)</option>
-                                                                        <option value="134" >Chhunni Lal  (20105)</option>
-                                                                        <option value="135" >Chandra Singh  (20108)</option>
-                                                                        <option value="136" >Sharwan Bijarniya  (20109)</option>
-                                                                        <option value="137" >Shree Chand  (20110)</option>
-                                                                        <option value="138" >Chena Ram  (20113)</option>
-                                                                        <option value="139" >Surendra Rewar  (20114)</option>
-                                                                        <option value="140" >Mahaveer Narsas  (20115)</option>
-                                                                        <option value="141" >Dinesh Sharma  (20116)</option>
-                                                                        <option value="142" >Guman Ram  (20117)</option>
-                                                                        <option value="143" >Mahendra Kumar  (20119)</option>
-                                                                        <option value="144" >Bajrang Lal  (20121)</option>
-                                                                        <option value="145" >Mukesh Kumar  (20122)</option>
-                                                                        <option value="146" >Jhumar Sharma  (20123)</option>
-                                                                        <option value="147" >Omprakash Sharma  (20127)</option>
-                                                                        <option value="148" >Dhola Ram  (20133)</option>
-                                                                        <option value="149" >Raghuveer Singh  (20005)</option>
-                                                                        <option value="150" >Mahaveer Prasad  (20007)</option>
-                                                                        <option value="151" >BABITA MEEL  (657498)</option>
-                                                            </select>
-                            <input type="hidden" name="overrides[8264]" id="override_8264" value="">
-                            <div id="conflict_8264"></div>
-                        </td>
-                    </tr>
-                                    <tr>
-                        <td>
-                            <select name="substitute_subjects[8265]" class="form-control" style="width: 100%;">
-                                                                        <option value="1" >ENGLISH (ENGLISH)</option>
-                                                                        <option value="2" selected>HINDI (HINDI)</option>
-                                                                        <option value="3" >MATHEMATICS (MATHS)</option>
-                                                                        <option value="12" >ENVIRONMENTAL STUDIES (ENVIRONMENTAL STUDIES)</option>
-                                                                        <option value="27" >ENVIRONMENTAL STUDIES (ORAL) (ENVIRONMENTAL STUDIES (ORAL))</option>
-                                                                        <option value="28" >ENGLISH (ORAL) (ENGLISH (ORAL))</option>
-                                                                        <option value="29" >HINDI (ORAL) (HINDI (ORAL))</option>
-                                                                        <option value="30" >MATHEMATICS (ORAL) (MATHEMATICS (ORAL))</option>
-                                                            </select>
-                        </td>
-                        <td>LKG (B)</td>
-                        <td>09:15 AM - 09:45 AM</td>
-                        <td></td>
-                        <td>
-                            <select name="substitutions[8265]" id="substitute_8265" 
-                                class="form-control substitute_select" 
-                                data-timetable_id="8265" 
-                                data-day="Wednesday" 
-                                data-time_from="09:15 AM" 
-                                data-time_to="09:45 AM">
-                                <option value="">Select Substitute...</option>
-                                                                        <option value="1" >Mahaveer Prasad (9000)</option>
-                                                                        <option value="2" >Anita Jangir (SEG001)</option>
-                                                                        <option value="3" >Vikas Gora (SEG005)</option>
-                                                                        <option value="4" >Alka Choudhary (SEG006)</option>
-                                                                        <option value="5" >Pratibha Choudhary (SEG061)</option>
-                                                                        <option value="7" >Amisha Sharma (SEG002)</option>
-                                                                        <option value="8" >Anjani Jangir (SEG003)</option>
-                                                                        <option value="11" >Bajrang Lal  (SEG008)</option>
-                                                                        <option value="12" >Boota Singh (SEG009)</option>
-                                                                        <option value="13" >Chawand Singh (SEG010)</option>
-                                                                        <option value="14" >Mahendra Bhanwariya (SEG011)</option>
-                                                                        <option value="15" >Mahesh Ranwa (SEG012)</option>
-                                                                        <option value="16" >Manoj Jangir (SEG013)</option>
-                                                                        <option value="17" >Mohd.Ilyas  (SEG014)</option>
-                                                                        <option value="18" >Monika Sharma (SEG015)</option>
-                                                                        <option value="19" >Mukesh Kok (SEG016)</option>
-                                                                        <option value="21" >Naveen Soni (SEG018)</option>
-                                                                        <option value="22" >Om Prakash Soni (SEG019)</option>
-                                                                        <option value="24" >Parwati  (SEG021)</option>
-                                                                        <option value="26" >Santosh Ruhela (SEG023)</option>
-                                                                        <option value="27" >Sarita Gadhwal (SEG024)</option>
-                                                                        <option value="28" >Saroj Choudhary (SEG025)</option>
-                                                                        <option value="29" >Surendra Siyak (SEG026)</option>
-                                                                        <option value="31" >Parmeshwar Lal  (SEG028)</option>
-                                                                        <option value="32" >Ruchi Swami (SEG029)</option>
-                                                                        <option value="36" >Kamla Bhamu (SEG033)</option>
-                                                                        <option value="38" >Nisha Mor (SEG035)</option>
-                                                                        <option value="40" >Pratibha Sharma (SEG037)</option>
-                                                                        <option value="41" >Renuka  (SEG038)</option>
-                                                                        <option value="43" >Geeta Sharma (SEG040)</option>
-                                                                        <option value="44" >Manisha  (SEG041)</option>
-                                                                        <option value="46" >Urmila Kumari (SEG043)</option>
-                                                                        <option value="47" >Khusboo Tailor (SEG044)</option>
-                                                                        <option value="49" >Shivani Dhaka (SEG046)</option>
-                                                                        <option value="50" >Narendra Kumar (SEG047)</option>
-                                                                        <option value="55" >Divya Bhakar (SEG052)</option>
-                                                                        <option value="56" >Gaytri Swami (SEG053)</option>
-                                                                        <option value="57" >Jyoti Gaur (SEG054)</option>
-                                                                        <option value="58" >Sarita Sain (SEG055)</option>
-                                                                        <option value="60" >Bhawana  (SEG057)</option>
-                                                                        <option value="62" >Nikita  (SEG059)</option>
-                                                                        <option value="64" >Nisha Sharma (SEG062)</option>
-                                                                        <option value="65" >Jyoti Kanwar (SEG063)</option>
-                                                                        <option value="66" >Renu Tank (SEG064)</option>
-                                                                        <option value="67" >Radhika  (359784)</option>
-                                                                        <option value="68" >Sonam Kanwar (SEG067)</option>
-                                                                        <option value="69" >Neetu Kanwar Rathor (SEG068)</option>
-                                                                        <option value="70" >Banwari Lal Bhamu (SEG069)</option>
-                                                                        <option value="71" >Aaina Ladha (SEG070)</option>
-                                                                        <option value="72" >Vidhya Sharma (SEG071)</option>
-                                                                        <option value="73" >Prabhati Kumari (SEG072)</option>
-                                                                        <option value="74" >Sangeeta Sharma (SEG073)</option>
-                                                                        <option value="75" >Bebi Kanwar (SEG074)</option>
-                                                                        <option value="76" >Rekha Shekhawat (SEG075)</option>
-                                                                        <option value="77" >Manoj  (SEG076)</option>
-                                                                        <option value="78" >Mahaveer Kumawat  (4001)</option>
-                                                                        <option value="79" >Manju Saran . (EMP0170)</option>
-                                                                        <option value="80" >Mamta Dhaka . (EMP0179)</option>
-                                                                        <option value="81" >Mahesh Jangir  (EMP0171)</option>
-                                                                        <option value="82" >M S Bhamu (EMP001)</option>
-                                                                        <option value="83" >Hem Lata (S10054)</option>
-                                                                        <option value="84" >Sanjay Dhaka (S10085)</option>
-                                                                        <option value="85" >Nirmala Bhukar (S10046)</option>
-                                                                        <option value="86" >Ajay Mor  (003002)</option>
-                                                                        <option value="87" >surendra rewar  (004)</option>
-                                                                        <option value="88" >sapna  (005)</option>
-                                                                        <option value="89" >vikram singh  (006)</option>
-                                                                        <option value="90" >Vikas Buglaiya (S10014)</option>
-                                                                        <option value="91" >DEEPENDRA SINGH  (007)</option>
-                                                                        <option value="92" >SURESH KUMAR SAHARAN  (008)</option>
-                                                                        <option value="93" >bhumi maheshwari  (009)</option>
-                                                                        <option value="94" >HARISH SHARMA  (1110)</option>
-                                                                        <option value="95" >zarina bano  (1111)</option>
-                                                                        <option value="96" >NEMICHAND PRAJAPAT  (1112)</option>
-                                                                        <option value="97" >PANKAJ  (1113)</option>
-                                                                        <option value="98" >CHHOTI DEVI  (1115)</option>
-                                                                        <option value="99" >BINDIYA  (1117)</option>
-                                                                        <option value="100" >kumkum sharma  (1119)</option>
-                                                                        <option value="101" >SANJAY KHAN  (1120)</option>
-                                                                        <option value="103" >pooja gora  (1125)</option>
-                                                                        <option value="104" >pooja jangir  (2226)</option>
-                                                                        <option value="105" >khushboo tak  (1127)</option>
-                                                                        <option value="106" >VIJENDRA SEWDA  (1128)</option>
-                                                                        <option value="107" >DEEPIKA SHARMA  (56)</option>
-                                                                        <option value="108" >BALVEER SINGH KARIR  (87)</option>
-                                                                        <option value="109" >JUGAL KISHOR  (97)</option>
-                                                                        <option value="110" >HARI PRAKASH  (100)</option>
-                                                                        <option value="111" >SANJAY SWEEPAR  (001)</option>
-                                                                        <option value="112" >SANDEEP  (002)</option>
-                                                                        <option value="113" >shankar lal  (003)</option>
-                                                                        <option value="114" >siyan singh  (0004)</option>
-                                                                        <option value="115" >sanjay chahar  (00006)</option>
-                                                                        <option value="116" >rajkumar  (1234)</option>
-                                                                        <option value="117" >ramswaroop moond  (22222)</option>
-                                                                        <option value="119" >saroj  (088)</option>
-                                                                        <option value="121" >DEVENDRA SINGH KHEDAR  (55)</option>
-                                                                        <option value="122" >SUSHILA  (7012)</option>
-                                                                        <option value="123" >REKHA GODARA  (8010)</option>
-                                                                        <option value="124" >PRIYA  (899)</option>
-                                                                        <option value="125" >GAYATRI  (578)</option>
-                                                                        <option value="126" >RAJU REWAR  (1023)</option>
-                                                                        <option value="128" >Dhanesh Sunda (100122)</option>
-                                                                        <option value="129" >APURWA SHARMA  (5025)</option>
-                                                                        <option value="130" >APURVA SHARMA  (55835468)</option>
-                                                                        <option value="131" >PRACHI MAAN  (6655788)</option>
-                                                                        <option value="132" >Ishwar Ram (20103)</option>
-                                                                        <option value="133" >Mahaveer Fageriya Fageriya (20104)</option>
-                                                                        <option value="134" >Chhunni Lal  (20105)</option>
-                                                                        <option value="135" >Chandra Singh  (20108)</option>
-                                                                        <option value="136" >Sharwan Bijarniya  (20109)</option>
-                                                                        <option value="137" >Shree Chand  (20110)</option>
-                                                                        <option value="138" >Chena Ram  (20113)</option>
-                                                                        <option value="139" >Surendra Rewar  (20114)</option>
-                                                                        <option value="140" >Mahaveer Narsas  (20115)</option>
-                                                                        <option value="141" >Dinesh Sharma  (20116)</option>
-                                                                        <option value="142" >Guman Ram  (20117)</option>
-                                                                        <option value="143" >Mahendra Kumar  (20119)</option>
-                                                                        <option value="144" >Bajrang Lal  (20121)</option>
-                                                                        <option value="145" >Mukesh Kumar  (20122)</option>
-                                                                        <option value="146" >Jhumar Sharma  (20123)</option>
-                                                                        <option value="147" >Omprakash Sharma  (20127)</option>
-                                                                        <option value="148" >Dhola Ram  (20133)</option>
-                                                                        <option value="149" >Raghuveer Singh  (20005)</option>
-                                                                        <option value="150" >Mahaveer Prasad  (20007)</option>
-                                                                        <option value="151" >BABITA MEEL  (657498)</option>
-                                                            </select>
-                            <input type="hidden" name="overrides[8265]" id="override_8265" value="">
-                            <div id="conflict_8265"></div>
-                        </td>
-                    </tr>
-                                    <tr>
-                        <td>
-                            <select name="substitute_subjects[8266]" class="form-control" style="width: 100%;">
-                                                                        <option value="1" >ENGLISH (ENGLISH)</option>
-                                                                        <option value="2" selected>HINDI (HINDI)</option>
-                                                                        <option value="3" >MATHEMATICS (MATHS)</option>
-                                                                        <option value="12" >ENVIRONMENTAL STUDIES (ENVIRONMENTAL STUDIES)</option>
-                                                                        <option value="27" >ENVIRONMENTAL STUDIES (ORAL) (ENVIRONMENTAL STUDIES (ORAL))</option>
-                                                                        <option value="28" >ENGLISH (ORAL) (ENGLISH (ORAL))</option>
-                                                                        <option value="29" >HINDI (ORAL) (HINDI (ORAL))</option>
-                                                                        <option value="30" >MATHEMATICS (ORAL) (MATHEMATICS (ORAL))</option>
-                                                            </select>
-                        </td>
-                        <td>LKG (B)</td>
+                        <td>VI (D)</td>
                         <td>09:45 AM - 10:15 AM</td>
                         <td></td>
                         <td>
-                            <select name="substitutions[8266]" id="substitute_8266" 
+                            <select name="substitutions[1156]" id="substitute_1156" 
                                 class="form-control substitute_select" 
-                                data-timetable_id="8266" 
-                                data-day="Wednesday" 
+                                data-timetable_id="1156" 
+                                data-day="Thursday" 
                                 data-time_from="09:45 AM" 
                                 data-time_to="10:15 AM">
                                 <option value="">Select Substitute...</option>
@@ -502,7 +194,6 @@ Page:
                                                                         <option value="2" >Anita Jangir (SEG001)</option>
                                                                         <option value="3" >Vikas Gora (SEG005)</option>
                                                                         <option value="4" >Alka Choudhary (SEG006)</option>
-                                                                        <option value="5" >Pratibha Choudhary (SEG061)</option>
                                                                         <option value="7" >Amisha Sharma (SEG002)</option>
                                                                         <option value="8" >Anjani Jangir (SEG003)</option>
                                                                         <option value="11" >Bajrang Lal  (SEG008)</option>
@@ -524,6 +215,7 @@ Page:
                                                                         <option value="31" >Parmeshwar Lal  (SEG028)</option>
                                                                         <option value="32" >Ruchi Swami (SEG029)</option>
                                                                         <option value="36" >Kamla Bhamu (SEG033)</option>
+                                                                        <option value="37" >Khushboo Kanwar (SEG034)</option>
                                                                         <option value="38" >Nisha Mor (SEG035)</option>
                                                                         <option value="40" >Pratibha Sharma (SEG037)</option>
                                                                         <option value="41" >Renuka  (SEG038)</option>
@@ -624,193 +316,40 @@ Page:
                                                                         <option value="150" >Mahaveer Prasad  (20007)</option>
                                                                         <option value="151" >BABITA MEEL  (657498)</option>
                                                             </select>
-                            <input type="hidden" name="overrides[8266]" id="override_8266" value="">
-                            <div id="conflict_8266"></div>
+                            <input type="hidden" name="overrides[1156]" id="override_1156" value="">
+                            <div id="conflict_1156"></div>
                         </td>
                     </tr>
                                     <tr>
                         <td>
-                            <select name="substitute_subjects[8268]" class="form-control" style="width: 100%;">
+                            <select name="substitute_subjects[9992]" class="form-control" style="width: 100%;">
                                                                         <option value="1" >ENGLISH (ENGLISH)</option>
                                                                         <option value="2" >HINDI (HINDI)</option>
                                                                         <option value="3" >MATHEMATICS (MATHS)</option>
-                                                                        <option value="12" >ENVIRONMENTAL STUDIES (ENVIRONMENTAL STUDIES)</option>
-                                                                        <option value="27" selected>ENVIRONMENTAL STUDIES (ORAL) (ENVIRONMENTAL STUDIES (ORAL))</option>
-                                                                        <option value="28" >ENGLISH (ORAL) (ENGLISH (ORAL))</option>
-                                                                        <option value="29" >HINDI (ORAL) (HINDI (ORAL))</option>
-                                                                        <option value="30" >MATHEMATICS (ORAL) (MATHEMATICS (ORAL))</option>
+                                                                        <option value="4" selected>SCIENCE (SCIENCE)</option>
+                                                                        <option value="5" >SOCIAL STUDIES (SST)</option>
+                                                                        <option value="6" >THIRD LANGUAGE (THIRD LANGUAGE)</option>
+                                                                        <option value="18" >REASONING (REASONING)</option>
+                                                                        <option value="19" >GK-GS (GK-GS)</option>
+                                                                        <option value="26" >MOY (CREATIVE TYPE) (MOY (CREATIVE TYPE))</option>
+                                                                        <option value="11" >COMPUTER (COMPUTER)</option>
                                                             </select>
                         </td>
-                        <td>LKG (B)</td>
-                        <td>10:30 AM - 11:00 AM</td>
+                        <td>VIII (A)</td>
+                        <td>11:00 AM - 11:35 AM</td>
                         <td></td>
                         <td>
-                            <select name="substitutions[8268]" id="substitute_8268" 
+                            <select name="substitutions[9992]" id="substitute_9992" 
                                 class="form-control substitute_select" 
-                                data-timetable_id="8268" 
-                                data-day="Wednesday" 
-                                data-time_from="10:30 AM" 
-                                data-time_to="11:00 AM">
-                                <option value="">Select Substitute...</option>
-                                                                        <option value="1" >Mahaveer Prasad (9000)</option>
-                                                                        <option value="2" >Anita Jangir (SEG001)</option>
-                                                                        <option value="3" >Vikas Gora (SEG005)</option>
-                                                                        <option value="4" >Alka Choudhary (SEG006)</option>
-                                                                        <option value="5" >Pratibha Choudhary (SEG061)</option>
-                                                                        <option value="7" >Amisha Sharma (SEG002)</option>
-                                                                        <option value="8" >Anjani Jangir (SEG003)</option>
-                                                                        <option value="11" >Bajrang Lal  (SEG008)</option>
-                                                                        <option value="12" >Boota Singh (SEG009)</option>
-                                                                        <option value="13" >Chawand Singh (SEG010)</option>
-                                                                        <option value="14" >Mahendra Bhanwariya (SEG011)</option>
-                                                                        <option value="15" >Mahesh Ranwa (SEG012)</option>
-                                                                        <option value="16" >Manoj Jangir (SEG013)</option>
-                                                                        <option value="17" >Mohd.Ilyas  (SEG014)</option>
-                                                                        <option value="18" >Monika Sharma (SEG015)</option>
-                                                                        <option value="19" >Mukesh Kok (SEG016)</option>
-                                                                        <option value="21" >Naveen Soni (SEG018)</option>
-                                                                        <option value="22" >Om Prakash Soni (SEG019)</option>
-                                                                        <option value="24" >Parwati  (SEG021)</option>
-                                                                        <option value="26" >Santosh Ruhela (SEG023)</option>
-                                                                        <option value="27" >Sarita Gadhwal (SEG024)</option>
-                                                                        <option value="28" >Saroj Choudhary (SEG025)</option>
-                                                                        <option value="29" >Surendra Siyak (SEG026)</option>
-                                                                        <option value="31" >Parmeshwar Lal  (SEG028)</option>
-                                                                        <option value="32" >Ruchi Swami (SEG029)</option>
-                                                                        <option value="36" >Kamla Bhamu (SEG033)</option>
-                                                                        <option value="38" >Nisha Mor (SEG035)</option>
-                                                                        <option value="40" >Pratibha Sharma (SEG037)</option>
-                                                                        <option value="41" >Renuka  (SEG038)</option>
-                                                                        <option value="43" >Geeta Sharma (SEG040)</option>
-                                                                        <option value="44" >Manisha  (SEG041)</option>
-                                                                        <option value="46" >Urmila Kumari (SEG043)</option>
-                                                                        <option value="47" >Khusboo Tailor (SEG044)</option>
-                                                                        <option value="49" >Shivani Dhaka (SEG046)</option>
-                                                                        <option value="50" >Narendra Kumar (SEG047)</option>
-                                                                        <option value="55" >Divya Bhakar (SEG052)</option>
-                                                                        <option value="56" >Gaytri Swami (SEG053)</option>
-                                                                        <option value="57" >Jyoti Gaur (SEG054)</option>
-                                                                        <option value="58" >Sarita Sain (SEG055)</option>
-                                                                        <option value="60" >Bhawana  (SEG057)</option>
-                                                                        <option value="62" >Nikita  (SEG059)</option>
-                                                                        <option value="64" >Nisha Sharma (SEG062)</option>
-                                                                        <option value="65" >Jyoti Kanwar (SEG063)</option>
-                                                                        <option value="66" >Renu Tank (SEG064)</option>
-                                                                        <option value="67" >Radhika  (359784)</option>
-                                                                        <option value="68" >Sonam Kanwar (SEG067)</option>
-                                                                        <option value="69" >Neetu Kanwar Rathor (SEG068)</option>
-                                                                        <option value="70" >Banwari Lal Bhamu (SEG069)</option>
-                                                                        <option value="71" >Aaina Ladha (SEG070)</option>
-                                                                        <option value="72" >Vidhya Sharma (SEG071)</option>
-                                                                        <option value="73" >Prabhati Kumari (SEG072)</option>
-                                                                        <option value="74" >Sangeeta Sharma (SEG073)</option>
-                                                                        <option value="75" >Bebi Kanwar (SEG074)</option>
-                                                                        <option value="76" >Rekha Shekhawat (SEG075)</option>
-                                                                        <option value="77" >Manoj  (SEG076)</option>
-                                                                        <option value="78" >Mahaveer Kumawat  (4001)</option>
-                                                                        <option value="79" >Manju Saran . (EMP0170)</option>
-                                                                        <option value="80" >Mamta Dhaka . (EMP0179)</option>
-                                                                        <option value="81" >Mahesh Jangir  (EMP0171)</option>
-                                                                        <option value="82" >M S Bhamu (EMP001)</option>
-                                                                        <option value="83" >Hem Lata (S10054)</option>
-                                                                        <option value="84" >Sanjay Dhaka (S10085)</option>
-                                                                        <option value="85" >Nirmala Bhukar (S10046)</option>
-                                                                        <option value="86" >Ajay Mor  (003002)</option>
-                                                                        <option value="87" >surendra rewar  (004)</option>
-                                                                        <option value="88" >sapna  (005)</option>
-                                                                        <option value="89" >vikram singh  (006)</option>
-                                                                        <option value="90" >Vikas Buglaiya (S10014)</option>
-                                                                        <option value="91" >DEEPENDRA SINGH  (007)</option>
-                                                                        <option value="92" >SURESH KUMAR SAHARAN  (008)</option>
-                                                                        <option value="93" >bhumi maheshwari  (009)</option>
-                                                                        <option value="94" >HARISH SHARMA  (1110)</option>
-                                                                        <option value="95" >zarina bano  (1111)</option>
-                                                                        <option value="96" >NEMICHAND PRAJAPAT  (1112)</option>
-                                                                        <option value="97" >PANKAJ  (1113)</option>
-                                                                        <option value="98" >CHHOTI DEVI  (1115)</option>
-                                                                        <option value="99" >BINDIYA  (1117)</option>
-                                                                        <option value="100" >kumkum sharma  (1119)</option>
-                                                                        <option value="101" >SANJAY KHAN  (1120)</option>
-                                                                        <option value="103" >pooja gora  (1125)</option>
-                                                                        <option value="104" >pooja jangir  (2226)</option>
-                                                                        <option value="105" >khushboo tak  (1127)</option>
-                                                                        <option value="106" >VIJENDRA SEWDA  (1128)</option>
-                                                                        <option value="107" >DEEPIKA SHARMA  (56)</option>
-                                                                        <option value="108" >BALVEER SINGH KARIR  (87)</option>
-                                                                        <option value="109" >JUGAL KISHOR  (97)</option>
-                                                                        <option value="110" >HARI PRAKASH  (100)</option>
-                                                                        <option value="111" >SANJAY SWEEPAR  (001)</option>
-                                                                        <option value="112" >SANDEEP  (002)</option>
-                                                                        <option value="113" >shankar lal  (003)</option>
-                                                                        <option value="114" >siyan singh  (0004)</option>
-                                                                        <option value="115" >sanjay chahar  (00006)</option>
-                                                                        <option value="116" >rajkumar  (1234)</option>
-                                                                        <option value="117" >ramswaroop moond  (22222)</option>
-                                                                        <option value="119" >saroj  (088)</option>
-                                                                        <option value="121" >DEVENDRA SINGH KHEDAR  (55)</option>
-                                                                        <option value="122" >SUSHILA  (7012)</option>
-                                                                        <option value="123" >REKHA GODARA  (8010)</option>
-                                                                        <option value="124" >PRIYA  (899)</option>
-                                                                        <option value="125" >GAYATRI  (578)</option>
-                                                                        <option value="126" >RAJU REWAR  (1023)</option>
-                                                                        <option value="128" >Dhanesh Sunda (100122)</option>
-                                                                        <option value="129" >APURWA SHARMA  (5025)</option>
-                                                                        <option value="130" >APURVA SHARMA  (55835468)</option>
-                                                                        <option value="131" >PRACHI MAAN  (6655788)</option>
-                                                                        <option value="132" >Ishwar Ram (20103)</option>
-                                                                        <option value="133" >Mahaveer Fageriya Fageriya (20104)</option>
-                                                                        <option value="134" >Chhunni Lal  (20105)</option>
-                                                                        <option value="135" >Chandra Singh  (20108)</option>
-                                                                        <option value="136" >Sharwan Bijarniya  (20109)</option>
-                                                                        <option value="137" >Shree Chand  (20110)</option>
-                                                                        <option value="138" >Chena Ram  (20113)</option>
-                                                                        <option value="139" >Surendra Rewar  (20114)</option>
-                                                                        <option value="140" >Mahaveer Narsas  (20115)</option>
-                                                                        <option value="141" >Dinesh Sharma  (20116)</option>
-                                                                        <option value="142" >Guman Ram  (20117)</option>
-                                                                        <option value="143" >Mahendra Kumar  (20119)</option>
-                                                                        <option value="144" >Bajrang Lal  (20121)</option>
-                                                                        <option value="145" >Mukesh Kumar  (20122)</option>
-                                                                        <option value="146" >Jhumar Sharma  (20123)</option>
-                                                                        <option value="147" >Omprakash Sharma  (20127)</option>
-                                                                        <option value="148" >Dhola Ram  (20133)</option>
-                                                                        <option value="149" >Raghuveer Singh  (20005)</option>
-                                                                        <option value="150" >Mahaveer Prasad  (20007)</option>
-                                                                        <option value="151" >BABITA MEEL  (657498)</option>
-                                                            </select>
-                            <input type="hidden" name="overrides[8268]" id="override_8268" value="">
-                            <div id="conflict_8268"></div>
-                        </td>
-                    </tr>
-                                    <tr>
-                        <td>
-                            <select name="substitute_subjects[8269]" class="form-control" style="width: 100%;">
-                                                                        <option value="1" >ENGLISH (ENGLISH)</option>
-                                                                        <option value="2" >HINDI (HINDI)</option>
-                                                                        <option value="3" >MATHEMATICS (MATHS)</option>
-                                                                        <option value="12" >ENVIRONMENTAL STUDIES (ENVIRONMENTAL STUDIES)</option>
-                                                                        <option value="27" selected>ENVIRONMENTAL STUDIES (ORAL) (ENVIRONMENTAL STUDIES (ORAL))</option>
-                                                                        <option value="28" >ENGLISH (ORAL) (ENGLISH (ORAL))</option>
-                                                                        <option value="29" >HINDI (ORAL) (HINDI (ORAL))</option>
-                                                                        <option value="30" >MATHEMATICS (ORAL) (MATHEMATICS (ORAL))</option>
-                                                            </select>
-                        </td>
-                        <td>LKG (B)</td>
-                        <td>11:00 AM - 11:30 AM</td>
-                        <td></td>
-                        <td>
-                            <select name="substitutions[8269]" id="substitute_8269" 
-                                class="form-control substitute_select" 
-                                data-timetable_id="8269" 
-                                data-day="Wednesday" 
+                                data-timetable_id="9992" 
+                                data-day="Thursday" 
                                 data-time_from="11:00 AM" 
-                                data-time_to="11:30 AM">
+                                data-time_to="11:35 AM">
                                 <option value="">Select Substitute...</option>
                                                                         <option value="1" >Mahaveer Prasad (9000)</option>
                                                                         <option value="2" >Anita Jangir (SEG001)</option>
                                                                         <option value="3" >Vikas Gora (SEG005)</option>
                                                                         <option value="4" >Alka Choudhary (SEG006)</option>
-                                                                        <option value="5" >Pratibha Choudhary (SEG061)</option>
                                                                         <option value="7" >Amisha Sharma (SEG002)</option>
                                                                         <option value="8" >Anjani Jangir (SEG003)</option>
                                                                         <option value="11" >Bajrang Lal  (SEG008)</option>
@@ -832,6 +371,7 @@ Page:
                                                                         <option value="31" >Parmeshwar Lal  (SEG028)</option>
                                                                         <option value="32" >Ruchi Swami (SEG029)</option>
                                                                         <option value="36" >Kamla Bhamu (SEG033)</option>
+                                                                        <option value="37" >Khushboo Kanwar (SEG034)</option>
                                                                         <option value="38" >Nisha Mor (SEG035)</option>
                                                                         <option value="40" >Pratibha Sharma (SEG037)</option>
                                                                         <option value="41" >Renuka  (SEG038)</option>
@@ -932,185 +472,29 @@ Page:
                                                                         <option value="150" >Mahaveer Prasad  (20007)</option>
                                                                         <option value="151" >BABITA MEEL  (657498)</option>
                                                             </select>
-                            <input type="hidden" name="overrides[8269]" id="override_8269" value="">
-                            <div id="conflict_8269"></div>
+                            <input type="hidden" name="overrides[9992]" id="override_9992" value="">
+                            <div id="conflict_9992"></div>
                         </td>
                     </tr>
                                     <tr>
                         <td>
-                            <select name="substitute_subjects[8270]" class="form-control" style="width: 100%;">
+                            <select name="substitute_subjects[1161]" class="form-control" style="width: 100%;">
                                                                         <option value="1" >ENGLISH (ENGLISH)</option>
                                                                         <option value="2" >HINDI (HINDI)</option>
-                                                                        <option value="3" selected>MATHEMATICS (MATHS)</option>
-                                                                        <option value="12" >ENVIRONMENTAL STUDIES (ENVIRONMENTAL STUDIES)</option>
-                                                                        <option value="27" >ENVIRONMENTAL STUDIES (ORAL) (ENVIRONMENTAL STUDIES (ORAL))</option>
-                                                                        <option value="28" >ENGLISH (ORAL) (ENGLISH (ORAL))</option>
-                                                                        <option value="29" >HINDI (ORAL) (HINDI (ORAL))</option>
-                                                                        <option value="30" >MATHEMATICS (ORAL) (MATHEMATICS (ORAL))</option>
+                                                                        <option value="3" >MATHEMATICS (MATHS)</option>
+                                                                        <option value="4" selected>SCIENCE (SCIENCE)</option>
+                                                                        <option value="5" >SOCIAL STUDIES (SST)</option>
+                                                                        <option value="11" >COMPUTER (COMPUTER)</option>
                                                             </select>
                         </td>
-                        <td>LKG (B)</td>
-                        <td>11:30 AM - 12:00 PM</td>
-                        <td></td>
-                        <td>
-                            <select name="substitutions[8270]" id="substitute_8270" 
-                                class="form-control substitute_select" 
-                                data-timetable_id="8270" 
-                                data-day="Wednesday" 
-                                data-time_from="11:30 AM" 
-                                data-time_to="12:00 PM">
-                                <option value="">Select Substitute...</option>
-                                                                        <option value="1" >Mahaveer Prasad (9000)</option>
-                                                                        <option value="2" >Anita Jangir (SEG001)</option>
-                                                                        <option value="3" >Vikas Gora (SEG005)</option>
-                                                                        <option value="4" >Alka Choudhary (SEG006)</option>
-                                                                        <option value="5" >Pratibha Choudhary (SEG061)</option>
-                                                                        <option value="7" >Amisha Sharma (SEG002)</option>
-                                                                        <option value="8" >Anjani Jangir (SEG003)</option>
-                                                                        <option value="11" >Bajrang Lal  (SEG008)</option>
-                                                                        <option value="12" >Boota Singh (SEG009)</option>
-                                                                        <option value="13" >Chawand Singh (SEG010)</option>
-                                                                        <option value="14" >Mahendra Bhanwariya (SEG011)</option>
-                                                                        <option value="15" >Mahesh Ranwa (SEG012)</option>
-                                                                        <option value="16" >Manoj Jangir (SEG013)</option>
-                                                                        <option value="17" >Mohd.Ilyas  (SEG014)</option>
-                                                                        <option value="18" >Monika Sharma (SEG015)</option>
-                                                                        <option value="19" >Mukesh Kok (SEG016)</option>
-                                                                        <option value="21" >Naveen Soni (SEG018)</option>
-                                                                        <option value="22" >Om Prakash Soni (SEG019)</option>
-                                                                        <option value="24" >Parwati  (SEG021)</option>
-                                                                        <option value="26" >Santosh Ruhela (SEG023)</option>
-                                                                        <option value="27" >Sarita Gadhwal (SEG024)</option>
-                                                                        <option value="28" >Saroj Choudhary (SEG025)</option>
-                                                                        <option value="29" >Surendra Siyak (SEG026)</option>
-                                                                        <option value="31" >Parmeshwar Lal  (SEG028)</option>
-                                                                        <option value="32" >Ruchi Swami (SEG029)</option>
-                                                                        <option value="36" >Kamla Bhamu (SEG033)</option>
-                                                                        <option value="38" >Nisha Mor (SEG035)</option>
-                                                                        <option value="40" >Pratibha Sharma (SEG037)</option>
-                                                                        <option value="41" >Renuka  (SEG038)</option>
-                                                                        <option value="43" >Geeta Sharma (SEG040)</option>
-                                                                        <option value="44" >Manisha  (SEG041)</option>
-                                                                        <option value="46" >Urmila Kumari (SEG043)</option>
-                                                                        <option value="47" >Khusboo Tailor (SEG044)</option>
-                                                                        <option value="49" >Shivani Dhaka (SEG046)</option>
-                                                                        <option value="50" >Narendra Kumar (SEG047)</option>
-                                                                        <option value="55" >Divya Bhakar (SEG052)</option>
-                                                                        <option value="56" >Gaytri Swami (SEG053)</option>
-                                                                        <option value="57" >Jyoti Gaur (SEG054)</option>
-                                                                        <option value="58" >Sarita Sain (SEG055)</option>
-                                                                        <option value="60" >Bhawana  (SEG057)</option>
-                                                                        <option value="62" >Nikita  (SEG059)</option>
-                                                                        <option value="64" >Nisha Sharma (SEG062)</option>
-                                                                        <option value="65" >Jyoti Kanwar (SEG063)</option>
-                                                                        <option value="66" >Renu Tank (SEG064)</option>
-                                                                        <option value="67" >Radhika  (359784)</option>
-                                                                        <option value="68" >Sonam Kanwar (SEG067)</option>
-                                                                        <option value="69" >Neetu Kanwar Rathor (SEG068)</option>
-                                                                        <option value="70" >Banwari Lal Bhamu (SEG069)</option>
-                                                                        <option value="71" >Aaina Ladha (SEG070)</option>
-                                                                        <option value="72" >Vidhya Sharma (SEG071)</option>
-                                                                        <option value="73" >Prabhati Kumari (SEG072)</option>
-                                                                        <option value="74" >Sangeeta Sharma (SEG073)</option>
-                                                                        <option value="75" >Bebi Kanwar (SEG074)</option>
-                                                                        <option value="76" >Rekha Shekhawat (SEG075)</option>
-                                                                        <option value="77" >Manoj  (SEG076)</option>
-                                                                        <option value="78" >Mahaveer Kumawat  (4001)</option>
-                                                                        <option value="79" >Manju Saran . (EMP0170)</option>
-                                                                        <option value="80" >Mamta Dhaka . (EMP0179)</option>
-                                                                        <option value="81" >Mahesh Jangir  (EMP0171)</option>
-                                                                        <option value="82" >M S Bhamu (EMP001)</option>
-                                                                        <option value="83" >Hem Lata (S10054)</option>
-                                                                        <option value="84" >Sanjay Dhaka (S10085)</option>
-                                                                        <option value="85" >Nirmala Bhukar (S10046)</option>
-                                                                        <option value="86" >Ajay Mor  (003002)</option>
-                                                                        <option value="87" >surendra rewar  (004)</option>
-                                                                        <option value="88" >sapna  (005)</option>
-                                                                        <option value="89" >vikram singh  (006)</option>
-                                                                        <option value="90" >Vikas Buglaiya (S10014)</option>
-                                                                        <option value="91" >DEEPENDRA SINGH  (007)</option>
-                                                                        <option value="92" >SURESH KUMAR SAHARAN  (008)</option>
-                                                                        <option value="93" >bhumi maheshwari  (009)</option>
-                                                                        <option value="94" >HARISH SHARMA  (1110)</option>
-                                                                        <option value="95" >zarina bano  (1111)</option>
-                                                                        <option value="96" >NEMICHAND PRAJAPAT  (1112)</option>
-                                                                        <option value="97" >PANKAJ  (1113)</option>
-                                                                        <option value="98" >CHHOTI DEVI  (1115)</option>
-                                                                        <option value="99" >BINDIYA  (1117)</option>
-                                                                        <option value="100" >kumkum sharma  (1119)</option>
-                                                                        <option value="101" >SANJAY KHAN  (1120)</option>
-                                                                        <option value="103" >pooja gora  (1125)</option>
-                                                                        <option value="104" >pooja jangir  (2226)</option>
-                                                                        <option value="105" >khushboo tak  (1127)</option>
-                                                                        <option value="106" >VIJENDRA SEWDA  (1128)</option>
-                                                                        <option value="107" >DEEPIKA SHARMA  (56)</option>
-                                                                        <option value="108" >BALVEER SINGH KARIR  (87)</option>
-                                                                        <option value="109" >JUGAL KISHOR  (97)</option>
-                                                                        <option value="110" >HARI PRAKASH  (100)</option>
-                                                                        <option value="111" >SANJAY SWEEPAR  (001)</option>
-                                                                        <option value="112" >SANDEEP  (002)</option>
-                                                                        <option value="113" >shankar lal  (003)</option>
-                                                                        <option value="114" >siyan singh  (0004)</option>
-                                                                        <option value="115" >sanjay chahar  (00006)</option>
-                                                                        <option value="116" >rajkumar  (1234)</option>
-                                                                        <option value="117" >ramswaroop moond  (22222)</option>
-                                                                        <option value="119" >saroj  (088)</option>
-                                                                        <option value="121" >DEVENDRA SINGH KHEDAR  (55)</option>
-                                                                        <option value="122" >SUSHILA  (7012)</option>
-                                                                        <option value="123" >REKHA GODARA  (8010)</option>
-                                                                        <option value="124" >PRIYA  (899)</option>
-                                                                        <option value="125" >GAYATRI  (578)</option>
-                                                                        <option value="126" >RAJU REWAR  (1023)</option>
-                                                                        <option value="128" >Dhanesh Sunda (100122)</option>
-                                                                        <option value="129" >APURWA SHARMA  (5025)</option>
-                                                                        <option value="130" >APURVA SHARMA  (55835468)</option>
-                                                                        <option value="131" >PRACHI MAAN  (6655788)</option>
-                                                                        <option value="132" >Ishwar Ram (20103)</option>
-                                                                        <option value="133" >Mahaveer Fageriya Fageriya (20104)</option>
-                                                                        <option value="134" >Chhunni Lal  (20105)</option>
-                                                                        <option value="135" >Chandra Singh  (20108)</option>
-                                                                        <option value="136" >Sharwan Bijarniya  (20109)</option>
-                                                                        <option value="137" >Shree Chand  (20110)</option>
-                                                                        <option value="138" >Chena Ram  (20113)</option>
-                                                                        <option value="139" >Surendra Rewar  (20114)</option>
-                                                                        <option value="140" >Mahaveer Narsas  (20115)</option>
-                                                                        <option value="141" >Dinesh Sharma  (20116)</option>
-                                                                        <option value="142" >Guman Ram  (20117)</option>
-                                                                        <option value="143" >Mahendra Kumar  (20119)</option>
-                                                                        <option value="144" >Bajrang Lal  (20121)</option>
-                                                                        <option value="145" >Mukesh Kumar  (20122)</option>
-                                                                        <option value="146" >Jhumar Sharma  (20123)</option>
-                                                                        <option value="147" >Omprakash Sharma  (20127)</option>
-                                                                        <option value="148" >Dhola Ram  (20133)</option>
-                                                                        <option value="149" >Raghuveer Singh  (20005)</option>
-                                                                        <option value="150" >Mahaveer Prasad  (20007)</option>
-                                                                        <option value="151" >BABITA MEEL  (657498)</option>
-                                                            </select>
-                            <input type="hidden" name="overrides[8270]" id="override_8270" value="">
-                            <div id="conflict_8270"></div>
-                        </td>
-                    </tr>
-                                    <tr>
-                        <td>
-                            <select name="substitute_subjects[8271]" class="form-control" style="width: 100%;">
-                                                                        <option value="1" >ENGLISH (ENGLISH)</option>
-                                                                        <option value="2" >HINDI (HINDI)</option>
-                                                                        <option value="3" selected>MATHEMATICS (MATHS)</option>
-                                                                        <option value="12" >ENVIRONMENTAL STUDIES (ENVIRONMENTAL STUDIES)</option>
-                                                                        <option value="27" >ENVIRONMENTAL STUDIES (ORAL) (ENVIRONMENTAL STUDIES (ORAL))</option>
-                                                                        <option value="28" >ENGLISH (ORAL) (ENGLISH (ORAL))</option>
-                                                                        <option value="29" >HINDI (ORAL) (HINDI (ORAL))</option>
-                                                                        <option value="30" >MATHEMATICS (ORAL) (MATHEMATICS (ORAL))</option>
-                                                            </select>
-                        </td>
-                        <td>LKG (B)</td>
+                        <td>VI (D)</td>
                         <td>12:00 PM - 12:30 PM</td>
                         <td></td>
                         <td>
-                            <select name="substitutions[8271]" id="substitute_8271" 
+                            <select name="substitutions[1161]" id="substitute_1161" 
                                 class="form-control substitute_select" 
-                                data-timetable_id="8271" 
-                                data-day="Wednesday" 
+                                data-timetable_id="1161" 
+                                data-day="Thursday" 
                                 data-time_from="12:00 PM" 
                                 data-time_to="12:30 PM">
                                 <option value="">Select Substitute...</option>
@@ -1118,7 +502,6 @@ Page:
                                                                         <option value="2" >Anita Jangir (SEG001)</option>
                                                                         <option value="3" >Vikas Gora (SEG005)</option>
                                                                         <option value="4" >Alka Choudhary (SEG006)</option>
-                                                                        <option value="5" >Pratibha Choudhary (SEG061)</option>
                                                                         <option value="7" >Amisha Sharma (SEG002)</option>
                                                                         <option value="8" >Anjani Jangir (SEG003)</option>
                                                                         <option value="11" >Bajrang Lal  (SEG008)</option>
@@ -1140,6 +523,7 @@ Page:
                                                                         <option value="31" >Parmeshwar Lal  (SEG028)</option>
                                                                         <option value="32" >Ruchi Swami (SEG029)</option>
                                                                         <option value="36" >Kamla Bhamu (SEG033)</option>
+                                                                        <option value="37" >Khushboo Kanwar (SEG034)</option>
                                                                         <option value="38" >Nisha Mor (SEG035)</option>
                                                                         <option value="40" >Pratibha Sharma (SEG037)</option>
                                                                         <option value="41" >Renuka  (SEG038)</option>
@@ -1240,8 +624,320 @@ Page:
                                                                         <option value="150" >Mahaveer Prasad  (20007)</option>
                                                                         <option value="151" >BABITA MEEL  (657498)</option>
                                                             </select>
-                            <input type="hidden" name="overrides[8271]" id="override_8271" value="">
-                            <div id="conflict_8271"></div>
+                            <input type="hidden" name="overrides[1161]" id="override_1161" value="">
+                            <div id="conflict_1161"></div>
+                        </td>
+                    </tr>
+                                    <tr>
+                        <td>
+                            <select name="substitute_subjects[10292]" class="form-control" style="width: 100%;">
+                                                                        <option value="1" >ENGLISH (ENGLISH)</option>
+                                                                        <option value="2" >HINDI (HINDI)</option>
+                                                                        <option value="3" >MATHEMATICS (MATHS)</option>
+                                                                        <option value="4" selected>SCIENCE (SCIENCE)</option>
+                                                                        <option value="5" >SOCIAL STUDIES (SST)</option>
+                                                                        <option value="6" >THIRD LANGUAGE (THIRD LANGUAGE)</option>
+                                                                        <option value="18" >REASONING (REASONING)</option>
+                                                                        <option value="19" >GK-GS (GK-GS)</option>
+                                                                        <option value="26" >MOY (CREATIVE TYPE) (MOY (CREATIVE TYPE))</option>
+                                                                        <option value="11" >COMPUTER (COMPUTER)</option>
+                                                            </select>
+                        </td>
+                        <td>VIII (C)</td>
+                        <td>12:25 PM - 1:00 PM</td>
+                        <td></td>
+                        <td>
+                            <select name="substitutions[10292]" id="substitute_10292" 
+                                class="form-control substitute_select" 
+                                data-timetable_id="10292" 
+                                data-day="Thursday" 
+                                data-time_from="12:25 PM" 
+                                data-time_to="1:00 PM">
+                                <option value="">Select Substitute...</option>
+                                                                        <option value="1" >Mahaveer Prasad (9000)</option>
+                                                                        <option value="2" >Anita Jangir (SEG001)</option>
+                                                                        <option value="3" >Vikas Gora (SEG005)</option>
+                                                                        <option value="4" >Alka Choudhary (SEG006)</option>
+                                                                        <option value="7" >Amisha Sharma (SEG002)</option>
+                                                                        <option value="8" >Anjani Jangir (SEG003)</option>
+                                                                        <option value="11" >Bajrang Lal  (SEG008)</option>
+                                                                        <option value="12" >Boota Singh (SEG009)</option>
+                                                                        <option value="13" >Chawand Singh (SEG010)</option>
+                                                                        <option value="14" >Mahendra Bhanwariya (SEG011)</option>
+                                                                        <option value="15" >Mahesh Ranwa (SEG012)</option>
+                                                                        <option value="16" >Manoj Jangir (SEG013)</option>
+                                                                        <option value="17" >Mohd.Ilyas  (SEG014)</option>
+                                                                        <option value="18" >Monika Sharma (SEG015)</option>
+                                                                        <option value="19" >Mukesh Kok (SEG016)</option>
+                                                                        <option value="21" >Naveen Soni (SEG018)</option>
+                                                                        <option value="22" >Om Prakash Soni (SEG019)</option>
+                                                                        <option value="24" >Parwati  (SEG021)</option>
+                                                                        <option value="26" >Santosh Ruhela (SEG023)</option>
+                                                                        <option value="27" >Sarita Gadhwal (SEG024)</option>
+                                                                        <option value="28" >Saroj Choudhary (SEG025)</option>
+                                                                        <option value="29" >Surendra Siyak (SEG026)</option>
+                                                                        <option value="31" >Parmeshwar Lal  (SEG028)</option>
+                                                                        <option value="32" >Ruchi Swami (SEG029)</option>
+                                                                        <option value="36" >Kamla Bhamu (SEG033)</option>
+                                                                        <option value="37" >Khushboo Kanwar (SEG034)</option>
+                                                                        <option value="38" >Nisha Mor (SEG035)</option>
+                                                                        <option value="40" >Pratibha Sharma (SEG037)</option>
+                                                                        <option value="41" >Renuka  (SEG038)</option>
+                                                                        <option value="43" >Geeta Sharma (SEG040)</option>
+                                                                        <option value="44" >Manisha  (SEG041)</option>
+                                                                        <option value="46" >Urmila Kumari (SEG043)</option>
+                                                                        <option value="47" >Khusboo Tailor (SEG044)</option>
+                                                                        <option value="49" >Shivani Dhaka (SEG046)</option>
+                                                                        <option value="50" >Narendra Kumar (SEG047)</option>
+                                                                        <option value="55" >Divya Bhakar (SEG052)</option>
+                                                                        <option value="56" >Gaytri Swami (SEG053)</option>
+                                                                        <option value="57" >Jyoti Gaur (SEG054)</option>
+                                                                        <option value="58" >Sarita Sain (SEG055)</option>
+                                                                        <option value="60" >Bhawana  (SEG057)</option>
+                                                                        <option value="62" >Nikita  (SEG059)</option>
+                                                                        <option value="64" >Nisha Sharma (SEG062)</option>
+                                                                        <option value="65" >Jyoti Kanwar (SEG063)</option>
+                                                                        <option value="66" >Renu Tank (SEG064)</option>
+                                                                        <option value="67" >Radhika  (359784)</option>
+                                                                        <option value="68" >Sonam Kanwar (SEG067)</option>
+                                                                        <option value="69" >Neetu Kanwar Rathor (SEG068)</option>
+                                                                        <option value="70" >Banwari Lal Bhamu (SEG069)</option>
+                                                                        <option value="71" >Aaina Ladha (SEG070)</option>
+                                                                        <option value="72" >Vidhya Sharma (SEG071)</option>
+                                                                        <option value="73" >Prabhati Kumari (SEG072)</option>
+                                                                        <option value="74" >Sangeeta Sharma (SEG073)</option>
+                                                                        <option value="75" >Bebi Kanwar (SEG074)</option>
+                                                                        <option value="76" >Rekha Shekhawat (SEG075)</option>
+                                                                        <option value="77" >Manoj  (SEG076)</option>
+                                                                        <option value="78" >Mahaveer Kumawat  (4001)</option>
+                                                                        <option value="79" >Manju Saran . (EMP0170)</option>
+                                                                        <option value="80" >Mamta Dhaka . (EMP0179)</option>
+                                                                        <option value="81" >Mahesh Jangir  (EMP0171)</option>
+                                                                        <option value="82" >M S Bhamu (EMP001)</option>
+                                                                        <option value="83" >Hem Lata (S10054)</option>
+                                                                        <option value="84" >Sanjay Dhaka (S10085)</option>
+                                                                        <option value="85" >Nirmala Bhukar (S10046)</option>
+                                                                        <option value="86" >Ajay Mor  (003002)</option>
+                                                                        <option value="87" >surendra rewar  (004)</option>
+                                                                        <option value="88" >sapna  (005)</option>
+                                                                        <option value="89" >vikram singh  (006)</option>
+                                                                        <option value="90" >Vikas Buglaiya (S10014)</option>
+                                                                        <option value="91" >DEEPENDRA SINGH  (007)</option>
+                                                                        <option value="92" >SURESH KUMAR SAHARAN  (008)</option>
+                                                                        <option value="93" >bhumi maheshwari  (009)</option>
+                                                                        <option value="94" >HARISH SHARMA  (1110)</option>
+                                                                        <option value="95" >zarina bano  (1111)</option>
+                                                                        <option value="96" >NEMICHAND PRAJAPAT  (1112)</option>
+                                                                        <option value="97" >PANKAJ  (1113)</option>
+                                                                        <option value="98" >CHHOTI DEVI  (1115)</option>
+                                                                        <option value="99" >BINDIYA  (1117)</option>
+                                                                        <option value="100" >kumkum sharma  (1119)</option>
+                                                                        <option value="101" >SANJAY KHAN  (1120)</option>
+                                                                        <option value="103" >pooja gora  (1125)</option>
+                                                                        <option value="104" >pooja jangir  (2226)</option>
+                                                                        <option value="105" >khushboo tak  (1127)</option>
+                                                                        <option value="106" >VIJENDRA SEWDA  (1128)</option>
+                                                                        <option value="107" >DEEPIKA SHARMA  (56)</option>
+                                                                        <option value="108" >BALVEER SINGH KARIR  (87)</option>
+                                                                        <option value="109" >JUGAL KISHOR  (97)</option>
+                                                                        <option value="110" >HARI PRAKASH  (100)</option>
+                                                                        <option value="111" >SANJAY SWEEPAR  (001)</option>
+                                                                        <option value="112" >SANDEEP  (002)</option>
+                                                                        <option value="113" >shankar lal  (003)</option>
+                                                                        <option value="114" >siyan singh  (0004)</option>
+                                                                        <option value="115" >sanjay chahar  (00006)</option>
+                                                                        <option value="116" >rajkumar  (1234)</option>
+                                                                        <option value="117" >ramswaroop moond  (22222)</option>
+                                                                        <option value="119" >saroj  (088)</option>
+                                                                        <option value="121" >DEVENDRA SINGH KHEDAR  (55)</option>
+                                                                        <option value="122" >SUSHILA  (7012)</option>
+                                                                        <option value="123" >REKHA GODARA  (8010)</option>
+                                                                        <option value="124" >PRIYA  (899)</option>
+                                                                        <option value="125" >GAYATRI  (578)</option>
+                                                                        <option value="126" >RAJU REWAR  (1023)</option>
+                                                                        <option value="128" >Dhanesh Sunda (100122)</option>
+                                                                        <option value="129" >APURWA SHARMA  (5025)</option>
+                                                                        <option value="130" >APURVA SHARMA  (55835468)</option>
+                                                                        <option value="131" >PRACHI MAAN  (6655788)</option>
+                                                                        <option value="132" >Ishwar Ram (20103)</option>
+                                                                        <option value="133" >Mahaveer Fageriya Fageriya (20104)</option>
+                                                                        <option value="134" >Chhunni Lal  (20105)</option>
+                                                                        <option value="135" >Chandra Singh  (20108)</option>
+                                                                        <option value="136" >Sharwan Bijarniya  (20109)</option>
+                                                                        <option value="137" >Shree Chand  (20110)</option>
+                                                                        <option value="138" >Chena Ram  (20113)</option>
+                                                                        <option value="139" >Surendra Rewar  (20114)</option>
+                                                                        <option value="140" >Mahaveer Narsas  (20115)</option>
+                                                                        <option value="141" >Dinesh Sharma  (20116)</option>
+                                                                        <option value="142" >Guman Ram  (20117)</option>
+                                                                        <option value="143" >Mahendra Kumar  (20119)</option>
+                                                                        <option value="144" >Bajrang Lal  (20121)</option>
+                                                                        <option value="145" >Mukesh Kumar  (20122)</option>
+                                                                        <option value="146" >Jhumar Sharma  (20123)</option>
+                                                                        <option value="147" >Omprakash Sharma  (20127)</option>
+                                                                        <option value="148" >Dhola Ram  (20133)</option>
+                                                                        <option value="149" >Raghuveer Singh  (20005)</option>
+                                                                        <option value="150" >Mahaveer Prasad  (20007)</option>
+                                                                        <option value="151" >BABITA MEEL  (657498)</option>
+                                                            </select>
+                            <input type="hidden" name="overrides[10292]" id="override_10292" value="">
+                            <div id="conflict_10292"></div>
+                        </td>
+                    </tr>
+                                    <tr>
+                        <td>
+                            <select name="substitute_subjects[10444]" class="form-control" style="width: 100%;">
+                                                                        <option value="1" >ENGLISH (ENGLISH)</option>
+                                                                        <option value="2" >HINDI (HINDI)</option>
+                                                                        <option value="3" >MATHEMATICS (MATHS)</option>
+                                                                        <option value="4" selected>SCIENCE (SCIENCE)</option>
+                                                                        <option value="5" >SOCIAL STUDIES (SST)</option>
+                                                                        <option value="6" >THIRD LANGUAGE (THIRD LANGUAGE)</option>
+                                                                        <option value="18" >REASONING (REASONING)</option>
+                                                                        <option value="19" >GK-GS (GK-GS)</option>
+                                                                        <option value="26" >MOY (CREATIVE TYPE) (MOY (CREATIVE TYPE))</option>
+                                                                        <option value="11" >COMPUTER (COMPUTER)</option>
+                                                            </select>
+                        </td>
+                        <td>VIII (D)</td>
+                        <td>11:50 PM - 12:25 PM</td>
+                        <td></td>
+                        <td>
+                            <select name="substitutions[10444]" id="substitute_10444" 
+                                class="form-control substitute_select" 
+                                data-timetable_id="10444" 
+                                data-day="Thursday" 
+                                data-time_from="11:50 PM" 
+                                data-time_to="12:25 PM">
+                                <option value="">Select Substitute...</option>
+                                                                        <option value="1" >Mahaveer Prasad (9000)</option>
+                                                                        <option value="2" >Anita Jangir (SEG001)</option>
+                                                                        <option value="3" >Vikas Gora (SEG005)</option>
+                                                                        <option value="4" >Alka Choudhary (SEG006)</option>
+                                                                        <option value="7" >Amisha Sharma (SEG002)</option>
+                                                                        <option value="8" >Anjani Jangir (SEG003)</option>
+                                                                        <option value="11" >Bajrang Lal  (SEG008)</option>
+                                                                        <option value="12" >Boota Singh (SEG009)</option>
+                                                                        <option value="13" >Chawand Singh (SEG010)</option>
+                                                                        <option value="14" >Mahendra Bhanwariya (SEG011)</option>
+                                                                        <option value="15" >Mahesh Ranwa (SEG012)</option>
+                                                                        <option value="16" >Manoj Jangir (SEG013)</option>
+                                                                        <option value="17" >Mohd.Ilyas  (SEG014)</option>
+                                                                        <option value="18" >Monika Sharma (SEG015)</option>
+                                                                        <option value="19" >Mukesh Kok (SEG016)</option>
+                                                                        <option value="21" >Naveen Soni (SEG018)</option>
+                                                                        <option value="22" >Om Prakash Soni (SEG019)</option>
+                                                                        <option value="24" >Parwati  (SEG021)</option>
+                                                                        <option value="26" >Santosh Ruhela (SEG023)</option>
+                                                                        <option value="27" >Sarita Gadhwal (SEG024)</option>
+                                                                        <option value="28" >Saroj Choudhary (SEG025)</option>
+                                                                        <option value="29" >Surendra Siyak (SEG026)</option>
+                                                                        <option value="31" >Parmeshwar Lal  (SEG028)</option>
+                                                                        <option value="32" >Ruchi Swami (SEG029)</option>
+                                                                        <option value="36" >Kamla Bhamu (SEG033)</option>
+                                                                        <option value="37" >Khushboo Kanwar (SEG034)</option>
+                                                                        <option value="38" >Nisha Mor (SEG035)</option>
+                                                                        <option value="40" >Pratibha Sharma (SEG037)</option>
+                                                                        <option value="41" >Renuka  (SEG038)</option>
+                                                                        <option value="43" >Geeta Sharma (SEG040)</option>
+                                                                        <option value="44" >Manisha  (SEG041)</option>
+                                                                        <option value="46" >Urmila Kumari (SEG043)</option>
+                                                                        <option value="47" >Khusboo Tailor (SEG044)</option>
+                                                                        <option value="49" >Shivani Dhaka (SEG046)</option>
+                                                                        <option value="50" >Narendra Kumar (SEG047)</option>
+                                                                        <option value="55" >Divya Bhakar (SEG052)</option>
+                                                                        <option value="56" >Gaytri Swami (SEG053)</option>
+                                                                        <option value="57" >Jyoti Gaur (SEG054)</option>
+                                                                        <option value="58" >Sarita Sain (SEG055)</option>
+                                                                        <option value="60" >Bhawana  (SEG057)</option>
+                                                                        <option value="62" >Nikita  (SEG059)</option>
+                                                                        <option value="64" >Nisha Sharma (SEG062)</option>
+                                                                        <option value="65" >Jyoti Kanwar (SEG063)</option>
+                                                                        <option value="66" >Renu Tank (SEG064)</option>
+                                                                        <option value="67" >Radhika  (359784)</option>
+                                                                        <option value="68" >Sonam Kanwar (SEG067)</option>
+                                                                        <option value="69" >Neetu Kanwar Rathor (SEG068)</option>
+                                                                        <option value="70" >Banwari Lal Bhamu (SEG069)</option>
+                                                                        <option value="71" >Aaina Ladha (SEG070)</option>
+                                                                        <option value="72" >Vidhya Sharma (SEG071)</option>
+                                                                        <option value="73" >Prabhati Kumari (SEG072)</option>
+                                                                        <option value="74" >Sangeeta Sharma (SEG073)</option>
+                                                                        <option value="75" >Bebi Kanwar (SEG074)</option>
+                                                                        <option value="76" >Rekha Shekhawat (SEG075)</option>
+                                                                        <option value="77" >Manoj  (SEG076)</option>
+                                                                        <option value="78" >Mahaveer Kumawat  (4001)</option>
+                                                                        <option value="79" >Manju Saran . (EMP0170)</option>
+                                                                        <option value="80" >Mamta Dhaka . (EMP0179)</option>
+                                                                        <option value="81" >Mahesh Jangir  (EMP0171)</option>
+                                                                        <option value="82" >M S Bhamu (EMP001)</option>
+                                                                        <option value="83" >Hem Lata (S10054)</option>
+                                                                        <option value="84" >Sanjay Dhaka (S10085)</option>
+                                                                        <option value="85" >Nirmala Bhukar (S10046)</option>
+                                                                        <option value="86" >Ajay Mor  (003002)</option>
+                                                                        <option value="87" >surendra rewar  (004)</option>
+                                                                        <option value="88" >sapna  (005)</option>
+                                                                        <option value="89" >vikram singh  (006)</option>
+                                                                        <option value="90" >Vikas Buglaiya (S10014)</option>
+                                                                        <option value="91" >DEEPENDRA SINGH  (007)</option>
+                                                                        <option value="92" >SURESH KUMAR SAHARAN  (008)</option>
+                                                                        <option value="93" >bhumi maheshwari  (009)</option>
+                                                                        <option value="94" >HARISH SHARMA  (1110)</option>
+                                                                        <option value="95" >zarina bano  (1111)</option>
+                                                                        <option value="96" >NEMICHAND PRAJAPAT  (1112)</option>
+                                                                        <option value="97" >PANKAJ  (1113)</option>
+                                                                        <option value="98" >CHHOTI DEVI  (1115)</option>
+                                                                        <option value="99" >BINDIYA  (1117)</option>
+                                                                        <option value="100" >kumkum sharma  (1119)</option>
+                                                                        <option value="101" >SANJAY KHAN  (1120)</option>
+                                                                        <option value="103" >pooja gora  (1125)</option>
+                                                                        <option value="104" >pooja jangir  (2226)</option>
+                                                                        <option value="105" >khushboo tak  (1127)</option>
+                                                                        <option value="106" >VIJENDRA SEWDA  (1128)</option>
+                                                                        <option value="107" >DEEPIKA SHARMA  (56)</option>
+                                                                        <option value="108" >BALVEER SINGH KARIR  (87)</option>
+                                                                        <option value="109" >JUGAL KISHOR  (97)</option>
+                                                                        <option value="110" >HARI PRAKASH  (100)</option>
+                                                                        <option value="111" >SANJAY SWEEPAR  (001)</option>
+                                                                        <option value="112" >SANDEEP  (002)</option>
+                                                                        <option value="113" >shankar lal  (003)</option>
+                                                                        <option value="114" >siyan singh  (0004)</option>
+                                                                        <option value="115" >sanjay chahar  (00006)</option>
+                                                                        <option value="116" >rajkumar  (1234)</option>
+                                                                        <option value="117" >ramswaroop moond  (22222)</option>
+                                                                        <option value="119" >saroj  (088)</option>
+                                                                        <option value="121" >DEVENDRA SINGH KHEDAR  (55)</option>
+                                                                        <option value="122" >SUSHILA  (7012)</option>
+                                                                        <option value="123" >REKHA GODARA  (8010)</option>
+                                                                        <option value="124" >PRIYA  (899)</option>
+                                                                        <option value="125" >GAYATRI  (578)</option>
+                                                                        <option value="126" >RAJU REWAR  (1023)</option>
+                                                                        <option value="128" >Dhanesh Sunda (100122)</option>
+                                                                        <option value="129" >APURWA SHARMA  (5025)</option>
+                                                                        <option value="130" >APURVA SHARMA  (55835468)</option>
+                                                                        <option value="131" >PRACHI MAAN  (6655788)</option>
+                                                                        <option value="132" >Ishwar Ram (20103)</option>
+                                                                        <option value="133" >Mahaveer Fageriya Fageriya (20104)</option>
+                                                                        <option value="134" >Chhunni Lal  (20105)</option>
+                                                                        <option value="135" >Chandra Singh  (20108)</option>
+                                                                        <option value="136" >Sharwan Bijarniya  (20109)</option>
+                                                                        <option value="137" >Shree Chand  (20110)</option>
+                                                                        <option value="138" >Chena Ram  (20113)</option>
+                                                                        <option value="139" >Surendra Rewar  (20114)</option>
+                                                                        <option value="140" >Mahaveer Narsas  (20115)</option>
+                                                                        <option value="141" >Dinesh Sharma  (20116)</option>
+                                                                        <option value="142" >Guman Ram  (20117)</option>
+                                                                        <option value="143" >Mahendra Kumar  (20119)</option>
+                                                                        <option value="144" >Bajrang Lal  (20121)</option>
+                                                                        <option value="145" >Mukesh Kumar  (20122)</option>
+                                                                        <option value="146" >Jhumar Sharma  (20123)</option>
+                                                                        <option value="147" >Omprakash Sharma  (20127)</option>
+                                                                        <option value="148" >Dhola Ram  (20133)</option>
+                                                                        <option value="149" >Raghuveer Singh  (20005)</option>
+                                                                        <option value="150" >Mahaveer Prasad  (20007)</option>
+                                                                        <option value="151" >BABITA MEEL  (657498)</option>
+                                                            </select>
+                            <input type="hidden" name="overrides[10444]" id="override_10444" value="">
+                            <div id="conflict_10444"></div>
                         </td>
                     </tr>
                             </tbody>

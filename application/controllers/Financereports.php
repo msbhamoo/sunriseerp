@@ -656,8 +656,9 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
             $dates               = $this->customlib->get_betweendate($_POST['search_type']);
             $data['search_type'] = $_POST['search_type'];
         } else {
+            $_POST['search_type'] = 'this_year';
             $dates               = $this->customlib->get_betweendate('this_year');
-            $data['search_type'] = '';
+            $data['search_type'] = 'this_year';
         }
 
         $start_date = date('Y-m-d', strtotime($dates['from_date']));

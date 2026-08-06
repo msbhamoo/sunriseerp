@@ -865,6 +865,38 @@ public function getFeeSessionGroupId($student_fees_master_id)
 
         $return_array = array();
         if (!empty($result_value2)) {
+            // Batch pre-fetch custom receipts for performance
+            $deposite_ids = array();
+            foreach ($result_value2 as $val) {
+                if (!empty($val->id)) {
+                    $deposite_ids[] = $val->id;
+                }
+            }
+            
+            $custom_receipts_map = array();
+            if (!empty($deposite_ids)) {
+                $this->db->where_in('student_fees_deposite_id', array_unique($deposite_ids));
+                $this->db->order_by('id', 'desc');
+                $receipt_rows = $this->db->get('custom_receipt_logs')->result();
+                foreach ($receipt_rows as $rc) {
+                    $key = $rc->student_fees_deposite_id . '_' . $rc->sub_invoice_id;
+                    if (!isset($custom_receipts_map[$key])) {
+                        $custom_receipts_map[$key] = $rc;
+                    }
+                }
+            }
+
+            // Batch pre-fetch staff names
+            $staff_names_map = array();
+            $staff_rows = $this->db->select('id, name, surname, employee_id')->get('staff')->result();
+            foreach ($staff_rows as $st) {
+                $staff_names_map[$st->id] = array(
+                    'name' => trim($st->name . ' ' . $st->surname),
+                    'employee_id' => $st->employee_id,
+                    'id' => $st->id
+                );
+            }
+
             $st_date = strtotime($start_date);
             $ed_date = strtotime($end_date);
             foreach ($result_value2 as $key => $value) {
@@ -883,8 +915,9 @@ public function getFeeSessionGroupId($student_fees_master_id)
                         $a['admission_no']           = $value->admission_no;
                         $a['firstname']              = $value->firstname;
                         
-                        // Custom receipt logic
-                        $custom_receipt = $this->db->order_by('id', 'desc')->get_where('custom_receipt_logs', array('student_fees_deposite_id' => $value->id, 'sub_invoice_id' => $r_value->inv_no))->row();
+                        // Optimized custom receipt lookup
+                        $mapKey = $value->id . '_' . $r_value->inv_no;
+                        $custom_receipt = isset($custom_receipts_map[$mapKey]) ? $custom_receipts_map[$mapKey] : null;
                         $a['custom_receipt_no'] = $custom_receipt ? $custom_receipt->receipt_no : ($value->id . '/' . $r_value->inv_no);
                         $a['custom_receipt_status'] = $custom_receipt ? $custom_receipt->status : 'Collected';
                         $a['custom_receipt_id'] = $custom_receipt ? $custom_receipt->id : 0;
@@ -908,14 +941,10 @@ public function getFeeSessionGroupId($student_fees_master_id)
                         $a['description']            = $r_value->description;
                         $a['payment_mode']           = $r_value->payment_mode;
                         $a['inv_no']                 = $r_value->inv_no;
-                        $a['received_by']            = $r_value->received_by;
-                        if (isset($r_value->received_by)) {
-
-                            $a['received_by']     = $r_value->received_by;
-                            $a['received_byname'] = $this->staff_model->get_StaffNameById($r_value->received_by);
+                        $a['received_by']            = isset($r_value->received_by) ? $r_value->received_by : '';
+                        if (!empty($r_value->received_by) && isset($staff_names_map[$r_value->received_by])) {
+                            $a['received_byname'] = $staff_names_map[$r_value->received_by];
                         } else {
-
-                            $a['received_by']     = '';
                             $a['received_byname'] = array('name' => '', 'employee_id' => '', 'id' => '');
                         }
 
@@ -1042,37 +1071,35 @@ public function getFeeSessionGroupId($student_fees_master_id)
     public function findObjectById($array, $st_date, $ed_date)
     {
         $ar = json_decode($array->amount_detail);
-
-        $array = array();
-        for ($i = $st_date; $i <= $ed_date; $i += 86400) {
-            $find = date('Y-m-d', $i);
-            foreach ($ar as $row_key => $row_value) {
-                if ($row_value->date == $find) {
-                    $array[] = $row_value;
+        $result = array();
+        if (!empty($ar) && (is_array($ar) || is_object($ar))) {
+            foreach ($ar as $row_value) {
+                if (!empty($row_value->date)) {
+                    $item_date = strtotime(date('Y-m-d', strtotime($row_value->date)));
+                    if ($item_date >= $st_date && $item_date <= $ed_date) {
+                        $result[] = $row_value;
+                    }
                 }
             }
         }
-
-        return $array;
+        return $result;
     }
 
     public function findObjectByCollectId($array, $st_date, $ed_date, $receivedBy)
     {
         $ar = json_decode($array->amount_detail);
-
-        $array = array();
-        for ($i = $st_date; $i <= $ed_date; $i += 86400) {
-            $find = date('Y-m-d', $i);
-            foreach ($ar as $row_key => $row_value) {
-                if (isset($row_value->received_by)) {
-                    if ($row_value->date == $find && $row_value->received_by == $receivedBy) {
-                        $array[] = $row_value;
+        $result = array();
+        if (!empty($ar) && (is_array($ar) || is_object($ar))) {
+            foreach ($ar as $row_value) {
+                if (!empty($row_value->date) && isset($row_value->received_by) && $row_value->received_by == $receivedBy) {
+                    $item_date = strtotime(date('Y-m-d', strtotime($row_value->date)));
+                    if ($item_date >= $st_date && $item_date <= $ed_date) {
+                        $result[] = $row_value;
                     }
                 }
             }
         }
-
-        return $array;
+        return $result;
     }	
 
     public function getTransportFeeByID($trans_fee_id) 

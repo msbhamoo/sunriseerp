@@ -77,6 +77,7 @@
         overflow-x: auto;
         padding-bottom: 16px;
         scroll-behavior: smooth;
+        position: relative;
     }
     .cr-row-container::-webkit-scrollbar {
         height: 8px;
@@ -105,6 +106,26 @@
     .cr-day-col:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+    }
+    
+    /* Sticky First Column */
+    .cr-row-container > .cr-day-col:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        box-shadow: 4px 0 15px rgba(0,0,0,0.08);
+    }
+
+    .period-badge {
+        display: inline-block;
+        background: var(--day-accent);
+        color: #ffffff;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-right: 6px;
+        text-transform: uppercase;
     }
 
     /* Pastel Theme Variations per Day */
@@ -290,14 +311,48 @@
             <?php } ?>
 
             <!-- Single Row Horizontal Scroll Timetable Grid -->
-            <?php if (!empty($timetable)) { ?>
+            <?php if (!empty($timetable)) { 
+                // Collect max period count / unique slots to render period timeline column
+                $max_slots = 0;
+                $sample_slots = [];
+                foreach ($timetable as $d_k => $p_v) {
+                    if (!empty($p_v) && count($p_v) > $max_slots) {
+                        $max_slots = count($p_v);
+                        $sample_slots = $p_v;
+                    }
+                }
+            ?>
                 <div class="cr-row-container">
+                    <!-- Sticky Period Timeline Column -->
+                    <div class="cr-day-col cr-period-col" style="flex: 0 0 180px; min-width: 180px; position: sticky; left: 0; z-index: 20; background: #ffffff; box-shadow: 4px 0 15px rgba(0,0,0,0.08); border-right: 2px solid #e2e8f0;">
+                        <div class="cr-day-header" style="background: #0f172a; color: #ffffff; font-weight: 800;">
+                            <span><i class="fa fa-list-ol"></i> Periods</span>
+                        </div>
+                        <div class="cr-day-body" style="gap: 12px;">
+                            <?php if (!empty($sample_slots)) {
+                                $p_counter = 1;
+                                foreach ($sample_slots as $s_item) {
+                                    if (isset($s_item->period_type) && $s_item->period_type == 'break') { ?>
+                                        <div style="background: #f1f5f9; border: 1px dashed #94a3b8; border-radius: 10px; padding: 10px; text-align: center; font-size: 12px; color: #475569; font-weight: 700; height: 42px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                            <i class="fa fa-cutlery"></i> <strong>Break</strong>
+                                        </div>
+                                    <?php } else { ?>
+                                        <div class="cr-slot-card" style="background: #f8fafc; border-left: 5px solid #4f46e5; height: 82px; display: flex; flex-direction: column; justify-content: center;">
+                                            <div style="font-size: 14px; font-weight: 800; color: #1e293b;">Period <?php echo $p_counter++; ?></div>
+                                            <div style="font-size: 11px; font-weight: 600; color: #64748b;"><i class="fa fa-clock-o"></i> <?php echo $s_item->time_from . " - " . $s_item->time_to; ?></div>
+                                        </div>
+                                    <?php }
+                                }
+                            } ?>
+                        </div>
+                    </div>
+
                     <?php foreach ($timetable as $tm_key => $tm_value) { 
                         $day_title = ucfirst($tm_key);
                         $is_today = (strtolower($tm_key) == strtolower($current_day));
                         $p_class = isset($pastel_classes[$day_title]) ? $pastel_classes[$day_title] : 'pastel-monday';
                     ?>
-                        <div class="cr-day-col <?php echo $p_class; ?>">
+                        <div class="cr-day-col <?php echo $p_class; ?> <?php echo $is_today ? 'today-col' : ''; ?>">
                             <div class="cr-day-header <?php echo $is_today ? 'today' : ''; ?>">
                                 <span><i class="fa fa-clock-o"></i> <?php echo $day_title; ?></span>
                                 <?php if ($is_today) { ?>
@@ -313,15 +368,15 @@
                                 <?php } else {
                                     foreach ($timetable[$tm_key] as $tm_k => $tm_kue) {
                                         if (isset($tm_kue->period_type) && $tm_kue->period_type == 'break') { ?>
-                                            <div style="background: var(--day-bg); border: 1px dashed var(--day-accent); border-radius: 10px; padding: 10px; text-align: center; font-size: 12px; color: var(--day-accent); font-weight: 600;">
-                                                <i class="fa fa-cutlery"></i> <strong><?php echo $tm_kue->break_label; ?></strong> (<?php echo $tm_kue->time_from; ?> - <?php echo $tm_kue->time_to; ?>)
+                                            <div style="background: var(--day-bg); border: 1px dashed var(--day-accent); border-radius: 10px; padding: 10px; text-align: center; font-size: 12px; color: var(--day-accent); font-weight: 600; height: 42px; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fa fa-cutlery"></i> &nbsp;<strong><?php echo $tm_kue->break_label; ?></strong>
                                             </div>
                                         <?php } else { ?>
-                                            <div class="cr-slot-card">
-                                                <div class="cr-slot-subject">
+                                            <div class="cr-slot-card" style="height: 82px; display: flex; flex-direction: column; justify-content: space-between;">
+                                                <div class="cr-slot-subject" style="margin-bottom: 0;">
                                                     <?php echo $tm_kue->subject_name != '' ? $tm_kue->subject_name : 'Not Scheduled'; ?><?php echo !empty($tm_kue->code) ? " (" . $tm_kue->code . ")" : ""; ?>
                                                 </div>
-                                                <div class="cr-slot-teacher">
+                                                <div class="cr-slot-teacher" style="margin-bottom: 0;">
                                                     <i class="fa fa-user-circle" style="color: var(--day-accent);"></i>
                                                     <span><?php echo $tm_kue->name != '' ? $tm_kue->name . " " . $tm_kue->surname : 'Not Scheduled'; ?></span>
                                                 </div>
@@ -361,6 +416,16 @@
     var section_id = '<?php echo set_value('section_id') ?>';
     var subject_group_id = '<?php echo set_value('subject_group_id') ?>';
     $(document).ready(function () {
+        // Auto-scroll to today's timetable column while keeping sticky Periods column visible
+        var todayCol = $('.cr-row-container .today-col');
+        if (todayCol.length > 0) {
+            var container = $('.cr-row-container');
+            var periodColWidth = $('.cr-period-col').outerWidth() || 180;
+            var scrollPos = todayCol.position().left - periodColWidth;
+            if (scrollPos > 0) {
+                container.animate({ scrollLeft: scrollPos }, 400);
+            }
+        }
 
         $('#myTabs a:first').tab('show') // Select first tab
         getSectionByClass(class_id, section_id);

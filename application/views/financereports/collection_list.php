@@ -9,16 +9,16 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
     .d2-card { 
         background: #ffffff; 
         border-radius: 14px; 
-        padding: 20px 24px; 
-        margin-bottom: 20px; 
+        padding: 16px 20px; 
+        margin-bottom: 12px; 
         box-shadow: 0 4px 18px rgba(0,0,0,0.02); 
         border: 1px solid #f1f5f9; 
     }
     .d2-header-card {
         background: #ffffff;
         border-radius: 14px;
-        padding: 20px 24px;
-        margin-bottom: 20px;
+        padding: 14px 20px;
+        margin-bottom: 12px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.03);
         border: 1px solid #f1f5f9;
         display: flex;
@@ -26,7 +26,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
         justify-content: space-between;
     }
     .d2-header-title {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 800;
         color: #0f172a;
         margin: 0;
@@ -36,16 +36,16 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
     }
     .d2-header-title i {
         color: #059669;
-        font-size: 22px;
+        font-size: 20px;
     }
 
     .d2-title { 
-        font-size: 15px; 
+        font-size: 14px; 
         font-weight: 800; 
         color: #0f172a; 
-        margin-bottom: 16px; 
+        margin-bottom: 10px; 
         border-bottom: 1px solid #f1f5f9; 
-        padding-bottom: 12px; 
+        padding-bottom: 8px; 
         display: flex;
         align-items: center;
         gap: 8px;
@@ -63,7 +63,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
         border-radius: 8px; 
         box-shadow: none; 
         border: none; 
-        padding: 8px 18px; 
+        padding: 7px 16px; 
         font-weight: 700; 
         background: #059669;
         color: #fff;
@@ -101,106 +101,89 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
         text-transform: uppercase; 
         letter-spacing: 0.5px;
         background: #f8fafc;
-        padding: 12px;
+        padding: 10px 12px;
     }
     .table>tbody>tr>td { 
         vertical-align: middle; 
         border-top: 1px solid #f1f5f9; 
         font-size: 13px;
         color: #334155;
-        padding: 12px;
+        padding: 10px 12px;
     }
 
     /* Summary Metrics Row */
     .d2-metrics-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 16px;
-        margin-bottom: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin-bottom: 12px;
     }
     .d2-metric-box {
         background: #ffffff;
-        border-radius: 14px;
-        padding: 16px 20px;
+        border-radius: 12px;
+        padding: 12px 16px;
         border: 1px solid #f1f5f9;
         box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
     }
     .d2-metric-icon {
-        width: 46px;
-        height: 46px;
-        border-radius: 12px;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
+        font-size: 18px;
     }
     .d2-metric-icon.emerald { background: #d1fae5; color: #047857; }
     .d2-metric-icon.blue { background: #e0f2fe; color: #0284c7; }
     .d2-metric-icon.purple { background: #f3e8ff; color: #7e22ce; }
 
-    .d2-metric-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .d2-metric-val { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.2; }
+    .d2-metric-label { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .d2-metric-val { font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.1; }
+
+    /* Hide redundant DataTables search input & default export buttons */
+    .dataTables_filter, .dt-buttons {
+        display: none !important;
+    }
 </style>
 <div class="content-wrapper dashboard2-wrapper" style="min-height: 946px;">
-    <section class="content">
-        <!-- Header Card -->
-        <div class="d2-header-card">
-            <div>
-                <div class="d2-header-title">
-                    <i class="fa fa-money"></i> Fee Collection Report
-                </div>
-                <small style="color: #64748b; font-weight: 500;">Finance Reports / Collection List</small>
-            </div>
-        </div>
+    <section class="content" style="padding: 15px 15px 0 15px;">
+        <!-- Unified Header & Criteria Card -->
+        <div class="d2-card" style="padding: 14px 20px;">
+            <form role="form" action="<?php echo site_url('financereports/collection_list') ?>" method="post" class="">
+                <?php echo $this->customlib->getCSRF(); ?>
+                <!-- Hidden Search Duration field -->
+                <select class="form-control" name="search_type" id="search_type_hidden" style="display:none;">
+                    <?php foreach ($searchlist as $key => $search) { ?>
+                        <option value="<?php echo $key ?>" <?php
+                        if ((isset($search_type)) && ($search_type == $key)) {
+                            echo "selected";
+                        }
+                        ?>><?php echo $search ?></option>
+                    <?php }?>
+                </select>
+                <div id='date_result' style="display:none;"></div>
 
-        <!-- Main content -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="d2-card">
-                    <div class="d2-title"><i class="fa fa-search" style="color:#059669;"></i> <?php echo $this->lang->line('select_criteria'); ?></div>
-                    <form role="form" action="<?php echo site_url('financereports/collection_list') ?>" method="post" class="">
-                        <div class="row" style="padding: 5px 0;">
-                            <?php echo $this->customlib->getCSRF(); ?>
-                            
-                            <div class="col-sm-4 col-lg-4 col-md-4">
-                                <div class="form-group" style="position:relative;">
-                                    <label style="font-weight: 700; color: #475569;">Search to collect Fee</label>
-                                    <input type="text" name="search_student" id="search_student_ajax" class="form-control" placeholder="<?php echo $this->lang->line('search_by_student_name'); ?>" autocomplete="off" style="border-radius: 8px;">
-                                    <div id="ajax_student_search_results_container" class="custom-ajax-search-container"></div>
-                                </div>
-                            </div>
-
-                            <div class="col-sm-4 col-lg-4 col-md-4">
-                                <div class="form-group">
-                                    <label style="font-weight: 700; color: #475569;"><?php echo $this->lang->line('search_duration'); ?><small class="req"> *</small></label>
-                                    <select class="form-control" name="search_type" onchange="showdate(this.value)" style="border-radius: 8px;">
-
-                                        <?php foreach ($searchlist as $key => $search) { ?>
-                                            <option value="<?php echo $key ?>" <?php
-                                            if ((isset($search_type)) && ($search_type == $key)) {
-                                                echo "selected";
-                                            }
-                                            ?>><?php echo $search ?></option>
-                                        <?php }?>
-                                    </select>
-                                    <span class="text-danger"><?php echo form_error('search_type'); ?></span>
-                                </div>
-                            </div>
-
-                            <div id='date_result'>
-                            </div>
-
-                            <div class="form-group">
-                                <div class="col-sm-12" style="padding-top: 10px; text-align: right;">
-                                    <button type="submit" name="search" value="search_filter" id="search_btn" class="btn btn-primary btn-sleek"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
-                                </div>
-                            </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <div class="d2-header-title">
+                            <i class="fa fa-money"></i> Fee Collection Report
                         </div>
-                    </form>
+                        <small style="color: #64748b; font-weight: 500;">Finance Reports / Collection List</small>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 8px; flex: 1; max-width: 450px; margin-left: 20px;">
+                        <div style="position:relative; flex: 1;">
+                            <input type="text" name="search_student" id="search_student_ajax" class="form-control" value="<?php echo set_value('search_student', isset($search_student) ? $search_student : ''); ?>" placeholder="Search student name, roll no, enroll no..." autocomplete="off" style="border-radius: 8px; height: 38px;">
+                            <div id="ajax_student_search_results_container" class="custom-ajax-search-container"></div>
+                        </div>
+                    </div>
                 </div>
+            </form>
+        </div>
                     <?php if (empty($results)) { ?>
                         <div class="d2-card">
                             <div class="alert alert-info" style="margin-bottom:0; border-radius: 8px;">
@@ -278,19 +261,17 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                         </div>
 
                         <div class="d2-card">
-                            <div class="d2-title" style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="d2-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
                                 <span><i class="fa fa-table" style="color:#0284c7;"></i> Fee Collection List</span>
-                                <div class="box-tools">
-                                    <input type="text" id="table_filter" class="form-control input-sm" placeholder="Search in list..." style="width: 220px; display: inline-block; border-radius: 8px;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <a class="btn btn-default btn-xs" id="btnExport" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('download_excel'); ?>" onclick="fnExcelReport();" style="border-radius: 6px; padding: 5px 10px; font-weight: 600;"><i class="fa fa-file-excel-o"></i> CSV</a>
+                                    <a class="btn btn-default btn-xs" id="print" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('print'); ?>" onclick="printDiv()" style="border-radius: 6px; padding: 5px 10px; font-weight: 600;"><i class="fa fa-print"></i> Print</a>
                                 </div>
                             </div>
                             
                             <div class="box-body table-responsive" id="transfee">
                                 <div id="printhead"><center><b><h4>Fee Collection List<br><?php $this->customlib->get_postmessage(); ?></h4></b></center></div>
                                 <div class="download_label">Fee Collection List<br><?php $this->customlib->get_postmessage(); ?></div>
-
-                                <a class="btn btn-default btn-xs pull-right" id="print" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('print'); ?>" onclick="printDiv()" style="border-radius: 6px; padding: 4px 8px; margin-left: 5px;"><i class="fa fa-print"></i></a>
-                                <a class="btn btn-default btn-xs pull-right" id="btnExport" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('download_excel'); ?>"  onclick="fnExcelReport();" style="border-radius: 6px; padding: 4px 8px;"><i class="fa fa-file-excel-o"></i></a>
 
                                 <table class="table table-striped table-hover example" style="border: none;" id="headerTable">
                                     <thead class="header">

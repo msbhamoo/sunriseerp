@@ -68,6 +68,7 @@
         overflow-x: auto;
         padding-bottom: 16px;
         scroll-behavior: smooth;
+        position: relative;
     }
     .ts-row-container::-webkit-scrollbar {
         height: 8px;
@@ -96,6 +97,26 @@
     .ts-class-col:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+    }
+    
+    /* Sticky First Column */
+    .ts-row-container > .ts-class-col:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        box-shadow: 4px 0 15px rgba(0,0,0,0.08);
+    }
+
+    .ts-period-badge {
+        display: inline-block;
+        background: #0284c7;
+        color: #ffffff;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-right: 6px;
+        text-transform: uppercase;
     }
 
     .ts-class-header {
@@ -254,8 +275,42 @@
         </div>
 
         <!-- Single Row Horizontal Class Cards -->
-        <?php if (!empty($schedule)) { ?>
+        <?php if (!empty($schedule)) { 
+            // Find class schedule with max slots to build sticky Period timeline column
+            $ts_max_slots = 0;
+            $ts_sample_slots = [];
+            foreach ($schedule as $cls_k => $tt_v) {
+                if (!empty($tt_v) && count($tt_v) > $ts_max_slots) {
+                    $ts_max_slots = count($tt_v);
+                    $ts_sample_slots = $tt_v;
+                }
+            }
+        ?>
             <div class="ts-row-container">
+                <!-- Sticky Period Timeline Column -->
+                <div class="ts-class-col ts-period-col" style="flex: 0 0 180px; min-width: 180px; position: sticky; left: 0; z-index: 20; background: #ffffff; box-shadow: 4px 0 15px rgba(0,0,0,0.08); border-right: 2px solid #e2e8f0; border-top: 4px solid #0f172a;">
+                    <div class="ts-class-header" style="background: #0f172a; color: #ffffff; font-weight: 800;">
+                        <span><i class="fa fa-list-ol"></i> Periods</span>
+                    </div>
+                    <div class="ts-class-body" style="gap: 12px;">
+                        <?php if (!empty($ts_sample_slots)) {
+                            $ts_p_counter = 1;
+                            foreach ($ts_sample_slots as $ts_s) {
+                                if (isset($ts_s->period_type) && $ts_s->period_type == 'break') { ?>
+                                    <div style="background: #f1f5f9; border: 1px dashed #94a3b8; border-radius: 8px; padding: 8px; text-align: center; font-size: 11px; color: #475569; font-weight: 700; height: 36px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                        <i class="fa fa-cutlery"></i> <strong>Break</strong>
+                                    </div>
+                                <?php } else { ?>
+                                    <div class="ts-slot-card" style="background: #f8fafc; border-left: 5px solid #0284c7; height: 92px; display: flex; flex-direction: column; justify-content: center;">
+                                        <div style="font-size: 14px; font-weight: 800; color: #1e293b;">Period <?php echo $ts_p_counter++; ?></div>
+                                        <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-top: 4px;"><i class="fa fa-clock-o"></i> <?php echo $ts_s->time_from . " - " . $ts_s->time_to; ?></div>
+                                    </div>
+                                <?php }
+                            }
+                        } ?>
+                    </div>
+                </div>
+
                 <?php 
                 $theme_idx = 0;
                 foreach ($schedule as $class_name => $timetable) { 
@@ -271,15 +326,17 @@
                         <div class="ts-class-body">
                             <?php foreach ($timetable as $t) { ?>
                                 <?php if (isset($t->period_type) && $t->period_type == 'break') { ?>
-                                    <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 8px; text-align: center; font-size: 11px; color: #64748b; font-weight: 600;">
-                                        <i class="fa fa-cutlery"></i> <?php echo $t->break_label; ?> (<?php echo $t->time_from; ?> - <?php echo $t->time_to; ?>)
+                                    <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 8px; text-align: center; font-size: 11px; color: #64748b; font-weight: 600; height: 36px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fa fa-cutlery"></i> &nbsp;<?php echo $t->break_label; ?>
                                     </div>
                                 <?php } else { 
                                     $card_class = $t->is_absent_uncovered ? 'uncovered' : ($t->is_substituted ? 'substituted' : '');
                                 ?>
-                                    <div class="ts-slot-card <?php echo $card_class; ?>">
+                                    <div class="ts-slot-card <?php echo $card_class; ?>" style="height: 92px; display: flex; flex-direction: column; justify-content: space-between;">
                                         <div class="ts-slot-subject">
-                                            <span><?php echo $t->subject_name != '' ? $t->subject_name : 'N/A'; ?><?php echo !empty($t->code) ? " (" . $t->code . ")" : ""; ?></span>
+                                            <span>
+                                                <?php echo $t->subject_name != '' ? $t->subject_name : 'N/A'; ?><?php echo !empty($t->code) ? " (" . $t->code . ")" : ""; ?>
+                                            </span>
                                             <?php if ($t->is_substituted) { ?>
                                                 <span class="ts-badge sub"><i class="fa fa-exchange"></i> Sub</span>
                                             <?php } else if ($t->is_absent_uncovered) { ?>
