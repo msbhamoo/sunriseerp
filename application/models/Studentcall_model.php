@@ -12,7 +12,6 @@ class Studentcall_model extends MY_Model
     {
         parent::__construct();
         $this->current_session = $this->setting_model->getCurrentSession();
-        $this->merge_existing_duplicate_calls();
     }
 
     public function resolve_previous_followups($call_id)

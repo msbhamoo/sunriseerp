@@ -8,6 +8,16 @@
             background-color: #f8fafc;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
+        body.modal-open {
+            overflow: hidden !important;
+        }
+        .modal {
+            overflow-y: auto !important;
+        }
+        #followUpModal .modal-body, #addCallModal .modal-body {
+            max-height: calc(100vh - 140px);
+            overflow-y: auto;
+        }
         .d2-metric-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

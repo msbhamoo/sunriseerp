@@ -297,6 +297,20 @@ class Studentcall extends Admin_Controller
                 if (!empty($followup['assigned_to'])) {
                     $this->add_notification($followup['assigned_to'], "New Follow-up assigned to you for student ID: " . $followup['student_id']);
                 }
+            } else if (!empty($data['notes'])) {
+                // Record entry into timeline history
+                $followup = array(
+                    'student_call_id' => $call_id,
+                    'student_id'      => $this->input->post('student_id'),
+                    'due_date'        => $data['date'],
+                    'priority'        => 'Medium',
+                    'assigned_to'     => $userdata["id"],
+                    'remarks'         => $data['notes'],
+                    'call_status'     => $data['call_status'],
+                    'status'          => 'Completed',
+                    'created_by'      => $userdata["id"]
+                );
+                $this->studentcall_model->add_followup($followup);
             }
 
             $copy_to_siblings = $this->input->post('copy_to_siblings');
@@ -454,17 +468,10 @@ class Studentcall extends Admin_Controller
 
         $followup_db = $this->studentcall_model->get_followup($id);
         
-        // Update main call log with the latest followup note, call_status and date
-        $update_main_call = array(
-            'date' => date('Y-m-d')
-        );
-        if ($remarks !== null && $remarks !== '') {
-            $update_main_call['notes'] = $remarks;
-        }
+        // Update main call log status if outcome/call_status is provided (preserving original call date and initial notes)
         if (!empty($call_status)) {
-            $update_main_call['call_status'] = $call_status;
+            $this->studentcall_model->update_call($followup_db['student_call_id'], array('call_status' => $call_status));
         }
-        $this->studentcall_model->update_call($followup_db['student_call_id'], $update_main_call);
 
         // Check if next follow up date is set
         if ($this->input->post('next_follow_up_date')) {

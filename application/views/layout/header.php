@@ -702,11 +702,9 @@
                     <span class="logo-lg"><img src="<?php echo $this->customlib->getBaseUrl(); ?>uploads/school_content/admin_logo/<?php echo $this->setting_model->getAdminlogo() . img_time();?>" alt="<?php echo $this->customlib->getAppName() ?>" /></span>
                 </a>
                 <nav class="navbar navbar-static-top" role="navigation">
-                    <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+                    <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button" title="Toggle Sidebar">
                         <span class="sr-only"><?php echo $this->lang->line('toggle_navigation'); ?></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
+                        <i class="icon-menu"></i>
                     </a>				
 					
                     <div class="col-lg-4 col-md-3 col-sm-2 col-xs-4">

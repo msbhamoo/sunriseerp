@@ -1,16 +1,140 @@
-<div class="content-wrapper">
-    <section class="content-header">
-        <h1><i class="fa fa-newspaper-o"></i> <?php echo $this->lang->line('marks_register'); ?></h1>
+<div class="content-wrapper dashboard2-wrapper" style="min-height: 946px;">
+    <section class="content-header" style="padding: 15px 15px 5px 15px;">
+        <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fa fa-newspaper-o" style="color: #0284c7;"></i> <?php echo $this->lang->line('marks_register'); ?>
+        </h1>
     </section>
+
+    <style type="text/css">
+        .dashboard2-wrapper {
+            background-color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        /* Modern Card Box Enhancements */
+        .sc-card {
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.02);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .sc-card-header {
+            background: #ffffff;
+            border-bottom: 1px solid #f1f5f9;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .sc-card-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sc-card label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .sc-card .form-control {
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            height: 38px;
+            background-color: #f8fafc;
+            font-size: 13px;
+            color: #0f172a;
+            transition: all 0.2s ease;
+        }
+
+        .sc-card .form-control:focus {
+            border-color: #0284c7;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+        }
+
+        .select2-container--default .select2-selection--multiple {
+            border-radius: 8px !important;
+            border: 1px solid #e2e8f0 !important;
+            background-color: #f8fafc !important;
+            min-height: 38px !important;
+        }
+
+        /* Buttons */
+        .btn-sc-primary {
+            background-color: #0284c7;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 8px 20px;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+            transition: all 0.2s ease;
+        }
+        .btn-sc-primary:hover, .btn-sc-primary:focus {
+            background-color: #0369a1;
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+        }
+
+        .btn-sc-warning {
+            background-color: #f59e0b;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 8px 18px;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+            transition: all 0.2s ease;
+        }
+        .btn-sc-warning:hover, .btn-sc-warning:focus {
+            background-color: #d97706;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .rank-option-container {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 6px 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            margin-right: 15px;
+        }
+        .rank-option-container label {
+            margin-bottom: 0 !important;
+            font-size: 12px !important;
+            text-transform: none !important;
+            color: #334155 !important;
+            cursor: pointer;
+        }
+    </style>
+
     <!-- Main content -->
-    <section class="content">
+    <section class="content" style="padding: 15px;">
         <div class="row">
             <div class="col-md-12">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title"><i class="fa fa-search"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
+                <div class="sc-card">
+                    <div class="sc-card-header">
+                        <h3 class="sc-card-title"><i class="fa fa-search" style="color:#0284c7;"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
                     </div>
-                    <div class="box-body">
+                    <div class="box-body" style="padding: 20px;">
                         <form role="form" id="filter_form" class="row">
                             <div class="col-md-3">
                                 <div class="form-group">
@@ -32,7 +156,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('exam'); ?> <small class="req"> *</small></label>
-                                    <select id="exam_id" name="exam_id" class="form-control" >
+                                    <select id="exam_id" name="exam_id" class="form-control">
                                         <option value=""><?php echo $this->lang->line('select'); ?></option>
                                     </select>
                                 </div>
@@ -40,31 +164,32 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('subject'); ?> <small class="req"> *</small></label>
-                                    <select id="subject_id" name="subject_id" class="form-control" >
+                                    <select id="subject_id" name="subject_id" class="form-control">
                                         <option value=""><?php echo $this->lang->line('select'); ?></option>
                                     </select>
                                     <input type="hidden" id="timetable_id" name="timetable_id" value="">
                                 </div>
                             </div>
                             
-                            <div class="col-md-12 text-right">
-                                <div style="display:inline-block; margin-right: 20px; border-right: 1px solid #eee; padding-right: 20px;">
-                                    <label class="radio-inline"><input type="radio" name="rank_type" value="combined" checked> Combined (All Sections)</label>
-                                    <label class="radio-inline"><input type="radio" name="rank_type" value="section"> Section-wise</label>
-                                    <button type="button" class="btn btn-warning btn-sm" id="btn_generate_rank"><i class="fa fa-line-chart"></i> Generate Rank</button>
+                            <div class="col-md-12 text-right" style="margin-top: 10px;">
+                                <div class="rank-option-container">
+                                    <label class="radio-inline"><input type="radio" name="rank_type" value="combined" checked> <strong>Combined</strong> (All Sections)</label>
+                                    <label class="radio-inline"><input type="radio" name="rank_type" value="section"> <strong>Section-wise</strong></label>
+                                    <button type="button" class="btn btn-sc-warning" id="btn_generate_rank"><i class="fa fa-line-chart"></i> Generate Rank</button>
                                 </div>
-                                <button type="button" class="btn btn-primary btn-sm" id="btn_search"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                                <button type="button" class="btn btn-sc-primary" id="btn_search"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
                             </div>
                         </form>
                     </div>
                 </div>
 
                 <!-- Marks Entry Grid Box -->
-                <div class="box box-info" id="marks_entry_container" style="display:none;">
-                    <div class="box-header with-border">
-                        <h3 class="box-title"><i class="fa fa-list"></i> <?php echo $this->lang->line('marks_entry'); ?></h3>
+                <div class="sc-card" id="marks_entry_container" style="display:none;">
+                    <div class="sc-card-header" style="display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap; padding: 10px 20px;">
+                        <h3 class="sc-card-title" style="margin: 0;"><i class="fa fa-list" style="color:#0284c7;"></i> <?php echo $this->lang->line('marks_entry'); ?></h3>
+                        <div id="marks_header_actions" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-left: auto;"></div>
                     </div>
-                    <div class="box-body marksEntryForm">
+                    <div class="box-body marksEntryForm" style="padding: 20px;">
                         <!-- Premium grid will be loaded here via AJAX -->
                     </div>
                 </div>
@@ -185,6 +310,14 @@
                 success: function (data) {
                     $('#marks_entry_container').show();
                     $('.marksEntryForm').html(data.page);
+                    
+                    var headerHtml = $('.marksEntryForm').find('#header_action_template').html();
+                    if (headerHtml) {
+                        $('#marks_header_actions').html(headerHtml).show();
+                        if ($.fn.dropify) {
+                            $('#marks_header_actions').find('.dropify').dropify();
+                        }
+                    }
                     $btn.button('reset');
                 },
                 error: function() {

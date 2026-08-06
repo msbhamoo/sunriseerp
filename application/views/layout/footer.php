@@ -469,9 +469,33 @@ pdfMake.fonts = jsonData;
                 localStorage.setItem('openSidebarMenuIndex', 'closed');
             });
 
-            // Close flyout menu when hamburger menu is tapped on mobile
-            $(document).on('click', '.sidebar-toggle', function() {
-                if ($(window).width() <= 767) {
+            // Restore desktop sidebar collapse state from localStorage
+            if (localStorage.getItem('sidebar_collapsed') === '1' && $(window).width() >= 768) {
+                $('body').addClass('sidebar-collapse');
+                // When starting in collapsed mode, ensure flyout is closed
+                $('.sidebar-menu > li .treeview-menu').removeClass('is-open');
+                $('body').removeClass('submenu-is-open');
+                localStorage.setItem('openSidebarMenuIndex', 'closed');
+            }
+
+            // Sidebar toggle click handler (Desktop & Mobile)
+            $(document).on('click', '.sidebar-toggle', function(e) {
+                e.preventDefault();
+                // Close flyout submenu when toggling sidebar
+                $('.sidebar-menu > li .treeview-menu').removeClass('is-open');
+                $('body').removeClass('submenu-is-open');
+                localStorage.setItem('openSidebarMenuIndex', 'closed');
+
+                if ($(window).width() >= 768) {
+                    $('body').toggleClass('sidebar-collapse');
+                    var isCollapsed = $('body').hasClass('sidebar-collapse');
+                    localStorage.setItem('sidebar_collapsed', isCollapsed ? '1' : '0');
+                }
+            });
+
+            // Close flyout menu when clicking outside on content wrapper
+            $(document).on('click', '.content-wrapper, .main-header .navbar', function() {
+                if ($('.sidebar-menu > li .treeview-menu.is-open').length) {
                     $('.sidebar-menu > li .treeview-menu').removeClass('is-open');
                     $('body').removeClass('submenu-is-open');
                     localStorage.setItem('openSidebarMenuIndex', 'closed');

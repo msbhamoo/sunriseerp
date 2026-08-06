@@ -1,10 +1,10 @@
 <style>
-    /* Premium Grid UI Styles */
+    /* Premium Grid UI Styles - Dashboard2 Theme */
     .premium-grid-container {
-        background: #fff;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        border: 1px solid #eaeaea;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.02);
+        border: 1px solid #f1f5f9;
         overflow: hidden;
         margin-top: 15px;
     }
@@ -17,15 +17,15 @@
     }
     
     .premium-table thead th {
-        background-color: #f8f9fa;
-        color: #495057;
-        font-weight: 600;
-        font-size: 12px;
+        background-color: #f8fafc;
+        color: #64748b;
+        font-weight: 700;
+        font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        border-bottom: 2px solid #e9ecef;
+        border-bottom: 1px solid #e2e8f0;
         border-top: none;
-        padding: 12px 15px;
+        padding: 12px 16px;
         white-space: nowrap;
         position: sticky;
         top: 0;
@@ -37,15 +37,15 @@
     }
     
     .premium-table tbody tr:hover {
-        background-color: #f1f8ff;
+        background-color: #f8fafc;
     }
     
     .premium-table td {
-        padding: 8px 15px;
+        padding: 10px 16px;
         vertical-align: middle;
-        border-top: 1px solid #f1f3f5;
+        border-top: 1px solid #f1f5f9;
         font-size: 13px;
-        color: #333;
+        color: #0f172a;
     }
     
     /* Excel-like Input Cells */
@@ -55,40 +55,43 @@
     
     .excel-cell, .noteinput {
         width: 100%;
-        border: 1px solid transparent;
-        background: transparent;
-        padding: 8px 12px;
-        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        padding: 6px 10px;
+        border-radius: 6px;
         transition: all 0.2s ease;
         box-shadow: none;
         font-weight: 500;
+        font-size: 13px;
+        color: #0f172a;
     }
     
     .excel-cell:not([readonly]):hover, .noteinput:not([readonly]):hover {
-        border-color: #dce1e7;
-        background: #fdfdfd;
+        border-color: #cbd5e1;
+        background: #ffffff;
     }
     
     .excel-cell:not([readonly]):focus, .noteinput:not([readonly]):focus {
-        border-color: #007bff;
-        background: #fff;
-        box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        border-color: #0284c7;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
         outline: none;
         position: relative;
         z-index: 5;
     }
     
     .excel-cell[readonly] {
-        background-color: #f8f9fa;
-        color: #adb5bd;
+        background-color: #f1f5f9;
+        color: #94a3b8;
         cursor: not-allowed;
-        border-color: transparent !important;
+        border-color: #e2e8f0 !important;
         box-shadow: none !important;
     }
     
     .mark-invalid {
-        border-color: #dc3545 !important;
-        background-color: #ffe6e6 !important;
+        border-color: #ef4444 !important;
+        background-color: #fef2f2 !important;
+        color: #dc2626 !important;
     }
     
     /* Checkbox Styling */
@@ -96,8 +99,9 @@
         display: flex;
         align-items: center;
         gap: 6px;
-        font-size: 12px;
-        color: #666;
+        font-size: 11px;
+        font-weight: 600;
+        color: #64748b;
         cursor: pointer;
         margin-bottom: 5px;
         user-select: none;
@@ -105,99 +109,122 @@
     
     .custom-checkbox-label input[type="checkbox"] {
         margin: 0;
-        accent-color: #007bff;
+        accent-color: #0284c7;
         width: 14px;
         height: 14px;
         cursor: pointer;
     }
     
-    /* Header Action Bar */
+    /* Header Action Bar - Compact Single Line Toolbar */
     .action-bar {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: #f8f9fa;
-        padding: 15px 20px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        border: 1px solid #eaeaea;
+        background: #f8fafc;
+        padding: 10px 16px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #e2e8f0;
+        gap: 12px;
+        flex-wrap: wrap;
     }
     
     .action-bar .dropify-wrapper {
-        height: 40px !important;
-        min-height: 40px !important;
-        border-radius: 4px;
-        border-color: #dce1e7;
+        height: 36px !important;
+        min-height: 36px !important;
+        border-radius: 8px !important;
+        border: 1px dashed #cbd5e1 !important;
+        background: #ffffff !important;
+        padding: 0 10px !important;
+        transition: all 0.2s ease !important;
     }
     
+    .action-bar .dropify-wrapper:hover {
+        border-color: #0284c7 !important;
+    }
+    
+    .action-bar .dropify-wrapper .dropify-message p {
+        font-size: 11px !important;
+        margin: 0 !important;
+        color: #64748b !important;
+        font-weight: 600 !important;
+        line-height: 36px !important;
+    }
+    
+    .action-bar .dropify-wrapper .dropify-message span.file-icon {
+        font-size: 14px !important;
+    }
+
     .btn-premium {
-        border-radius: 4px;
-        font-weight: 600;
-        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 700;
+        padding: 0 16px;
+        height: 36px;
         transition: all 0.2s;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
     }
     
     .btn-premium:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
     
     .student-avatar-placeholder {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        background: #e9ecef;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #e0f2fe;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        color: #6c757d;
-        font-weight: 600;
-        font-size: 12px;
+        color: #0284c7;
+        font-weight: 800;
+        font-size: 13px;
         margin-right: 10px;
     }
     
     .student-name-col {
         display: flex;
         align-items: center;
-        font-weight: 600;
-        color: #2b3445;
+        font-weight: 700;
+        color: #0f172a;
     }
     
     .badge-class {
-        background: #e1f5fe;
-        color: #0288d1;
-        padding: 4px 8px;
-        border-radius: 12px;
+        background: #f1f5f9;
+        color: #475569;
+        padding: 4px 10px;
+        border-radius: 20px;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
     }
     
     /* Empty State */
     .premium-empty-state {
-        padding: 40px;
+        padding: 50px 20px;
         text-align: center;
-        background: #fff;
-        border-radius: 8px;
-        border: 1px dashed #dce1e7;
-        color: #6c757d;
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px dashed #cbd5e1;
+        color: #64748b;
     }
 </style>
 
-<div class="action-bar">   
-    <div style="flex: 1; max-width: 500px;"> 
-        <form method="POST" enctype="multipart/form-data" id="fileUploadForm" style="display: flex; gap: 10px; align-items: center;">
-            <div style="flex: 1;">
-                <input id="my-file-selector" data-height="40" class="dropify" type="file">
+<div id="header_action_template" style="display:none;">
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">   
+        <form method="POST" enctype="multipart/form-data" id="fileUploadForm" style="display: flex; gap: 8px; align-items: center; margin: 0;">
+            <div style="width: 220px; position: relative;">
+                <input id="my-file-selector" name="file" data-height="34" class="dropify" type="file" data-allowed-file-extensions="xls xlsx csv" placeholder="Select Excel File">
             </div>
-            <button type="submit" class="btn btn-primary btn-premium" id="btnSubmit">
+            <button type="submit" class="btn btn-sc-primary btn-premium" id="btnSubmit" style="height: 34px; white-space: nowrap; padding: 0 14px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
                 <i class="fa fa-upload"></i> <?php echo $this->lang->line('submit') ?>
             </button>
         </form>
-    </div>  
-
-    <div> 
-        <a class="btn btn-outline-primary btn-premium" href="<?php echo site_url('cbseexam/exam/exportformat') ?>" target="_blank" style="background: #fff; border: 1px solid #007bff; color: #007bff;">
+        <a class="btn btn-premium" href="<?php echo site_url('cbseexam/exam/exportformat') ?>" target="_blank" style="height: 34px; display: inline-flex; align-items: center; gap: 6px; background: #ffffff; border: 1px solid #cbd5e1; color: #0284c7; border-radius: 8px; font-weight: 700; padding: 0 14px; font-size: 12px;">
             <i class="fa fa-download"></i> <?php echo $this->lang->line('export_sample'); ?>
         </a>
     </div>
@@ -212,27 +239,27 @@
                 <table class="table premium-table">
                     <thead>
                         <tr>
-                            <th><?php echo $this->lang->line('admission_no'); ?></th>
-                            <th><?php echo $this->lang->line('roll_no'); ?></th>
-                            <th><?php echo $this->lang->line('student_name'); ?></th>
-                            <th><?php echo $this->lang->line('class'); ?></th>
-                            <th><?php echo $this->lang->line('gender'); ?></th>
+                            <th class="sortable" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('admission_no'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
+                            <th class="sortable" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('roll_no'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
+                            <th class="sortable" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('student_name'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
+                            <th class="sortable" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('class'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
+                            <th class="sortable" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('gender'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
                             
                             <?php foreach ($exam_assessment_types as $key => $value) {
                                 if (!is_null($value->cbse_exam_timetable_assessment_type_id)) {
                                     $value = (array)$value;
                                     $code = $value['code'] ? " (".$value['code'].")" : '';
                             ?>
-                                    <th style="min-width: 150px;">
-                                        <?php echo $value['name'] . $code; ?>
+                                    <th class="sortable" style="min-width: 150px; cursor:pointer; user-select:none;">
+                                        <?php echo $value['name'] . $code; ?> <i class="fa fa-sort text-muted pull-right"></i>
                                         <div style="font-size: 10px; color: #888; font-weight: normal; margin-top: 2px;">
                                             Max: <?php echo $value['maximum_marks']; ?>
                                         </div>
                                     </th>
                             <?php } } ?>
                             
-                            <th style="min-width: 100px;">Percentage</th>
-                            <th style="min-width: 150px;"><?php echo $this->lang->line('note') ?></th>
+                            <th class="sortable" style="min-width: 100px; cursor:pointer; user-select:none;">Percentage <i class="fa fa-sort text-muted pull-right"></i></th>
+                            <th class="sortable" style="min-width: 150px; cursor:pointer; user-select:none;"><?php echo $this->lang->line('note') ?> <i class="fa fa-sort text-muted pull-right"></i></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -324,6 +351,10 @@
 
 <script>
 $(document).ready(function() {
+    if ($.fn.dropify) {
+        $('.dropify').dropify();
+    }
+
     // Keyboard navigation
     $('.excel-cell').on('keydown', function(e) {
         var $this = $(this);
@@ -473,5 +504,57 @@ $(document).ready(function() {
             }
         });
     });
+
+    // Column Sorting Handler for Premium Table
+    $(document).on('click', '.premium-table thead th.sortable', function() {
+        var $th = $(this);
+        var colIndex = $th.index();
+        var $table = $th.closest('table');
+        var $tbody = $table.find('tbody');
+        var rows = $tbody.find('tr.excel-row').get();
+        
+        var dir = $th.hasClass('asc') ? 'desc' : 'asc';
+        
+        $table.find('thead th').removeClass('asc desc').find('i.fa-sort-asc, i.fa-sort-desc').removeClass('fa-sort-asc fa-sort-desc').addClass('fa-sort');
+        $th.removeClass('asc desc').addClass(dir);
+        $th.find('i').removeClass('fa-sort fa-sort-asc fa-sort-desc').addClass(dir === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc');
+
+        rows.sort(function(a, b) {
+            var aVal = getCellValue(a, colIndex);
+            var bVal = getCellValue(b, colIndex);
+
+            var aNum = parseFloat(aVal);
+            var bNum = parseFloat(bVal);
+
+            if (!isNaN(aNum) && !isNaN(bNum)) {
+                return dir === 'asc' ? aNum - bNum : bNum - aNum;
+            }
+
+            return dir === 'asc' ? aVal.toString().localeCompare(bVal.toString()) : bVal.toString().localeCompare(aVal.toString());
+        });
+
+        $.each(rows, function(index, row) {
+            $tbody.append(row);
+        });
+    });
+
+    function getCellValue(row, index) {
+        var $td = $(row).children('td').eq(index);
+        
+        // Priority 1: Check if td has input field
+        var $input = $td.find('input[type="number"], input[type="text"]');
+        if ($input.length && $input.val() !== '') {
+            return $input.val().trim();
+        }
+        
+        // Priority 2: Check for row-percentage
+        var $perc = $td.find('.row-percentage');
+        if ($perc.length) {
+            return parseFloat($perc.text().replace('%', '')) || 0;
+        }
+        
+        // Priority 3: Direct text value
+        return $td.text().trim();
+    }
 });
 </script>
