@@ -359,21 +359,46 @@ div.slimScrollRail {
 /* =========================================
    Secondary Flyout Submenu Panel
    ========================================= */
-.sidebar-menu .treeview-menu {
-    position: fixed !important;
-    left: 240px !important;
-    top: 50px !important;
-    width: 250px !important;
-    height: calc(100vh - 50px) !important;
-    background-color: #ffffff !important;
-    border-right: 1px solid #e2e8f0 !important;
-    box-shadow: 8px 0 28px rgba(15, 23, 42, 0.08), 2px 0 6px rgba(15, 23, 42, 0.03) !important;
-    z-index: 1020 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-    display: none !important;
+
+/* Desktop Secondary Flyout Submenu Panel */
+@media (min-width: 768px) {
+    .sidebar-menu .treeview-menu {
+        position: fixed !important;
+        left: 240px !important;
+        top: 50px !important;
+        width: 250px !important;
+        height: calc(100vh - 50px) !important;
+        background-color: #ffffff !important;
+        border-right: 1px solid #e2e8f0 !important;
+        box-shadow: 8px 0 28px rgba(15, 23, 42, 0.08), 2px 0 6px rgba(15, 23, 42, 0.03) !important;
+        z-index: 1020 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        display: none !important;
+    }
+}
+
+/* Mobile Submenu Full Panel Overlay (Inside 280px Mobile Drawer) */
+@media (max-width: 767px) {
+    .sidebar-menu .treeview-menu {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100vh !important;
+        background-color: #ffffff !important;
+        z-index: 100000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        display: none !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
 }
 
 .sidebar-menu .treeview-menu.is-open {
