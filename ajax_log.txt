@@ -50,8 +50,6 @@ Page:
                                                 ✔ Anita Jangir (SEG001)                                            </option>
                                                                                     <option value="3" >
                                                 ✔ Vikas Gora (SEG005)                                            </option>
-                                                                                    <option value="13" >
-                                                ✔ Chawand Singh (SEG010)                                            </option>
                                                                                     <option value="16" >
                                                 ✔ Manoj Jangir (SEG013)                                            </option>
                                                                                     <option value="17" >
@@ -203,6 +201,8 @@ Page:
                                                 📅 Bajrang Lal  (SEG008) - XII - Science(PCB) (B)                                            </option>
                                                                                     <option value="12" >
                                                 📅 Boota Singh (SEG009) - IX (B)                                            </option>
+                                                                                    <option value="13" selected>
+                                                📅 Chawand Singh (SEG010) - VIII (A)                                            </option>
                                                                                     <option value="14" >
                                                 📅 Mahendra Bhanwariya (SEG011) - MiSaN (A)                                            </option>
                                                                                     <option value="15" >
@@ -359,8 +359,6 @@ Page:
                                                 ✔ Banwari Lal Bhamu (SEG069)                                            </option>
                                                                                     <option value="73" >
                                                 ✔ Prabhati Kumari (SEG072)                                            </option>
-                                                                                    <option value="78" >
-                                                ✔ Mahaveer Kumawat  (4001)                                            </option>
                                                                                     <option value="79" >
                                                 ✔ Manju Saran . (EMP0170)                                            </option>
                                                                                     <option value="80" >
@@ -548,6 +546,8 @@ Page:
                                                 📅 Rekha Shekhawat (SEG075) - UKG (A)                                            </option>
                                                                                     <option value="77" >
                                                 📅 Manoj  (SEG076) - UKG (C)                                            </option>
+                                                                                    <option value="78" selected>
+                                                📅 Mahaveer Kumawat  (4001) - VI (D)                                            </option>
                                                                                     <option value="91" >
                                                 📅 DEEPENDRA SINGH  (007) - VIII (E)                                            </option>
                                                                                     <option value="92" >
@@ -634,8 +634,6 @@ Page:
                                                 ✔ Vikas Gora (SEG005)                                            </option>
                                                                                     <option value="17" >
                                                 ✔ Mohd.Ilyas  (SEG014)                                            </option>
-                                                                                    <option value="36" >
-                                                ✔ Kamla Bhamu (SEG033)                                            </option>
                                                                                     <option value="41" >
                                                 ✔ Renuka  (SEG038)                                            </option>
                                                                                     <option value="55" >
@@ -805,6 +803,8 @@ Page:
                                                 📅 Parmeshwar Lal  (SEG028) - XI - Science(PCB) (A)                                            </option>
                                                                                     <option value="32" >
                                                 📅 Ruchi Swami (SEG029) - XII - Commerce (A)                                            </option>
+                                                                                    <option value="36" selected>
+                                                📅 Kamla Bhamu (SEG033) - VIII (A)                                            </option>
                                                                                     <option value="37" >
                                                 📅 Khushboo Kanwar (SEG034) - LKG (B)                                            </option>
                                                                                     <option value="38" >
@@ -953,8 +953,6 @@ Page:
                                                 ✔ Manju Saran . (EMP0170)                                            </option>
                                                                                     <option value="80" >
                                                 ✔ Mamta Dhaka . (EMP0179)                                            </option>
-                                                                                    <option value="81" >
-                                                ✔ Mahesh Jangir  (EMP0171)                                            </option>
                                                                                     <option value="82" >
                                                 ✔ M S Bhamu (EMP001)                                            </option>
                                                                                     <option value="83" >
@@ -1144,6 +1142,8 @@ Page:
                                                 📅 Rekha Shekhawat (SEG075) - I (B)                                            </option>
                                                                                     <option value="77" >
                                                 📅 Manoj  (SEG076) - UKG (C)                                            </option>
+                                                                                    <option value="81" selected>
+                                                📅 Mahesh Jangir  (EMP0171) - VIII (C)                                            </option>
                                                                                     <option value="91" >
                                                 📅 DEEPENDRA SINGH  (007) - VIII (E)                                            </option>
                                                                                     <option value="93" >
@@ -1216,8 +1216,6 @@ Page:
                                                 ✔ Vikas Gora (SEG005)                                            </option>
                                                                                     <option value="13" >
                                                 ✔ Chawand Singh (SEG010)                                            </option>
-                                                                                    <option value="16" >
-                                                ✔ Manoj Jangir (SEG013)                                            </option>
                                                                                     <option value="17" >
                                                 ✔ Mohd.Ilyas  (SEG014)                                            </option>
                                                                                     <option value="41" >
@@ -1244,8 +1242,6 @@ Page:
                                                 ✔ Mamta Dhaka . (EMP0179)                                            </option>
                                                                                     <option value="81" >
                                                 ✔ Mahesh Jangir  (EMP0171)                                            </option>
-                                                                                    <option value="82" >
-                                                ✔ M S Bhamu (EMP001)                                            </option>
                                                                                     <option value="83" >
                                                 ✔ Hem Lata (S10054)                                            </option>
                                                                                     <option value="84" >
@@ -1357,6 +1353,8 @@ Page:
                                                 📅 Mahendra Bhanwariya (SEG011) - MiSaN (A)                                            </option>
                                                                                     <option value="15" >
                                                 📅 Mahesh Ranwa (SEG012) - IX (A)                                            </option>
+                                                                                    <option value="16" >
+                                                📅 Manoj Jangir (SEG013) - VIII (D)                                            </option>
                                                                                     <option value="18" >
                                                 📅 Monika Sharma (SEG015) - MiSaN (A)                                            </option>
                                                                                     <option value="19" >
@@ -1425,6 +1423,8 @@ Page:
                                                 📅 Rekha Shekhawat (SEG075) - UKG (A)                                            </option>
                                                                                     <option value="77" >
                                                 📅 Manoj  (SEG076) - UKG (C)                                            </option>
+                                                                                    <option value="82" selected>
+                                                📅 M S Bhamu (EMP001) - VI (D)                                            </option>
                                                                                     <option value="91" >
                                                 📅 DEEPENDRA SINGH  (007) - VIII (E)                                            </option>
                                                                                     <option value="93" >
@@ -1509,8 +1509,6 @@ Page:
                                                 ✔ Vikas Gora (SEG005)                                            </option>
                                                                                     <option value="13" >
                                                 ✔ Chawand Singh (SEG010)                                            </option>
-                                                                                    <option value="16" >
-                                                ✔ Manoj Jangir (SEG013)                                            </option>
                                                                                     <option value="17" >
                                                 ✔ Mohd.Ilyas  (SEG014)                                            </option>
                                                                                     <option value="41" >
@@ -1537,8 +1535,6 @@ Page:
                                                 ✔ Mamta Dhaka . (EMP0179)                                            </option>
                                                                                     <option value="81" >
                                                 ✔ Mahesh Jangir  (EMP0171)                                            </option>
-                                                                                    <option value="82" >
-                                                ✔ M S Bhamu (EMP001)                                            </option>
                                                                                     <option value="83" >
                                                 ✔ Hem Lata (S10054)                                            </option>
                                                                                     <option value="84" >
@@ -1650,6 +1646,8 @@ Page:
                                                 📅 Mahendra Bhanwariya (SEG011) - MiSaN (A)                                            </option>
                                                                                     <option value="15" >
                                                 📅 Mahesh Ranwa (SEG012) - IX (A)                                            </option>
+                                                                                    <option value="16" selected>
+                                                📅 Manoj Jangir (SEG013) - VIII (D)                                            </option>
                                                                                     <option value="18" >
                                                 📅 Monika Sharma (SEG015) - MiSaN (A)                                            </option>
                                                                                     <option value="19" >
@@ -1718,6 +1716,8 @@ Page:
                                                 📅 Rekha Shekhawat (SEG075) - UKG (A)                                            </option>
                                                                                     <option value="77" >
                                                 📅 Manoj  (SEG076) - UKG (C)                                            </option>
+                                                                                    <option value="82" >
+                                                📅 M S Bhamu (EMP001) - VI (D)                                            </option>
                                                                                     <option value="91" >
                                                 📅 DEEPENDRA SINGH  (007) - VIII (E)                                            </option>
                                                                                     <option value="93" >

@@ -5,17 +5,17 @@
     }
     .hist-header-card {
         background: #ffffff;
-        border-radius: 14px;
-        padding: 20px 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-        border: 1px solid #f1f5f9;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+        border: 1px solid #e2e8f0;
         display: flex;
         align-items: center;
         justify-content: space-between;
     }
     .hist-header-title {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 800;
         color: #0f172a;
         margin: 0;
@@ -24,25 +24,25 @@
         gap: 10px;
     }
     .hist-header-title i {
-        color: #6366f1;
-        font-size: 22px;
+        color: #0284c7;
+        font-size: 20px;
     }
 
     .hist-search-card {
         background: #ffffff;
-        border-radius: 14px;
-        padding: 20px 24px;
-        margin-bottom: 20px;
-        border: 1px solid #f1f5f9;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin-bottom: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
     }
 
     .hist-table-card {
         background: #ffffff;
-        border-radius: 14px;
-        padding: 24px;
-        border: 1px solid #f1f5f9;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.03);
     }
 
     /* Modern Table Styling */
@@ -173,8 +173,8 @@
                 <i class="fa fa-history"></i> Substitution History Logs
             </div>
             <div>
-                <a href="<?php echo site_url('admin/substitution/index'); ?>" class="btn btn-sm btn-default" style="border-radius: 8px; font-weight: 600;"><i class="fa fa-calendar-check-o"></i> Substitute Planning</a>
-                <a href="<?php echo site_url('admin/substitution/todays_schedule'); ?>" class="btn btn-sm btn-info" style="border-radius: 8px; font-weight: 600;"><i class="fa fa-clock-o"></i> Today's Schedule</a>
+                <a href="<?php echo site_url('admin/substitution/index'); ?>" class="btn btn-sm btn-default" style="border-radius: 8px; font-weight: 600; border: 1px solid #cbd5e1; background: #ffffff; color: #334155;"><i class="fa fa-calendar-check-o"></i> Substitute Planning</a>
+                <a href="<?php echo site_url('admin/substitution/todays_schedule'); ?>" class="btn btn-sm btn-primary" style="border-radius: 8px; font-weight: 600; background: #0284c7; border-color: #0284c7;"><i class="fa fa-clock-o"></i> Today's Schedule</a>
             </div>
         </div>
 
@@ -186,13 +186,13 @@
                     <div class="col-md-4 col-sm-5">
                         <div class="form-group mb0">
                             <label style="font-weight: 700; color: #475569;"><?php echo $this->lang->line('date'); ?></label>
-                            <input type="text" id="date" name="date" class="form-control date" value="<?php echo set_value('date', $search_date); ?>" style="border-radius: 8px;">
+                            <input type="text" id="date" name="date" class="form-control date" value="<?php echo set_value('date', $search_date); ?>" style="border-radius: 8px; border: 1px solid #cbd5e1;" autocomplete="off">
                         </div>
                     </div>
                     <div class="col-md-5 col-sm-5">
                         <div class="form-group mb0">
                             <label style="font-weight: 700; color: #475569;">Filter by Teacher</label>
-                            <select id="staff_id" name="staff_id" class="form-control" style="border-radius: 8px;">
+                            <select id="staff_id" name="staff_id" class="form-control" style="border-radius: 8px; border: 1px solid #cbd5e1;">
                                 <option value=""><?php echo $this->lang->line('select'); ?> (All Teachers)</option>
                                 <?php
                                 foreach ($staff_list as $staff) {
@@ -206,7 +206,7 @@
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-2 text-right">
-                        <button type="submit" name="search" value="search_filter" class="btn btn-primary btn-block" style="border-radius: 8px; font-weight: 700; padding: 7px 16px;"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                        <button type="submit" name="search" value="search_filter" class="btn btn-primary btn-block" style="border-radius: 8px; font-weight: 700; padding: 7px 16px; background: #0284c7; border-color: #0284c7;"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
                     </div>
                 </div>
             </form>
@@ -232,6 +232,7 @@
                             <th>Class (Section)</th>
                             <th>Subject</th>
                             <th>Time</th>
+                            <th>Period</th>
                             <th>Assigned By</th>
                             <th>Conflict Status</th>
                             <th>Leave Type</th>
@@ -258,6 +259,13 @@
                                 <td style="font-weight: 700; color: #1e293b;"><?php echo $h['subject_name']; ?></td>
                                 <td style="white-space: nowrap;">
                                     <i class="fa fa-clock-o text-muted"></i> <?php echo $h['time_from'] . " - " . $h['time_to']; ?>
+                                </td>
+                                <td>
+                                    <?php if (!empty($h['period_number'])) { ?>
+                                        <span class="badge-sub-status info" style="font-weight: 800;">Period <?php echo $h['period_number']; ?></span>
+                                    <?php } else { ?>
+                                        <span class="badge-sub-status info">N/A</span>
+                                    <?php } ?>
                                 </td>
                                 <td>
                                     <div style="font-weight: 600; color: #334155;"><?php echo $h['admin_name'] . " " . $h['admin_surname']; ?></div>
@@ -299,16 +307,23 @@
             todayHighlight: true
         });
 
-        // Initialize DataTable with CSV and Print Buttons
+        // Initialize DataTable with Excel, CSV, and Print Buttons
         var table = $('.substitution-history-table').DataTable({
             dom: '<"dt-controls-row"fl>' +
                  'tr' +
                  '<"row" <"col-sm-5"i><"col-sm-7"p>>',
             buttons: [
                 {
+                    extend: 'excel',
+                    className: 'btn btn-default',
+                    text: '<i class="fa fa-file-excel-o text-success"></i> Excel',
+                    title: 'Substitution History Log',
+                    exportOptions: { columns: ':visible' }
+                },
+                {
                     extend: 'csv',
                     className: 'btn btn-default',
-                    text: '<i class="fa fa-file-excel-o text-success"></i> CSV',
+                    text: '<i class="fa fa-file-text-o"></i> CSV',
                     title: 'Substitution History Log',
                     exportOptions: { columns: ':visible' }
                 },
@@ -317,7 +332,92 @@
                     className: 'btn btn-default',
                     text: '<i class="fa fa-print"></i> Print',
                     title: 'Substitution History Log',
-                    exportOptions: { columns: ':visible' }
+                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 9] }, // Excludes Assigned By (7) and Conflict Status (8)
+                    customize: function (win) {
+                        var body = $(win.document.body);
+                        body.css('font-family', "'Inter', system-ui, -apple-system, sans-serif")
+                            .css('padding', '15px')
+                            .css('background-color', '#ffffff');
+
+                        // Inject media print styles to force color backgrounds & print graphics
+                        $(win.document.head).append(`
+                            <style type="text/css">
+                                @page {
+                                    size: A4 portrait;
+                                    margin: 10mm;
+                                }
+                                @media print {
+                                    body {
+                                        -webkit-print-color-adjust: exact !important;
+                                        print-color-adjust: exact !important;
+                                        color-adjust: exact !important;
+                                    }
+                                    .badge-sub-status {
+                                        -webkit-print-color-adjust: exact !important;
+                                        print-color-adjust: exact !important;
+                                        border: 1px solid rgba(0,0,0,0.1) !important;
+                                    }
+                                    .badge-sub-status.success { background-color: #dcfce7 !important; color: #15803d !important; }
+                                    .badge-sub-status.warning { background-color: #fef3c7 !important; color: #b45309 !important; }
+                                    .badge-sub-status.danger { background-color: #fee2e2 !important; color: #b91c1c !important; }
+                                    .badge-sub-status.info { background-color: #e0f2fe !important; color: #0369a1 !important; }
+                                    th {
+                                        background-color: #f8fafc !important;
+                                        -webkit-print-color-adjust: exact !important;
+                                    }
+                                }
+                            </style>
+                        `);
+
+                        body.find('h1')
+                            .text('Substitution History Report')
+                            .css({
+                                'text-align': 'center',
+                                'font-size': '18px',
+                                'font-weight': '800',
+                                'color': '#0f172a',
+                                'margin-bottom': '12px',
+                                'border-bottom': '2px solid #0284c7',
+                                'padding-bottom': '6px'
+                            });
+
+                        var $table = body.find('table');
+                        $table.removeClass('table-striped table-bordered')
+                            .css({
+                                'width': '100%',
+                                'border-collapse': 'collapse',
+                                'margin-top': '8px'
+                            });
+
+                        $table.find('th').css({
+                            'background-color': '#f8fafc',
+                            'color': '#334155',
+                            'font-size': '10px',
+                            'font-weight': '700',
+                            'text-transform': 'uppercase',
+                            'letter-spacing': '0.5px',
+                            'padding': '6px 8px',
+                            'border-bottom': '2px solid #cbd5e1',
+                            'text-align': 'left'
+                        });
+
+                        $table.find('td').css({
+                            'padding': '6px 8px',
+                            'font-size': '10px',
+                            'color': '#1e293b',
+                            'border-bottom': '1px solid #e2e8f0',
+                            'vertical-align': 'middle'
+                        });
+
+                        // Keep badges styled nicely for print
+                        body.find('.badge-sub-status').css({
+                            'display': 'inline-block',
+                            'padding': '2px 6px',
+                            'border-radius': '4px',
+                            'font-size': '9px',
+                            'font-weight': '700'
+                        });
+                    }
                 }
             ],
             "aaSorting": [],

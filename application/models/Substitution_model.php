@@ -151,7 +151,7 @@ class Substitution_model extends MY_Model
                 admin_staff.name as admin_name, admin_staff.surname as admin_surname, admin_staff.employee_id as admin_emp_id,
                 classes.class, sections.section, 
                 IF(sub_subjects.name IS NOT NULL, sub_subjects.name, subjects.name) as subject_name, 
-                subject_timetable.time_from, subject_timetable.time_to
+                subject_timetable.time_from, subject_timetable.time_to, subject_timetable.class_id, subject_timetable.section_id, subject_timetable.day
                 FROM staff_substitutions ss
                 INNER JOIN staff as absent_staff ON absent_staff.id = ss.absent_staff_id
                 INNER JOIN staff as sub_staff ON sub_staff.id = ss.substitute_staff_id

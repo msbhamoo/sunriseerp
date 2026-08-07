@@ -245,6 +245,9 @@ class Substitution extends Admin_Controller
         $data['title'] = 'Substitution History';
         
         $date = $this->input->post('date');
+        if (empty($date)) {
+            $date = date($this->customlib->getSchoolDateFormat());
+        }
         $staff_id = $this->input->post('staff_id');
         $data['search_date'] = $date;
         $data['search_staff_id'] = $staff_id;
@@ -253,7 +256,31 @@ class Substitution extends Admin_Controller
             $formatted_date = date('Y-m-d', $this->customlib->datetostrtotime($date));
         }
 
-        $data['history'] = $this->substitution_model->get_substitution_history($formatted_date, $staff_id);
+        $history = $this->substitution_model->get_substitution_history($formatted_date, $staff_id);
+        
+        // Calculate exact Period Number for each history log entry
+        if (!empty($history)) {
+            foreach ($history as &$h_item) {
+                $day_str = !empty($h_item['day']) ? $h_item['day'] : date('l', strtotime($h_item['date']));
+                $class_day_tt = $this->subjecttimetable_model->getSubjectByClassandSectionDay($h_item['class_id'], $h_item['section_id'], $day_str);
+                $p_index = 0;
+                $found_period = null;
+                if (!empty($class_day_tt)) {
+                    foreach ($class_day_tt as $c_slot) {
+                        if (!isset($c_slot->period_type) || $c_slot->period_type != 'break') {
+                            $p_index++;
+                        }
+                        if ($c_slot->id == $h_item['subject_timetable_id']) {
+                            $found_period = $p_index;
+                            break;
+                        }
+                    }
+                }
+                $h_item['period_number'] = $found_period;
+            }
+        }
+
+        $data['history'] = $history;
         $data['staff_list'] = $this->staff_model->get();
 
         $this->load->view('layout/header');
