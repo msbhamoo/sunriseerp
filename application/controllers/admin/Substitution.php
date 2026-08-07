@@ -80,14 +80,87 @@ class Substitution extends Admin_Controller
             ];
         }
 
+        // Fetch all staff members
+        $all_staff = $this->staff_model->get();
+
         foreach ($timetable as &$t) {
             $t->substitute_staff_id = $sub_map[$t->id]['substitute_staff_id'] ?? '';
             $t->substitute_subject_id = $sub_map[$t->id]['substitute_subject_id'] ?? '';
             $t->available_subjects = $this->subjectgroup_model->getAllsubjectByClassSection($t->class_id, $t->section_id);
+
+            // Compute exact period index based on the master class-section day timetable
+            $class_day_tt = $this->subjecttimetable_model->getSubjectByClassandSectionDay($t->class_id, $t->section_id, $day_of_week);
+            $p_index = 0;
+            $found_period = null;
+            if (!empty($class_day_tt)) {
+                foreach ($class_day_tt as $c_slot) {
+                    if (!isset($c_slot->period_type) || $c_slot->period_type != 'break') {
+                        $p_index++;
+                    }
+                    if ($c_slot->id == $t->id) {
+                        $found_period = $p_index;
+                        break;
+                    }
+                }
+            }
+            $t->period_number = $found_period;
+
+            // Get list of absent staff for this date to flag them
+            $formatted_date_str = date('Y-m-d', $timestamp);
+            $absent_data = $this->substitution_model->get_absent_staff_by_date($formatted_date_str);
+            $absent_staff_ids = [];
+            $absent_details_map = [];
+            if (!empty($absent_data['absent_staff'])) {
+                foreach ($absent_data['absent_staff'] as $as_item) {
+                    $absent_staff_ids[] = $as_item['id'];
+                    $l_label = !empty($as_item['leave_type']) ? $as_item['leave_type'] : 'Absent / On Leave';
+                    $absent_details_map[$as_item['id']] = $l_label;
+                }
+            }
+
+            // Partition staff into Available (free/not assigned), Absent/On Leave, and Busy
+            $available_staff = [];
+            $absent_staff_list = [];
+            $busy_staff = [];
+
+            foreach ($all_staff as $staff_member) {
+                if ($staff_member['id'] == $staff_id || $staff_member['is_active'] != 1) {
+                    continue;
+                }
+
+                // Check if staff is absent / on leave today
+                if (in_array($staff_member['id'], $absent_staff_ids)) {
+                    $staff_member['leave_info'] = $absent_details_map[$staff_member['id']] ?? 'Absent';
+                    $absent_staff_list[] = $staff_member;
+                    continue;
+                }
+                
+                $conflict = $this->substitution_model->check_conflict(
+                    $staff_member['id'], 
+                    $day_of_week, 
+                    $t->time_from, 
+                    $t->time_to, 
+                    $formatted_date_str
+                );
+
+                if ($conflict) {
+                    $staff_member['conflict_info'] = isset($conflict['class']) && isset($conflict['section']) 
+                        ? $conflict['class'] . ' (' . $conflict['section'] . ')'
+                        : 'Busy';
+                    $busy_staff[] = $staff_member;
+                } else {
+                    $available_staff[] = $staff_member;
+                }
+            }
+
+            $t->available_staff = $available_staff;
+            $t->absent_staff_list = $absent_staff_list;
+            $t->busy_staff = $busy_staff;
         }
+
         $data['timetable'] = $timetable;
         $data['sub_map'] = $sub_map;
-        $data['staff_list'] = $this->staff_model->get(); // All staff to act as substitutes
+        $data['staff_list'] = $all_staff;
         $data['absent_staff_id'] = $staff_id;
 
         $page = $this->load->view('admin/substitution/_timetable_list', $data, true);

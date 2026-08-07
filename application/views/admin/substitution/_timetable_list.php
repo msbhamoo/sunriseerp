@@ -5,6 +5,7 @@
         <table class="table table-striped table-bordered">
             <thead>
                 <tr>
+                    <th>Period</th>
                     <th>Subject</th>
                     <th>Class (Section)</th>
                     <th>Time</th>
@@ -13,8 +14,20 @@
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($timetable as $t) { ?>
+                <?php 
+                $fallback_p_num = 1;
+                foreach ($timetable as $t) { 
+                    $is_break = (isset($t->period_type) && $t->period_type == 'break');
+                    $period_num_display = !empty($t->period_number) ? $t->period_number : $fallback_p_num++;
+                ?>
                     <tr>
+                        <td>
+                            <?php if ($is_break) { ?>
+                                <span class="label label-default" style="font-size: 11px;"><i class="fa fa-cutlery"></i> Break</span>
+                            <?php } else { ?>
+                                <span class="label label-primary" style="font-size: 11px; font-weight: 700;">Period <?php echo $period_num_display; ?></span>
+                            <?php } ?>
+                        </td>
                         <td>
                             <select name="substitute_subjects[<?php echo $t->id; ?>]" class="form-control" style="width: 100%;">
                                 <?php 
@@ -54,13 +67,42 @@
                                 data-time_from="<?php echo $t->time_from; ?>" 
                                 data-time_to="<?php echo $t->time_to; ?>">
                                 <option value="">Select Substitute...</option>
-                                <?php foreach ($staff_list as $staff) { 
-                                    if ($staff['id'] != $absent_staff_id && $staff['is_active'] == 1) { 
-                                        $selected = (isset($sub_map[$t->id]['substitute_staff_id']) && $sub_map[$t->id]['substitute_staff_id'] == $staff['id']) ? 'selected' : '';
-                                ?>
-                                        <option value="<?php echo $staff['id']; ?>" <?php echo $selected; ?>><?php echo $staff['name'] . " " . $staff['surname'] . " (" . $staff['employee_id'] . ")"; ?></option>
-                                <?php } 
-                                } ?>
+                                
+                                <?php if (!empty($t->available_staff)) { ?>
+                                    <optgroup label="Available Staff (Free this period)">
+                                        <?php foreach ($t->available_staff as $staff) { 
+                                            $selected = (isset($sub_map[$t->id]['substitute_staff_id']) && $sub_map[$t->id]['substitute_staff_id'] == $staff['id']) ? 'selected' : '';
+                                        ?>
+                                            <option value="<?php echo $staff['id']; ?>" <?php echo $selected; ?>>
+                                                ✔ <?php echo $staff['name'] . " " . $staff['surname'] . " (" . $staff['employee_id'] . ")"; ?>
+                                            </option>
+                                        <?php } ?>
+                                    </optgroup>
+                                <?php } ?>
+
+                                <?php if (!empty($t->busy_staff)) { ?>
+                                    <optgroup label="Other Active Staff (Scheduled / Busy)">
+                                        <?php foreach ($t->busy_staff as $staff) { 
+                                            $selected = (isset($sub_map[$t->id]['substitute_staff_id']) && $sub_map[$t->id]['substitute_staff_id'] == $staff['id']) ? 'selected' : '';
+                                        ?>
+                                            <option value="<?php echo $staff['id']; ?>" <?php echo $selected; ?>>
+                                                📅 <?php echo $staff['name'] . " " . $staff['surname'] . " (" . $staff['employee_id'] . ") - " . $staff['conflict_info']; ?>
+                                            </option>
+                                        <?php } ?>
+                                    </optgroup>
+                                <?php } ?>
+
+                                <?php if (!empty($t->absent_staff_list)) { ?>
+                                    <optgroup label="Absent / On Leave Staff">
+                                        <?php foreach ($t->absent_staff_list as $staff) { 
+                                            $selected = (isset($sub_map[$t->id]['substitute_staff_id']) && $sub_map[$t->id]['substitute_staff_id'] == $staff['id']) ? 'selected' : '';
+                                        ?>
+                                            <option value="<?php echo $staff['id']; ?>" <?php echo $selected; ?>>
+                                                ⚠️ <?php echo $staff['name'] . " " . $staff['surname'] . " (" . $staff['employee_id'] . ") - " . $staff['leave_info']; ?>
+                                            </option>
+                                        <?php } ?>
+                                    </optgroup>
+                                <?php } ?>
                             </select>
                             <input type="hidden" name="overrides[<?php echo $t->id; ?>]" id="override_<?php echo $t->id; ?>" value="">
                             <div id="conflict_<?php echo $t->id; ?>"></div>

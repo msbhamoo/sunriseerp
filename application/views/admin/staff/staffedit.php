@@ -58,19 +58,24 @@
                                             <div class="form-group">
                                                 <label for="exampleInputEmail1"><?php echo $this->lang->line('role'); ?></label><small class="req"> *</small>
                                                 <input type="hidden" name="editid" value="<?php echo $staff['id']; ?>">
-                                                <select  id="role" name="role" class="form-control" >
-                                                    <option value=""   ><?php echo $this->lang->line('select'); ?></option>
-                                                    <?php
-foreach ($getStaffRole as $key => $role) {
+                                                <?php if (isset($can_change_role) && !$can_change_role) { ?>
+                                                    <input type="text" class="form-control" value="<?php echo $staff["user_type"]; ?>" readonly disabled />
+                                                    <input type="hidden" name="role" value="<?php echo $staff["role_id"]; ?>">
+                                                <?php } else { ?>
+                                                    <select  id="role" name="role" class="form-control" >
+                                                        <option value=""   ><?php echo $this->lang->line('select'); ?></option>
+                                                        <?php
+    foreach ($getStaffRole as $key => $role) {
+        ?>
+                                                            <option value="<?php echo $role["id"] ?>" <?php
+    if ($staff["user_type"] == $role["type"]) {
+            echo "selected";
+        }
+        ?>><?php echo $role["type"] ?></option>
+                                                                <?php }
     ?>
-                                                        <option value="<?php echo $role["id"] ?>" <?php
-if ($staff["user_type"] == $role["type"]) {
-        echo "selected";
-    }
-    ?>><?php echo $role["type"] ?></option>
-                                                            <?php }
-?>
-                                                </select>
+                                                    </select>
+                                                <?php } ?>
                                                 <span class="text-danger"><?php echo form_error('role'); ?></span>
                                             </div>
                                         </div>

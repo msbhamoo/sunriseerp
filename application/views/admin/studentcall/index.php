@@ -192,6 +192,72 @@
                 display: none;
             }
         }
+
+        /* STUDENT CALL NAV TABS */
+        .student-call-nav-tabs {
+            border-bottom: 2px solid #e2e8f0 !important;
+            background: #ffffff !important;
+            border-radius: 12px !important;
+            padding: 8px 12px 0 12px !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
+            margin-bottom: 20px !important;
+            display: flex !important;
+            gap: 6px !important;
+            flex-wrap: wrap !important;
+        }
+        .student-call-nav-tabs > li > a {
+            font-weight: 700 !important;
+            font-size: 14px !important;
+            color: #64748b !important;
+            border-radius: 8px 8px 0 0 !important;
+            padding: 10px 18px !important;
+            border: 1px solid transparent !important;
+            transition: all 0.2s ease !important;
+        }
+        .student-call-nav-tabs > li.active > a,
+        .student-call-nav-tabs > li.active > a:focus,
+        .student-call-nav-tabs > li.active > a:hover {
+            color: #0284c7 !important;
+            background-color: #f0f9ff !important;
+            border-color: #bae6fd #bae6fd #f0f9ff !important;
+            border-bottom-color: transparent !important;
+        }
+
+        /* FLOATING ROW ACTIONS ON HOVER + VISIBLE WHEN SCROLLED RIGHT */
+        @media (min-width: 768px) {
+            .table-responsive {
+                position: relative;
+                overflow-x: auto;
+            }
+            .mobile-card-table tbody tr {
+                transition: background-color 0.2s ease;
+            }
+            .mobile-card-table tbody tr:hover {
+                background-color: #f8fafc !important;
+            }
+            .mobile-card-table tbody tr td:last-child,
+            .mobile-card-table tbody tr td[data-label="Action"] {
+                position: relative;
+                transition: background-color 0.2s ease;
+            }
+            /* Float action cell to right viewport edge ONLY when hovering over that particular row */
+            .mobile-card-table tbody tr:hover td:last-child,
+            .mobile-card-table tbody tr:hover td[data-label="Action"] {
+                position: sticky !important;
+                right: 0 !important;
+                background-color: #f0f9ff !important;
+                z-index: 10 !important;
+                box-shadow: -6px 0 15px rgba(15, 23, 42, 0.12) !important;
+                border-left: 1px solid #cbd5e1 !important;
+            }
+            /* Action buttons are visible naturally in the table column when scrolled right */
+            .mobile-card-table tbody tr td:last-child > div,
+            .mobile-card-table tbody tr td[data-label="Action"] > div {
+                opacity: 1 !important;
+                visibility: visible !important;
+                transform: none !important;
+            }
+        }
     </style>
 
     <section class="content">
@@ -227,6 +293,31 @@
             </div>
         </div>
         <?php } ?>
+
+        <!-- NAV TABS FOR STUDENT CALL MODULE -->
+        <div class="nav-tabs-custom" style="background: transparent; box-shadow: none; margin-bottom: 20px;">
+            <ul class="nav nav-tabs student-call-nav-tabs" id="student_call_tabs">
+                <li class="active">
+                    <a href="#tab_call_log" data-toggle="tab">
+                        <i class="fa fa-phone-square text-info" style="margin-right: 6px;"></i> <?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Call Log'); ?>
+                    </a>
+                </li>
+                <li>
+                    <a href="#tab_pending_followup" data-toggle="tab">
+                        <i class="fa fa-clock-o text-warning" style="margin-right: 6px;"></i> Follow-up Pending 
+                        <span class="badge bg-yellow" style="margin-left: 6px; font-size: 11px;"><?php echo $pending_followups; ?></span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#tab_student_status" data-toggle="tab">
+                        <i class="fa fa-users text-success" style="margin-right: 6px;"></i> Student Call Status
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content" style="padding-top: 5px; background: transparent;">
+                <!-- TAB 1: CALL LOG -->
+                <div class="tab-pane active" id="tab_call_log">
 
         <div class="row">
             <div class="col-md-12">
@@ -357,7 +448,7 @@
                     </div>
                     <div class="box-body">
                         <div class="table-responsive">
-                            <table class="table table-striped table-bordered table-hover example mobile-card-table" cellspacing="0" width="100%">
+                            <table id="primary_call_log_table" class="table table-striped table-bordered table-hover example mobile-card-table" cellspacing="0" width="100%">
                                 <thead>
                                     <tr>
                                         <th><?php echo $this->lang->line('student'); ?></th>
@@ -476,6 +567,220 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    <!-- END TAB 1 -->
+
+    <!-- TAB 2: PENDING FOLLOW-UPS -->
+    <div class="tab-pane" id="tab_pending_followup">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-warning">
+                    <div class="box-header with-border">
+                        <h3 class="box-title"><i class="fa fa-clock-o text-warning"></i> Pending & Overdue Follow-ups List</h3>
+                        <div class="box-tools pull-right">
+                            <?php if ($this->rbac->hasPrivilege('student_call_log', 'can_add')) { ?>
+                                <a data-toggle="modal" data-target="#addCallModal" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Add Call & Follow-up</a>
+                            <?php } ?>
+                        </div>
+                    </div>
+                    <div class="box-body">
+                        <div class="table-responsive">
+                            <table id="pending_followup_table" class="table table-striped table-bordered table-hover pending-example mobile-card-table" cellspacing="0" width="100%">
+                                <thead>
+                                    <tr>
+                                        <th><?php echo $this->lang->line('student'); ?></th>
+                                        <th>Father Name</th>
+                                        <th><?php echo $this->lang->line('class'); ?></th>
+                                        <th><?php echo $this->lang->line('phone'); ?></th>
+                                        <th><?php echo $this->lang->line('purpose'); ?></th>
+                                        <th>Follow-up Status</th>
+                                        <th>Due Date</th>
+                                        <th>Assigned To</th>
+                                        <th class="text-right noExport"><?php echo $this->lang->line('action'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php 
+                                    $has_pending_items = false;
+                                    if (!empty($calls)) {
+                                        foreach ($calls as $call) { 
+                                            if (empty($call['pending_count']) || $call['pending_count'] == 0) {
+                                                continue;
+                                            }
+                                            $has_pending_items = true;
+                                            $normalized_date = !empty($call['date']) ? str_replace('/', '-', $call['date']) : '';
+                                            $called_today = (!empty($normalized_date) && date('Y-m-d', strtotime($normalized_date)) == date('Y-m-d')) ? '1' : '0';
+                                            $last_call_date = !empty($call['date']) ? date($this->customlib->getSchoolDateFormat(true, true), strtotime($normalized_date)) : '';
+                                            $dial_phone = !empty($call['father_phone']) ? $call['father_phone'] : (!empty($call['mother_phone']) ? $call['mother_phone'] : (!empty($call['guardian_phone']) ? $call['guardian_phone'] : (!empty($call['mobileno']) ? $call['mobileno'] : $call['phone_number'])));
+                                            $clean_dial_phone = preg_replace('/[^0-9]/', '', $dial_phone);
+                                        ?>
+                                            <tr>
+                                                <td data-label="Student">
+                                                    <div style="font-weight:600; color:#1e293b;"><?php echo $call['firstname'] . " " . $call['lastname'] . " (" . $call['admission_no'] . ")"; ?></div>
+                                                </td>
+                                                <td data-label="Father Name"><?php echo $call['father_name']; ?></td>
+                                                <td data-label="Class"><?php echo $call['class'] . " (" . $call['section'] . ")"; ?></td>
+                                                <td data-label="Phone"><?php echo $call['phone_number']; ?></td>
+                                                <td data-label="Purpose"><?php echo get_purpose_pill($call['purpose_name']); ?></td>
+                                                <td data-label="Follow-up Status">
+                                                    <?php 
+                                                        $today_date = date('Y-m-d');
+                                                        $due_date_str = !empty($call['next_follow_up_date']) ? date('Y-m-d', strtotime($call['next_follow_up_date'])) : '';
+                                                        $formatted_due = !empty($call['next_follow_up_date']) ? date($this->customlib->getSchoolDateFormat(), strtotime($call['next_follow_up_date'])) : '';
+
+                                                        if (!empty($due_date_str) && $due_date_str < $today_date) {
+                                                            echo "<span class='label label-danger'><i class='fa fa-exclamation-triangle'></i> Overdue (" . $formatted_due . ")</span>";
+                                                        } else if (!empty($due_date_str) && $due_date_str == $today_date) {
+                                                            echo "<span class='label label-warning'><i class='fa fa-clock-o'></i> Due Today</span>";
+                                                        } else {
+                                                            echo "<span class='label label-info'><i class='fa fa-calendar'></i> Pending (" . $formatted_due . ")</span>";
+                                                        }
+                                                    ?>
+                                                </td>
+                                                <td data-label="Due Date"><?php echo !empty($call['next_follow_up_date']) ? date($this->customlib->getSchoolDateFormat(), strtotime($call['next_follow_up_date'])) : '-'; ?></td>
+                                                <td data-label="Assigned To"><?php echo $call['assigned_to_name']; ?></td>
+                                                <td data-label="Action" class="pull-right">
+                                                    <div style="display:inline-flex; gap:3px; align-items:center; justify-content:flex-end;">
+                                                        <a href="javascript:void(0)" class="btn btn-success btn-xs trigger-direct-call" data-call-id="<?php echo $call['id']; ?>" data-student-name="<?php echo htmlspecialchars($call['firstname'] . ' ' . $call['lastname']); ?>" data-phone="<?php echo $clean_dial_phone; ?>" data-called-today="<?php echo $called_today; ?>" data-last-call-date="<?php echo $last_call_date; ?>" data-toggle="tooltip" title="Dial"><i class="fa fa-phone"></i></a>
+                                                        <a href="javascript:void(0)" class="btn btn-info btn-xs btn-view-call-details" data-id="<?php echo $call['id']; ?>" data-toggle="tooltip" title="View Details"><i class="fa fa-eye"></i></a>
+                                                        <?php if ($this->rbac->hasPrivilege('student_call_log', 'can_edit')) { ?>
+                                                            <a href="javascript:void(0)" class="btn btn-primary btn-xs btn-quick-resolve" data-id="<?php echo $call['id']; ?>" data-toggle="tooltip" title="Mark Done"><i class="fa fa-check"></i></a>
+                                                            <a href="javascript:void(0)" class="btn btn-warning btn-xs btn-quick-reschedule" data-id="<?php echo $call['id']; ?>" data-toggle="tooltip" title="Reschedule Date"><i class="fa fa-calendar"></i></a>
+                                                        <?php } ?>
+                                                        <a href="javascript:void(0)" class="btn btn-default btn-xs btn-follow-up-log" data-id="<?php echo $call['id']; ?>" onclick="follow_up('<?php echo $call['id']; ?>'); return false;" data-toggle="tooltip" title="Log Follow-up"><i class="fa fa-pencil"></i></a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php }
+                                    } 
+                                    if (!$has_pending_items) { ?>
+                                        <tr>
+                                            <td colspan="9" class="text-center text-muted" style="padding: 20px;">
+                                                <i class="fa fa-check-circle text-success" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+                                                No pending follow-ups currently found.
+                                            </td>
+                                        </tr>
+                                    <?php } ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END TAB 2 -->
+
+    <!-- TAB 3: STUDENT CALL STATUS -->
+    <div class="tab-pane" id="tab_student_status">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title"><i class="fa fa-filter"></i> Student Call Status Filter Criteria</h3>
+                    </div>
+                    <div class="box-body row">
+                        <div class="col-sm-2 col-md-2">
+                            <div class="form-group">
+                                <label><?php echo $this->lang->line('class'); ?></label>
+                                <select id="status_class_id" name="status_class_id" class="form-control">
+                                    <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                    <?php foreach ($class_list as $class) { ?>
+                                        <option value="<?php echo $class['id'] ?>"><?php echo $class['class'] ?></option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-2 col-md-2">
+                            <div class="form-group">
+                                <label><?php echo $this->lang->line('section'); ?></label>
+                                <select id="status_section_id" name="status_section_id" class="form-control">
+                                    <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-2 col-md-2">
+                            <div class="form-group">
+                                <label>Admission Type</label>
+                                <select id="status_admission_type" name="status_admission_type" class="form-control">
+                                    <option value="">All</option>
+                                    <option value="New">New</option>
+                                    <option value="Old">Old</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-2 col-md-2">
+                            <div class="form-group">
+                                <label>Shrestha</label>
+                                <select id="status_shrestha" name="status_shrestha" class="form-control">
+                                    <option value="">All</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-2 col-md-2">
+                            <div class="form-group">
+                                <label>RTE</label>
+                                <select id="status_rte" name="status_rte" class="form-control">
+                                    <option value="">All</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-2 col-md-2">
+                            <div class="form-group">
+                                <label>Staff Kid</label>
+                                <select id="status_is_staff_kid" name="status_is_staff_kid" class="form-control">
+                                    <option value="">All</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <button type="button" id="btn_status_search" class="btn btn-primary btn-sm pull-right"><i class="fa fa-search"></i> Filter Students</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="box box-primary">
+                    <div class="box-header ptbnull">
+                        <h3 class="box-title titlefix"><i class="fa fa-user"></i> Student Call Status Directory</h3>
+                    </div>
+                    <div class="box-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered table-hover mobile-card-table" id="student_status_table" cellspacing="0" width="100%">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Father Name</th>
+                                        <th>Class</th>
+                                        <th>Pickup Point</th>
+                                        <th>Adm. Type</th>
+                                        <th>Phone</th>
+                                        <th>Last Call Date</th>
+                                        <th>Last Call Status</th>
+                                        <th class="text-right noExport">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END TAB 3 -->
+</div>
+<!-- END TAB-CONTENT -->
+</div>
+<!-- END NAV-TABS-CUSTOM -->
 <!-- Add Call Modal -->
 <div id="addCallModal" class="modal fade" role="dialog">
     <div class="modal-dialog modal-dialog2 modal-lg">
@@ -1108,7 +1413,7 @@
                 dataType: 'json',
                 success: function(res) {
                     if (res.status == 'success') {
-                        var table = $('.example').DataTable();
+                        var table = $('#primary_call_log_table').DataTable();
                         table.clear();
                         if (res.data && res.data.length > 0) {
                             table.rows.add(res.data);
@@ -1195,6 +1500,14 @@
                 }
             });
         }
+
+        $('#pending_metric_box').on('click', function() {
+            $('#student_call_tabs a[href="#tab_pending_followup"]').tab('show');
+        });
+
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+        });
     });
 
     function follow_up(id) {
@@ -1253,7 +1566,7 @@
             $(this).removeClass('btn-default').addClass('active btn-primary');
             
             var filter = $(this).data('filter');
-            var table = $('.example').DataTable();
+            var table = $('#primary_call_log_table').DataTable();
 
             // Clear previous custom search functions
             $.fn.dataTable.ext.search = [];

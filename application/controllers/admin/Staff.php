@@ -1096,6 +1096,11 @@ class Staff extends Admin_Controller
         $sessionData = $this->session->userdata('admin');
         $userdata    = $this->customlib->getUserData();
 
+        $logged_in_role_id       = isset($userdata['role_id']) ? $userdata['role_id'] : 0;
+        $logged_in_role_name     = isset($userdata['role']) ? strtolower($userdata['role']) : '';
+        $is_logged_in_superadmin = ($logged_in_role_id == 7 || $logged_in_role_name == 'super admin');
+        $can_change_role         = ($is_logged_in_superadmin || $logged_in_role_id == 1 || $logged_in_role_name == 'admin');
+
         $data['title']               = 'Edit Staff';
         $data['id']                  = $id;
         $genderList                  = $this->customlib->getGender();
@@ -1105,7 +1110,18 @@ class Staff extends Admin_Controller
         $data["leavetypeList"]       = $leavetypeList;
         $data["payscaleList"]        = $payscaleList;
         $staffRole                   = $this->staff_model->getStaffRole();
-        $data["getStaffRole"]        = $staffRole;
+        if (!$is_logged_in_superadmin) {
+            $filteredStaffRole = array();
+            foreach ($staffRole as $role_item) {
+                if ($role_item['id'] != 7) {
+                    $filteredStaffRole[] = $role_item;
+                }
+            }
+            $staffRole = $filteredStaffRole;
+        }
+        $data["getStaffRole"]            = $staffRole;
+        $data["can_change_role"]         = $can_change_role;
+        $data["is_logged_in_superadmin"] = $is_logged_in_superadmin;
         $designation                 = $this->staff_model->getStaffDesignation();
         $data["designation"]         = $designation;
         $department                  = $this->staff_model->getDepartment();
@@ -1307,7 +1323,14 @@ class Staff extends Admin_Controller
                 }
 
                 $insert_id = $this->staff_model->add($data1);
-                $role_id   = $this->input->post("role");
+                if ($can_change_role) {
+                    $role_id = $this->input->post("role");
+                    if (!$is_logged_in_superadmin && $role_id == 7) {
+                        $role_id = $staff['role_id'];
+                    }
+                } else {
+                    $role_id = $staff['role_id'];
+                }
                 $role_data = array('staff_id' => $id, 'role_id' => $role_id);
                 $this->staff_model->update_role($role_data);
                 $leave_type    = $this->input->post("leave_type_id");

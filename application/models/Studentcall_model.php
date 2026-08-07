@@ -318,6 +318,24 @@ class Studentcall_model extends MY_Model
         return $query->result_array();
     }
 
+    public function get_total_pending_followups_count($staff_id = null)
+    {
+        $this->db->select('count(DISTINCT student_call_id) as total');
+        $this->db->from('student_call_followups');
+        $this->db->join('student_calls', 'student_calls.id = student_call_followups.student_call_id');
+        $this->db->join('student_session', 'student_session.id = student_calls.student_session_id');
+        $this->db->join('students', 'students.id = student_calls.student_id');
+        $this->db->where('student_session.session_id', $this->current_session);
+        $this->db->where('students.is_active', 'yes');
+        $this->db->where('student_call_followups.status', 'Pending');
+        if ($staff_id) {
+            $this->db->where('student_call_followups.assigned_to', $staff_id);
+        }
+        $query = $this->db->get();
+        $res = $query->row_array();
+        return isset($res['total']) ? intval($res['total']) : 0;
+    }
+
     public function get_all_pending_followups_for_reminder()
     {
         $this->db->select('student_call_followups.*, student_calls.student_id, student_calls.phone_number, students.firstname, students.lastname, students.admission_no');
@@ -363,13 +381,22 @@ class Studentcall_model extends MY_Model
         return $query->result_array();
     }
 
-    public function get_calls_by_student($student_session_id)
+    public function get_calls_by_student($student_id, $student_session_id = null)
     {
         $this->db->select('student_calls.*, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname');
         $this->db->from('student_calls');
         $this->db->join('student_call_purpose', 'student_call_purpose.id = student_calls.call_purpose_id', 'left');
         $this->db->join('staff', 'staff.id = student_calls.created_by', 'left');
-        $this->db->where('student_calls.student_session_id', $student_session_id);
+        
+        $this->db->group_start();
+        if (!empty($student_id)) {
+            $this->db->where('student_calls.student_id', $student_id);
+        }
+        if (!empty($student_session_id)) {
+            $this->db->or_where('student_calls.student_session_id', $student_session_id);
+        }
+        $this->db->group_end();
+
         $this->db->order_by('student_calls.date', 'desc');
         $query = $this->db->get();
         return $query->result_array();

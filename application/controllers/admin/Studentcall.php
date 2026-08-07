@@ -39,7 +39,7 @@ class Studentcall extends Admin_Controller
         // Fetch widget stats
         $staff_id = $this->customlib->getUserData()["id"];
         $today_stats = $this->studentcall_model->get_today_call_statistics();
-        $pending_followups = count($this->studentcall_model->get_pending_followups_by_staff($staff_id));
+        $pending_followups = $this->studentcall_model->get_total_pending_followups_count();
         
         $total_calls_today = 0;
         $connected_today = 0;
@@ -95,7 +95,7 @@ class Studentcall extends Admin_Controller
 
         // Fetch widget stats
         $today_stats = $this->studentcall_model->get_today_call_statistics();
-        $pending_followups = count($this->studentcall_model->get_pending_followups_by_staff($staff_id));
+        $pending_followups = $this->studentcall_model->get_total_pending_followups_count($staff_id);
         
         $total_calls_today = 0;
         $connected_today = 0;

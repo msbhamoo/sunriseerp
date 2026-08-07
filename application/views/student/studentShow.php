@@ -1539,30 +1539,101 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php 
-                                            $CI =& get_instance();
-                                            $CI->load->model('studentcall_model');
-                                            $stu_calls = $CI->studentcall_model->get_calls_by_student($student['student_session_id']);
-                                            if (!empty($stu_calls)) {
-                                                foreach ($stu_calls as $c) { ?>
-                                                    <tr>
-                                                        <td><?php echo $c['call_type']; ?></td>
-                                                        <td><?php echo $c['purpose_name']; ?></td>
-                                                        <td><?php echo $c['contact_person']; ?></td>
-                                                        <td><?php echo $c['phone_number']; ?></td>
-                                                        <td><?php echo $c['call_status']; ?></td>
-                                                        <td><?php echo date($this->customlib->getSchoolDateFormat(true, true), strtotime($c['date'])); ?></td>
-                                                        <td><?php 
-                                                            $stu_fws = $CI->studentcall_model->get_followups_by_call($c['id']);
-                                                            if(!empty($stu_fws) && isset($stu_fws[0]['due_date']) && $stu_fws[0]['status']=='Pending') {
-                                                                echo date($this->customlib->getSchoolDateFormat(), strtotime($stu_fws[0]['due_date']));
-                                                            }
-                                                        ?></td>
-                                                        <td><?php echo $c['notes']; ?></td>
-                                                        <td><?php echo $c['staff_name'] . " " . $c['staff_surname']; ?></td>
-                                                    </tr>
-                                                <?php }
-                                            } ?>
+                                             <?php 
+                                             $CI =& get_instance();
+                                             $CI->load->model('studentcall_model');
+                                             $stu_calls = $CI->studentcall_model->get_calls_by_student($student['id'], $student['student_session_id']);
+                                             if (!empty($stu_calls)) {
+                                                 foreach ($stu_calls as $c) { 
+                                                     $stu_fws = $CI->studentcall_model->get_followups_by_call($c['id']);
+                                                     $fw_count = !empty($stu_fws) ? count($stu_fws) : 0;
+                                                 ?>
+                                                     <tr class="call-main-row">
+                                                         <td><span class="label label-primary" style="background-color:#3b82f6 !important; font-size:11px; padding:3px 8px; border-radius:12px;"><?php echo !empty($c['call_type']) ? $c['call_type'] : 'Outgoing'; ?></span></td>
+                                                         <td><?php echo !empty($c['purpose_name']) ? get_purpose_pill($c['purpose_name']) : '-'; ?></td>
+                                                         <td><?php echo !empty($c['contact_person']) ? $c['contact_person'] : '-'; ?></td>
+                                                         <td><?php echo !empty($c['phone_number']) ? $c['phone_number'] : '-'; ?></td>
+                                                         <td>
+                                                             <?php 
+                                                                 if ($c['call_status'] == 'Connected') {
+                                                                     echo "<span class='label label-success' style='border-radius:10px;'>Connected</span>";
+                                                                 } elseif ($c['call_status'] == 'Not Connected') {
+                                                                     echo "<span class='label label-danger' style='border-radius:10px;'>Not Connected</span>";
+                                                                 } elseif ($c['call_status'] == 'Callback Requested') {
+                                                                     echo "<span class='label label-info' style='border-radius:10px;'>Callback Requested</span>";
+                                                                 } else {
+                                                                     echo "<span class='label label-default' style='border-radius:10px;'>" . htmlspecialchars($c['call_status']) . "</span>";
+                                                                 }
+                                                             ?>
+                                                         </td>
+                                                         <td><?php echo !empty($c['date']) ? date($this->customlib->getSchoolDateFormat(true, true), strtotime($c['date'])) : '-'; ?></td>
+                                                         <td><?php 
+                                                             if (!empty($stu_fws)) {
+                                                                 $latest_fw = $stu_fws[count($stu_fws) - 1];
+                                                                 if (!empty($latest_fw['due_date'])) {
+                                                                     echo date($this->customlib->getSchoolDateFormat(), strtotime($latest_fw['due_date']));
+                                                                     if ($latest_fw['status'] == 'Pending') {
+                                                                         echo " <span class='label label-warning' style='font-size:10px; border-radius:10px;'>Pending</span>";
+                                                                     } else {
+                                                                         echo " <span class='label label-success' style='font-size:10px; border-radius:10px;'>Resolved</span>";
+                                                                     }
+                                                                 } else {
+                                                                     echo "-";
+                                                                 }
+                                                             } else {
+                                                                 echo "-";
+                                                             }
+                                                         ?></td>
+                                                         <td>
+                                                             <div style="font-weight:500; color:#1e293b;"><?php echo !empty($c['notes']) ? htmlspecialchars($c['notes']) : '-'; ?></div>
+                                                             <?php if ($fw_count > 0) { ?>
+                                                                 <button type="button" class="btn btn-default btn-xs toggle-fw-timeline" data-target="#fw_timeline_<?php echo $c['id']; ?>" style="margin-top:6px; border-radius:14px; font-weight:600; color:#0284c7; background:#f0f9ff; border:1px solid #bae6fd; padding:3px 10px;">
+                                                                     <i class="fa fa-history"></i> <?php echo $fw_count; ?> Follow-up<?php echo $fw_count > 1 ? 's' : ''; ?> <i class="fa fa-chevron-down" style="font-size:9px; margin-left:2px;"></i>
+                                                                 </button>
+                                                             <?php } ?>
+                                                         </td>
+                                                         <td><?php echo trim($c['staff_name'] . " " . $c['staff_surname']); ?></td>
+                                                     </tr>
+
+                                                     <?php if ($fw_count > 0) { ?>
+                                                     <tr id="fw_timeline_<?php echo $c['id']; ?>" class="fw-timeline-row" style="display:none; background-color:#f8fafc;">
+                                                         <td colspan="9" style="padding:15px 25px; border-top:none;">
+                                                             <div style="background:#ffffff; border-radius:10px; padding:15px; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                                                                 <div style="font-weight:700; font-size:11px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
+                                                                     <i class="fa fa-clock-o text-info"></i> Follow-up History (<?php echo $fw_count; ?> Chronological Entries)
+                                                                 </div>
+                                                                 <div style="border-left:2px solid #cbd5e1; padding-left:18px; margin-left:8px;">
+                                                                     <?php foreach ($stu_fws as $fw) { 
+                                                                         $is_pending = ($fw['status'] == 'Pending');
+                                                                         $badge_class = $is_pending ? 'label-warning' : ($fw['status'] == 'Completed' || $fw['status'] == 'Resolved' ? 'label-success' : 'label-info');
+                                                                     ?>
+                                                                         <div style="position:relative; margin-bottom:14px;">
+                                                                             <div style="position:absolute; left:-24px; top:4px; width:10px; height:10px; border-radius:50%; background:<?php echo $is_pending ? '#f59e0b' : '#10b981'; ?>; border:2px solid #ffffff; box-shadow:0 0 0 1px <?php echo $is_pending ? '#fbcfe8' : '#a7f3d0'; ?>;"></div>
+                                                                             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:3px;">
+                                                                                 <span style="font-weight:700; color:#0f172a; font-size:12px;"><?php echo !empty($fw['due_date']) ? date($this->customlib->getSchoolDateFormat(), strtotime($fw['due_date'])) : 'No Date'; ?></span>
+                                                                                 <span class="label <?php echo $badge_class; ?>" style="font-size:10px; border-radius:8px;"><?php echo !empty($fw['status']) ? $fw['status'] : 'Logged'; ?></span>
+                                                                                 <?php if (!empty($fw['assigned_name'])) { ?>
+                                                                                     <span style="font-size:11px; color:#64748b;"><i class="fa fa-user" style="font-size:10px;"></i> <?php echo trim($fw['assigned_name'] . ' ' . $fw['assigned_surname']); ?></span>
+                                                                                 <?php } ?>
+                                                                             </div>
+                                                                             <?php if (!empty($fw['remarks'])) { ?>
+                                                                                 <div style="font-size:12px; color:#334155; background:#f1f5f9; padding:6px 12px; border-radius:8px; display:inline-block; max-width:100%; word-break:break-word;">
+                                                                                     <?php echo htmlspecialchars($fw['remarks']); ?>
+                                                                                 </div>
+                                                                             <?php } ?>
+                                                                         </div>
+                                                                     <?php } ?>
+                                                                 </div>
+                                                             </div>
+                                                         </td>
+                                                     </tr>
+                                                     <?php } ?>
+                                                 <?php }
+                                             } else { ?>
+                                                 <tr>
+                                                     <td colspan="9" class="text-center text-muted" style="padding:15px;"><?php echo $this->lang->line('no_record_found'); ?></td>
+                                                 </tr>
+                                             <?php } ?>
                                         </tbody>
                                     </table>
                                 </div>
@@ -5089,6 +5160,21 @@ view.setMimeTypes(
             storefile(data);
         //================store image=================
     }
+}
+
+// Student Profile Call Log - Expandable Timeline Toggle Handler
+$(document).on('click', '.toggle-fw-timeline', function(e) {
+    e.preventDefault();
+    var target = $(this).data('target');
+    $(target).toggle();
+    var $icon = $(this).find('.fa-chevron-down, .fa-chevron-up');
+    if ($(target).is(':visible')) {
+        $icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+    } else {
+        $icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+    }
+});
+</script>
   }
 </script>
 <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
