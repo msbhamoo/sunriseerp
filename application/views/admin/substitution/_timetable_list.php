@@ -115,4 +115,43 @@
             <button type="button" id="save_substitution_btn" class="btn btn-success"><i class="fa fa-save"></i> Save Substitutions</button>
         </div>
     </form>
+    <style type="text/css">
+        .select2-container--default .select2-selection--single {
+            border-radius: 8px !important;
+            border: 1px solid #cbd5e1 !important;
+            height: 38px !important;
+            padding: 4px 8px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 28px !important;
+            color: #1e293b !important;
+            font-weight: 500 !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px !important;
+        }
+        .select2-dropdown {
+            border-radius: 8px !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+            z-index: 99999 !important;
+        }
+        .select2-results__group {
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            background-color: #f1f5f9 !important;
+            padding: 6px 10px !important;
+        }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            if (typeof $.fn.select2 !== 'undefined') {
+                $('.substitute_select').select2({
+                    width: '100%',
+                    placeholder: 'Search & Select Substitute...',
+                    dropdownParent: $('body')
+                });
+            }
+        });
+    </script>
 <?php } ?>

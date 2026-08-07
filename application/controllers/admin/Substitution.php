@@ -144,9 +144,10 @@ class Substitution extends Admin_Controller
                 );
 
                 if ($conflict) {
+                    $c_label = ($conflict['conflict_type'] == 'substitution') ? 'Substituted in ' : 'Class ';
                     $staff_member['conflict_info'] = isset($conflict['class']) && isset($conflict['section']) 
-                        ? $conflict['class'] . ' (' . $conflict['section'] . ')'
-                        : 'Busy';
+                        ? $c_label . $conflict['class'] . ' (' . $conflict['section'] . ')'
+                        : 'Scheduled';
                     $busy_staff[] = $staff_member;
                 } else {
                     $available_staff[] = $staff_member;

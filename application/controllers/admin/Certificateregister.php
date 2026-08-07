@@ -411,21 +411,24 @@ class Certificateregister extends Admin_Controller {
                 'collected' => $academic_collected,
                 'due' => $academic_due,
                 'last_collected' => $academic_last_collected_amount,
-                'last_collected_date' => $academic_last_collected_date
+                'last_collected_date' => $academic_last_collected_date,
+                'last_collected_date_raw' => !empty($academic_last_date_raw) ? date('Y-m-d', strtotime($academic_last_date_raw)) : ''
             ],
             'transport' => [
                 'total' => $transport_total,
                 'collected' => $transport_collected,
                 'due' => $transport_due,
                 'last_collected' => $transport_last_collected_amount,
-                'last_collected_date' => $transport_last_collected_date
+                'last_collected_date' => $transport_last_collected_date,
+                'last_collected_date_raw' => !empty($transport_last_date_raw) ? date('Y-m-d', strtotime($transport_last_date_raw)) : ''
             ],
             'hostel' => [
                 'total' => $hostel_total,
                 'collected' => $hostel_collected,
                 'due' => $hostel_due,
                 'last_collected' => $hostel_last_collected_amount,
-                'last_collected_date' => $hostel_last_collected_date
+                'last_collected_date' => $hostel_last_collected_date,
+                'last_collected_date_raw' => !empty($hostel_last_date_raw) ? date('Y-m-d', strtotime($hostel_last_date_raw)) : ''
             ],
             'history' => $history
         ];

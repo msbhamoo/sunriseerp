@@ -83,6 +83,10 @@ class Substitution_model extends MY_Model
 
     public function check_conflict($substitute_staff_id, $day, $time_from, $time_to, $date)
     {
+        // Convert 12-hour time format (e.g. "08:45 AM" or "12:00 PM") to 24-hour H:i:s for accurate MySQL time string comparison
+        $tf_24 = date('H:i:s', strtotime($time_from));
+        $tt_24 = date('H:i:s', strtotime($time_to));
+
         // Check standard timetable for conflict
         $sql = "SELECT subject_timetable.*, classes.class, sections.section, subjects.name as subject_name 
                 FROM subject_timetable 
@@ -94,11 +98,11 @@ class Substitution_model extends MY_Model
                 AND subject_timetable.day = " . $this->db->escape($day) . " 
                 AND subject_timetable.session_id = " . $this->current_session . " 
                 AND ( 
-                    (subject_timetable.time_from <= " . $this->db->escape($time_from) . " AND subject_timetable.time_to > " . $this->db->escape($time_from) . ") 
+                    (TIME(subject_timetable.time_from) <= " . $this->db->escape($tf_24) . " AND TIME(subject_timetable.time_to) > " . $this->db->escape($tf_24) . ") 
                     OR 
-                    (subject_timetable.time_from < " . $this->db->escape($time_to) . " AND subject_timetable.time_to >= " . $this->db->escape($time_to) . ") 
+                    (TIME(subject_timetable.time_from) < " . $this->db->escape($tt_24) . " AND TIME(subject_timetable.time_to) >= " . $this->db->escape($tt_24) . ") 
                     OR 
-                    (subject_timetable.time_from >= " . $this->db->escape($time_from) . " AND subject_timetable.time_to <= " . $this->db->escape($time_to) . ") 
+                    (TIME(subject_timetable.time_from) >= " . $this->db->escape($tf_24) . " AND TIME(subject_timetable.time_to) <= " . $this->db->escape($tt_24) . ") 
                 )
                 AND subject_timetable.id NOT IN (
                     SELECT subject_timetable_id FROM staff_substitutions 
@@ -110,6 +114,7 @@ class Substitution_model extends MY_Model
         $standard_conflict = $query->row_array();
 
         if ($standard_conflict) {
+            $standard_conflict['conflict_type'] = 'regular';
             return $standard_conflict;
         }
 
@@ -125,14 +130,19 @@ class Substitution_model extends MY_Model
                  AND staff_substitutions.date = " . $this->db->escape($date) . " 
                  AND staff_substitutions.session_id = " . $this->current_session . " 
                  AND ( 
-                    (subject_timetable.time_from <= " . $this->db->escape($time_from) . " AND subject_timetable.time_to > " . $this->db->escape($time_from) . ") 
+                    (TIME(subject_timetable.time_from) <= " . $this->db->escape($tf_24) . " AND TIME(subject_timetable.time_to) > " . $this->db->escape($tf_24) . ") 
                     OR 
-                    (subject_timetable.time_from < " . $this->db->escape($time_to) . " AND subject_timetable.time_to >= " . $this->db->escape($time_to) . ") 
+                    (TIME(subject_timetable.time_from) < " . $this->db->escape($tt_24) . " AND TIME(subject_timetable.time_to) >= " . $this->db->escape($tt_24) . ") 
                     OR 
-                    (subject_timetable.time_from >= " . $this->db->escape($time_from) . " AND subject_timetable.time_to <= " . $this->db->escape($time_to) . ") 
+                    (TIME(subject_timetable.time_from) >= " . $this->db->escape($tf_24) . " AND TIME(subject_timetable.time_to) <= " . $this->db->escape($tt_24) . ") 
                  )";
         $query2 = $this->db->query($sql2);
-        return $query2->row_array();
+        $sub_conflict = $query2->row_array();
+        if ($sub_conflict) {
+            $sub_conflict['conflict_type'] = 'substitution';
+            return $sub_conflict;
+        }
+        return null;
     }
 
     public function get_substitution_history($date = null, $staff_id = null)

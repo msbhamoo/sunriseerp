@@ -830,3 +830,34 @@ if (!function_exists('get_call_status_pill')) {
         return '<span class="label" style="background-color:' . $style['bg'] . '; color:' . $style['color'] . '; border:1px solid ' . $style['border'] . '; padding:4px 10px; border-radius:12px; font-weight:600; font-size:11px; display:inline-block;">' . htmlspecialchars($status) . '</span>';
     }
 }
+
+if (!function_exists('fix_utf8_notes')) {
+    function fix_utf8_notes($str)
+    {
+        if (empty($str)) {
+            return $str;
+        }
+        if (strpos($str, 'Óñ') !== false || strpos($str, 'ÓÑ') !== false || strpos($str, 'Â') !== false) {
+            $conv1 = @mb_convert_encoding($str, 'ISO-8859-1', 'UTF-8');
+            if (!empty($conv1)) {
+                $conv2 = @mb_convert_encoding($conv1, 'ISO-8859-1', 'UTF-8');
+                if (!empty($conv2) && preg_match('/[\x{0900}-\x{097F}]/u', $conv2)) {
+                    return $conv2;
+                }
+                if (preg_match('/[\x{0900}-\x{097F}]/u', $conv1)) {
+                    return $conv1;
+                }
+            }
+            $map = [
+                'Óñà' => 'अ', 'Óñá' => 'आ', 'Óñç' => 'इ', 'Óñè' => 'ई', 'Óñë' => 'उ', 'Óñê' => 'ऊ', 'Óñï' => 'ऋ', 'ÓñÅ' => 'ए', 'ÓñÉ' => 'ऐ', 'Óñæ' => 'ओ', 'Óñô' => 'औ',
+                'Óñò' => 'क', 'Óñó' => 'ख', 'Óñô' => 'ग', 'Óñö' => 'घ', 'Óñû' => 'च', 'Óñü' => 'छ', 'Óñ£' => 'ज', 'Óñ¥' => 'झ', 'Óñ«' => 'म',
+                'Óñî' => 'ठ', 'Óñí' => 'ड', 'Óññ' => 'त', 'Óñª' => 'द', 'Óñõ' => 'ध', 'Óñ¿' => 'न',
+                'Óñ¬' => 'प', 'Óñ¼' => 'ब', 'Óñ¡' => 'भ', 'Óñ»' => 'य', 'Óñ░' => 'र', 'Óñ±' => 'ल', 'ÓñÁ' => 'व', 'Óñ¾' => 'श',
+                'Óñ©' => 'स', 'Óñ╣' => 'ह', 'Óñ¥' => 'ा', 'Óñ┐' => 'ि', 'ÓÑÇ' => 'ी', 'ÓÑü' => 'ु', 'ÓÑé' => 'ू', 'ÓÑç' => 'े', 'ÓÑê' => 'ै',
+                'ÓÑï' => 'ो', 'ÓÑì' => '्', 'ÓÑö' => 'ौ', 'ÓÑù' => 'गे'
+            ];
+            return strtr($str, $map);
+        }
+        return $str;
+    }
+}

@@ -208,23 +208,23 @@ class Studentcall_model extends MY_Model
             $this->db->where('student_calls.call_status', $status);
         }
         if (!empty($date_from) && !empty($date_to)) {
-            $this->db->where('student_calls.date >=', $date_from . ' 00:00:00');
-            $this->db->where('student_calls.date <=', $date_to . ' 23:59:59');
+            $this->db->where('DATE(student_calls.date) >=', $date_from);
+            $this->db->where('DATE(student_calls.date) <=', $date_to);
         } elseif (!empty($date_from)) {
-            $this->db->where('student_calls.date >=', $date_from . ' 00:00:00');
+            $this->db->where('DATE(student_calls.date) >=', $date_from);
         } elseif (!empty($date_to)) {
-            $this->db->where('student_calls.date <=', $date_to . ' 23:59:59');
+            $this->db->where('DATE(student_calls.date) <=', $date_to);
         }
         
         if (!empty($assigned_to)) {
             $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND student_call_followups.assigned_to = '.(int)$assigned_to.')', NULL, FALSE);
         }
         if (!empty($follow_up_date_from) && !empty($follow_up_date_to)) {
-            $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND student_call_followups.due_date >= '.$this->db->escape($follow_up_date_from . ' 00:00:00').' AND student_call_followups.due_date <= '.$this->db->escape($follow_up_date_to . ' 23:59:59').')', NULL, FALSE);
+            $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND DATE(student_call_followups.due_date) >= '.$this->db->escape($follow_up_date_from).' AND DATE(student_call_followups.due_date) <= '.$this->db->escape($follow_up_date_to).')', NULL, FALSE);
         } elseif (!empty($follow_up_date_from)) {
-            $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND student_call_followups.due_date >= '.$this->db->escape($follow_up_date_from . ' 00:00:00').')', NULL, FALSE);
+            $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND DATE(student_call_followups.due_date) >= '.$this->db->escape($follow_up_date_from).')', NULL, FALSE);
         } elseif (!empty($follow_up_date_to)) {
-            $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND student_call_followups.due_date <= '.$this->db->escape($follow_up_date_to . ' 23:59:59').')', NULL, FALSE);
+            $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND DATE(student_call_followups.due_date) <= '.$this->db->escape($follow_up_date_to).')', NULL, FALSE);
         }
 
         $this->db->order_by('student_calls.id', 'desc');
@@ -416,9 +416,10 @@ class Studentcall_model extends MY_Model
 
     public function get_students_call_status($class_id = null, $section_id = null, $start = 0, $length = 10, $search_value = '', $admission_type = '', $shrestha = '', $rte = '', $is_staff_kid = '', $purpose_id = '', $call_status = '', $order_by = 'students.firstname', $order_dir = 'asc')
     {
-        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.admission_no, students.father_name, students.mobileno, students.father_phone, students.mother_phone, students.guardian_phone, students.admission_type, classes.class, sections.section, sc.date as last_call_date, sc.call_status as last_call_status, pickup_point.name as pickup_point_name');
+        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.admission_no, students.father_name, students.mobileno, students.father_phone, students.mother_phone, students.guardian_phone, students.admission_type, students.shrestha, students.rte, students.is_staff_kid, students.staff_id, student_staff.name as student_staff_name, classes.class, sections.section, sc.date as last_call_date, sc.call_status as last_call_status, pickup_point.name as pickup_point_name');
         $this->db->from('student_session');
         $this->db->join('students', 'students.id = student_session.student_id');
+        $this->db->join('staff as student_staff', 'student_staff.id = students.staff_id', 'left');
         $this->db->join('classes', 'student_session.class_id = classes.id');
         $this->db->join('sections', 'student_session.section_id = sections.id');
         $this->db->join('route_pickup_point', 'student_session.route_pickup_point_id = route_pickup_point.id', 'left');
@@ -451,13 +452,31 @@ class Studentcall_model extends MY_Model
             $this->db->where('students.admission_type', $admission_type);
         }
         if ($shrestha !== '' && $shrestha !== null) {
-            $this->db->where('students.shrestha', $shrestha);
+            if ($shrestha === 'Yes' || $shrestha === '1' || $shrestha === 1) {
+                $this->db->where_in('students.shrestha', ['Yes', 1, '1']);
+            } elseif ($shrestha === 'No' || $shrestha === '0' || $shrestha === 0) {
+                $this->db->where_in('students.shrestha', ['No', 0, '0']);
+            } else {
+                $this->db->where('students.shrestha', $shrestha);
+            }
         }
         if ($rte !== '' && $rte !== null) {
-            $this->db->where('students.rte', $rte);
+            if ($rte === 'Yes' || $rte === '1' || $rte === 1) {
+                $this->db->where_in('students.rte', ['Yes', 1, '1']);
+            } elseif ($rte === 'No' || $rte === '0' || $rte === 0) {
+                $this->db->where_in('students.rte', ['No', 0, '0']);
+            } else {
+                $this->db->where('students.rte', $rte);
+            }
         }
         if ($is_staff_kid !== '' && $is_staff_kid !== null) {
-            $this->db->where('students.is_staff_kid', $is_staff_kid);
+            if ($is_staff_kid === 'Yes' || $is_staff_kid === '1' || $is_staff_kid === 1) {
+                $this->db->where_in('students.is_staff_kid', [1, '1', 'Yes']);
+            } elseif ($is_staff_kid === 'No' || $is_staff_kid === '0' || $is_staff_kid === 0) {
+                $this->db->where_in('students.is_staff_kid', [0, '0', 'No']);
+            } else {
+                $this->db->where('students.is_staff_kid', $is_staff_kid);
+            }
         }
 
         if (!empty($call_status)) {
@@ -519,13 +538,31 @@ class Studentcall_model extends MY_Model
             $this->db->where('students.admission_type', $admission_type);
         }
         if ($shrestha !== '' && $shrestha !== null) {
-            $this->db->where('students.shrestha', $shrestha);
+            if ($shrestha === 'Yes' || $shrestha === '1' || $shrestha === 1) {
+                $this->db->where_in('students.shrestha', ['Yes', 1, '1']);
+            } elseif ($shrestha === 'No' || $shrestha === '0' || $shrestha === 0) {
+                $this->db->where_in('students.shrestha', ['No', 0, '0']);
+            } else {
+                $this->db->where('students.shrestha', $shrestha);
+            }
         }
         if ($rte !== '' && $rte !== null) {
-            $this->db->where('students.rte', $rte);
+            if ($rte === 'Yes' || $rte === '1' || $rte === 1) {
+                $this->db->where_in('students.rte', ['Yes', 1, '1']);
+            } elseif ($rte === 'No' || $rte === '0' || $rte === 0) {
+                $this->db->where_in('students.rte', ['No', 0, '0']);
+            } else {
+                $this->db->where('students.rte', $rte);
+            }
         }
         if ($is_staff_kid !== '' && $is_staff_kid !== null) {
-            $this->db->where('students.is_staff_kid', $is_staff_kid);
+            if ($is_staff_kid === 'Yes' || $is_staff_kid === '1' || $is_staff_kid === 1) {
+                $this->db->where_in('students.is_staff_kid', [1, '1', 'Yes']);
+            } elseif ($is_staff_kid === 'No' || $is_staff_kid === '0' || $is_staff_kid === 0) {
+                $this->db->where_in('students.is_staff_kid', [0, '0', 'No']);
+            } else {
+                $this->db->where('students.is_staff_kid', $is_staff_kid);
+            }
         }
 
         if (!empty($call_status)) {

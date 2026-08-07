@@ -409,18 +409,6 @@
                             </div>
                             <div class="col-sm-2 col-md-2">
                                 <div class="form-group">
-                                    <label><?php echo $this->lang->line('date_from'); ?></label>
-                                    <input id="date_from" name="date_from" placeholder="" type="text" class="form-control date" value="<?php echo set_value('date_from'); ?>" readonly="readonly" />
-                                </div>
-                            </div>
-                            <div class="col-sm-2 col-md-2">
-                                <div class="form-group">
-                                    <label><?php echo $this->lang->line('date_to'); ?></label>
-                                    <input id="date_to" name="date_to" placeholder="" type="text" class="form-control date" value="<?php echo set_value('date_to'); ?>" readonly="readonly" />
-                                </div>
-                            </div>
-                            <div class="col-sm-2 col-md-2">
-                                <div class="form-group">
                                     <label>Follow-up Date From</label>
                                     <input id="follow_up_date_from" name="follow_up_date_from" placeholder="" type="text" class="form-control date" value="<?php echo set_value('follow_up_date_from'); ?>" readonly="readonly" />
                                 </div>
@@ -450,6 +438,7 @@
                             </div>
                             <div class="col-sm-12">
                                 <button type="submit" name="search" value="search_filter" class="btn btn-primary btn-sm checkbox-toggle pull-right"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                                <button type="button" id="btn_tab1_reset" class="btn btn-default btn-sm pull-right" style="margin-right: 8px;"><i class="fa fa-undo"></i> Reset Filters</button>
                             </div>
                         </div>
                     </form>
@@ -509,21 +498,22 @@
                                                 <td data-label="Purpose"><?php echo get_purpose_pill($call['purpose_name']); ?></td>
                                                 <td data-label="Status"><?php echo get_call_status_pill($call['call_status']); ?></td>
                                                 <td data-label="Date"><?php echo date($this->customlib->getSchoolDateFormat(true, true), strtotime($call['date'])); ?></td>
-                                                <td data-label="Note">
-                                                    <div style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#444; font-size:12px;" data-toggle="tooltip" data-placement="top" title="<?php echo htmlspecialchars($call['notes'] ?? ''); ?>">
-                                                        <?php 
-                                                        if (!empty($call['notes'])) {
-                                                            if (strpos($call['notes'], ' | ') !== false) {
-                                                                echo '<span class="label label-info" style="font-size:10px; padding:2px 6px;">Structured Notes</span> ' . htmlspecialchars(substr($call['notes'], 0, 30)) . '...';
-                                                            } else {
-                                                                echo htmlspecialchars($call['notes']);
-                                                            }
-                                                        } else {
-                                                            echo '<span style="color:#ccc;">-</span>';
-                                                        }
-                                                        ?>
-                                                    </div>
-                                                </td>
+                                                 <td data-label="Note">
+                                                     <?php $clean_note = fix_utf8_notes($call['notes'] ?? ''); ?>
+                                                     <div style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#444; font-size:12px;" data-toggle="tooltip" data-placement="top" title="<?php echo htmlspecialchars($clean_note); ?>">
+                                                         <?php 
+                                                         if (!empty($clean_note)) {
+                                                             if (strpos($clean_note, ' | ') !== false) {
+                                                                 echo '<span class="label label-info" style="font-size:10px; padding:2px 6px;">Structured Notes</span> ' . htmlspecialchars(substr($clean_note, 0, 30)) . '...';
+                                                             } else {
+                                                                 echo htmlspecialchars($clean_note);
+                                                             }
+                                                         } else {
+                                                             echo '<span style="color:#ccc;">-</span>';
+                                                         }
+                                                         ?>
+                                                     </div>
+                                                 </td>
                                                 <td data-label="Follow-up Status">
                                                     <?php 
                                                     if ($call['total_followups'] == 0) {
@@ -782,6 +772,7 @@
                         </div>
                         <div class="col-sm-12">
                             <button type="button" id="btn_status_search" class="btn btn-primary btn-sm pull-right"><i class="fa fa-search"></i> Filter Students</button>
+                            <button type="button" id="btn_status_reset" class="btn btn-default btn-sm pull-right" style="margin-right: 8px;"><i class="fa fa-undo"></i> Reset Filters</button>
                         </div>
                     </div>
                 </div>
@@ -880,6 +871,7 @@
                                     <div class="row">
                                         <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_view')) { ?>
                                         <div class="col-md-12">
+                                            <div id="add_call_recent_payment_warning"></div>
                                             <h5 style="font-weight:bold; margin-top:0;">Fees Summary</h5>
                                             <table class="table table-bordered table-striped" style="font-size:12px; margin-bottom: 10px;">
                                                 <thead>
@@ -1350,8 +1342,9 @@
                 $section.slideDown();
                 var student_session_id = $('#student_session_id').val();
                 if (student_session_id) {
-                    $('#fee_summary_body').html('<tr><td colspan="4" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
+                    $('#fee_summary_body').html('<tr><td colspan="6" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
                     $('#attendance_summary_body').html('<i class="fa fa-spinner fa-spin"></i> Loading...');
+                    $('#add_call_recent_payment_warning').html('');
                     
                     $.ajax({
                         url: "<?php echo site_url('admin/certificateregister/get_student_fee_summary_ajax') ?>",
@@ -1360,22 +1353,59 @@
                         dataType: "json",
                         success: function (res) {
                             var feeHtml = '';
+                            var recentPayment = null;
+                            var today = new Date();
+                            today.setHours(0,0,0,0);
+
+                            var checkFeeRow = function(title, data) {
+                                if (!data) return '';
+                                var last_amt = data.last_collected > 0 ? parseFloat(data.last_collected).toFixed(2) : '-';
+                                var last_date = data.last_collected_date ? data.last_collected_date : '-';
+                                var rowStyle = '';
+                                var badge = '';
+
+                                if (data.last_collected_date_raw && data.last_collected > 0) {
+                                    var pDate = parseISODateLocal(data.last_collected_date_raw);
+                                    if (pDate) {
+                                        pDate.setHours(0,0,0,0);
+                                        var diffDays = Math.round((today - pDate) / (1000 * 60 * 60 * 24));
+                                        if (diffDays >= 0 && diffDays <= 14) {
+                                            rowStyle = 'style="background-color: #fef2f2;"';
+                                            var dayText = diffDays === 0 ? 'Today' : (diffDays === 1 ? 'Yesterday' : diffDays + 'd ago');
+                                            badge = ' <span class="badge bg-red" style="font-size:10px; background-color:#dc2626 !important;">Recently Paid (' + dayText + ')</span>';
+                                            if (!recentPayment || diffDays < recentPayment.daysAgo) {
+                                                recentPayment = {
+                                                    type: title,
+                                                    amount: last_amt,
+                                                    date: last_date,
+                                                    daysAgo: diffDays
+                                                };
+                                            }
+                                        }
+                                    }
+                                }
+                                return '<tr ' + rowStyle + '><td>' + title + '</td><td>' + parseFloat(data.total).toFixed(2) + '</td><td>' + parseFloat(data.collected).toFixed(2) + '</td><td>' + last_amt + '</td><td>' + last_date + badge + '</td><td><b>' + parseFloat(data.due).toFixed(2) + '</b></td></tr>';
+                            };
+
                             if (res.academic) {
-                                var last_amt_a = res.academic.last_collected > 0 ? parseFloat(res.academic.last_collected).toFixed(2) : '-';
-                                var last_date_a = res.academic.last_collected_date ? res.academic.last_collected_date : '-';
-                                feeHtml += '<tr><td>Academic Fees</td><td>' + parseFloat(res.academic.total).toFixed(2) + '</td><td>' + parseFloat(res.academic.collected).toFixed(2) + '</td><td>' + last_amt_a + '</td><td>' + last_date_a + '</td><td><b>' + parseFloat(res.academic.due).toFixed(2) + '</b></td></tr>';
+                                feeHtml += checkFeeRow('Academic Fees', res.academic);
                             }
                             if (res.transport && res.transport.total > 0) {
-                                var last_amt_t = res.transport.last_collected > 0 ? parseFloat(res.transport.last_collected).toFixed(2) : '-';
-                                var last_date_t = res.transport.last_collected_date ? res.transport.last_collected_date : '-';
-                                feeHtml += '<tr><td>Transport Fees</td><td>' + parseFloat(res.transport.total).toFixed(2) + '</td><td>' + parseFloat(res.transport.collected).toFixed(2) + '</td><td>' + last_amt_t + '</td><td>' + last_date_t + '</td><td><b>' + parseFloat(res.transport.due).toFixed(2) + '</b></td></tr>';
+                                feeHtml += checkFeeRow('Transport Fees', res.transport);
                             }
                             if (res.hostel && res.hostel.total > 0) {
-                                var last_amt_h = res.hostel.last_collected > 0 ? parseFloat(res.hostel.last_collected).toFixed(2) : '-';
-                                var last_date_h = res.hostel.last_collected_date ? res.hostel.last_collected_date : '-';
-                                feeHtml += '<tr><td>Hostel Fees</td><td>' + parseFloat(res.hostel.total).toFixed(2) + '</td><td>' + parseFloat(res.hostel.collected).toFixed(2) + '</td><td>' + last_amt_h + '</td><td>' + last_date_h + '</td><td><b>' + parseFloat(res.hostel.due).toFixed(2) + '</b></td></tr>';
+                                feeHtml += checkFeeRow('Hostel Fees', res.hostel);
                             }
                             $('#fee_summary_body').html(feeHtml);
+
+                            if (recentPayment) {
+                                var dayLabel = recentPayment.daysAgo === 0 ? 'Today' : (recentPayment.daysAgo === 1 ? 'Yesterday' : recentPayment.daysAgo + ' days ago');
+                                var warnHtml = '<div class="alert alert-danger" style="margin-bottom: 12px; border-left: 5px solid #dc2626; background: #fef2f2; color: #991b1b; padding: 10px 12px; font-size: 13px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">' +
+                                    '<i class="fa fa-exclamation-triangle" style="font-size:16px; margin-right:6px; color:#dc2626;"></i>' +
+                                    '<strong>RECENT FEE PAYMENT DETECTED:</strong> Submitted <strong>₹' + recentPayment.amount + '</strong> (' + recentPayment.type + ') on <strong>' + recentPayment.date + '</strong> (' + dayLabel + '). Please verify before requesting fee submission!' +
+                                    '</div>';
+                                $('#add_call_recent_payment_warning').html(warnHtml);
+                            }
 
                             var attHtml = '';
                             if (res.history && (res.history.working_days !== undefined && res.history.working_days !== null)) {
@@ -1474,28 +1504,35 @@
                     {
                         $('#section_id').append("<option value=" + obj.section_id + ">" + obj.section + "</option>");
                     });
-                    $('#searchForm').trigger('submit');
+                    fetchCallLogsAjax();
                 }
             });
         });
 
-        $('#searchForm').on('submit', function(e) {
-            e.preventDefault();
-            var $btn = $(this).find('button[type="submit"]');
+        function fetchCallLogsAjax() {
+            var $btn = $('#searchForm').find('button[type="submit"]');
             $btn.button('loading');
             $.ajax({
-                url: '<?php echo site_url("admin/studentcall/search_ajax") ?>',
+                url: '<?php echo site_url("admin/studentcall/get_call_logs_ajax") ?>',
                 type: 'POST',
-                data: $(this).serialize(),
+                data: $('#searchForm').serialize(),
                 dataType: 'json',
                 success: function(res) {
                     if (res.status == 'success') {
-                        var table = $('#primary_call_log_table').DataTable();
-                        table.clear();
-                        if (res.data && res.data.length > 0) {
-                            table.rows.add(res.data);
+                        if ($.fn.DataTable.isDataTable('#primary_call_log_table')) {
+                            $('#primary_call_log_table').DataTable().destroy();
                         }
-                        table.draw();
+                        $('#primary_call_log_table tbody').html(res.html || '<tr><td colspan="13" class="text-center text-muted">No call log records found.</td></tr>');
+                        $('#primary_call_log_table').DataTable({
+                            "pageLength": 25,
+                            "ordering": true,
+                            "searching": true,
+                            "info": true,
+                            "paging": true
+                        });
+                        if (typeof $('[data-toggle="tooltip"]').tooltip === 'function') {
+                            $('[data-toggle="tooltip"]').tooltip();
+                        }
                     }
                     $btn.button('reset');
                 },
@@ -1503,11 +1540,36 @@
                     $btn.button('reset');
                 }
             });
+        }
+
+        $('#searchForm').on('submit', function(e) {
+            e.preventDefault();
+            fetchCallLogsAjax();
         });
 
-        // Instant AJAX search on any Tab 1 Select Criteria filter change
-        $('#searchForm select:not(#class_id), #searchForm input.date').on('change changeDate', function() {
-            $('#searchForm').trigger('submit');
+        $('#btn_tab1_reset').on('click', function(e) {
+            e.preventDefault();
+            $('#class_id').val('');
+            $('#section_id').empty().append('<option value=""><?php echo $this->lang->line("select"); ?></option>');
+            $('#purpose_id').val('');
+            $('#status').val('');
+            $('#date_from').val('');
+            $('#date_to').val('');
+            $('#follow_up_date_from').val('');
+            $('#follow_up_date_to').val('');
+            <?php if (empty($is_assigned_to_me_view)) { ?>
+                $('#assigned_to').val('');
+            <?php } ?>
+            fetchCallLogsAjax();
+        });
+
+        // Instant AJAX search on Tab 1 filter change or datepicker date select
+        $('#searchForm select:not(#class_id)').on('change', function() {
+            fetchCallLogsAjax();
+        });
+        
+        $('#searchForm input.date').datepicker().on('changeDate', function() {
+            fetchCallLogsAjax();
         });
         $('#status_class_id').change(function(){
             var class_id = $(this).val();
@@ -1560,6 +1622,18 @@
         });
 
         $('#btn_status_search').on('click', function() {
+            student_status_table.ajax.reload();
+        });
+
+        $('#btn_status_reset').on('click', function() {
+            $('#status_class_id').val('');
+            $('#status_section_id').empty().append('<option value=""><?php echo $this->lang->line("select"); ?></option>');
+            $('#status_admission_type').val('');
+            $('#status_shrestha').val('');
+            $('#status_rte').val('');
+            $('#status_is_staff_kid').val('');
+            $('#status_purpose_id').val('');
+            $('#status_call_status').val('');
             student_status_table.ajax.reload();
         });
 

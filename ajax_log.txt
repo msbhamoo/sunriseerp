@@ -194,107 +194,107 @@ Page:
                                 
                                                                     <optgroup label="Other Active Staff (Scheduled / Busy)">
                                                                                     <option value="4" >
-                                                📅 Alka Choudhary (SEG006) - VI (B)                                            </option>
+                                                📅 Alka Choudhary (SEG006) - Class VI (B)                                            </option>
                                                                                     <option value="7" >
-                                                📅 Amisha Sharma (SEG002) - III (C)                                            </option>
+                                                📅 Amisha Sharma (SEG002) - Class III (C)                                            </option>
                                                                                     <option value="11" >
-                                                📅 Bajrang Lal  (SEG008) - XII - Science(PCB) (B)                                            </option>
+                                                📅 Bajrang Lal  (SEG008) - Class XII - Science(PCB) (B)                                            </option>
                                                                                     <option value="12" >
-                                                📅 Boota Singh (SEG009) - IX (B)                                            </option>
+                                                📅 Boota Singh (SEG009) - Class IX (B)                                            </option>
                                                                                     <option value="13" selected>
-                                                📅 Chawand Singh (SEG010) - VIII (A)                                            </option>
+                                                📅 Chawand Singh (SEG010) - Substituted in VIII (A)                                            </option>
                                                                                     <option value="14" >
-                                                📅 Mahendra Bhanwariya (SEG011) - MiSaN (A)                                            </option>
+                                                📅 Mahendra Bhanwariya (SEG011) - Class MiSaN (A)                                            </option>
                                                                                     <option value="15" >
-                                                📅 Mahesh Ranwa (SEG012) - IX (C)                                            </option>
+                                                📅 Mahesh Ranwa (SEG012) - Class IX (C)                                            </option>
                                                                                     <option value="19" >
-                                                📅 Mukesh Kok (SEG016) - XI - Science(PCM) (A)                                            </option>
+                                                📅 Mukesh Kok (SEG016) - Class XI - Science(PCM) (A)                                            </option>
                                                                                     <option value="21" >
-                                                📅 Naveen Soni (SEG018) - VIII (D)                                            </option>
+                                                📅 Naveen Soni (SEG018) - Class VIII (D)                                            </option>
                                                                                     <option value="22" >
-                                                📅 Om Prakash Soni (SEG019) - VI (D)                                            </option>
+                                                📅 Om Prakash Soni (SEG019) - Class VI (D)                                            </option>
                                                                                     <option value="24" >
-                                                📅 Parwati  (SEG021) - XII - Arts (A)                                            </option>
+                                                📅 Parwati  (SEG021) - Class XII - Arts (A)                                            </option>
                                                                                     <option value="26" >
-                                                📅 Santosh Ruhela (SEG023) - VIII (A)                                            </option>
+                                                📅 Santosh Ruhela (SEG023) - Class VIII (A)                                            </option>
                                                                                     <option value="27" >
-                                                📅 Sarita Gadhwal (SEG024) - XII - Science(PCB) (A)                                            </option>
+                                                📅 Sarita Gadhwal (SEG024) - Class XII - Science(PCB) (A)                                            </option>
                                                                                     <option value="28" >
-                                                📅 Saroj Choudhary (SEG025) - VIII (C)                                            </option>
+                                                📅 Saroj Choudhary (SEG025) - Class VIII (C)                                            </option>
                                                                                     <option value="29" >
-                                                📅 Surendra Siyak (SEG026) - VIII (B)                                            </option>
+                                                📅 Surendra Siyak (SEG026) - Class VIII (B)                                            </option>
                                                                                     <option value="31" >
-                                                📅 Parmeshwar Lal  (SEG028) - XI - Science(PCB) (A)                                            </option>
+                                                📅 Parmeshwar Lal  (SEG028) - Class XI - Science(PCB) (A)                                            </option>
                                                                                     <option value="32" >
-                                                📅 Ruchi Swami (SEG029) - XII - Commerce (A)                                            </option>
+                                                📅 Ruchi Swami (SEG029) - Class XII - Commerce (A)                                            </option>
                                                                                     <option value="37" >
-                                                📅 Khushboo Kanwar (SEG034) - LKG (B)                                            </option>
+                                                📅 Khushboo Kanwar (SEG034) - Class LKG (B)                                            </option>
                                                                                     <option value="38" >
-                                                📅 Nisha Mor (SEG035) - IV (A)                                            </option>
+                                                📅 Nisha Mor (SEG035) - Class IV (A)                                            </option>
                                                                                     <option value="40" >
-                                                📅 Pratibha Sharma (SEG037) - V (A)                                            </option>
+                                                📅 Pratibha Sharma (SEG037) - Class V (A)                                            </option>
                                                                                     <option value="43" >
-                                                📅 Geeta Sharma (SEG040) - II (A)                                            </option>
+                                                📅 Geeta Sharma (SEG040) - Class II (A)                                            </option>
                                                                                     <option value="44" >
-                                                📅 Manisha  (SEG041) - I (B)                                            </option>
+                                                📅 Manisha  (SEG041) - Class I (B)                                            </option>
                                                                                     <option value="46" >
-                                                📅 Urmila Kumari (SEG043) - I (A)                                            </option>
+                                                📅 Urmila Kumari (SEG043) - Class I (A)                                            </option>
                                                                                     <option value="47" >
-                                                📅 Khusboo Tailor (SEG044) - III (A)                                            </option>
+                                                📅 Khusboo Tailor (SEG044) - Class III (A)                                            </option>
                                                                                     <option value="57" >
-                                                📅 Jyoti Gaur (SEG054) - VI (C)                                            </option>
+                                                📅 Jyoti Gaur (SEG054) - Class VI (C)                                            </option>
                                                                                     <option value="58" >
-                                                📅 Sarita Sain (SEG055) - IV (C)                                            </option>
+                                                📅 Sarita Sain (SEG055) - Class IV (C)                                            </option>
                                                                                     <option value="60" >
-                                                📅 Bhawana  (SEG057) - II (C)                                            </option>
+                                                📅 Bhawana  (SEG057) - Class II (C)                                            </option>
                                                                                     <option value="62" >
-                                                📅 Nikita  (SEG059) - I (C)                                            </option>
+                                                📅 Nikita  (SEG059) - Class I (C)                                            </option>
                                                                                     <option value="64" >
-                                                📅 Nisha Sharma (SEG062) - VI (C)                                            </option>
+                                                📅 Nisha Sharma (SEG062) - Class VI (C)                                            </option>
                                                                                     <option value="66" >
-                                                📅 Renu Tank (SEG064) - LKG (A)                                            </option>
+                                                📅 Renu Tank (SEG064) - Class LKG (A)                                            </option>
                                                                                     <option value="68" >
-                                                📅 Sonam Kanwar (SEG067) - II (B)                                            </option>
+                                                📅 Sonam Kanwar (SEG067) - Class II (B)                                            </option>
                                                                                     <option value="69" >
-                                                📅 Neetu Kanwar Rathor (SEG068) - X (C)                                            </option>
+                                                📅 Neetu Kanwar Rathor (SEG068) - Class X (C)                                            </option>
                                                                                     <option value="71" >
-                                                📅 Aaina Ladha (SEG070) - VII (A)                                            </option>
+                                                📅 Aaina Ladha (SEG070) - Class VII (A)                                            </option>
                                                                                     <option value="72" >
-                                                📅 Vidhya Sharma (SEG071) - Nursery (A)                                            </option>
+                                                📅 Vidhya Sharma (SEG071) - Class Nursery (A)                                            </option>
                                                                                     <option value="74" >
-                                                📅 Sangeeta Sharma (SEG073) - Nursery (B)                                            </option>
+                                                📅 Sangeeta Sharma (SEG073) - Class Nursery (B)                                            </option>
                                                                                     <option value="75" >
-                                                📅 Bebi Kanwar (SEG074) - XI - Arts (A)                                            </option>
+                                                📅 Bebi Kanwar (SEG074) - Class XI - Arts (A)                                            </option>
                                                                                     <option value="76" >
-                                                📅 Rekha Shekhawat (SEG075) - I (B)                                            </option>
+                                                📅 Rekha Shekhawat (SEG075) - Class I (B)                                            </option>
                                                                                     <option value="77" >
-                                                📅 Manoj  (SEG076) - UKG (C)                                            </option>
+                                                📅 Manoj  (SEG076) - Class UKG (C)                                            </option>
                                                                                     <option value="91" >
-                                                📅 DEEPENDRA SINGH  (007) - VIII (E)                                            </option>
+                                                📅 DEEPENDRA SINGH  (007) - Class VIII (E)                                            </option>
                                                                                     <option value="93" >
-                                                📅 bhumi maheshwari  (009) - VI (A)                                            </option>
+                                                📅 bhumi maheshwari  (009) - Class VI (A)                                            </option>
                                                                                     <option value="94" >
-                                                📅 HARISH SHARMA  (1110) - X (B)                                            </option>
+                                                📅 HARISH SHARMA  (1110) - Class X (B)                                            </option>
                                                                                     <option value="96" >
-                                                📅 NEMICHAND PRAJAPAT  (1112) - XI - Science(PCM) (B)                                            </option>
+                                                📅 NEMICHAND PRAJAPAT  (1112) - Class XI - Science(PCM) (B)                                            </option>
                                                                                     <option value="99" >
-                                                📅 BINDIYA  (1117) - X (A)                                            </option>
+                                                📅 BINDIYA  (1117) - Class X (A)                                            </option>
                                                                                     <option value="101" >
-                                                📅 SANJAY KHAN  (1120) - IX (A)                                            </option>
+                                                📅 SANJAY KHAN  (1120) - Class IX (A)                                            </option>
                                                                                     <option value="103" >
-                                                📅 pooja gora  (1125) - I (A)                                            </option>
+                                                📅 pooja gora  (1125) - Class I (A)                                            </option>
                                                                                     <option value="104" >
-                                                📅 pooja jangir  (2226) - II (D)                                            </option>
+                                                📅 pooja jangir  (2226) - Class II (D)                                            </option>
                                                                                     <option value="116" >
-                                                📅 rajkumar  (1234) - VI (A)                                            </option>
+                                                📅 rajkumar  (1234) - Class VI (A)                                            </option>
                                                                                     <option value="122" >
-                                                📅 SUSHILA  (7012) - V (C)                                            </option>
+                                                📅 SUSHILA  (7012) - Class V (C)                                            </option>
                                                                                     <option value="124" >
-                                                📅 PRIYA  (899) - VII (C)                                            </option>
+                                                📅 PRIYA  (899) - Class VII (C)                                            </option>
                                                                                     <option value="125" >
-                                                📅 GAYATRI  (578) - UKG (B)                                            </option>
+                                                📅 GAYATRI  (578) - Class UKG (B)                                            </option>
                                                                                     <option value="126" >
-                                                📅 RAJU REWAR  (1023) - VIII (C)                                            </option>
+                                                📅 RAJU REWAR  (1023) - Class VIII (C)                                            </option>
                                                                             </optgroup>
                                 
                                                                     <optgroup label="Absent / On Leave Staff">
@@ -339,26 +339,36 @@ Page:
                                                 ✔ Anita Jangir (SEG001)                                            </option>
                                                                                     <option value="3" >
                                                 ✔ Vikas Gora (SEG005)                                            </option>
+                                                                                    <option value="4" >
+                                                ✔ Alka Choudhary (SEG006)                                            </option>
                                                                                     <option value="13" >
                                                 ✔ Chawand Singh (SEG010)                                            </option>
+                                                                                    <option value="14" >
+                                                ✔ Mahendra Bhanwariya (SEG011)                                            </option>
                                                                                     <option value="17" >
                                                 ✔ Mohd.Ilyas  (SEG014)                                            </option>
-                                                                                    <option value="18" >
-                                                ✔ Monika Sharma (SEG015)                                            </option>
+                                                                                    <option value="24" >
+                                                ✔ Parwati  (SEG021)                                            </option>
                                                                                     <option value="41" >
                                                 ✔ Renuka  (SEG038)                                            </option>
                                                                                     <option value="55" >
                                                 ✔ Divya Bhakar (SEG052)                                            </option>
                                                                                     <option value="56" >
                                                 ✔ Gaytri Swami (SEG053)                                            </option>
+                                                                                    <option value="58" >
+                                                ✔ Sarita Sain (SEG055)                                            </option>
                                                                                     <option value="65" >
                                                 ✔ Jyoti Kanwar (SEG063)                                            </option>
-                                                                                    <option value="69" >
-                                                ✔ Neetu Kanwar Rathor (SEG068)                                            </option>
+                                                                                    <option value="66" >
+                                                ✔ Renu Tank (SEG064)                                            </option>
                                                                                     <option value="70" >
                                                 ✔ Banwari Lal Bhamu (SEG069)                                            </option>
+                                                                                    <option value="72" >
+                                                ✔ Vidhya Sharma (SEG071)                                            </option>
                                                                                     <option value="73" >
                                                 ✔ Prabhati Kumari (SEG072)                                            </option>
+                                                                                    <option value="77" >
+                                                ✔ Manoj  (SEG076)                                            </option>
                                                                                     <option value="79" >
                                                 ✔ Manju Saran . (EMP0170)                                            </option>
                                                                                     <option value="80" >
@@ -383,10 +393,10 @@ Page:
                                                 ✔ vikram singh  (006)                                            </option>
                                                                                     <option value="90" >
                                                 ✔ Vikas Buglaiya (S10014)                                            </option>
-                                                                                    <option value="97" >
-                                                ✔ PANKAJ  (1113)                                            </option>
-                                                                                    <option value="98" >
-                                                ✔ CHHOTI DEVI  (1115)                                            </option>
+                                                                                    <option value="91" >
+                                                ✔ DEEPENDRA SINGH  (007)                                            </option>
+                                                                                    <option value="93" >
+                                                ✔ bhumi maheshwari  (009)                                            </option>
                                                                                     <option value="100" >
                                                 ✔ kumkum sharma  (1119)                                            </option>
                                                                                     <option value="105" >
@@ -415,6 +425,10 @@ Page:
                                                 ✔ ramswaroop moond  (22222)                                            </option>
                                                                                     <option value="119" >
                                                 ✔ saroj  (088)                                            </option>
+                                                                                    <option value="124" >
+                                                ✔ PRIYA  (899)                                            </option>
+                                                                                    <option value="125" >
+                                                ✔ GAYATRI  (578)                                            </option>
                                                                                     <option value="128" >
                                                 ✔ Dhanesh Sunda (100122)                                            </option>
                                                                                     <option value="129" >
@@ -464,126 +478,112 @@ Page:
                                                                             </optgroup>
                                 
                                                                     <optgroup label="Other Active Staff (Scheduled / Busy)">
-                                                                                    <option value="4" >
-                                                📅 Alka Choudhary (SEG006) - VI (B)                                            </option>
                                                                                     <option value="7" >
-                                                📅 Amisha Sharma (SEG002) - III (C)                                            </option>
+                                                📅 Amisha Sharma (SEG002) - Class III (C)                                            </option>
                                                                                     <option value="11" >
-                                                📅 Bajrang Lal  (SEG008) - XII - Science(PCB) (A)                                            </option>
+                                                📅 Bajrang Lal  (SEG008) - Class XII - Science(PCB) (A)                                            </option>
                                                                                     <option value="12" >
-                                                📅 Boota Singh (SEG009) - VIII (D)                                            </option>
-                                                                                    <option value="14" >
-                                                📅 Mahendra Bhanwariya (SEG011) - MiSaN (A)                                            </option>
+                                                📅 Boota Singh (SEG009) - Class VIII (D)                                            </option>
                                                                                     <option value="15" >
-                                                📅 Mahesh Ranwa (SEG012) - X (A)                                            </option>
+                                                📅 Mahesh Ranwa (SEG012) - Class IX (B)                                            </option>
                                                                                     <option value="16" >
-                                                📅 Manoj Jangir (SEG013) - XII - Science(PCB) (B)                                            </option>
+                                                📅 Manoj Jangir (SEG013) - Class XII - Science(PCB) (B)                                            </option>
+                                                                                    <option value="18" >
+                                                📅 Monika Sharma (SEG015) - Class VIII (C)                                            </option>
                                                                                     <option value="19" >
-                                                📅 Mukesh Kok (SEG016) - X (A)                                            </option>
+                                                📅 Mukesh Kok (SEG016) - Class X (A)                                            </option>
                                                                                     <option value="21" >
-                                                📅 Naveen Soni (SEG018) - VII (C)                                            </option>
+                                                📅 Naveen Soni (SEG018) - Class VII (C)                                            </option>
                                                                                     <option value="22" >
-                                                📅 Om Prakash Soni (SEG019) - VI (C)                                            </option>
-                                                                                    <option value="24" >
-                                                📅 Parwati  (SEG021) - XII - Arts (A)                                            </option>
+                                                📅 Om Prakash Soni (SEG019) - Class VI (C)                                            </option>
                                                                                     <option value="26" >
-                                                📅 Santosh Ruhela (SEG023) - VIII (A)                                            </option>
+                                                📅 Santosh Ruhela (SEG023) - Class VIII (C)                                            </option>
                                                                                     <option value="27" >
-                                                📅 Sarita Gadhwal (SEG024) - X (B)                                            </option>
+                                                📅 Sarita Gadhwal (SEG024) - Class X (B)                                            </option>
                                                                                     <option value="28" >
-                                                📅 Saroj Choudhary (SEG025) - Nursery (A)                                            </option>
+                                                📅 Saroj Choudhary (SEG025) - Class Nursery (A)                                            </option>
                                                                                     <option value="29" >
-                                                📅 Surendra Siyak (SEG026) - VIII (B)                                            </option>
+                                                📅 Surendra Siyak (SEG026) - Class IX (A)                                            </option>
                                                                                     <option value="31" >
-                                                📅 Parmeshwar Lal  (SEG028) - X (C)                                            </option>
+                                                📅 Parmeshwar Lal  (SEG028) - Class X (B)                                            </option>
                                                                                     <option value="32" >
-                                                📅 Ruchi Swami (SEG029) - XII - Commerce (A)                                            </option>
+                                                📅 Ruchi Swami (SEG029) - Class XI - Commerce (A)                                            </option>
                                                                                     <option value="36" >
-                                                📅 Kamla Bhamu (SEG033) - V (C)                                            </option>
+                                                📅 Kamla Bhamu (SEG033) - Class V (C)                                            </option>
                                                                                     <option value="37" >
-                                                📅 Khushboo Kanwar (SEG034) - LKG (B)                                            </option>
+                                                📅 Khushboo Kanwar (SEG034) - Class LKG (B)                                            </option>
                                                                                     <option value="38" >
-                                                📅 Nisha Mor (SEG035) - IV (A)                                            </option>
+                                                📅 Nisha Mor (SEG035) - Class IV (A)                                            </option>
                                                                                     <option value="40" >
-                                                📅 Pratibha Sharma (SEG037) - V (A)                                            </option>
+                                                📅 Pratibha Sharma (SEG037) - Class V (A)                                            </option>
                                                                                     <option value="43" >
-                                                📅 Geeta Sharma (SEG040) - II (A)                                            </option>
+                                                📅 Geeta Sharma (SEG040) - Class II (A)                                            </option>
                                                                                     <option value="44" >
-                                                📅 Manisha  (SEG041) - I (B)                                            </option>
+                                                📅 Manisha  (SEG041) - Class I (B)                                            </option>
                                                                                     <option value="46" >
-                                                📅 Urmila Kumari (SEG043) - I (A)                                            </option>
+                                                📅 Urmila Kumari (SEG043) - Class I (C)                                            </option>
                                                                                     <option value="47" >
-                                                📅 Khusboo Tailor (SEG044) - III (A)                                            </option>
+                                                📅 Khusboo Tailor (SEG044) - Class IV (B)                                            </option>
                                                                                     <option value="49" >
-                                                📅 Shivani Dhaka (SEG046) - IX (B)                                            </option>
+                                                📅 Shivani Dhaka (SEG046) - Class IX (B)                                            </option>
                                                                                     <option value="50" >
-                                                📅 Narendra Kumar (SEG047) - XII - Commerce (A)                                            </option>
+                                                📅 Narendra Kumar (SEG047) - Class XII - Commerce (A)                                            </option>
                                                                                     <option value="57" >
-                                                📅 Jyoti Gaur (SEG054) - VI (B)                                            </option>
-                                                                                    <option value="58" >
-                                                📅 Sarita Sain (SEG055) - IV (C)                                            </option>
+                                                📅 Jyoti Gaur (SEG054) - Class VI (B)                                            </option>
                                                                                     <option value="60" >
-                                                📅 Bhawana  (SEG057) - Nursery (B)                                            </option>
+                                                📅 Bhawana  (SEG057) - Class Nursery (B)                                            </option>
                                                                                     <option value="62" >
-                                                📅 Nikita  (SEG059) - I (A)                                            </option>
+                                                📅 Nikita  (SEG059) - Class I (A)                                            </option>
                                                                                     <option value="64" >
-                                                📅 Nisha Sharma (SEG062) - II (B)                                            </option>
-                                                                                    <option value="66" >
-                                                📅 Renu Tank (SEG064) - LKG (A)                                            </option>
+                                                📅 Nisha Sharma (SEG062) - Class Nursery (B)                                            </option>
                                                                                     <option value="67" >
-                                                📅 Radhika  (359784) - UKG (C)                                            </option>
+                                                📅 Radhika  (359784) - Class UKG (C)                                            </option>
                                                                                     <option value="68" >
-                                                📅 Sonam Kanwar (SEG067) - II (B)                                            </option>
+                                                📅 Sonam Kanwar (SEG067) - Class II (C)                                            </option>
+                                                                                    <option value="69" >
+                                                📅 Neetu Kanwar Rathor (SEG068) - Class XII - Commerce (A)                                            </option>
                                                                                     <option value="71" >
-                                                📅 Aaina Ladha (SEG070) - VI (A)                                            </option>
-                                                                                    <option value="72" >
-                                                📅 Vidhya Sharma (SEG071) - Nursery (A)                                            </option>
+                                                📅 Aaina Ladha (SEG070) - Class VI (A)                                            </option>
                                                                                     <option value="74" >
-                                                📅 Sangeeta Sharma (SEG073) - Nursery (B)                                            </option>
+                                                📅 Sangeeta Sharma (SEG073) - Class III (A)                                            </option>
                                                                                     <option value="75" >
-                                                📅 Bebi Kanwar (SEG074) - XI - Arts (A)                                            </option>
+                                                📅 Bebi Kanwar (SEG074) - Class X (C)                                            </option>
                                                                                     <option value="76" >
-                                                📅 Rekha Shekhawat (SEG075) - UKG (A)                                            </option>
-                                                                                    <option value="77" >
-                                                📅 Manoj  (SEG076) - UKG (C)                                            </option>
+                                                📅 Rekha Shekhawat (SEG075) - Class UKG (A)                                            </option>
                                                                                     <option value="78" selected>
-                                                📅 Mahaveer Kumawat  (4001) - VI (D)                                            </option>
-                                                                                    <option value="91" >
-                                                📅 DEEPENDRA SINGH  (007) - VIII (E)                                            </option>
+                                                📅 Mahaveer Kumawat  (4001) - Substituted in VI (D)                                            </option>
                                                                                     <option value="92" >
-                                                📅 SURESH KUMAR SAHARAN  (008) - MiSaN (A)                                            </option>
-                                                                                    <option value="93" >
-                                                📅 bhumi maheshwari  (009) - VI (A)                                            </option>
+                                                📅 SURESH KUMAR SAHARAN  (008) - Class MiSaN (A)                                            </option>
                                                                                     <option value="94" >
-                                                📅 HARISH SHARMA  (1110) - X (B)                                            </option>
+                                                📅 HARISH SHARMA  (1110) - Class XII - Science(PCM) (B)                                            </option>
                                                                                     <option value="95" >
-                                                📅 zarina bano  (1111) - UKG (B)                                            </option>
+                                                📅 zarina bano  (1111) - Class UKG (B)                                            </option>
                                                                                     <option value="96" >
-                                                📅 NEMICHAND PRAJAPAT  (1112) - XI - Science(PCM) (A)                                            </option>
+                                                📅 NEMICHAND PRAJAPAT  (1112) - Class XI - Science(PCM) (A)                                            </option>
+                                                                                    <option value="97" >
+                                                📅 PANKAJ  (1113) - Class VIII (E)                                            </option>
+                                                                                    <option value="98" >
+                                                📅 CHHOTI DEVI  (1115) - Class VI (A)                                            </option>
                                                                                     <option value="99" >
-                                                📅 BINDIYA  (1117) - XII - Arts (A)                                            </option>
+                                                📅 BINDIYA  (1117) - Class XII - Arts (A)                                            </option>
                                                                                     <option value="101" >
-                                                📅 SANJAY KHAN  (1120) - IX (B)                                            </option>
+                                                📅 SANJAY KHAN  (1120) - Class XI - Science(PCM) (B)                                            </option>
                                                                                     <option value="103" >
-                                                📅 pooja gora  (1125) - I (C)                                            </option>
+                                                📅 pooja gora  (1125) - Class I (C)                                            </option>
                                                                                     <option value="104" >
-                                                📅 pooja jangir  (2226) - II (D)                                            </option>
+                                                📅 pooja jangir  (2226) - Class II (D)                                            </option>
                                                                                     <option value="107" >
-                                                📅 DEEPIKA SHARMA  (56) - VIII (B)                                            </option>
+                                                📅 DEEPIKA SHARMA  (56) - Class VIII (B)                                            </option>
                                                                                     <option value="121" >
-                                                📅 DEVENDRA SINGH KHEDAR  (55) - XI - Arts (A)                                            </option>
+                                                📅 DEVENDRA SINGH KHEDAR  (55) - Class XI - Arts (A)                                            </option>
                                                                                     <option value="122" >
-                                                📅 SUSHILA  (7012) - IV (B)                                            </option>
+                                                📅 SUSHILA  (7012) - Class IV (B)                                            </option>
                                                                                     <option value="123" >
-                                                📅 REKHA GODARA  (8010) - LKG (A)                                            </option>
-                                                                                    <option value="124" >
-                                                📅 PRIYA  (899) - VII (C)                                            </option>
-                                                                                    <option value="125" >
-                                                📅 GAYATRI  (578) - UKG (B)                                            </option>
+                                                📅 REKHA GODARA  (8010) - Class LKG (A)                                            </option>
                                                                                     <option value="126" >
-                                                📅 RAJU REWAR  (1023) - IX (A)                                            </option>
+                                                📅 RAJU REWAR  (1023) - Class VIII (A)                                            </option>
                                                                                     <option value="130" >
-                                                📅 APURVA SHARMA  (55835468) - VIII (A)                                            </option>
+                                                📅 APURVA SHARMA  (55835468) - Class VIII (A)                                            </option>
                                                                             </optgroup>
                                 
                                                                     <optgroup label="Absent / On Leave Staff">
@@ -632,14 +632,26 @@ Page:
                                                 ✔ Anita Jangir (SEG001)                                            </option>
                                                                                     <option value="3" >
                                                 ✔ Vikas Gora (SEG005)                                            </option>
+                                                                                    <option value="7" >
+                                                ✔ Amisha Sharma (SEG002)                                            </option>
+                                                                                    <option value="15" >
+                                                ✔ Mahesh Ranwa (SEG012)                                            </option>
                                                                                     <option value="17" >
                                                 ✔ Mohd.Ilyas  (SEG014)                                            </option>
+                                                                                    <option value="24" >
+                                                ✔ Parwati  (SEG021)                                            </option>
+                                                                                    <option value="29" >
+                                                ✔ Surendra Siyak (SEG026)                                            </option>
+                                                                                    <option value="40" >
+                                                ✔ Pratibha Sharma (SEG037)                                            </option>
                                                                                     <option value="41" >
                                                 ✔ Renuka  (SEG038)                                            </option>
                                                                                     <option value="55" >
                                                 ✔ Divya Bhakar (SEG052)                                            </option>
                                                                                     <option value="56" >
                                                 ✔ Gaytri Swami (SEG053)                                            </option>
+                                                                                    <option value="62" >
+                                                ✔ Nikita  (SEG059)                                            </option>
                                                                                     <option value="65" >
                                                 ✔ Jyoti Kanwar (SEG063)                                            </option>
                                                                                     <option value="67" >
@@ -674,10 +686,14 @@ Page:
                                                 ✔ vikram singh  (006)                                            </option>
                                                                                     <option value="90" >
                                                 ✔ Vikas Buglaiya (S10014)                                            </option>
+                                                                                    <option value="91" >
+                                                ✔ DEEPENDRA SINGH  (007)                                            </option>
                                                                                     <option value="92" >
                                                 ✔ SURESH KUMAR SAHARAN  (008)                                            </option>
                                                                                     <option value="95" >
                                                 ✔ zarina bano  (1111)                                            </option>
+                                                                                    <option value="96" >
+                                                ✔ NEMICHAND PRAJAPAT  (1112)                                            </option>
                                                                                     <option value="98" >
                                                 ✔ CHHOTI DEVI  (1115)                                            </option>
                                                                                     <option value="100" >
@@ -714,6 +730,10 @@ Page:
                                                 ✔ DEVENDRA SINGH KHEDAR  (55)                                            </option>
                                                                                     <option value="123" >
                                                 ✔ REKHA GODARA  (8010)                                            </option>
+                                                                                    <option value="124" >
+                                                ✔ PRIYA  (899)                                            </option>
+                                                                                    <option value="126" >
+                                                ✔ RAJU REWAR  (1023)                                            </option>
                                                                                     <option value="128" >
                                                 ✔ Dhanesh Sunda (100122)                                            </option>
                                                                                     <option value="129" >
@@ -766,117 +786,97 @@ Page:
                                 
                                                                     <optgroup label="Other Active Staff (Scheduled / Busy)">
                                                                                     <option value="4" >
-                                                📅 Alka Choudhary (SEG006) - VI (B)                                            </option>
-                                                                                    <option value="7" >
-                                                📅 Amisha Sharma (SEG002) - III (C)                                            </option>
+                                                📅 Alka Choudhary (SEG006) - Class IX (B)                                            </option>
                                                                                     <option value="11" >
-                                                📅 Bajrang Lal  (SEG008) - X (B)                                            </option>
+                                                📅 Bajrang Lal  (SEG008) - Class X (B)                                            </option>
                                                                                     <option value="12" >
-                                                📅 Boota Singh (SEG009) - VIII (B)                                            </option>
+                                                📅 Boota Singh (SEG009) - Class VIII (B)                                            </option>
                                                                                     <option value="13" >
-                                                📅 Chawand Singh (SEG010) - XI - Commerce (A)                                            </option>
+                                                📅 Chawand Singh (SEG010) - Class XI - Commerce (A)                                            </option>
                                                                                     <option value="14" >
-                                                📅 Mahendra Bhanwariya (SEG011) - IX (C)                                            </option>
-                                                                                    <option value="15" >
-                                                📅 Mahesh Ranwa (SEG012) - X (A)                                            </option>
+                                                📅 Mahendra Bhanwariya (SEG011) - Class IX (C)                                            </option>
                                                                                     <option value="16" >
-                                                📅 Manoj Jangir (SEG013) - XI - Science(PCB) (B)                                            </option>
+                                                📅 Manoj Jangir (SEG013) - Class XI - Science(PCB) (B)                                            </option>
                                                                                     <option value="18" >
-                                                📅 Monika Sharma (SEG015) - VIII (E)                                            </option>
+                                                📅 Monika Sharma (SEG015) - Class VIII (E)                                            </option>
                                                                                     <option value="19" >
-                                                📅 Mukesh Kok (SEG016) - X (C)                                            </option>
+                                                📅 Mukesh Kok (SEG016) - Class X (C)                                            </option>
                                                                                     <option value="21" >
-                                                📅 Naveen Soni (SEG018) - VIII (C)                                            </option>
+                                                📅 Naveen Soni (SEG018) - Class VIII (C)                                            </option>
                                                                                     <option value="22" >
-                                                📅 Om Prakash Soni (SEG019) - VI (A)                                            </option>
-                                                                                    <option value="24" >
-                                                📅 Parwati  (SEG021) - XII - Arts (A)                                            </option>
+                                                📅 Om Prakash Soni (SEG019) - Class VI (A)                                            </option>
                                                                                     <option value="26" >
-                                                📅 Santosh Ruhela (SEG023) - VI (D)                                            </option>
+                                                📅 Santosh Ruhela (SEG023) - Class VI (D)                                            </option>
                                                                                     <option value="27" >
-                                                📅 Sarita Gadhwal (SEG024) - XII - Science(PCB) (A)                                            </option>
+                                                📅 Sarita Gadhwal (SEG024) - Class XII - Science(PCB) (B)                                            </option>
                                                                                     <option value="28" >
-                                                📅 Saroj Choudhary (SEG025) - VIII (C)                                            </option>
-                                                                                    <option value="29" >
-                                                📅 Surendra Siyak (SEG026) - VIII (B)                                            </option>
+                                                📅 Saroj Choudhary (SEG025) - Class VIII (D)                                            </option>
                                                                                     <option value="31" >
-                                                📅 Parmeshwar Lal  (SEG028) - XI - Science(PCB) (A)                                            </option>
+                                                📅 Parmeshwar Lal  (SEG028) - Class MiSaN (A)                                            </option>
                                                                                     <option value="32" >
-                                                📅 Ruchi Swami (SEG029) - XII - Commerce (A)                                            </option>
+                                                📅 Ruchi Swami (SEG029) - Class XII - Commerce (A)                                            </option>
                                                                                     <option value="36" selected>
-                                                📅 Kamla Bhamu (SEG033) - VIII (A)                                            </option>
+                                                📅 Kamla Bhamu (SEG033) - Substituted in VIII (A)                                            </option>
                                                                                     <option value="37" >
-                                                📅 Khushboo Kanwar (SEG034) - LKG (B)                                            </option>
+                                                📅 Khushboo Kanwar (SEG034) - Class LKG (B)                                            </option>
                                                                                     <option value="38" >
-                                                📅 Nisha Mor (SEG035) - IV (A)                                            </option>
-                                                                                    <option value="40" >
-                                                📅 Pratibha Sharma (SEG037) - V (A)                                            </option>
+                                                📅 Nisha Mor (SEG035) - Class IV (C)                                            </option>
                                                                                     <option value="43" >
-                                                📅 Geeta Sharma (SEG040) - II (A)                                            </option>
+                                                📅 Geeta Sharma (SEG040) - Class II (B)                                            </option>
                                                                                     <option value="44" >
-                                                📅 Manisha  (SEG041) - I (A)                                            </option>
+                                                📅 Manisha  (SEG041) - Class I (A)                                            </option>
                                                                                     <option value="46" >
-                                                📅 Urmila Kumari (SEG043) - I (A)                                            </option>
+                                                📅 Urmila Kumari (SEG043) - Class II (A)                                            </option>
                                                                                     <option value="47" >
-                                                📅 Khusboo Tailor (SEG044) - Nursery (B)                                            </option>
+                                                📅 Khusboo Tailor (SEG044) - Class Nursery (B)                                            </option>
                                                                                     <option value="49" >
-                                                📅 Shivani Dhaka (SEG046) - IX (A)                                            </option>
+                                                📅 Shivani Dhaka (SEG046) - Class IX (A)                                            </option>
                                                                                     <option value="50" >
-                                                📅 Narendra Kumar (SEG047) - XII - Science(PCB) (A)                                            </option>
+                                                📅 Narendra Kumar (SEG047) - Class XII - Science(PCB) (A)                                            </option>
                                                                                     <option value="57" >
-                                                📅 Jyoti Gaur (SEG054) - VI (B)                                            </option>
+                                                📅 Jyoti Gaur (SEG054) - Class VI (B)                                            </option>
                                                                                     <option value="58" >
-                                                📅 Sarita Sain (SEG055) - IV (A)                                            </option>
+                                                📅 Sarita Sain (SEG055) - Class IV (A)                                            </option>
                                                                                     <option value="60" >
-                                                📅 Bhawana  (SEG057) - II (C)                                            </option>
-                                                                                    <option value="62" >
-                                                📅 Nikita  (SEG059) - I (C)                                            </option>
+                                                📅 Bhawana  (SEG057) - Class III (C)                                            </option>
                                                                                     <option value="64" >
-                                                📅 Nisha Sharma (SEG062) - III (A)                                            </option>
+                                                📅 Nisha Sharma (SEG062) - Class III (A)                                            </option>
                                                                                     <option value="66" >
-                                                📅 Renu Tank (SEG064) - LKG (A)                                            </option>
+                                                📅 Renu Tank (SEG064) - Class LKG (A)                                            </option>
                                                                                     <option value="68" >
-                                                📅 Sonam Kanwar (SEG067) - II (B)                                            </option>
+                                                📅 Sonam Kanwar (SEG067) - Class II (D)                                            </option>
                                                                                     <option value="69" >
-                                                📅 Neetu Kanwar Rathor (SEG068) - VI (C)                                            </option>
+                                                📅 Neetu Kanwar Rathor (SEG068) - Class VI (C)                                            </option>
                                                                                     <option value="71" >
-                                                📅 Aaina Ladha (SEG070) - VII (A)                                            </option>
+                                                📅 Aaina Ladha (SEG070) - Class VII (C)                                            </option>
                                                                                     <option value="72" >
-                                                📅 Vidhya Sharma (SEG071) - Nursery (A)                                            </option>
+                                                📅 Vidhya Sharma (SEG071) - Class Nursery (A)                                            </option>
                                                                                     <option value="74" >
-                                                📅 Sangeeta Sharma (SEG073) - Nursery (B)                                            </option>
+                                                📅 Sangeeta Sharma (SEG073) - Class IV (B)                                            </option>
                                                                                     <option value="75" >
-                                                📅 Bebi Kanwar (SEG074) - XII - Arts (A)                                            </option>
+                                                📅 Bebi Kanwar (SEG074) - Class XII - Arts (A)                                            </option>
                                                                                     <option value="76" >
-                                                📅 Rekha Shekhawat (SEG075) - I (B)                                            </option>
+                                                📅 Rekha Shekhawat (SEG075) - Class I (C)                                            </option>
                                                                                     <option value="77" >
-                                                📅 Manoj  (SEG076) - UKG (C)                                            </option>
-                                                                                    <option value="91" >
-                                                📅 DEEPENDRA SINGH  (007) - VIII (E)                                            </option>
+                                                📅 Manoj  (SEG076) - Class UKG (C)                                            </option>
                                                                                     <option value="93" >
-                                                📅 bhumi maheshwari  (009) - V (C)                                            </option>
+                                                📅 bhumi maheshwari  (009) - Class V (C)                                            </option>
                                                                                     <option value="94" >
-                                                📅 HARISH SHARMA  (1110) - X (B)                                            </option>
-                                                                                    <option value="96" >
-                                                📅 NEMICHAND PRAJAPAT  (1112) - XI - Science(PCM) (B)                                            </option>
+                                                📅 HARISH SHARMA  (1110) - Class XI - Science(PCM) (B)                                            </option>
                                                                                     <option value="97" >
-                                                📅 PANKAJ  (1113) - VII (A)                                            </option>
+                                                📅 PANKAJ  (1113) - Class VII (A)                                            </option>
                                                                                     <option value="99" >
-                                                📅 BINDIYA  (1117) - XI - Arts (A)                                            </option>
+                                                📅 BINDIYA  (1117) - Class XI - Arts (A)                                            </option>
                                                                                     <option value="101" >
-                                                📅 SANJAY KHAN  (1120) - IX (B)                                            </option>
+                                                📅 SANJAY KHAN  (1120) - Class XI - Science(PCM) (A)                                            </option>
                                                                                     <option value="103" >
-                                                📅 pooja gora  (1125) - I (B)                                            </option>
+                                                📅 pooja gora  (1125) - Class I (B)                                            </option>
                                                                                     <option value="104" >
-                                                📅 pooja jangir  (2226) - II (C)                                            </option>
+                                                📅 pooja jangir  (2226) - Class II (C)                                            </option>
                                                                                     <option value="122" >
-                                                📅 SUSHILA  (7012) - V (A)                                            </option>
-                                                                                    <option value="124" >
-                                                📅 PRIYA  (899) - VII (C)                                            </option>
+                                                📅 SUSHILA  (7012) - Class V (A)                                            </option>
                                                                                     <option value="125" >
-                                                📅 GAYATRI  (578) - UKG (B)                                            </option>
-                                                                                    <option value="126" >
-                                                📅 RAJU REWAR  (1023) - IX (A)                                            </option>
+                                                📅 GAYATRI  (578) - Class UKG (B)                                            </option>
                                                                             </optgroup>
                                 
                                                                     <optgroup label="Absent / On Leave Staff">
@@ -927,18 +927,16 @@ Page:
                                                 ✔ Vikas Gora (SEG005)                                            </option>
                                                                                     <option value="17" >
                                                 ✔ Mohd.Ilyas  (SEG014)                                            </option>
-                                                                                    <option value="36" >
-                                                ✔ Kamla Bhamu (SEG033)                                            </option>
+                                                                                    <option value="29" >
+                                                ✔ Surendra Siyak (SEG026)                                            </option>
                                                                                     <option value="41" >
                                                 ✔ Renuka  (SEG038)                                            </option>
-                                                                                    <option value="49" >
-                                                ✔ Shivani Dhaka (SEG046)                                            </option>
-                                                                                    <option value="50" >
-                                                ✔ Narendra Kumar (SEG047)                                            </option>
                                                                                     <option value="55" >
                                                 ✔ Divya Bhakar (SEG052)                                            </option>
                                                                                     <option value="56" >
                                                 ✔ Gaytri Swami (SEG053)                                            </option>
+                                                                                    <option value="62" >
+                                                ✔ Nikita  (SEG059)                                            </option>
                                                                                     <option value="65" >
                                                 ✔ Jyoti Kanwar (SEG063)                                            </option>
                                                                                     <option value="67" >
@@ -971,6 +969,8 @@ Page:
                                                 ✔ vikram singh  (006)                                            </option>
                                                                                     <option value="90" >
                                                 ✔ Vikas Buglaiya (S10014)                                            </option>
+                                                                                    <option value="91" >
+                                                ✔ DEEPENDRA SINGH  (007)                                            </option>
                                                                                     <option value="92" >
                                                 ✔ SURESH KUMAR SAHARAN  (008)                                            </option>
                                                                                     <option value="95" >
@@ -1011,6 +1011,10 @@ Page:
                                                 ✔ DEVENDRA SINGH KHEDAR  (55)                                            </option>
                                                                                     <option value="123" >
                                                 ✔ REKHA GODARA  (8010)                                            </option>
+                                                                                    <option value="124" >
+                                                ✔ PRIYA  (899)                                            </option>
+                                                                                    <option value="126" >
+                                                ✔ RAJU REWAR  (1023)                                            </option>
                                                                                     <option value="128" >
                                                 ✔ Dhanesh Sunda (100122)                                            </option>
                                                                                     <option value="129" >
@@ -1063,113 +1067,109 @@ Page:
                                 
                                                                     <optgroup label="Other Active Staff (Scheduled / Busy)">
                                                                                     <option value="4" >
-                                                📅 Alka Choudhary (SEG006) - VI (B)                                            </option>
+                                                📅 Alka Choudhary (SEG006) - Class VIII (B)                                            </option>
                                                                                     <option value="7" >
-                                                📅 Amisha Sharma (SEG002) - Nursery (B)                                            </option>
+                                                📅 Amisha Sharma (SEG002) - Class Nursery (B)                                            </option>
                                                                                     <option value="11" >
-                                                📅 Bajrang Lal  (SEG008) - X (A)                                            </option>
+                                                📅 Bajrang Lal  (SEG008) - Class X (A)                                            </option>
                                                                                     <option value="12" >
-                                                📅 Boota Singh (SEG009) - IX (C)                                            </option>
+                                                📅 Boota Singh (SEG009) - Class VIII (B)                                            </option>
                                                                                     <option value="13" >
-                                                📅 Chawand Singh (SEG010) - XI - Commerce (A)                                            </option>
+                                                📅 Chawand Singh (SEG010) - Class XI - Commerce (A)                                            </option>
                                                                                     <option value="14" >
-                                                📅 Mahendra Bhanwariya (SEG011) - MiSaN (A)                                            </option>
+                                                📅 Mahendra Bhanwariya (SEG011) - Class IX (C)                                            </option>
                                                                                     <option value="15" >
-                                                📅 Mahesh Ranwa (SEG012) - X (A)                                            </option>
+                                                📅 Mahesh Ranwa (SEG012) - Class X (B)                                            </option>
                                                                                     <option value="16" >
-                                                📅 Manoj Jangir (SEG013) - XI - Science(PCB) (B)                                            </option>
+                                                📅 Manoj Jangir (SEG013) - Class XI - Science(PCB) (B)                                            </option>
                                                                                     <option value="18" >
-                                                📅 Monika Sharma (SEG015) - VIII (E)                                            </option>
+                                                📅 Monika Sharma (SEG015) - Class VIII (E)                                            </option>
                                                                                     <option value="19" >
-                                                📅 Mukesh Kok (SEG016) - X (C)                                            </option>
+                                                📅 Mukesh Kok (SEG016) - Class X (C)                                            </option>
                                                                                     <option value="21" >
-                                                📅 Naveen Soni (SEG018) - VIII (D)                                            </option>
+                                                📅 Naveen Soni (SEG018) - Class VIII (C)                                            </option>
                                                                                     <option value="22" >
-                                                📅 Om Prakash Soni (SEG019) - VI (A)                                            </option>
+                                                📅 Om Prakash Soni (SEG019) - Class VI (A)                                            </option>
                                                                                     <option value="24" >
-                                                📅 Parwati  (SEG021) - XII - Arts (A)                                            </option>
+                                                📅 Parwati  (SEG021) - Class MiSaN (A)                                            </option>
                                                                                     <option value="26" >
-                                                📅 Santosh Ruhela (SEG023) - VIII (A)                                            </option>
+                                                📅 Santosh Ruhela (SEG023) - Class VI (D)                                            </option>
                                                                                     <option value="27" >
-                                                📅 Sarita Gadhwal (SEG024) - XII - Science(PCB) (A)                                            </option>
+                                                📅 Sarita Gadhwal (SEG024) - Class XII - Science(PCB) (B)                                            </option>
                                                                                     <option value="28" >
-                                                📅 Saroj Choudhary (SEG025) - VIII (A)                                            </option>
-                                                                                    <option value="29" >
-                                                📅 Surendra Siyak (SEG026) - VIII (B)                                            </option>
+                                                📅 Saroj Choudhary (SEG025) - Class VIII (A)                                            </option>
                                                                                     <option value="31" >
-                                                📅 Parmeshwar Lal  (SEG028) - XI - Science(PCB) (A)                                            </option>
+                                                📅 Parmeshwar Lal  (SEG028) - Class MiSaN (A)                                            </option>
                                                                                     <option value="32" >
-                                                📅 Ruchi Swami (SEG029) - XII - Commerce (A)                                            </option>
+                                                📅 Ruchi Swami (SEG029) - Class XII - Commerce (A)                                            </option>
+                                                                                    <option value="36" >
+                                                📅 Kamla Bhamu (SEG033) - Substituted in VIII (A)                                            </option>
                                                                                     <option value="37" >
-                                                📅 Khushboo Kanwar (SEG034) - LKG (B)                                            </option>
+                                                📅 Khushboo Kanwar (SEG034) - Class LKG (B)                                            </option>
                                                                                     <option value="38" >
-                                                📅 Nisha Mor (SEG035) - IV (A)                                            </option>
+                                                📅 Nisha Mor (SEG035) - Class IV (C)                                            </option>
                                                                                     <option value="40" >
-                                                📅 Pratibha Sharma (SEG037) - V (A)                                            </option>
+                                                📅 Pratibha Sharma (SEG037) - Class V (C)                                            </option>
                                                                                     <option value="43" >
-                                                📅 Geeta Sharma (SEG040) - II (A)                                            </option>
+                                                📅 Geeta Sharma (SEG040) - Class II (B)                                            </option>
                                                                                     <option value="44" >
-                                                📅 Manisha  (SEG041) - I (A)                                            </option>
+                                                📅 Manisha  (SEG041) - Class I (A)                                            </option>
                                                                                     <option value="46" >
-                                                📅 Urmila Kumari (SEG043) - I (A)                                            </option>
+                                                📅 Urmila Kumari (SEG043) - Class I (B)                                            </option>
                                                                                     <option value="47" >
-                                                📅 Khusboo Tailor (SEG044) - III (A)                                            </option>
+                                                📅 Khusboo Tailor (SEG044) - Class Nursery (B)                                            </option>
+                                                                                    <option value="49" >
+                                                📅 Shivani Dhaka (SEG046) - Class IX (A)                                            </option>
+                                                                                    <option value="50" >
+                                                📅 Narendra Kumar (SEG047) - Class XII - Science(PCB) (A)                                            </option>
                                                                                     <option value="57" >
-                                                📅 Jyoti Gaur (SEG054) - VI (C)                                            </option>
+                                                📅 Jyoti Gaur (SEG054) - Class VI (B)                                            </option>
                                                                                     <option value="58" >
-                                                📅 Sarita Sain (SEG055) - IV (A)                                            </option>
+                                                📅 Sarita Sain (SEG055) - Class IV (A)                                            </option>
                                                                                     <option value="60" >
-                                                📅 Bhawana  (SEG057) - II (A)                                            </option>
-                                                                                    <option value="62" >
-                                                📅 Nikita  (SEG059) - I (C)                                            </option>
+                                                📅 Bhawana  (SEG057) - Class II (A)                                            </option>
                                                                                     <option value="64" >
-                                                📅 Nisha Sharma (SEG062) - VI (B)                                            </option>
+                                                📅 Nisha Sharma (SEG062) - Class III (A)                                            </option>
                                                                                     <option value="66" >
-                                                📅 Renu Tank (SEG064) - LKG (A)                                            </option>
+                                                📅 Renu Tank (SEG064) - Class LKG (A)                                            </option>
                                                                                     <option value="68" >
-                                                📅 Sonam Kanwar (SEG067) - II (B)                                            </option>
+                                                📅 Sonam Kanwar (SEG067) - Class II (D)                                            </option>
                                                                                     <option value="69" >
-                                                📅 Neetu Kanwar Rathor (SEG068) - VI (D)                                            </option>
+                                                📅 Neetu Kanwar Rathor (SEG068) - Class VI (C)                                            </option>
                                                                                     <option value="71" >
-                                                📅 Aaina Ladha (SEG070) - VI (C)                                            </option>
+                                                📅 Aaina Ladha (SEG070) - Class VI (C)                                            </option>
                                                                                     <option value="72" >
-                                                📅 Vidhya Sharma (SEG071) - Nursery (A)                                            </option>
+                                                📅 Vidhya Sharma (SEG071) - Class Nursery (A)                                            </option>
                                                                                     <option value="74" >
-                                                📅 Sangeeta Sharma (SEG073) - Nursery (B)                                            </option>
+                                                📅 Sangeeta Sharma (SEG073) - Class IV (B)                                            </option>
                                                                                     <option value="75" >
-                                                📅 Bebi Kanwar (SEG074) - XII - Arts (A)                                            </option>
+                                                📅 Bebi Kanwar (SEG074) - Class XII - Arts (A)                                            </option>
                                                                                     <option value="76" >
-                                                📅 Rekha Shekhawat (SEG075) - I (B)                                            </option>
+                                                📅 Rekha Shekhawat (SEG075) - Class I (C)                                            </option>
                                                                                     <option value="77" >
-                                                📅 Manoj  (SEG076) - UKG (C)                                            </option>
+                                                📅 Manoj  (SEG076) - Class UKG (C)                                            </option>
                                                                                     <option value="81" selected>
-                                                📅 Mahesh Jangir  (EMP0171) - VIII (C)                                            </option>
-                                                                                    <option value="91" >
-                                                📅 DEEPENDRA SINGH  (007) - VIII (E)                                            </option>
+                                                📅 Mahesh Jangir  (EMP0171) - Substituted in VIII (C)                                            </option>
                                                                                     <option value="93" >
-                                                📅 bhumi maheshwari  (009) - V (A)                                            </option>
+                                                📅 bhumi maheshwari  (009) - Class V (A)                                            </option>
                                                                                     <option value="94" >
-                                                📅 HARISH SHARMA  (1110) - X (B)                                            </option>
+                                                📅 HARISH SHARMA  (1110) - Class XI - Science(PCM) (B)                                            </option>
                                                                                     <option value="96" >
-                                                📅 NEMICHAND PRAJAPAT  (1112) - IX (B)                                            </option>
+                                                📅 NEMICHAND PRAJAPAT  (1112) - Class IX (B)                                            </option>
                                                                                     <option value="97" >
-                                                📅 PANKAJ  (1113) - VII (A)                                            </option>
+                                                📅 PANKAJ  (1113) - Class VII (A)                                            </option>
                                                                                     <option value="99" >
-                                                📅 BINDIYA  (1117) - XI - Arts (A)                                            </option>
+                                                📅 BINDIYA  (1117) - Class XI - Arts (A)                                            </option>
                                                                                     <option value="101" >
-                                                📅 SANJAY KHAN  (1120) - IX (B)                                            </option>
+                                                📅 SANJAY KHAN  (1120) - Class XI - Science(PCM) (A)                                            </option>
                                                                                     <option value="103" >
-                                                📅 pooja gora  (1125) - I (C)                                            </option>
+                                                📅 pooja gora  (1125) - Class I (B)                                            </option>
                                                                                     <option value="104" >
-                                                📅 pooja jangir  (2226) - II (C)                                            </option>
+                                                📅 pooja jangir  (2226) - Class II (C)                                            </option>
                                                                                     <option value="122" >
-                                                📅 SUSHILA  (7012) - V (C)                                            </option>
-                                                                                    <option value="124" >
-                                                📅 PRIYA  (899) - VII (C)                                            </option>
+                                                📅 SUSHILA  (7012) - Class V (A)                                            </option>
                                                                                     <option value="125" >
-                                                📅 GAYATRI  (578) - UKG (B)                                            </option>
-                                                                                    <option value="126" >
-                                                📅 RAJU REWAR  (1023) - IX (A)                                            </option>
+                                                📅 GAYATRI  (578) - Class UKG (B)                                            </option>
                                                                             </optgroup>
                                 
                                                                     <optgroup label="Absent / On Leave Staff">
@@ -1218,6 +1218,8 @@ Page:
                                                 ✔ Chawand Singh (SEG010)                                            </option>
                                                                                     <option value="17" >
                                                 ✔ Mohd.Ilyas  (SEG014)                                            </option>
+                                                                                    <option value="22" >
+                                                ✔ Om Prakash Soni (SEG019)                                            </option>
                                                                                     <option value="41" >
                                                 ✔ Renuka  (SEG038)                                            </option>
                                                                                     <option value="50" >
@@ -1228,12 +1230,16 @@ Page:
                                                 ✔ Gaytri Swami (SEG053)                                            </option>
                                                                                     <option value="65" >
                                                 ✔ Jyoti Kanwar (SEG063)                                            </option>
-                                                                                    <option value="69" >
-                                                ✔ Neetu Kanwar Rathor (SEG068)                                            </option>
+                                                                                    <option value="66" >
+                                                ✔ Renu Tank (SEG064)                                            </option>
                                                                                     <option value="70" >
                                                 ✔ Banwari Lal Bhamu (SEG069)                                            </option>
+                                                                                    <option value="72" >
+                                                ✔ Vidhya Sharma (SEG071)                                            </option>
                                                                                     <option value="73" >
                                                 ✔ Prabhati Kumari (SEG072)                                            </option>
+                                                                                    <option value="77" >
+                                                ✔ Manoj  (SEG076)                                            </option>
                                                                                     <option value="78" >
                                                 ✔ Mahaveer Kumawat  (4001)                                            </option>
                                                                                     <option value="79" >
@@ -1258,6 +1264,8 @@ Page:
                                                 ✔ vikram singh  (006)                                            </option>
                                                                                     <option value="90" >
                                                 ✔ Vikas Buglaiya (S10014)                                            </option>
+                                                                                    <option value="91" >
+                                                ✔ DEEPENDRA SINGH  (007)                                            </option>
                                                                                     <option value="92" >
                                                 ✔ SURESH KUMAR SAHARAN  (008)                                            </option>
                                                                                     <option value="98" >
@@ -1290,6 +1298,10 @@ Page:
                                                 ✔ ramswaroop moond  (22222)                                            </option>
                                                                                     <option value="119" >
                                                 ✔ saroj  (088)                                            </option>
+                                                                                    <option value="124" >
+                                                ✔ PRIYA  (899)                                            </option>
+                                                                                    <option value="125" >
+                                                ✔ GAYATRI  (578)                                            </option>
                                                                                     <option value="128" >
                                                 ✔ Dhanesh Sunda (100122)                                            </option>
                                                                                     <option value="129" >
@@ -1342,123 +1354,111 @@ Page:
                                 
                                                                     <optgroup label="Other Active Staff (Scheduled / Busy)">
                                                                                     <option value="4" >
-                                                📅 Alka Choudhary (SEG006) - VI (B)                                            </option>
+                                                📅 Alka Choudhary (SEG006) - Class VIII (B)                                            </option>
                                                                                     <option value="7" >
-                                                📅 Amisha Sharma (SEG002) - Nursery (B)                                            </option>
+                                                📅 Amisha Sharma (SEG002) - Class Nursery (B)                                            </option>
                                                                                     <option value="11" >
-                                                📅 Bajrang Lal  (SEG008) - XI - Science(PCM) (B)                                            </option>
+                                                📅 Bajrang Lal  (SEG008) - Class XI - Science(PCM) (B)                                            </option>
                                                                                     <option value="12" >
-                                                📅 Boota Singh (SEG009) - IX (C)                                            </option>
+                                                📅 Boota Singh (SEG009) - Class IX (A)                                            </option>
                                                                                     <option value="14" >
-                                                📅 Mahendra Bhanwariya (SEG011) - MiSaN (A)                                            </option>
+                                                📅 Mahendra Bhanwariya (SEG011) - Class X (C)                                            </option>
                                                                                     <option value="15" >
-                                                📅 Mahesh Ranwa (SEG012) - IX (A)                                            </option>
+                                                📅 Mahesh Ranwa (SEG012) - Class IX (A)                                            </option>
                                                                                     <option value="16" >
-                                                📅 Manoj Jangir (SEG013) - VIII (D)                                            </option>
+                                                📅 Manoj Jangir (SEG013) - Substituted in VIII (D)                                            </option>
                                                                                     <option value="18" >
-                                                📅 Monika Sharma (SEG015) - MiSaN (A)                                            </option>
+                                                📅 Monika Sharma (SEG015) - Class MiSaN (A)                                            </option>
                                                                                     <option value="19" >
-                                                📅 Mukesh Kok (SEG016) - XI - Science(PCM) (A)                                            </option>
+                                                📅 Mukesh Kok (SEG016) - Class XII - Science(PCM) (A)                                            </option>
                                                                                     <option value="21" >
-                                                📅 Naveen Soni (SEG018) - VIII (A)                                            </option>
-                                                                                    <option value="22" >
-                                                📅 Om Prakash Soni (SEG019) - VI (D)                                            </option>
+                                                📅 Naveen Soni (SEG018) - Class VIII (A)                                            </option>
                                                                                     <option value="24" >
-                                                📅 Parwati  (SEG021) - XII - Arts (A)                                            </option>
+                                                📅 Parwati  (SEG021) - Class XI - Arts (A)                                            </option>
                                                                                     <option value="26" >
-                                                📅 Santosh Ruhela (SEG023) - VII (A)                                            </option>
+                                                📅 Santosh Ruhela (SEG023) - Class VII (A)                                            </option>
                                                                                     <option value="27" >
-                                                📅 Sarita Gadhwal (SEG024) - X (A)                                            </option>
+                                                📅 Sarita Gadhwal (SEG024) - Class X (A)                                            </option>
                                                                                     <option value="28" >
-                                                📅 Saroj Choudhary (SEG025) - Nursery (A)                                            </option>
+                                                📅 Saroj Choudhary (SEG025) - Class Nursery (A)                                            </option>
                                                                                     <option value="29" >
-                                                📅 Surendra Siyak (SEG026) - VI (B)                                            </option>
+                                                📅 Surendra Siyak (SEG026) - Class VI (B)                                            </option>
                                                                                     <option value="31" >
-                                                📅 Parmeshwar Lal  (SEG028) - XI - Science(PCB) (A)                                            </option>
+                                                📅 Parmeshwar Lal  (SEG028) - Class XII - Science(PCB) (A)                                            </option>
                                                                                     <option value="32" >
-                                                📅 Ruchi Swami (SEG029) - XII - Commerce (A)                                            </option>
+                                                📅 Ruchi Swami (SEG029) - Class XI - Commerce (A)                                            </option>
                                                                                     <option value="36" >
-                                                📅 Kamla Bhamu (SEG033) - V (A)                                            </option>
+                                                📅 Kamla Bhamu (SEG033) - Class V (A)                                            </option>
                                                                                     <option value="37" >
-                                                📅 Khushboo Kanwar (SEG034) - LKG (B)                                            </option>
+                                                📅 Khushboo Kanwar (SEG034) - Class LKG (B)                                            </option>
                                                                                     <option value="38" >
-                                                📅 Nisha Mor (SEG035) - IV (A)                                            </option>
+                                                📅 Nisha Mor (SEG035) - Class IV (C)                                            </option>
                                                                                     <option value="40" >
-                                                📅 Pratibha Sharma (SEG037) - V (A)                                            </option>
+                                                📅 Pratibha Sharma (SEG037) - Class V (C)                                            </option>
                                                                                     <option value="43" >
-                                                📅 Geeta Sharma (SEG040) - II (A)                                            </option>
+                                                📅 Geeta Sharma (SEG040) - Class II (B)                                            </option>
                                                                                     <option value="44" >
-                                                📅 Manisha  (SEG041) - I (A)                                            </option>
+                                                📅 Manisha  (SEG041) - Class I (A)                                            </option>
                                                                                     <option value="46" >
-                                                📅 Urmila Kumari (SEG043) - I (A)                                            </option>
+                                                📅 Urmila Kumari (SEG043) - Class II (C)                                            </option>
                                                                                     <option value="47" >
-                                                📅 Khusboo Tailor (SEG044) - III (A)                                            </option>
+                                                📅 Khusboo Tailor (SEG044) - Class III (A)                                            </option>
                                                                                     <option value="49" >
-                                                📅 Shivani Dhaka (SEG046) - XII - Arts (A)                                            </option>
+                                                📅 Shivani Dhaka (SEG046) - Class XII - Arts (A)                                            </option>
                                                                                     <option value="57" >
-                                                📅 Jyoti Gaur (SEG054) - VI (A)                                            </option>
+                                                📅 Jyoti Gaur (SEG054) - Class VI (A)                                            </option>
                                                                                     <option value="58" >
-                                                📅 Sarita Sain (SEG055) - IV (B)                                            </option>
+                                                📅 Sarita Sain (SEG055) - Class IV (B)                                            </option>
                                                                                     <option value="60" >
-                                                📅 Bhawana  (SEG057) - II (B)                                            </option>
+                                                📅 Bhawana  (SEG057) - Class II (B)                                            </option>
                                                                                     <option value="62" >
-                                                📅 Nikita  (SEG059) - I (B)                                            </option>
+                                                📅 Nikita  (SEG059) - Class I (B)                                            </option>
                                                                                     <option value="64" >
-                                                📅 Nisha Sharma (SEG062) - IV (C)                                            </option>
-                                                                                    <option value="66" >
-                                                📅 Renu Tank (SEG064) - LKG (A)                                            </option>
+                                                📅 Nisha Sharma (SEG062) - Class IV (C)                                            </option>
                                                                                     <option value="67" >
-                                                📅 Radhika  (359784) - UKG (C)                                            </option>
+                                                📅 Radhika  (359784) - Class UKG (C)                                            </option>
                                                                                     <option value="68" >
-                                                📅 Sonam Kanwar (SEG067) - II (A)                                            </option>
+                                                📅 Sonam Kanwar (SEG067) - Class II (A)                                            </option>
+                                                                                    <option value="69" >
+                                                📅 Neetu Kanwar Rathor (SEG068) - Class XI - Science(PCM) (A)                                            </option>
                                                                                     <option value="71" >
-                                                📅 Aaina Ladha (SEG070) - VII (A)                                            </option>
-                                                                                    <option value="72" >
-                                                📅 Vidhya Sharma (SEG071) - Nursery (A)                                            </option>
+                                                📅 Aaina Ladha (SEG070) - Class VI (D)                                            </option>
                                                                                     <option value="74" >
-                                                📅 Sangeeta Sharma (SEG073) - Nursery (B)                                            </option>
+                                                📅 Sangeeta Sharma (SEG073) - Class III (C)                                            </option>
                                                                                     <option value="75" >
-                                                📅 Bebi Kanwar (SEG074) - XI - Arts (A)                                            </option>
+                                                📅 Bebi Kanwar (SEG074) - Class X (A)                                            </option>
                                                                                     <option value="76" >
-                                                📅 Rekha Shekhawat (SEG075) - UKG (A)                                            </option>
-                                                                                    <option value="77" >
-                                                📅 Manoj  (SEG076) - UKG (C)                                            </option>
+                                                📅 Rekha Shekhawat (SEG075) - Class UKG (A)                                            </option>
                                                                                     <option value="82" selected>
-                                                📅 M S Bhamu (EMP001) - VI (D)                                            </option>
-                                                                                    <option value="91" >
-                                                📅 DEEPENDRA SINGH  (007) - VIII (E)                                            </option>
+                                                📅 M S Bhamu (EMP001) - Substituted in VI (D)                                            </option>
                                                                                     <option value="93" >
-                                                📅 bhumi maheshwari  (009) - VI (A)                                            </option>
+                                                📅 bhumi maheshwari  (009) - Class VI (C)                                            </option>
                                                                                     <option value="94" >
-                                                📅 HARISH SHARMA  (1110) - IX (B)                                            </option>
+                                                📅 HARISH SHARMA  (1110) - Class IX (B)                                            </option>
                                                                                     <option value="95" >
-                                                📅 zarina bano  (1111) - UKG (B)                                            </option>
+                                                📅 zarina bano  (1111) - Class UKG (B)                                            </option>
                                                                                     <option value="96" >
-                                                📅 NEMICHAND PRAJAPAT  (1112) - X (C)                                            </option>
+                                                📅 NEMICHAND PRAJAPAT  (1112) - Class X (C)                                            </option>
                                                                                     <option value="97" >
-                                                📅 PANKAJ  (1113) - IX (C)                                            </option>
+                                                📅 PANKAJ  (1113) - Class VII (C)                                            </option>
                                                                                     <option value="99" >
-                                                📅 BINDIYA  (1117) - X (C)                                            </option>
+                                                📅 BINDIYA  (1117) - Class X (B)                                            </option>
                                                                                     <option value="101" >
-                                                📅 SANJAY KHAN  (1120) - IX (B)                                            </option>
+                                                📅 SANJAY KHAN  (1120) - Class IX (C)                                            </option>
                                                                                     <option value="103" >
-                                                📅 pooja gora  (1125) - I (C)                                            </option>
+                                                📅 pooja gora  (1125) - Class I (C)                                            </option>
                                                                                     <option value="104" >
-                                                📅 pooja jangir  (2226) - II (D)                                            </option>
+                                                📅 pooja jangir  (2226) - Class II (C)                                            </option>
                                                                                     <option value="107" >
-                                                📅 DEEPIKA SHARMA  (56) - VIII (E)                                            </option>
+                                                📅 DEEPIKA SHARMA  (56) - Class VIII (E)                                            </option>
                                                                                     <option value="121" >
-                                                📅 DEVENDRA SINGH KHEDAR  (55) - XII - Commerce (A)                                            </option>
+                                                📅 DEVENDRA SINGH KHEDAR  (55) - Class XII - Commerce (A)                                            </option>
                                                                                     <option value="122" >
-                                                📅 SUSHILA  (7012) - V (C)                                            </option>
+                                                📅 SUSHILA  (7012) - Class IV (A)                                            </option>
                                                                                     <option value="123" >
-                                                📅 REKHA GODARA  (8010) - LKG (A)                                            </option>
-                                                                                    <option value="124" >
-                                                📅 PRIYA  (899) - VII (C)                                            </option>
-                                                                                    <option value="125" >
-                                                📅 GAYATRI  (578) - UKG (B)                                            </option>
+                                                📅 REKHA GODARA  (8010) - Class LKG (A)                                            </option>
                                                                                     <option value="126" >
-                                                📅 RAJU REWAR  (1023) - IX (A)                                            </option>
+                                                📅 RAJU REWAR  (1023) - Class VII (A)                                            </option>
                                                                             </optgroup>
                                 
                                                                     <optgroup label="Absent / On Leave Staff">
@@ -1511,6 +1511,8 @@ Page:
                                                 ✔ Chawand Singh (SEG010)                                            </option>
                                                                                     <option value="17" >
                                                 ✔ Mohd.Ilyas  (SEG014)                                            </option>
+                                                                                    <option value="22" >
+                                                ✔ Om Prakash Soni (SEG019)                                            </option>
                                                                                     <option value="41" >
                                                 ✔ Renuka  (SEG038)                                            </option>
                                                                                     <option value="50" >
@@ -1521,12 +1523,16 @@ Page:
                                                 ✔ Gaytri Swami (SEG053)                                            </option>
                                                                                     <option value="65" >
                                                 ✔ Jyoti Kanwar (SEG063)                                            </option>
-                                                                                    <option value="69" >
-                                                ✔ Neetu Kanwar Rathor (SEG068)                                            </option>
+                                                                                    <option value="66" >
+                                                ✔ Renu Tank (SEG064)                                            </option>
                                                                                     <option value="70" >
                                                 ✔ Banwari Lal Bhamu (SEG069)                                            </option>
+                                                                                    <option value="72" >
+                                                ✔ Vidhya Sharma (SEG071)                                            </option>
                                                                                     <option value="73" >
                                                 ✔ Prabhati Kumari (SEG072)                                            </option>
+                                                                                    <option value="77" >
+                                                ✔ Manoj  (SEG076)                                            </option>
                                                                                     <option value="78" >
                                                 ✔ Mahaveer Kumawat  (4001)                                            </option>
                                                                                     <option value="79" >
@@ -1551,6 +1557,8 @@ Page:
                                                 ✔ vikram singh  (006)                                            </option>
                                                                                     <option value="90" >
                                                 ✔ Vikas Buglaiya (S10014)                                            </option>
+                                                                                    <option value="91" >
+                                                ✔ DEEPENDRA SINGH  (007)                                            </option>
                                                                                     <option value="92" >
                                                 ✔ SURESH KUMAR SAHARAN  (008)                                            </option>
                                                                                     <option value="98" >
@@ -1583,6 +1591,10 @@ Page:
                                                 ✔ ramswaroop moond  (22222)                                            </option>
                                                                                     <option value="119" >
                                                 ✔ saroj  (088)                                            </option>
+                                                                                    <option value="124" >
+                                                ✔ PRIYA  (899)                                            </option>
+                                                                                    <option value="125" >
+                                                ✔ GAYATRI  (578)                                            </option>
                                                                                     <option value="128" >
                                                 ✔ Dhanesh Sunda (100122)                                            </option>
                                                                                     <option value="129" >
@@ -1635,123 +1647,111 @@ Page:
                                 
                                                                     <optgroup label="Other Active Staff (Scheduled / Busy)">
                                                                                     <option value="4" >
-                                                📅 Alka Choudhary (SEG006) - VI (B)                                            </option>
+                                                📅 Alka Choudhary (SEG006) - Class VIII (B)                                            </option>
                                                                                     <option value="7" >
-                                                📅 Amisha Sharma (SEG002) - Nursery (B)                                            </option>
+                                                📅 Amisha Sharma (SEG002) - Class Nursery (B)                                            </option>
                                                                                     <option value="11" >
-                                                📅 Bajrang Lal  (SEG008) - XI - Science(PCM) (B)                                            </option>
+                                                📅 Bajrang Lal  (SEG008) - Class XI - Science(PCM) (B)                                            </option>
                                                                                     <option value="12" >
-                                                📅 Boota Singh (SEG009) - IX (C)                                            </option>
+                                                📅 Boota Singh (SEG009) - Class IX (A)                                            </option>
                                                                                     <option value="14" >
-                                                📅 Mahendra Bhanwariya (SEG011) - MiSaN (A)                                            </option>
+                                                📅 Mahendra Bhanwariya (SEG011) - Class X (C)                                            </option>
                                                                                     <option value="15" >
-                                                📅 Mahesh Ranwa (SEG012) - IX (A)                                            </option>
+                                                📅 Mahesh Ranwa (SEG012) - Class IX (A)                                            </option>
                                                                                     <option value="16" selected>
-                                                📅 Manoj Jangir (SEG013) - VIII (D)                                            </option>
+                                                📅 Manoj Jangir (SEG013) - Substituted in VIII (D)                                            </option>
                                                                                     <option value="18" >
-                                                📅 Monika Sharma (SEG015) - MiSaN (A)                                            </option>
+                                                📅 Monika Sharma (SEG015) - Class MiSaN (A)                                            </option>
                                                                                     <option value="19" >
-                                                📅 Mukesh Kok (SEG016) - XI - Science(PCM) (A)                                            </option>
+                                                📅 Mukesh Kok (SEG016) - Class XII - Science(PCM) (A)                                            </option>
                                                                                     <option value="21" >
-                                                📅 Naveen Soni (SEG018) - VIII (A)                                            </option>
-                                                                                    <option value="22" >
-                                                📅 Om Prakash Soni (SEG019) - VI (D)                                            </option>
+                                                📅 Naveen Soni (SEG018) - Class VIII (A)                                            </option>
                                                                                     <option value="24" >
-                                                📅 Parwati  (SEG021) - XII - Arts (A)                                            </option>
+                                                📅 Parwati  (SEG021) - Class XI - Arts (A)                                            </option>
                                                                                     <option value="26" >
-                                                📅 Santosh Ruhela (SEG023) - VII (A)                                            </option>
+                                                📅 Santosh Ruhela (SEG023) - Class VII (A)                                            </option>
                                                                                     <option value="27" >
-                                                📅 Sarita Gadhwal (SEG024) - X (A)                                            </option>
+                                                📅 Sarita Gadhwal (SEG024) - Class X (A)                                            </option>
                                                                                     <option value="28" >
-                                                📅 Saroj Choudhary (SEG025) - Nursery (A)                                            </option>
+                                                📅 Saroj Choudhary (SEG025) - Class Nursery (A)                                            </option>
                                                                                     <option value="29" >
-                                                📅 Surendra Siyak (SEG026) - VI (B)                                            </option>
+                                                📅 Surendra Siyak (SEG026) - Class VI (B)                                            </option>
                                                                                     <option value="31" >
-                                                📅 Parmeshwar Lal  (SEG028) - XI - Science(PCB) (A)                                            </option>
+                                                📅 Parmeshwar Lal  (SEG028) - Class XII - Science(PCB) (A)                                            </option>
                                                                                     <option value="32" >
-                                                📅 Ruchi Swami (SEG029) - XII - Commerce (A)                                            </option>
+                                                📅 Ruchi Swami (SEG029) - Class XI - Commerce (A)                                            </option>
                                                                                     <option value="36" >
-                                                📅 Kamla Bhamu (SEG033) - V (A)                                            </option>
+                                                📅 Kamla Bhamu (SEG033) - Class V (A)                                            </option>
                                                                                     <option value="37" >
-                                                📅 Khushboo Kanwar (SEG034) - LKG (B)                                            </option>
+                                                📅 Khushboo Kanwar (SEG034) - Class LKG (B)                                            </option>
                                                                                     <option value="38" >
-                                                📅 Nisha Mor (SEG035) - IV (A)                                            </option>
+                                                📅 Nisha Mor (SEG035) - Class IV (C)                                            </option>
                                                                                     <option value="40" >
-                                                📅 Pratibha Sharma (SEG037) - V (A)                                            </option>
+                                                📅 Pratibha Sharma (SEG037) - Class V (C)                                            </option>
                                                                                     <option value="43" >
-                                                📅 Geeta Sharma (SEG040) - II (A)                                            </option>
+                                                📅 Geeta Sharma (SEG040) - Class II (B)                                            </option>
                                                                                     <option value="44" >
-                                                📅 Manisha  (SEG041) - I (A)                                            </option>
+                                                📅 Manisha  (SEG041) - Class I (A)                                            </option>
                                                                                     <option value="46" >
-                                                📅 Urmila Kumari (SEG043) - I (A)                                            </option>
+                                                📅 Urmila Kumari (SEG043) - Class II (C)                                            </option>
                                                                                     <option value="47" >
-                                                📅 Khusboo Tailor (SEG044) - III (A)                                            </option>
+                                                📅 Khusboo Tailor (SEG044) - Class III (A)                                            </option>
                                                                                     <option value="49" >
-                                                📅 Shivani Dhaka (SEG046) - XII - Arts (A)                                            </option>
+                                                📅 Shivani Dhaka (SEG046) - Class XII - Arts (A)                                            </option>
                                                                                     <option value="57" >
-                                                📅 Jyoti Gaur (SEG054) - VI (A)                                            </option>
+                                                📅 Jyoti Gaur (SEG054) - Class VI (A)                                            </option>
                                                                                     <option value="58" >
-                                                📅 Sarita Sain (SEG055) - IV (B)                                            </option>
+                                                📅 Sarita Sain (SEG055) - Class IV (B)                                            </option>
                                                                                     <option value="60" >
-                                                📅 Bhawana  (SEG057) - II (B)                                            </option>
+                                                📅 Bhawana  (SEG057) - Class II (B)                                            </option>
                                                                                     <option value="62" >
-                                                📅 Nikita  (SEG059) - I (B)                                            </option>
+                                                📅 Nikita  (SEG059) - Class I (B)                                            </option>
                                                                                     <option value="64" >
-                                                📅 Nisha Sharma (SEG062) - IV (C)                                            </option>
-                                                                                    <option value="66" >
-                                                📅 Renu Tank (SEG064) - LKG (A)                                            </option>
+                                                📅 Nisha Sharma (SEG062) - Class IV (C)                                            </option>
                                                                                     <option value="67" >
-                                                📅 Radhika  (359784) - UKG (C)                                            </option>
+                                                📅 Radhika  (359784) - Class UKG (C)                                            </option>
                                                                                     <option value="68" >
-                                                📅 Sonam Kanwar (SEG067) - II (A)                                            </option>
+                                                📅 Sonam Kanwar (SEG067) - Class II (A)                                            </option>
+                                                                                    <option value="69" >
+                                                📅 Neetu Kanwar Rathor (SEG068) - Class XI - Science(PCM) (A)                                            </option>
                                                                                     <option value="71" >
-                                                📅 Aaina Ladha (SEG070) - VII (A)                                            </option>
-                                                                                    <option value="72" >
-                                                📅 Vidhya Sharma (SEG071) - Nursery (A)                                            </option>
+                                                📅 Aaina Ladha (SEG070) - Class VI (D)                                            </option>
                                                                                     <option value="74" >
-                                                📅 Sangeeta Sharma (SEG073) - Nursery (B)                                            </option>
+                                                📅 Sangeeta Sharma (SEG073) - Class III (C)                                            </option>
                                                                                     <option value="75" >
-                                                📅 Bebi Kanwar (SEG074) - XI - Arts (A)                                            </option>
+                                                📅 Bebi Kanwar (SEG074) - Class X (A)                                            </option>
                                                                                     <option value="76" >
-                                                📅 Rekha Shekhawat (SEG075) - UKG (A)                                            </option>
-                                                                                    <option value="77" >
-                                                📅 Manoj  (SEG076) - UKG (C)                                            </option>
+                                                📅 Rekha Shekhawat (SEG075) - Class UKG (A)                                            </option>
                                                                                     <option value="82" >
-                                                📅 M S Bhamu (EMP001) - VI (D)                                            </option>
-                                                                                    <option value="91" >
-                                                📅 DEEPENDRA SINGH  (007) - VIII (E)                                            </option>
+                                                📅 M S Bhamu (EMP001) - Substituted in VI (D)                                            </option>
                                                                                     <option value="93" >
-                                                📅 bhumi maheshwari  (009) - VI (A)                                            </option>
+                                                📅 bhumi maheshwari  (009) - Class VI (C)                                            </option>
                                                                                     <option value="94" >
-                                                📅 HARISH SHARMA  (1110) - IX (B)                                            </option>
+                                                📅 HARISH SHARMA  (1110) - Class IX (B)                                            </option>
                                                                                     <option value="95" >
-                                                📅 zarina bano  (1111) - UKG (B)                                            </option>
+                                                📅 zarina bano  (1111) - Class UKG (B)                                            </option>
                                                                                     <option value="96" >
-                                                📅 NEMICHAND PRAJAPAT  (1112) - X (C)                                            </option>
+                                                📅 NEMICHAND PRAJAPAT  (1112) - Class X (C)                                            </option>
                                                                                     <option value="97" >
-                                                📅 PANKAJ  (1113) - IX (C)                                            </option>
+                                                📅 PANKAJ  (1113) - Class VII (C)                                            </option>
                                                                                     <option value="99" >
-                                                📅 BINDIYA  (1117) - X (C)                                            </option>
+                                                📅 BINDIYA  (1117) - Class X (B)                                            </option>
                                                                                     <option value="101" >
-                                                📅 SANJAY KHAN  (1120) - IX (B)                                            </option>
+                                                📅 SANJAY KHAN  (1120) - Class IX (C)                                            </option>
                                                                                     <option value="103" >
-                                                📅 pooja gora  (1125) - I (C)                                            </option>
+                                                📅 pooja gora  (1125) - Class I (C)                                            </option>
                                                                                     <option value="104" >
-                                                📅 pooja jangir  (2226) - II (D)                                            </option>
+                                                📅 pooja jangir  (2226) - Class II (C)                                            </option>
                                                                                     <option value="107" >
-                                                📅 DEEPIKA SHARMA  (56) - VIII (E)                                            </option>
+                                                📅 DEEPIKA SHARMA  (56) - Class VIII (E)                                            </option>
                                                                                     <option value="121" >
-                                                📅 DEVENDRA SINGH KHEDAR  (55) - XII - Commerce (A)                                            </option>
+                                                📅 DEVENDRA SINGH KHEDAR  (55) - Class XII - Commerce (A)                                            </option>
                                                                                     <option value="122" >
-                                                📅 SUSHILA  (7012) - V (C)                                            </option>
+                                                📅 SUSHILA  (7012) - Class IV (A)                                            </option>
                                                                                     <option value="123" >
-                                                📅 REKHA GODARA  (8010) - LKG (A)                                            </option>
-                                                                                    <option value="124" >
-                                                📅 PRIYA  (899) - VII (C)                                            </option>
-                                                                                    <option value="125" >
-                                                📅 GAYATRI  (578) - UKG (B)                                            </option>
+                                                📅 REKHA GODARA  (8010) - Class LKG (A)                                            </option>
                                                                                     <option value="126" >
-                                                📅 RAJU REWAR  (1023) - IX (A)                                            </option>
+                                                📅 RAJU REWAR  (1023) - Class VII (A)                                            </option>
                                                                             </optgroup>
                                 
                                                                     <optgroup label="Absent / On Leave Staff">
@@ -1769,4 +1769,43 @@ Page:
             <button type="button" id="save_substitution_btn" class="btn btn-success"><i class="fa fa-save"></i> Save Substitutions</button>
         </div>
     </form>
+    <style type="text/css">
+        .select2-container--default .select2-selection--single {
+            border-radius: 8px !important;
+            border: 1px solid #cbd5e1 !important;
+            height: 38px !important;
+            padding: 4px 8px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 28px !important;
+            color: #1e293b !important;
+            font-weight: 500 !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px !important;
+        }
+        .select2-dropdown {
+            border-radius: 8px !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+            z-index: 99999 !important;
+        }
+        .select2-results__group {
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            background-color: #f1f5f9 !important;
+            padding: 6px 10px !important;
+        }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            if (typeof $.fn.select2 !== 'undefined') {
+                $('.substitute_select').select2({
+                    width: '100%',
+                    placeholder: 'Search & Select Substitute...',
+                    dropdownParent: $('body')
+                });
+            }
+        });
+    </script>
 

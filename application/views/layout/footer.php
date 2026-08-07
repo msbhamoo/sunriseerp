@@ -500,19 +500,14 @@ pdfMake.fonts = jsonData;
                 }
             });
 
-            // Close flyout menu & mobile drawer when clicking/tapping outside on content wrapper
+            // Close mobile drawer when clicking/tapping outside on content wrapper
             $(document).on('click touchstart', '.content-wrapper, .main-footer', function(e) {
                 if ($(e.target).closest('.main-sidebar, .sidebar-toggle').length > 0) {
                     return;
                 }
 
                 if (window.innerWidth < 768 && $('body').hasClass('sidebar-open')) {
-                    $('body').removeClass('sidebar-open submenu-is-open');
-                    $('.sidebar-menu > li .treeview-menu').removeClass('is-open');
-                } else if ($('.sidebar-menu > li .treeview-menu.is-open').length) {
-                    $('.sidebar-menu > li .treeview-menu').removeClass('is-open');
-                    $('body').removeClass('submenu-is-open');
-                    localStorage.setItem('openSidebarMenuIndex', 'closed');
+                    $('body').removeClass('sidebar-open');
                 }
             });
 

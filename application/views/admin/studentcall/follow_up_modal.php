@@ -46,6 +46,7 @@
                     </tr>
                     <tr>
                         <td colspan="4" style="padding: 0;">
+                            <div id="modal_recent_payment_warning"></div>
                             <table class="table table-bordered" style="margin-bottom: 0;">
                                 <thead>
                                     <tr>
@@ -292,9 +293,19 @@
         });
     });
 
+    function parseISODateLocal(dateStr) {
+        if (!dateStr) return null;
+        var parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        }
+        return new Date(dateStr);
+    }
+
     function loadStudentFeeAttendance(student_session_id, label) {
         $('#modal_fee_summary_body').html('<tr><td colspan="6" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
         $('#modal_att_summary_body').html('<i class="fa fa-spinner fa-spin"></i> Loading...');
+        $('#modal_recent_payment_warning').html('');
         if(label) $('#fee_for_label').text('(for ' + label + ')');
 
         $.ajax({
@@ -304,22 +315,61 @@
             dataType: "json",
             success: function (res) {
                 var feeHtml = '';
+                var recentPayment = null;
+                var today = new Date();
+                today.setHours(0,0,0,0);
+
+                var checkFeeRow = function(feeType, title, data) {
+                    if (!data) return '';
+                    var last_amt = data.last_collected > 0 ? parseFloat(data.last_collected).toFixed(2) : '-';
+                    var last_date = data.last_collected_date ? data.last_collected_date : '-';
+                    var rowStyle = '';
+                    var badge = '';
+
+                    if (data.last_collected_date_raw && data.last_collected > 0) {
+                        var pDate = parseISODateLocal(data.last_collected_date_raw);
+                        if (pDate) {
+                            pDate.setHours(0,0,0,0);
+                            var diffDays = Math.round((today - pDate) / (1000 * 60 * 60 * 24));
+                            if (diffDays >= 0 && diffDays <= 14) {
+                                rowStyle = 'style="background-color: #fef2f2;"';
+                                var dayText = diffDays === 0 ? 'Today' : (diffDays === 1 ? 'Yesterday' : diffDays + 'd ago');
+                                badge = ' <span class="badge bg-red" style="font-size:10px; background-color:#dc2626 !important;" data-toggle="tooltip" title="Paid within last 2 weeks">Recently Paid (' + dayText + ')</span>';
+                                if (!recentPayment || diffDays < recentPayment.daysAgo) {
+                                    recentPayment = {
+                                        type: title,
+                                        amount: last_amt,
+                                        date: last_date,
+                                        daysAgo: diffDays
+                                    };
+                                }
+                            }
+                        }
+                    }
+
+                    return '<tr ' + rowStyle + '><td>' + title + '</td><td>' + parseFloat(data.total).toFixed(2) + '</td><td>' + parseFloat(data.collected).toFixed(2) + '</td><td>' + last_amt + '</td><td>' + last_date + badge + '</td><td><b>' + parseFloat(data.due).toFixed(2) + '</b></td></tr>';
+                };
+
                 if (res.academic) {
-                    var last_amt_a = res.academic.last_collected > 0 ? parseFloat(res.academic.last_collected).toFixed(2) : '-';
-                    var last_date_a = res.academic.last_collected_date ? res.academic.last_collected_date : '-';
-                    feeHtml += '<tr><td>Academic Fees</td><td>' + parseFloat(res.academic.total).toFixed(2) + '</td><td>' + parseFloat(res.academic.collected).toFixed(2) + '</td><td>' + last_amt_a + '</td><td>' + last_date_a + '</td><td><b>' + parseFloat(res.academic.due).toFixed(2) + '</b></td></tr>';
+                    feeHtml += checkFeeRow('academic', 'Academic Fees', res.academic);
                 }
                 if (res.transport && res.transport.total > 0) {
-                    var last_amt_t = res.transport.last_collected > 0 ? parseFloat(res.transport.last_collected).toFixed(2) : '-';
-                    var last_date_t = res.transport.last_collected_date ? res.transport.last_collected_date : '-';
-                    feeHtml += '<tr><td>Transport Fees</td><td>' + parseFloat(res.transport.total).toFixed(2) + '</td><td>' + parseFloat(res.transport.collected).toFixed(2) + '</td><td>' + last_amt_t + '</td><td>' + last_date_t + '</td><td><b>' + parseFloat(res.transport.due).toFixed(2) + '</b></td></tr>';
+                    feeHtml += checkFeeRow('transport', 'Transport Fees', res.transport);
                 }
                 if (res.hostel && res.hostel.total > 0) {
-                    var last_amt_h = res.hostel.last_collected > 0 ? parseFloat(res.hostel.last_collected).toFixed(2) : '-';
-                    var last_date_h = res.hostel.last_collected_date ? res.hostel.last_collected_date : '-';
-                    feeHtml += '<tr><td>Hostel Fees</td><td>' + parseFloat(res.hostel.total).toFixed(2) + '</td><td>' + parseFloat(res.hostel.collected).toFixed(2) + '</td><td>' + last_amt_h + '</td><td>' + last_date_h + '</td><td><b>' + parseFloat(res.hostel.due).toFixed(2) + '</b></td></tr>';
+                    feeHtml += checkFeeRow('hostel', 'Hostel Fees', res.hostel);
                 }
+
                 $('#modal_fee_summary_body').html(feeHtml);
+
+                if (recentPayment) {
+                    var dayLabel = recentPayment.daysAgo === 0 ? 'Today' : (recentPayment.daysAgo === 1 ? 'Yesterday' : recentPayment.daysAgo + ' days ago');
+                    var warnHtml = '<div class="alert alert-danger" style="margin: 10px 0; border-left: 5px solid #dc2626; background: #fef2f2; color: #991b1b; padding: 10px 12px; font-size: 13px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">' +
+                        '<i class="fa fa-exclamation-triangle" style="font-size:16px; margin-right:6px; color:#dc2626;"></i>' +
+                        '<strong>RECENT FEE PAYMENT DETECTED:</strong> This student/family submitted a fee payment of <strong>₹' + recentPayment.amount + '</strong> (' + recentPayment.type + ') on <strong>' + recentPayment.date + '</strong> (' + dayLabel + '). Please verify payment details before requesting fee submission!' +
+                        '</div>';
+                    $('#modal_recent_payment_warning').html(warnHtml);
+                }
 
                 var attHtml = '';
                 if (res.history && (res.history.working_days !== undefined && res.history.working_days !== null)) {
