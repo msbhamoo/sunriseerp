@@ -49,17 +49,19 @@
                             <table class="table table-bordered" style="margin-bottom: 0;">
                                 <thead>
                                     <tr>
-                                        <th colspan="4" class="text-center" style="background-color: #f9f9f9;">Fee Summary <span id="fee_for_label" style="font-weight:normal;color:#666;"></span></th>
+                                        <th colspan="6" class="text-center" style="background-color: #f9f9f9;">Fee Summary <span id="fee_for_label" style="font-weight:normal;color:#666;"></span></th>
                                     </tr>
                                     <tr>
                                         <th>Fee Type</th>
                                         <th>Total</th>
-                                        <th>Collected</th>
+                                        <th>Total Collected</th>
+                                        <th>Last Collected</th>
+                                        <th>Last Collected Date</th>
                                         <th>Due</th>
                                     </tr>
                                 </thead>
                                 <tbody id="modal_fee_summary_body">
-                                    <tr><td colspan="4" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
+                                    <tr><td colspan="6" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
                                 </tbody>
                             </table>
                         </td>
@@ -291,7 +293,7 @@
     });
 
     function loadStudentFeeAttendance(student_session_id, label) {
-        $('#modal_fee_summary_body').html('<tr><td colspan="4" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
+        $('#modal_fee_summary_body').html('<tr><td colspan="6" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>');
         $('#modal_att_summary_body').html('<i class="fa fa-spinner fa-spin"></i> Loading...');
         if(label) $('#fee_for_label').text('(for ' + label + ')');
 
@@ -303,13 +305,19 @@
             success: function (res) {
                 var feeHtml = '';
                 if (res.academic) {
-                    feeHtml += '<tr><td>Academic Fees</td><td>' + parseFloat(res.academic.total).toFixed(2) + '</td><td>' + parseFloat(res.academic.collected).toFixed(2) + '</td><td><b>' + parseFloat(res.academic.due).toFixed(2) + '</b></td></tr>';
+                    var last_amt_a = res.academic.last_collected > 0 ? parseFloat(res.academic.last_collected).toFixed(2) : '-';
+                    var last_date_a = res.academic.last_collected_date ? res.academic.last_collected_date : '-';
+                    feeHtml += '<tr><td>Academic Fees</td><td>' + parseFloat(res.academic.total).toFixed(2) + '</td><td>' + parseFloat(res.academic.collected).toFixed(2) + '</td><td>' + last_amt_a + '</td><td>' + last_date_a + '</td><td><b>' + parseFloat(res.academic.due).toFixed(2) + '</b></td></tr>';
                 }
                 if (res.transport && res.transport.total > 0) {
-                    feeHtml += '<tr><td>Transport Fees</td><td>' + parseFloat(res.transport.total).toFixed(2) + '</td><td>' + parseFloat(res.transport.collected).toFixed(2) + '</td><td><b>' + parseFloat(res.transport.due).toFixed(2) + '</b></td></tr>';
+                    var last_amt_t = res.transport.last_collected > 0 ? parseFloat(res.transport.last_collected).toFixed(2) : '-';
+                    var last_date_t = res.transport.last_collected_date ? res.transport.last_collected_date : '-';
+                    feeHtml += '<tr><td>Transport Fees</td><td>' + parseFloat(res.transport.total).toFixed(2) + '</td><td>' + parseFloat(res.transport.collected).toFixed(2) + '</td><td>' + last_amt_t + '</td><td>' + last_date_t + '</td><td><b>' + parseFloat(res.transport.due).toFixed(2) + '</b></td></tr>';
                 }
                 if (res.hostel && res.hostel.total > 0) {
-                    feeHtml += '<tr><td>Hostel Fees</td><td>' + parseFloat(res.hostel.total).toFixed(2) + '</td><td>' + parseFloat(res.hostel.collected).toFixed(2) + '</td><td><b>' + parseFloat(res.hostel.due).toFixed(2) + '</b></td></tr>';
+                    var last_amt_h = res.hostel.last_collected > 0 ? parseFloat(res.hostel.last_collected).toFixed(2) : '-';
+                    var last_date_h = res.hostel.last_collected_date ? res.hostel.last_collected_date : '-';
+                    feeHtml += '<tr><td>Hostel Fees</td><td>' + parseFloat(res.hostel.total).toFixed(2) + '</td><td>' + parseFloat(res.hostel.collected).toFixed(2) + '</td><td>' + last_amt_h + '</td><td>' + last_date_h + '</td><td><b>' + parseFloat(res.hostel.due).toFixed(2) + '</b></td></tr>';
                 }
                 $('#modal_fee_summary_body').html(feeHtml);
 
@@ -326,7 +334,7 @@
                 $('#modal_att_summary_body').html(attHtml);
             },
             error: function() {
-                $('#modal_fee_summary_body').html('<tr><td colspan="4" class="text-center text-danger">Error loading fee details.</td></tr>');
+                $('#modal_fee_summary_body').html('<tr><td colspan="6" class="text-center text-danger">Error loading fee details.</td></tr>');
                 $('#modal_att_summary_body').html('<span class="text-danger">Error loading attendance details.</span>');
             }
         });

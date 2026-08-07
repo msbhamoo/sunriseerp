@@ -15,8 +15,21 @@
             overflow-y: auto !important;
         }
         #followUpModal .modal-body, #addCallModal .modal-body {
+            min-height: 340px;
             max-height: calc(100vh - 140px);
             overflow-y: auto;
+        }
+        #student_search_results .list-group-item {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            font-size: 13px;
+            color: #1e293b;
+        }
+        #student_search_results .list-group-item:hover {
+            background-color: #f0f9ff;
+            color: #0284c7;
+            font-weight: 600;
         }
         .d2-metric-grid {
             display: grid;
@@ -708,6 +721,8 @@
                                     <option value="">All</option>
                                     <option value="New">New</option>
                                     <option value="Old">Old</option>
+                                    <option value="Added">Added</option>
+                                    <option value="Promotion">Promotion</option>
                                 </select>
                             </div>
                         </div>
@@ -738,6 +753,30 @@
                                     <option value="">All</option>
                                     <option value="Yes">Yes</option>
                                     <option value="No">No</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-2 col-md-2">
+                            <div class="form-group">
+                                <label>Purpose</label>
+                                <select id="status_purpose_id" name="status_purpose_id" class="form-control">
+                                    <option value="">All Purposes</option>
+                                    <?php foreach ($purposes as $purpose) { ?>
+                                        <option value="<?php echo $purpose['id'] ?>"><?php echo $purpose['purpose'] ?></option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-2 col-md-2">
+                            <div class="form-group">
+                                <label>Call Status / Outcome</label>
+                                <select id="status_call_status" name="status_call_status" class="form-control">
+                                    <option value="">All Statuses</option>
+                                    <option value="Connected">Connected</option>
+                                    <option value="Not Connected">Not Connected</option>
+                                    <option value="Callback Requested">Callback Requested</option>
+                                    <option value="Not Answered">Not Answered</option>
+                                    <option value="No Call Log">No Call Log (Not Called)</option>
                                 </select>
                             </div>
                         </div>
@@ -784,19 +823,25 @@
 <!-- Add Call Modal -->
 <div id="addCallModal" class="modal fade" role="dialog">
     <div class="modal-dialog modal-dialog2 modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title"><?php echo ($this->lang->line('add_call') ? $this->lang->line('add_call') : 'Add Call'); ?></h4>
+        <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 15px 40px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="background: #114b5f; color: #fff; padding: 16px 20px;">
+                <button type="button" class="close" data-dismiss="modal" style="color: #fff; opacity: 0.9; font-size: 24px;">&times;</button>
+                <h4 class="modal-title" style="font-weight: 600; font-size: 18px; color: #fff; margin: 0; font-family: Inter, sans-serif;"><?php echo ($this->lang->line('search_student') ? $this->lang->line('search_student') : 'Search Student'); ?></h4>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="padding: 20px; background: #f8fafc;">
                 <form id="addCallForm" method="post" accept-charset="utf-8">
                     <div class="row">
                         <div class="col-md-12">
-                            <div class="form-group">
-                                <label><?php echo ($this->lang->line('search_student') ? $this->lang->line('search_student') : 'Search Student'); ?></label>
-                                <input type="text" id="search_student_keyword" class="form-control" placeholder="Search by name, admission no, roll no..." autocomplete="off">
-                                <ul id="student_search_results" class="list-group" style="position: absolute; z-index: 1000; width: 95%; max-height: 200px; overflow-y: auto;"></ul>
+                            <div class="form-group" style="position: relative; margin-bottom: 20px;">
+                                <div class="input-group" style="width: 100%; border-radius: 8px; overflow: hidden; border: 1.5px solid #0f172a; background: #fff;">
+                                    <input type="text" id="search_student_keyword" class="form-control" placeholder="Search by name, admission no, roll no..." autocomplete="off" style="height: 46px; font-size: 15px; border: none; box-shadow: none; padding-left: 16px;">
+                                    <span class="input-group-btn" style="width: 50px;">
+                                        <button class="btn btn-navy" type="button" style="height: 46px; width: 50px; background: #0f172a; color: #fff; border: none; border-radius: 0; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fa fa-search" style="font-size: 16px;"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div id="student_search_results" style="position: absolute; z-index: 99999; left: 0; right: 0; max-height: 360px; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); margin-top: 6px; padding: 10px; display: none;"></div>
                             </div>
                         </div>
                     </div>
@@ -839,14 +884,16 @@
                                             <table class="table table-bordered table-striped" style="font-size:12px; margin-bottom: 10px;">
                                                 <thead>
                                                     <tr>
-                                                        <th>FEE HEAD</th>
-                                                        <th>TOTAL FEES</th>
-                                                        <th>COLLECTED</th>
+                                                        <th>FEE TYPE</th>
+                                                        <th>TOTAL</th>
+                                                        <th>TOTAL COLLECTED</th>
+                                                        <th>LAST COLLECTED</th>
+                                                        <th>LAST COLLECTED DATE</th>
                                                         <th>DUE</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody id="fee_summary_body">
-                                                    <tr><td colspan="4" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
+                                                    <tr><td colspan="6" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading...</td></tr>
                                                 </tbody>
                                             </table>
                                         </div>
@@ -888,13 +935,14 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label><?php echo $this->lang->line('purpose'); ?></label>
-                                            <select name="purpose_id" class="form-control">
+                                            <label><?php echo $this->lang->line('purpose'); ?> <small class="req"> *</small></label>
+                                            <select name="purpose_id" id="purpose_id" class="form-control">
                                                 <option value=""><?php echo $this->lang->line('select'); ?></option>
                                                 <?php foreach ($purposes as $purpose) { ?>
                                                     <option value="<?php echo $purpose['id'] ?>"><?php echo $purpose['purpose'] ?></option>
                                                 <?php } ?>
                                             </select>
+                                            <span class="text-danger" id="error_purpose_id"></span>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -1157,7 +1205,7 @@
             }
         });
 
-        $('#search_student_keyword').on('keyup', function () {
+        $('#search_student_keyword').on('keyup input focus', function () {
             var keyword = $(this).val();
             if (keyword.length >= 2) {
                 $.ajax({
@@ -1169,28 +1217,50 @@
                         var html = '';
                         student_phones = {};
                         var student_details = {};
-                        $.each(res, function (index, value) {
-                            student_phones[value.student_id] = {
-                                Father: value.father_phone,
-                                Mother: value.mother_phone,
-                                Guardian: value.guardian_phone,
-                                Student: value.mobileno
-                            };
-                            student_details[value.student_id] = {
-                                admission_type: value.admission_type || 'New',
-                                shrestha: value.shrestha || 'No',
-                                rte: value.rte || 'No',
-                                is_staff_kid: (value.is_staff_kid == 1 || value.is_staff_kid === '1') ? 'Yes' : 'No',
-                                staff_name: value.staff_name || ''
-                            };
-                            html += '<li class="list-group-item student-item" style="cursor:pointer;" data-id="' + value.student_id + '" data-session="' + value.student_session_id + '" data-name="' + value.firstname + ' ' + value.lastname + ' (' + value.admission_no + ')' + (value.father_name ? ' - Father: ' + value.father_name : '') + ' - ' + value.class + ' (' + value.section + ')">' + value.firstname + ' ' + value.lastname + ' (' + value.admission_no + ')' + (value.father_name ? ' - Father: ' + value.father_name : '') + ' - ' + value.class + ' (' + value.section + ')</li>';
-                        });
-                        $('#student_search_results').html(html);
+                        if (res && res.length > 0) {
+                            $.each(res, function (index, value) {
+                                student_phones[value.student_id] = {
+                                    Father: value.father_phone,
+                                    Mother: value.mother_phone,
+                                    Guardian: value.guardian_phone,
+                                    Student: value.mobileno
+                                };
+                                student_details[value.student_id] = {
+                                    admission_type: value.admission_type || 'New',
+                                    shrestha: value.shrestha || 'No',
+                                    rte: value.rte || 'No',
+                                    is_staff_kid: (value.is_staff_kid == 1 || value.is_staff_kid === '1') ? 'Yes' : 'No',
+                                    staff_name: value.staff_name || ''
+                                };
+
+                                var fatherName = value.father_name ? value.father_name : 'N/A';
+                                var motherName = value.mother_name ? value.mother_name : 'N/A';
+                                var imgUrl = value.image ? '<?php echo base_url(); ?>' + value.image : '<?php echo base_url(); ?>uploads/student_images/no_image.png';
+
+                                html += '<div class="student-item ajax-search-item" data-id="' + value.student_id + '" data-session="' + value.student_session_id + '" data-name="' + value.firstname + ' ' + (value.lastname || '') + ' (' + value.admission_no + ')' + (value.father_name ? ' - Father: ' + value.father_name : '') + ' - ' + value.class + ' (' + value.section + ')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; margin-bottom:8px; border:1px solid #e2e8f0; border-radius:12px; background:#fff; cursor:pointer; transition:all 0.2s ease;">' +
+                                    '<div style="display:flex; align-items:center; gap:14px; flex:1; min-width:0;">' +
+                                        '<img src="' + imgUrl + '" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid #f1f5f9; flex-shrink:0;">' +
+                                        '<div style="min-width:0; flex:1;">' +
+                                            '<div style="font-weight:700; font-size:14px; color:#0f172a; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + value.firstname + ' ' + (value.lastname || '') + '</div>' +
+                                            '<div style="font-size:12px; color:#64748b; font-weight:500; margin-top:2px;">' + value.class + ' - ' + value.section + ' &nbsp;&nbsp;' + value.admission_no + '</div>' +
+                                        '</div>' +
+                                    '</div>' +
+                                    '<div style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:#334155; font-weight:600; text-transform:uppercase; margin-left:15px; margin-right:15px; flex-shrink:0;">' +
+                                        '<div style="display:flex; align-items:center; gap:6px;"><span class="parent-badge badge-father" style="background-color:#007bff; color:#fff; border-radius:50%; width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold;">F</span> ' + fatherName + '</div>' +
+                                        '<div style="display:flex; align-items:center; gap:6px;"><span class="parent-badge badge-mother" style="background-color:#e83e8c; color:#fff; border-radius:50%; width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold;">M</span> ' + motherName + '</div>' +
+                                    '</div>' +
+                                    '<i class="fa fa-chevron-right" style="color:#cbd5e1; font-size:16px;"></i>' +
+                                '</div>';
+                            });
+                        } else {
+                            html = '<div style="padding:15px; text-align:center; color:#94a3b8; font-size:13px;">No students found</div>';
+                        }
+                        $('#student_search_results').html(html).show();
                         window.student_details_map = student_details;
                     }
                 });
             } else {
-                $('#student_search_results').html('');
+                $('#student_search_results').html('').hide();
             }
         });
 
@@ -1291,13 +1361,19 @@
                         success: function (res) {
                             var feeHtml = '';
                             if (res.academic) {
-                                feeHtml += '<tr><td>Academic Fees</td><td>' + parseFloat(res.academic.total).toFixed(2) + '</td><td>' + parseFloat(res.academic.collected).toFixed(2) + '</td><td><b>' + parseFloat(res.academic.due).toFixed(2) + '</b></td></tr>';
+                                var last_amt_a = res.academic.last_collected > 0 ? parseFloat(res.academic.last_collected).toFixed(2) : '-';
+                                var last_date_a = res.academic.last_collected_date ? res.academic.last_collected_date : '-';
+                                feeHtml += '<tr><td>Academic Fees</td><td>' + parseFloat(res.academic.total).toFixed(2) + '</td><td>' + parseFloat(res.academic.collected).toFixed(2) + '</td><td>' + last_amt_a + '</td><td>' + last_date_a + '</td><td><b>' + parseFloat(res.academic.due).toFixed(2) + '</b></td></tr>';
                             }
                             if (res.transport && res.transport.total > 0) {
-                                feeHtml += '<tr><td>Transport Fees</td><td>' + parseFloat(res.transport.total).toFixed(2) + '</td><td>' + parseFloat(res.transport.collected).toFixed(2) + '</td><td><b>' + parseFloat(res.transport.due).toFixed(2) + '</b></td></tr>';
+                                var last_amt_t = res.transport.last_collected > 0 ? parseFloat(res.transport.last_collected).toFixed(2) : '-';
+                                var last_date_t = res.transport.last_collected_date ? res.transport.last_collected_date : '-';
+                                feeHtml += '<tr><td>Transport Fees</td><td>' + parseFloat(res.transport.total).toFixed(2) + '</td><td>' + parseFloat(res.transport.collected).toFixed(2) + '</td><td>' + last_amt_t + '</td><td>' + last_date_t + '</td><td><b>' + parseFloat(res.transport.due).toFixed(2) + '</b></td></tr>';
                             }
                             if (res.hostel && res.hostel.total > 0) {
-                                feeHtml += '<tr><td>Hostel Fees</td><td>' + parseFloat(res.hostel.total).toFixed(2) + '</td><td>' + parseFloat(res.hostel.collected).toFixed(2) + '</td><td><b>' + parseFloat(res.hostel.due).toFixed(2) + '</b></td></tr>';
+                                var last_amt_h = res.hostel.last_collected > 0 ? parseFloat(res.hostel.last_collected).toFixed(2) : '-';
+                                var last_date_h = res.hostel.last_collected_date ? res.hostel.last_collected_date : '-';
+                                feeHtml += '<tr><td>Hostel Fees</td><td>' + parseFloat(res.hostel.total).toFixed(2) + '</td><td>' + parseFloat(res.hostel.collected).toFixed(2) + '</td><td>' + last_amt_h + '</td><td>' + last_date_h + '</td><td><b>' + parseFloat(res.hostel.due).toFixed(2) + '</b></td></tr>';
                             }
                             $('#fee_summary_body').html(feeHtml);
 
@@ -1314,7 +1390,7 @@
                             $('#attendance_summary_body').html(attHtml);
                         },
                         error: function() {
-                            $('#fee_summary_body').html('<tr><td colspan="4" class="text-center text-danger">Error loading fee details.</td></tr>');
+                            $('#fee_summary_body').html('<tr><td colspan="6" class="text-center text-danger">Error loading fee details.</td></tr>');
                             $('#attendance_summary_body').html('<span class="text-danger">Error loading attendance details.</span>');
                         }
                     });
@@ -1398,6 +1474,7 @@
                     {
                         $('#section_id').append("<option value=" + obj.section_id + ">" + obj.section + "</option>");
                     });
+                    $('#searchForm').trigger('submit');
                 }
             });
         });
@@ -1426,6 +1503,11 @@
                     $btn.button('reset');
                 }
             });
+        });
+
+        // Instant AJAX search on any Tab 1 Select Criteria filter change
+        $('#searchForm select:not(#class_id), #searchForm input.date').on('change changeDate', function() {
+            $('#searchForm').trigger('submit');
         });
         $('#status_class_id').change(function(){
             var class_id = $(this).val();
@@ -1459,6 +1541,8 @@
                     d.shrestha = $('#status_shrestha').val();
                     d.rte = $('#status_rte').val();
                     d.is_staff_kid = $('#status_is_staff_kid').val();
+                    d.purpose_id = $('#status_purpose_id').val();
+                    d.call_status = $('#status_call_status').val();
                     d.<?php echo $this->security->get_csrf_token_name(); ?> = "<?php echo $this->security->get_csrf_hash(); ?>";
                 }
             },
@@ -1476,6 +1560,11 @@
         });
 
         $('#btn_status_search').on('click', function() {
+            student_status_table.ajax.reload();
+        });
+
+        // Instant AJAX reload on any Student Call Status filter criteria change
+        $('#status_class_id, #status_section_id, #status_admission_type, #status_shrestha, #status_rte, #status_is_staff_kid, #status_purpose_id, #status_call_status').on('change', function() {
             student_status_table.ajax.reload();
         });
 
@@ -1500,6 +1589,18 @@
                 }
             });
         }
+
+        var pending_followup_table = $('#pending_followup_table').DataTable({
+            "pageLength": 25,
+            "ordering": true,
+            "searching": true,
+            "info": true,
+            "paging": true,
+            "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            "columnDefs": [
+                { "orderable": false, "targets": -1 }
+            ]
+        });
 
         $('#pending_metric_box').on('click', function() {
             $('#student_call_tabs a[href="#tab_pending_followup"]').tab('show');

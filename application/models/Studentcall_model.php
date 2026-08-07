@@ -158,7 +158,7 @@ class Studentcall_model extends MY_Model
 
     public function search_student($query)
     {
-        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.admission_no, students.roll_no, students.firstname, students.middlename, students.lastname, students.father_name, students.mobileno, students.father_phone, students.mother_phone, students.guardian_phone, students.admission_type, students.shrestha, students.rte, students.is_staff_kid, students.staff_id, staff.name as staff_name, classes.class, sections.section');
+        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.admission_no, students.roll_no, students.firstname, students.middlename, students.lastname, students.father_name, students.mother_name, students.image, students.mobileno, students.father_phone, students.mother_phone, students.guardian_phone, students.admission_type, students.shrestha, students.rte, students.is_staff_kid, students.staff_id, staff.name as staff_name, classes.class, sections.section');
         $this->db->from('student_session');
         $this->db->join('students', 'students.id = student_session.student_id');
         $this->db->join('classes', 'student_session.class_id = classes.id');
@@ -228,10 +228,6 @@ class Studentcall_model extends MY_Model
         }
 
         $this->db->order_by('student_calls.id', 'desc');
-
-        if (empty($class_id) && empty($section_id) && empty($date_from) && empty($date_to) && empty($purpose_id) && empty($status) && empty($follow_up_date_from) && empty($follow_up_date_to) && empty($assigned_to)) {
-            $this->db->limit(100);
-        }
 
         $query = $this->db->get();
         return $query->result_array();
@@ -418,7 +414,7 @@ class Studentcall_model extends MY_Model
         return $query->result_array();
     }
 
-    public function get_students_call_status($class_id = null, $section_id = null, $start = 0, $length = 10, $search_value = '', $admission_type = '', $shrestha = '', $rte = '', $is_staff_kid = '', $order_by = 'students.firstname', $order_dir = 'asc')
+    public function get_students_call_status($class_id = null, $section_id = null, $start = 0, $length = 10, $search_value = '', $admission_type = '', $shrestha = '', $rte = '', $is_staff_kid = '', $purpose_id = '', $call_status = '', $order_by = 'students.firstname', $order_dir = 'asc')
     {
         $this->db->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.admission_no, students.father_name, students.mobileno, students.father_phone, students.mother_phone, students.guardian_phone, students.admission_type, classes.class, sections.section, sc.date as last_call_date, sc.call_status as last_call_status, pickup_point.name as pickup_point_name');
         $this->db->from('student_session');
@@ -428,9 +424,10 @@ class Studentcall_model extends MY_Model
         $this->db->join('route_pickup_point', 'student_session.route_pickup_point_id = route_pickup_point.id', 'left');
         $this->db->join('pickup_point', 'route_pickup_point.pickup_point_id = pickup_point.id', 'left');
         
-        // Join with subquery to get the most recent call status
-        $this->db->join('(SELECT student_session_id, MAX(date) as max_date FROM student_calls GROUP BY student_session_id) as latest_call', 'latest_call.student_session_id = student_session.id', 'left', false);
-        $this->db->join('student_calls sc', 'sc.student_session_id = student_session.id AND sc.date = latest_call.max_date', 'left', false);
+        // Join with subquery to get the most recent call status (filtered by purpose_id if specified)
+        $purpose_sub = !empty($purpose_id) ? " WHERE call_purpose_id = " . (int)$purpose_id : "";
+        $this->db->join('(SELECT student_session_id, MAX(id) as max_id FROM student_calls ' . $purpose_sub . ' GROUP BY student_session_id) as latest_call', 'latest_call.student_session_id = student_session.id', 'left', false);
+        $this->db->join('student_calls sc', 'sc.id = latest_call.max_id', 'left', false);
 
         $this->db->where('student_session.session_id', $this->current_session);
         $this->db->where('students.is_active', 'yes');
@@ -461,6 +458,19 @@ class Studentcall_model extends MY_Model
         }
         if ($is_staff_kid !== '' && $is_staff_kid !== null) {
             $this->db->where('students.is_staff_kid', $is_staff_kid);
+        }
+
+        if (!empty($call_status)) {
+            if ($call_status == 'No Call Log' || $call_status == 'Not Called') {
+                $this->db->where('sc.id IS NULL', null, false);
+            } else if ($call_status == 'Not Connected') {
+                $this->db->group_start();
+                $this->db->where('sc.id IS NULL', null, false);
+                $this->db->or_where('sc.call_status !=', 'Connected');
+                $this->db->group_end();
+            } else {
+                $this->db->where('sc.call_status', $call_status);
+            }
         }
 
         if ($order_by && $order_dir) {
@@ -477,12 +487,16 @@ class Studentcall_model extends MY_Model
         return $query->result_array();
     }
 
-    public function get_students_call_status_count($class_id = null, $section_id = null, $search_value = '', $admission_type = '', $shrestha = '', $rte = '', $is_staff_kid = '')
+    public function get_students_call_status_count($class_id = null, $section_id = null, $search_value = '', $admission_type = '', $shrestha = '', $rte = '', $is_staff_kid = '', $purpose_id = '', $call_status = '')
     {
         $this->db->select('students.id');
         $this->db->from('student_session');
         $this->db->join('students', 'students.id = student_session.student_id');
         
+        $purpose_sub = !empty($purpose_id) ? " WHERE call_purpose_id = " . (int)$purpose_id : "";
+        $this->db->join('(SELECT student_session_id, MAX(id) as max_id FROM student_calls ' . $purpose_sub . ' GROUP BY student_session_id) as latest_call', 'latest_call.student_session_id = student_session.id', 'left', false);
+        $this->db->join('student_calls sc', 'sc.id = latest_call.max_id', 'left', false);
+
         $this->db->where('student_session.session_id', $this->current_session);
         $this->db->where('students.is_active', 'yes');
 
@@ -512,6 +526,19 @@ class Studentcall_model extends MY_Model
         }
         if ($is_staff_kid !== '' && $is_staff_kid !== null) {
             $this->db->where('students.is_staff_kid', $is_staff_kid);
+        }
+
+        if (!empty($call_status)) {
+            if ($call_status == 'No Call Log' || $call_status == 'Not Called') {
+                $this->db->where('sc.id IS NULL', null, false);
+            } else if ($call_status == 'Not Connected') {
+                $this->db->group_start();
+                $this->db->where('sc.id IS NULL', null, false);
+                $this->db->or_where('sc.call_status !=', 'Connected');
+                $this->db->group_end();
+            } else {
+                $this->db->where('sc.call_status', $call_status);
+            }
         }
         
         $query = $this->db->get();

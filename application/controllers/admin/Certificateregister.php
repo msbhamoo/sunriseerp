@@ -287,6 +287,18 @@ class Certificateregister extends Admin_Controller {
         $hostel_due = 0;
         $transport_due = 0;
 
+        $academic_last_collected_amount = 0;
+        $academic_last_collected_date = '-';
+        $academic_last_date_raw = '';
+
+        $hostel_last_collected_amount = 0;
+        $hostel_last_collected_date = '-';
+        $hostel_last_date_raw = '';
+
+        $transport_last_collected_amount = 0;
+        $transport_last_collected_date = '-';
+        $transport_last_date_raw = '';
+
         if ($has_fee_privilege) {
             $academic_fees = $this->studentfeemaster_model->getStudentFees($student_session_id);
 
@@ -299,10 +311,30 @@ class Certificateregister extends Admin_Controller {
                         foreach ($fee_master->fees as $fee) {
                             $fee_amount = (isset($fee->amount)) ? $fee->amount : 0;
                             $collected = 0;
-                            $amount_detail = json_decode($fee->amount_detail);
+                            $amount_detail = json_decode($fee->amount_detail, true);
                             if (!empty($amount_detail)) {
                                 foreach ($amount_detail as $detail) {
-                                    $collected += $detail->amount + $detail->amount_discount;
+                                    $amt = isset($detail['amount']) ? (float)$detail['amount'] : 0;
+                                    $disc = isset($detail['amount_discount']) ? (float)$detail['amount_discount'] : 0;
+                                    $collected += $amt + $disc;
+
+                                    $pdate = !empty($detail['date']) ? $detail['date'] : '';
+                                    if (!empty($pdate)) {
+                                        $is_hostel = (isset($fee->fee_groups_id) && in_array($fee->fee_groups_id, $hostel_fee_group_ids));
+                                        if ($is_hostel) {
+                                            if (empty($hostel_last_date_raw) || strtotime($pdate) > strtotime($hostel_last_date_raw)) {
+                                                $hostel_last_date_raw = $pdate;
+                                                $hostel_last_collected_date = date($this->customlib->getSchoolDateFormat(), strtotime($pdate));
+                                                $hostel_last_collected_amount = $amt;
+                                            }
+                                        } else {
+                                            if (empty($academic_last_date_raw) || strtotime($pdate) > strtotime($academic_last_date_raw)) {
+                                                $academic_last_date_raw = $pdate;
+                                                $academic_last_collected_date = date($this->customlib->getSchoolDateFormat(), strtotime($pdate));
+                                                $academic_last_collected_amount = $amt;
+                                            }
+                                        }
+                                    }
                                 }
                             }
                             
@@ -327,10 +359,21 @@ class Certificateregister extends Admin_Controller {
             if (!empty($transport_fees)) {
                 foreach ($transport_fees as $tfee) {
                     $transport_total += $tfee->fees;
-                    $amount_detail = json_decode($tfee->amount_detail);
+                    $amount_detail = json_decode($tfee->amount_detail, true);
                     if (!empty($amount_detail)) {
                         foreach ($amount_detail as $detail) {
-                            $transport_collected += $detail->amount + $detail->amount_discount;
+                            $amt = isset($detail['amount']) ? (float)$detail['amount'] : 0;
+                            $disc = isset($detail['amount_discount']) ? (float)$detail['amount_discount'] : 0;
+                            $transport_collected += $amt + $disc;
+
+                            $pdate = !empty($detail['date']) ? $detail['date'] : '';
+                            if (!empty($pdate)) {
+                                if (empty($transport_last_date_raw) || strtotime($pdate) > strtotime($transport_last_date_raw)) {
+                                    $transport_last_date_raw = $pdate;
+                                    $transport_last_collected_date = date($this->customlib->getSchoolDateFormat(), strtotime($pdate));
+                                    $transport_last_collected_amount = $amt;
+                                }
+                            }
                         }
                     }
                 }
@@ -363,9 +406,27 @@ class Certificateregister extends Admin_Controller {
         }
         
         $data = [
-            'academic' => ['total' => $academic_total, 'collected' => $academic_collected, 'due' => $academic_due],
-            'transport' => ['total' => $transport_total, 'collected' => $transport_collected, 'due' => $transport_due],
-            'hostel' => ['total' => $hostel_total, 'collected' => $hostel_collected, 'due' => $hostel_due],
+            'academic' => [
+                'total' => $academic_total,
+                'collected' => $academic_collected,
+                'due' => $academic_due,
+                'last_collected' => $academic_last_collected_amount,
+                'last_collected_date' => $academic_last_collected_date
+            ],
+            'transport' => [
+                'total' => $transport_total,
+                'collected' => $transport_collected,
+                'due' => $transport_due,
+                'last_collected' => $transport_last_collected_amount,
+                'last_collected_date' => $transport_last_collected_date
+            ],
+            'hostel' => [
+                'total' => $hostel_total,
+                'collected' => $hostel_collected,
+                'due' => $hostel_due,
+                'last_collected' => $hostel_last_collected_amount,
+                'last_collected_date' => $hostel_last_collected_date
+            ],
             'history' => $history
         ];
 

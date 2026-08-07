@@ -250,6 +250,7 @@ class Studentcall extends Admin_Controller
         $this->form_validation->set_rules('call_type', $this->lang->line('call_type'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('contact_person', $this->lang->line('contact_person'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('phone_number', $this->lang->line('phone'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('purpose_id', $this->lang->line('purpose'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('date', $this->lang->line('date'), 'trim|required|xss_clean');
 
         if ($this->form_validation->run() == false) {
@@ -258,6 +259,7 @@ class Studentcall extends Admin_Controller
                 'call_type'      => form_error('call_type'),
                 'contact_person' => form_error('contact_person'),
                 'phone_number'   => form_error('phone_number'),
+                'purpose_id'     => form_error('purpose_id'),
                 'date'           => form_error('date')
             );
             $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
@@ -578,6 +580,8 @@ class Studentcall extends Admin_Controller
         $shrestha = $this->input->post('shrestha');
         $rte = $this->input->post('rte');
         $is_staff_kid = $this->input->post('is_staff_kid');
+        $purpose_id = $this->input->post('purpose_id');
+        $call_status = $this->input->post('call_status');
 
         $start = $this->input->post('start') ? $this->input->post('start') : 0;
         $length = $this->input->post('length') ? $this->input->post('length') : 10;
@@ -608,12 +612,14 @@ class Studentcall extends Admin_Controller
             'admission_type' => $admission_type,
             'shrestha' => $shrestha,
             'rte' => $rte,
-            'is_staff_kid' => $is_staff_kid
+            'is_staff_kid' => $is_staff_kid,
+            'purpose_id' => $purpose_id,
+            'call_status' => $call_status
         );
         $this->session->set_userdata('studentcall_status_filters', $filters);
 
-        $students = $this->studentcall_model->get_students_call_status($class_id, $section_id, $start, $length, $search_value, $admission_type, $shrestha, $rte, $is_staff_kid, $order_by, $order_dir);
-        $total_count = $this->studentcall_model->get_students_call_status_count($class_id, $section_id, $search_value, $admission_type, $shrestha, $rte, $is_staff_kid);
+        $students = $this->studentcall_model->get_students_call_status($class_id, $section_id, $start, $length, $search_value, $admission_type, $shrestha, $rte, $is_staff_kid, $purpose_id, $call_status, $order_by, $order_dir);
+        $total_count = $this->studentcall_model->get_students_call_status_count($class_id, $section_id, $search_value, $admission_type, $shrestha, $rte, $is_staff_kid, $purpose_id, $call_status);
 
         $data = [];
         if (!empty($students)) {
