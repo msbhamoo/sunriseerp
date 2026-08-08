@@ -1567,10 +1567,6 @@
         $('#searchForm select:not(#class_id)').on('change', function() {
             fetchCallLogsAjax();
         });
-        
-        $('#searchForm input.date').datepicker().on('changeDate', function() {
-            fetchCallLogsAjax();
-        });
         $('#status_class_id').change(function(){
             var class_id = $(this).val();
             var base_url = '<?php echo base_url() ?>';
