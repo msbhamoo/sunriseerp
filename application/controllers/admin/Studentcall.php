@@ -655,24 +655,45 @@ class Studentcall extends Admin_Controller
                 $is_staff_kid = ($student['is_staff_kid'] == 1 || $student['is_staff_kid'] === '1' || strtolower($student['is_staff_kid'] ?? '') === 'yes') ? 'Yes' : 'No';
                 $staff_name = $student['student_staff_name'] ?? '';
 
+                $action = '';
+                if ($this->rbac->hasPrivilege('student_call_log', 'can_add')) {
+                    $action = '<button class="btn btn-default btn-xs" onclick="openCallModalFromStatus(' . $student['student_id'] . ', ' . $student['student_session_id'] . ', \'' . htmlspecialchars(addslashes($student['firstname'] . ' ' . $student['lastname']), ENT_QUOTES) . '\')" data-toggle="tooltip" title="Log Call"><i class="fa fa-phone"></i> Log Call</button>';
+                }
+
                 $student_cell = '<div style="font-weight:600; color:#1e293b;">' . htmlspecialchars($student['firstname'] . ' ' . $student['lastname'] . ' (' . $student['admission_no'] . ')') . '</div>' .
                     '<div style="margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 10px;">' .
                     '<span style="background:#e0f2fe; color:#0369a1; padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="Admission Type">Adm: ' . htmlspecialchars($adm_type) . '</span>' .
                     '<span style="background:' . ($shrestha === 'Yes' ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#64748b;') . ' padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="Shrestha">Shrestha: ' . $shrestha . '</span>' .
                     '<span style="background:' . ($rte === 'Yes' ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#64748b;') . ' padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="RTE">RTE: ' . $rte . '</span>' .
-                    '<span style="background:' . ($is_staff_kid === 'Yes' ? '#fef3c7; color:#b45309;' : '#f1f5f9; color:#64748b;') . ' padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="Staff Kid">Staff Kid: ' . $is_staff_kid . ($is_staff_kid === 'Yes' && !empty($staff_name) ? " (<b>" . htmlspecialchars($staff_name) . "</b>)" : "") . '</span>' .
-                    '</div>';
+                    '<span style="background:' . ($is_staff_kid === 'Yes' ? '#fef3c7; color:#b45309;' : '#f1f5f9; color:#64748b;') . ' padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="Staff Kid">Staff Kid: ' . $is_staff_kid . ($is_staff_kid === 'Yes' && !empty($staff_name) ? " (<b>" . htmlspecialchars($staff_name) . "</b>)" : "") . '</span>';
+
+                $row_class = '';
+                $fee_info = $this->studentcall_model->get_student_fee_info($student['student_session_id']);
+                if (!empty($fee_info)) {
+                    if (!empty($fee_info['is_fully_paid'])) {
+                        $row_class = 'row-pastel-green';
+                        $student_cell .= '<span style="background:#16a34a; color:#ffffff; padding:1px 6px; border-radius:10px; font-weight:700;" data-toggle="tooltip" title="Fee Status"><i class="fa fa-check-circle"></i> All Fees Paid</span>';
+                    } elseif (!empty($fee_info['paid_today'])) {
+                        $row_class = 'row-pastel-yellow';
+                        $student_cell .= '<span style="background:#9333ea; color:#ffffff; padding:1px 6px; border-radius:10px; font-weight:700;" data-toggle="tooltip" title="Fee Payment"><i class="fa fa-flash"></i> Paid Today</span>';
+                    } elseif (!empty($fee_info['paid_last_7_days'])) {
+                        $row_class = 'row-pastel-blue';
+                        $student_cell .= '<span style="background:#2563eb; color:#ffffff; padding:1px 6px; border-radius:10px; font-weight:700;" data-toggle="tooltip" title="Fee Payment"><i class="fa fa-calendar-check-o"></i> Paid in Last 7 Days</span>';
+                    }
+                }
+                $student_cell .= '</div>';
 
                 $row = [
-                    $student_cell,
-                    $student['father_name'],
-                    $student['class'] . ' (' . $student['section'] . ')',
-                    $student['pickup_point_name'] ? $student['pickup_point_name'] : '-',
-                    $student['admission_type'] ? $student['admission_type'] : '-',
-                    $phone,
-                    $last_call,
-                    get_call_status_pill($status),
-                    '<div class="pull-right">' . $action . '</div>'
+                    'DT_RowClass' => $row_class,
+                    0 => $student_cell,
+                    1 => $student['father_name'],
+                    2 => $student['class'] . ' (' . $student['section'] . ')',
+                    3 => $student['pickup_point_name'] ? $student['pickup_point_name'] : '-',
+                    4 => $student['admission_type'] ? $student['admission_type'] : '-',
+                    5 => $phone,
+                    6 => $last_call,
+                    7 => get_call_status_pill($status),
+                    8 => '<div class="pull-right">' . $action . '</div>'
                 ];
                 $data[] = $row;
             }
@@ -812,8 +833,23 @@ class Studentcall extends Admin_Controller
                     '<span style="background:#e0f2fe; color:#0369a1; padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="Admission Type">Adm: ' . htmlspecialchars($adm_type) . '</span>' .
                     '<span style="background:' . ($shrestha === 'Yes' ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#64748b;') . ' padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="Shrestha">Shrestha: ' . $shrestha . '</span>' .
                     '<span style="background:' . ($rte === 'Yes' ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#64748b;') . ' padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="RTE">RTE: ' . $rte . '</span>' .
-                    '<span style="background:' . ($is_staff_kid === 'Yes' ? '#fef3c7; color:#b45309;' : '#f1f5f9; color:#64748b;') . ' padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="Staff Kid">Staff Kid: ' . $is_staff_kid . ($is_staff_kid === 'Yes' && !empty($staff_name) ? " (<b>" . htmlspecialchars($staff_name) . "</b>)" : "") . '</span>' .
-                    '</div>';
+                    '<span style="background:' . ($is_staff_kid === 'Yes' ? '#fef3c7; color:#b45309;' : '#f1f5f9; color:#64748b;') . ' padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="Staff Kid">Staff Kid: ' . $is_staff_kid . ($is_staff_kid === 'Yes' && !empty($staff_name) ? " (<b>" . htmlspecialchars($staff_name) . "</b>)" : "") . '</span>';
+
+                $row_style = '';
+                $fee_info = $this->studentcall_model->get_student_fee_info($call['student_session_id']);
+                if (!empty($fee_info)) {
+                    if (!empty($fee_info['is_fully_paid'])) {
+                        $row_style = 'style="background-color: #f0fdf4;"'; // Pastel Green
+                        $student_cell .= '<span style="background:#16a34a; color:#ffffff; padding:1px 6px; border-radius:10px; font-weight:700;" data-toggle="tooltip" title="Fee Status"><i class="fa fa-check-circle"></i> All Fees Paid</span>';
+                    } elseif (!empty($fee_info['paid_today'])) {
+                        $row_style = 'style="background-color: #faf5ff;"'; // Pastel Purple/Yellow tint
+                        $student_cell .= '<span style="background:#9333ea; color:#ffffff; padding:1px 6px; border-radius:10px; font-weight:700;" data-toggle="tooltip" title="Fee Payment"><i class="fa fa-flash"></i> Paid Today</span>';
+                    } elseif (!empty($fee_info['paid_last_7_days'])) {
+                        $row_style = 'style="background-color: #eff6ff;"'; // Pastel Blue
+                        $student_cell .= '<span style="background:#2563eb; color:#ffffff; padding:1px 6px; border-radius:10px; font-weight:700;" data-toggle="tooltip" title="Fee Payment"><i class="fa fa-calendar-check-o"></i> Paid in Last 7 Days</span>';
+                    }
+                }
+                $student_cell .= '</div>';
 
                 $clean_call_notes = fix_utf8_notes($call['notes'] ?? '');
                 $note_cell = '';
@@ -854,7 +890,7 @@ class Studentcall extends Admin_Controller
                     '<a href="javascript:void(0)" class="btn btn-default btn-xs btn-follow-up-log" data-id="' . $call['id'] . '" onclick="follow_up(\'' . $call['id'] . '\'); return false;" data-toggle="tooltip" title="Log Follow-up"><i class="fa fa-pencil"></i></a>' .
                     '</div>';
 
-                $html .= '<tr data-called-today="' . $called_today . '">' .
+                $html .= '<tr data-called-today="' . $called_today . '" ' . $row_style . '>' .
                     '<td data-label="Student">' . $student_cell . '</td>' .
                     '<td data-label="Father Name">' . htmlspecialchars($call['father_name'] ?? '') . '</td>' .
                     '<td data-label="Class">' . htmlspecialchars($call['class'] . ' (' . $call['section'] . ')') . '</td>' .

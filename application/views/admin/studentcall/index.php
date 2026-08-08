@@ -115,6 +115,18 @@
             font-size: 11px !important;
             transition: all 0.2s ease !important;
         }
+        tr.row-pastel-green, table.dataTable tbody tr.row-pastel-green, table.dataTable tbody tr.row-pastel-green > td {
+            background-color: #f0fdf4 !important;
+        }
+        tr.row-pastel-yellow, table.dataTable tbody tr.row-pastel-yellow, table.dataTable tbody tr.row-pastel-yellow > td {
+            background-color: #faf5ff !important;
+        }
+        tr.row-pastel-blue, table.dataTable tbody tr.row-pastel-blue, table.dataTable tbody tr.row-pastel-blue > td {
+            background-color: #eff6ff !important;
+        }
+        #primary_call_log_table tbody tr[style*="background-color"] td {
+            background-color: inherit !important;
+        }
 
         @media (max-width: 767px) {
             .mobile-card-table, 
@@ -450,7 +462,7 @@
                     </div>
                     <div class="box-body">
                         <div class="table-responsive">
-                            <table id="primary_call_log_table" class="table table-striped table-bordered table-hover example mobile-card-table" cellspacing="0" width="100%">
+                            <table id="primary_call_log_table" class="table table-bordered table-hover example mobile-card-table" cellspacing="0" width="100%">
                                 <thead>
                                     <tr>
                                         <th><?php echo $this->lang->line('student'); ?></th>
@@ -473,8 +485,20 @@
                                         foreach ($calls as $call) { 
                                             $normalized_date = !empty($call['date']) ? str_replace('/', '-', $call['date']) : '';
                                             $called_today = (!empty($normalized_date) && date('Y-m-d', strtotime($normalized_date)) == date('Y-m-d')) ? '1' : '0';
+                                            
+                                            $row_style = '';
+                                            $fee_info = $this->studentcall_model->get_student_fee_info($call['student_session_id']);
+                                            if (!empty($fee_info)) {
+                                                if (!empty($fee_info['is_fully_paid'])) {
+                                                    $row_style = 'style="background-color: #f0fdf4;"';
+                                                } elseif (!empty($fee_info['paid_today'])) {
+                                                    $row_style = 'style="background-color: #faf5ff;"';
+                                                } elseif (!empty($fee_info['paid_last_7_days'])) {
+                                                    $row_style = 'style="background-color: #eff6ff;"';
+                                                }
+                                            }
                                         ?>
-                                            <tr data-called-today="<?php echo $called_today; ?>">
+                                            <tr data-called-today="<?php echo $called_today; ?>" <?php echo $row_style; ?>>
                                                 <td data-label="Student">
                                                     <div style="font-weight:600; color:#1e293b;"><?php echo $call['firstname'] . " " . $call['lastname'] . " (" . $call['admission_no'] . ")"; ?></div>
                                                     <div style="margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 10px;">
@@ -489,6 +513,18 @@
                                                         <span style="background:<?php echo ($shrestha === 'Yes' ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#64748b;'); ?> padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="Shrestha">Shrestha: <?php echo $shrestha; ?></span>
                                                         <span style="background:<?php echo ($rte === 'Yes' ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#64748b;'); ?> padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="RTE">RTE: <?php echo $rte; ?></span>
                                                         <span style="background:<?php echo ($is_staff_kid === 'Yes' ? '#fef3c7; color:#b45309;' : '#f1f5f9; color:#64748b;'); ?> padding:1px 6px; border-radius:10px; font-weight:600;" data-toggle="tooltip" title="Staff Kid">Staff Kid: <?php echo $is_staff_kid . ($is_staff_kid === 'Yes' && !empty($staff_name) ? " (<b>" . htmlspecialchars($staff_name) . "</b>)" : ""); ?></span>
+                                                        <?php
+                                                             $fee_info = $this->studentcall_model->get_student_fee_info($call['student_session_id']);
+                                                             if (!empty($fee_info)) {
+                                                                 if (!empty($fee_info['is_fully_paid'])) {
+                                                                     echo '<span style="background:#16a34a; color:#ffffff; padding:1px 6px; border-radius:10px; font-weight:700;" data-toggle="tooltip" title="Fee Status"><i class="fa fa-check-circle"></i> All Fees Paid</span>';
+                                                                 } elseif (!empty($fee_info['paid_today'])) {
+                                                                     echo '<span style="background:#9333ea; color:#ffffff; padding:1px 6px; border-radius:10px; font-weight:700;" data-toggle="tooltip" title="Fee Payment"><i class="fa fa-flash"></i> Paid Today</span>';
+                                                                 } elseif (!empty($fee_info['paid_last_7_days'])) {
+                                                                     echo '<span style="background:#2563eb; color:#ffffff; padding:1px 6px; border-radius:10px; font-weight:700;" data-toggle="tooltip" title="Fee Payment"><i class="fa fa-calendar-check-o"></i> Paid in Last 7 Days</span>';
+                                                                 }
+                                                             }
+                                                        ?>
                                                     </div>
                                                 </td>
                                                 <td data-label="Father Name"><?php echo $call['father_name']; ?></td>
@@ -541,8 +577,6 @@
                                                     <?php if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) { 
                                                         $dial_phone = !empty($call['father_phone']) ? $call['father_phone'] : (!empty($call['mother_phone']) ? $call['mother_phone'] : (!empty($call['guardian_phone']) ? $call['guardian_phone'] : (!empty($call['mobileno']) ? $call['mobileno'] : $call['phone_number'])));
                                                         $clean_dial_phone = preg_replace('/[^0-9]/', '', $dial_phone);
-                                                        $normalized_date = !empty($call['date']) ? str_replace('/', '-', $call['date']) : '';
-                                                        $called_today = (!empty($normalized_date) && date('Y-m-d', strtotime($normalized_date)) == date('Y-m-d')) ? '1' : '0';
                                                         $last_call_date = !empty($call['date']) ? date($this->customlib->getSchoolDateFormat(true, true), strtotime($normalized_date)) : '';
                                                         
                                                         $wa_msg = "Hello, this is regarding student " . $call['firstname'] . " " . $call['lastname'] . " (" . $call['class'] . " - " . $call['section'] . "). Purpose: " . $call['purpose_name'] . ". Please get in touch with us.";
@@ -783,7 +817,7 @@
                     </div>
                     <div class="box-body">
                         <div class="table-responsive">
-                            <table class="table table-striped table-bordered table-hover mobile-card-table" id="student_status_table" cellspacing="0" width="100%">
+                            <table class="table table-bordered table-hover mobile-card-table" id="student_status_table" cellspacing="0" width="100%">
                                 <thead>
                                     <tr>
                                         <th>Student</th>

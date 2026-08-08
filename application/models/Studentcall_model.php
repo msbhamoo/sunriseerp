@@ -450,13 +450,17 @@ class Studentcall_model extends MY_Model
         }
 
         if (!empty($admission_type)) {
-            $this->db->where('students.admission_type', $admission_type);
+            $this->db->where("TRIM(students.admission_type)", trim($admission_type));
         }
         if ($shrestha !== '' && $shrestha !== null) {
             if ($shrestha === 'Yes' || $shrestha === '1' || $shrestha === 1) {
                 $this->db->where_in('students.shrestha', ['Yes', 1, '1']);
             } elseif ($shrestha === 'No' || $shrestha === '0' || $shrestha === 0) {
+                $this->db->group_start();
                 $this->db->where_in('students.shrestha', ['No', 0, '0']);
+                $this->db->or_where('students.shrestha IS NULL', null, false);
+                $this->db->or_where('students.shrestha', '');
+                $this->db->group_end();
             } else {
                 $this->db->where('students.shrestha', $shrestha);
             }
@@ -465,7 +469,11 @@ class Studentcall_model extends MY_Model
             if ($rte === 'Yes' || $rte === '1' || $rte === 1) {
                 $this->db->where_in('students.rte', ['Yes', 1, '1']);
             } elseif ($rte === 'No' || $rte === '0' || $rte === 0) {
+                $this->db->group_start();
                 $this->db->where_in('students.rte', ['No', 0, '0']);
+                $this->db->or_where('students.rte IS NULL', null, false);
+                $this->db->or_where('students.rte', '');
+                $this->db->group_end();
             } else {
                 $this->db->where('students.rte', $rte);
             }
@@ -474,7 +482,11 @@ class Studentcall_model extends MY_Model
             if ($is_staff_kid === 'Yes' || $is_staff_kid === '1' || $is_staff_kid === 1) {
                 $this->db->where_in('students.is_staff_kid', [1, '1', 'Yes']);
             } elseif ($is_staff_kid === 'No' || $is_staff_kid === '0' || $is_staff_kid === 0) {
+                $this->db->group_start();
                 $this->db->where_in('students.is_staff_kid', [0, '0', 'No']);
+                $this->db->or_where('students.is_staff_kid IS NULL', null, false);
+                $this->db->or_where('students.is_staff_kid', '');
+                $this->db->group_end();
             } else {
                 $this->db->where('students.is_staff_kid', $is_staff_kid);
             }
@@ -536,13 +548,17 @@ class Studentcall_model extends MY_Model
         }
 
         if (!empty($admission_type)) {
-            $this->db->where('students.admission_type', $admission_type);
+            $this->db->where("TRIM(students.admission_type)", trim($admission_type));
         }
         if ($shrestha !== '' && $shrestha !== null) {
             if ($shrestha === 'Yes' || $shrestha === '1' || $shrestha === 1) {
                 $this->db->where_in('students.shrestha', ['Yes', 1, '1']);
             } elseif ($shrestha === 'No' || $shrestha === '0' || $shrestha === 0) {
+                $this->db->group_start();
                 $this->db->where_in('students.shrestha', ['No', 0, '0']);
+                $this->db->or_where('students.shrestha IS NULL', null, false);
+                $this->db->or_where('students.shrestha', '');
+                $this->db->group_end();
             } else {
                 $this->db->where('students.shrestha', $shrestha);
             }
@@ -551,7 +567,11 @@ class Studentcall_model extends MY_Model
             if ($rte === 'Yes' || $rte === '1' || $rte === 1) {
                 $this->db->where_in('students.rte', ['Yes', 1, '1']);
             } elseif ($rte === 'No' || $rte === '0' || $rte === 0) {
+                $this->db->group_start();
                 $this->db->where_in('students.rte', ['No', 0, '0']);
+                $this->db->or_where('students.rte IS NULL', null, false);
+                $this->db->or_where('students.rte', '');
+                $this->db->group_end();
             } else {
                 $this->db->where('students.rte', $rte);
             }
@@ -560,7 +580,11 @@ class Studentcall_model extends MY_Model
             if ($is_staff_kid === 'Yes' || $is_staff_kid === '1' || $is_staff_kid === 1) {
                 $this->db->where_in('students.is_staff_kid', [1, '1', 'Yes']);
             } elseif ($is_staff_kid === 'No' || $is_staff_kid === '0' || $is_staff_kid === 0) {
+                $this->db->group_start();
                 $this->db->where_in('students.is_staff_kid', [0, '0', 'No']);
+                $this->db->or_where('students.is_staff_kid IS NULL', null, false);
+                $this->db->or_where('students.is_staff_kid', '');
+                $this->db->group_end();
             } else {
                 $this->db->where('students.is_staff_kid', $is_staff_kid);
             }
@@ -581,5 +605,98 @@ class Studentcall_model extends MY_Model
         
         $query = $this->db->get();
         return $query->num_rows();
+    }
+
+    public function get_student_fee_info($student_session_id)
+    {
+        $this->load->model('studentfeemaster_model');
+        $academic_fees = $this->studentfeemaster_model->getStudentFees($student_session_id);
+
+        $total_amount = 0;
+        $collected_amount = 0;
+        $latest_payment_date = null;
+
+        if (!empty($academic_fees)) {
+            foreach ($academic_fees as $fee_master) {
+                if (!empty($fee_master->fees)) {
+                    foreach ($fee_master->fees as $fee) {
+                        $fee_amount = (isset($fee->amount)) ? (float)$fee->amount : 0;
+                        $total_amount += $fee_amount;
+
+                        $amount_detail = json_decode($fee->amount_detail, true);
+                        if (!empty($amount_detail)) {
+                            foreach ($amount_detail as $detail) {
+                                $amt = isset($detail['amount']) ? (float)$detail['amount'] : 0;
+                                $disc = isset($detail['amount_discount']) ? (float)$detail['amount_discount'] : 0;
+                                $collected_amount += ($amt + $disc);
+
+                                $pdate = !empty($detail['date']) ? $detail['date'] : '';
+                                if (!empty($pdate)) {
+                                    if (empty($latest_payment_date) || strtotime($pdate) > strtotime($latest_payment_date)) {
+                                        $latest_payment_date = $pdate;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $student = $this->db->get_where('student_session', ['id' => $student_session_id])->row_array();
+        if (!empty($student)) {
+            $st_data = $this->db->get_where('students', ['id' => $student['student_id']])->row_array();
+            if (!empty($st_data['route_pickup_point_id'])) {
+                $transport_fees = $this->studentfeemaster_model->getStudentTransportFees($student_session_id, $st_data['route_pickup_point_id']);
+                if (!empty($transport_fees)) {
+                    foreach ($transport_fees as $tfee) {
+                        $total_amount += (float)$tfee->fees;
+                        $amount_detail = json_decode($tfee->amount_detail, true);
+                        if (!empty($amount_detail)) {
+                            foreach ($amount_detail as $detail) {
+                                $amt = isset($detail['amount']) ? (float)$detail['amount'] : 0;
+                                $disc = isset($detail['amount_discount']) ? (float)$detail['amount_discount'] : 0;
+                                $collected_amount += ($amt + $disc);
+
+                                $pdate = !empty($detail['date']) ? $detail['date'] : '';
+                                if (!empty($pdate)) {
+                                    if (empty($latest_payment_date) || strtotime($pdate) > strtotime($latest_payment_date)) {
+                                        $latest_payment_date = $pdate;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $due_amount = max(0, $total_amount - $collected_amount);
+        $is_fully_paid = ($total_amount > 0 && $due_amount <= 0);
+
+        $today = date('Y-m-d');
+        $seven_days_ago = date('Y-m-d', strtotime('-7 days'));
+
+        $paid_today = false;
+        $paid_last_7_days = false;
+
+        if ($latest_payment_date) {
+            $p_date_formatted = date('Y-m-d', strtotime($latest_payment_date));
+            if ($p_date_formatted === $today) {
+                $paid_today = true;
+            } elseif ($p_date_formatted >= $seven_days_ago && $p_date_formatted < $today) {
+                $paid_last_7_days = true;
+            }
+        }
+
+        return [
+            'total_amount' => $total_amount,
+            'collected_amount' => $collected_amount,
+            'due_amount' => $due_amount,
+            'is_fully_paid' => $is_fully_paid,
+            'latest_payment_date' => $latest_payment_date,
+            'paid_today' => $paid_today,
+            'paid_last_7_days' => $paid_last_7_days
+        ];
     }
 }
