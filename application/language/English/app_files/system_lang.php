@@ -1189,7 +1189,7 @@ $lang['leave_from_date'] = "Leave From Date";
 $lang['leave_list'] = "Leave List";	
 $lang['leave_status'] = "Leave Status";	
 $lang['leave_to_date'] = "Leave To Date";	
-$lang['leave_type'] = "Leave Type";	
+$lang['leave_type'] = "Setting";	
 $lang['leave_type_list'] = "Leave Type List";	
 $lang['leaves'] = "Leaves";	
 $lang['lecture_video'] = "Lecture Video";	
@@ -2386,6 +2386,10 @@ $lang['staff_day_wise_attendance_report']= "Staff Day Wise Attendance Report";
 $lang['student_day_wise_attendance_report']= "Student Day Wise Attendance Report";
 $lang['scan_location']= "Scan Location";
 $lang['half_day_second_shift']= "Half Day (Second Half)";
+$lang['unplanned_leave']= "Unplanned Leave";
+$lang['uniform']= "Uniform";
+$lang['in_uniform']= "In Uniform";
+$lang['uniform_compliance']= "Uniform";
 $lang['changing_the_session_name_format_may_cause_issues_on_some_pages_or_features_so_it_is_recommended_not_to_change_the_session_name_format']= "Changing the session name format may cause issues on some pages or features, so it is recommended not to change the session name format.";
 
 #version 7.1.0

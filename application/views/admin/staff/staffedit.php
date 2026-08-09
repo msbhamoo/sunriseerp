@@ -278,23 +278,32 @@ if ($staff["marital_status"] == $mavalue) {
                                         <div class="row">
                                         <?php if ($sch_setting->staff_qualification) {?>
                                             <div class="col-md-3">
-
                                                 <div class="form-group">
                                                     <label for="exampleInputEmail1"><?php echo $this->lang->line('qualification'); ?></label>
-                                                    <textarea id="qualification" name="qualification" placeholder=""  class="form-control" ><?php echo set_value('qualification', $staff["qualification"]); ?></textarea>
+                                                    <select id="qualification" name="qualification" class="form-control">
+                                                        <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                                        <?php if (!empty($qualification_list)) { foreach ($qualification_list as $q) { ?>
+                                                            <option value="<?php echo htmlspecialchars($q['qualification_name']); ?>" <?php echo set_select('qualification', $q['qualification_name'], ($staff['qualification'] == $q['qualification_name'])); ?>><?php echo htmlspecialchars($q['qualification_name']); ?></option>
+                                                        <?php } } ?>
+                                                    </select>
                                                     <span class="text-danger"><?php echo form_error('qualification'); ?></span>
                                                 </div>
                                             </div>
                                         <?php }if ($sch_setting->staff_work_experience) {?>
                                             <div class="col-md-3">
-
                                                 <div class="form-group">
                                                     <label for="exampleInputEmail1"><?php echo $this->lang->line('work_experience'); ?></label>
-                                                    <textarea id="permanent_address" name="work_exp" placeholder="" class="form-control"><?php echo set_value('work_exp', $staff["work_exp"]) ?></textarea>
+                                                    <select id="work_exp" name="work_exp" class="form-control">
+                                                        <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                                        <?php if (!empty($workexperience_list)) { foreach ($workexperience_list as $e) { ?>
+                                                            <option value="<?php echo htmlspecialchars($e['work_experience']); ?>" <?php echo set_select('work_exp', $e['work_experience'], ($staff['work_exp'] == $e['work_experience'])); ?>><?php echo htmlspecialchars($e['work_experience']); ?></option>
+                                                        <?php } } ?>
+                                                    </select>
                                                     <span class="text-danger"><?php echo form_error('work_exp'); ?></span>
                                                 </div>
                                             </div>
-                                        <?php }if ($sch_setting->staff_note) {?>
+                                        <?php }
+if ($sch_setting->staff_note) {?>
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="exampleInputFile"><?php echo $this->lang->line('note'); ?></label>

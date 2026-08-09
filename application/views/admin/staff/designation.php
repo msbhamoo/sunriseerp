@@ -6,6 +6,9 @@
             display: none !important;
         }
     }
+    .tablists { margin: 0; padding: 0; list-style: none; }
+    .tablists li a { display: block; padding: 10px 15px; background: #fff; border: 1px solid #e7e7e7; margin-bottom: 5px; border-radius: 3px; color: #444; font-weight: 500; }
+    .tablists li a.active, .tablists li a:hover { background: #0084B4; color: #fff; border-color: #0084B4; }
 </style>
 
 <div class="content-wrapper" style="min-height: 946px;">
@@ -15,6 +18,19 @@
     <!-- Main content -->
     <section class="content">
         <div class="row">
+            <div class="col-md-2">
+                <div class="box border0">
+                    <ul class="tablists">
+                        <li><a href="<?php echo site_url('admin/leavetypes?tab=leavetype') ?>">Leave Type</a></li>
+                        <li><a href="<?php echo site_url('admin/leavetypes?tab=bulk') ?>">Bulk Leave Allocation</a></li>
+                        <li><a href="<?php echo site_url('admin/department/department') ?>"><?php echo $this->lang->line('department'); ?></a></li>
+                        <li><a href="<?php echo site_url('admin/designation/designation') ?>" class="active"><?php echo $this->lang->line('designation'); ?></a></li>
+                        <li><a href="<?php echo site_url('admin/qualification/qualification') ?>">Qualification</a></li>
+                        <li><a href="<?php echo site_url('admin/workexperience/workexperience') ?>">Work Experience</a></li>
+
+                    </ul>
+                </div>
+            </div>
             <?php if (($this->rbac->hasPrivilege('designation', 'can_add')) || ($this->rbac->hasPrivilege('designation', 'can_edit'))) {
     ?>
                 <div class="col-md-4">
@@ -53,11 +69,12 @@ if (isset($result)) {
             <?php }?>
             <div class="col-md-<?php
 if (($this->rbac->hasPrivilege('designation', 'can_add')) || ($this->rbac->hasPrivilege('designation', 'can_edit'))) {
-    echo "8";
+    echo "6";
 } else {
-    echo "12";
+    echo "10";
 }
 ?>">
+
                 <div class="box box-primary" id="tachelist">
                     <div class="box-header ptbnull">
                         <h3 class="box-title titlefix"><?php echo $this->lang->line('designation_list'); ?></h3>

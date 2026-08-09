@@ -114,7 +114,15 @@ if (!empty($side_list_value->submenus)) {
                             <?php
 foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
 
+                        if (isset($submenu_value->lang_key) && ($submenu_value->lang_key == 'department' || $submenu_value->lang_key == 'designation')) {
+                            continue;
+                        }
+                        if (isset($submenu_value->url) && (strpos($submenu_value->url, 'admin/department') !== false || strpos($submenu_value->url, 'admin/designation') !== false)) {
+                            continue;
+                        }
+
                         $sidebar_permission = access_permission_sidebar_remove_pipe($submenu_value->access_permissions);
+
                         $sidebar_access     = false;
 
                         if (!empty($sidebar_permission)) {

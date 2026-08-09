@@ -293,7 +293,14 @@ class Accvoucher_model extends MY_Model
         ]);
 
         $this->db->trans_complete();
-        return $this->db->trans_status();
+        $ok = $this->db->trans_status();
+
+        // Non-critical: notify admins in the bell (only after a successful commit).
+        if ($ok) {
+            $this->notifyReversal($voucher, $reversal_no, $staff_id, 'manual');
+        }
+
+        return $ok;
     }
 
     /**
@@ -371,7 +378,70 @@ class Accvoucher_model extends MY_Model
         ]);
 
         $this->db->trans_complete();
-        return $this->db->trans_status();
+        $ok = $this->db->trans_status();
+
+        // Non-critical: notify admins in the bell (only after a successful commit).
+        if ($ok) {
+            $this->notifyReversal($voucher, $reversal_no, $staff_id, 'auto');
+        }
+
+        return $ok;
+    }
+
+    /**
+     * Send a bell notification to admins that a voucher was reversed.
+     *
+     * This is a NON-CRITICAL side effect: it is fully self-contained and swallows any
+     * error, so it can NEVER affect or roll back the reversal that already committed.
+     * Call it only AFTER the reversal transaction has succeeded.
+     *
+     * @param array  $voucher      The original voucher (already reversed).
+     * @param string $reversal_no  The reversal voucher number (e.g. RV-00156-REV).
+     * @param int    $staff_id     Staff id who performed/triggered the reversal (0 = system).
+     * @param string $type         'auto' (triggered by fee delete/sync) or 'manual' (UI action).
+     */
+    private function notifyReversal($voucher, $reversal_no, $staff_id, $type = 'manual')
+    {
+        try {
+            // Resolve "who" — staff name, or "System" when no staff context.
+            $who = 'System';
+            if (!empty($staff_id)) {
+                $staff = $this->db->select('name, surname')
+                                  ->where('id', $staff_id)
+                                  ->get('staff')->row();
+                if ($staff) {
+                    $who = trim(($staff->name ?? '') . ' ' . ($staff->surname ?? ''));
+                    if ($who === '') { $who = 'Staff #' . $staff_id; }
+                }
+            }
+
+            $orig_no = $voucher['voucher_no'] ?? '(unknown)';
+            $amount  = 0;
+            if (!empty($voucher['items'])) {
+                foreach ($voucher['items'] as $it) { $amount += (float)($it['debit_amount'] ?? 0); }
+            }
+            $amount_str = number_format($amount, 2);
+
+            if ($type === 'auto') {
+                $title = 'Voucher Auto-Reversed';
+                $how   = 'automatically reversed because its linked fee record was deleted or edited';
+                $url   = 'accounts/reports/false_reversals';
+            } else {
+                $title = 'Voucher Reversed';
+                $how   = 'manually reversed';
+                $url   = 'accounts/reports/daybook';
+            }
+
+            $message = "Voucher {$orig_no} (Amt: {$amount_str}) was {$how}. "
+                     . "Reversal entry: {$reversal_no}. By: {$who}.";
+
+            $this->load->model('SystemNotification_model');
+            // Role 7 = Admin (same role used by other alerts in this app).
+            $this->SystemNotification_model->notifyRole(7, $title, $message, $url);
+        } catch (\Throwable $e) {
+            // Intentionally ignored — notifications must never break a financial reversal.
+            log_message('error', 'notifyReversal failed: ' . $e->getMessage());
+        }
     }
 
     public function getDatatableVouchers($type)
@@ -413,5 +483,95 @@ class Accvoucher_model extends MY_Model
         $this->db->order_by('created_at', 'asc');
         $this->db->limit($limit);
         return $this->db->get('acc_sync_queue')->result_array();
+    }
+
+    /**
+     * READ-ONLY diagnostic: list AUTO-REVERSAL vouchers that were most likely false
+     * positives — i.e. the original fee voucher was auto-reversed even though its source
+     * fee sub-invoice still exists in student_fees_deposite.amount_detail.
+     *
+     * This is strictly SELECT-only. It performs NO writes and does not restore anything;
+     * it is a review aid so an admin can decide what (if anything) to restore later.
+     * Detection mirrors Accounts_integration::detectOrphanedVouchers() but inverted:
+     * a still-existing sub-invoice means the reversal should never have happened.
+     *
+     * @return array Rows describing each false-positive reversal candidate.
+     */
+    public function findFalsePositiveReversals()
+    {
+        $results = [];
+
+        // The auto-generated mirror vouchers: narration starts with "AUTO-REVERSAL of",
+        // reference_id ends with "_rev", and they point back to the original via
+        // reversal_of_voucher_id.
+        $this->db->from('acc_vouchers');
+        $this->db->like('reference_id', '_rev', 'before'); // reference_id LIKE '%_rev'
+        $this->db->where_in('reference_module', ['fee_collection', 'fee_discount']);
+        $this->db->like('narration', 'AUTO-REVERSAL of', 'after'); // narration LIKE 'AUTO-REVERSAL of%'
+        $mirrors = $this->db->get()->result_array();
+
+        foreach ($mirrors as $mirror) {
+            // Resolve the original voucher via the FK (robust, no string parsing).
+            $original = null;
+            if (!empty($mirror['reversal_of_voucher_id'])) {
+                $original = $this->db->where('id', $mirror['reversal_of_voucher_id'])
+                                     ->get('acc_vouchers')->row_array();
+            }
+            if (empty($original)) {
+                // Fallback: strip a single trailing "_rev" from the mirror reference_id.
+                $orig_ref = preg_replace('/_rev$/', '', $mirror['reference_id']);
+                $original = $this->db->where('reference_id', $orig_ref)
+                                     ->where('reference_module', $mirror['reference_module'])
+                                     ->where('status', 'reversed')
+                                     ->get('acc_vouchers')->row_array();
+            }
+            if (empty($original)) {
+                continue; // Cannot resolve original; skip (report only what we can verify).
+            }
+
+            // Existence check on the ORIGINAL reference_id, same rule as the orphan sweep.
+            // Base ref = deposit_sub (drop a trailing "_disc" for discount journals).
+            $base_ref = preg_replace('/_disc$/', '', (string)$original['reference_id']);
+            $parts = explode('_', $base_ref);
+            $deposit_id = $parts[0] ?? 0;
+            $sub_invoice_id = $parts[1] ?? 0;
+
+            $sub_invoice_exists = false;
+            $student_name = '';
+            if ($deposit_id) {
+                $deposit = $this->db->where('id', $deposit_id)
+                                    ->get('student_fees_deposite')->row();
+                if ($deposit) {
+                    $amount_detail = json_decode($deposit->amount_detail, true);
+                    if (is_array($amount_detail) && isset($amount_detail[$sub_invoice_id])) {
+                        $sub_invoice_exists = true;
+                    }
+                }
+            }
+
+            // False positive = the source sub-invoice still exists, yet it was reversed.
+            if ($sub_invoice_exists) {
+                $amount = $this->db->select('SUM(debit_amount) as amt')
+                                   ->where('voucher_id', $original['id'])
+                                   ->get('acc_voucher_items')->row();
+                $results[] = [
+                    'original_voucher_id'   => $original['id'],
+                    'original_voucher_no'   => $original['voucher_no'],
+                    'original_voucher_date' => $original['voucher_date'],
+                    'original_status'       => $original['status'],
+                    'reversal_voucher_id'   => $mirror['id'],
+                    'reversal_voucher_no'   => $mirror['voucher_no'],
+                    'reversal_voucher_date' => $mirror['voucher_date'],
+                    'reference_module'      => $original['reference_module'],
+                    'reference_id'          => $original['reference_id'],
+                    'deposit_id'            => $deposit_id,
+                    'sub_invoice_id'        => $sub_invoice_id,
+                    'amount'                => $amount ? (float)$amount->amt : 0,
+                    'narration'             => $original['narration'],
+                ];
+            }
+        }
+
+        return $results;
     }
 }

@@ -336,6 +336,47 @@ class Staff_model extends MY_Model
         }
     }
 
+    public function update_bulk_staff_leave_details($staff_ids, $leave_data)
+    {
+        if (empty($staff_ids) || empty($leave_data)) {
+            return false;
+        }
+
+        $session = $this->setting_model->getCurrentSession();
+        $this->db->trans_start();
+
+        foreach ($staff_ids as $staff_id) {
+            foreach ($leave_data as $leave_type_id => $alloted_leave) {
+                if ($alloted_leave === '' || $alloted_leave === null) {
+                    continue;
+                }
+
+                $query = $this->db->where(array(
+                    'staff_id'      => $staff_id,
+                    'leave_type_id' => $leave_type_id,
+                    'session_id'    => $session,
+                ))->get('staff_leave_details');
+
+                if ($query->num_rows() > 0) {
+                    $row = $query->row();
+                    $this->db->where('id', $row->id);
+                    $this->db->update('staff_leave_details', array('alloted_leave' => $alloted_leave));
+                } else {
+                    $this->db->insert('staff_leave_details', array(
+                        'staff_id'      => $staff_id,
+                        'leave_type_id' => $leave_type_id,
+                        'alloted_leave' => $alloted_leave,
+                        'session_id'    => $session,
+                    ));
+                }
+            }
+        }
+
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+
     public function getPayroll($id = null)
     {
         $this->db->select()->from('staff_payroll');
@@ -1021,4 +1062,189 @@ class Staff_model extends MY_Model
         $query = $this->db->query($sql);
         return $query->result_array();
     }
+
+    public function get_department_by_name($name)
+    {
+        if (empty($name)) return null;
+        $query = $this->db->select('id')->where('LOWER(department_name)', strtolower(trim($name)))->get('department');
+        if ($query->num_rows() > 0) {
+            return $query->row()->id;
+        }
+        return null;
+    }
+
+    public function get_designation_by_name($name)
+    {
+        if (empty($name)) return null;
+        $query = $this->db->select('id')->where('LOWER(designation)', strtolower(trim($name)))->get('staff_designation');
+        if ($query->num_rows() > 0) {
+            return $query->row()->id;
+        }
+        return null;
+    }
+
+    public function get_role_by_name($name)
+    {
+        if (empty($name)) return null;
+        $query = $this->db->select('id')->where('LOWER(name)', strtolower(trim($name)))->get('roles');
+        if ($query->num_rows() > 0) {
+            return $query->row()->id;
+        }
+        return null;
+    }
+
+    public function clean_scientific_number($val)
+    {
+        $val = trim($val);
+        if (empty($val)) return '';
+        if (preg_match('/^[0-9]+(\.[0-9]+)?[eE]\+[0-9]+$/i', $val)) {
+            return sprintf("%.0f", (float)$val);
+        }
+        return $val;
+    }
+
+
+    public function parse_date_to_db($date_str)
+    {
+        $date_str = trim($date_str);
+        if (empty($date_str) || $date_str == '0000-00-00' || $date_str == '1970-01-01') return null;
+
+        $clean_date = str_replace(array('.', '/', ' '), '-', $date_str);
+        $parts = explode('-', $clean_date);
+
+        if (count($parts) == 3) {
+            // YYYY-MM-DD
+            if (strlen($parts[0]) == 4) {
+                $y = $parts[0];
+                $m = str_pad($parts[1], 2, '0', STR_PAD_LEFT);
+                $d = str_pad($parts[2], 2, '0', STR_PAD_LEFT);
+                return "{$y}-{$m}-{$d}";
+            }
+            // DD-MM-YYYY
+            if (strlen($parts[2]) == 4) {
+                $d = str_pad($parts[0], 2, '0', STR_PAD_LEFT);
+                $m = str_pad($parts[1], 2, '0', STR_PAD_LEFT);
+                $y = $parts[2];
+                if ((int)$m > 12 && (int)$d <= 12) {
+                    $temp = $d; $d = $m; $m = $temp;
+                }
+                return "{$y}-{$m}-{$d}";
+            }
+        }
+
+        $timestamp = strtotime($clean_date);
+        if ($timestamp !== false && $timestamp > 0) {
+            return date('Y-m-d', $timestamp);
+        }
+        return null;
+    }
+
+    public function bulk_update_staff_from_csv($csv_rows)
+
+
+    {
+        if (empty($csv_rows)) return 0;
+        $this->db->trans_start();
+        $processed_count = 0;
+
+        foreach ($csv_rows as $row) {
+            $employee_id = isset($row['employee_id']) ? trim($row['employee_id']) : '';
+            $email       = isset($row['email']) ? trim($row['email']) : '';
+
+            $existing = null;
+            if (!empty($employee_id)) {
+                $staff_q = $this->db->where('employee_id', $employee_id)->get('staff');
+                if ($staff_q->num_rows() > 0) {
+                    $existing = $staff_q->row();
+                }
+            }
+            if (empty($existing) && !empty($email)) {
+                $staff_q = $this->db->where('email', $email)->get('staff');
+                if ($staff_q->num_rows() > 0) {
+                    $existing = $staff_q->row();
+                }
+            }
+
+            $update_data = array();
+            if (isset($row['name']) && $row['name'] !== '') $update_data['name'] = trim($row['name']);
+            if (isset($row['surname']) && $row['surname'] !== '') $update_data['surname'] = trim($row['surname']);
+            if (isset($row['father_name']) && $row['father_name'] !== '') $update_data['father_name'] = trim($row['father_name']);
+            if (isset($row['mother_name']) && $row['mother_name'] !== '') $update_data['mother_name'] = trim($row['mother_name']);
+            if (isset($row['email']) && $row['email'] !== '') $update_data['email'] = trim($row['email']);
+            if (isset($row['contact_no']) && $row['contact_no'] !== '') $update_data['contact_no'] = $this->clean_scientific_number($row['contact_no']);
+            if (isset($row['emergency_contact_no']) && $row['emergency_contact_no'] !== '') $update_data['emergency_contact_no'] = $this->clean_scientific_number($row['emergency_contact_no']);
+            if (isset($row['dob']) && $row['dob'] !== '') $update_data['dob'] = $this->parse_date_to_db($row['dob']);
+            if (isset($row['date_of_joining']) && $row['date_of_joining'] !== '') $update_data['date_of_joining'] = $this->parse_date_to_db($row['date_of_joining']);
+
+            if (isset($row['qualification']) && $row['qualification'] !== '') $update_data['qualification'] = trim($row['qualification']);
+            if (isset($row['basic_salary']) && $row['basic_salary'] !== '') $update_data['basic_salary'] = trim($row['basic_salary']);
+            if (isset($row['contract_type']) && $row['contract_type'] !== '') $update_data['contract_type'] = trim($row['contract_type']);
+            if (isset($row['account_title']) && $row['account_title'] !== '') $update_data['account_title'] = trim($row['account_title']);
+            if (isset($row['bank_account_no']) && $row['bank_account_no'] !== '') $update_data['bank_account_no'] = $this->clean_scientific_number($row['bank_account_no']);
+            if (isset($row['bank_name']) && $row['bank_name'] !== '') $update_data['bank_name'] = trim($row['bank_name']);
+            if (isset($row['ifsc_code']) && $row['ifsc_code'] !== '') $update_data['ifsc_code'] = trim($row['ifsc_code']);
+            if (isset($row['pan_no']) && $row['pan_no'] !== '') $update_data['epf_no'] = $this->clean_scientific_number($row['pan_no']);
+
+
+            if (isset($row['password']) && trim($row['password']) !== '') {
+                $update_data['password'] = $this->enc_lib->passHashEnc(trim($row['password']));
+            }
+
+            if (isset($row['department']) && trim($row['department']) !== '') {
+                $dept_id = $this->get_department_by_name($row['department']);
+                if ($dept_id !== null) {
+                    $update_data['department'] = $dept_id;
+                }
+            }
+
+            if (isset($row['designation']) && trim($row['designation']) !== '') {
+                $desig_id = $this->get_designation_by_name($row['designation']);
+                if ($desig_id !== null) {
+                    $update_data['designation'] = $desig_id;
+                }
+            }
+
+            if ($existing) {
+                // Existing staff -> UPDATE
+                $staff_id = $existing->id;
+                if (!empty($update_data)) {
+                    $this->db->where('id', $staff_id);
+                    $this->db->update('staff', $update_data);
+                }
+            } else {
+                // Unmatched staff -> CREATE NEW STAFF RECORD!
+                $update_data['employee_id'] = !empty($employee_id) ? $employee_id : 'EMP' . rand(1000, 9999);
+                if (empty($update_data['name'])) $update_data['name'] = 'Staff ' . $update_data['employee_id'];
+                if (empty($update_data['email'])) $update_data['email'] = strtolower($update_data['employee_id']) . '@school.com';
+                if (empty($update_data['password'])) $update_data['password'] = $this->enc_lib->passHashEnc('123456');
+                $update_data['is_active'] = 1;
+
+                $this->db->insert('staff', $update_data);
+                $staff_id = $this->db->insert_id();
+            }
+
+            // Role resolution & update
+            $role_id = null;
+            if (isset($row['role']) && trim($row['role']) !== '') {
+                $role_id = $this->get_role_by_name($row['role']);
+            }
+            if ($role_id === null) {
+                $role_id = 2; // Default Teacher role
+            }
+            $role_exists = $this->db->where('staff_id', $staff_id)->get('staff_roles');
+            if ($role_exists->num_rows() > 0) {
+                $this->db->where('staff_id', $staff_id);
+                $this->db->update('staff_roles', array('role_id' => $role_id));
+            } else {
+                $this->db->insert('staff_roles', array('staff_id' => $staff_id, 'role_id' => $role_id));
+            }
+
+            $processed_count++;
+        }
+
+        $this->db->trans_complete();
+        return ($this->db->trans_status() === false) ? 0 : $processed_count;
+    }
+
 }
+

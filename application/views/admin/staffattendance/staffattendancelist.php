@@ -122,6 +122,28 @@
         }
     }
 
+    /* ===== Uniform toggle switch ===== */
+    .uniform-switch { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; margin: 0; user-select: none; }
+    .uniform-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .uniform-slider { position: relative; display: inline-block; width: 42px; height: 22px; background: #d9534f; border-radius: 22px; transition: background .2s ease; flex: 0 0 auto; }
+    .uniform-slider::before { content: ""; position: absolute; height: 16px; width: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .2s ease; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+    .uniform-switch input:checked + .uniform-slider { background: #00a65a; }
+    .uniform-switch input:checked + .uniform-slider::before { transform: translateX(20px); }
+    .uniform-text { font-size: 12px; font-weight: 600; min-width: 26px; }
+    .uniform-switch input:checked ~ .uniform-text { color: #00a65a; }
+    .uniform-switch input:not(:checked) ~ .uniform-text { color: #d9534f; }
+
+    /* ===== Page polish (visual only — no structural change) ===== */
+    #staffatt-legend { display:flex; flex-wrap:wrap; gap:14px; align-items:center; font-size:12px; color:#555; padding:8px 4px 0; }
+    #staffatt-legend .lg-item { display:inline-flex; align-items:center; gap:6px; }
+    #staffatt-legend .lg-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+    .staffatt-table thead th { background:#f7f9fb; color:#41505f; font-size:12px; text-transform:uppercase; letter-spacing:.3px; border-bottom:2px solid #e4e9ef !important; vertical-align:middle; white-space:nowrap; }
+    .staffatt-table tbody td { vertical-align:middle !important; }
+    .staffatt-table tbody tr:hover td { background:#f3f8ff !important; }
+    .staffatt-table .radio-inline { margin-right:8px; }
+    .staffatt-hint { color:#8a93a2; font-size:12px; margin-top:4px; }
+    @media (max-width:767px){ .uniform-switch { justify-content:flex-start; } }
+
 </style>
 
 <div class="content-wrapper">
@@ -188,12 +210,26 @@
                             <h3 class="box-title"><i class="fa fa-users"></i> <?php echo $this->lang->line('staff_list'); ?></h3>
                             <div class="box-tools pull-right">
                             </div>
+                            <div id="staffatt-legend">
+                                <span class="lg-item"><span class="lg-dot" style="background:#00a65a;"></span> <?php echo $this->lang->line('in_uniform'); ?>: <?php echo $this->lang->line('yes'); ?></span>
+                                <span class="lg-item"><span class="lg-dot" style="background:#d9534f;"></span> <?php echo $this->lang->line('in_uniform'); ?>: <?php echo $this->lang->line('no'); ?></span>
+                                <span class="lg-item"><i class="fa fa-info-circle text-muted"></i> <?php echo $this->lang->line('in_uniform'); ?> &amp; <?php echo $this->lang->line('unplanned_leave'); ?> are for tracking only.</span>
+                            </div>
                         </div>
                         <div class="box-body">
                             <?php
                             if (!empty($resultlist)) {
                                 $checked = "";
-                           
+
+                                // Attendance types that should NOT have entry/exit time (leave-like).
+                                // Kept data-driven so the new "Unplanned Leave" type is handled without
+                                // hardcoding its id, while Absent/Holiday behave exactly as before.
+                                $leave_like_ids = [];
+                                foreach ($attendencetypeslist as $__t) {
+                                    if (in_array($__t['long_lang_name'], ['absent', 'holiday', 'unplanned_leave'])) {
+                                        $leave_like_ids[] = (int)$__t['id'];
+                                    }
+                                }
                                 ?>
                                 <form action="<?php echo site_url('admin/staffattendance/index') ?>" id="save_attendance" method="post">
                                     <?php echo $this->customlib->getCSRF(); ?>
@@ -220,6 +256,11 @@
                                                         }
                                                         ?>
                                                     </div>
+                                                    <div class="form-group">
+                                                        <label><i class="fa fa-user-circle-o"></i> <?php echo $this->lang->line('in_uniform'); ?> (<?php echo $this->lang->line('all'); ?>) &nbsp;</label>
+                                                        <button type="button" id="set_all_uniform_yes" class="btn btn-xs btn-success"><i class="fa fa-check"></i> <?php echo $this->lang->line('yes'); ?></button>
+                                                        <button type="button" id="set_all_uniform_no" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> <?php echo $this->lang->line('no'); ?></button>
+                                                    </div>
                                                 </div>
                                                 <div class="col-md-4">
                                                     <div class="pull-right">
@@ -228,14 +269,14 @@
 														<?php } ?>
                                                     </div>
                                                 </div>
-                                            </div>                                        
+                                            </div>
                                     </div>
                                     <input type="hidden" name="is_first_time_attendance" value="<?php echo $is_first_time_attendance;?>">
                                     <input type="hidden" name="user_id" value="<?php echo $user_type_id; ?>">
                                     <input type="hidden" name="section_id" value="">
                                     <input type="hidden" name="date" value="<?php echo $date; ?>">
                                     <div class="table-responsive">
-                                        <table class="table table-hover table-striped example">
+                                        <table class="table table-hover table-striped example staffatt-table">
                                             <thead>
                                                 <tr>
                                                     <th>#</th>
@@ -243,6 +284,7 @@
                                                     <th><?php echo $this->lang->line('name'); ?></th>
                                                     <th><?php echo $this->lang->line('role'); ?></th>
                                                     <th ><?php echo $this->lang->line('attendance'); ?></th>
+                                                    <th class="text-center white-space-nowrap"><i class="fa fa-user-circle-o"></i> <?php echo $this->lang->line('in_uniform'); ?></th>
                                                     <?php  if ($sch_setting->biometric) {  ?>
                                                         <th width="10%"><?php echo $this->lang->line('date'); ?></th>
                                                     <?php  }  ?>
@@ -331,6 +373,19 @@
                                                                             ?>
                                                         </td>
                                                         <?php
+                                                            // Uniform toggle — independent of attendance type.
+                                                            // Unset/NULL is treated as "in uniform" (default compliant); only explicit 'no' shows off.
+                                                            $uniform_val = isset($value['uniform_status']) ? $value['uniform_status'] : null;
+                                                            $uniform_checked = ($uniform_val === 'no') ? '' : 'checked';
+                                                        ?>
+                                                        <td class="text-center">
+                                                            <label class="uniform-switch" title="<?php echo $this->lang->line('in_uniform'); ?>">
+                                                                <input type="checkbox" class="uniform-check" name="uniform_status_<?php echo $value['staff_id']; ?>" value="yes" <?php echo $uniform_checked; ?>>
+                                                                <span class="uniform-slider"></span>
+                                                                <span class="uniform-text"><?php echo ($uniform_val === 'no') ? $this->lang->line('no') : $this->lang->line('yes'); ?></span>
+                                                            </label>
+                                                        </td>
+                                                        <?php
                                                         if ($sch_setting->biometric) {
                                                         ?>
                                                             <td>
@@ -361,7 +416,7 @@
                                                         </td>
 
                                                         <?php
-                                                        if($value['staff_attendance_type_id']==3 || $value['staff_attendance_type_id']==5){
+                                                        if(in_array((int)$value['staff_attendance_type_id'], $leave_like_ids)){
                                                             $disable_input_attr="disabled";
                                                         }else{
                                                             $disable_input_attr="";
@@ -431,8 +486,8 @@
                 $("input[type=radio][class='"+radio_default+"']").prop("checked", returnVal);
                 
                 let attendance_type_id = ($(this).data('record_id'));
-                if(attendance_type_id==3 || attendance_type_id==5){
-                    //absent or holiday
+                if(window.leaveTypeIds && window.leaveTypeIds.indexOf(parseInt(attendance_type_id))!==-1){
+                    //absent, holiday or unplanned leave -> no entry/exit time
                     $('.in_time').attr("disabled",true);
                     $('.out_time').attr("disabled",true);
                 }else{
@@ -533,11 +588,14 @@ if (time.toString().match(/^([01]\d|2[0-3])(:)([0-5]\d)(:[0-5]\d)?$/)) {
 
 var attendance_setting = <?php echo json_encode($staff_settings) ?>;
 
+var leaveTypeIds = <?php echo json_encode(isset($leave_like_ids) ? $leave_like_ids : [3,5]); ?>;
+window.leaveTypeIds = leaveTypeIds;
+
 function getatten(atten_type){
-    //3 for absent 5 for holiday
-    if(atten_type==3 || atten_type==5){
+    // Leave-like types (absent / holiday / unplanned leave) have no entry/exit time.
+    if(leaveTypeIds.indexOf(parseInt(atten_type))!==-1){
       $('.in_time').val('');
-      $('.out_time').val('');  
+      $('.out_time').val('');
       return false;
     }else{
         var role_id = $("input[name='staff_role[]']").map(function(){return $(this).val();}).get();
@@ -558,7 +616,7 @@ function getatten(atten_type){
 }
 
 let disable_enable=(type,staff_id)=>{
-    if(type==3 || type==5){
+    if(leaveTypeIds.indexOf(parseInt(type))!==-1){
         $("#in_time_"+staff_id).val("");
         $("#out_time_"+staff_id).val("");
         $("#in_time_"+staff_id).attr("disabled",true);
@@ -570,5 +628,23 @@ let disable_enable=(type,staff_id)=>{
         $("#out_time_"+staff_id).attr("disabled",false);
     }
 }
+
+// ===== Uniform toggle: label text + set-all buttons =====
+$(document).ready(function() {
+    function syncUniformText($chk) {
+        var yes = "<?php echo $this->lang->line('yes'); ?>";
+        var no  = "<?php echo $this->lang->line('no'); ?>";
+        $chk.closest('.uniform-switch').find('.uniform-text').text($chk.is(':checked') ? yes : no);
+    }
+    $(document).on('change', '.uniform-check', function() {
+        syncUniformText($(this));
+    });
+    $('#set_all_uniform_yes').on('click', function() {
+        $('.uniform-check').prop('checked', true).each(function(){ syncUniformText($(this)); });
+    });
+    $('#set_all_uniform_no').on('click', function() {
+        $('.uniform-check').prop('checked', false).each(function(){ syncUniformText($(this)); });
+    });
+});
 
 </script>

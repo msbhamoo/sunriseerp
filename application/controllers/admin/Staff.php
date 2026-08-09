@@ -76,6 +76,53 @@ class Staff extends Admin_Controller
         $this->load->view('layout/footer');
     }
 
+    public function ajaxsearch()
+    {
+        if (!$this->rbac->hasPrivilege('staff', 'can_view')) {
+            echo json_encode(array('status' => 'error', 'message' => 'Access denied'));
+            return;
+        }
+
+        $role_id     = $this->input->post('role_id');
+        $search_text = trim($this->input->post('search_text'));
+        $is_active   = $this->input->post('is_active') !== null ? $this->input->post('is_active') : 1;
+
+        if (!empty($role_id) && !empty($search_text)) {
+            $resultlist = $this->staff_model->getEmployee($role_id, $is_active);
+            $filtered   = array();
+            $search_lower = strtolower($search_text);
+            foreach ($resultlist as $staff) {
+                $full_name = strtolower($staff['name'] . ' ' . $staff['surname']);
+                $emp_id    = strtolower($staff['employee_id']);
+                $contact   = strtolower($staff['contact_no']);
+                if (strpos($full_name, $search_lower) !== false || strpos($emp_id, $search_lower) !== false || strpos($contact, $search_lower) !== false) {
+                    $filtered[] = $staff;
+                }
+            }
+            $resultlist = $filtered;
+        } else if (!empty($role_id)) {
+            $resultlist = $this->staff_model->getEmployee($role_id, $is_active);
+        } else if (!empty($search_text)) {
+            $resultlist = $this->staff_model->searchFullText($search_text, $is_active);
+        } else {
+            $resultlist = $this->staff_model->searchFullText("", $is_active);
+        }
+
+        $data['resultlist'] = $resultlist;
+        $data['fields']     = $this->customfield_model->get_custom_fields('staff', 1);
+
+        $card_html = $this->load->view('admin/staff/_staff_card_view', $data, true);
+        $list_html = $this->load->view('admin/staff/_staff_list_view', $data, true);
+
+        echo json_encode(array(
+            'status'    => 'success',
+            'count'     => count($resultlist),
+            'card_html' => $card_html,
+            'list_html' => $list_html,
+        ));
+    }
+
+
     public function disablestafflist()
     {
         if (!$this->rbac->hasPrivilege('disable_staff', 'can_view')) {
@@ -407,6 +454,11 @@ class Staff extends Admin_Controller
         $data["designation"]         = $designation;
         $department                  = $this->staff_model->getDepartment();
         $data["department"]          = $department;
+        $this->load->model('qualification_model');
+        $this->load->model('workexperience_model');
+        $data["qualification_list"]  = $this->qualification_model->get();
+        $data["workexperience_list"] = $this->workexperience_model->get();
+
         $marital_status              = $this->marital_status;
         $data["marital_status"]      = $marital_status;
         $data['title']               = 'Add Staff';
@@ -1126,6 +1178,11 @@ class Staff extends Admin_Controller
         $data["designation"]         = $designation;
         $department                  = $this->staff_model->getDepartment();
         $data["department"]          = $department;
+        $this->load->model('qualification_model');
+        $this->load->model('workexperience_model');
+        $data["qualification_list"]  = $this->qualification_model->get();
+        $data["workexperience_list"] = $this->workexperience_model->get();
+
         $marital_status              = $this->marital_status;
         $data["marital_status"]      = $marital_status;
         $staff                       = $this->staff_model->get($id);
@@ -1934,5 +1991,243 @@ class Staff extends Admin_Controller
         return $this->saasvalidation->validateCanAddNewResource($input, $resource_name, $quantity);
     }
 
+    public function bulk_update()
+    {
+        if (!$this->rbac->hasPrivilege('staff', 'can_edit')) {
+            access_denied();
+        }
+        $this->session->set_userdata('top_menu', 'HR');
+        $this->session->set_userdata('sub_menu', 'HR/staff');
+        $data['title'] = 'Bulk Staff Detail Update';
+
+        $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_csv_upload');
+
+        if ($this->form_validation->run() == false) {
+            $this->load->view("layout/header", $data);
+            $this->load->view("admin/staff/bulk_update/upload", $data);
+            $this->load->view("layout/footer", $data);
+        } else {
+            if (isset($_FILES["file"]) && !empty($_FILES['file']['name'])) {
+                $file = $_FILES['file']['tmp_name'];
+                $this->load->library('CSVReader');
+                $result = $this->csvreader->parse_file($file);
+
+                if (!empty($result)) {
+                    $preview_rows = array();
+                    foreach ($result as $raw_row) {
+                        $row = $this->normalize_csv_row($raw_row);
+                        $emp_id = isset($row['employee_id']) ? trim($row['employee_id']) : '';
+                        $existing = null;
+                        
+                        if (!empty($emp_id)) {
+                            $staff_q = $this->db->where('employee_id', $emp_id)->get('staff');
+                            if ($staff_q->num_rows() > 0) {
+                                $existing = $staff_q->row_array();
+                            }
+                        }
+                        if (empty($existing) && !empty($row['email'])) {
+                            $staff_q = $this->db->where('email', trim($row['email']))->get('staff');
+                            if ($staff_q->num_rows() > 0) {
+                                $existing = $staff_q->row_array();
+                                $row['employee_id'] = $existing['employee_id'];
+                            }
+                        }
+
+                        $row['is_matched'] = (!empty($existing)) ? 1 : 0;
+                        $row['staff_db']   = $existing;
+                        $preview_rows[]    = $row;
+                    }
+                    $data['preview_rows'] = $preview_rows;
+                    $this->session->set_userdata('bulk_staff_update_rows', $preview_rows);
+
+                    $this->load->view("layout/header", $data);
+                    $this->load->view("admin/staff/bulk_update/preview", $data);
+                    $this->load->view("layout/footer", $data);
+                } else {
+                    $this->session->set_flashdata('msg', '<div class="alert alert-danger text-center">CSV file is empty or invalid format.</div>');
+                    redirect('admin/staff/bulk_update');
+                }
+            }
+        }
+    }
+
+    private function normalize_csv_row($row)
+    {
+        $normalized = array();
+        foreach ($row as $k => $v) {
+            $clean_k = strtolower(trim(preg_replace('/[\x00-\x1F\x7F-\xFF]/', '', $k)));
+            $clean_v = trim($v);
+
+            if (in_array($clean_k, array('employee_id', 'employee', 'emp_id', 'staff_id', 'id', 'employeeid'))) {
+                $normalized['employee_id'] = $this->clean_scientific_number($clean_v);
+            } else if (in_array($clean_k, array('name', 'first_name'))) {
+                $normalized['name'] = $clean_v;
+            } else if (in_array($clean_k, array('surname', 'last_name'))) {
+                $normalized['surname'] = $clean_v;
+            } else if (strpos($clean_k, 'father') !== false) {
+                $normalized['father_name'] = $clean_v;
+            } else if (strpos($clean_k, 'mother') !== false) {
+                $normalized['mother_name'] = $clean_v;
+            } else if (strpos($clean_k, 'email') !== false) {
+                $normalized['email'] = $clean_v;
+            } else if (strpos($clean_k, 'pass') !== false) {
+                $normalized['password'] = $clean_v;
+            } else if (in_array($clean_k, array('contact_no', 'mobile_no', 'phone', 'contact'))) {
+                $normalized['contact_no'] = $this->clean_scientific_number($clean_v);
+            } else if (strpos($clean_k, 'emerg') !== false) {
+                $normalized['emergency_contact_no'] = $this->clean_scientific_number($clean_v);
+            } else if ($clean_k === 'dob' || strpos($clean_k, 'birth') !== false) {
+                $normalized['dob'] = $clean_v;
+            } else if (strpos($clean_k, 'join') !== false || $clean_k === 'date_of_j') {
+                $normalized['date_of_joining'] = $clean_v;
+            } else if (strpos($clean_k, 'social') !== false || $clean_k === 'social_cat') {
+                $normalized['social_category'] = $clean_v;
+            } else if (strpos($clean_k, 'qual') !== false) {
+                if (strpos($clean_k, 'acad') !== false) {
+                    $normalized['highest_academic_qualification'] = $clean_v;
+                } else if (strpos($clean_k, 'prof') !== false || strpos($clean_k, 'pi') !== false) {
+                    $normalized['highest_professional_qualification'] = $clean_v;
+                } else {
+                    $normalized['qualification'] = $clean_v;
+                }
+            } else if (strpos($clean_k, 'math') !== false || strpos($clean_k, 'sci') !== false) {
+                $normalized['maths_science_upto'] = $clean_v;
+            } else if (strpos($clean_k, 'english') !== false) {
+                $normalized['english_upto'] = $clean_v;
+            } else if (strpos($clean_k, 'social_stu') !== false || strpos($clean_k, 'studies') !== false) {
+                $normalized['social_studies_upto'] = $clean_v;
+            } else if (strpos($clean_k, 'salary') !== false || strpos($clean_k, 'basic') !== false) {
+                $normalized['basic_salary'] = $clean_v;
+            } else if (strpos($clean_k, 'contract') !== false) {
+                $normalized['contract_type'] = $clean_v;
+            } else if (strpos($clean_k, 'depart') !== false) {
+                $normalized['department'] = $clean_v;
+            } else if (strpos($clean_k, 'desig') !== false) {
+                $normalized['designation'] = $clean_v;
+            } else if (strpos($clean_k, 'account_title') !== false || strpos($clean_k, 'acc_title') !== false) {
+                $normalized['account_title'] = $clean_v;
+            } else if (strpos($clean_k, 'bank_acc') !== false || strpos($clean_k, 'account_no') !== false || strpos($clean_k, 'account_num') !== false) {
+                $normalized['bank_account_no'] = $this->clean_scientific_number($clean_v);
+            } else if (strpos($clean_k, 'bank_name') !== false) {
+                $normalized['bank_name'] = $clean_v;
+            } else if (strpos($clean_k, 'ifsc') !== false) {
+                $normalized['ifsc_code'] = $clean_v;
+            } else if (strpos($clean_k, 'aadhar') !== false || strpos($clean_k, 'adhar') !== false) {
+                $normalized['aadhar_no'] = $this->clean_scientific_number($clean_v);
+            } else if (strpos($clean_k, 'pan') !== false) {
+                $normalized['pan_no'] = $clean_v;
+            } else {
+                $normalized[$clean_k] = $clean_v;
+            }
+        }
+        return $normalized;
+    }
+
+    private function clean_scientific_number($val)
+    {
+        $val = trim($val);
+        if (empty($val)) return '';
+        if (preg_match('/^[0-9]+(\.[0-9]+)?[eE]\+[0-9]+$/i', $val)) {
+            return sprintf("%.0f", (float)$val);
+        }
+        return $val;
+    }
+
+
+
+    public function export_staff_id_name()
+    {
+        if (!$this->rbac->hasPrivilege('staff', 'can_view')) {
+            access_denied();
+        }
+        $this->load->helper('download');
+        $staff_list = $this->staff_model->get();
+
+        $csv_data = "employee_id,name,surname,email,role,department,designation\n";
+        foreach ($staff_list as $s) {
+            $emp_id  = '"' . str_replace('"', '""', $s['employee_id']) . '"';
+            $name    = '"' . str_replace('"', '""', $s['name']) . '"';
+            $surname = '"' . str_replace('"', '""', $s['surname']) . '"';
+            $email   = '"' . str_replace('"', '""', $s['email']) . '"';
+            $role    = '"' . str_replace('"', '""', isset($s['user_type']) ? $s['user_type'] : '') . '"';
+            $dept    = '"' . str_replace('"', '""', isset($s['department']) ? $s['department'] : '') . '"';
+            $desig   = '"' . str_replace('"', '""', isset($s['designation']) ? $s['designation'] : '') . '"';
+            $csv_data .= "{$emp_id},{$name},{$surname},{$email},{$role},{$dept},{$desig}\n";
+        }
+        force_download('staff_id_name_list.csv', $csv_data);
+    }
+
+    public function export_staff_sample()
+    {
+        if (!$this->rbac->hasPrivilege('staff', 'can_view')) {
+            access_denied();
+        }
+        $this->load->helper('download');
+        $staff_list = $this->staff_model->get();
+
+        $csv_data = "employee_id,name,surname,father_name,mother_name,email,password,contact_no,emergency_contact_no,dob,date_of_joining,social_category,qualification,highest_academic_qualification,highest_professional_qualification,maths_science_upto,english_upto,social_studies_upto,basic_salary,contract_type,department,designation,account_title,bank_account_no,bank_name,ifsc_code,aadhar_no,pan_no\n";
+        foreach ($staff_list as $s) {
+            $emp_id       = '"' . str_replace('"', '""', isset($s['employee_id']) ? $s['employee_id'] : '') . '"';
+            $name         = '"' . str_replace('"', '""', isset($s['name']) ? $s['name'] : '') . '"';
+            $surname      = '"' . str_replace('"', '""', isset($s['surname']) ? $s['surname'] : '') . '"';
+            $father_name  = '"' . str_replace('"', '""', isset($s['father_name']) ? $s['father_name'] : '') . '"';
+            $mother_name  = '"' . str_replace('"', '""', isset($s['mother_name']) ? $s['mother_name'] : '') . '"';
+            $email        = '"' . str_replace('"', '""', isset($s['email']) ? $s['email'] : '') . '"';
+            $pass         = '';
+            $contact      = '"' . str_replace('"', '""', isset($s['contact_no']) ? $s['contact_no'] : '') . '"';
+            $emergency    = '"' . str_replace('"', '""', isset($s['emergency_contact_no']) ? $s['emergency_contact_no'] : '') . '"';
+            $dob          = '"' . str_replace('"', '""', isset($s['dob']) ? date('d/m/Y', strtotime($s['dob'])) : '') . '"';
+            $joining_date = '"' . str_replace('"', '""', isset($s['date_of_joining']) ? date('d/m/Y', strtotime($s['date_of_joining'])) : '') . '"';
+            $social_cat   = '"' . str_replace('"', '""', isset($s['social_category']) ? $s['social_category'] : 'General') . '"';
+            $qual         = '"' . str_replace('"', '""', isset($s['qualification']) ? $s['qualification'] : '') . '"';
+            $acad_qual    = '"' . str_replace('"', '""', isset($s['qualification']) ? $s['qualification'] : '') . '"';
+            $prof_qual    = '""';
+            $maths_sci    = '""';
+            $english      = '""';
+            $social_st    = '""';
+            $salary       = '"' . str_replace('"', '""', isset($s['basic_salary']) ? $s['basic_salary'] : '') . '"';
+            $contract     = '"' . str_replace('"', '""', isset($s['contract_type']) ? $s['contract_type'] : '') . '"';
+            $dept         = '"' . str_replace('"', '""', isset($s['department']) ? $s['department'] : '') . '"';
+            $desig        = '"' . str_replace('"', '""', isset($s['designation']) ? $s['designation'] : '') . '"';
+            $acc_title    = '"' . str_replace('"', '""', isset($s['account_title']) ? $s['account_title'] : '') . '"';
+            $bank_acc     = '"' . str_replace('"', '""', isset($s['bank_account_no']) ? $s['bank_account_no'] : '') . '"';
+            $bank_name    = '"' . str_replace('"', '""', isset($s['bank_name']) ? $s['bank_name'] : '') . '"';
+            $ifsc         = '"' . str_replace('"', '""', isset($s['ifsc_code']) ? $s['ifsc_code'] : '') . '"';
+            $aadhar       = '"' . str_replace('"', '""', isset($s['aadhar_no']) ? $s['aadhar_no'] : '') . '"';
+            $pan          = '"' . str_replace('"', '""', isset($s['epf_no']) ? $s['epf_no'] : '') . '"';
+
+            $csv_data .= "{$emp_id},{$name},{$surname},{$father_name},{$mother_name},{$email},{$pass},{$contact},{$emergency},{$dob},{$joining_date},{$social_cat},{$qual},{$acad_qual},{$prof_qual},{$maths_sci},{$english},{$social_st},{$salary},{$contract},{$dept},{$desig},{$acc_title},{$bank_acc},{$bank_name},{$ifsc},{$aadhar},{$pan}\n";
+        }
+        force_download('full_staff_bulk_update_template.csv', $csv_data);
+    }
+
+
+    public function process_bulk_update()
+    {
+        if (!$this->rbac->hasPrivilege('staff', 'can_edit')) {
+            access_denied();
+        }
+        $session_rows     = $this->session->userdata('bulk_staff_update_rows');
+        $selected_indices = $this->input->post('selected_rows');
+
+        if (empty($session_rows) || empty($selected_indices)) {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger text-center">No staff rows selected to update.</div>');
+            redirect('admin/staff/bulk_update');
+        }
+
+        $rows_to_update = array();
+        foreach ($selected_indices as $idx) {
+            if (isset($session_rows[$idx])) {
+                $rows_to_update[] = $session_rows[$idx];
+            }
+        }
+
+        $updated_count = $this->staff_model->bulk_update_staff_from_csv($rows_to_update);
+        $this->session->unset_userdata('bulk_staff_update_rows');
+
+        $this->session->set_flashdata('msg', '<div class="alert alert-success text-center">' . $updated_count . ' staff records updated successfully.</div>');
+        redirect('admin/staff');
+    }
 
 }
+

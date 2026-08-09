@@ -17,9 +17,12 @@ class LeaveTypes extends Admin_Controller
     {
         $this->session->set_userdata('top_menu', 'HR');
         $this->session->set_userdata('sub_menu', 'admin/leavetypes');
-        $data["title"]     = $this->lang->line('add_leave_type');
-        $LeaveTypes        = $this->leavetypes_model->getLeaveType();
-        $data["leavetype"] = $LeaveTypes;
+        $data["title"]      = $this->lang->line('add_leave_type');
+        $LeaveTypes         = $this->leavetypes_model->getLeaveType();
+        $data["leavetype"]  = $LeaveTypes;
+        $data["roles"]      = $this->staff_model->getStaffRole();
+        $data["staff_list"] = $this->staff_model->get();
+        $data["tab"]        = $this->input->get('tab') ? $this->input->get('tab') : 'leavetype';
         $this->load->view("layout/header");
         $this->load->view("admin/staff/leavetypes", $data);
         $this->load->view("layout/footer");
@@ -68,8 +71,11 @@ class LeaveTypes extends Admin_Controller
             redirect("admin/leavetypes");
         } else {
 
-            $LeaveTypes        = $this->leavetypes_model->getLeaveType();
-            $data["leavetype"] = $LeaveTypes;
+            $LeaveTypes         = $this->leavetypes_model->getLeaveType();
+            $data["leavetype"]  = $LeaveTypes;
+            $data["roles"]      = $this->staff_model->getStaffRole();
+            $data["staff_list"] = $this->staff_model->get();
+            $data["tab"]        = 'leavetype';
             $this->load->view("layout/header");
             $this->load->view("admin/staff/leavetypes", $data);
             $this->load->view("layout/footer");
@@ -78,11 +84,14 @@ class LeaveTypes extends Admin_Controller
 
     public function leaveedit($id)
     {
-        $result            = $this->staff_model->getLeaveType($id);
-        $data["title"]     = $this->lang->line('edit_leave_type');
-        $data["result"]    = $result;
-        $LeaveTypes        = $this->leavetypes_model->getLeaveType();
-        $data["leavetype"] = $LeaveTypes;
+        $result             = $this->staff_model->getLeaveType($id);
+        $data["title"]      = $this->lang->line('edit_leave_type');
+        $data["result"]     = $result;
+        $LeaveTypes         = $this->leavetypes_model->getLeaveType();
+        $data["leavetype"]  = $LeaveTypes;
+        $data["roles"]      = $this->staff_model->getStaffRole();
+        $data["staff_list"] = $this->staff_model->get();
+        $data["tab"]        = 'leavetype';
         $this->load->view("layout/header");
         $this->load->view("admin/staff/leavetypes", $data);
         $this->load->view("layout/footer");
@@ -94,4 +103,39 @@ class LeaveTypes extends Admin_Controller
         redirect('admin/leavetypes');
     }
 
+    public function save_bulk_allocation()
+    {
+        if (!$this->rbac->hasPrivilege('leave_types', 'can_edit') && !$this->rbac->hasPrivilege('leave_types', 'can_add')) {
+            access_denied();
+        }
+
+        $target_type    = $this->input->post('target_type');
+        $role_id        = $this->input->post('role_id');
+        $staff_ids      = $this->input->post('staff_ids');
+        $alloted_leaves = $this->input->post('alloted_leave');
+
+        $target_staff_ids = array();
+
+        if ($target_type == 'role' && !empty($role_id)) {
+            $staff_members = $this->staff_model->getEmployeeByRoleID($role_id);
+            if (!empty($staff_members)) {
+                foreach ($staff_members as $staff) {
+                    $target_staff_ids[] = $staff['id'];
+                }
+            }
+        } else if ($target_type == 'staff' && !empty($staff_ids)) {
+            $target_staff_ids = $staff_ids;
+        }
+
+        if (!empty($target_staff_ids) && !empty($alloted_leaves)) {
+            $this->staff_model->update_bulk_staff_leave_details($target_staff_ids, $alloted_leaves);
+            $this->session->set_flashdata('msg', '<div class="alert alert-success">' . $this->lang->line('success_message') . '</div>');
+        } else {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger">Please select staff or role and configure leaves.</div>');
+        }
+
+        redirect('admin/leavetypes?tab=bulk');
+    }
+
 }
+

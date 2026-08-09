@@ -365,4 +365,28 @@ class Reports extends MY_Addon_AccountsController
         $this->load->view('accounts/reports/balancesheet', $data);
         $this->load->view('layout/footer', $data);
     }
+
+    /**
+     * READ-ONLY diagnostic report of AUTO-REVERSAL vouchers that were most likely
+     * false positives (source fee sub-invoice still exists). Performs NO writes.
+     * Route: accounts/reports/false_reversals
+     */
+    public function false_reversals()
+    {
+        if (!$this->rbac->hasPrivilege('acc_ledger_master', 'can_view')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'Accounts');
+        $this->session->set_userdata('sub_menu', 'accounts/reports/false_reversals');
+
+        $this->load->model('accvoucher_model');
+
+        $data['title'] = 'False-Positive Auto-Reversals (Review)';
+        $data['rows'] = $this->accvoucher_model->findFalsePositiveReversals();
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('accounts/reports/false_reversals', $data);
+        $this->load->view('layout/footer', $data);
+    }
 }

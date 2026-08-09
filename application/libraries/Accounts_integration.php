@@ -779,9 +779,12 @@ class Accounts_integration
                 }
             }
             if (!$sub_invoice_exists) {
+                // DETECTION ONLY: report the candidate, never auto-reverse.
+                // Reversing a financial voucher must not be a side effect of viewing a page.
+                // Genuine fee deletions/edits already reverse their own voucher precisely and
+                // immediately via Studentfee_model::remove() -> reverse_sync(). Auto-sweeping
+                // here caused false positives (valid vouchers wrongly reversed on dashboard load).
                 $orphans[] = ['voucher_id' => $v['id'], 'module' => 'fee_collection', 'ref_id' => $v['reference_id']];
-                $this->reverse_sync('fee_collection', $v['reference_id']);
-                $this->reverse_sync('fee_discount', $v['reference_id'] . '_disc');
             }
         }
 
@@ -794,8 +797,8 @@ class Accounts_integration
             
             $exists = $this->CI->db->where('id', $v['reference_id'])->where('status', 'paid')->get('staff_payslip')->row();
             if (!$exists) {
+                // DETECTION ONLY: report the candidate, never auto-reverse (see fee branch above).
                 $orphans[] = ['voucher_id' => $v['id'], 'module' => 'payroll', 'ref_id' => $v['reference_id']];
-                $this->reverse_sync('payroll', $v['reference_id']);
             }
         }
 

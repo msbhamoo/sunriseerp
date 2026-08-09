@@ -173,9 +173,20 @@ class Staffattendance extends Admin_Controller
                 $absent_staff_list=[];
                 $present_staff_list=[];
 
+                // Deploy-safe: only persist uniform status if the column exists (migration run).
+                $has_uniform_col = $this->db->field_exists('uniform_status', 'staff_attendance');
+
                 foreach ($user_type_ary as $key => $value) {
-                    
+
                   $attendencetype = $this->input->post('attendencetype' . $value);
+
+                  // Skip staff with no attendance status selected. Prevents inserting a NULL
+                  // attendance type (rejected under strict SQL mode) and avoids overwriting an
+                  // existing record with a null type. Only marked staff are saved.
+                  if ($attendencetype === null || $attendencetype === '' || $attendencetype === false) {
+                      continue;
+                  }
+
                   $in_time    =   $this->input->post("in_time_" . $value);
                   $out_time   =   $this->input->post("out_time_" . $value);
 
@@ -188,7 +199,7 @@ class Staffattendance extends Admin_Controller
                     }
 
                     $absent_config = $this->staff_attendance['absent'];
-                
+
                     if ($attendencetype == $absent_config) {
                         $absent_staff_list[] = $value;
                     }else if(
@@ -202,15 +213,23 @@ class Staffattendance extends Admin_Controller
                         $present_staff_list['in_time'][$value] =$this->input->post("in_time_" . $value);
                     }
 
-                    $attendance_array[] = array(                       
+                    $single_attendance = array(
                         'staff_id'                 => $value,
                         'staff_attendance_type_id' => $this->input->post('attendencetype' . $value),
                         'remark'                   => $this->input->post("remark" . $value),
                         'in_time'                  => $in_time,
-                        'out_time'                 => $out_time, 
+                        'out_time'                 => $out_time,
                         'date'                     => date('Y-m-d', $this->customlib->datetostrtotime($date)),
                         'updated_at'               => date('Y-m-d', $this->customlib->datetostrtotime($date)),
                     );
+
+                    if ($has_uniform_col) {
+                        // 'yes' when the toggle is on, 'no' otherwise. Independent of attendance type.
+                        $uniform_val = $this->input->post('uniform_status_' . $value);
+                        $single_attendance['uniform_status'] = ($uniform_val === 'yes') ? 'yes' : 'no';
+                    }
+
+                    $attendance_array[] = $single_attendance;
                 }
 
                 $this->staffattendancemodel->addorUpdate($attendance_array);
