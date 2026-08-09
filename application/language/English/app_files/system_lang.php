@@ -2766,3 +2766,9 @@ $lang['student_call_log'] = 'Student Call Log';
 $lang['assigned_to_me'] = 'Assigned To Me';
 $lang['call_purpose'] = 'Call Purpose';
 
+$lang['compliance_checklist'] = 'Compliance Checklist';
+$lang['id_card'] = 'ID Card';
+$lang['lesson_plan'] = 'Lesson Plan / Diary';
+$lang['phone_handover'] = 'Phone Handover';
+$lang['compliance_tracking_note'] = 'Compliance items are for tracking and record keeping.';
+

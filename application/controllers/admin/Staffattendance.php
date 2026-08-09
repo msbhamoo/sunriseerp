@@ -223,10 +223,18 @@ class Staffattendance extends Admin_Controller
                         'updated_at'               => date('Y-m-d', $this->customlib->datetostrtotime($date)),
                     );
 
-                    if ($has_uniform_col) {
-                        // 'yes' when the toggle is on, 'no' otherwise. Independent of attendance type.
-                        $uniform_val = $this->input->post('uniform_status_' . $value);
-                        $single_attendance['uniform_status'] = ($uniform_val === 'yes') ? 'yes' : 'no';
+                    $compliance_items = [
+                        'uniform_status'       => 'uniform_status_',
+                        'id_card_status'       => 'id_card_status_',
+                        'lesson_plan_status'   => 'lesson_plan_status_',
+                        'phone_handover_status' => 'phone_handover_status_',
+                    ];
+
+                    foreach ($compliance_items as $col_name => $post_prefix) {
+                        if ($this->db->field_exists($col_name, 'staff_attendance')) {
+                            $val = $this->input->post($post_prefix . $value);
+                            $single_attendance[$col_name] = ($val === 'yes') ? 'yes' : 'no';
+                        }
                     }
 
                     $attendance_array[] = $single_attendance;

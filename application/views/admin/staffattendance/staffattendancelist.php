@@ -122,18 +122,15 @@
         }
     }
 
-    /* ===== Uniform toggle switch ===== */
-    .uniform-switch { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; margin: 0; user-select: none; }
-    .uniform-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
-    .uniform-slider { position: relative; display: inline-block; width: 42px; height: 22px; background: #d9534f; border-radius: 22px; transition: background .2s ease; flex: 0 0 auto; }
-    .uniform-slider::before { content: ""; position: absolute; height: 16px; width: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .2s ease; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
-    .uniform-switch input:checked + .uniform-slider { background: #00a65a; }
-    .uniform-switch input:checked + .uniform-slider::before { transform: translateX(20px); }
-    .uniform-text { font-size: 12px; font-weight: 600; min-width: 26px; }
-    .uniform-switch input:checked ~ .uniform-text { color: #00a65a; }
-    .uniform-switch input:not(:checked) ~ .uniform-text { color: #d9534f; }
+    /* ===== Compliance Compact Badge Checkboxes ===== */
+    .cmp-group { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+    .cmp-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; user-select: none; border: 1px solid #d1d5db; background: #f8fafc; color: #64748b; transition: all 0.15s ease; margin: 0; }
+    .cmp-pill input { display: none; }
+    .cmp-pill.active { background: #e6f4ea; color: #1e7e34; border-color: #a8dab5; }
+    .cmp-pill:not(.active) { background: #fef2f2; color: #dc3545; border-color: #f5c6cb; }
+    .cmp-pill i { font-size: 10px; }
 
-    /* ===== Page polish (visual only — no structural change) ===== */
+    /* ===== Page polish ===== */
     #staffatt-legend { display:flex; flex-wrap:wrap; gap:14px; align-items:center; font-size:12px; color:#555; padding:8px 4px 0; }
     #staffatt-legend .lg-item { display:inline-flex; align-items:center; gap:6px; }
     #staffatt-legend .lg-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
@@ -209,11 +206,10 @@
                         <div class="box-header with-border">
                             <h3 class="box-title"><i class="fa fa-users"></i> <?php echo $this->lang->line('staff_list'); ?></h3>
                             <div class="box-tools pull-right">
-                            </div>
-                            <div id="staffatt-legend">
-                                <span class="lg-item"><span class="lg-dot" style="background:#00a65a;"></span> <?php echo $this->lang->line('in_uniform'); ?>: <?php echo $this->lang->line('yes'); ?></span>
-                                <span class="lg-item"><span class="lg-dot" style="background:#d9534f;"></span> <?php echo $this->lang->line('in_uniform'); ?>: <?php echo $this->lang->line('no'); ?></span>
-                                <span class="lg-item"><i class="fa fa-info-circle text-muted"></i> <?php echo $this->lang->line('in_uniform'); ?> &amp; <?php echo $this->lang->line('unplanned_leave'); ?> are for tracking only.</span>
+                            </div>                            <div id="staffatt-legend">
+                                <span class="lg-item"><span class="lg-dot" style="background:#00a65a;"></span> <?php echo $this->lang->line('yes'); ?> / Compliant</span>
+                                <span class="lg-item"><span class="lg-dot" style="background:#d9534f;"></span> <?php echo $this->lang->line('no'); ?> / Non-Compliant</span>
+                                <span class="lg-item"><i class="fa fa-info-circle text-muted"></i> Compliance items (Uniform, ID Card, Lesson Plan, Phone Handover) are for administrative tracking.</span>
                             </div>
                         </div>
                         <div class="box-body">
@@ -235,7 +231,7 @@
                                     <?php echo $this->customlib->getCSRF(); ?>
                                     <div class="mailbox-controls">
                                     <div class="row">
-                                                <div class="col-md-8">
+                                                <div class="col-md-9">
                                                 
                                                     <div class="form-group">
                                                         <label for="exampleInputEmail1"><?php echo $this->lang->line('set_attendance_for_all_staff_as'); ?> &nbsp;</label>
@@ -256,17 +252,35 @@
                                                         }
                                                         ?>
                                                     </div>
-                                                    <div class="form-group">
-                                                        <label><i class="fa fa-user-circle-o"></i> <?php echo $this->lang->line('in_uniform'); ?> (<?php echo $this->lang->line('all'); ?>) &nbsp;</label>
-                                                        <button type="button" id="set_all_uniform_yes" class="btn btn-xs btn-success"><i class="fa fa-check"></i> <?php echo $this->lang->line('yes'); ?></button>
-                                                        <button type="button" id="set_all_uniform_no" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> <?php echo $this->lang->line('no'); ?></button>
+                                                    <div class="form-group" style="display:flex; flex-wrap:wrap; gap:15px; align-items:center; background:#f9fafb; padding:8px 12px; border-radius:6px; border:1px solid #eef2f6;">
+                                                        <span style="font-weight:600; color:#334155;"><i class="fa fa-check-square-o"></i> <?php echo $this->lang->line('compliance_checklist'); ?> (Set All):</span>
+                                                        
+                                                        <span style="font-size:12px;"><strong><?php echo $this->lang->line('in_uniform'); ?>:</strong>
+                                                            <button type="button" class="btn btn-xs btn-success set-all-cmp" data-target="uniform-check" data-val="true"><i class="fa fa-check"></i> <?php echo $this->lang->line('yes'); ?></button>
+                                                            <button type="button" class="btn btn-xs btn-danger set-all-cmp" data-target="uniform-check" data-val="false"><i class="fa fa-times"></i> <?php echo $this->lang->line('no'); ?></button>
+                                                        </span>
+
+                                                        <span style="font-size:12px;"><strong><?php echo $this->lang->line('id_card'); ?>:</strong>
+                                                            <button type="button" class="btn btn-xs btn-success set-all-cmp" data-target="idcard-check" data-val="true"><i class="fa fa-check"></i> <?php echo $this->lang->line('yes'); ?></button>
+                                                            <button type="button" class="btn btn-xs btn-danger set-all-cmp" data-target="idcard-check" data-val="false"><i class="fa fa-times"></i> <?php echo $this->lang->line('no'); ?></button>
+                                                        </span>
+
+                                                        <span style="font-size:12px;"><strong><?php echo $this->lang->line('lesson_plan'); ?>:</strong>
+                                                            <button type="button" class="btn btn-xs btn-success set-all-cmp" data-target="lessonplan-check" data-val="true"><i class="fa fa-check"></i> <?php echo $this->lang->line('yes'); ?></button>
+                                                            <button type="button" class="btn btn-xs btn-danger set-all-cmp" data-target="lessonplan-check" data-val="false"><i class="fa fa-times"></i> <?php echo $this->lang->line('no'); ?></button>
+                                                        </span>
+
+                                                        <span style="font-size:12px;"><strong><?php echo $this->lang->line('phone_handover'); ?>:</strong>
+                                                            <button type="button" class="btn btn-xs btn-success set-all-cmp" data-target="phone-check" data-val="true"><i class="fa fa-check"></i> <?php echo $this->lang->line('yes'); ?></button>
+                                                            <button type="button" class="btn btn-xs btn-danger set-all-cmp" data-target="phone-check" data-val="false"><i class="fa fa-times"></i> <?php echo $this->lang->line('no'); ?></button>
+                                                        </span>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-4">
+                                                <div class="col-md-3">
                                                     <div class="pull-right">
-														<?php if (($this->rbac->hasPrivilege('staff_attendance', 'can_add')) || ($this->rbac->hasPrivilege('staff_attendance', 'can_edit'))) { ?>
+ 														<?php if (($this->rbac->hasPrivilege('staff_attendance', 'can_add')) || ($this->rbac->hasPrivilege('staff_attendance', 'can_edit'))) { ?>
                                                         <button type="submit" name="search" value="saveattendence" id="saveattendence" class="btn btn-primary pull-right checkbox-toggle"><i class="fa fa-save"></i> <?php echo $this->lang->line('save_attendance'); ?> </button>
-														<?php } ?>
+ 														<?php } ?>
                                                     </div>
                                                 </div>
                                             </div>
@@ -283,8 +297,8 @@
                                                     <th><?php echo $this->lang->line('staff_id'); ?></th>
                                                     <th><?php echo $this->lang->line('name'); ?></th>
                                                     <th><?php echo $this->lang->line('role'); ?></th>
-                                                    <th ><?php echo $this->lang->line('attendance'); ?></th>
-                                                    <th class="text-center white-space-nowrap"><i class="fa fa-user-circle-o"></i> <?php echo $this->lang->line('in_uniform'); ?></th>
+                                                    <th><?php echo $this->lang->line('attendance'); ?></th>
+                                                    <th class="text-center white-space-nowrap" style="min-width:280px;"><i class="fa fa-check-square-o"></i> <?php echo $this->lang->line('compliance_checklist'); ?></th>
                                                     <?php  if ($sch_setting->biometric) {  ?>
                                                         <th width="10%"><?php echo $this->lang->line('date'); ?></th>
                                                     <?php  }  ?>
@@ -373,17 +387,42 @@
                                                                             ?>
                                                         </td>
                                                         <?php
-                                                            // Uniform toggle — independent of attendance type.
-                                                            // Unset/NULL is treated as "in uniform" (default compliant); only explicit 'no' shows off.
-                                                            $uniform_val = isset($value['uniform_status']) ? $value['uniform_status'] : null;
-                                                            $uniform_checked = ($uniform_val === 'no') ? '' : 'checked';
+                                                            // Compliance toggles — default 'yes' (checked) unless explicit 'no'
+                                                            $u_val  = isset($value['uniform_status']) ? $value['uniform_status'] : null;
+                                                            $id_val = isset($value['id_card_status']) ? $value['id_card_status'] : null;
+                                                            $lp_val = isset($value['lesson_plan_status']) ? $value['lesson_plan_status'] : null;
+                                                            $ph_val = isset($value['phone_handover_status']) ? $value['phone_handover_status'] : null;
                                                         ?>
-                                                        <td class="text-center">
-                                                            <label class="uniform-switch" title="<?php echo $this->lang->line('in_uniform'); ?>">
-                                                                <input type="checkbox" class="uniform-check" name="uniform_status_<?php echo $value['staff_id']; ?>" value="yes" <?php echo $uniform_checked; ?>>
-                                                                <span class="uniform-slider"></span>
-                                                                <span class="uniform-text"><?php echo ($uniform_val === 'no') ? $this->lang->line('no') : $this->lang->line('yes'); ?></span>
-                                                            </label>
+                                                        <td>
+                                                            <div class="cmp-group">
+                                                                <!-- Uniform -->
+                                                                <label class="cmp-pill <?php echo ($u_val === 'no') ? '' : 'active'; ?>" title="<?php echo $this->lang->line('in_uniform'); ?>">
+                                                                    <input type="checkbox" class="cmp-check uniform-check" name="uniform_status_<?php echo $value['staff_id']; ?>" value="yes" <?php echo ($u_val === 'no') ? '' : 'checked'; ?>>
+                                                                    <i class="fa <?php echo ($u_val === 'no') ? 'fa-times' : 'fa-check'; ?>"></i>
+                                                                    <span><?php echo $this->lang->line('in_uniform'); ?></span>
+                                                                </label>
+
+                                                                <!-- ID Card -->
+                                                                <label class="cmp-pill <?php echo ($id_val === 'no') ? '' : 'active'; ?>" title="<?php echo $this->lang->line('id_card'); ?>">
+                                                                    <input type="checkbox" class="cmp-check idcard-check" name="id_card_status_<?php echo $value['staff_id']; ?>" value="yes" <?php echo ($id_val === 'no') ? '' : 'checked'; ?>>
+                                                                    <i class="fa <?php echo ($id_val === 'no') ? 'fa-times' : 'fa-check'; ?>"></i>
+                                                                    <span><?php echo $this->lang->line('id_card'); ?></span>
+                                                                </label>
+
+                                                                <!-- Lesson Plan / Diary -->
+                                                                <label class="cmp-pill <?php echo ($lp_val === 'no') ? '' : 'active'; ?>" title="<?php echo $this->lang->line('lesson_plan'); ?>">
+                                                                    <input type="checkbox" class="cmp-check lessonplan-check" name="lesson_plan_status_<?php echo $value['staff_id']; ?>" value="yes" <?php echo ($lp_val === 'no') ? '' : 'checked'; ?>>
+                                                                    <i class="fa <?php echo ($lp_val === 'no') ? 'fa-times' : 'fa-check'; ?>"></i>
+                                                                    <span><?php echo $this->lang->line('lesson_plan'); ?></span>
+                                                                </label>
+
+                                                                <!-- Phone Handover -->
+                                                                <label class="cmp-pill <?php echo ($ph_val === 'no') ? '' : 'active'; ?>" title="<?php echo $this->lang->line('phone_handover'); ?>">
+                                                                    <input type="checkbox" class="cmp-check phone-check" name="phone_handover_status_<?php echo $value['staff_id']; ?>" value="yes" <?php echo ($ph_val === 'no') ? '' : 'checked'; ?>>
+                                                                    <i class="fa <?php echo ($ph_val === 'no') ? 'fa-times' : 'fa-check'; ?>"></i>
+                                                                    <span><?php echo $this->lang->line('phone_handover'); ?></span>
+                                                                </label>
+                                                            </div>
                                                         </td>
                                                         <?php
                                                         if ($sch_setting->biometric) {
@@ -629,21 +668,31 @@ let disable_enable=(type,staff_id)=>{
     }
 }
 
-// ===== Uniform toggle: label text + set-all buttons =====
+// ===== Compliance Checklist Pill handlers =====
 $(document).ready(function() {
-    function syncUniformText($chk) {
-        var yes = "<?php echo $this->lang->line('yes'); ?>";
-        var no  = "<?php echo $this->lang->line('no'); ?>";
-        $chk.closest('.uniform-switch').find('.uniform-text').text($chk.is(':checked') ? yes : no);
+    function syncCmpPill($chk) {
+        var isChecked = $chk.is(':checked');
+        var $pill = $chk.closest('.cmp-pill');
+        var $icon = $pill.find('i');
+        if (isChecked) {
+            $pill.addClass('active');
+            $icon.removeClass('fa-times').addClass('fa-check');
+        } else {
+            $pill.removeClass('active');
+            $icon.removeClass('fa-check').addClass('fa-times');
+        }
     }
-    $(document).on('change', '.uniform-check', function() {
-        syncUniformText($(this));
+
+    $(document).on('change', '.cmp-check', function() {
+        syncCmpPill($(this));
     });
-    $('#set_all_uniform_yes').on('click', function() {
-        $('.uniform-check').prop('checked', true).each(function(){ syncUniformText($(this)); });
-    });
-    $('#set_all_uniform_no').on('click', function() {
-        $('.uniform-check').prop('checked', false).each(function(){ syncUniformText($(this)); });
+
+    $('.set-all-cmp').on('click', function() {
+        var targetClass = $(this).data('target');
+        var state = $(this).data('val') === true || $(this).data('val') === 'true';
+        $('.' + targetClass).prop('checked', state).each(function() {
+            syncCmpPill($(this));
+        });
     });
 });
 
