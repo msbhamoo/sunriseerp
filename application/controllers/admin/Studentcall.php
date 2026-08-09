@@ -50,7 +50,9 @@ class Studentcall extends Admin_Controller
         $follow_up_date_to = $this->parse_input_date($this->input->post('follow_up_date_to'));
         $assigned_to = $this->input->post('assigned_to');
 
-        $data['calls'] = $this->studentcall_model->get_calls($class_id, $section_id, $date_from, $date_to, $purpose_id, $status, $follow_up_date_from, $follow_up_date_to, $assigned_to);
+        // Defer heavy call-log fetch to AJAX (get_call_logs_ajax) for faster initial page load.
+        $data['calls'] = [];
+        $data['pending_calls'] = $this->studentcall_model->get_pending_followup_calls('all');
 
         // Fetch widget stats
         $staff_id = $this->customlib->getUserData()["id"];
@@ -107,7 +109,9 @@ class Studentcall extends Admin_Controller
         $follow_up_date_from = $this->parse_input_date($this->input->post('follow_up_date_from'));
         $follow_up_date_to = $this->parse_input_date($this->input->post('follow_up_date_to'));
 
-        $data['calls'] = $this->studentcall_model->get_calls($class_id, $section_id, $date_from, $date_to, $purpose_id, $status, $follow_up_date_from, $follow_up_date_to, $staff_id);
+        // Defer heavy call-log fetch to AJAX (get_call_logs_ajax) for faster initial page load.
+        $data['calls'] = [];
+        $data['pending_calls'] = $this->studentcall_model->get_pending_followup_calls('all', $staff_id);
 
         // Fetch widget stats
         $today_stats = $this->studentcall_model->get_today_call_statistics();
@@ -615,9 +619,10 @@ class Studentcall extends Admin_Controller
             2 => 'classes.class',
             3 => 'pickup_point.name',
             4 => 'students.admission_type',
-            5 => 'students.mobileno',
-            6 => 'sc.date',
-            7 => 'sc.call_status',
+            5 => 'students.is_staff_kid',
+            6 => 'students.mobileno',
+            7 => 'sc.date',
+            8 => 'sc.call_status',
         );
         $order_by = isset($db_columns[$order_col_index]) ? $db_columns[$order_col_index] : 'students.firstname';
 
@@ -655,6 +660,13 @@ class Studentcall extends Admin_Controller
                 $is_staff_kid = ($student['is_staff_kid'] == 1 || $student['is_staff_kid'] === '1' || strtolower($student['is_staff_kid'] ?? '') === 'yes') ? 'Yes' : 'No';
                 $staff_name = $student['student_staff_name'] ?? '';
 
+                $staff_kid_cell = '';
+                if ($is_staff_kid === 'Yes') {
+                    $staff_kid_cell = '<span class="label label-warning" style="font-size:11px; padding:3px 8px;" data-toggle="tooltip" title="Staff Kid"><i class="fa fa-user"></i> Yes' . (!empty($staff_name) ? ' (' . htmlspecialchars($staff_name) . ')' : '') . '</span>';
+                } else {
+                    $staff_kid_cell = '<span class="label label-default" style="font-size:11px; padding:3px 8px;">No</span>';
+                }
+
                 $action = '';
                 if ($this->rbac->hasPrivilege('student_call_log', 'can_add')) {
                     $action = '<button class="btn btn-default btn-xs" onclick="openCallModalFromStatus(' . $student['student_id'] . ', ' . $student['student_session_id'] . ', \'' . htmlspecialchars(addslashes($student['firstname'] . ' ' . $student['lastname']), ENT_QUOTES) . '\')" data-toggle="tooltip" title="Log Call"><i class="fa fa-phone"></i> Log Call</button>';
@@ -690,10 +702,11 @@ class Studentcall extends Admin_Controller
                     2 => $student['class'] . ' (' . $student['section'] . ')',
                     3 => $student['pickup_point_name'] ? $student['pickup_point_name'] : '-',
                     4 => $student['admission_type'] ? $student['admission_type'] : '-',
-                    5 => $phone,
-                    6 => $last_call,
-                    7 => get_call_status_pill($status),
-                    8 => '<div class="pull-right">' . $action . '</div>'
+                    5 => $staff_kid_cell,
+                    6 => $phone,
+                    7 => $last_call,
+                    8 => get_call_status_pill($status),
+                    9 => '<div class="pull-right">' . $action . '</div>'
                 ];
                 $data[] = $row;
             }

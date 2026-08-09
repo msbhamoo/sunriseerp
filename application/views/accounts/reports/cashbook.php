@@ -104,25 +104,113 @@
                     </h3>
                 </div>
             
-                <!-- Opening Balances -->
-                <div class="row">
-                    <div class="col-md-3 col-sm-6 col-xs-12">
-                        <div class="box box-solid" style="border: 1px solid #d2d6de; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 4px solid #00c0ef;">
-                            <div class="box-body text-center" style="padding: 15px;">
-                                <span style="font-size: 11px; font-weight: 700; color: #777; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo $this->lang->line('opening_balance'); ?> (Cash)</span>
-                                <h3 style="margin: 10px 0 0 0; font-weight: 600; color: #333; font-size: 22px;"><?php echo $this->customlib->getSchoolCurrencyFormat() . ' ' . amountFormat(abs($cash_ob)) . ($cash_ob < 0 ? ' <small class="text-danger">(Cr)</small>' : ''); ?></h3>
+                <!-- Balances Summary: Opening + Closing -->
+                <?php
+                    $cur = $this->customlib->getSchoolCurrencyFormat();
+                    $cash_delta = $cb_cash - $cash_ob;
+                    $bank_delta = $cb_bank - $bank_ob;
+                    $balance_cards = [
+                        ['label' => $this->lang->line('opening_balance') . ' (Cash)', 'value' => $cash_ob, 'icon' => 'fa-money',       'accent' => '#0ea5e9', 'bg' => '#f0f9ff', 'type' => 'opening'],
+                        ['label' => $this->lang->line('opening_balance') . ' (Bank)', 'value' => $bank_ob, 'icon' => 'fa-university',  'accent' => '#0ea5e9', 'bg' => '#f0f9ff', 'type' => 'opening'],
+                        ['label' => $this->lang->line('closing_balance') . ' (Cash)', 'value' => $cb_cash, 'icon' => 'fa-money',       'accent' => ($cb_cash < 0 ? '#dc2626' : '#059669'), 'bg' => ($cb_cash < 0 ? '#fef2f2' : '#ecfdf5'), 'type' => 'closing', 'delta' => $cash_delta],
+                        ['label' => $this->lang->line('closing_balance') . ' (Bank)', 'value' => $cb_bank, 'icon' => 'fa-university',  'accent' => ($cb_bank < 0 ? '#dc2626' : '#059669'), 'bg' => ($cb_bank < 0 ? '#fef2f2' : '#ecfdf5'), 'type' => 'closing', 'delta' => $bank_delta],
+                    ];
+                ?>
+                <div class="row cashbook-balance-row">
+                    <?php foreach ($balance_cards as $c) { ?>
+                        <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 15px;">
+                            <div class="cashbook-balance-card" style="background: <?php echo $c['bg']; ?>; border: 1px solid #e2e8f0; border-left: 4px solid <?php echo $c['accent']; ?>; border-radius: 8px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: transform .15s ease, box-shadow .15s ease; height: 100%;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                    <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo $c['label']; ?></span>
+                                    <i class="fa <?php echo $c['icon']; ?>" style="color: <?php echo $c['accent']; ?>; font-size: 16px; opacity: 0.9;"></i>
+                                </div>
+                                <div style="font-weight: 700; color: #0f172a; font-size: 22px; font-variant-numeric: tabular-nums; line-height: 1.2;">
+                                    <?php echo $cur . ' ' . amountFormat(abs($c['value'])); ?>
+                                    <?php if ($c['value'] < 0) echo ' <small style="color:#dc2626; font-weight:600;">(Cr)</small>'; ?>
+                                </div>
+                                <?php if ($c['type'] === 'closing') {
+                                    $d = $c['delta'];
+                                    if ($d > 0) {
+                                        echo '<div style="margin-top:6px; font-size:11px; font-weight:600; color:#059669;"><i class="fa fa-arrow-up"></i> ' . $cur . amountFormat(abs($d)) . ' vs opening</div>';
+                                    } elseif ($d < 0) {
+                                        echo '<div style="margin-top:6px; font-size:11px; font-weight:600; color:#dc2626;"><i class="fa fa-arrow-down"></i> ' . $cur . amountFormat(abs($d)) . ' vs opening</div>';
+                                    } else {
+                                        echo '<div style="margin-top:6px; font-size:11px; font-weight:600; color:#64748b;"><i class="fa fa-minus"></i> No change</div>';
+                                    }
+                                } ?>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6 col-xs-12">
-                        <div class="box box-solid" style="border: 1px solid #d2d6de; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 4px solid #00c0ef;">
-                            <div class="box-body text-center" style="padding: 15px;">
-                                <span style="font-size: 11px; font-weight: 700; color: #777; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo $this->lang->line('opening_balance'); ?> (Bank)</span>
-                                <h3 style="margin: 10px 0 0 0; font-weight: 600; color: #333; font-size: 22px;"><?php echo $this->customlib->getSchoolCurrencyFormat() . ' ' . amountFormat(abs($bank_ob)) . ($bank_ob < 0 ? ' <small class="text-danger">(Cr)</small>' : ''); ?></h3>
-                            </div>
-                        </div>
-                    </div>
+                    <?php } ?>
                 </div>
+                <style>
+                    .cashbook-balance-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+
+                    /* --- Cashbook Transaction Tables --- */
+                    .cashbook-txn-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+                    .cashbook-txn-table thead th {
+                        white-space: nowrap; font-size: 11px !important; letter-spacing: 0.4px;
+                        background: #f8fafc !important; color: #475569 !important;
+                        padding: 10px 8px !important; vertical-align: middle; border-bottom: 2px solid #e2e8f0;
+                    }
+                    .cashbook-txn-table tbody td {
+                        padding: 9px 8px !important; font-size: 12.5px !important;
+                        vertical-align: middle; color: #1e293b;
+                    }
+                    /* SR NO. - narrow, centered */
+                    .cashbook-txn-table thead th:nth-child(1),
+                    .cashbook-txn-table tbody td:nth-child(1) { text-align: center; color: #94a3b8; font-weight: 600; width: 50px; }
+                    /* Date - keep on one line */
+                    .cashbook-txn-table tbody td:nth-child(2) { white-space: nowrap; color: #475569; font-variant-numeric: tabular-nums; }
+                    /* Ledger - primary text */
+                    .cashbook-txn-table tbody td:nth-child(3) strong { color: #0f172a; font-weight: 600; }
+                    /* Account Type - dot prefix */
+                    .cashbook-txn-table tbody td:nth-child(4) { white-space: nowrap; color: #475569; }
+                    .cashbook-txn-table tbody td:nth-child(4)::before {
+                        content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+                        background: #94a3b8; margin-right: 6px; vertical-align: middle;
+                    }
+                    /* Amount - bold, tabular, colored by table type */
+                    .cashbook-txn-table thead th.text-right,
+                    .cashbook-txn-table tbody td.text-right {
+                        white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 700 !important;
+                    }
+                    .box-success .cashbook-txn-table tbody td.text-right { color: #059669; }
+                    .box-danger  .cashbook-txn-table tbody td.text-right { color: #dc2626; }
+                    /* Row states */
+                    .cashbook-txn-table tbody tr:hover td { background-color: #f1f5f9 !important; }
+                    .cashbook-txn-table.table-striped > tbody > tr:nth-of-type(odd) { background-color: #fafbfc; }
+                    /* Footer */
+                    .cashbook-txn-table tfoot th {
+                        background: #f8fafc !important; padding: 10px 8px !important;
+                        font-size: 13px !important; border-top: 2px solid #e2e8f0;
+                    }
+                    /* Empty-state row */
+                    .cashbook-txn-table tbody td[colspan] { color: #94a3b8 !important; font-style: italic; padding: 24px 12px !important; }
+
+                    /* Inner vertical scroll so long lists don't push the whole page */
+                    .cashbook-txn-scroll {
+                        max-height: 520px; overflow: auto;
+                        padding: 0; margin: 0; border-top: 1px solid #e2e8f0;
+                    }
+                    .cashbook-txn-scroll .cashbook-txn-table { margin: 0 !important; border: none !important; }
+                    .cashbook-txn-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+                    .cashbook-txn-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+                    .cashbook-txn-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+                    .cashbook-txn-scroll::-webkit-scrollbar-track { background: transparent; }
+                    /* Sticky header + footer inside the scroll area */
+                    .cashbook-txn-scroll .cashbook-txn-table thead th {
+                        position: sticky; top: 0; z-index: 3;
+                        background: #f8fafc !important;
+                        box-shadow: inset 0 -2px 0 #e2e8f0, 0 2px 4px rgba(0,0,0,0.03);
+                        border-bottom: none !important;
+                    }
+                    .cashbook-txn-scroll .cashbook-txn-table tfoot th {
+                        position: sticky; bottom: 0; z-index: 3;
+                        background: #f8fafc !important;
+                        box-shadow: inset 0 2px 0 #e2e8f0, 0 -2px 4px rgba(0,0,0,0.03);
+                        border-top: none !important;
+                    }
+                </style>
 
                 <div class="row">
                     <!-- Income Panel -->
@@ -134,8 +222,8 @@
                                     <span class="label label-success" style="font-size: 13px; padding: 5px 10px; border-radius: 4px;">TOTAL: <?php echo $this->customlib->getSchoolCurrencyFormat() . amountFormat($total_income); ?></span>
                                 </div>
                             </div>
-                            <div class="box-body table-responsive" style="padding: 0;">
-                                <table class="table table-striped table-bordered table-hover" style="margin-bottom: 0; border: none;">
+                            <div class="cashbook-txn-scroll">
+                                <table class="table table-striped table-bordered table-hover cashbook-txn-table" style="margin-bottom: 0; border: none;">
                                     <thead>
                                         <tr style="background-color: #f9fafb;">
                                             <th style="border-top: none; font-size: 12px; color: #555;">SR NO.</th>
@@ -159,7 +247,8 @@
                                             <td style="font-size: 13px;"><strong><?php echo $r['ledger_name']; ?></strong></td>
                                             <td style="font-size: 13px;"><?php echo $r['account_type']; ?></td>
                                             <td class="text-right" style="font-size: 13px; font-weight: 600;"><?php echo $this->customlib->getSchoolCurrencyFormat() . amountFormat($r['debit_amount']); ?></td>
-                                            <td style="font-size: 13px;"><?php echo !empty($r['item_narration']) ? $r['item_narration'] : $r['narration']; ?></td>
+                                            <?php $__n = !empty($r['item_narration']) ? $r['item_narration'] : $r['narration']; ?>
+                                            <td title="<?php echo htmlspecialchars((string)$__n, ENT_QUOTES); ?>"><?php echo $__n; ?></td>
                                         </tr>
                                         <?php } } ?>
                                     </tbody>
@@ -184,8 +273,8 @@
                                     <span class="label label-danger" style="font-size: 13px; padding: 5px 10px; border-radius: 4px;">TOTAL: <?php echo $this->customlib->getSchoolCurrencyFormat() . amountFormat($total_expense); ?></span>
                                 </div>
                             </div>
-                            <div class="box-body table-responsive" style="padding: 0;">
-                                <table class="table table-striped table-bordered table-hover" style="margin-bottom: 0; border: none;">
+                            <div class="cashbook-txn-scroll">
+                                <table class="table table-striped table-bordered table-hover cashbook-txn-table" style="margin-bottom: 0; border: none;">
                                     <thead>
                                         <tr style="background-color: #f9fafb;">
                                             <th style="border-top: none; font-size: 12px; color: #555;">SR NO.</th>
@@ -209,7 +298,8 @@
                                             <td style="font-size: 13px;"><strong><?php echo $r['ledger_name']; ?></strong></td>
                                             <td style="font-size: 13px;"><?php echo $r['account_type']; ?></td>
                                             <td class="text-right" style="font-size: 13px; font-weight: 600;"><?php echo $this->customlib->getSchoolCurrencyFormat() . amountFormat($r['credit_amount']); ?></td>
-                                            <td style="font-size: 13px;"><?php echo !empty($r['item_narration']) ? $r['item_narration'] : $r['narration']; ?></td>
+                                            <?php $__n = !empty($r['item_narration']) ? $r['item_narration'] : $r['narration']; ?>
+                                            <td title="<?php echo htmlspecialchars((string)$__n, ENT_QUOTES); ?>"><?php echo $__n; ?></td>
                                         </tr>
                                         <?php } } ?>
                                     </tbody>
@@ -221,26 +311,6 @@
                                         </tr>
                                     </tfoot>
                                 </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Closing Balances -->
-                <div class="row">
-                    <div class="col-md-3 col-sm-6 col-xs-12">
-                        <div class="box box-solid" style="border: 1px solid #d2d6de; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 4px solid #dd4b39;">
-                            <div class="box-body text-center" style="padding: 15px;">
-                                <span style="font-size: 11px; font-weight: 700; color: #777; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo $this->lang->line('closing_balance'); ?> (Cash)</span>
-                                <h3 style="margin: 10px 0 0 0; font-weight: 600; color: #333; font-size: 22px;"><?php echo $this->customlib->getSchoolCurrencyFormat() . ' ' . amountFormat(abs($cb_cash)) . ($cb_cash < 0 ? ' <small class="text-danger">(Cr)</small>' : ''); ?></h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6 col-xs-12">
-                        <div class="box box-solid" style="border: 1px solid #d2d6de; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 4px solid #dd4b39;">
-                            <div class="box-body text-center" style="padding: 15px;">
-                                <span style="font-size: 11px; font-weight: 700; color: #777; text-transform: uppercase; letter-spacing: 0.5px;"><?php echo $this->lang->line('closing_balance'); ?> (Bank)</span>
-                                <h3 style="margin: 10px 0 0 0; font-weight: 600; color: #333; font-size: 22px;"><?php echo $this->customlib->getSchoolCurrencyFormat() . ' ' . amountFormat(abs($cb_bank)) . ($cb_bank < 0 ? ' <small class="text-danger">(Cr)</small>' : ''); ?></h3>
                             </div>
                         </div>
                     </div>

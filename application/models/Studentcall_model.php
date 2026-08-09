@@ -478,18 +478,13 @@ class Studentcall_model extends MY_Model
                 $this->db->where('students.rte', $rte);
             }
         }
-        if ($is_staff_kid !== '' && $is_staff_kid !== null) {
-            if ($is_staff_kid === 'Yes' || $is_staff_kid === '1' || $is_staff_kid === 1) {
-                $this->db->where_in('students.is_staff_kid', [1, '1', 'Yes']);
-            } elseif ($is_staff_kid === 'No' || $is_staff_kid === '0' || $is_staff_kid === 0) {
-                $this->db->group_start();
-                $this->db->where_in('students.is_staff_kid', [0, '0', 'No']);
-                $this->db->or_where('students.is_staff_kid IS NULL', null, false);
-                $this->db->or_where('students.is_staff_kid', '');
-                $this->db->group_end();
-            } else {
-                $this->db->where('students.is_staff_kid', $is_staff_kid);
-            }
+        if ($is_staff_kid === '1' || $is_staff_kid === 1) {
+            $this->db->where("students.is_staff_kid", '1');
+        } elseif ($is_staff_kid === '0' || $is_staff_kid === 0) {
+            $this->db->group_start();
+            $this->db->where("students.is_staff_kid", '0');
+            $this->db->or_where('students.is_staff_kid IS NULL', null, false);
+            $this->db->group_end();
         }
 
         if (!empty($call_status)) {
@@ -576,18 +571,13 @@ class Studentcall_model extends MY_Model
                 $this->db->where('students.rte', $rte);
             }
         }
-        if ($is_staff_kid !== '' && $is_staff_kid !== null) {
-            if ($is_staff_kid === 'Yes' || $is_staff_kid === '1' || $is_staff_kid === 1) {
-                $this->db->where_in('students.is_staff_kid', [1, '1', 'Yes']);
-            } elseif ($is_staff_kid === 'No' || $is_staff_kid === '0' || $is_staff_kid === 0) {
-                $this->db->group_start();
-                $this->db->where_in('students.is_staff_kid', [0, '0', 'No']);
-                $this->db->or_where('students.is_staff_kid IS NULL', null, false);
-                $this->db->or_where('students.is_staff_kid', '');
-                $this->db->group_end();
-            } else {
-                $this->db->where('students.is_staff_kid', $is_staff_kid);
-            }
+        if ($is_staff_kid === '1' || $is_staff_kid === 1) {
+            $this->db->where("students.is_staff_kid", '1');
+        } elseif ($is_staff_kid === '0' || $is_staff_kid === 0) {
+            $this->db->group_start();
+            $this->db->where("students.is_staff_kid", '0');
+            $this->db->or_where('students.is_staff_kid IS NULL', null, false);
+            $this->db->group_end();
         }
 
         if (!empty($call_status)) {
@@ -607,8 +597,18 @@ class Studentcall_model extends MY_Model
         return $query->num_rows();
     }
 
+    private static $fee_info_cache = [];
+
     public function get_student_fee_info($student_session_id)
     {
+        if (empty($student_session_id)) {
+            return null;
+        }
+
+        if (isset(self::$fee_info_cache[$student_session_id])) {
+            return self::$fee_info_cache[$student_session_id];
+        }
+
         $this->load->model('studentfeemaster_model');
         $academic_fees = $this->studentfeemaster_model->getStudentFees($student_session_id);
 
@@ -689,7 +689,7 @@ class Studentcall_model extends MY_Model
             }
         }
 
-        return [
+        $res = [
             'total_amount' => $total_amount,
             'collected_amount' => $collected_amount,
             'due_amount' => $due_amount,
@@ -698,5 +698,8 @@ class Studentcall_model extends MY_Model
             'paid_today' => $paid_today,
             'paid_last_7_days' => $paid_last_7_days
         ];
+
+        self::$fee_info_cache[$student_session_id] = $res;
+        return $res;
     }
 }

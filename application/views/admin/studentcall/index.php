@@ -373,9 +373,9 @@
                     </div>
                     
                     <form id="searchForm" role="form" action="<?php echo site_url('admin/studentcall' . (!empty($is_assigned_to_me_view) ? '/assigned_to_me' : '')) ?>" method="post" class="">
-                        <div class="box-body row">
+                        <div id="tab1_filters_body" class="box-body row" style="<?php echo $has_active_filters ? '' : 'display:none;'; ?>">
                             <?php echo $this->customlib->getCSRF(); ?>
-                            <div class="col-sm-2 col-md-2">
+                            <div class="col-sm-6 col-md-3">
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('class'); ?></label>
                                     <select id="class_id" name="class_id" class="form-control" >
@@ -386,7 +386,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-sm-2 col-md-2">
+                            <div class="col-sm-6 col-md-3">
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('section'); ?></label>
                                     <select id="section_id" name="section_id" class="form-control" data-saved="<?php echo set_value('section_id'); ?>">
@@ -394,7 +394,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-sm-2 col-md-2">
+                            <div class="col-sm-6 col-md-3">
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('purpose'); ?></label>
                                     <select id="purpose_id" name="purpose_id" class="form-control" >
@@ -405,7 +405,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-sm-2 col-md-2">
+                            <div class="col-sm-6 col-md-3">
                                 <div class="form-group">
                                     <label><?php echo $this->lang->line('status'); ?></label>
                                     <select id="status" name="status" class="form-control" >
@@ -419,26 +419,26 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-sm-2 col-md-2">
+                            <div class="col-sm-6 col-md-3">
                                 <div class="form-group">
-                                    <label>Follow-up Date From</label>
+                                    <label>Follow-up From</label>
                                     <input id="follow_up_date_from" name="follow_up_date_from" placeholder="" type="text" class="form-control date" value="<?php echo set_value('follow_up_date_from'); ?>" readonly="readonly" />
                                 </div>
                             </div>
-                            <div class="col-sm-2 col-md-2">
+                            <div class="col-sm-6 col-md-3">
                                 <div class="form-group">
-                                    <label>Follow-up Date To</label>
+                                    <label>Follow-up To</label>
                                     <input id="follow_up_date_to" name="follow_up_date_to" placeholder="" type="text" class="form-control date" value="<?php echo set_value('follow_up_date_to'); ?>" readonly="readonly" />
                                 </div>
                             </div>
-                            <div class="col-sm-2 col-md-2">
+                            <div class="col-sm-6 col-md-3">
                                 <div class="form-group">
                                     <label><?php echo ($this->lang->line('assign_to') ? $this->lang->line('assign_to') : 'Assigned To'); ?></label>
                                     <select id="assigned_to" name="assigned_to" class="form-control" >
                                         <?php if (empty($is_assigned_to_me_view)) { ?>
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
                                         <?php } ?>
-                                        <?php foreach ($staff_list as $staff) { 
+                                        <?php foreach ($staff_list as $staff) {
                                             if (!empty($is_assigned_to_me_view) && isset($default_assigned_to) && $default_assigned_to != $staff['id']) {
                                                 continue;
                                             }
@@ -448,9 +448,11 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-sm-12">
-                                <button type="submit" name="search" value="search_filter" class="btn btn-primary btn-sm checkbox-toggle pull-right"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
-                                <button type="button" id="btn_tab1_reset" class="btn btn-default btn-sm pull-right" style="margin-right: 8px;"><i class="fa fa-undo"></i> Reset Filters</button>
+                            <div class="col-sm-6 col-md-3">
+                                <div class="form-group" style="margin-top:25px;">
+                                    <button type="submit" name="search" value="search_filter" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                                    <button type="button" id="btn_tab1_reset" class="btn btn-default btn-sm" style="margin-left: 6px;"><i class="fa fa-undo"></i> Reset</button>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -461,6 +463,19 @@
                         <h3 class="box-title titlefix"><i class="fa fa-list"></i> <?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Student Call Log'); ?> <?php echo $this->lang->line('list'); ?></h3>
                     </div>
                     <div class="box-body">
+                        <style>
+                            #primary_call_log_table thead th { white-space: nowrap; font-size: 11px; letter-spacing: 0.3px; background: #f8fafc; color: #475569; padding: 10px 8px; vertical-align: middle; }
+                            #primary_call_log_table tbody td { vertical-align: middle; padding: 10px 8px; font-size: 13px; color: #1e293b; }
+                            #primary_call_log_table tbody tr:hover { background-color: #f1f5f9 !important; }
+                            #primary_call_log_table tbody td:first-child { min-width: 240px; max-width: 300px; }
+                            #primary_call_log_table tbody td:first-child > div:first-child { font-size: 13.5px; margin-bottom: 4px; }
+                            #primary_call_log_table tbody td:first-child > div:last-child span { font-size: 10px !important; padding: 2px 7px !important; line-height: 1.4; white-space: nowrap; }
+                            #primary_call_log_table tbody td:nth-child(4) { min-width: 120px; }
+                            #primary_call_log_table tbody td:nth-child(5) { white-space: nowrap; }
+                            #primary_call_log_table tbody td:nth-child(8) { white-space: nowrap; font-variant-numeric: tabular-nums; }
+                            #primary_call_log_table tbody td:nth-child(10) { white-space: nowrap; }
+                            #primary_call_log_table tbody td:last-child { white-space: nowrap; }
+                        </style>
                         <div class="table-responsive">
                             <table id="primary_call_log_table" class="table table-bordered table-hover example mobile-card-table" cellspacing="0" width="100%">
                                 <thead>
@@ -481,11 +496,12 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <tr><td colspan="13" class="text-center text-muted" style="padding:20px;"><i class="fa fa-spinner fa-spin"></i> Loading call logs...</td></tr>
                                     <?php if (!empty($calls)) {
-                                        foreach ($calls as $call) { 
+                                        foreach ($calls as $call) {
                                             $normalized_date = !empty($call['date']) ? str_replace('/', '-', $call['date']) : '';
                                             $called_today = (!empty($normalized_date) && date('Y-m-d', strtotime($normalized_date)) == date('Y-m-d')) ? '1' : '0';
-                                            
+
                                             $row_style = '';
                                             $fee_info = $this->studentcall_model->get_student_fee_info($call['student_session_id']);
                                             if (!empty($fee_info)) {
@@ -623,6 +639,16 @@
                         </div>
                     </div>
                     <div class="box-body">
+                        <style>
+                            #pending_followup_table thead th { white-space: nowrap; font-size: 11px; letter-spacing: 0.3px; background: #f8fafc; color: #475569; padding: 10px 8px; vertical-align: middle; }
+                            #pending_followup_table tbody td { vertical-align: middle; padding: 10px 8px; font-size: 13px; color: #1e293b; }
+                            #pending_followup_table tbody tr:hover { background-color: #fef9c3 !important; }
+                            #pending_followup_table tbody td:first-child { min-width: 200px; font-weight: 600; }
+                            #pending_followup_table tbody td:nth-child(4) { white-space: nowrap; }
+                            #pending_followup_table tbody td:nth-child(6) { white-space: nowrap; }
+                            #pending_followup_table tbody td:nth-child(7) { white-space: nowrap; font-variant-numeric: tabular-nums; }
+                            #pending_followup_table tbody td:last-child { white-space: nowrap; }
+                        </style>
                         <div class="table-responsive">
                             <table id="pending_followup_table" class="table table-striped table-bordered table-hover pending-example mobile-card-table" cellspacing="0" width="100%">
                                 <thead>
@@ -639,13 +665,10 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php 
+                                    <?php
                                     $has_pending_items = false;
-                                    if (!empty($calls)) {
-                                        foreach ($calls as $call) { 
-                                            if (empty($call['pending_count']) || $call['pending_count'] == 0) {
-                                                continue;
-                                            }
+                                    if (!empty($pending_calls)) {
+                                        foreach ($pending_calls as $call) {
                                             $has_pending_items = true;
                                             $normalized_date = !empty($call['date']) ? str_replace('/', '-', $call['date']) : '';
                                             $called_today = (!empty($normalized_date) && date('Y-m-d', strtotime($normalized_date)) == date('Y-m-d')) ? '1' : '0';
@@ -718,8 +741,9 @@
                     <div class="box-header with-border">
                         <h3 class="box-title"><i class="fa fa-filter"></i> Student Call Status Filter Criteria</h3>
                     </div>
+                    <form id="statusSearchForm" role="form" action="javascript:void(0);">
                     <div class="box-body row">
-                        <div class="col-sm-2 col-md-2">
+                        <div class="col-sm-6 col-md-3">
                             <div class="form-group">
                                 <label><?php echo $this->lang->line('class'); ?></label>
                                 <select id="status_class_id" name="status_class_id" class="form-control">
@@ -730,7 +754,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-sm-2 col-md-2">
+                        <div class="col-sm-6 col-md-3">
                             <div class="form-group">
                                 <label><?php echo $this->lang->line('section'); ?></label>
                                 <select id="status_section_id" name="status_section_id" class="form-control">
@@ -738,7 +762,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-sm-2 col-md-2">
+                        <div class="col-sm-6 col-md-3">
                             <div class="form-group">
                                 <label>Admission Type</label>
                                 <select id="status_admission_type" name="status_admission_type" class="form-control">
@@ -750,7 +774,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-sm-2 col-md-2">
+                        <div class="col-sm-6 col-md-3">
                             <div class="form-group">
                                 <label>Shrestha</label>
                                 <select id="status_shrestha" name="status_shrestha" class="form-control">
@@ -760,7 +784,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-sm-2 col-md-2">
+                        <div class="col-sm-6 col-md-3">
                             <div class="form-group">
                                 <label>RTE</label>
                                 <select id="status_rte" name="status_rte" class="form-control">
@@ -770,17 +794,17 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-sm-2 col-md-2">
+                        <div class="col-sm-6 col-md-3">
                             <div class="form-group">
                                 <label>Staff Kid</label>
                                 <select id="status_is_staff_kid" name="status_is_staff_kid" class="form-control">
                                     <option value="">All</option>
-                                    <option value="Yes">Yes</option>
-                                    <option value="No">No</option>
+                                    <option value="1">Yes</option>
+                                    <option value="0">No</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="col-sm-2 col-md-2">
+                        <div class="col-sm-6 col-md-3">
                             <div class="form-group">
                                 <label>Purpose</label>
                                 <select id="status_purpose_id" name="status_purpose_id" class="form-control">
@@ -791,9 +815,9 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-sm-2 col-md-2">
+                        <div class="col-sm-6 col-md-3">
                             <div class="form-group">
-                                <label>Call Status / Outcome</label>
+                                <label>Call Status</label>
                                 <select id="status_call_status" name="status_call_status" class="form-control">
                                     <option value="">All Statuses</option>
                                     <option value="Connected">Connected</option>
@@ -804,11 +828,14 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-sm-12">
-                            <button type="button" id="btn_status_search" class="btn btn-primary btn-sm pull-right"><i class="fa fa-search"></i> Filter Students</button>
-                            <button type="button" id="btn_status_reset" class="btn btn-default btn-sm pull-right" style="margin-right: 8px;"><i class="fa fa-undo"></i> Reset Filters</button>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="form-group" style="margin-top:25px;">
+                                <button type="submit" id="btn_status_search" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Filter</button>
+                                <button type="button" id="btn_status_reset" class="btn btn-default btn-sm" style="margin-left: 6px;"><i class="fa fa-undo"></i> Reset</button>
+                            </div>
                         </div>
                     </div>
+                    </form>
                 </div>
 
                 <div class="box box-primary">
@@ -816,6 +843,20 @@
                         <h3 class="box-title titlefix"><i class="fa fa-user"></i> Student Call Status Directory</h3>
                     </div>
                     <div class="box-body">
+                        <style>
+                            #student_status_table thead th { white-space: nowrap; font-size: 11px; letter-spacing: 0.3px; background: #f8fafc; color: #475569; padding: 10px 8px; vertical-align: middle; }
+                            #student_status_table tbody td { vertical-align: middle; padding: 10px 8px; font-size: 13px; color: #1e293b; }
+                            #student_status_table tbody tr:hover { background-color: #f1f5f9 !important; }
+                            #student_status_table tbody td:first-child { min-width: 220px; max-width: 280px; }
+                            #student_status_table tbody td:first-child > div:first-child { font-size: 13.5px; margin-bottom: 4px; }
+                            #student_status_table tbody td:first-child > div:last-child span { font-size: 10px !important; padding: 2px 7px !important; line-height: 1.4; white-space: nowrap; }
+                            #student_status_table tbody td:nth-child(4) { min-width: 120px; }
+                            #student_status_table tbody td:nth-child(6) { min-width: 110px; white-space: nowrap; }
+                            #student_status_table tbody td:nth-child(7) { white-space: nowrap; font-variant-numeric: tabular-nums; }
+                            #student_status_table tbody td:nth-child(8) { white-space: nowrap; }
+                            #student_status_table tbody td:nth-child(9) { white-space: nowrap; }
+                            #student_status_table_wrapper .dataTables_length select { min-width: 60px; }
+                        </style>
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover mobile-card-table" id="student_status_table" cellspacing="0" width="100%">
                                 <thead>
@@ -825,6 +866,7 @@
                                         <th>Class</th>
                                         <th>Pickup Point</th>
                                         <th>Adm. Type</th>
+                                        <th>Staff Kid</th>
                                         <th>Phone</th>
                                         <th>Last Call Date</th>
                                         <th>Last Call Status</th>
@@ -1581,6 +1623,16 @@
             fetchCallLogsAjax();
         });
 
+        // Auto-load call logs on initial page render (deferred from server-side for speed).
+        fetchCallLogsAjax();
+
+        // Tab 1 Filters toggle (header "Filters" button)
+        $(document).on('click', '.mobile-filter-toggle-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#tab1_filters_body').slideToggle(150);
+        });
+
         $('#btn_tab1_reset').on('click', function(e) {
             e.preventDefault();
             $('#class_id').val('');
@@ -1647,15 +1699,23 @@
                 { "orderable": true },
                 { "orderable": true },
                 { "orderable": true },
+                { "orderable": true },
                 { "orderable": false }
             ]
         });
 
-        $('#btn_status_search').on('click', function() {
-            student_status_table.ajax.reload();
+        $('#statusSearchForm').on('submit', function(e) {
+            e.preventDefault();
+            student_status_table.draw();
         });
 
-        $('#btn_status_reset').on('click', function() {
+        $(document).on('click', '#btn_status_search', function(e) {
+            e.preventDefault();
+            student_status_table.draw();
+        });
+
+        $(document).on('click', '#btn_status_reset', function(e) {
+            e.preventDefault();
             $('#status_class_id').val('');
             $('#status_section_id').empty().append('<option value=""><?php echo $this->lang->line("select"); ?></option>');
             $('#status_admission_type').val('');
@@ -1664,12 +1724,12 @@
             $('#status_is_staff_kid').val('');
             $('#status_purpose_id').val('');
             $('#status_call_status').val('');
-            student_status_table.ajax.reload();
+            student_status_table.draw();
         });
 
-        // Instant AJAX reload on any Student Call Status filter criteria change
-        $('#status_class_id, #status_section_id, #status_admission_type, #status_shrestha, #status_rte, #status_is_staff_kid, #status_purpose_id, #status_call_status').on('change', function() {
-            student_status_table.ajax.reload();
+        // Instant DataTables draw on any Student Call Status filter criteria change
+        $(document).on('change', '#status_class_id, #status_section_id, #status_admission_type, #status_shrestha, #status_rte, #status_is_staff_kid, #status_purpose_id, #status_call_status', function() {
+            student_status_table.draw();
         });
 
         // Trigger section load if class is already selected (from saved session filters)
