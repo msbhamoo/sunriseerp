@@ -94,4 +94,20 @@ function getSubjectDataTerm($term_array,$find_term,$find_exam,$find_subject_id,$
   
   }
 
+function calculate_best_of_n_marks($scores_array, $m = 2)
+{
+    if (empty($scores_array)) {
+        return 0;
+    }
+    $valid_scores = array_filter($scores_array, function($val) {
+        return is_numeric($val);
+    });
+    if (empty($valid_scores)) {
+        return 0;
+    }
+    rsort($valid_scores, SORT_NUMERIC);
+    $top_m = array_slice($valid_scores, 0, $m);
+    return array_sum($top_m) / count($top_m);
+}
+
 ?>

@@ -107,8 +107,8 @@ class Observation extends MY_Addon_CBSEController
 
     public function add_observation_term_marks()
     {
-        $row                         = $this->input->post('row[]');
-        $cbse_observation_parameters = $this->input->post('cbse_observation_parameters[]');
+        $row                         = $this->input->post('row');
+        $cbse_observation_parameters = $this->input->post('cbse_observation_parameters');
         $this->form_validation->set_rules('cbse_observation_term_id', $this->lang->line('cbse_observation_term_id'), 'trim|required|xss_clean');
         if (!isset($row)) {
 
@@ -175,7 +175,7 @@ class Observation extends MY_Addon_CBSEController
 
     public function add()
     {
-        $row = $this->input->post('row[]');
+        $row = $this->input->post('row');
 
         $this->form_validation->set_rules(
             'observation', $this->lang->line('observation'), array(
@@ -335,14 +335,18 @@ class Observation extends MY_Addon_CBSEController
 
     public function assign()
     {
-        // if (!$this->rbac->hasPrivilege('cbse_exam_assign_observation', 'can_view')) {
-            // access_denied();
-        // }
+        if (!$this->rbac->hasPrivilege('cbse_exam_assign_observation', 'can_view')) {
+            access_denied();
+        }
 
         $this->session->set_userdata('top_menu', 'cbse_exam');
         $this->session->set_userdata('sub_menu', 'cbse_exam/assign');
-        $class                         = $this->class_model->get();
-        $data['classlist']             = $class;
+        $userdata = $this->customlib->getUserData();
+        if (isset($userdata["role_id"]) && ($userdata["role_id"] == 2) && (isset($userdata["class_teacher"]) && $userdata["class_teacher"] == "yes")) {
+            $data['classlist'] = $this->classteacher_model->getTeacherRestrictionClassSections($userdata["id"]);
+        } else {
+            $data['classlist'] = $this->class_model->get();
+        }
         $data['observation_parameter'] = $this->cbseexam_observation_model->getobservationlist();
         $data['terms']                 = $this->cbseexam_term_model->get();
         $this->load->view('layout/header', $data);

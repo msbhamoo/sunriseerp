@@ -188,6 +188,16 @@ $lang["instruction"] = "Instructions";
 #version 4.0.0
 
 $lang["subject_note"] = "Subject Note";
+$lang["report_card_setup"] = "Report Card Setup";
+$lang["term_exam"] = "Term / Exam";
+$lang["include"] = "Include";
+$lang["print_grade"] = "Print Grade";
+$lang["print_remark"] = "Print Remark";
+$lang["print_note"] = "Print Note";
+$lang["split_evenly"] = "Split Evenly";
+$lang["total_weightage"] = "Total Weightage";
+$lang["select_an_exam_below"] = "Select an exam below";
+$lang["print_selectors_help"] = "Grade, Remark and Note each pick the one exam whose value is printed on the report card.";
 $lang["please_select_date"] = "Please Select Date!";
 $lang["please_select_from_date"] = "Please Select From Date!";
 $lang["please_select_to_date"] = "Please Select To Date!";

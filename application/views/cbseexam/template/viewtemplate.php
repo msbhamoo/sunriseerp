@@ -262,7 +262,7 @@
                       if ($template['school_name']) {
                       ?>
                         <td valign="top" style="font-weight: bold; padding-bottom: 2px"><?php echo $this->lang->line('school_name'); ?></td>
-                        <td valign="top">: Mount Carmel School</td>
+                        <td valign="top">: <?php echo $template['school_name']; ?></td>
                       <?php
                       }
                       ?>

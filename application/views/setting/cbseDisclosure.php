@@ -71,8 +71,11 @@
                             <div class="tab-pane" id="secB">
                                 <form class="cbse-ajax-form" enctype="multipart/form-data">
                                     <input type="hidden" name="section" value="documents">
-                                    <div class="alert alert-info" style="font-size:12px;">
-                                        <i class="fa fa-info-circle"></i> Upload PDF / Document files for CBSE SARAS 7.0 inspection compliance. Visitors will be able to view/download these directly from your public website.
+                                    <div style="margin-bottom: 15px; overflow: hidden;">
+                                        <button type="button" class="btn btn-sm btn-info pull-right btn-add-custom-doc" data-section="documents"><i class="fa fa-plus"></i> Add New Document Type</button>
+                                        <div class="alert alert-info" style="font-size:12px; margin-bottom: 0; overflow: hidden;">
+                                            <i class="fa fa-info-circle"></i> Upload PDF / Document files for CBSE SARAS 7.0 inspection compliance. Visitors will be able to view/download these directly from your public website.
+                                        </div>
                                     </div>
                                     <table class="table table-bordered table-striped">
                                         <thead>
@@ -117,6 +120,42 @@
                                                 </td>
                                             </tr>
                                             <?php endforeach; ?>
+
+                                            <?php
+                                            if (!empty($disclosure_data['documents'])) {
+                                                foreach ($disclosure_data['documents'] as $d_key => $d_item) {
+                                                    if (!empty($d_item['is_custom'])) {
+                                                        $doc_id = $d_item['id'];
+                                                        $doc_title = $d_item['value'];
+                                                        $filePath = $d_item['file_path'];
+                                                        ?>
+                                                        <tr class="custom-doc-row" id="doc_row_<?php echo $doc_id; ?>">
+                                                            <td><?php echo $i++; ?></td>
+                                                            <td>
+                                                                <strong><?php echo htmlspecialchars($doc_title); ?></strong>
+                                                                <span class="label label-info" style="font-size:10px; margin-left:5px;">Custom</span>
+                                                            </td>
+                                                            <td>
+                                                                <div style="display: flex; align-items: center; gap: 10px;">
+                                                                    <label for="input_<?php echo $d_key; ?>" class="btn btn-sm btn-primary" style="margin-bottom:0; cursor:pointer;">
+                                                                        <i class="fa fa-upload"></i> Choose PDF File
+                                                                    </label>
+                                                                    <input type="file" id="input_<?php echo $d_key; ?>" name="<?php echo $d_key; ?>" class="cbse-file-input" style="opacity: 0; position: absolute; width: 1px; height: 1px;" accept=".pdf,.png,.jpg,.jpeg">
+                                                                    <span class="file-name-label text-muted" style="font-size: 11px; font-style: italic;">No file chosen</span>
+                                                                    <?php if (!empty($filePath)): ?>
+                                                                        <a href="<?php echo base_url($filePath); ?>" target="_blank" class="btn btn-xs btn-info" style="margin-left: auto; white-space: nowrap;"><i class="fa fa-eye"></i> View PDF</a>
+                                                                    <?php else: ?>
+                                                                        <span class="label label-warning" style="margin-left: auto; white-space: nowrap;">Not Uploaded</span>
+                                                                    <?php endif; ?>
+                                                                    <button type="button" class="btn btn-xs btn-danger btn-delete-custom-doc" data-id="<?php echo $doc_id; ?>" title="Delete Custom Document"><i class="fa fa-trash"></i></button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <?php
+                                                    }
+                                                }
+                                            }
+                                            ?>
                                         </tbody>
                                     </table>
                                     <div class="box-footer text-right">
@@ -129,7 +168,10 @@
                             <div class="tab-pane" id="secC">
                                 <form class="cbse-ajax-form" enctype="multipart/form-data">
                                     <input type="hidden" name="section" value="results">
-                                    <h4 class="box-title">Academic & Committee Documents</h4>
+                                    <div style="margin-bottom: 15px; overflow: hidden;">
+                                        <button type="button" class="btn btn-sm btn-info pull-right btn-add-custom-doc" data-section="results"><i class="fa fa-plus"></i> Add New Document Type</button>
+                                        <h4 class="box-title" style="margin: 0; padding-top: 5px;">Academic & Committee Documents</h4>
+                                    </div>
                                     <table class="table table-bordered table-striped">
                                         <thead>
                                             <tr>
@@ -170,6 +212,42 @@
                                                 </td>
                                             </tr>
                                             <?php endforeach; ?>
+
+                                            <?php
+                                            if (!empty($disclosure_data['results'])) {
+                                                foreach ($disclosure_data['results'] as $r_key => $r_item) {
+                                                    if (!empty($r_item['is_custom'])) {
+                                                        $doc_id = $r_item['id'];
+                                                        $doc_title = $r_item['value'];
+                                                        $filePath = $r_item['file_path'];
+                                                        ?>
+                                                        <tr class="custom-doc-row" id="doc_row_<?php echo $doc_id; ?>">
+                                                            <td><?php echo $i++; ?></td>
+                                                            <td>
+                                                                <strong><?php echo htmlspecialchars($doc_title); ?></strong>
+                                                                <span class="label label-info" style="font-size:10px; margin-left:5px;">Custom</span>
+                                                            </td>
+                                                            <td>
+                                                                <div style="display: flex; align-items: center; gap: 10px;">
+                                                                    <label class="btn btn-sm btn-primary" style="margin-bottom:0; cursor:pointer;">
+                                                                        <i class="fa fa-upload"></i> Choose PDF File
+                                                                        <input type="file" name="<?php echo $r_key; ?>" class="cbse-file-input" style="display: none;" accept=".pdf,.png,.jpg,.jpeg">
+                                                                    </label>
+                                                                    <span class="file-name-label text-muted" style="font-size: 11px; font-style: italic;">No file chosen</span>
+                                                                    <?php if (!empty($filePath)): ?>
+                                                                        <a href="<?php echo base_url($filePath); ?>" target="_blank" class="btn btn-xs btn-info" style="margin-left: auto; white-space: nowrap;"><i class="fa fa-eye"></i> View PDF</a>
+                                                                    <?php else: ?>
+                                                                        <span class="label label-warning" style="margin-left: auto; white-space: nowrap;">Not Uploaded</span>
+                                                                    <?php endif; ?>
+                                                                    <button type="button" class="btn btn-xs btn-danger btn-delete-custom-doc" data-id="<?php echo $doc_id; ?>" title="Delete Custom Document"><i class="fa fa-trash"></i></button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <?php
+                                                    }
+                                                }
+                                            }
+                                            ?>
                                         </tbody>
                                     </table>
 
@@ -288,6 +366,42 @@
     </section>
 </div>
 
+<!-- Modal to Add Custom Document Type -->
+<div class="modal fade" id="addCustomDocModal" tabindex="-1" role="dialog" aria-labelledby="addCustomDocModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="add_custom_doc_form" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="addCustomDocModalLabel"><i class="fa fa-plus-circle"></i> Add New Type of Document</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Target Section <span class="text-danger">*</span></label>
+                        <select name="section" id="custom_doc_section" class="form-control">
+                            <option value="documents">B. Documents & Information</option>
+                            <option value="results">C. Result & Academics</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Document Title / Name <span class="text-danger">*</span></label>
+                        <input type="text" name="title" id="custom_doc_title" class="form-control" placeholder="e.g. FIRE SAFETY RENEWAL CERTIFICATE 2025" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Upload Official PDF / File <span class="text-danger">*</span></label>
+                        <input type="file" name="custom_file" id="custom_doc_file" class="form-control" accept=".pdf,.png,.jpg,.jpeg" required>
+                        <span class="help-block" style="font-size: 11px;">Allowed formats: .pdf, .png, .jpg, .jpeg (Max: 100MB)</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btn_save_custom_doc"><i class="fa fa-save"></i> Save Document</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script type="text/javascript">
 $(document).ready(function() {
     $(document).on('change', '.cbse-file-input', function() {
@@ -296,6 +410,76 @@ $(document).ready(function() {
             $(this).closest('div').find('.file-name-label').text(fileName).css({'color': '#28a745', 'font-weight': 'bold'});
         } else {
             $(this).closest('div').find('.file-name-label').text('No file chosen').css({'color': '#777', 'font-weight': 'normal'});
+        }
+    });
+
+    $('.btn-add-custom-doc').on('click', function() {
+        var targetSection = $(this).data('section');
+        if (targetSection) {
+            $('#custom_doc_section').val(targetSection);
+        }
+        $('#custom_doc_title').val('');
+        $('#custom_doc_file').val('');
+        $('#addCustomDocModal').modal('show');
+    });
+
+    $('#add_custom_doc_form').on('submit', function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        var submitBtn = $('#btn_save_custom_doc');
+
+        submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Uploading...');
+
+        $.ajax({
+            url: '<?php echo site_url("schsettings/ajax_add_cbse_custom_document"); ?>',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            success: function(data) {
+                submitBtn.prop('disabled', false).html('<i class="fa fa-save"></i> Save Document');
+                if (data.status === 'success') {
+                    $('#addCustomDocModal').modal('hide');
+                    successMsg(data.message);
+                    setTimeout(function() {
+                        location.reload();
+                    }, 800);
+                } else {
+                    errorMsg(data.message);
+                }
+            },
+            error: function() {
+                submitBtn.prop('disabled', false).html('<i class="fa fa-save"></i> Save Document');
+                errorMsg('An error occurred while adding the document.');
+            }
+        });
+    });
+
+    $(document).on('click', '.btn-delete-custom-doc', function() {
+        var docId = $(this).data('id');
+        if (!docId) return;
+
+        if (confirm('Are you sure you want to delete this custom document? This action cannot be undone.')) {
+            $.ajax({
+                url: '<?php echo site_url("schsettings/ajax_delete_cbse_custom_document"); ?>',
+                type: 'POST',
+                data: { id: docId },
+                dataType: 'json',
+                success: function(data) {
+                    if (data.status === 'success') {
+                        successMsg(data.message);
+                        $('#doc_row_' + docId).fadeOut(500, function() {
+                            $(this).remove();
+                        });
+                    } else {
+                        errorMsg(data.message);
+                    }
+                },
+                error: function() {
+                    errorMsg('An error occurred while deleting the document.');
+                }
+            });
         }
     });
 

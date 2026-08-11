@@ -1601,7 +1601,7 @@ class Schsettings extends Admin_Controller
         // Handle File Uploads
         if (!empty($_FILES)) {
             $upload_path_relative = 'uploads/cbse_disclosure/';
-            $upload_dir = $this->customlib->getFolderPath() . $upload_path_relative;
+            $upload_dir = FCPATH . $upload_path_relative;
             if (!is_dir($upload_dir)) {
                 @mkdir($upload_dir, 0777, true);
             }
@@ -1657,7 +1657,7 @@ class Schsettings extends Admin_Controller
                     }
 
                     $clean_name = isset($filename_map[$field_key]) ? $filename_map[$field_key] : $field_key;
-                    $target_filename = $clean_name . '.' . $ext;
+                    $target_filename = $clean_name . '_' . time() . '.' . $ext;
                     $target_file_path = $upload_dir . $target_filename;
 
                     if (move_uploaded_file($file_info['tmp_name'], $target_file_path)) {
@@ -1685,6 +1685,94 @@ class Schsettings extends Admin_Controller
         }
 
         echo json_encode(array('status' => 'success', 'message' => 'CBSE Mandatory Disclosure updated successfully!'));
+    }
+
+    public function ajax_add_cbse_custom_document()
+    {
+        if (!$this->rbac->hasPrivilege('general_setting', 'can_edit')) {
+            echo json_encode(array('status' => 'fail', 'message' => 'Access Denied'));
+            return;
+        }
+
+        $section = $this->input->post('section');
+        $title   = trim($this->input->post('title'));
+
+        if (empty($title)) {
+            echo json_encode(array('status' => 'fail', 'message' => 'Document title is required.'));
+            return;
+        }
+
+        if (empty($section)) {
+            $section = 'documents';
+        }
+
+        if (empty($_FILES['custom_file']['name'])) {
+            echo json_encode(array('status' => 'fail', 'message' => 'Please select a file to upload.'));
+            return;
+        }
+
+        $file_info = $_FILES['custom_file'];
+        $allowed_extensions = array('pdf', 'jpg', 'jpeg', 'png');
+        $ext = strtolower(pathinfo($file_info['name'], PATHINFO_EXTENSION));
+
+        if (!in_array($ext, $allowed_extensions)) {
+            echo json_encode(array('status' => 'fail', 'message' => 'Invalid file format (.' . $ext . '). Only PDF, JPG, JPEG, and PNG files are allowed.'));
+            return;
+        }
+
+        $upload_path_relative = 'uploads/cbse_disclosure/';
+        $upload_dir = FCPATH . $upload_path_relative;
+        if (!is_dir($upload_dir)) {
+            @mkdir($upload_dir, 0777, true);
+        }
+
+        $clean_title = preg_replace('/[^a-zA-Z0-9_\-]/', '_', strtolower($title));
+        $target_filename = 'custom_' . substr($clean_title, 0, 30) . '_' . time() . '.' . $ext;
+        $target_file_path = $upload_dir . $target_filename;
+
+        if (move_uploaded_file($file_info['tmp_name'], $target_file_path)) {
+            $saved_rel_path = $upload_path_relative . $target_filename;
+        } else {
+            $img_name = $this->media_storage->fileupload('custom_file', "./uploads/cbse_disclosure/");
+            if (!empty($img_name)) {
+                $saved_rel_path = 'uploads/cbse_disclosure/' . $img_name;
+            } else {
+                echo json_encode(array('status' => 'fail', 'message' => 'Failed to upload file. Check directory permissions.'));
+                return;
+            }
+        }
+
+        $this->load->model('cbse_disclosure_model');
+        $insert_id = $this->cbse_disclosure_model->add_custom_document($section, $title, $saved_rel_path);
+
+        echo json_encode(array(
+            'status'  => 'success',
+            'message' => 'New custom document added successfully!',
+            'id'      => $insert_id
+        ));
+    }
+
+    public function ajax_delete_cbse_custom_document()
+    {
+        if (!$this->rbac->hasPrivilege('general_setting', 'can_edit')) {
+            echo json_encode(array('status' => 'fail', 'message' => 'Access Denied'));
+            return;
+        }
+
+        $id = $this->input->post('id');
+        if (empty($id)) {
+            echo json_encode(array('status' => 'fail', 'message' => 'Invalid document ID'));
+            return;
+        }
+
+        $this->load->model('cbse_disclosure_model');
+        $deleted = $this->cbse_disclosure_model->delete_custom_document($id);
+
+        if ($deleted) {
+            echo json_encode(array('status' => 'success', 'message' => 'Custom document deleted successfully!'));
+        } else {
+            echo json_encode(array('status' => 'fail', 'message' => 'Failed to delete custom document. Record not found.'));
+        }
     }
 }
 

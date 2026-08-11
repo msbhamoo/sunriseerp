@@ -50,7 +50,13 @@ class Observationparameter extends MY_Addon_CBSEController
             access_denied();
         }
        
-        $this->cbseexam_observation_parameter_model->remove($id);           
+        $in_use = $this->db->where('cbse_observation_parameter_id', $id)->get('cbse_observation_subparameter')->num_rows();
+        if ($in_use > 0) {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">' . $this->lang->line('something_went_wrong') . '</div>');
+        } else {
+            $this->cbseexam_observation_parameter_model->remove($id);           
+            $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">' . $this->lang->line('delete_message') . '</div>');
+        }
         redirect('cbseexam/observationparameter');
     }
 

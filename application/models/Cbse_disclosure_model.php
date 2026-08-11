@@ -51,8 +51,10 @@ class Cbse_disclosure_model extends CI_Model
                 $data[$section] = array();
             }
             $data[$section][$key] = array(
+                'id' => $row['id'],
                 'value' => $row['field_value'],
-                'file_path' => $row['file_path']
+                'file_path' => $row['file_path'],
+                'is_custom' => (strpos($key, 'custom_doc_') === 0) ? 1 : 0
             );
         }
 
@@ -83,6 +85,41 @@ class Cbse_disclosure_model extends CI_Model
         } else {
             $this->db->insert('cbse_mandatory_disclosures', $data);
         }
+    }
+
+    public function add_custom_document($section, $title, $file_path)
+    {
+        $this->ensure_table_exists();
+        $field_key = 'custom_doc_' . uniqid() . '_' . time();
+        $data = array(
+            'section'     => $section,
+            'field_key'   => $field_key,
+            'field_value' => $title,
+            'file_path'   => $file_path
+        );
+        $this->db->insert('cbse_mandatory_disclosures', $data);
+        return $this->db->insert_id();
+    }
+
+    public function get_custom_document($id)
+    {
+        $this->ensure_table_exists();
+        return $this->db->get_where('cbse_mandatory_disclosures', array('id' => $id))->row_array();
+    }
+
+    public function delete_custom_document($id)
+    {
+        $this->ensure_table_exists();
+        $doc = $this->get_custom_document($id);
+        if ($doc) {
+            if (!empty($doc['file_path']) && file_exists(FCPATH . $doc['file_path'])) {
+                @unlink(FCPATH . $doc['file_path']);
+            }
+            $this->db->where('id', $id);
+            $this->db->delete('cbse_mandatory_disclosures');
+            return true;
+        }
+        return false;
     }
 
     public function get_section_fields($section)

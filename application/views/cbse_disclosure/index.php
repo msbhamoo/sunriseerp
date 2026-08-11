@@ -176,6 +176,29 @@
                         </td>
                     </tr>
                     <?php endforeach; ?>
+                    <?php
+                    if (!empty($disclosure_data['documents'])) {
+                        foreach ($disclosure_data['documents'] as $d_key => $d_item) {
+                            if (!empty($d_item['is_custom'])) {
+                                $doc_title = $d_item['value'];
+                                $filePath  = $d_item['file_path'];
+                                ?>
+                                <tr>
+                                    <td><?php echo $i++; ?></td>
+                                    <td><?php echo htmlspecialchars($doc_title); ?></td>
+                                    <td style="text-align: right;">
+                                        <?php if (!empty($filePath)): ?>
+                                            <a href="<?php echo base_url($filePath); ?>" target="_blank" class="btn-doc"><i class="fa fa-external-link"></i> View Document</a>
+                                        <?php else: ?>
+                                            <span class="text-muted" style="font-size:12px;">Under Process</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php
+                            }
+                        }
+                    }
+                    ?>
                 </tbody>
             </table>
         </div>
@@ -218,6 +241,29 @@
                         </td>
                     </tr>
                     <?php endforeach; ?>
+                    <?php
+                    if (!empty($disclosure_data['results'])) {
+                        foreach ($disclosure_data['results'] as $r_key => $r_item) {
+                            if (!empty($r_item['is_custom'])) {
+                                $doc_title = $r_item['value'];
+                                $filePath  = $r_item['file_path'];
+                                ?>
+                                <tr>
+                                    <td><?php echo $i++; ?></td>
+                                    <td><?php echo htmlspecialchars($doc_title); ?></td>
+                                    <td style="text-align: right;">
+                                        <?php if (!empty($filePath)): ?>
+                                            <a href="<?php echo base_url($filePath); ?>" target="_blank" class="btn-doc"><i class="fa fa-external-link"></i> View Document</a>
+                                        <?php else: ?>
+                                            <span class="text-muted" style="font-size:12px;">Under Process</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php
+                            }
+                        }
+                    }
+                    ?>
                 </tbody>
             </table>
 

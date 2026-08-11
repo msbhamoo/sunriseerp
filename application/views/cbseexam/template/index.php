@@ -1,6 +1,48 @@
 <script src="<?php echo base_url(); ?>backend/plugins/ckeditor/ckeditor.js"></script>
 <script src="<?php echo base_url(); ?>backend/js/ckeditor_config.js"></script>
 <?php $this->load->view('layout/cbseexam_css.php'); ?>
+<style type="text/css">
+    /* Right-side drawer style (scoped to these two modals only) */
+    .modal.modal-right { padding-right: 0 !important; }
+    .modal.modal-right .modal-dialog {
+        position: fixed;
+        top: 0;
+        right: 0;
+        margin: 0;
+        width: 720px;
+        max-width: 100%;
+        height: 100%;
+    }
+    .modal.modal-right .modal-content {
+        height: 100%;
+        border: 0;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -3px 0 12px rgba(0,0,0,0.18);
+    }
+    .modal.modal-right .modal-body {
+        flex: 1 1 auto;
+        overflow-y: auto;
+    }
+    .modal.modal-right .modal-footer {
+        flex: 0 0 auto;
+    }
+    /* Slide-in animation from the right */
+    .modal.modal-right.fade .modal-dialog {
+        -webkit-transform: translateX(100%);
+        transform: translateX(100%);
+        -webkit-transition: transform 0.3s ease-out;
+        transition: transform 0.3s ease-out;
+    }
+    .modal.modal-right.in .modal-dialog {
+        -webkit-transform: translateX(0);
+        transform: translateX(0);
+    }
+    @media (max-width: 767px) {
+        .modal.modal-right .modal-dialog { width: 100%; }
+    }
+</style>
 <div class="content-wrapper">
     <!-- Main content -->
     <section class="content">
@@ -82,8 +124,8 @@
 </div>
 
 
-<div id="viewTemplateModal" class="modal fade modalmark" role="dialog" aria-hidden="true" style="display: none;">
-    <div class="modal-dialog modal-lg">
+<div id="viewTemplateModal" class="modal fade modalmark modal-right" role="dialog" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog">
         <!-- Modal content-->
         <div class="modal-content">
             <div class="modal-header">
@@ -101,8 +143,8 @@
 
 
 
-<div id="linkexamModal" class="modal fade" role="dialog">
-    <div class="modal-dialog modal-xl">
+<div id="linkexamModal" class="modal fade modal-right" role="dialog">
+    <div class="modal-dialog">
         <!-- Modal content-->
         <div class="modal-content">
             <div class="modal-header">
@@ -136,13 +178,15 @@
                             </div>
                         </div>
                         <div class="col-md-9">
-                            <div class="alert alert-info" style="margin-top:20px; font-size:13px;">
-                                <i class="fa fa-info-circle"></i> <b>Understanding Weightage</b>
-                                <ul style="margin-bottom:0; padding-left:15px; margin-top:5px;">
-                                    <li><b>What is it?</b> Weightage allows you to assign a relative percentage of importance to different exams/terms in the final calculation.</li>
-                                    <li><b>Why do we need it?</b> E.g., You may want "Term 1" to contribute only 40% to the final grade, and "Term 2" to contribute 60%.</li>
-                                    <li><b>How to add it?</b> When linking multiple exams or terms below, enter the percentage value (e.g., 40, 60) in the "Weightage" column next to the corresponding exam. Ensure the total adds up to exactly 100%.</li>
-                                </ul>
+                            <div style="margin-top:28px; font-size:13px;">
+                                <a href="javascript:void(0)" id="weightage_help_toggle" style="text-decoration:none;"><i class="fa fa-info-circle"></i> <b>What is weightage?</b> <i class="fa fa-caret-down"></i></a>
+                                <div id="weightage_help_body" class="alert alert-info" style="display:none; margin-top:8px; margin-bottom:0;">
+                                    <ul style="margin-bottom:0; padding-left:15px;">
+                                        <li><b>What is it?</b> Weightage assigns a relative percentage of importance to each term in the final calculation.</li>
+                                        <li><b>Why?</b> E.g. "Term 1" may contribute only 40% to the final grade, and "Term 2" 60%.</li>
+                                        <li><b>How?</b> Enter the percentage in the "Weightage" column next to each term. The total must add up to exactly 100% (the running total is shown below the table).</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -418,6 +462,7 @@
             var template_id = $('#template_id').val();
             var weightage = $('#is_weightage').val();
             $('#examdata').html('');
+            $('#formlink button[type=submit]').prop('disabled', false);
             $.ajax({
                 type: 'POST',
                 url: baseurl + 'cbseexam/template/get_examdata',
@@ -472,6 +517,10 @@
                 }
             });
         }));
+
+        $(document).on('click', '#weightage_help_toggle', function() {
+            $('#weightage_help_body').slideToggle(150);
+        });
 
         $(document).ready(function() {
             modal_click_disabled('myModal', 'linkexamModal', 'viewTemplateModal');
