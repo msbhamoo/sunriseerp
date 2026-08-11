@@ -1141,7 +1141,12 @@ class Staff extends Admin_Controller
 
     public function edit($id)
     {
-        if (!$this->rbac->hasPrivilege('staff', 'can_edit')) {
+        $userdata = $this->customlib->getUserData();
+        $is_self  = isset($userdata['id']) && ($userdata['id'] == $id);
+
+        if ($is_self && $this->rbac->hasPrivilege('staff_edit_self', 'can_edit')) {
+            // Authorized via Staff Edit Self permission
+        } else if (!$this->rbac->hasPrivilege('staff', 'can_edit')) {
             access_denied();
         }
         $a           = 0;

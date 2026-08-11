@@ -93,6 +93,30 @@
         background-color: #fef2f2 !important;
         color: #dc2626 !important;
     }
+
+    /* Live grade badge shown next to each entered mark */
+    .excel-cell-wrapper { display: flex; align-items: center; gap: 6px; }
+    .excel-cell-wrapper .excel-cell,
+    .excel-cell-wrapper .noteinput { flex: 1; }
+    .mark-grade-badge {
+        display: none;
+        flex: none;
+        min-width: 34px;
+        text-align: center;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 3px 8px;
+        border-radius: 6px;
+        background: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
+        letter-spacing: 0.3px;
+    }
+    .mark-grade-badge.grade-fail {
+        background: #fef2f2;
+        color: #dc2626;
+        border-color: #fecaca;
+    }
     
     /* Checkbox Styling */
     .custom-checkbox-label {
@@ -312,6 +336,7 @@
                                             
                                             <div class="excel-cell-wrapper">
                                                 <input type="number" max="<?php echo $value['maximum_marks']; ?>" min="0" data-marks="<?php echo $value['maximum_marks']; ?>" class="marksssss_<?php echo $key+1 ;?> mark excel-cell" name="mark[<?php echo $student['exam_student_id']; ?>][<?php echo $value['id'] ?>][marks]" value="<?php if (!empty($student['marks'][$value['id']]['marks'])) { echo $student['marks'][$value['id']]['marks'];} ?>" step="any" placeholder="Enter marks..." <?php echo ($absent_status) ? "readonly='readonly'" : ""; ?>>
+                                                <span class="mark-grade-badge"></span>
                                             </div>
                                         </td>
                                 <?php
@@ -353,6 +378,35 @@
 $(document).ready(function() {
     if ($.fn.dropify) {
         $('.dropify').dropify();
+    }
+
+    // ----- Live grade badges (CBSE grade bands for this exam) -----
+    var gradeRanges = <?php echo json_encode(isset($grade_ranges) ? $grade_ranges : array()); ?>;
+
+    function gradeForPercent(pct) {
+        for (var i = 0; i < gradeRanges.length; i++) {
+            var g = gradeRanges[i];
+            if (pct >= parseFloat(g.minimum_percentage) && pct <= parseFloat(g.maximum_percentage)) {
+                return g.name;
+            }
+        }
+        return '';
+    }
+
+    function updateMarkGrade($cell) {
+        var $badge = $cell.closest('.excel-cell-wrapper').find('.mark-grade-badge');
+        if (!gradeRanges.length) { $badge.hide(); return; }
+        var maxMarks = parseFloat($cell.data('marks'));
+        var val = parseFloat($cell.val());
+        if ($cell.prop('readonly') || isNaN(val) || isNaN(maxMarks) || maxMarks <= 0 || $cell.val() === '') {
+            $badge.hide().text('');
+            return;
+        }
+        var pct = (val / maxMarks) * 100;
+        var name = gradeForPercent(pct);
+        if (!name) { $badge.hide().text(''); return; }
+        // Below the CBSE 33% pass line is styled as a fail band.
+        $badge.text(name).toggleClass('grade-fail', pct < 33).show();
     }
 
     // Keyboard navigation
@@ -427,7 +481,8 @@ $(document).ready(function() {
         } else {
             $this.removeClass('mark-invalid');
         }
-        
+
+        updateMarkGrade($this);
         calculateRowPercentage($this.closest('.excel-row'));
     });
 
@@ -442,7 +497,8 @@ $(document).ready(function() {
         } else {
             $cellWrapper.prop('readonly', false);
         }
-        
+
+        updateMarkGrade($cellWrapper);
         calculateRowPercentage($this.closest('.excel-row'));
     });
 
@@ -475,6 +531,9 @@ $(document).ready(function() {
     // Initial calculation on load
     $('.excel-row').each(function() {
         calculateRowPercentage($(this));
+    });
+    $('.excel-cell').each(function() {
+        updateMarkGrade($(this));
     });
 
     // Auto-save logic (if button clicked) - intercepts the regular form submission

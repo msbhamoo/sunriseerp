@@ -95,6 +95,39 @@
     </section>
 
     <section class="content">
+        <?php if (isset($setup_steps)) { ?>
+        <div class="d2-card" style="margin-bottom:20px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+                <div class="d2-title" style="margin:0;"><i class="fa fa-magic" style="color:#0284c7;"></i> Setup Guide &mdash; get an exam ready end to end</div>
+                <span style="font-size:12px; font-weight:700; color:#0284c7; background:#e0f2fe; padding:4px 12px; border-radius:999px;"><?php echo $setup_done; ?> / <?php echo $setup_total; ?> steps done</span>
+            </div>
+            <div style="height:8px; border-radius:999px; background:#eef2f7; overflow:hidden; margin-bottom:18px;">
+                <div style="height:100%; width:<?php echo $setup_total ? round(($setup_done/$setup_total)*100) : 0; ?>%; background:#10b981;"></div>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px;">
+                <?php foreach ($setup_steps as $st) {
+                    $done = $st['done'];
+                    $optional = !empty($st['optional']);
+                    $badge_bg = $done ? '#10b981' : ($optional ? '#94a3b8' : '#cbd5e1');
+                ?>
+                <a href="<?php echo $st['url']; ?>" style="text-decoration:none; display:flex; gap:12px; align-items:flex-start; border:1px solid <?php echo $done ? '#bbf7d0' : '#e2e8f0'; ?>; background:<?php echo $done ? '#f0fdf4' : '#ffffff'; ?>; border-radius:10px; padding:14px; transition:box-shadow .15s;">
+                    <span style="flex:none; width:26px; height:26px; border-radius:50%; background:<?php echo $badge_bg; ?>; color:#fff; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center;">
+                        <?php echo $done ? '&#10003;' : $st['n']; ?>
+                    </span>
+                    <span>
+                        <span style="display:block; font-weight:700; color:#0f172a; font-size:14px;"><?php echo $st['title']; ?><?php echo $optional ? ' <em style="color:#94a3b8; font-weight:500;">(optional)</em>' : ''; ?></span>
+                        <span style="display:block; color:#64748b; font-size:12.5px; margin-top:2px;"><?php echo $st['desc']; ?></span>
+                        <?php if (!$optional) { ?>
+                            <span style="display:inline-block; margin-top:6px; font-size:11px; font-weight:700; color:<?php echo $done ? '#059669' : '#b45309'; ?>;">
+                                <?php echo $done ? ('Done' . (isset($st['count']) ? ' · ' . $st['count'] . ' configured' : '')) : 'Pending — click to set up'; ?>
+                            </span>
+                        <?php } ?>
+                    </span>
+                </a>
+                <?php } ?>
+            </div>
+        </div>
+        <?php } ?>
         <div class="row">
             <!-- Session Overview -->
             <div class="col-md-8">

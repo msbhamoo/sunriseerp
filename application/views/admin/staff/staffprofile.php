@@ -1507,7 +1507,8 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                             ?>
                         </li>
                         <?php
-                        if ($this->rbac->hasPrivilege('staff', 'can_edit')) {
+                        $is_self_profile = ($logged_in_User_Role->id == $id || (isset($staff['id']) && $logged_in_User_Role->id == $staff['id']));
+                        if ($this->rbac->hasPrivilege('staff', 'can_edit') || ($a && $this->rbac->hasPrivilege('staff_edit_self', 'can_edit'))) {
 
                             if ($logged_in_User_Role->id == 7) {
                                 if ($a) {

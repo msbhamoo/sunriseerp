@@ -510,6 +510,12 @@ class Cbseexam_exam_model extends MY_Model
         return $this->db->select('cbse_exams.*')->from('cbse_exams')->where('session_id', $this->current_session)->where('cbse_exams.is_publish', '1')->order_by('cbse_exams.name', 'asc')->get()->result_array();
     }
 
+    public function get_all_session_exams()
+    {
+        return $this->db->select('cbse_exams.*')->from('cbse_exams')->where('session_id', $this->current_session)->order_by('cbse_exams.name', 'asc')->get()->result_array();
+    }
+
+
 
     public function getExamResultByExamIdByTemplate($cbse_exam_id, $cbse_template_id, $class_section_id)
     {
@@ -542,6 +548,47 @@ class Cbseexam_exam_model extends MY_Model
         return $query->result();
     }
 
+    /**
+     * Overlay per-subject max marks (cbse_exam_timetable_assessment_types.maximum_marks)
+     * onto report/marksheet result rows. Each row carries cbse_exam_timetable_id and
+     * cbse_exam_assessment_type_id; the junction is unique per pair, so this is a safe
+     * 1:1 lookup that never changes row counts. Rows without an override keep the
+     * assessment-type default already selected by the query.
+     */
+    private function _apply_max_override(&$rows)
+    {
+        if (empty($rows)) {
+            return;
+        }
+        $tt_ids = array();
+        foreach ($rows as $r) {
+            if (!empty($r->cbse_exam_timetable_id)) {
+                $tt_ids[(int)$r->cbse_exam_timetable_id] = true;
+            }
+        }
+        if (empty($tt_ids)) {
+            return;
+        }
+        $overrides = $this->db->select('cbse_exam_timetable_id, cbse_exam_assessment_type_id, maximum_marks')
+            ->from('cbse_exam_timetable_assessment_types')
+            ->where_in('cbse_exam_timetable_id', array_keys($tt_ids))
+            ->where('maximum_marks IS NOT NULL', null, false)
+            ->get()->result_array();
+        if (empty($overrides)) {
+            return;
+        }
+        $map = array();
+        foreach ($overrides as $o) {
+            $map[$o['cbse_exam_timetable_id']][$o['cbse_exam_assessment_type_id']] = $o['maximum_marks'];
+        }
+        foreach ($rows as $r) {
+            if (isset($r->cbse_exam_timetable_id, $r->cbse_exam_assessment_type_id)
+                && isset($map[$r->cbse_exam_timetable_id][$r->cbse_exam_assessment_type_id])) {
+                $r->maximum_marks = $map[$r->cbse_exam_timetable_id][$r->cbse_exam_assessment_type_id];
+            }
+        }
+    }
+
     public function getStudentExamResultByExamId($cbse_template_id, $cbse_exam_id, $students)
     {
         $students = implode(', ', array_map(function ($val) {
@@ -553,7 +600,9 @@ class Cbseexam_exam_model extends MY_Model
         students.permanent_address,students.category_id,students.adhar_no,students.samagra_id,students.bank_account_no,students.bank_name, students.ifsc_code , students.guardian_name , students.father_pic ,students.height ,students.weight,students.measurement_date, students.mother_pic , students.guardian_pic , students.guardian_relation,students.guardian_phone,students.guardian_address,students.is_active ,students.created_at ,students.updated_at,students.father_name,students.father_phone,students.blood_group,students.school_house_id,students.father_occupation,students.mother_name,students.mother_phone,students.mother_occupation,students.guardian_occupation,students.gender,students.guardian_is,students.rte,students.guardian_email,subjects.name as subject_name,subjects.code as `subject_code`,classes.id AS `class_id`,classes.class,sections.id AS `section_id`,sections.section,student_session.id as `student_session_id` FROM `cbse_template` INNER JOIN cbse_template_term_exams on cbse_template_term_exams.cbse_template_id=cbse_template.id INNER JOIN `cbse_exams` on cbse_exams.id=cbse_template_term_exams.cbse_exam_id INNER JOIN cbse_exam_timetable on cbse_exam_timetable.cbse_exam_id=cbse_exams.id INNER JOIN cbse_exam_students on cbse_exam_students.cbse_exam_id=cbse_exams.id INNER JOIN cbse_exam_assessment_types on cbse_exam_assessment_types.cbse_exam_assessment_id=cbse_exams.cbse_exam_assessment_id INNER JOIN cbse_terms on cbse_terms.id=cbse_exams.cbse_term_id left join cbse_student_subject_marks on cbse_student_subject_marks.cbse_exam_timetable_id =cbse_exam_timetable.id and cbse_student_subject_marks.cbse_exam_student_id= cbse_exam_students.id and cbse_student_subject_marks.cbse_exam_assessment_type_id=cbse_exam_assessment_types.id  INNER JOIN student_session on student_session.id=cbse_exam_students.student_session_id INNER join students on students.id =student_session.student_id  INNER JOIN subjects on subjects.id=cbse_exam_timetable.subject_id INNER join  classes on student_session.class_id = classes.id INNER join  sections on sections.id = student_session.section_id left join cbse_student_template_rank on cbse_student_template_rank.cbse_template_id=cbse_template.id and cbse_student_template_rank.student_session_id=student_session.id LEFT JOIN cbse_exam_student_subject_rank on cbse_exam_student_subject_rank.cbse_template_id=cbse_template.id and cbse_exam_student_subject_rank.student_session_id=student_session.id and cbse_exam_student_subject_rank.subject_id=subjects.id WHERE cbse_template.id=" . $this->db->escape($cbse_template_id) . " and cbse_exams.`id` = " . $this->db->escape($cbse_exam_id) . " and cbse_exams.session_id=" . $this->current_session . " and student_session.id in (" . $students . ")";
 
         $query = $this->db->query($sql);
-        return $query->result();
+        $rows = $query->result();
+        $this->_apply_max_override($rows);
+        return $rows;
     }
 
     public function getStudentResultByExamId($cbse_exam_id, $students)
@@ -593,7 +642,9 @@ class Cbseexam_exam_model extends MY_Model
             
 
         $query = $this->db->query($sql);
-        return $query->result();
+        $rows = $query->result();
+        $this->_apply_max_override($rows);
+        return $rows;
     }
 
     public function getResultTermwiseByTemplateIdWithSelectedTerm($cbse_template_id, $class_section_id)
@@ -644,7 +695,9 @@ class Cbseexam_exam_model extends MY_Model
             WHERE cbse_template.id=" . $this->db->escape($cbse_template_id) . " and student_session.id in (" . $students . ") order by cbse_student_template_rank.rank asc";
 
         $query = $this->db->query($sql);
-        return $query->result();
+        $rows = $query->result();
+        $this->_apply_max_override($rows);
+        return $rows;
     }
 
     public function getTemplateAssessment($cbse_template_id)
@@ -1289,7 +1342,7 @@ class Cbseexam_exam_model extends MY_Model
                     $class_section_id[]=$class_section[0]['id'];
                 }
             }
-         $this->db->select('students.*,cbse_exam_students.cbse_exam_id,cbse_exam_students.id as exam_student_id,  cbse_exams.total_working_days,cbse_exam_students.total_present_days,cbse_exam_students.roll_no as `exam_roll_no`,classes.class as class_name,sections.section as section_name,cbse_exam_students.student_session_id')
+         $this->db->select('students.*,cbse_exam_students.cbse_exam_id,cbse_exam_students.id as exam_student_id,  cbse_exams.total_working_days,cbse_exam_students.total_present_days,cbse_exam_students.roll_no as `exam_roll_no`,classes.class as class_name,sections.section as section_name,student_session.class_id as class_id,student_session.section_id as section_id,cbse_exam_students.student_session_id')
             ->from('cbse_exam_students')
             ->join('cbse_exams', 'cbse_exams.id=cbse_exam_students.cbse_exam_id')
             ->join('cbse_exam_class_sections', 'cbse_exam_class_sections.cbse_exam_id=cbse_exams.id')
@@ -1389,7 +1442,10 @@ class Cbseexam_exam_model extends MY_Model
 
     public function get_exam_subject_assessment_types($exam_assessment_id, $timetable_id)
     {
-        $this->db->select('cbse_exam_assessment_types.*,cbse_exam_timetable_assessment_types.id as cbse_exam_timetable_assessment_type_id');
+        // maximum_marks: use the per-subject override on the timetable link when
+        // set, otherwise fall back to the assessment-type default. This is the
+        // single source of truth for a subject's max marks (entry + marksheet).
+        $this->db->select('cbse_exam_assessment_types.id, cbse_exam_assessment_types.cbse_exam_assessment_id, cbse_exam_assessment_types.name, cbse_exam_assessment_types.code, cbse_exam_assessment_types.pass_percentage, cbse_exam_assessment_types.description, COALESCE(cbse_exam_timetable_assessment_types.maximum_marks, cbse_exam_assessment_types.maximum_marks) as maximum_marks, cbse_exam_timetable_assessment_types.id as cbse_exam_timetable_assessment_type_id');
         $this->db->from('cbse_exam_assessment_types');
         $this->db->join('cbse_exam_timetable_assessment_types', 'cbse_exam_timetable_assessment_types.cbse_exam_timetable_id=' . $timetable_id . ' and cbse_exam_timetable_assessment_types.cbse_exam_assessment_type_id=cbse_exam_assessment_types.id');
         $this->db->where('cbse_exam_assessment_types.cbse_exam_assessment_id', $exam_assessment_id);
@@ -1802,5 +1858,316 @@ $my_subjects[]=$value;
             return $query->result();
     }
 
+    public function get_cbse_reportcard_data($exam_id, $class_ids = array(), $section_ids = array())
+    {
+        $exam = $this->get_exambyId($exam_id);
+        if (!$exam) {
+            return false;
+        }
+
+        // Grade bands for this exam (percentage based).
+        $grades = array();
+        if (!empty($exam['cbse_exam_grade_id'])) {
+            $grades = $this->db->select('name, minimum_percentage, maximum_percentage')
+                ->from('cbse_exam_grades_range')
+                ->where('cbse_exam_grade_id', $exam['cbse_exam_grade_id'])
+                ->order_by('minimum_percentage', 'desc')
+                ->get()->result_array();
+        }
+
+        // Students (with class/section) + their marks keyed [student][tt][at].
+        $sd = $this->get_bulk_exam_students_with_marks($exam_id, $class_ids, $section_ids);
+        $students = $sd['students'];
+        $existing = $sd['existing_marks'];
+
+        // Per-class subject structure with override-aware max marks.
+        $where_class = '';
+        if (!empty($class_ids) && is_array($class_ids)) {
+            $where_class = ' AND tc.class_id IN (' . implode(',', array_map('intval', $class_ids)) . ')';
+        }
+        $sql = "SELECT tc.class_id, t.id AS tt_id, t.subject_id, s.name AS subject_name, s.code AS subject_code,
+                       at.id AS at_id, at.name AS at_name,
+                       COALESCE(tat.maximum_marks, at.maximum_marks) AS max_marks
+                FROM cbse_exam_timetable t
+                JOIN cbse_exam_timetable_classes tc ON tc.cbse_exam_timetable_id = t.id
+                JOIN subjects s ON s.id = t.subject_id
+                JOIN cbse_exam_timetable_assessment_types tat ON tat.cbse_exam_timetable_id = t.id
+                JOIN cbse_exam_assessment_types at ON at.id = tat.cbse_exam_assessment_type_id
+                WHERE t.cbse_exam_id = " . $this->db->escape($exam_id) . $where_class . "
+                ORDER BY tc.class_id, s.name, at.id";
+        $rows = $this->db->query($sql)->result_array();
+
+        // class_id => subject_id => { name, code, tt, max, at_ids[] }
+        $class_subjects = array();
+        foreach ($rows as $r) {
+            $cid = $r['class_id'];
+            $sid = $r['subject_id'];
+            if (!isset($class_subjects[$cid][$sid])) {
+                $class_subjects[$cid][$sid] = array(
+                    'subject_name' => $r['subject_name'],
+                    'subject_code' => $r['subject_code'],
+                    'tt_id' => $r['tt_id'],
+                    'max' => 0,
+                    'at_ids' => array()
+                );
+            }
+            $class_subjects[$cid][$sid]['max'] += (float)$r['max_marks'];
+            $class_subjects[$cid][$sid]['at_ids'][] = $r['at_id'];
+        }
+
+        $report = array();
+        foreach ($students as $std) {
+            $cid = isset($std['class_id']) ? $std['class_id'] : 0;
+            $sid_key = $std['exam_student_id'];
+            $subjects_out = array();
+            $grand_obt = 0;
+            $grand_max = 0;
+
+            if (isset($class_subjects[$cid])) {
+                foreach ($class_subjects[$cid] as $subject_id => $sub) {
+                    $tt = $sub['tt_id'];
+                    $obtained = 0;
+                    $absent = false;
+                    $has_mark = false;
+                    foreach ($sub['at_ids'] as $at_id) {
+                        if (isset($existing[$sid_key][$tt][$at_id])) {
+                            $m = $existing[$sid_key][$tt][$at_id];
+                            $has_mark = true;
+                            if ($m['is_absent'] == 1) {
+                                $absent = true;
+                            } else {
+                                $obtained += (float)$m['marks'];
+                            }
+                        }
+                    }
+                    $max = $sub['max'];
+                    $pct = ($max > 0) ? ($obtained / $max) * 100 : 0;
+                    $subjects_out[] = array(
+                        'subject_name' => $sub['subject_name'],
+                        'subject_code' => $sub['subject_code'],
+                        'max' => $max,
+                        'obtained' => $absent ? null : ($has_mark ? $obtained : null),
+                        'absent' => $absent,
+                        'grade' => ($has_mark && !$absent) ? $this->_grade_for_percent($pct, $grades) : '',
+                        'percent' => $pct
+                    );
+                    if ($has_mark && !$absent) {
+                        $grand_obt += $obtained;
+                    }
+                    $grand_max += $max;
+                }
+            }
+
+            $overall_pct = ($grand_max > 0) ? ($grand_obt / $grand_max) * 100 : 0;
+            $report[] = array(
+                'student' => $std,
+                'subjects' => $subjects_out,
+                'grand_obtained' => $grand_obt,
+                'grand_max' => $grand_max,
+                'overall_percent' => $overall_pct,
+                'overall_grade' => $this->_grade_for_percent($overall_pct, $grades),
+                'result' => ($overall_pct >= 33) ? 'PASS' : 'FAIL',
+                'rank' => 0
+            );
+        }
+
+        // Class rank by overall percentage (standard competition ranking).
+        // Only rank students who have at least one mark (grand_max > 0).
+        $order = array();
+        foreach ($report as $idx => $rc) {
+            if ($rc['grand_max'] > 0) $order[$idx] = $rc['overall_percent'];
+        }
+        arsort($order);
+        $rank = 0; $seen = 0; $prev = null;
+        foreach ($order as $idx => $pct) {
+            $seen++;
+            if ($prev === null || $pct < $prev) { $rank = $seen; $prev = $pct; }
+            $report[$idx]['rank'] = $rank;
+        }
+
+        return array('exam' => $exam, 'grades' => $grades, 'report' => $report);
+    }
+
+    private function _grade_for_percent($pct, $grades)
+    {
+        foreach ($grades as $g) {
+            if ($pct >= (float)$g['minimum_percentage'] && $pct <= (float)$g['maximum_percentage']) {
+                return $g['name'];
+            }
+        }
+        return '';
+    }
+
+    public function get_subject_max_marks($exam_id, $class_id)
+    {
+        $sql = "SELECT t.id AS tt_id, t.subject_id, s.name AS subject_name, s.code AS subject_code
+                FROM cbse_exam_timetable t
+                JOIN subjects s ON s.id = t.subject_id
+                JOIN cbse_exam_timetable_classes tc ON tc.cbse_exam_timetable_id = t.id AND tc.class_id = " . (int)$class_id . "
+                WHERE t.cbse_exam_id = " . $this->db->escape($exam_id) . "
+                ORDER BY s.name";
+        $subjects = $this->db->query($sql)->result_array();
+
+        foreach ($subjects as &$sub) {
+            $sub['assessment_types'] = $this->db->select('at.id AS at_id, at.name, at.code, at.maximum_marks AS default_max, tat.id AS tat_id, tat.maximum_marks AS override_max')
+                ->from('cbse_exam_timetable_assessment_types tat')
+                ->join('cbse_exam_assessment_types at', 'at.id = tat.cbse_exam_assessment_type_id')
+                ->where('tat.cbse_exam_timetable_id', $sub['tt_id'])
+                ->order_by('at.id')
+                ->get()->result_array();
+        }
+        unset($sub);
+        return $subjects;
+    }
+
+    public function save_subject_max_marks($rows)
+    {
+        $this->db->trans_start();
+        foreach ($rows as $tat_id => $max) {
+            $val = ($max === '' || $max === null) ? null : (float)$max;
+            $this->db->where('id', (int)$tat_id)
+                ->update('cbse_exam_timetable_assessment_types', array('maximum_marks' => $val));
+        }
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    public function get_bulk_exam_classes($exam_id)
+    {
+        $sql = "SELECT DISTINCT c.id, c.class
+                FROM cbse_exam_class_sections ecs
+                JOIN class_sections cs ON cs.id = ecs.class_section_id
+                JOIN classes c ON c.id = cs.class_id
+                WHERE ecs.cbse_exam_id = " . $this->db->escape($exam_id) . "
+                ORDER BY c.id";
+        return $this->db->query($sql)->result_array();
+    }
+
+    public function get_bulk_exam_structure($exam_id)
+    {
+        $exam = $this->get_exambyId($exam_id);
+        if (!$exam) {
+            return false;
+        }
+
+        $sql = "SELECT t.id as timetable_id, t.subject_id, s.name as subject_name, s.code as subject_code, tc.class_id
+                FROM cbse_exam_timetable t
+                JOIN subjects s ON s.id = t.subject_id
+                LEFT JOIN cbse_exam_timetable_classes tc ON tc.cbse_exam_timetable_id = t.id
+                WHERE t.cbse_exam_id = " . $this->db->escape($exam_id) . "
+                ORDER BY s.name, t.id";
+        $raw_items = $this->db->query($sql)->result_array();
+
+        $sql_tat = "SELECT tat.id, tat.cbse_exam_timetable_id, tat.cbse_exam_assessment_type_id
+                    FROM cbse_exam_timetable_assessment_types tat
+                    JOIN cbse_exam_timetable t ON t.id = tat.cbse_exam_timetable_id
+                    WHERE t.cbse_exam_id = " . $this->db->escape($exam_id);
+        $raw_tats = $this->db->query($sql_tat)->result_array();
+        $tat_map = array();
+        foreach ($raw_tats as $tat) {
+            $tat_map[$tat['cbse_exam_timetable_id']][$tat['cbse_exam_assessment_type_id']] = $tat['id'];
+        }
+
+        $unique_subjects = array();
+        $subject_class_map = array();
+
+        foreach ($raw_items as $item) {
+            $sub_id = $item['subject_id'];
+            $tt_id = $item['timetable_id'];
+            $cls_id = $item['class_id'];
+
+            if (!isset($unique_subjects[$sub_id])) {
+                $unique_subjects[$sub_id] = array(
+                    'subject_id' => $sub_id,
+                    'subject_name' => $item['subject_name'],
+                    'subject_code' => $item['subject_code'],
+                    'id' => $tt_id,
+                    'assessment_types' => $this->get_exam_subject_assessment_types($exam['cbse_exam_assessment_id'], $tt_id)
+                );
+
+                if (empty($unique_subjects[$sub_id]['assessment_types'])) {
+                    $this->db->select('cbse_exam_assessment_types.id, cbse_exam_assessment_types.cbse_exam_assessment_id, cbse_exam_assessment_types.name, cbse_exam_assessment_types.code, cbse_exam_assessment_types.pass_percentage, cbse_exam_assessment_types.description, COALESCE(cbse_exam_timetable_assessment_types.maximum_marks, cbse_exam_assessment_types.maximum_marks) as maximum_marks, cbse_exam_timetable_assessment_types.id as cbse_exam_timetable_assessment_type_id');
+                    $this->db->from('cbse_exam_timetable_assessment_types');
+                    $this->db->join('cbse_exam_assessment_types', 'cbse_exam_assessment_types.id = cbse_exam_timetable_assessment_types.cbse_exam_assessment_type_id');
+                    $this->db->where('cbse_exam_timetable_assessment_types.cbse_exam_timetable_id', $tt_id);
+                    $unique_subjects[$sub_id]['assessment_types'] = $this->db->get()->result();
+                }
+            }
+
+            if ($cls_id) {
+                $subject_class_map[$sub_id][$cls_id] = $tt_id;
+            }
+        }
+
+        return array(
+            'exam' => $exam,
+            'subjects' => array_values($unique_subjects),
+            'subject_class_map' => $subject_class_map,
+            'tat_map' => $tat_map
+        );
+    }
+
+    public function get_bulk_exam_students_with_marks($exam_id, $class_ids = null, $section_ids = null)
+    {
+        $all_students = $this->get_examstudents($exam_id);
+        $filtered_students = array();
+
+        if (!empty($class_ids) || !empty($section_ids)) {
+            foreach ($all_students as $std) {
+                $pass_class = empty($class_ids) || (is_array($class_ids) && in_array($std['class_id'], $class_ids));
+                $pass_section = empty($section_ids) || (is_array($section_ids) && in_array($std['section_id'], $section_ids));
+                if ($pass_class && $pass_section) {
+                    $filtered_students[] = $std;
+                }
+            }
+        } else {
+            $filtered_students = $all_students;
+        }
+
+        $sql = "SELECT m.*, t.subject_id 
+                FROM cbse_student_subject_marks m 
+                JOIN cbse_exam_timetable t ON t.id = m.cbse_exam_timetable_id 
+                WHERE t.cbse_exam_id = " . $this->db->escape($exam_id);
+        $existing_marks_raw = $this->db->query($sql)->result_array();
+
+        $existing_marks = array();
+        foreach ($existing_marks_raw as $m) {
+            $s_id = $m['cbse_exam_student_id'];
+            $tt_id = $m['cbse_exam_timetable_id'];
+            $at_id = $m['cbse_exam_assessment_type_id'];
+            $existing_marks[$s_id][$tt_id][$at_id] = $m;
+        }
+
+        return array(
+            'students' => $filtered_students,
+            'existing_marks' => $existing_marks
+        );
+    }
+
+    public function save_bulk_exam_marks($exam_id, $bulk_marks_data)
+    {
+        $this->db->trans_start();
+
+        foreach ($bulk_marks_data as $item) {
+            $this->db->where('cbse_exam_student_id', $item['cbse_exam_student_id']);
+            $this->db->where('cbse_exam_timetable_id', $item['cbse_exam_timetable_id']);
+            $this->db->where('cbse_exam_assessment_type_id', $item['cbse_exam_assessment_type_id']);
+            $this->db->delete('cbse_student_subject_marks');
+
+            $this->db->insert('cbse_student_subject_marks', array(
+                'cbse_exam_student_id' => $item['cbse_exam_student_id'],
+                'cbse_exam_timetable_id' => $item['cbse_exam_timetable_id'],
+                'cbse_exam_assessment_type_id' => $item['cbse_exam_assessment_type_id'],
+                'cbse_exam_timetable_assessment_type_id' => $item['cbse_exam_timetable_assessment_type_id'],
+                'marks' => $item['marks'],
+                'is_absent' => $item['is_absent'],
+                'note' => isset($item['note']) ? $item['note'] : ''
+            ));
+        }
+
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
 
 }
+

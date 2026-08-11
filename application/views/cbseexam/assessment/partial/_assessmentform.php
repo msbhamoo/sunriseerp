@@ -16,9 +16,11 @@ if($action == "add"){
                   <div class="form-group row">
                         <div class="col-md-12">
                            <lebel class="btn btn-xs btn-info pull-right add_row"><?php echo $this->lang->line('add_more')?></lebel>
+                           <lebel class="btn btn-xs btn-success pull-right" id="load_cbse_preset" style="margin-right:8px;"><i class="fa fa-magic"></i> Load CBSE 80+20 Preset</lebel>
                         </div>
-                  </div>                    
-                 <div class="row">                    
+                  </div>
+                  <p class="text-muted" style="font-size:12px;margin:-6px 0 10px;"><i class="fa fa-info-circle"></i> The preset creates the CBSE components: Annual Exam (80) + Periodic Test, Multiple Assessment, Portfolio &amp; Subject Enrichment (5 each) = 100. Each becomes its own marks column.</p>
+                 <div class="row">
                         <div class="col-md-12">
                            <div class="col-md-2">
                                     <div>

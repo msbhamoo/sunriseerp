@@ -7,10 +7,10 @@ $is_localhost = isset($_SERVER['HTTP_HOST']) && ($_SERVER['HTTP_HOST'] === 'loca
 if ($is_localhost) {
     $db['default'] = array(
         'dsn'          => '',
-        'hostname' => '127.0.0.1',
+        'hostname' => '127.0.0.1:3307',
         'username' => 'root',
         'password' => '',
-        'database' => 'newerp',
+        'database' => 'schoolsms',
         'dbdriver'     => 'mysqli',
         'dbprefix'     => '',
         'pconnect'     => false,
@@ -55,7 +55,10 @@ if ($is_localhost) {
 $active_group = 'default';
 
 $mydb   = $db['default'];
-$mysqli = new mysqli($mydb['hostname'], $mydb["username"], $mydb["password"], $mydb["database"]);
+$host_parts = explode(':', $mydb['hostname']);
+$db_host = $host_parts[0];
+$db_port = isset($host_parts[1]) ? (int)$host_parts[1] : 3306;
+$mysqli = new mysqli($db_host, $mydb["username"], $mydb["password"], $mydb["database"], $db_port);
 
 if ($mysqli->connect_errno) {
     printf("connection failed: %s\n", $mysqli->connect_error());

@@ -232,6 +232,38 @@ $(this).parent().closest('div.row').remove();
 
 });
 
+// Build one assessment-type row (matches the markup the backend expects).
+function cbsePresetRow(idx, name, code, max, pass) {
+    var html = '<div class="row">' +
+        '<input type="hidden" name="row[]" value="' + idx + '">' +
+        '<input type="hidden" name="update_id[]" value="0">' +
+        '<div class="col-md-2"><div class="form-group"><input class="form-control" name="type_name_' + idx + '" value="' + name + '"></div></div>' +
+        '<div class="col-md-2"><div class="form-group"><input class="form-control" type="text" name="code_' + idx + '" value="' + code + '"></div></div>' +
+        '<div class="col-md-2"><div class="form-group"><input class="form-control" type="number" name="maximum_marks_' + idx + '" value="' + max + '"></div></div>' +
+        '<div class="col-md-2"><div class="form-group"><input class="form-control" type="number" name="pass_percentage_' + idx + '" value="' + pass + '"></div></div>' +
+        '<div class="col-md-3"><div class="form-group"><textarea class="form-control" name="type_description_' + idx + '"></textarea></div></div>' +
+        '<div class="col-md-1 text-center"><div class="form-group"><span class="section_id_error text-danger rtl-float-right cursor-pointer"><i class="fa fa-remove remove_row"></i></span></div></div>' +
+        '</div>';
+    return html;
+}
+
+$(document).on('click', '#load_cbse_preset', function() {
+    if (!$('#name').val()) { $('#name').val('CBSE Term (80+20)'); }
+    var components = [
+        ['Annual / Term Exam', 'EXAM', 80, 33],
+        ['Periodic Test', 'PT', 5, 33],
+        ['Multiple Assessment', 'MA', 5, 33],
+        ['Portfolio', 'PF', 5, 33],
+        ['Subject Enrichment', 'SEA', 5, 33]
+    ];
+    var html = '';
+    $.each(components, function(i, c) {
+        html += cbsePresetRow(i + 1, c[0], c[1], c[2], c[3]);
+    });
+    $('#grade_result').html(html);
+    row = components.length + 1;
+});
+
     function add(){
          
         $('#name').val('');

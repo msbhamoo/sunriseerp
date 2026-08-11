@@ -11,7 +11,7 @@
             </li>
 			<?php } if ($this->rbac->hasPrivilege('cbse_exam_assessment', 'can_view')) {  ?>
             <li class="<?php echo set_SubSubmenu('cbseexam/assessment'); ?>">
-                <a class="<?php echo set_SubSubmenu('cbseexam/assessment'); ?>" href="<?php echo site_url('cbseexam/assessment') ?>"><?php echo $this->lang->line('assessment'); ?></a>
+                <a class="<?php echo set_SubSubmenu('cbseexam/assessment'); ?>" href="<?php echo site_url('cbseexam/assessment') ?>"><?php echo $this->lang->line('assessment'); ?> (Marks Pattern)</a>
             </li>
 			<?php } if ($this->rbac->hasPrivilege('cbse_exam_term', 'can_view')) {  ?>
             <li class="<?php echo set_SubSubmenu('cbseexam/term'); ?>">
