@@ -682,42 +682,48 @@ let disable_enable=(type,student_session_id)=>{
     }
 }
 
+// Convert a PHP date() format string (e.g. "d M Y") to the equivalent
+// moment.js format (e.g. "DD MMM YYYY"). Uppercasing the PHP format is wrong:
+// PHP "M" (short month name, "Aug") is not moment "M" (numeric month), which
+// caused strict parsing to fail and a lenient fallback to report the wrong
+// weekday (e.g. flagging Wednesday as Sunday).
+function phpToMomentFormat(phpFormat) {
+    var map = {
+        d: 'DD', j: 'D', D: 'ddd', l: 'dddd', N: 'E', w: 'e',
+        m: 'MM', n: 'M', M: 'MMM', F: 'MMMM',
+        Y: 'YYYY', y: 'YY',
+        H: 'HH', G: 'H', h: 'hh', g: 'h', i: 'mm', s: 'ss', A: 'A', a: 'a'
+    };
+    var out = '';
+    for (var i = 0; i < phpFormat.length; i++) {
+        var ch = phpFormat[i];
+        out += map.hasOwnProperty(ch) ? map[ch] : ch;
+    }
+    return out;
+}
+
 function parseDateValAndCheckSunday(dateVal) {
     if (!dateVal) return false;
-    
-    // First let's try to see if it matches standard patterns DD-MM-YYYY or MM/DD/YYYY etc
-    // Typical getSchoolDateFormat strings map to JS patterns:
+
     var format = '<?php echo $this->customlib->getSchoolDateFormat(); ?>';
-    
+
     if (typeof moment !== 'undefined') {
-        var momentFormat = format.toUpperCase();
-        var m = moment(dateVal, momentFormat, true);
+        var momentFormat = phpToMomentFormat(format);
+        var m = moment(dateVal, momentFormat, true); // strict parse with correct tokens
         if (m.isValid()) {
             return m.day() === 0;
         }
-        var m2 = moment(dateVal, ["DD-MM-YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD.MM.YYYY", "DD/MM/YYYY"]);
+        // Fallback: try a few common explicit formats (strict).
+        var m2 = moment(dateVal, ["DD MMM YYYY", "DD-MM-YYYY", "YYYY-MM-DD", "DD.MM.YYYY", "DD/MM/YYYY", "MM/DD/YYYY"], true);
         if (m2.isValid()) {
             return m2.day() === 0;
         }
     }
-    
-    // Attempt standard JS Date fallback
+
+    // Last-resort native fallback.
     var d = new Date(dateVal);
     if (!isNaN(d.getTime())) {
         return d.getDay() === 0;
-    }
-    
-    // Manual split fallback (assuming DD/MM/YYYY or DD-MM-YYYY)
-    var parts = dateVal.split(/[\.\-\/]/);
-    if (parts.length === 3) {
-        // If year is last, assume DD MM YYYY or MM DD YYYY
-        if (parts[2].length === 4) {
-            var d2 = new Date(parts[2], parts[1]-1, parts[0]);
-            if (d2.getDay() === 0) return true;
-        } else if (parts[0].length === 4) {
-            var d3 = new Date(parts[0], parts[1]-1, parts[2]);
-            if (d3.getDay() === 0) return true;
-        }
     }
     return false;
 }

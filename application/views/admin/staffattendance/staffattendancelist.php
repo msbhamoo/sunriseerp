@@ -151,6 +151,11 @@
                 <div class="box box-primary">
                     <div class="box-header with-border">
                         <h3 class="box-title"><i class="fa fa-search"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
+                        <div class="box-tools pull-right">
+                            <a href="<?php echo site_url('admin/staffattendance/scan'); ?>" class="btn btn-success btn-sm"><i class="fa fa-qrcode"></i> Mark My Attendance</a>
+                            <a href="<?php echo site_url('admin/staffattendance/qrdisplay'); ?>" target="_blank" class="btn btn-info btn-sm"><i class="fa fa-desktop"></i> Display QR</a>
+                            <a href="<?php echo site_url('admin/staffattendance/qrsettings'); ?>" class="btn btn-default btn-sm"><i class="fa fa-cog"></i> QR Settings</a>
+                        </div>
                     </div>
                     <form id='form1' action="<?php echo site_url('admin/staffattendance/index') ?>" method="post" accept-charset="utf-8">
                         <div class="box-body">

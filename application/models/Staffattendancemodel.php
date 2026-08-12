@@ -295,5 +295,145 @@ class Staffattendancemodel extends MY_Model {
         }
     }
 
+    /**
+     * Compute the schedule-based earliest allowed out-time for a staff on a
+     * given day: the entry time of the band the in_time fell into, plus that
+     * band's total_institute_hour. Returns "H:i:s" or null if undeterminable.
+     */
+    public function scheduleEarliestOut($role_id, $in_time)
+    {
+        if (IsNullOrEmptyString($in_time)) {
+            return null;
+        }
+        $this->db->where('role_id', $role_id);
+        $rows = $this->db->get('staff_attendence_schedules')->result();
+        if (empty($rows)) {
+            return null;
+        }
+        $in_sec = strtotime("1970-01-01 $in_time UTC");
+        foreach ($rows as $row) {
+            $from = strtotime("1970-01-01 {$row->entry_time_from} UTC");
+            $to   = strtotime("1970-01-01 {$row->entry_time_to} UTC");
+            if ($in_sec >= $from && $in_sec <= $to) {
+                $hours = $row->total_institute_hour;
+                if (IsNullOrEmptyString($hours)) {
+                    return null;
+                }
+                $dur = strtotime("1970-01-01 $hours UTC") - strtotime("1970-01-01 00:00:00 UTC");
+                return date('H:i:s', strtotime($in_time) + $dur);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * QR-driven attendance marking with cooldown + early-exit guards.
+     *
+     * $opts keys: cooldown_minutes, earliest_out_source ('schedule'|'manual'),
+     *             manual_earliest_out_time, confirm_early (bool), reason,
+     *             source (string, e.g. 'qr').
+     *
+     * Returns array('status' => code, 'message' => text, 'time' => H:i).
+     * Codes: no_schedule, marked_in, cooldown, confirm_early, marked_out,
+     *        already_complete, error.
+     */
+    public function qrMark($staff_id, $role_id, $opts = array())
+    {
+        $date   = date('Y-m-d');
+        $now    = date('H:i:s');
+        $source = isset($opts['source']) ? $opts['source'] : 'qr';
+        $has_source_col = $this->db->field_exists('attendance_source', 'staff_attendance');
+
+        $this->db->where('staff_id', $staff_id)->where('date', $date);
+        $row = $this->db->get('staff_attendance')->row();
+
+        // ---- IN scan: no row yet, or row exists without an in_time ----
+        if (empty($row) || IsNullOrEmptyString($row->in_time)) {
+            $range = $this->staffAttendaceSetting_model->getAttendanceTypeByRole($role_id, $now);
+            if (!$range) {
+                return array('status' => 'no_schedule', 'message' => 'No attendance schedule is configured for your role at this time. Please contact admin.');
+            }
+            $data = array(
+                'staff_id'                 => $staff_id,
+                'date'                     => $date,
+                'in_time'                  => $now,
+                'staff_attendance_type_id' => $range->staff_attendence_type_id,
+                'remark'                   => '',
+                'is_active'                => 1,
+            );
+            if ($has_source_col) {
+                $data['attendance_source'] = $source;
+            }
+            if (empty($row)) {
+                $data['created_at'] = date('Y-m-d H:i:s');
+                $this->db->insert('staff_attendance', $data);
+            } else {
+                unset($data['created_at']);
+                $data['updated_at'] = date('Y-m-d H:i:s');
+                $this->db->where('id', $row->id)->update('staff_attendance', $data);
+            }
+            return array('status' => 'marked_in', 'message' => 'Attendance marked. Welcome!', 'time' => date('h:i A', strtotime($now)));
+        }
+
+        // ---- Row already complete ----
+        if (!IsNullOrEmptyString($row->out_time)) {
+            return array(
+                'status'  => 'already_complete',
+                'message' => 'Your attendance for today is already complete (in ' . date('h:i A', strtotime($row->in_time)) . ', out ' . date('h:i A', strtotime($row->out_time)) . ').',
+            );
+        }
+
+        // ---- OUT scan candidate: in_time set, out_time empty ----
+        // Cooldown: ignore accidental rapid re-scans after the in-scan.
+        $cooldown = isset($opts['cooldown_minutes']) ? (int) $opts['cooldown_minutes'] : 5;
+        if ($cooldown > 0) {
+            $secs_since_in = strtotime("1970-01-01 $now UTC") - strtotime("1970-01-01 {$row->in_time} UTC");
+            if ($secs_since_in >= 0 && $secs_since_in < ($cooldown * 60)) {
+                return array(
+                    'status'  => 'cooldown',
+                    'message' => 'You already marked in at ' . date('h:i A', strtotime($row->in_time)) . '. Scan again after your shift to mark out.',
+                );
+            }
+        }
+
+        // Early-exit guard: only accept out-scan past the earliest exit time,
+        // unless the staff explicitly confirms leaving early.
+        $confirm_early = !empty($opts['confirm_early']);
+        $earliest_out  = null;
+        if (isset($opts['earliest_out_source']) && $opts['earliest_out_source'] === 'manual') {
+            if (!IsNullOrEmptyString($opts['manual_earliest_out_time'])) {
+                $earliest_out = date('H:i:s', strtotime($opts['manual_earliest_out_time']));
+            }
+        } else {
+            $earliest_out = $this->scheduleEarliestOut($role_id, $row->in_time);
+        }
+
+        if (!$confirm_early && $earliest_out !== null && $now < $earliest_out) {
+            return array(
+                'status'       => 'confirm_early',
+                'message'      => 'It is earlier than your exit time (' . date('h:i A', strtotime($earliest_out)) . '). Are you leaving early?',
+                'earliest_out' => date('h:i A', strtotime($earliest_out)),
+            );
+        }
+
+        // Record the out-scan.
+        $update = array('out_time' => $now, 'updated_at' => date('Y-m-d H:i:s'));
+        $type   = $this->staff_schedule_hours($row->staff_id, $row->in_time);
+        if ($type) {
+            $update['staff_attendance_type_id'] = $type;
+        }
+        $early_note = '';
+        if ($earliest_out !== null && $now < $earliest_out) {
+            $reason     = isset($opts['reason']) ? trim($opts['reason']) : '';
+            $early_note = 'early exit (QR)' . ($reason !== '' ? ': ' . $reason : '');
+        }
+        if ($early_note !== '') {
+            $existing = IsNullOrEmptyString($row->remark) ? '' : $row->remark . ' | ';
+            $update['remark'] = $existing . $early_note;
+        }
+        $this->db->where('id', $row->id)->update('staff_attendance', $update);
+
+        return array('status' => 'marked_out', 'message' => 'Marked out. Have a good day!', 'time' => date('h:i A', strtotime($now)));
+    }
 
 }

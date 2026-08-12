@@ -87,22 +87,29 @@ class Substitution_model extends MY_Model
         $tf_24 = date('H:i:s', strtotime($time_from));
         $tt_24 = date('H:i:s', strtotime($time_to));
 
+        // NOTE: compare against the proper 24-hour start_time/end_time TIME
+        // columns, NOT TIME(time_from)/TIME(time_to). time_from/time_to are
+        // 12-hour VARCHARs ("01:00 PM") and MySQL's TIME() silently drops the
+        // AM/PM, turning afternoon periods into early-morning ones (and periods
+        // crossing noon into reversed intervals), which produced false
+        // conflicts for teachers who were actually free.
+
         // Check standard timetable for conflict
-        $sql = "SELECT subject_timetable.*, classes.class, sections.section, subjects.name as subject_name 
-                FROM subject_timetable 
-                INNER JOIN classes ON classes.id = subject_timetable.class_id 
-                INNER JOIN sections ON sections.id = subject_timetable.section_id 
-                LEFT JOIN subject_group_subjects ON subject_group_subjects.id = subject_timetable.subject_group_subject_id 
-                LEFT JOIN subjects ON subjects.id = subject_group_subjects.subject_id 
-                WHERE subject_timetable.staff_id = " . $this->db->escape($substitute_staff_id) . " 
-                AND subject_timetable.day = " . $this->db->escape($day) . " 
-                AND subject_timetable.session_id = " . $this->current_session . " 
-                AND ( 
-                    (TIME(subject_timetable.time_from) <= " . $this->db->escape($tf_24) . " AND TIME(subject_timetable.time_to) > " . $this->db->escape($tf_24) . ") 
-                    OR 
-                    (TIME(subject_timetable.time_from) < " . $this->db->escape($tt_24) . " AND TIME(subject_timetable.time_to) >= " . $this->db->escape($tt_24) . ") 
-                    OR 
-                    (TIME(subject_timetable.time_from) >= " . $this->db->escape($tf_24) . " AND TIME(subject_timetable.time_to) <= " . $this->db->escape($tt_24) . ") 
+        $sql = "SELECT subject_timetable.*, classes.class, sections.section, subjects.name as subject_name
+                FROM subject_timetable
+                INNER JOIN classes ON classes.id = subject_timetable.class_id
+                INNER JOIN sections ON sections.id = subject_timetable.section_id
+                LEFT JOIN subject_group_subjects ON subject_group_subjects.id = subject_timetable.subject_group_subject_id
+                LEFT JOIN subjects ON subjects.id = subject_group_subjects.subject_id
+                WHERE subject_timetable.staff_id = " . $this->db->escape($substitute_staff_id) . "
+                AND subject_timetable.day = " . $this->db->escape($day) . "
+                AND subject_timetable.session_id = " . $this->current_session . "
+                AND (
+                    (subject_timetable.start_time <= " . $this->db->escape($tf_24) . " AND subject_timetable.end_time > " . $this->db->escape($tf_24) . ")
+                    OR
+                    (subject_timetable.start_time < " . $this->db->escape($tt_24) . " AND subject_timetable.end_time >= " . $this->db->escape($tt_24) . ")
+                    OR
+                    (subject_timetable.start_time >= " . $this->db->escape($tf_24) . " AND subject_timetable.end_time <= " . $this->db->escape($tt_24) . ")
                 )
                 AND subject_timetable.id NOT IN (
                     SELECT subject_timetable_id FROM staff_substitutions 
@@ -129,12 +136,12 @@ class Substitution_model extends MY_Model
                  WHERE staff_substitutions.substitute_staff_id = " . $this->db->escape($substitute_staff_id) . " 
                  AND staff_substitutions.date = " . $this->db->escape($date) . " 
                  AND staff_substitutions.session_id = " . $this->current_session . " 
-                 AND ( 
-                    (TIME(subject_timetable.time_from) <= " . $this->db->escape($tf_24) . " AND TIME(subject_timetable.time_to) > " . $this->db->escape($tf_24) . ") 
-                    OR 
-                    (TIME(subject_timetable.time_from) < " . $this->db->escape($tt_24) . " AND TIME(subject_timetable.time_to) >= " . $this->db->escape($tt_24) . ") 
-                    OR 
-                    (TIME(subject_timetable.time_from) >= " . $this->db->escape($tf_24) . " AND TIME(subject_timetable.time_to) <= " . $this->db->escape($tt_24) . ") 
+                 AND (
+                    (subject_timetable.start_time <= " . $this->db->escape($tf_24) . " AND subject_timetable.end_time > " . $this->db->escape($tf_24) . ")
+                    OR
+                    (subject_timetable.start_time < " . $this->db->escape($tt_24) . " AND subject_timetable.end_time >= " . $this->db->escape($tt_24) . ")
+                    OR
+                    (subject_timetable.start_time >= " . $this->db->escape($tf_24) . " AND subject_timetable.end_time <= " . $this->db->escape($tt_24) . ")
                  )";
         $query2 = $this->db->query($sql2);
         $sub_conflict = $query2->row_array();

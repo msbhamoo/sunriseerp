@@ -744,8 +744,13 @@
 }?>
 
                                 <ul class="nav navbar-nav headertopmenu">
- <!-- Dark/Light Mode Toggle Button -->                             
-	
+ <!-- Dark/Light Mode Toggle Button -->
+
+                                    <!-- QR Attendance: visible to every logged-in staff to mark their own attendance -->
+                                    <li class="cal15" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('mark_my_attendance') ? $this->lang->line('mark_my_attendance') : 'Mark My Attendance'; ?>">
+                                        <a href="<?php echo base_url() ?>admin/staffattendance/scan"><i class="fa fa-qrcode" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;" aria-hidden="true"></i></a>
+                                    </li>
+
                                     <?php if ($this->rbac->hasPrivilege('student', 'can_view')) {?>
                                         <li class="cal15 hidden-xs" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('search'); ?>">
                                             <a href="#" data-toggle="modal" data-target="#globalSearchModal"><i class="icon-search" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i></a>

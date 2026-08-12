@@ -19,7 +19,8 @@ class Staffattendance extends Admin_Controller
         $this->load->model("staffattendancemodel");
         $this->load->model("staff_model");
         $this->load->model("payroll_model"); 
-        $this->load->model("staffAttendaceSetting_model"); 
+        $this->load->model("staffAttendaceSetting_model");
+        $this->load->model("staffQrSetting_model");
     }
 
     public function index_old(){
@@ -320,6 +321,192 @@ class Staffattendance extends Admin_Controller
         $this->load->view("layout/header");
         $this->load->view("admin/staff/staffattendance", $data);
         $this->load->view("layout/footer");
+    }
+
+    // =================================================================
+    //  QR-BASED ATTENDANCE
+    // =================================================================
+
+    /**
+     * Admin: configure QR attendance (mode, cooldown, IP/GPS restriction).
+     */
+    public function qrsettings()
+    {
+        if (!($this->rbac->hasPrivilege('staff_attendance', 'can_view'))) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'HR');
+        $this->session->set_userdata('sub_menu', 'admin/staffattendance/qrsettings');
+
+        if ($this->input->post('save_qr_setting')) {
+            if (!($this->rbac->hasPrivilege('staff_attendance', 'can_edit'))) {
+                access_denied();
+            }
+            $mode = ($this->input->post('qr_mode') === 'static') ? 'static' : 'daily';
+            $save = array(
+                'is_enabled'               => $this->input->post('is_enabled') ? 1 : 0,
+                'qr_mode'                  => $mode,
+                'rescan_cooldown_minutes'  => (int) $this->input->post('rescan_cooldown_minutes'),
+                'earliest_out_source'      => ($this->input->post('earliest_out_source') === 'manual') ? 'manual' : 'schedule',
+                'manual_earliest_out_time' => $this->input->post('manual_earliest_out_time') ?: null,
+                'ip_allowlist'             => trim($this->input->post('ip_allowlist')),
+                'gps_enabled'              => $this->input->post('gps_enabled') ? 1 : 0,
+                'gps_lat'                  => ($this->input->post('gps_lat') === '') ? null : $this->input->post('gps_lat'),
+                'gps_lng'                  => ($this->input->post('gps_lng') === '') ? null : $this->input->post('gps_lng'),
+                'gps_radius_m'             => (int) ($this->input->post('gps_radius_m') ?: 200),
+            );
+            // Regenerate the static token on demand.
+            if ($this->input->post('regenerate_static')) {
+                $save['static_token'] = $this->staffQrSetting_model->generateToken();
+            }
+            $this->staffQrSetting_model->save($save);
+            $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">' . $this->lang->line('success_message') . '</div>');
+            redirect('admin/staffattendance/qrsettings');
+        }
+
+        $data['title']    = 'QR Attendance Settings';
+        $data['setting']  = $this->staffQrSetting_model->get();
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/staffattendance/qrsettings', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    /**
+     * Admin: full-screen QR to display at the entrance. In daily mode the
+     * token auto-rotates at date change; the page also refreshes periodically.
+     */
+    public function qrdisplay()
+    {
+        if (!($this->rbac->hasPrivilege('staff_attendance', 'can_view'))) {
+            access_denied();
+        }
+
+        $setting = $this->staffQrSetting_model->get();
+        $token   = $this->staffQrSetting_model->getValidToken();
+        $this->load->library('QR_Code');
+
+        $data['title']       = 'Attendance QR';
+        $data['setting']     = $setting;
+        $data['qr_base64']   = $this->qr_code->generateBase64($token);
+        $data['generated_at'] = date('d M Y, h:i A');
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/staffattendance/qrdisplay', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    /**
+     * Staff self-service: camera page to scan the displayed QR.
+     */
+    public function scan()
+    {
+        $admin = $this->session->userdata('admin');
+        if (empty($admin['id'])) {
+            access_denied();
+        }
+        $setting = $this->staffQrSetting_model->get();
+
+        $this->session->set_userdata('top_menu', 'HR');
+        $this->session->set_userdata('sub_menu', 'admin/staffattendance/scan');
+        $data['title']       = 'Mark My Attendance';
+        $data['setting']     = $setting;
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/staffattendance/scan', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    /**
+     * Staff self-service AJAX endpoint: validate the scanned token +
+     * location, then mark in/out via the guarded model method.
+     */
+    public function markqr()
+    {
+        $this->load->helper('json_output');
+        $admin = $this->session->userdata('admin');
+        if (empty($admin['id'])) {
+            json_output(401, array('status' => 'error', 'message' => 'Your session has expired. Please log in again.'));
+            return;
+        }
+
+        $setting = $this->staffQrSetting_model->get();
+        if (empty($setting['is_enabled'])) {
+            json_output(200, array('status' => 'error', 'message' => 'QR attendance is currently disabled.'));
+            return;
+        }
+
+        $token = $this->input->post('token');
+        if (!$this->staffQrSetting_model->isTokenValid($token)) {
+            json_output(200, array('status' => 'error', 'message' => 'Invalid or expired QR code. Please scan the current code on screen.'));
+            return;
+        }
+
+        // IP allowlist restriction.
+        if (!IsNullOrEmptyString($setting['ip_allowlist'])) {
+            $allow = array_filter(array_map('trim', explode(',', $setting['ip_allowlist'])));
+            $ip    = $this->input->ip_address();
+            if (!empty($allow) && !$this->ipAllowed($ip, $allow)) {
+                json_output(200, array('status' => 'error', 'message' => 'You must be on the school network to mark attendance.'));
+                return;
+            }
+        }
+
+        // GPS proximity restriction.
+        if (!empty($setting['gps_enabled'])) {
+            $lat = $this->input->post('lat');
+            $lng = $this->input->post('lng');
+            if ($lat === null || $lat === '' || $lng === null || $lng === '') {
+                json_output(200, array('status' => 'error', 'message' => 'Location access is required. Please enable location and try again.'));
+                return;
+            }
+            $dist = $this->haversineMeters((float) $setting['gps_lat'], (float) $setting['gps_lng'], (float) $lat, (float) $lng);
+            if ($dist > (float) $setting['gps_radius_m']) {
+                json_output(200, array('status' => 'error', 'message' => 'You are too far from the school to mark attendance.'));
+                return;
+            }
+        }
+
+        $role   = json_decode($this->customlib->getStaffRole());
+        $opts   = array(
+            'cooldown_minutes'         => $setting['rescan_cooldown_minutes'],
+            'earliest_out_source'      => $setting['earliest_out_source'],
+            'manual_earliest_out_time' => $setting['manual_earliest_out_time'],
+            'confirm_early'            => (bool) $this->input->post('confirm_early'),
+            'reason'                   => $this->input->post('reason'),
+            'source'                   => 'qr',
+        );
+        $result = $this->staffattendancemodel->qrMark($admin['id'], $role->id, $opts);
+        json_output(200, $result);
+    }
+
+    /**
+     * Match an IP against the allowlist. Supports exact IPs and simple
+     * prefix entries (e.g. "203.0.113." matches 203.0.113.x).
+     */
+    private function ipAllowed($ip, $allow)
+    {
+        foreach ($allow as $entry) {
+            if ($entry === $ip) {
+                return true;
+            }
+            if (substr($entry, -1) === '.' && strpos($ip, $entry) === 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Great-circle distance between two lat/lng points, in metres.
+     */
+    private function haversineMeters($lat1, $lng1, $lat2, $lng2)
+    {
+        $r = 6371000;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLng = deg2rad($lng2 - $lng1);
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+             sin($dLng / 2) * sin($dLng / 2);
+        return $r * 2 * atan2(sqrt($a), sqrt(1 - $a));
     }
 
 }
