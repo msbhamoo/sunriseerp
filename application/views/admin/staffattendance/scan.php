@@ -32,6 +32,19 @@
                             <button class="btn btn-default" id="btn-cancel-early">No, stay marked in</button>
                         </div>
 
+                        <!-- Action choices when already checked in (step out / leave / step in) -->
+                        <div id="choose-box" style="display:none;margin-top:15px;text-align:left;">
+                            <div class="alert alert-info" id="choose-msg"></div>
+                            <div id="breakout-reason-wrap" style="display:none;margin-bottom:10px;">
+                                <label>Reason for stepping out (optional)</label>
+                                <input type="text" id="breakout-reason" class="form-control" placeholder="e.g. bank, medical, personal work">
+                            </div>
+                            <button class="btn btn-warning" id="btn-break-out" style="display:none;"><i class="fa fa-sign-out"></i> Step Out (will return)</button>
+                            <button class="btn btn-success" id="btn-break-in" style="display:none;"><i class="fa fa-sign-in"></i> Step In (returned)</button>
+                            <button class="btn btn-danger" id="btn-final-out" style="display:none;"><i class="fa fa-power-off"></i> Mark Out (end of day)</button>
+                            <button class="btn btn-default" id="btn-choose-cancel"><i class="fa fa-times"></i> Cancel</button>
+                        </div>
+
                         <div style="margin-top:15px;">
                             <button class="btn btn-default" id="btn-rescan" style="display:none;"><i class="fa fa-refresh"></i> Scan again</button>
                         </div>
@@ -59,9 +72,14 @@
     var earlyMsg = document.getElementById('early-msg');
     var rescanBtn = document.getElementById('btn-rescan');
 
+    var chooseBox = document.getElementById('choose-box');
+    var chooseMsg = document.getElementById('choose-msg');
+
     var stream = null;
     var scanning = false;
-    var lastToken = null;   // token being processed (kept for early-exit confirm)
+    var lastToken = null;   // token being processed (kept for re-submits)
+    var curLat = null;      // location captured on the scan, reused for actions
+    var curLng = null;
 
     function showStatus(msg, cls) {
         statusEl.style.display = 'block';
@@ -76,6 +94,7 @@
 
     function startCamera() {
         earlyBox.style.display = 'none';
+        chooseBox.style.display = 'none';
         rescanBtn.style.display = 'none';
         statusEl.style.display = 'none';
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -116,7 +135,7 @@
 
     function onDecoded(token) {
         lastToken = token;
-        showStatus('<i class="fa fa-spinner fa-spin"></i> Marking attendance...', 'alert-info');
+        showStatus('<i class="fa fa-spinner fa-spin"></i> Reading QR...', 'alert-info');
         if (GPS_NEEDED) {
             if (!navigator.geolocation) {
                 showStatus('Location is required but not supported by this browser.', 'alert-danger');
@@ -124,7 +143,7 @@
                 return;
             }
             navigator.geolocation.getCurrentPosition(
-                function (pos) { submit(token, pos.coords.latitude, pos.coords.longitude, false, ''); },
+                function (pos) { curLat = pos.coords.latitude; curLng = pos.coords.longitude; submit({}); },
                 function () {
                     showStatus('Please enable location access and scan again.', 'alert-danger');
                     rescanBtn.style.display = 'inline-block';
@@ -132,28 +151,39 @@
                 { enableHighAccuracy: true, timeout: 10000 }
             );
         } else {
-            submit(token, null, null, false, '');
+            curLat = null; curLng = null;
+            submit({});
         }
     }
 
-    function submit(token, lat, lng, confirmEarly, reason) {
-        var data = { token: token };
-        if (lat !== null) { data.lat = lat; data.lng = lng; }
-        if (confirmEarly) { data.confirm_early = 1; data.reason = reason || ''; }
+    // extra: { action, reason, confirm_early }
+    function submit(extra) {
+        extra = extra || {};
+        var data = { token: lastToken };
+        if (curLat !== null) { data.lat = curLat; data.lng = curLng; }
+        if (extra.action) { data.action = extra.action; }
+        if (extra.reason) { data.reason = extra.reason; }
+        if (extra.confirm_early) { data.confirm_early = 1; }
 
         $.ajax({
             url: MARK_URL, type: 'POST', data: data, dataType: 'json'
         }).done(function (res) {
-            handleResult(res, lat, lng);
+            handleResult(res);
         }).fail(function () {
             showStatus('Network error. Please try again.', 'alert-danger');
             rescanBtn.style.display = 'inline-block';
         });
     }
 
-    function handleResult(res, lat, lng) {
+    function hideAllPanels() {
+        earlyBox.style.display = 'none';
+        chooseBox.style.display = 'none';
+    }
+
+    function handleResult(res) {
         var s = res.status;
-        if (s === 'marked_in' || s === 'marked_out') {
+        hideAllPanels();
+        if (s === 'marked_in' || s === 'marked_out' || s === 'break_out' || s === 'break_in') {
             showStatus('<i class="fa fa-check-circle"></i> ' + res.message + (res.time ? ' (' + res.time + ')' : ''), 'alert-success');
             rescanBtn.style.display = 'inline-block';
         } else if (s === 'already_complete' || s === 'cooldown') {
@@ -163,9 +193,15 @@
             statusEl.style.display = 'none';
             earlyMsg.innerHTML = res.message;
             earlyBox.style.display = 'block';
-            // Stash the location for the confirmed resend.
-            earlyBox.dataset.lat = (lat === null ? '' : lat);
-            earlyBox.dataset.lng = (lng === null ? '' : lng);
+        } else if (s === 'choose') {
+            statusEl.style.display = 'none';
+            var acts = res.actions || [];
+            chooseMsg.innerHTML = res.message;
+            document.getElementById('breakout-reason-wrap').style.display = (acts.indexOf('break_out') !== -1) ? 'block' : 'none';
+            document.getElementById('btn-break-out').style.display = (acts.indexOf('break_out') !== -1) ? 'inline-block' : 'none';
+            document.getElementById('btn-break-in').style.display  = (acts.indexOf('break_in')  !== -1) ? 'inline-block' : 'none';
+            document.getElementById('btn-final-out').style.display = (acts.indexOf('final_out') !== -1) ? 'inline-block' : 'none';
+            chooseBox.style.display = 'block';
         } else {
             // no_schedule or error
             showStatus('<i class="fa fa-exclamation-triangle"></i> ' + res.message, 'alert-danger');
@@ -175,16 +211,39 @@
 
     document.getElementById('btn-confirm-early').addEventListener('click', function () {
         var reason = document.getElementById('early-reason').value;
-        var lat = earlyBox.dataset.lat === '' ? null : parseFloat(earlyBox.dataset.lat);
-        var lng = earlyBox.dataset.lng === '' ? null : parseFloat(earlyBox.dataset.lng);
         earlyBox.style.display = 'none';
         showStatus('<i class="fa fa-spinner fa-spin"></i> Marking out...', 'alert-info');
-        submit(lastToken, lat, lng, true, reason);
+        submit({ action: 'final_out', confirm_early: true, reason: reason });
     });
 
     document.getElementById('btn-cancel-early').addEventListener('click', function () {
         earlyBox.style.display = 'none';
         showStatus('<i class="fa fa-info-circle"></i> No changes made. You are still marked in.', 'alert-info');
+        rescanBtn.style.display = 'inline-block';
+    });
+
+    document.getElementById('btn-break-out').addEventListener('click', function () {
+        var reason = document.getElementById('breakout-reason').value;
+        chooseBox.style.display = 'none';
+        showStatus('<i class="fa fa-spinner fa-spin"></i> Recording your step out...', 'alert-info');
+        submit({ action: 'break_out', reason: reason });
+    });
+
+    document.getElementById('btn-break-in').addEventListener('click', function () {
+        chooseBox.style.display = 'none';
+        showStatus('<i class="fa fa-spinner fa-spin"></i> Recording your return...', 'alert-info');
+        submit({ action: 'break_in' });
+    });
+
+    document.getElementById('btn-final-out').addEventListener('click', function () {
+        chooseBox.style.display = 'none';
+        showStatus('<i class="fa fa-spinner fa-spin"></i> Marking out...', 'alert-info');
+        submit({ action: 'final_out' });
+    });
+
+    document.getElementById('btn-choose-cancel').addEventListener('click', function () {
+        chooseBox.style.display = 'none';
+        showStatus('<i class="fa fa-info-circle"></i> No changes made.', 'alert-info');
         rescanBtn.style.display = 'inline-block';
     });
 

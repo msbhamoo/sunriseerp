@@ -474,8 +474,49 @@ class Staffattendance extends Admin_Controller
             'reason'                   => $this->input->post('reason'),
             'source'                   => 'qr',
         );
-        $result = $this->staffattendancemodel->qrMark($admin['id'], $role->id, $opts);
-        json_output(200, $result);
+
+        // Mid-day outing actions (step out / step in) and the explicit
+        // end-of-day check-out are driven by an "action" the scan page sends
+        // after showing the teacher their options.
+        $action = $this->input->post('action');
+        if ($action === 'break_out') {
+            json_output(200, $this->staffattendancemodel->qrBreakOut($admin['id'], $this->input->post('reason')));
+            return;
+        }
+        if ($action === 'break_in') {
+            json_output(200, $this->staffattendancemodel->qrBreakIn($admin['id']));
+            return;
+        }
+        if ($action === 'final_out') {
+            json_output(200, $this->staffattendancemodel->qrMark($admin['id'], $role->id, $opts));
+            return;
+        }
+
+        // No explicit action: mark in on the first scan; otherwise return the
+        // available choices so the teacher can pick step-out vs leave-for-day.
+        $state = $this->staffattendancemodel->getQrState($admin['id']);
+        if ($state['state'] === 'not_in') {
+            json_output(200, $this->staffattendancemodel->qrMark($admin['id'], $role->id, $opts));
+            return;
+        }
+        if ($state['state'] === 'on_break') {
+            json_output(200, array(
+                'status'  => 'choose',
+                'actions' => array('break_in'),
+                'message' => 'You stepped out at ' . $state['since'] . '. Scan confirmed — step back in?',
+            ));
+            return;
+        }
+        if ($state['state'] === 'complete') {
+            json_output(200, array('status' => 'already_complete', 'message' => 'Your attendance for today is already complete (in ' . $state['in'] . ', out ' . $state['out'] . ').'));
+            return;
+        }
+        // state === 'in'
+        json_output(200, array(
+            'status'  => 'choose',
+            'actions' => array('break_out', 'final_out'),
+            'message' => 'You are checked in (' . $state['in'] . '). What would you like to do?',
+        ));
     }
 
     /**

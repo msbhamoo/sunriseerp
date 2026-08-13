@@ -364,6 +364,11 @@ class Staffattendancemodel extends MY_Model {
             if ($has_source_col) {
                 $data['attendance_source'] = $source;
             }
+            // Flag as QR so the attendance list shows the "QR / Barcode" source
+            // (the list view keys off qrcode_attendance, default 0 = Manual).
+            if ($this->db->field_exists('qrcode_attendance', 'staff_attendance')) {
+                $data['qrcode_attendance'] = 1;
+            }
             if (empty($row)) {
                 $data['created_at'] = date('Y-m-d H:i:s');
                 $this->db->insert('staff_attendance', $data);
@@ -434,6 +439,98 @@ class Staffattendancemodel extends MY_Model {
         $this->db->where('id', $row->id)->update('staff_attendance', $update);
 
         return array('status' => 'marked_out', 'message' => 'Marked out. Have a good day!', 'time' => date('h:i A', strtotime($now)));
+    }
+
+    /**
+     * Current QR state for a staff today, used by the scan page to decide which
+     * action buttons to show.
+     * Returns one of: not_in, on_break, complete, in  (+ context fields).
+     */
+    public function getQrState($staff_id)
+    {
+        $date = date('Y-m-d');
+        $this->db->where('staff_id', $staff_id)->where('date', $date);
+        $att = $this->db->get('staff_attendance')->row();
+
+        if (empty($att) || IsNullOrEmptyString($att->in_time)) {
+            return array('state' => 'not_in');
+        }
+
+        // Open break? (out_time set, in_time null)
+        if ($this->db->table_exists('staff_attendance_break')) {
+            $this->db->where('staff_id', $staff_id)->where('date', $date)
+                     ->where('in_time IS NULL')->order_by('id', 'desc')->limit(1);
+            $open = $this->db->get('staff_attendance_break')->row();
+            if (!empty($open)) {
+                return array('state' => 'on_break', 'since' => date('h:i A', strtotime($open->out_time)));
+            }
+        }
+
+        if (!IsNullOrEmptyString($att->out_time)) {
+            return array('state' => 'complete', 'in' => date('h:i A', strtotime($att->in_time)), 'out' => date('h:i A', strtotime($att->out_time)));
+        }
+
+        return array('state' => 'in', 'in' => date('h:i A', strtotime($att->in_time)));
+    }
+
+    /**
+     * Log the start of a mid-day outing. Requires the staff to be checked in
+     * and not already on an open break.
+     */
+    public function qrBreakOut($staff_id, $reason = '')
+    {
+        $date = date('Y-m-d');
+        $now  = date('H:i:s');
+
+        $st = $this->getQrState($staff_id);
+        if ($st['state'] === 'not_in') {
+            return array('status' => 'error', 'message' => 'Please check in first before stepping out.');
+        }
+        if ($st['state'] === 'on_break') {
+            return array('status' => 'error', 'message' => 'You are already marked as stepped out. Scan again to step back in.');
+        }
+        if ($st['state'] === 'complete') {
+            return array('status' => 'error', 'message' => 'Your attendance for today is already complete.');
+        }
+
+        $this->db->insert('staff_attendance_break', array(
+            'staff_id'   => $staff_id,
+            'date'       => $date,
+            'out_time'   => $now,
+            'reason'     => ($reason === null) ? '' : trim($reason),
+            'is_active'  => 1,
+            'created_at' => date('Y-m-d H:i:s'),
+        ));
+        return array('status' => 'break_out', 'message' => 'Stepped out. Scan again when you return.', 'time' => date('h:i A', strtotime($now)));
+    }
+
+    /**
+     * Close the open outing for the staff, recording return time and duration.
+     */
+    public function qrBreakIn($staff_id)
+    {
+        $date = date('Y-m-d');
+        $now  = date('H:i:s');
+
+        $this->db->where('staff_id', $staff_id)->where('date', $date)
+                 ->where('in_time IS NULL')->order_by('id', 'desc')->limit(1);
+        $open = $this->db->get('staff_attendance_break')->row();
+        if (empty($open)) {
+            return array('status' => 'error', 'message' => 'No open outing found to step back in.');
+        }
+
+        $mins = (int) round((strtotime("1970-01-01 $now UTC") - strtotime("1970-01-01 {$open->out_time} UTC")) / 60);
+        if ($mins < 0) { $mins = 0; }
+
+        $this->db->where('id', $open->id)->update('staff_attendance_break', array(
+            'in_time'          => $now,
+            'duration_minutes' => $mins,
+            'updated_at'       => date('Y-m-d H:i:s'),
+        ));
+
+        $h = intdiv($mins, 60); $mm = $mins % 60;
+        $dur = ($h > 0 ? $h . 'h ' : '') . $mm . 'm';
+        return array('status' => 'break_in', 'message' => 'Welcome back. You were out for ' . $dur . '.', 'time' => date('h:i A', strtotime($now)));
     }
 
 }
