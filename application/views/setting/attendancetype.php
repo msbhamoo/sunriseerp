@@ -222,6 +222,7 @@ foreach ($class_value['sections'] as $section_key => $section_value) {
 													<input class="copy_staff_attendance" id="copy_staff_attendance" value="1" type="checkbox" > <?php echo $this->lang->line('copy_first_detail_for_all'); ?>
 												</label></div>
 											</div>
+											<?php $row = 1; ?>
 											<?php  foreach ($list_attendance as $list_key => $list_value){ ?>
 													<div class="col-md-12 staff_attendance_row">
 														<div class="panel panel-info">
@@ -230,7 +231,6 @@ foreach ($class_value['sections'] as $section_key => $section_value) {
 															</div>
 															<div class="panel-body pr-05 ps-5">
 																<?php
-																$row = 1;
 																$prefill = array('p' => '', 'l' => '', 'f' => '', 'sh' => '');
 																$carriers = '';
 																if (!empty($attendance_type)) {

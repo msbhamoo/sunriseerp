@@ -1346,10 +1346,11 @@ class Schsettings extends Admin_Controller
        
                 $insert_array[] = array(
                     'staff_attendence_type_id' => $attendance_type,
-                    'role_id'                  => $class_section,
+                    'role_id'                  => $role_id,
                     'entry_time_from'          => $entry_time_from,
                     'entry_time_to'            => $entry_time_to,
-                    'total_institute_hour'     => ($total_institute_hour)
+                    'total_institute_hour'     => ($total_institute_hour),
+                    'is_active'                => 1
                 );
             }
 
