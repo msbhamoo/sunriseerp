@@ -284,6 +284,7 @@ foreach ($studentlistbysection as $stkey => $stvalue) {
 <?php
 $hdr_total_fee = 0;
 $hdr_total_paid = 0;
+$hdr_total_discount = 0;
 $hdr_total_balance = 0;
 
 if(!empty($session_fees)){
@@ -303,6 +304,7 @@ if(!empty($session_fees)){
                         }
                         $hdr_total_fee += $fee_value->amount;
                         $hdr_total_paid += $fee_paid;
+                        $hdr_total_discount += $fee_discount;
                         $feetype_balance = $fee_value->amount - ($fee_paid + $fee_discount);
                         if ($feetype_balance < 0) { $feetype_balance = 0; }
                         $hdr_total_balance += $feetype_balance;
@@ -326,6 +328,7 @@ if (!empty($transport_fees)) {
         }
         $hdr_total_fee += $transport_fee_value->fees;
         $hdr_total_paid += $fee_paid;
+        $hdr_total_discount += $fee_discount;
         $feetype_balance = $transport_fee_value->fees - ($fee_paid + $fee_discount);
         if ($feetype_balance < 0) { $feetype_balance = 0; }
         $hdr_total_balance += $feetype_balance;
@@ -336,46 +339,47 @@ $bg_color = '#fbfbfb';
 if ($hdr_total_fee > 0) {
     if ($hdr_total_balance <= 0) {
         $bg_color = '#eaffea'; // Pastel green for full paid
-    } elseif ($hdr_total_paid > 0) {
+    } elseif ($hdr_total_paid > 0 || $hdr_total_discount > 0) {
         $bg_color = '#ffffe0'; // Light yellow for partial
     }
 }
 ?>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div style="background: <?php echo $bg_color; ?>; border: 1px solid #e8e8e8; border-radius: 4px; padding: 15px 20px; margin-bottom: 15px; display: flex; align-items: stretch; flex-wrap: wrap; transition: background-color 0.3s ease;">
+                        <div class="box box-primary" style="border: 1px solid #d2d6de; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-bottom: 20px;">
+                            <div class="box-body" style="padding: 15px; background-color: <?php echo $bg_color; ?>; border-radius: 6px;">
+                                <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;">
                                     
-                                    <div style="flex: 1; display: flex; align-items: center; padding-right: 20px; border-right: 1px solid #eaeaea; min-width: 300px; margin-bottom: 10px;">
-                                        <div style="flex: 0 0 110px; text-align: center; margin-right: 25px;">
-                                            <img width="100" height="100" style="border-radius: 50%; border: 2px solid #2e4a4f; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); object-fit: cover;" src="<?php
-if (!empty($student["image"])) {
-    echo $this->media_storage->getImageURL($student["image"]);
+                                    <div style="flex: 0 0 140px; text-align: center; padding-right: 15px;">
+                                        <img src="<?php
+if (!empty($student['image'])) {
+    echo $this->media_storage->getImageURL($student['image']);
 } else {
     if ($student['gender'] == 'Female') {
         echo $this->media_storage->getImageURL("uploads/student_images/default_female.jpg");
-    } elseif ($student['gender'] == 'Male') {
+    } else {
         echo $this->media_storage->getImageURL("uploads/student_images/default_male.jpg");
     }
 }
-?>" alt="No Image">
-                                        </div>
-                                        <div style="flex: 1;">
-                                            <h3 style="margin-top: 0; font-weight: 600; color: #1a2a3a; margin-bottom: 15px; font-size: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                                                <?php echo strtoupper($this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname)); ?>
-                                            </h3>
-                                            <div class="row" style="color: #555; font-size: 14px;">
-                                                <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
-                                                    <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('admission_no'); ?>:</span> <?php echo $student['admission_no']; ?>
-                                                </div>
-                                                <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
-                                                    <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('class_section'); ?>:</span> <?php echo $student['class'] . " (" . $student['section'] . ")" ?>
-                                                </div>
-                                                <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
-                                                    <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('mobile_number'); ?>:</span> <?php echo $student['mobileno']; ?>
-                                                </div>
-                                                <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
-                                                    <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('father_name'); ?>:</span> <?php echo $student['father_name']; ?>
-                                                </div>
+?>" alt="User Image" style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">
+                                    </div>
+
+                                    <div style="flex: 1 1 300px; padding: 0 15px; border-right: 1px dashed #ccc; min-width: 250px;">
+                                        <h3 style="margin-top: 0; margin-bottom: 12px; font-weight: bold; color: #1a2a3a; text-transform: uppercase;">
+                                            <?php echo $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?>
+                                        </h3>
+                                        <div class="row" style="font-size: 13px; color: #444;">
+                                            <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
+                                                <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('admission_no'); ?>:</span> <?php echo $student['admission_no']; ?>
+                                            </div>
+                                            <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
+                                                <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('class'); ?> (<?php echo $this->lang->line('section'); ?>):</span> <?php echo $student['class'] . " (" . $student['section'] . ")"; ?>
+                                            </div>
+                                            <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
+                                                <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('mobile_number'); ?>:</span> <?php echo $student['mobileno']; ?>
+                                            </div>
+                                            <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
+                                                <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('father_name'); ?>:</span> <?php echo $student['father_name']; ?>
+                                            </div>
+                                            <div class="col-md-12 col-sm-12" style="padding: 0;">
                                                 <div class="col-md-6 col-sm-6" style="margin-bottom: 10px;">
                                                     <span style="font-weight: 600; color: #1a2a3a; display: inline-block; width: 110px;"><?php echo $this->lang->line('roll_number'); ?>:</span> <?php echo $student['roll_no']; ?>
                                                 </div>
@@ -411,6 +415,10 @@ foreach ($categorylist as $value) {
                                         <div style="background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px 15px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
                                             <span style="font-weight: 600; color: #555; font-size: 13px; text-transform: uppercase;">Paid</span>
                                             <span style="font-weight: bold; color: #00a65a; font-size: 16px;"><?php echo $currency_symbol . amountFormat($hdr_total_paid); ?></span>
+                                        </div>
+                                        <div style="background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px 15px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-weight: 600; color: #555; font-size: 13px; text-transform: uppercase;">Total Discount</span>
+                                            <span style="font-weight: bold; color: #f39c12; font-size: 16px;"><?php echo $currency_symbol . amountFormat($hdr_total_discount); ?></span>
                                         </div>
                                         <div style="background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
                                             <span style="font-weight: 600; color: #555; font-size: 13px; text-transform: uppercase;">Balance</span>

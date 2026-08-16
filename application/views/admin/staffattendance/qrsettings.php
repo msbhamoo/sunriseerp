@@ -34,14 +34,20 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label>QR Mode</label>
-                                        <select name="qr_mode" class="form-control">
-                                            <option value="daily"  <?php echo ($setting['qr_mode'] === 'daily')  ? 'selected' : ''; ?>>Daily (new code each day)</option>
-                                            <option value="static" <?php echo ($setting['qr_mode'] === 'static') ? 'selected' : ''; ?>>Static (fixed code)</option>
+                                        <select name="qr_mode" id="qr_mode" class="form-control">
+                                            <option value="daily"   <?php echo ($setting['qr_mode'] === 'daily')   ? 'selected' : ''; ?>>Daily (new code each day)</option>
+                                            <option value="static"  <?php echo ($setting['qr_mode'] === 'static')  ? 'selected' : ''; ?>>Static (fixed code)</option>
+                                            <option value="dynamic" <?php echo ($setting['qr_mode'] === 'dynamic') ? 'selected' : ''; ?>>Dynamic (auto-rotating code)</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <div class="form-group">
+                                    <div class="form-group" id="dynamic_interval_wrap" style="<?php echo ($setting['qr_mode'] === 'dynamic') ? '' : 'display:none;'; ?>">
+                                        <label>Rotate every (seconds)</label>
+                                        <input type="number" min="5" name="dynamic_interval_seconds" class="form-control" value="<?php echo htmlspecialchars($setting['dynamic_interval_seconds']); ?>">
+                                        <small class="text-muted">Dynamic mode only. The displayed code changes this often, so screenshots become useless quickly.</small>
+                                    </div>
+                                    <div class="form-group" id="regen_static_wrap" style="<?php echo ($setting['qr_mode'] === 'static') ? '' : 'display:none;'; ?>">
                                         <label>&nbsp;</label><br>
                                         <label>
                                             <input type="checkbox" name="regenerate_static" value="1">
@@ -50,6 +56,16 @@
                                     </div>
                                 </div>
                             </div>
+                            <script type="text/javascript">
+                            (function () {
+                                var sel = document.getElementById('qr_mode');
+                                function sync() {
+                                    document.getElementById('dynamic_interval_wrap').style.display = (sel.value === 'dynamic') ? '' : 'none';
+                                    document.getElementById('regen_static_wrap').style.display = (sel.value === 'static') ? '' : 'none';
+                                }
+                                if (sel) { sel.addEventListener('change', sync); sync(); }
+                            })();
+                            </script>
 
                             <hr>
                             <h4>Scan Rules</h4>

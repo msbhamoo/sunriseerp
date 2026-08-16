@@ -141,6 +141,7 @@ if (!function_exists('main_menu_array')) {
                 'dispatch'        => array('index','editdispatch'),
                 'receive'         => array('index','editreceive'),
                 'complaint'       => array('index','edit'),
+                'materialregister'=> array('index','edit','delete','download'),
                 'visitorspurpose' => array('index','edit'),
             ),
             

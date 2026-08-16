@@ -323,6 +323,49 @@ class Staffattendance extends Admin_Controller
         $this->load->view("layout/footer");
     }
 
+    /**
+     * AJAX: render the monthly attendance sheet (grid + summary) for a role and
+     * month. Returns an HTML partial loaded into the Monthly tab.
+     */
+    public function monthsheet()
+    {
+        if (!($this->rbac->hasPrivilege('staff_attendance', 'can_view'))) {
+            access_denied();
+        }
+
+        $role  = $this->input->post('role');
+        $month = (int) $this->input->post('month');
+        $year  = (int) $this->input->post('year');
+        if ($month < 1 || $month > 12) { $month = (int) date('m'); }
+        if ($year < 2000) { $year = (int) date('Y'); }
+
+        // Empty/"select" role = all staff.
+        $sheet    = $this->staffattendancemodel->getMonthlySheet($role, $year, $month);
+        $cal_hols = $this->staffattendancemodel->getMonthHolidayDates($year, $month);
+
+        $days_in_month = (int) date('t', mktime(0, 0, 0, $month, 1, $year));
+
+        // Holidays = Sundays (weekly off) + calendar holidays, de-duplicated.
+        $holiday_dates = array();
+        foreach ($cal_hols as $d) { $holiday_dates[$d] = true; }
+        for ($d = 1; $d <= $days_in_month; $d++) {
+            $ds = sprintf('%04d-%02d-%02d', $year, $month, $d);
+            if ((int) date('w', strtotime($ds)) === 0) { $holiday_dates[$ds] = true; } // Sunday
+        }
+
+        $data['sheet']         = $sheet;
+        $data['year']          = $year;
+        $data['month']         = $month;
+        $data['days_in_month'] = $days_in_month;
+        $data['holiday_dates'] = $holiday_dates;
+        $data['month_days']    = $days_in_month;
+        $data['holidays']      = count($holiday_dates);
+        $data['working_days']  = $days_in_month - count($holiday_dates);
+        $data['type_list']     = $this->attendencetype_model->getStaffAttendanceType();
+
+        $this->load->view('admin/staffattendance/_monthly_sheet', $data);
+    }
+
     // =================================================================
     //  QR-BASED ATTENDANCE
     // =================================================================
@@ -343,10 +386,14 @@ class Staffattendance extends Admin_Controller
             if (!($this->rbac->hasPrivilege('staff_attendance', 'can_edit'))) {
                 access_denied();
             }
-            $mode = ($this->input->post('qr_mode') === 'static') ? 'static' : 'daily';
+            $posted_mode = $this->input->post('qr_mode');
+            $mode = in_array($posted_mode, array('static', 'dynamic'), true) ? $posted_mode : 'daily';
+            $interval = (int) $this->input->post('dynamic_interval_seconds');
+            if ($interval < 5) { $interval = 30; }
             $save = array(
                 'is_enabled'               => $this->input->post('is_enabled') ? 1 : 0,
                 'qr_mode'                  => $mode,
+                'dynamic_interval_seconds' => $interval,
                 'rescan_cooldown_minutes'  => (int) $this->input->post('rescan_cooldown_minutes'),
                 'earliest_out_source'      => ($this->input->post('earliest_out_source') === 'manual') ? 'manual' : 'schedule',
                 'manual_earliest_out_time' => $this->input->post('manual_earliest_out_time') ?: null,
@@ -393,6 +440,26 @@ class Staffattendance extends Admin_Controller
         $this->load->view('layout/header', $data);
         $this->load->view('admin/staffattendance/qrdisplay', $data);
         $this->load->view('layout/footer', $data);
+    }
+
+    /**
+     * Live QR image endpoint the Display page polls in dynamic mode. Returns
+     * the current token rendered as a base64 PNG plus the rotation interval.
+     */
+    public function qrimage()
+    {
+        if (!($this->rbac->hasPrivilege('staff_attendance', 'can_view'))) {
+            access_denied();
+        }
+        $this->load->helper('json_output');
+        $setting = $this->staffQrSetting_model->get();
+        $token   = $this->staffQrSetting_model->getValidToken();
+        $this->load->library('QR_Code');
+        json_output(200, array(
+            'img'      => $this->qr_code->generateBase64($token),
+            'mode'     => $setting['qr_mode'],
+            'interval' => max(5, (int) $setting['dynamic_interval_seconds']),
+        ));
     }
 
     /**

@@ -533,4 +533,86 @@ class Staffattendancemodel extends MY_Model {
         return array('status' => 'break_in', 'message' => 'Welcome back. You were out for ' . $dur . '.', 'time' => date('h:i A', strtotime($now)));
     }
 
+    // =================================================================
+    //  MONTHLY ATTENDANCE SHEET
+    // =================================================================
+
+    /**
+     * Per-staff daily attendance for a role across a month.
+     * Returns ['staff' => [ {staff_id,name,employee_id} ], 'map' => [staff_id => ['Y-m-d' => long_lang_name]]].
+     */
+    public function getMonthlySheet($role_name, $year, $month)
+    {
+        $start = sprintf('%04d-%02d-01', $year, $month);
+        $end   = date('Y-m-t', strtotime($start));
+
+        // Optional role filter — empty/select means "all staff".
+        $role_cond = '';
+        if (!empty($role_name) && $role_name !== 'select') {
+            $role_cond = " AND roles.name = " . $this->db->escape($role_name);
+        }
+
+        $sql = "SELECT staff.id AS staff_id, staff.name, staff.surname, staff.employee_id,
+                       roles.name AS role_name, sa.date, sat.long_lang_name
+                FROM staff
+                LEFT JOIN staff_roles ON staff_roles.staff_id = staff.id
+                LEFT JOIN roles ON roles.id = staff_roles.role_id
+                LEFT JOIN staff_attendance sa ON sa.staff_id = staff.id AND sa.date BETWEEN " . $this->db->escape($start) . " AND " . $this->db->escape($end) . "
+                LEFT JOIN staff_attendance_type sat ON sat.id = sa.staff_attendance_type_id
+                WHERE staff.is_active = 1" . $role_cond . "
+                ORDER BY staff.name, staff.surname";
+        $rows = $this->db->query($sql)->result();
+
+        $staff = array();
+        $seen  = array();
+        $map   = array();
+        foreach ($rows as $r) {
+            if (!isset($seen[$r->staff_id])) {
+                $seen[$r->staff_id] = true;
+                $staff[] = array(
+                    'staff_id'    => $r->staff_id,
+                    'name'        => trim($r->name . ' ' . $r->surname),
+                    'employee_id' => $r->employee_id,
+                    'role_name'   => $r->role_name,
+                );
+                $map[$r->staff_id] = array();
+            }
+            if (!empty($r->date) && !empty($r->long_lang_name)) {
+                $map[$r->staff_id][$r->date] = $r->long_lang_name;
+            }
+        }
+        return array('staff' => $staff, 'map' => $map);
+    }
+
+    /**
+     * Distinct calendar-holiday dates (Y-m-d) within a month, taken from the
+     * annual_calendar (non-working days flagged for attendance).
+     */
+    public function getMonthHolidayDates($year, $month)
+    {
+        $start = sprintf('%04d-%02d-01', $year, $month);
+        $end   = date('Y-m-t', strtotime($start));
+        $dates = array();
+
+        if (!$this->db->table_exists('annual_calendar')) {
+            return $dates;
+        }
+        $sql = "SELECT from_date, to_date FROM annual_calendar
+                WHERE is_active = 1 AND is_working_day = 0
+                AND (module_impact IS NULL OR module_impact LIKE '%attendance%')
+                AND DATE(from_date) <= " . $this->db->escape($end) . "
+                AND DATE(to_date) >= " . $this->db->escape($start) . "";
+        $rows = $this->db->query($sql)->result();
+        $ms = strtotime($start);
+        $me = strtotime($end);
+        foreach ($rows as $r) {
+            $d = max($ms, strtotime(date('Y-m-d', strtotime($r->from_date))));
+            $to = min($me, strtotime(date('Y-m-d', strtotime($r->to_date))));
+            for ($t = $d; $t <= $to; $t += 86400) {
+                $dates[date('Y-m-d', $t)] = true;
+            }
+        }
+        return array_keys($dates);
+    }
+
 }

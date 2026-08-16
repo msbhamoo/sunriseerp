@@ -141,6 +141,76 @@
     .staffatt-hint { color:#8a93a2; font-size:12px; margin-top:4px; }
     @media (max-width:767px){ .uniform-switch { justify-content:flex-start; } }
 
+    /* ===== Attendance status as compact colour pills ===== */
+    .att-cell { min-width: 300px; }
+    .att-cell .radio.radio-inline { margin: 0 5px 5px 0 !important; padding: 0 !important; display: inline-block; }
+    .att-cell .radio.radio-inline input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+    .att-cell .radio.radio-inline label { display: inline-block; padding: 4px 11px; margin: 0; border: 1.5px solid #d7dde5; border-radius: 14px; font-size: 11.5px; font-weight: 600; color: #6b7684; background: #f7f9fb; cursor: pointer; line-height: 1.45; white-space: nowrap; transition: all .12s ease; }
+    .att-cell .radio.radio-inline label::before, .att-cell .radio.radio-inline label::after { display: none !important; content: none !important; }
+    .att-cell .radio.radio-inline label:hover { border-color: #9aa6b4; color: #445; }
+    /* selected — default, then per-status colours */
+    .att-cell input:checked + label { color: #fff; background: #334155; border-color: #334155; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+    .att-cell input.att-present:checked + label { background: #16a34a; border-color: #16a34a; }
+    .att-cell input.att-late:checked + label { background: #f59e0b; border-color: #f59e0b; }
+    .att-cell input.att-absent:checked + label { background: #dc2626; border-color: #dc2626; }
+    .att-cell input.att-half_day:checked + label { background: #2563eb; border-color: #2563eb; }
+    .att-cell input.att-holiday:checked + label { background: #7c3aed; border-color: #7c3aed; }
+    .att-cell input.att-unplanned_leave:checked + label { background: #db2777; border-color: #db2777; }
+    .att-cell input[type="radio"]:disabled + label { opacity: .5; cursor: not-allowed; }
+
+    /* ===== Fixed-size scroll box: table scrolls inside, page does not ===== */
+    .staffatt-scroll { width: 100%; max-width: 100%; max-height: 66vh; overflow: auto; }
+    .staffatt-scroll .staffatt-table { margin-bottom: 0; }
+
+    /* ===== Sticky header + tighter rows so more staff fit ===== */
+    .staffatt-table thead th { position: sticky; top: 0; z-index: 5; }
+    .staffatt-table tbody td { padding: 7px 8px !important; }
+    .staffatt-table .in_time, .staffatt-table .out_time { min-width: 84px; padding: 4px 6px; }
+    .staffatt-table td .form-control[name^="remark"] { min-width: 120px; }
+
+    /* ===== Row tint (left accent) by selected status ===== */
+    .staffatt-table tbody tr td:first-child { position: relative; }
+    .staffatt-table tbody tr.rt-present td:first-child { box-shadow: inset 4px 0 0 #16a34a; }
+    .staffatt-table tbody tr.rt-late td:first-child { box-shadow: inset 4px 0 0 #f59e0b; }
+    .staffatt-table tbody tr.rt-absent td:first-child { box-shadow: inset 4px 0 0 #dc2626; }
+    .staffatt-table tbody tr.rt-half_day td:first-child { box-shadow: inset 4px 0 0 #2563eb; }
+    .staffatt-table tbody tr.rt-holiday td:first-child { box-shadow: inset 4px 0 0 #7c3aed; }
+    .staffatt-table tbody tr.rt-unplanned_leave td:first-child { box-shadow: inset 4px 0 0 #db2777; }
+
+    /* ===== Cleaner criteria bar ===== */
+    #form1 .form-group label { font-weight: 600; color: #55606d; font-size: 13px; }
+    #form1 .btn-block { margin-top: 2px; }
+
+    /* ===== Redesigned header / single-panel look ===== */
+    .staffatt-topbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
+    .att-qractions { display:flex; gap:6px; flex-wrap:wrap; }
+    .staffatt-card { border-top:3px solid #2b3a4a !important; box-shadow:0 1px 3px rgba(0,0,0,.06); border-radius:8px; margin-bottom:0; }
+    .staffatt-criteria { padding:14px 16px 4px !important; }
+    .staffatt-card .box-body { padding-left:16px; padding-right:16px; }
+    .staffatt-actionbar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 0 12px; flex-wrap:wrap; border-top:1px solid #eef2f6; margin-top:4px; }
+    .staffatt-actionbar .sa-left { display:flex; align-items:center; gap:8px; }
+    .staffatt-actionbar .sa-title { font-size:15px; font-weight:600; color:#2b3a4a; }
+    .staffatt-actionbar .sa-count { display:inline-block; background:#eef2f7; color:#55606d; border-radius:10px; padding:1px 9px; font-size:12px; font-weight:600; }
+    .staffatt-info { color:#94a3b8; font-size:14px; }
+    .staffatt-info:hover { color:#64748b; }
+
+    /* ===== "Set all" controls inside column headers ===== */
+    .setall-wrap { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 6px; text-transform: none; font-weight: 400; }
+    .setall-label { font-size: 10.5px; color: #97a3b2; text-transform: uppercase; letter-spacing: .3px; margin-right: 2px; }
+    .setall-pill { margin: 0; font-weight: 500; cursor: pointer; }
+    .setall-pill input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .setall-pill span { display: inline-block; padding: 2px 8px; border: 1px solid #d7dde5; border-radius: 11px; font-size: 10.5px; color: #6b7684; background: #fff; transition: all .12s ease; }
+    .setall-pill:hover span { border-color: #9aa6b4; }
+    .setall-pill input:checked + span { color: #fff; background: #334155; border-color: #334155; }
+    .setall-pill.att-present input:checked + span { background: #16a34a; border-color: #16a34a; }
+    .setall-pill.att-late input:checked + span { background: #f59e0b; border-color: #f59e0b; }
+    .setall-pill.att-absent input:checked + span { background: #dc2626; border-color: #dc2626; }
+    .setall-pill.att-half_day input:checked + span { background: #2563eb; border-color: #2563eb; }
+    .setall-pill.att-holiday input:checked + span { background: #7c3aed; border-color: #7c3aed; }
+    .setall-cmp-wrap { justify-content: center; }
+    .setall-cmp-item { font-size: 10.5px; color: #6b7684; white-space: nowrap; }
+    .setall-cmp-item .btn-xs { padding: 1px 5px; font-size: 10px; margin-left: 1px; }
+
 </style>
 
 <div class="content-wrapper">
@@ -148,17 +218,21 @@
     <section class="content">
         <div class="row">
             <div class="col-md-12">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title"><i class="fa fa-search"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
-                        <div class="box-tools pull-right">
-                            <a href="<?php echo site_url('admin/staffattendance/scan'); ?>" class="btn btn-success btn-sm"><i class="fa fa-qrcode"></i> Mark My Attendance</a>
-                            <a href="<?php echo site_url('admin/staffattendance/qrdisplay'); ?>" target="_blank" class="btn btn-info btn-sm"><i class="fa fa-desktop"></i> Display QR</a>
-                            <a href="<?php echo site_url('admin/staffattendance/qrsettings'); ?>" class="btn btn-default btn-sm"><i class="fa fa-cog"></i> QR Settings</a>
-                        </div>
+                <div class="staffatt-topbar">
+                    <div class="btn-group att-tabs">
+                        <button type="button" class="btn btn-primary att-tab-btn" data-tab="daily"><i class="fa fa-calendar-check-o"></i> <?php echo $this->lang->line('staff_attendance'); ?></button>
+                        <button type="button" class="btn btn-default att-tab-btn" data-tab="monthly"><i class="fa fa-table"></i> Monthly Sheet</button>
                     </div>
+                    <div class="att-qractions">
+                        <a href="<?php echo site_url('admin/staffattendance/scan'); ?>" class="btn btn-sm btn-success"><i class="fa fa-qrcode"></i> Mark My Attendance</a>
+                        <a href="<?php echo site_url('admin/staffattendance/qrdisplay'); ?>" target="_blank" class="btn btn-sm btn-default"><i class="fa fa-desktop"></i> Display QR</a>
+                        <a href="<?php echo site_url('admin/staffattendance/qrsettings'); ?>" class="btn btn-sm btn-default" title="QR Settings"><i class="fa fa-cog"></i></a>
+                    </div>
+                </div>
+                <div id="tab-daily">
+                <div class="box box-primary staffatt-card">
                     <form id='form1' action="<?php echo site_url('admin/staffattendance/index') ?>" method="post" accept-charset="utf-8">
-                        <div class="box-body">
+                        <div class="box-body staffatt-criteria">
                             <?php
                             if ($this->session->flashdata('msg')) {
                                 echo $this->session->flashdata('msg');
@@ -167,9 +241,9 @@
                             ?>
                             <?php echo $this->customlib->getCSRF(); ?>
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-5 col-sm-6">
                                     <div class="form-group">
-                                        <label for="exampleInputEmail1"><?php echo $this->lang->line('role'); ?></label>
+                                        <label for="class_id"><?php echo $this->lang->line('role'); ?></label>
 
                                         <select autofocus="" id="class_id" name="user_id" class="form-control">
                                             <option value="select"><?php echo $this->lang->line('select'); ?></option>
@@ -188,17 +262,18 @@
                                         <span class="text-danger"><?php echo form_error('class_id'); ?></span>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4 col-sm-6">
                                     <div class="form-group">
-                                        <label for="exampleInputEmail1">
+                                        <label for="date_field">
                                             <?php echo $this->lang->line('attendance_date'); ?></label>
-                                        <input name="date" placeholder="" type="text" class="form-control date" value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat())); ?>" readonly="readonly" />
+                                        <input id="date_field" name="date" placeholder="" type="text" class="form-control date" value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat())); ?>" readonly="readonly" />
                                         <span class="text-danger"><?php echo form_error('date'); ?></span>
                                     </div>
                                 </div>
-                                <div class="col-md-12">
+                                <div class="col-md-3 col-sm-12">
                                     <div class="form-group">
-                                        <button type="submit" name="search" value="search" class="btn btn-primary pull-right checkbox-toggle"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                                        <label class="hidden-xs" style="display:block;">&nbsp;</label>
+                                        <button type="submit" name="search" value="search" class="btn btn-primary btn-block checkbox-toggle"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
                                     </div>
                                 </div>
                             </div>
@@ -207,17 +282,7 @@
                     <?php
                     if (isset($resultlist)) {
                     ?>
-                        <div class="box-header ptbnull"></div>
-                        <div class="box-header with-border">
-                            <h3 class="box-title"><i class="fa fa-users"></i> <?php echo $this->lang->line('staff_list'); ?></h3>
-                            <div class="box-tools pull-right">
-                            </div>                            <div id="staffatt-legend">
-                                <span class="lg-item"><span class="lg-dot" style="background:#00a65a;"></span> <?php echo $this->lang->line('yes'); ?> / Compliant</span>
-                                <span class="lg-item"><span class="lg-dot" style="background:#d9534f;"></span> <?php echo $this->lang->line('no'); ?> / Non-Compliant</span>
-                                <span class="lg-item"><i class="fa fa-info-circle text-muted"></i> Compliance items (Uniform, ID Card, Lesson Plan, Phone Handover) are for administrative tracking.</span>
-                            </div>
-                        </div>
-                        <div class="box-body">
+                        <div class="box-body" style="padding-top:0;">
                             <?php
                             if (!empty($resultlist)) {
                                 $checked = "";
@@ -234,67 +299,20 @@
                                 ?>
                                 <form action="<?php echo site_url('admin/staffattendance/index') ?>" id="save_attendance" method="post">
                                     <?php echo $this->customlib->getCSRF(); ?>
-                                    <div class="mailbox-controls">
-                                    <div class="row">
-                                                <div class="col-md-9">
-                                                
-                                                    <div class="form-group">
-                                                        <label for="exampleInputEmail1"><?php echo $this->lang->line('set_attendance_for_all_staff_as'); ?> &nbsp;</label>
-                                                        <?php
-                                                        foreach ($attendencetypeslist as $key => $type) {
-                                                            $att_type = str_replace(" ", "_", strtolower($type['type']));
-
-                                                        ?>
-                                                            <div class="radio radio-info radio-inline">
-                                                                <input type="radio" data-record_id="<?php echo $type['id'] ?>" name="attendencetype" class="default_radio" value="radio_<?php echo $type['id'] ?>" id="attendencetype<?php echo $type['id'] ?>"   onclick="getatten(<?php echo $type['id'] ?>)">
-                                                                <label for="attendencetype<?php echo $type['id'] ?>">
-                                                                    <?php echo  $this->lang->line($att_type); ?> 
-                                                                </label>
-
-                                                            </div>
-                                                        <?php
-
-                                                        }
-                                                        ?>
-                                                    </div>
-                                                    <div class="form-group" style="display:flex; flex-wrap:wrap; gap:15px; align-items:center; background:#f9fafb; padding:8px 12px; border-radius:6px; border:1px solid #eef2f6;">
-                                                        <span style="font-weight:600; color:#334155;"><i class="fa fa-check-square-o"></i> <?php echo $this->lang->line('compliance_checklist'); ?> (Set All):</span>
-                                                        
-                                                        <span style="font-size:12px;"><strong><?php echo $this->lang->line('in_uniform'); ?>:</strong>
-                                                            <button type="button" class="btn btn-xs btn-success set-all-cmp" data-target="uniform-check" data-val="true"><i class="fa fa-check"></i> <?php echo $this->lang->line('yes'); ?></button>
-                                                            <button type="button" class="btn btn-xs btn-danger set-all-cmp" data-target="uniform-check" data-val="false"><i class="fa fa-times"></i> <?php echo $this->lang->line('no'); ?></button>
-                                                        </span>
-
-                                                        <span style="font-size:12px;"><strong><?php echo $this->lang->line('id_card'); ?>:</strong>
-                                                            <button type="button" class="btn btn-xs btn-success set-all-cmp" data-target="idcard-check" data-val="true"><i class="fa fa-check"></i> <?php echo $this->lang->line('yes'); ?></button>
-                                                            <button type="button" class="btn btn-xs btn-danger set-all-cmp" data-target="idcard-check" data-val="false"><i class="fa fa-times"></i> <?php echo $this->lang->line('no'); ?></button>
-                                                        </span>
-
-                                                        <span style="font-size:12px;"><strong><?php echo $this->lang->line('lesson_plan'); ?>:</strong>
-                                                            <button type="button" class="btn btn-xs btn-success set-all-cmp" data-target="lessonplan-check" data-val="true"><i class="fa fa-check"></i> <?php echo $this->lang->line('yes'); ?></button>
-                                                            <button type="button" class="btn btn-xs btn-danger set-all-cmp" data-target="lessonplan-check" data-val="false"><i class="fa fa-times"></i> <?php echo $this->lang->line('no'); ?></button>
-                                                        </span>
-
-                                                        <span style="font-size:12px;"><strong><?php echo $this->lang->line('phone_handover'); ?>:</strong>
-                                                            <button type="button" class="btn btn-xs btn-success set-all-cmp" data-target="phone-check" data-val="true"><i class="fa fa-check"></i> <?php echo $this->lang->line('yes'); ?></button>
-                                                            <button type="button" class="btn btn-xs btn-danger set-all-cmp" data-target="phone-check" data-val="false"><i class="fa fa-times"></i> <?php echo $this->lang->line('no'); ?></button>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <div class="pull-right">
- 														<?php if (($this->rbac->hasPrivilege('staff_attendance', 'can_add')) || ($this->rbac->hasPrivilege('staff_attendance', 'can_edit'))) { ?>
-                                                        <button type="submit" name="search" value="saveattendence" id="saveattendence" class="btn btn-primary pull-right checkbox-toggle"><i class="fa fa-save"></i> <?php echo $this->lang->line('save_attendance'); ?> </button>
- 														<?php } ?>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                    <div class="staffatt-actionbar">
+                                        <div class="sa-left">
+                                            <span class="sa-title"><i class="fa fa-users"></i> <?php echo $this->lang->line('staff_list'); ?> <span class="sa-count"><?php echo count($resultlist); ?></span></span>
+                                            <a href="#" class="staffatt-info" data-toggle="tooltip" data-html="true" title="<span style='color:#00a65a;'>&#9679;</span> <?php echo $this->lang->line('yes'); ?> / Compliant&nbsp;&nbsp;<span style='color:#d9534f;'>&#9679;</span> <?php echo $this->lang->line('no'); ?> / Non-Compliant<br>Compliance items are for administrative tracking.&nbsp; Use <b>Set all</b> in the column headers to fill everyone at once."><i class="fa fa-info-circle"></i></a>
+                                        </div>
+                                        <?php if (($this->rbac->hasPrivilege('staff_attendance', 'can_add')) || ($this->rbac->hasPrivilege('staff_attendance', 'can_edit'))) { ?>
+                                            <button type="submit" name="search" value="saveattendence" id="saveattendence" class="btn btn-primary checkbox-toggle"><i class="fa fa-save"></i> <?php echo $this->lang->line('save_attendance'); ?></button>
+                                        <?php } ?>
                                     </div>
                                     <input type="hidden" name="is_first_time_attendance" value="<?php echo $is_first_time_attendance;?>">
                                     <input type="hidden" name="user_id" value="<?php echo $user_type_id; ?>">
                                     <input type="hidden" name="section_id" value="">
                                     <input type="hidden" name="date" value="<?php echo $date; ?>">
-                                    <div class="table-responsive">
+                                    <div class="table-responsive staffatt-scroll">
                                         <table class="table table-hover table-striped example staffatt-table">
                                             <thead>
                                                 <tr>
@@ -302,8 +320,37 @@
                                                     <th><?php echo $this->lang->line('staff_id'); ?></th>
                                                     <th><?php echo $this->lang->line('name'); ?></th>
                                                     <th><?php echo $this->lang->line('role'); ?></th>
-                                                    <th><?php echo $this->lang->line('attendance'); ?></th>
-                                                    <th class="text-center white-space-nowrap" style="min-width:280px;"><i class="fa fa-check-square-o"></i> <?php echo $this->lang->line('compliance_checklist'); ?></th>
+                                                    <th style="min-width:300px;">
+                                                        <?php echo $this->lang->line('attendance'); ?>
+                                                        <div class="setall-wrap">
+                                                            <span class="setall-label">Set all:</span>
+                                                            <?php foreach ($attendencetypeslist as $key => $type) { $att_type = str_replace(" ", "_", strtolower($type['type'])); ?>
+                                                                <label class="setall-pill att-<?php echo $att_type; ?>">
+                                                                    <input type="radio" data-record_id="<?php echo $type['id'] ?>" name="attendencetype" class="default_radio" value="radio_<?php echo $type['id'] ?>" id="attendencetype<?php echo $type['id'] ?>" onclick="getatten(<?php echo $type['id'] ?>)">
+                                                                    <span><?php echo $this->lang->line($att_type); ?></span>
+                                                                </label>
+                                                            <?php } ?>
+                                                        </div>
+                                                    </th>
+                                                    <th class="text-center white-space-nowrap" style="min-width:280px;">
+                                                        <i class="fa fa-check-square-o"></i> <?php echo $this->lang->line('compliance_checklist'); ?>
+                                                        <div class="setall-wrap setall-cmp-wrap">
+                                                            <span class="setall-label">Set all:</span>
+                                                            <?php
+                                                            $cmp_items = array(
+                                                                'uniform-check'    => $this->lang->line('in_uniform'),
+                                                                'idcard-check'     => $this->lang->line('id_card'),
+                                                                'lessonplan-check' => $this->lang->line('lesson_plan'),
+                                                                'phone-check'      => $this->lang->line('phone_handover'),
+                                                            );
+                                                            foreach ($cmp_items as $cmp_target => $cmp_label) { ?>
+                                                                <span class="setall-cmp-item"><?php echo $cmp_label; ?>
+                                                                    <button type="button" class="btn btn-xs btn-success set-all-cmp" data-target="<?php echo $cmp_target; ?>" data-val="true"><i class="fa fa-check"></i></button>
+                                                                    <button type="button" class="btn btn-xs btn-danger set-all-cmp" data-target="<?php echo $cmp_target; ?>" data-val="false"><i class="fa fa-times"></i></button>
+                                                                </span>
+                                                            <?php } ?>
+                                                        </div>
+                                                    </th>
                                                     <?php  if ($sch_setting->biometric) {  ?>
                                                         <th width="10%"><?php echo $this->lang->line('date'); ?></th>
                                                     <?php  }  ?>
@@ -334,11 +381,11 @@
                                                             <?php echo $value['name'] . " " . $value['surname']; ?>
                                                         </td>
                                                         <td><?php echo $value['user_type']; ?></td>
-                                                        <td>
+                                                        <td class="att-cell">
                                                             <?php
                                                             $c     = 1;
                                                             $count = 0;
-                                                            foreach ($attendencetypeslist as $key => $type) {  
+                                                            foreach ($attendencetypeslist as $key => $type) {
 
                                                                     $att_type = str_replace(" ", "_", strtolower($type['type']));
                                                                     if ($value["date"] != "xxx") {
@@ -347,7 +394,7 @@
                                                                             <input onclick="disable_enable(this.value,<?php echo $value["staff_id"] ?>)"  <?php if ($value['staff_attendance_type_id'] == $type['id']) {
                                                                                         echo "checked";
                                                                                     }
-                                                                                    ?> type="radio" id="attendencetype<?php echo $value['staff_id'] . "-" . $count; ?>" value="<?php echo $type['id'] ?>" name="attendencetype<?php echo $value['staff_id']; ?>" class="radio_<?php echo $type['id'] ?>">
+                                                                                    ?> type="radio" id="attendencetype<?php echo $value['staff_id'] . "-" . $count; ?>" value="<?php echo $type['id'] ?>" name="attendencetype<?php echo $value['staff_id']; ?>" class="radio_<?php echo $type['id'] ?> att-<?php echo $att_type; ?>">
                                                                             <label for="attendencetype<?php echo $value['staff_id'] . "-" . $count; ?>">
                                                                                 <?php echo $this->lang->line(($type['long_lang_name'])); ?>
                                                                             </label>
@@ -363,7 +410,7 @@
                                                                                 <input <?php if ($att_type == "absent") {
                                                                                             echo "checked";
                                                                                         }
-                                                                                        ?> type="radio" id="attendencetype<?php echo $value['staff_id'] . "-" . $count; ?>" value="<?php echo $type['id'] ?>" name="attendencetype<?php echo $value['staff_id']; ?>" class="radio_<?php echo $type['id'] ?>">
+                                                                                        ?> type="radio" id="attendencetype<?php echo $value['staff_id'] . "-" . $count; ?>" value="<?php echo $type['id'] ?>" name="attendencetype<?php echo $value['staff_id']; ?>" class="radio_<?php echo $type['id'] ?> att-<?php echo $att_type; ?>">
                                                                                 <label for="attendencetype<?php echo $value['staff_id'] . "-" . $count; ?>">
                                                                                     <?php echo $this->lang->line(($type['long_lang_name'])); ?>
                                                                                 </label>
@@ -375,7 +422,7 @@
                                                                                 <input  onclick="disable_enable(this.value,<?php echo $value["staff_id"] ?>)"  <?php if (($c == 1) && ($resultlist[0]['staff_attendance_type_id'] != 5)) {
                                                                                             echo "checked";
                                                                                         }
-                                                                                        ?> type="radio" id="attendencetype<?php echo $value['staff_id'] . "-" . $count; ?>" value="<?php echo $type['id'] ?>" name="attendencetype<?php echo $value['staff_id']; ?>" class="radio_<?php echo $type['id'] ?>">
+                                                                                        ?> type="radio" id="attendencetype<?php echo $value['staff_id'] . "-" . $count; ?>" value="<?php echo $type['id'] ?>" name="attendencetype<?php echo $value['staff_id']; ?>" class="radio_<?php echo $type['id'] ?> att-<?php echo $att_type; ?>">
                                                                                 <label for="attendencetype<?php echo $value['staff_id'] . "-" . $count; ?>">
                                                                                     <?php
                                                                                      echo $this->lang->line(($type['long_lang_name'])); ?>
@@ -498,13 +545,111 @@
             <?php
                     }
             ?>
+                </div><!-- /#tab-daily -->
+
+                <div id="tab-monthly" style="display:none;">
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <h3 class="box-title"><i class="fa fa-table"></i> Monthly Attendance Sheet</h3>
+                        </div>
+                        <div class="box-body">
+                            <div class="row">
+                                <div class="col-md-4 col-sm-6">
+                                    <div class="form-group">
+                                        <label><?php echo $this->lang->line('role'); ?></label>
+                                        <select id="ms-role" class="form-control">
+                                            <option value="select">All Staff</option>
+                                            <?php foreach ($classlist as $c) { ?>
+                                                <option value="<?php echo $c['type']; ?>"><?php echo $c['type']; ?></option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-4">
+                                    <div class="form-group">
+                                        <label>Month</label>
+                                        <select id="ms-month" class="form-control">
+                                            <?php for ($mn = 1; $mn <= 12; $mn++) { ?>
+                                                <option value="<?php echo $mn; ?>" <?php echo ($mn == date('n')) ? 'selected' : ''; ?>><?php echo date('F', mktime(0, 0, 0, $mn, 1)); ?></option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-4">
+                                    <div class="form-group">
+                                        <label>Year</label>
+                                        <select id="ms-year" class="form-control">
+                                            <?php $cy = (int) date('Y'); for ($yy = $cy - 3; $yy <= $cy + 1; $yy++) { ?>
+                                                <option value="<?php echo $yy; ?>" <?php echo ($yy == $cy) ? 'selected' : ''; ?>><?php echo $yy; ?></option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 col-sm-4">
+                                    <div class="form-group">
+                                        <label class="hidden-xs" style="display:block;">&nbsp;</label>
+                                        <button type="button" id="ms-show" class="btn btn-primary btn-block"><i class="fa fa-search"></i> Show</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="ms-container"><div class="text-muted" style="padding:16px;">Pick a role and month, then click <strong>Show</strong>.</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 </div>
+
+<script type="text/javascript">
+    (function () {
+        var MS_URL = "<?php echo site_url('admin/staffattendance/monthsheet'); ?>";
+        $(document).on('click', '.att-tab-btn', function () {
+            var t = $(this).data('tab');
+            $('.att-tab-btn').removeClass('btn-primary').addClass('btn-default');
+            $(this).removeClass('btn-default').addClass('btn-primary');
+            $('#tab-daily').toggle(t === 'daily');
+            $('#tab-monthly').toggle(t === 'monthly');
+        });
+        $(document).on('click', '#ms-show', function () {
+            var role = $('#ms-role').val(), month = $('#ms-month').val(), year = $('#ms-year').val();
+            $('#ms-container').html('<div style="padding:20px;"><i class="fa fa-spinner fa-spin"></i> Loading monthly sheet...</div>');
+            $.post(MS_URL, { role: role, month: month, year: year }, function (html) {
+                $('#ms-container').html(html);
+            }).fail(function () {
+                $('#ms-container').html('<div class="alert alert-danger">Could not load the sheet. Please try again.</div>');
+            });
+        });
+    })();
+</script>
 
 <script type="text/javascript">
     $(document).on('submit', '#save_attendance', function(e) {
         $('#load').button('loading');
     });
+
+    // Left-accent row tint reflecting the selected attendance status.
+    (function () {
+        var STATUSES = ['present','late','absent','half_day','holiday','unplanned_leave'];
+        function tintRow(radio) {
+            var tr = $(radio).closest('tr');
+            if (!tr.length) { return; }
+            for (var i = 0; i < STATUSES.length; i++) { tr.removeClass('rt-' + STATUSES[i]); }
+            var m = (radio.className || '').match(/att-([a-z_]+)/);
+            if (m) { tr.addClass('rt-' + m[1]); }
+        }
+        $(function () {
+            $('.att-cell input[type="radio"]:checked').each(function () { tintRow(this); });
+            if ($.fn.tooltip) { $('.staffatt-info').tooltip({ container: 'body' }); }
+        });
+        $(document).on('change', '.att-cell input[type="radio"]', function () { tintRow(this); });
+        // Refresh all row tints after a header "Set all" bulk action.
+        $(document).on('click', '.setall-pill input.default_radio', function () {
+            setTimeout(function () {
+                $('.att-cell input[type="radio"]:checked').each(function () { tintRow(this); });
+            }, 60);
+        });
+    })();
 
     $(document).ready(function() {
         $.extend($.fn.dataTable.defaults, {
@@ -527,7 +672,7 @@
             var returnVal = confirm("<?php echo $this->lang->line('are_you_sure'); ?>");
             if(returnVal){
                 
-                $("input[type=radio][class='"+radio_default+"']").prop("checked", returnVal);
+                $("input[type=radio]." + radio_default).prop("checked", returnVal).trigger('change');
                 
                 let attendance_type_id = ($(this).data('record_id'));
                 if(window.leaveTypeIds && window.leaveTypeIds.indexOf(parseInt(attendance_type_id))!==-1){
