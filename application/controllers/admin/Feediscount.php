@@ -260,6 +260,27 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
         $this->load->model('feediscountrequest_model');
         $data['requests'] = $this->feediscountrequest_model->getAll();
         
+        // Fetch unique discount categories/reasons for dropdown with auto-add capability
+        $reasons_query = $this->db->query("SELECT DISTINCT reason FROM fee_discount_requests WHERE reason IS NOT NULL AND reason != '' AND reason NOT LIKE 'Imported Ref%' ORDER BY reason ASC");
+        $preset_reasons = array(
+            'Management Discount',
+            'Sibling Concession',
+            'Staff Child Concession',
+            'Merit Scholarship',
+            'Early Payment Discount',
+            'Single Parent Concession',
+            'Financial Hardship',
+            'Need-based Scholarship'
+        );
+        if ($reasons_query->num_rows() > 0) {
+            foreach ($reasons_query->result_array() as $r) {
+                if (!in_array($r['reason'], $preset_reasons) && strlen($r['reason']) < 60) {
+                    $preset_reasons[] = $r['reason'];
+                }
+            }
+        }
+        $data['discount_categories'] = array_unique($preset_reasons);
+
         $this->load->view('layout/header', $data);
         $this->load->view('admin/feediscount/approvalQueue', $data);
         $this->load->view('layout/footer', $data);
@@ -272,10 +293,16 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
         }
         
         $this->load->model('feediscountrequest_model');
+        $this->load->model('studentfeemaster_model');
         $request = $this->feediscountrequest_model->get($id);
         
         if ($request && ($request['status'] == 'pending' || $request['status'] == 'provisional')) {
             $admin_id = $this->customlib->getStaffID();
+            $admin_record = $this->staff_model->get($admin_id);
+            $collected_by = $this->customlib->getAdminSessionUserName() . "(" . ($admin_record['employee_id'] ?? '') . ")";
+
+            $this->db->trans_start();
+
             $this->feediscountrequest_model->updateStatus($id, 'approved', $admin_id);
             
             // Create the dynamic discount record
@@ -291,9 +318,240 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
                     'date' => date('Y-m-d')
                 );
                 $this->db->insert('student_applied_discounts', $applied_data);
+            } elseif ($request['status'] == 'pending' && $student_fees_discount_id) {
+                // Apply discount directly across student unpaid fee heads so balance clears with zero payment collection
+                $student_session_id = $request['student_session_id'];
+                $student_due_fee = $this->studentfeemaster_model->getStudentFees($student_session_id);
+                
+                $total_discount_to_apply = 0;
+                if ($request['discount_type'] == 'fix') {
+                    $total_discount_to_apply = $request['amount'];
+                } else {
+                    $total_due_balance = 0;
+                    if (!empty($student_due_fee)) {
+                        foreach ($student_due_fee as $fee) {
+                            if (!empty($fee->fees)) {
+                                foreach ($fee->fees as $fee_value) {
+                                    $paid = 0;
+                                    $disc = 0;
+                                    if (!empty($fee_value->amount_detail)) {
+                                        $deps = json_decode($fee_value->amount_detail);
+                                        if (is_array($deps) || is_object($deps)) {
+                                            foreach ($deps as $d) {
+                                                $paid += $d->amount;
+                                                $disc += $d->amount_discount;
+                                            }
+                                        }
+                                    }
+                                    $bal = $fee_value->amount - ($paid + $disc);
+                                    if ($bal > 0) $total_due_balance += $bal;
+                                }
+                            }
+                        }
+                    }
+                    $total_discount_to_apply = ($total_due_balance * $request['percentage']) / 100;
+                }
+
+                $remaining_discount = $total_discount_to_apply;
+
+                if (!empty($student_due_fee) && $remaining_discount > 0) {
+                    foreach ($student_due_fee as $fee) {
+                        if (!empty($fee->fees)) {
+                            foreach ($fee->fees as $fee_value) {
+                                if ($remaining_discount <= 0) break;
+
+                                $head_paid = 0;
+                                $head_disc = 0;
+                                if (!empty($fee_value->amount_detail)) {
+                                    $deps = json_decode($fee_value->amount_detail);
+                                    if (is_array($deps) || is_object($deps)) {
+                                        foreach ($deps as $d) {
+                                            $head_paid += $d->amount;
+                                            $head_disc += $d->amount_discount;
+                                        }
+                                    }
+                                }
+
+                                $head_balance = $fee_value->amount - ($head_paid + $head_disc);
+                                if ($head_balance > 0) {
+                                    $apply_now = min($remaining_discount, $head_balance);
+                                    $remaining_discount -= $apply_now;
+
+                                    $q_dep = $this->db->get_where('student_fees_deposite', array(
+                                        'student_fees_master_id' => $fee->id,
+                                        'fee_groups_feetype_id' => $fee_value->fee_groups_feetype_id
+                                    ));
+
+                                    if ($q_dep->num_rows() > 0) {
+                                        $dep_row = $q_dep->row();
+                                        $amt_detail = json_decode($dep_row->amount_detail, true);
+                                        $inv_no = max(array_keys($amt_detail)) + 1;
+
+                                        $amt_detail[$inv_no] = array(
+                                            'inv_no' => $inv_no,
+                                            'amount' => 0,
+                                            'date' => date('Y-m-d'),
+                                            'description' => 'Discount: ' . $request['reason'],
+                                            'amount_discount' => $apply_now,
+                                            'amount_fine' => 0,
+                                            'payment_mode' => 'Cash',
+                                            'received_by' => $admin_id,
+                                            'collected_by' => $collected_by
+                                        );
+
+                                        $this->db->where('id', $dep_row->id);
+                                        $this->db->update('student_fees_deposite', array(
+                                            'amount_detail' => json_encode($amt_detail)
+                                        ));
+
+                                        $this->db->insert('student_applied_discounts', array(
+                                            'student_fees_deposite_id' => $dep_row->id,
+                                            'student_fees_discount_id' => $student_fees_discount_id,
+                                            'date' => date('Y-m-d'),
+                                            'invoice_id' => $dep_row->id,
+                                            'sub_invoice_id' => $inv_no
+                                        ));
+                                    } else {
+                                        $amt_detail = array(
+                                            1 => array(
+                                                'inv_no' => 1,
+                                                'amount' => 0,
+                                                'date' => date('Y-m-d'),
+                                                'description' => 'Discount: ' . $request['reason'],
+                                                'amount_discount' => $apply_now,
+                                                'amount_fine' => 0,
+                                                'payment_mode' => 'Cash',
+                                                'received_by' => $admin_id,
+                                                'collected_by' => $collected_by
+                                            )
+                                        );
+
+                                        $this->db->insert('student_fees_deposite', array(
+                                            'student_fees_master_id' => $fee->id,
+                                            'fee_groups_feetype_id' => $fee_value->fee_groups_feetype_id,
+                                            'amount_detail' => json_encode($amt_detail)
+                                        ));
+                                        $inserted_dep_id = $this->db->insert_id();
+
+                                        $this->db->insert('student_applied_discounts', array(
+                                            'student_fees_deposite_id' => $inserted_dep_id,
+                                            'student_fees_discount_id' => $student_fees_discount_id,
+                                            'date' => date('Y-m-d'),
+                                            'invoice_id' => $inserted_dep_id,
+                                            'sub_invoice_id' => 1
+                                        ));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // If transport fee has balance and discount remaining
+                if ($remaining_discount > 0) {
+                    $student = $this->student_model->getByStudentSession($student_session_id);
+                    if (!empty($student['route_pickup_point_id'])) {
+                        $transport_fees = $this->studentfeemaster_model->getStudentTransportFees($student_session_id, $student['route_pickup_point_id']);
+                        if (!empty($transport_fees)) {
+                            foreach ($transport_fees as $tr_fee) {
+                                if ($remaining_discount <= 0) break;
+
+                                $tr_paid = 0;
+                                $tr_disc = 0;
+                                if (!empty($tr_fee->amount_detail)) {
+                                    $deps = json_decode($tr_fee->amount_detail);
+                                    if (is_array($deps) || is_object($deps)) {
+                                        foreach ($deps as $d) {
+                                            $tr_paid += $d->amount;
+                                            $tr_disc += $d->amount_discount;
+                                        }
+                                    }
+                                }
+
+                                $tr_balance = $tr_fee->fees - ($tr_paid + $tr_disc);
+                                if ($tr_balance > 0) {
+                                    $apply_now = min($remaining_discount, $tr_balance);
+                                    $remaining_discount -= $apply_now;
+
+                                    $is_yearly = (isset($tr_fee->fee_category) && $tr_fee->fee_category == 'transport_yearly');
+                                    $where_field = $is_yearly ? 'student_transport_yearly_fee_id' : 'student_transport_fee_id';
+
+                                    $q_dep = $this->db->get_where('student_fees_deposite', array($where_field => $tr_fee->id));
+
+                                    if ($q_dep->num_rows() > 0) {
+                                        $dep_row = $q_dep->row();
+                                        $amt_detail = json_decode($dep_row->amount_detail, true);
+                                        $inv_no = max(array_keys($amt_detail)) + 1;
+
+                                        $amt_detail[$inv_no] = array(
+                                            'inv_no' => $inv_no,
+                                            'amount' => 0,
+                                            'date' => date('Y-m-d'),
+                                            'description' => 'Discount: ' . $request['reason'],
+                                            'amount_discount' => $apply_now,
+                                            'amount_fine' => 0,
+                                            'payment_mode' => 'Cash',
+                                            'received_by' => $admin_id,
+                                            'collected_by' => $collected_by
+                                        );
+
+                                        $this->db->where('id', $dep_row->id);
+                                        $this->db->update('student_fees_deposite', array(
+                                            'amount_detail' => json_encode($amt_detail)
+                                        ));
+
+                                        $this->db->insert('student_applied_discounts', array(
+                                            'student_fees_deposite_id' => $dep_row->id,
+                                            'student_fees_discount_id' => $student_fees_discount_id,
+                                            'date' => date('Y-m-d'),
+                                            'invoice_id' => $dep_row->id,
+                                            'sub_invoice_id' => $inv_no
+                                        ));
+                                    } else {
+                                        $amt_detail = array(
+                                            1 => array(
+                                                'inv_no' => 1,
+                                                'amount' => 0,
+                                                'date' => date('Y-m-d'),
+                                                'description' => 'Discount: ' . $request['reason'],
+                                                'amount_discount' => $apply_now,
+                                                'amount_fine' => 0,
+                                                'payment_mode' => 'Cash',
+                                                'received_by' => $admin_id,
+                                                'collected_by' => $collected_by
+                                            )
+                                        );
+
+                                        $insert_data = array(
+                                            'amount_detail' => json_encode($amt_detail)
+                                        );
+                                        $insert_data[$where_field] = $tr_fee->id;
+
+                                        $this->db->insert('student_fees_deposite', $insert_data);
+                                        $inserted_dep_id = $this->db->insert_id();
+
+                                        $this->db->insert('student_applied_discounts', array(
+                                            'student_fees_deposite_id' => $inserted_dep_id,
+                                            'student_fees_discount_id' => $student_fees_discount_id,
+                                            'date' => date('Y-m-d'),
+                                            'invoice_id' => $inserted_dep_id,
+                                            'sub_invoice_id' => 1
+                                        ));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Update student_fees_discounts status to applied
+                $this->db->where('id', $student_fees_discount_id);
+                $this->db->update('student_fees_discounts', array('status' => 'applied', 'payment_id' => 'DISC-' . $request['id']));
             }
+
+            $this->db->trans_complete();
             
-            $this->session->set_flashdata('msg', '<div class="alert alert-success">Request Approved Successfully</div>');
+            $this->session->set_flashdata('msg', '<div class="alert alert-success">Request Approved and Discount Successfully Applied to Student Fee!</div>');
         }
         redirect('admin/feediscount/approvalQueue');
     }
@@ -554,8 +812,8 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
 
     public function apply_direct_discount()
     {
-        if (!$this->rbac->hasPrivilege('fee_discount_approval', 'can_edit') && !$this->rbac->hasPrivilege('fees_discount_assign', 'can_view')) {
-            echo json_encode(array('status' => 'fail', 'message' => 'Access Denied'));
+        if (!$this->rbac->hasPrivilege('fee_discount_approval', 'can_edit')) {
+            echo json_encode(array('status' => 'fail', 'message' => 'Access Denied: You do not have permission to approve/apply discounts.'));
             return;
         }
 
@@ -588,306 +846,37 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
         $percentage = $discount_type == 'percentage' ? $this->input->post('percentage') : null;
 
         $staff_id = $this->customlib->getStaffID();
-        $staff_record = $this->staff_model->get($staff_id);
-        $collected_by = $this->customlib->getAdminSessionUserName() . "(" . ($staff_record['employee_id'] ?? '') . ")";
 
         $this->db->trans_start();
 
-        // 1. Log in fee_discount_requests as approved direct allotment
+        // 1. Log in fee_discount_requests as PENDING
         $this->load->model('feediscountrequest_model');
-        $this->load->model('studentfeemaster_model');
         $request_data = array(
             'student_session_id' => $student_session_id,
             'requested_by' => $staff_id,
-            'approved_by' => $staff_id,
+            'approved_by' => null,
             'discount_type' => $discount_type,
             'amount' => $amount,
             'percentage' => $percentage,
             'reason' => $reason,
-            'status' => 'approved',
-            'approved_at' => date('Y-m-d H:i:s'),
-            'admin_remark' => 'Direct discount applied from Approval Queue'
+            'status' => 'pending',
+            'approved_at' => null,
+            'admin_remark' => null
         );
         $request_id = $this->feediscountrequest_model->create($request_data);
-
-        // 2. Create dynamic discount in fees_discounts & assign to student_fees_discounts
-        $session_id = $this->setting_model->getCurrentSession();
-        $session_data = $this->session_model->get($session_id);
-        
-        $expire_date = null;
-        if (!empty($session_data) && isset($session_data['end_date'])) {
-            $expire_date = date('Y-m-d', strtotime($session_data['end_date']));
-        }
-
-        $discount_data = array(
-            'session_id' => $session_id,
-            'name' => 'Dynamic: ' . (strlen($reason) > 20 ? substr($reason, 0, 17) . '...' : $reason),
-            'code' => 'DYN-' . $request_id,
-            'type' => $discount_type,
-            'amount' => $amount,
-            'percentage' => $percentage,
-            'description' => $reason,
-            'discount_limit' => 1,
-            'expire_date' => $expire_date,
-            'is_active' => 'no'
-        );
-
-        $this->db->insert('fees_discounts', $discount_data);
-        $fees_discount_id = $this->db->insert_id();
-
-        $student_discount_data = array(
-            'student_session_id' => $student_session_id,
-            'fees_discount_id' => $fees_discount_id,
-            'status' => 'applied',
-            'payment_id' => 'DISC-' . $request_id,
-            'description' => $reason
-        );
-        $this->db->insert('student_fees_discounts', $student_discount_data);
-        $student_fees_discount_id = $this->db->insert_id();
-
-        // 3. Auto-apply the discount against the student's unpaid fee heads so fee balance is cleared immediately without collecting fee
-        $student_due_fee = $this->studentfeemaster_model->getStudentFees($student_session_id);
-        
-        // Calculate total discount to distribute
-        $total_discount_to_apply = 0;
-        if ($discount_type == 'fix') {
-            $total_discount_to_apply = $amount;
-        } else {
-            // calculate against total outstanding balance
-            $total_due_balance = 0;
-            if (!empty($student_due_fee)) {
-                foreach ($student_due_fee as $fee) {
-                    if (!empty($fee->fees)) {
-                        foreach ($fee->fees as $fee_value) {
-                            $paid = 0;
-                            $disc = 0;
-                            if (!empty($fee_value->amount_detail)) {
-                                $deps = json_decode($fee_value->amount_detail);
-                                if (is_array($deps) || is_object($deps)) {
-                                    foreach ($deps as $d) {
-                                        $paid += $d->amount;
-                                        $disc += $d->amount_discount;
-                                    }
-                                }
-                            }
-                            $bal = $fee_value->amount - ($paid + $disc);
-                            if ($bal > 0) $total_due_balance += $bal;
-                        }
-                    }
-                }
-            }
-            $total_discount_to_apply = ($total_due_balance * $percentage) / 100;
-        }
-
-        $remaining_discount = $total_discount_to_apply;
-
-        if (!empty($student_due_fee) && $remaining_discount > 0) {
-            foreach ($student_due_fee as $fee) {
-                if (!empty($fee->fees)) {
-                    foreach ($fee->fees as $fee_value) {
-                        if ($remaining_discount <= 0) break;
-
-                        $head_paid = 0;
-                        $head_disc = 0;
-                        if (!empty($fee_value->amount_detail)) {
-                            $deps = json_decode($fee_value->amount_detail);
-                            if (is_array($deps) || is_object($deps)) {
-                                foreach ($deps as $d) {
-                                    $head_paid += $d->amount;
-                                    $head_disc += $d->amount_discount;
-                                }
-                            }
-                        }
-
-                        $head_balance = $fee_value->amount - ($head_paid + $head_disc);
-                        if ($head_balance > 0) {
-                            $apply_now = min($remaining_discount, $head_balance);
-                            $remaining_discount -= $apply_now;
-
-                            // Check existing student_fees_deposite record
-                            $q_dep = $this->db->get_where('student_fees_deposite', array(
-                                'student_fees_master_id' => $fee->id,
-                                'fee_groups_feetype_id' => $fee_value->fee_groups_feetype_id
-                            ));
-
-                            if ($q_dep->num_rows() > 0) {
-                                $dep_row = $q_dep->row();
-                                $amt_detail = json_decode($dep_row->amount_detail, true);
-                                $inv_no = max(array_keys($amt_detail)) + 1;
-                                
-                                $amt_detail[$inv_no] = array(
-                                    'inv_no' => $inv_no,
-                                    'amount' => 0,
-                                    'date' => date('Y-m-d'),
-                                    'description' => 'Direct Discount: ' . $reason,
-                                    'amount_discount' => $apply_now,
-                                    'amount_fine' => 0,
-                                    'payment_mode' => 'Cash',
-                                    'received_by' => $staff_id,
-                                    'collected_by' => $collected_by
-                                );
-
-                                $this->db->where('id', $dep_row->id);
-                                $this->db->update('student_fees_deposite', array(
-                                    'amount_detail' => json_encode($amt_detail)
-                                ));
-
-                                $this->db->insert('student_applied_discounts', array(
-                                    'student_fees_deposite_id' => $dep_row->id,
-                                    'student_fees_discount_id' => $student_fees_discount_id,
-                                    'date' => date('Y-m-d'),
-                                    'invoice_id' => $dep_row->id,
-                                    'sub_invoice_id' => $inv_no
-                                ));
-                            } else {
-                                $amt_detail = array(
-                                    1 => array(
-                                        'inv_no' => 1,
-                                        'amount' => 0,
-                                        'date' => date('Y-m-d'),
-                                        'description' => 'Direct Discount: ' . $reason,
-                                        'amount_discount' => $apply_now,
-                                        'amount_fine' => 0,
-                                        'payment_mode' => 'Cash',
-                                        'received_by' => $staff_id,
-                                        'collected_by' => $collected_by
-                                    )
-                                );
-
-                                $this->db->insert('student_fees_deposite', array(
-                                    'student_fees_master_id' => $fee->id,
-                                    'fee_groups_feetype_id' => $fee_value->fee_groups_feetype_id,
-                                    'amount_detail' => json_encode($amt_detail)
-                                ));
-                                $inserted_dep_id = $this->db->insert_id();
-
-                                $this->db->insert('student_applied_discounts', array(
-                                    'student_fees_deposite_id' => $inserted_dep_id,
-                                    'student_fees_discount_id' => $student_fees_discount_id,
-                                    'date' => date('Y-m-d'),
-                                    'invoice_id' => $inserted_dep_id,
-                                    'sub_invoice_id' => 1
-                                ));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // If transport fee has balance and discount remaining
-        if ($remaining_discount > 0) {
-            $student = $this->student_model->getByStudentSession($student_session_id);
-            if (!empty($student['route_pickup_point_id'])) {
-                $transport_fees = $this->studentfeemaster_model->getStudentTransportFees($student_session_id, $student['route_pickup_point_id']);
-                if (!empty($transport_fees)) {
-                    foreach ($transport_fees as $tr_fee) {
-                        if ($remaining_discount <= 0) break;
-
-                        $tr_paid = 0;
-                        $tr_disc = 0;
-                        if (!empty($tr_fee->amount_detail)) {
-                            $deps = json_decode($tr_fee->amount_detail);
-                            if (is_array($deps) || is_object($deps)) {
-                                foreach ($deps as $d) {
-                                    $tr_paid += $d->amount;
-                                    $tr_disc += $d->amount_discount;
-                                }
-                            }
-                        }
-
-                        $tr_balance = $tr_fee->fees - ($tr_paid + $tr_disc);
-                        if ($tr_balance > 0) {
-                            $apply_now = min($remaining_discount, $tr_balance);
-                            $remaining_discount -= $apply_now;
-
-                            $is_yearly = (isset($tr_fee->fee_category) && $tr_fee->fee_category == 'transport_yearly');
-                            $where_field = $is_yearly ? 'student_transport_yearly_fee_id' : 'student_transport_fee_id';
-
-                            $q_dep = $this->db->get_where('student_fees_deposite', array($where_field => $tr_fee->id));
-
-                            if ($q_dep->num_rows() > 0) {
-                                $dep_row = $q_dep->row();
-                                $amt_detail = json_decode($dep_row->amount_detail, true);
-                                $inv_no = max(array_keys($amt_detail)) + 1;
-
-                                $amt_detail[$inv_no] = array(
-                                    'inv_no' => $inv_no,
-                                    'amount' => 0,
-                                    'date' => date('Y-m-d'),
-                                    'description' => 'Direct Discount: ' . $reason,
-                                    'amount_discount' => $apply_now,
-                                    'amount_fine' => 0,
-                                    'payment_mode' => 'Cash',
-                                    'received_by' => $staff_id,
-                                    'collected_by' => $collected_by
-                                );
-
-                                $this->db->where('id', $dep_row->id);
-                                $this->db->update('student_fees_deposite', array(
-                                    'amount_detail' => json_encode($amt_detail)
-                                ));
-
-                                $this->db->insert('student_applied_discounts', array(
-                                    'student_fees_deposite_id' => $dep_row->id,
-                                    'student_fees_discount_id' => $student_fees_discount_id,
-                                    'date' => date('Y-m-d'),
-                                    'invoice_id' => $dep_row->id,
-                                    'sub_invoice_id' => $inv_no
-                                ));
-                            } else {
-                                $amt_detail = array(
-                                    1 => array(
-                                        'inv_no' => 1,
-                                        'amount' => 0,
-                                        'date' => date('Y-m-d'),
-                                        'description' => 'Direct Discount: ' . $reason,
-                                        'amount_discount' => $apply_now,
-                                        'amount_fine' => 0,
-                                        'payment_mode' => 'Cash',
-                                        'received_by' => $staff_id,
-                                        'collected_by' => $collected_by
-                                    )
-                                );
-
-                                $insert_data = array(
-                                    'amount_detail' => json_encode($amt_detail)
-                                );
-                                $insert_data[$where_field] = $tr_fee->id;
-
-                                $this->db->insert('student_fees_deposite', $insert_data);
-                                $inserted_dep_id = $this->db->insert_id();
-
-                                $this->db->insert('student_applied_discounts', array(
-                                    'student_fees_deposite_id' => $inserted_dep_id,
-                                    'student_fees_discount_id' => $student_fees_discount_id,
-                                    'date' => date('Y-m-d'),
-                                    'invoice_id' => $inserted_dep_id,
-                                    'sub_invoice_id' => 1
-                                ));
-                            }
-                        }
-                    }
-                }
-            }
-        }
 
         $this->db->trans_complete();
 
         if ($this->db->trans_status() === false) {
-            echo json_encode(array('status' => 'fail', 'message' => 'Failed to apply discount. Please try again.'));
+            echo json_encode(array('status' => 'fail', 'message' => 'Failed to submit discount request. Please try again.'));
             return;
         }
 
         echo json_encode(array(
             'status' => 'success',
-            'message' => 'Discount successfully applied! The student fee balance has been deducted immediately without collecting any fee.',
-            'student_fees_discount_id' => $student_fees_discount_id,
-            'fees_discount_id' => $fees_discount_id
+            'message' => 'Discount request submitted successfully with Status: PENDING. It is now awaiting approval in the queue.',
+            'request_id' => $request_id
         ));
     }
 
 }
-
-
-

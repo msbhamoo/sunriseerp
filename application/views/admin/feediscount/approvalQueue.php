@@ -12,9 +12,11 @@
                             <i class="fa fa-check-circle"></i> Dynamic Discount Approvals
                         </h3>
                         <div class="box-tools pull-right">
+                            <?php if ($this->rbac->hasPrivilege('fee_discount_approval', 'can_edit')) { ?>
                             <button type="button" class="btn btn-sm btn-primary" id="openDirectDiscountBtn">
                                 <i class="fa fa-plus"></i> Apply Student Discount
                             </button>
+                            <?php } ?>
                         </div>
                     </div>
                     <div class="box-body">
@@ -344,8 +346,15 @@
                             </div>
 
                             <div class="form-group" style="margin-bottom: 12px;">
-                                <label style="font-size: 12px; font-weight: 600; color: #475569;">Reason / Description <small class="text-danger">*</small></label>
-                                <textarea class="form-control input-sm" name="reason" id="discount_reason_val" rows="2" placeholder="e.g. Special management discount / sibling concession" required></textarea>
+                                <label style="font-size: 12px; font-weight: 600; color: #475569;">Discount Reason / Type <small class="text-danger">*</small> <small class="text-muted">(Select or type to add new)</small></label>
+                                <select class="form-control input-sm select2_discount_reason" name="reason" id="discount_reason_val" style="width: 100%;" required>
+                                    <option value="">-- Select or Type New Reason --</option>
+                                    <?php if (!empty($discount_categories)) {
+                                        foreach ($discount_categories as $cat) { ?>
+                                            <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
+                                        <?php }
+                                    } ?>
+                                </select>
                                 <span class="text-danger" id="err_reason" style="font-size: 11px;"></span>
                             </div>
 
@@ -412,9 +421,18 @@
         var currentCurrencySymbol = '<?php echo $currency_symbol; ?>';
         var searchTimeout = null;
 
+        // Initialize Select2 with Tagging (Allows selecting existing or typing new reason)
+        $('.select2_discount_reason').select2({
+            tags: true,
+            placeholder: '-- Select or Type New Reason --',
+            allowClear: true,
+            dropdownParent: $('#directDiscountModal')
+        });
+
         // Open Drawer
         $('#openDirectDiscountBtn').click(function() {
             $('#direct_discount_form')[0].reset();
+            $('.select2_discount_reason').val('').trigger('change');
             $('#student_fee_profile').hide();
             $('#student_search_results_container').empty().hide();
             $('#discount_student_search').val('');
@@ -545,12 +563,12 @@
                         $('#student_fee_profile').fadeIn(200);
                         calculatePreviewBalance();
                     } else {
-                        alert(res.message || 'Unable to fetch student details');
+                        errorMsg(res.message || 'Unable to fetch student details');
                     }
                 },
                 error: function() {
                     $('#discount_student_loader').hide();
-                    alert('Error connecting to server. Please try again.');
+                    errorMsg('Error connecting to server. Please try again.');
                 }
             });
         }
@@ -607,7 +625,7 @@
             var submitBtn = $('#submitDirectDiscountBtn');
             $('.text-danger[id^="err_"]').empty();
 
-            submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Applying...');
+            submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Submitting...');
 
             $.ajax({
                 url: base_url + 'admin/feediscount/apply_direct_discount',
@@ -618,21 +636,23 @@
                     submitBtn.prop('disabled', false).html('<i class="fa fa-check"></i> Apply Discount');
                     if (res.status === 'success') {
                         $('#directDiscountModal').modal('hide');
-                        alert(res.message);
-                        location.reload(true);
+                        successMsg(res.message);
+                        setTimeout(function() {
+                            location.reload(true);
+                        }, 1200);
                     } else if (res.status === 'fail') {
                         if (res.error) {
                             $.each(res.error, function(key, val) {
                                 $('#err_' + key).html(val);
                             });
                         } else if (res.message) {
-                            alert(res.message);
+                            errorMsg(res.message);
                         }
                     }
                 },
                 error: function() {
                     submitBtn.prop('disabled', false).html('<i class="fa fa-check"></i> Apply Discount');
-                    alert('An error occurred. Please try again.');
+                    errorMsg('An error occurred. Please try again.');
                 }
             });
         });

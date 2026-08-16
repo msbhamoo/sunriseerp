@@ -169,7 +169,7 @@ foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
                     }
 
                     if ($side_list_value->lang_key == 'fees_collection') {
-                        if ($this->rbac->hasPrivilege('fee_discount_approval', 'can_view') || $this->rbac->hasPrivilege('fees_discount', 'can_view')) {
+                        if ($this->rbac->hasPrivilege('fee_discount_approval', 'can_view')) {
                             ?>
                             <li class="<?php echo set_Submenu('admin/feediscount/approvalQueue'); ?>"><a href="<?php echo site_url('admin/feediscount/approvalQueue'); ?>"><i class="icon-circle-small"></i>Discount Approval</a></li>
                             <?php
