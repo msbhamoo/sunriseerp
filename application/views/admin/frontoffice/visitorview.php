@@ -1,25 +1,85 @@
+<?php
+$total_visitors = count($visitor_list);
+$today_visitors = 0;
+$staff_meetings = 0;
+$student_meetings = 0;
+$today_str = date('Y-m-d');
+foreach ($visitor_list as $v) {
+    if (isset($v['date']) && date('Y-m-d', strtotime($v['date'])) === $today_str) {
+        $today_visitors++;
+    }
+    if (isset($v['meeting_with']) && $v['meeting_with'] === 'staff') {
+        $staff_meetings++;
+    } elseif (isset($v['meeting_with']) && $v['meeting_with'] === 'student') {
+        $student_meetings++;
+    }
+}
+?>
+
 <div class="content-wrapper">
     <section class="content-header">
-        <h1>
-            <i class="fa fa-ioxhost"></i> <?php echo $this->lang->line('front_office'); ?></h1>
+        <h1><i class="fa fa-users"></i> <?php echo $this->lang->line('front_office'); ?></h1>
     </section>
+    
     <section class="content">
+        <!-- Modern KPI Stat Grid -->
+        <div class="modern-stat-grid">
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label"><?php echo $this->lang->line('visitor_list') ? $this->lang->line('visitor_list') : 'Total Visitors'; ?></div>
+                    <div class="stat-value"><?php echo $total_visitors; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
+                    <i class="fa fa-address-book-o"></i>
+                </div>
+            </div>
+            
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label"><?php echo $this->lang->line('today_entries') ? $this->lang->line('today_entries') : "Today's Visitors"; ?></div>
+                    <div class="stat-value" style="color: #0284c7;"><?php echo $today_visitors; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(14, 165, 233, 0.12); color: #0284c7;">
+                    <i class="fa fa-calendar-check-o"></i>
+                </div>
+            </div>
+            
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Meeting Staff</div>
+                    <div class="stat-value text-success" style="color: #059669;"><?php echo $staff_meetings; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                    <i class="fa fa-user-circle"></i>
+                </div>
+            </div>
+            
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Meeting Student</div>
+                    <div class="stat-value text-warning" style="color: #d97706;"><?php echo $student_meetings; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
+                    <i class="fa fa-graduation-cap"></i>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-md-12">
-                <!-- general form elements -->
                 <div class="box box-primary">
                     <div class="box-header ptbnull">
-                        <h3 class="box-title titlefix"><?php echo $this->lang->line('visitor_list'); ?></h3>
+                        <h3 class="box-title titlefix"><i class="fa fa-list text-muted" style="margin-right: 6px;"></i> <?php echo $this->lang->line('visitor_list'); ?></h3>
                         <div class="box-tools pull-right">
-                            <?php if ($this->rbac->hasPrivilege('visitor_book', 'can_add')) {?>
-                            <button type="button" class="btn btn-sm btn-primary pull-right" data-toggle="modal" data-backdrop="static" data-target="#myModal"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add'); ?></button>
+                            <?php if ($this->rbac->hasPrivilege('visitor_book', 'can_add')) { ?>
+                                <button type="button" class="btn btn-sm btn-primary pull-right" id="btn-open-visitor-drawer"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add'); ?></button>
                             <?php } ?>
-                        </div><!-- /.box-tools -->
-                    </div><!-- /.box-header -->
+                        </div>
+                    </div>
                     <div class="box-body">
                         <div class="download_label"><?php echo $this->lang->line('visitor_list'); ?></div>
                         <div class="mailbox-messages table-responsive no-padding overflow-visible-lg">
-                            <table class="table table-hover table-striped table-bordered dt_table"  data-export-title="<?php echo $this->lang->line('visitor_list');?>">
+                            <table class="table table-hover table-striped table-bordered dt_table" data-export-title="<?php echo $this->lang->line('visitor_list');?>">
                                 <thead>
                                     <tr>
                                         <th><?php echo $this->lang->line('purpose'); ?></th>
@@ -36,260 +96,234 @@
                                 </thead>
                                 <tbody>
                                     <?php
-                                        if (empty($visitor_list)) {
-                                   
-                                        } else {
-                                            foreach ($visitor_list as $key => $value) { ?>
+                                    if (!empty($visitor_list)) {
+                                        foreach ($visitor_list as $key => $value) { ?>
                                             <tr>
-                                                <td class="mailbox-name"><?php echo $value['purpose']; ?> </td>
+                                                <td class="mailbox-name"><span class="badge" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1;"><?php echo html_escape($value['purpose']); ?></span></td>
                                                 <td class="mailbox-name">
-                                                    <?php echo $this->lang->line($value['meeting_with']); ?>
-                                                    <?php if($value['staff_id'] !=0){ echo ' ('.$value['staff_name'].' '.$value['staff_surname']. ' - '.$value['staff_employee_id'].')'; } ?>
-                                                    <?php if($value['student_session_id'] !=0){ echo ' ('.$value['student_firstname'].' '.$value['student_middlename'].' '.$value['student_lastname'].' - '.$value['admission_no'].')'; } ?>
+                                                    <strong><?php echo $this->lang->line($value['meeting_with']); ?></strong>
+                                                    <?php if($value['staff_id'] != 0){ echo '<br><small class="text-muted">' . html_escape($value['staff_name'].' '.$value['staff_surname']. ' ('.$value['staff_employee_id'].')') . '</small>'; } ?>
+                                                    <?php if($value['student_session_id'] != 0){ echo '<br><small class="text-muted">' . html_escape($value['student_firstname'].' '.$value['student_middlename'].' '.$value['student_lastname'].' ('.$value['admission_no'].')') . '</small>'; } ?>
                                                 </td>
-                                                <td class="mailbox-name"><?php echo $value['name']; ?><?php if($value['email'] !=''){ ?> <br><a href="mailto:<?php echo $value['email']; ?>">(<?php echo $value['email']; ?>)</a> <?php  } ?></td>
-                                                <td class="mailbox-name"><?php echo $value['contact']; ?></td>
-                                                <td class="mailbox-name"><?php echo $value['id_proof']; ?></td>
-                                                <td class="mailbox-name"><?php echo $value['no_of_people']; ?></td>
-                                                <td class="mailbox-name"> <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['date'])); ?></td>
-                                                <td class="mailbox-name"> <?php echo $value['in_time']; ?></td>
-                                                <td class="mailbox-name"> <?php echo $value['out_time']; ?></td> 
-                                                <td class="mailbox-date pull-right white-space-nowrap">
-                                                    <a  onclick="getRecord(<?php echo $value['id']; ?>)" class="btn btn-primary btn-xs" data-target="#visitordetails" data-toggle="modal"  title="<?php echo $this->lang->line('view'); ?>"><i class="fa fa-reorder"></i></a>
-                                                    <?php if ($value['image'] != "") {?>
-                                                        <a href="<?php echo base_url(); ?>admin/visitors/download/<?php echo $value['id']; ?>" class="btn btn-primary btn-xs" data-toggle="tooltip" title="" data-original-title="<?php echo $this->lang->line('download'); ?>">
+                                                <td class="mailbox-name"><strong style="color: #0f172a;"><?php echo html_escape($value['name']); ?></strong><?php if($value['email'] !=''){ ?> <br><a href="mailto:<?php echo $value['email']; ?>"><small class="text-muted"><i class="fa fa-envelope-o"></i> <?php echo html_escape($value['email']); ?></small></a> <?php } ?></td>
+                                                <td class="mailbox-name"><i class="fa fa-phone text-muted" style="margin-right: 3px;"></i> <?php echo html_escape($value['contact']); ?></td>
+                                                <td class="mailbox-name"><?php echo html_escape($value['id_proof']); ?></td>
+                                                <td class="mailbox-name"><span class="badge" style="background: #f1f5f9; color: #334155;"><?php echo html_escape($value['no_of_people']); ?></span></td>
+                                                <td class="mailbox-name white-space-nowrap"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($value['date'])); ?></td>
+                                                <td class="mailbox-name"><?php echo html_escape($value['in_time']); ?></td>
+                                                <td class="mailbox-name"><?php echo html_escape($value['out_time']); ?></td> 
+                                                <td class="mailbox-date text-right white-space-nowrap">
+                                                    <a onclick="getRecord(<?php echo $value['id']; ?>)" class="btn btn-default btn-xs" data-target="#visitordetails" data-toggle="modal" title="<?php echo $this->lang->line('view'); ?>"><i class="fa fa-eye"></i></a>
+                                                    <?php if ($value['image'] != "") { ?>
+                                                        <a href="<?php echo base_url(); ?>admin/visitors/download/<?php echo $value['id']; ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('download'); ?>">
                                                             <i class="fa fa-download"></i>
-                                                        </a>  <?php }?>
-                                                    <?php if ($this->rbac->hasPrivilege('visitor_book', 'can_edit')) {?>
-                                                        
-                                                        <a data-id="<?php echo $value['id']; ?>" class="btn btn-primary btn-xs editvisitor" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>"><i class="fa fa-pencil"></i>
                                                         </a>
-
                                                     <?php } ?>
-
+                                                    <?php if ($this->rbac->hasPrivilege('visitor_book', 'can_edit')) { ?>
+                                                        <a data-id="<?php echo $value['id']; ?>" class="btn btn-default btn-xs editvisitor" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>"><i class="fa fa-pencil text-primary"></i></a>
+                                                    <?php } ?>
                                                     <?php if ($this->rbac->hasPrivilege('visitor_book', 'can_delete')) { ?>
-
-                                                        <a class="btn btn-primary btn-xs delete_visitor" data-toggle="tooltip" data-id="<?php echo $value['id']; ?>" title="<?php echo $this->lang->line('delete'); ?>" data-original-title="<?php echo $this->lang->line('delete'); ?>"><i class="fa fa-remove"></i></a>                     
-                                                            
-                                                            <?php
- 
-        }
-        ?>
+                                                        <a class="btn btn-default btn-xs delete_visitor" data-toggle="tooltip" data-id="<?php echo $value['id']; ?>" title="<?php echo $this->lang->line('delete'); ?>"><i class="fa fa-trash text-danger"></i></a>
+                                                    <?php } ?>
                                                 </td>
                                             </tr>
-                                            <?php
-}
-}
-?>
+                                        <?php }
+                                    } ?>
                                 </tbody>
-                            </table><!-- /.table -->
-                        </div><!-- /.mail-box-messages -->
-                    </div><!-- /.box-body -->
+                            </table>
+                        </div>
+                    </div>
                 </div>
-            </div><!--/.col (left) col-8 end-->
-            <!-- right column -->
+            </div>
         </div>
-    </section><!-- /.content -->
-</div><!-- /.content-wrapper -->
+    </section>
+</div>
 
-<!-- new END -->
+<!-- Details Modal -->
 <div id="visitordetails" class="modal fade" role="dialog">
     <div class="modal-dialog modal-dialog2 modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title"><?php echo $this->lang->line('details'); ?></h4>
+                <h4 class="modal-title"><i class="fa fa-user-circle text-primary" style="margin-right: 6px;"></i> <?php echo $this->lang->line('details'); ?></h4>
             </div>
             <div class="modal-body" id="getdetails">
-
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="myModal" role="dialog" aria-labelledby="myModalLabel">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content modal-media-content">
-            <div class="modal-header modal-media-header">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title"><?php echo $this->lang->line('add_visitor'); ?></h4>
+<!-- Slide-in Right Drawer for Adding Visitor -->
+<div id="visitor-drawer-overlay" class="modern-drawer-overlay"></div>
+<div id="visitor-drawer-panel" class="modern-drawer-panel">
+    <form id="addvisitorform" method="post" enctype="multipart/form-data">
+        <div class="modern-drawer-header">
+            <h4 class="modern-drawer-title"><i class="fa fa-user-plus" style="color: var(--primary-theme-color, #4f46e5);"></i> <?php echo $this->lang->line('add_visitor'); ?></h4>
+            <button type="button" class="modern-drawer-close" id="btn-close-visitor-drawer">&times;</button>
+        </div>
+        <div class="modern-drawer-body">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label><?php echo $this->lang->line('purpose'); ?></label><small class="req"> *</small>
+                        <select name="purpose" class="form-control">
+                            <option value=""><?php echo $this->lang->line('select'); ?> </option>
+                            <?php foreach ($Purpose as $key => $value) { ?>
+                                <option value="<?php print_r($value['visitors_purpose']);?>" <?php if (set_value('purpose') == $value['visitors_purpose']) { ?>selected=""<?php } ?>><?php print_r($value['visitors_purpose']);?></option>
+                            <?php } ?>
+                        </select>
+                        <span class="text-danger"><?php echo form_error('purpose'); ?></span>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label><?php echo $this->lang->line('meeting_with'); ?></label><small class="req"> *</small>
+                        <select name="meeting_with" id="meeting_with" class="form-control">
+                            <option value=""><?php echo $this->lang->line('select'); ?> </option>
+                            <?php foreach ($meeting_with as $key => $meeting_with_value) { ?>
+                                <option value="<?php echo $key;?>"><?php echo $meeting_with_value;?></option>
+                            <?php } ?>
+                        </select>
+                        <span class="text-danger"><?php echo form_error('meeting_with'); ?></span>
+                    </div>
+                </div>
             </div>
-            <form id="addvisitorform" method="post" enctype="multipart/form-data">
-                <div class="modal-body ptt10 pb0">
-                    <div class="row">
-                        <div class="col-lg-12 col-md-12 col-sm-12">
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        <label for="exampleInputEmail1"><?php echo $this->lang->line('purpose'); ?></label><small class="req"> *</small>
-                                        <select name="purpose" class="form-control">
-                                            <option value=""><?php echo $this->lang->line('select'); ?> </option>
-                                            <?php foreach ($Purpose as $key => $value) {?>
-                                                <option value="<?php print_r($value['visitors_purpose']);?>"<?php if (set_value('purpose') == $value['visitors_purpose']) {?>selected=""<?php }?>><?php print_r($value['visitors_purpose']);?></option>
-                                            <?php }?>
-                                        </select>
-                                        <span class="text-danger"><?php echo form_error('purpose'); ?></span>
-                                    </div>
+            
+            <div id="visible_staff">
+                <div class="form-group">
+                    <label><?php echo $this->lang->line('staff'); ?></label><small class="req"> *</small>
+                    <select name="staff_id" id="staff_id" class="form-control">
+                        <option value=""><?php echo $this->lang->line('select'); ?> </option>
+                        <?php foreach($stafflist as $key => $stafflist_value){ ?>
+                            <option value="<?php echo $stafflist_value['id']; ?>"><?php echo $stafflist_value['name'].' '.$stafflist_value['surname'].' ('.$stafflist_value['employee_id'].')'; ?></option>
+                        <?php } ?>
+                    </select>
+                    <span class="text-danger"><?php echo form_error('staff'); ?></span>
+                </div>
+            </div>
+            
+            <div id="visible_student">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <label><?php echo $this->lang->line('class'); ?></label><small class="req"> *</small>
+                            <select autofocus="" id="class_id" name="class_id" class="form-control" >
+                                <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                <?php foreach ($classlist as $class) { ?>
+                                    <option value="<?php echo $class['id'] ?>" <?php if (set_value('class_id') == $class['id']) echo "selected=selected" ?>><?php echo $class['class'] ?></option>
+                                <?php } ?>
+                            </select>
+                            <span class="text-danger" id="error_class_id"></span>
+                        </div>
+                    </div> 
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <label><?php echo $this->lang->line('section'); ?></label><small class="req"> *</small>
+                            <select id="section_id" name="class_section_id" class="form-control" >
+                                <option value=""><?php echo $this->lang->line('select'); ?></option>
+                            </select>
+                            <span class="text-danger"><?php echo form_error('class_section_id'); ?></span>
+                        </div>  
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <label><?php echo $this->lang->line('student'); ?></label><small class="req"> *</small>
+                            <select id="student_id" name="student_session_id" class="form-control" >
+                            </select>
+                            <span class="text-danger"><?php echo form_error('student_session_id'); ?></span>
+                        </div>  
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label><?php echo $this->lang->line('visitor_name'); ?></label><small class="req"> *</small>
+                        <input type="text" class="form-control" value="<?php echo set_value('name'); ?>" name="name" placeholder="e.g. John Doe">
+                        <span class="text-danger"><?php echo form_error('name'); ?></span>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label><?php echo $this->lang->line('phone'); ?></label>
+                        <input type="text" class="form-control" value="<?php echo set_value('contact'); ?>" name="contact" placeholder="e.g. +91 9876543210">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label><?php echo $this->lang->line('id_card'); ?></label>
+                        <input type="text" class="form-control" value="<?php echo set_value('id_proof'); ?>" name="id_proof" placeholder="e.g. Aadhaar / DL / Voter ID">
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label><?php echo $this->lang->line('number_of_person'); ?></label>
+                        <input type="number" min="1" class="form-control" value="<?php echo set_value('pepples', 1); ?>" name="pepples">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label><?php echo $this->lang->line('date'); ?></label><small class="req"> *</small>
+                        <input type="text" id="date" class="form-control date" value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat())); ?>" name="date" readonly="">
+                        <span class="text-danger"><?php echo form_error('date'); ?></span>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label><?php echo $this->lang->line('in_time'); ?></label>
+                        <div class="bootstrap-timepicker">
+                            <div class="input-group">
+                                <input type="text" name="time" class="form-control timepicker" id="stime_" value="<?php echo set_value('time'); ?>">
+                                <div class="input-group-addon">
+                                    <i class="fa fa-clock-o"></i>
                                 </div>
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        <label for="exampleInputEmail1"><?php echo $this->lang->line('meeting_with'); ?></label><small class="req"> *</small>
-                                        <select name="meeting_with" id="meeting_with" class="form-control">
-                                            <option value=""><?php echo $this->lang->line('select'); ?> </option>
-                                            <?php foreach ($meeting_with as $key => $meeting_with_value) {?>
-                                                <option value="<?php echo $key;?>"><?php echo $meeting_with_value;?></option>
-                                            <?php }?>
-                                        </select>
-                                        <span class="text-danger"><?php echo form_error('meeting_with'); ?></span>
-                                    </div>
-                                </div>
-                                <div id="visible_staff">
-                                    <div class="col-sm-4">
-                                        <div class="form-group">
-                                            <label for="exampleInputEmail1"><?php echo $this->lang->line('staff'); ?></label><small class="req"> *</small>
-                                            <select name="staff_id" id="staff_id" class="form-control">
-                                                <option value=""><?php echo $this->lang->line('select'); ?> </option>
-                                                <?php foreach($stafflist as $key => $stafflist_value){ ?>
-                                                    <option value="<?php echo $stafflist_value['id']; ?>"><?php echo $stafflist_value['name'].' '.$stafflist_value['surname'].' ('.$stafflist_value['employee_id'].')'; ?></option>
-                                                <?php } ?>
-                                            </select>
-                                            <span class="text-danger"><?php echo form_error('staff'); ?></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="visible_student">
-                                    <div class="col-sm-4">
-                                        <div class="form-group">
-                                            <label><?php echo $this->lang->line('class'); ?></label><small class="req"> *</small>
-                                            <select autofocus="" id="class_id" name="class_id" class="form-control" >
-                                                <option value=""><?php echo $this->lang->line('select'); ?></option>
-                                                <?php
-                                                foreach ($classlist as $class) {
-                                                    ?>
-                                                    <option value="<?php echo $class['id'] ?>" <?php if (set_value('class_id') == $class['id']) echo "selected=selected" ?>><?php echo $class['class'] ?></option>
-                                                    <?php
-                                                }
-                                                ?>
-                                            </select>
-                                             <span class="text-danger" id="error_class_id"></span>
-                                        </div>
-                                    </div> 
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label><?php echo $this->lang->line('section'); ?></label><small class="req"> *</small>
-                                            <select  id="section_id" name="class_section_id" class="form-control" >
-                                                <option value=""><?php echo $this->lang->line('select'); ?></option>
-                                            </select>
-                                            <span class="text-danger"><?php echo form_error('class_section_id'); ?></span>
-                                        </div>  
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label><?php echo $this->lang->line('student'); ?></label><small class="req"> *</small>
-                                            <select  id="student_id" name="student_session_id" class="form-control" >
-                                                <!-- <option value=""><?php echo $this->lang->line('select'); ?></option> -->
-                                            </select>
-                                            <span class="text-danger"><?php echo form_error('student_session_id'); ?></span>
-                                        </div>  
-                                    </div>
-                                </div>
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        <label for="pwd"><?php echo $this->lang->line('visitor_name'); ?></label>  <small class="req"> *</small>
-                                        <input type="text" class="form-control" value="<?php echo set_value('name'); ?>" name="name">
-                                        <span class="text-danger"><?php echo form_error('name'); ?></span>
-                                    </div>
-                                </div>
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        <label for="pwd"><?php echo $this->lang->line('phone'); ?></label>
-                                        <input type="text" class="form-control" value="<?php echo set_value('contact'); ?>" name="contact">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        <label for="pwd"><?php echo $this->lang->line('id_card'); ?></label>
-                                        <input type="text" class="form-control" value="<?php echo set_value('id_proof'); ?>" name="id_proof">
-                                    </div>
-                                </div>
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        <label for="email"><?php echo $this->lang->line('number_of_person'); ?></label>
-                                        <input type="text" class="form-control" value="<?php echo set_value('pepples'); ?>" name="pepples">
-                                    </div>
-                                </div>
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        <label for="pwd"><?php echo $this->lang->line('date'); ?></label><small class="req"> *</small>
-                                        <input type="text" id="date" class="form-control date" value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat())); ?>"  name="date" readonly="">
-                                        <span class="text-danger"><?php echo form_error('date'); ?></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        <label for="pwd"><?php echo $this->lang->line('in_time'); ?></label>
-                                        <div class="bootstrap-timepicker">
-                                            <div class="form-group">
-                                                <div class="input-group">
-                                                    <input type="text" name="time" class="form-control timepicker" id="stime_" value="<?php echo set_value('time'); ?>">
-                                                    <div class="input-group-addon">
-                                                        <i class="fa fa-clock-o"></i>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <span class="text-danger"><?php echo form_error('time'); ?></span>
-                                    </div>
-                                </div>
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        <label for="pwd"><?php echo $this->lang->line('out_time'); ?></label>
-                                        <div class="bootstrap-timepicker">
-                                            <div class="form-group">
-                                                <div class="input-group">
-                                                    <input type="text" name="out_time" class="form-control timepicker" id="stime_" value="<?php echo set_value('out_time'); ?>">
-                                                    <div class="input-group-addon">
-                                                        <i class="fa fa-clock-o"></i>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <span class="text-danger"><?php echo form_error('out_time'); ?></span>
-                                    </div>
-                                </div>
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        <label for="exampleInputFile"><?php echo $this->lang->line('attach_document'); ?></label>
-                                        <div>
-                                            <input class="filestyle form-control" type='file' name='file'/>
-                                        </div>
-                                        <span class="text-danger"><?php echo form_error('file'); ?></span>
-                                    </div>                                    
-                                </div>
-                            </div>                           
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <div class="form-group">
-                                        <label for="pwd"><?php echo $this->lang->line('note'); ?></label>
-                                        <textarea class="form-control" id="description" name="note" name="note" rows="3"><?php echo set_value('note'); ?></textarea>
-                                        <span class="text-danger"><?php echo form_error('date'); ?></span>
-                                    </div>
-                                </div>
-                            </div>                            
                             </div>
                         </div>
-                    </div>    
-                    <div class="modal-footer">
-                            <button type="submit" class="btn btn-info pull-right" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><?php echo $this->lang->line('save') ?></button>
-                    </div>                
-            </form>
+                        <span class="text-danger"><?php echo form_error('time'); ?></span>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label><?php echo $this->lang->line('out_time'); ?></label>
+                        <div class="bootstrap-timepicker">
+                            <div class="input-group">
+                                <input type="text" name="out_time" class="form-control timepicker" id="stime_out" value="<?php echo set_value('out_time'); ?>">
+                                <div class="input-group-addon">
+                                    <i class="fa fa-clock-o"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-danger"><?php echo form_error('out_time'); ?></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><?php echo $this->lang->line('attach_document'); ?></label>
+                <input class="filestyle form-control" type='file' name='file' style="padding: 4px; height: auto;"/>
+                <span class="text-danger"><?php echo form_error('file'); ?></span>
+            </div>
+            
+            <div class="form-group">
+                <label><?php echo $this->lang->line('note'); ?></label>
+                <textarea class="form-control" id="description" name="note" rows="3" placeholder="Enter purpose details or notes..."><?php echo set_value('note'); ?></textarea>
+                <span class="text-danger"><?php echo form_error('date'); ?></span>
+            </div>
         </div>
-    </div>
+        <div class="modern-drawer-footer">
+            <button type="button" class="btn btn-default" id="btn-cancel-visitor-drawer"><?php echo $this->lang->line('cancel'); ?></button>
+            <button type="submit" class="btn btn-primary" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-check"></i> <?php echo $this->lang->line('save') ?></button>
+        </div>
+    </form>
 </div>
+
 
 <div class="modal fade" id="editvisitormodal" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog modal-lg" role="document">
@@ -332,9 +366,30 @@
             }
         ]
     );
+
+        // Visitor Drawer open / close handlers
+        $('#btn-open-visitor-drawer').on('click', function() {
+            $('#addvisitorform').trigger("reset");
+            $('#visible_student').hide();
+            $('#visible_staff').hide();
+            openVisitorDrawer();
+        });
+        $('#btn-close-visitor-drawer, #btn-cancel-visitor-drawer, #visitor-drawer-overlay').on('click', function() {
+            closeVisitorDrawer();
+        });
     });
 
+    function openVisitorDrawer() {
+        $('#visitor-drawer-overlay').addClass('is-active');
+        $('#visitor-drawer-panel').addClass('is-open');
+        $('body').addClass('drawer-open').css('overflow', 'hidden');
+    }
 
+    function closeVisitorDrawer() {
+        $('#visitor-drawer-panel').removeClass('is-open');
+        $('#visitor-drawer-overlay').removeClass('is-active');
+        $('body').removeClass('drawer-open').css('overflow', '');
+    }
 
     $(function () {
         $(".timepicker").timepicker({

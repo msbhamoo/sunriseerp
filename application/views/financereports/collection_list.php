@@ -1,273 +1,147 @@
 <?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
-<style type="text/css">
-    .dashboard2-wrapper { 
-        background-color: #f8fafc; 
-        font-family: 'Inter', system-ui, -apple-system, sans-serif; 
-    }
-    .d2-card { 
-        background: #ffffff; 
-        border-radius: 14px; 
-        padding: 16px 20px; 
-        margin-bottom: 12px; 
-        box-shadow: 0 4px 18px rgba(0,0,0,0.02); 
-        border: 1px solid #f1f5f9; 
-    }
-    .d2-header-card {
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 14px 20px;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-        border: 1px solid #f1f5f9;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .d2-header-title {
-        font-size: 18px;
-        font-weight: 800;
-        color: #0f172a;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .d2-header-title i {
-        color: #059669;
-        font-size: 20px;
-    }
 
-    .d2-title { 
-        font-size: 14px; 
-        font-weight: 800; 
-        color: #0f172a; 
-        margin-bottom: 10px; 
-        border-bottom: 1px solid #f1f5f9; 
-        padding-bottom: 8px; 
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .d2-pill { 
-        padding: 4px 12px; 
-        border-radius: 20px; 
-        font-size: 11px; 
-        font-weight: 700; 
-        display: inline-block; 
-    }
-    .pill-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
-    .pill-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-    .btn-sleek { 
-        border-radius: 8px; 
-        box-shadow: none; 
-        border: none; 
-        padding: 7px 16px; 
-        font-weight: 700; 
-        background: #059669;
-        color: #fff;
-        transition: all 0.2s ease;
-    }
-    .btn-sleek:hover {
-        background: #047857;
-        color: #fff;
-        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
-    }
-    .action-btn { 
-        width: 32px; 
-        height: 32px; 
-        line-height: 32px; 
-        text-align: center; 
-        padding: 0; 
-        border-radius: 8px; 
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 2px; 
-        color: #fff; 
-        border: none; 
-        box-shadow: 0 2px 5px rgba(0,0,0,0.06); 
-        transition: all 0.2s ease; 
-    }
-    .action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.12); color: #fff; }
-    .btn-print { background: #0284c7; }
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1><i class="fa fa-money"></i> <?php echo $this->lang->line('fees_collection'); ?></h1>
+    </section>
     
-    .table>thead>tr>th { 
-        border-bottom: 2px solid #f1f5f9; 
-        color: #64748b; 
-        font-size: 11px; 
-        font-weight: 700;
-        text-transform: uppercase; 
-        letter-spacing: 0.5px;
-        background: #f8fafc;
-        padding: 10px 12px;
-    }
-    .table>tbody>tr>td { 
-        vertical-align: middle; 
-        border-top: 1px solid #f1f5f9; 
-        font-size: 13px;
-        color: #334155;
-        padding: 10px 12px;
-    }
+    <section class="content">
+        <!-- Unified Header & Criteria Box -->
+        <div class="box box-primary" style="overflow: visible; z-index: 50;">
+            <div class="box-header with-border">
+                <h3 class="box-title"><i class="fa fa-filter text-muted" style="margin-right: 6px;"></i> Fee Collection Report</h3>
+            </div>
+            <div class="box-body" style="overflow: visible;">
+                <form role="form" action="<?php echo site_url('financereports/collection_list') ?>" method="post" class="">
+                    <?php echo $this->customlib->getCSRF(); ?>
+                    <!-- Hidden Search Duration field -->
+                    <select class="form-control" name="search_type" id="search_type_hidden" style="display:none;">
+                        <?php foreach ($searchlist as $key => $search) { ?>
+                            <option value="<?php echo $key ?>" <?php
+                            if ((isset($search_type)) && ($search_type == $key)) {
+                                echo "selected";
+                            }
+                            ?>><?php echo $search ?></option>
+                        <?php } ?>
+                    </select>
+                    <div id='date_result' style="display:none;"></div>
 
-    /* Summary Metrics Row */
-    .d2-metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 12px;
-        margin-bottom: 12px;
-    }
-    .d2-metric-box {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 12px 16px;
-        border: 1px solid #f1f5f9;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    .d2-metric-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-    }
-    .d2-metric-icon.emerald { background: #d1fae5; color: #047857; }
-    .d2-metric-icon.blue { background: #e0f2fe; color: #0284c7; }
-    .d2-metric-icon.purple { background: #f3e8ff; color: #7e22ce; }
-
-    .d2-metric-label { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .d2-metric-val { font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.1; }
-
-    /* Hide redundant DataTables search input & default export buttons */
-    .dataTables_filter, .dt-buttons {
-        display: none !important;
-    }
-</style>
-<div class="content-wrapper dashboard2-wrapper" style="min-height: 946px;">
-    <section class="content" style="padding: 15px 15px 0 15px;">
-        <!-- Unified Header & Criteria Card -->
-        <div class="d2-card" style="padding: 14px 20px;">
-            <form role="form" action="<?php echo site_url('financereports/collection_list') ?>" method="post" class="">
-                <?php echo $this->customlib->getCSRF(); ?>
-                <!-- Hidden Search Duration field -->
-                <select class="form-control" name="search_type" id="search_type_hidden" style="display:none;">
-                    <?php foreach ($searchlist as $key => $search) { ?>
-                        <option value="<?php echo $key ?>" <?php
-                        if ((isset($search_type)) && ($search_type == $key)) {
-                            echo "selected";
-                        }
-                        ?>><?php echo $search ?></option>
-                    <?php }?>
-                </select>
-                <div id='date_result' style="display:none;"></div>
-
-                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-                    <div>
-                        <div class="d2-header-title">
-                            <i class="fa fa-money"></i> Fee Collection Report
+                    <div class="row">
+                        <div class="col-md-4 col-sm-6">
+                            <div class="form-group">
+                                <label><?php echo $this->lang->line('search_duration'); ?></label>
+                                <select class="form-control" id="search_type_select" onchange="$('#search_type_hidden').val(this.value); this.form.submit();">
+                                    <?php foreach ($searchlist as $key => $search) { ?>
+                                        <option value="<?php echo $key ?>" <?php if ((isset($search_type)) && ($search_type == $key)) { echo "selected"; } ?>><?php echo $search ?></option>
+                                    <?php } ?>
+                                </select>
+                            </div>
                         </div>
-                        <small style="color: #64748b; font-weight: 500;">Finance Reports / Collection List</small>
+                        <div class="col-md-8 col-sm-6">
+                            <div class="form-group search-student-wrapper">
+                                <label>Quick Search Student</label>
+                                <div>
+                                    <input type="text" name="search_student" id="search_student_ajax" class="form-control" value="<?php echo set_value('search_student', isset($search_student) ? $search_student : ''); ?>" placeholder="Search student name, roll no, scholar no..." autocomplete="off">
+                                    <div id="ajax_student_search_results_container" class="custom-ajax-search-container"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </form>
+            </div>
+        </div>
 
-                    <div style="display: flex; align-items: center; gap: 8px; flex: 1; max-width: 450px; margin-left: 20px;">
-                        <div style="position:relative; flex: 1;">
-                            <input type="text" name="search_student" id="search_student_ajax" class="form-control" value="<?php echo set_value('search_student', isset($search_student) ? $search_student : ''); ?>" placeholder="Search student name, roll no, enroll no..." autocomplete="off" style="border-radius: 8px; height: 38px;">
-                            <div id="ajax_student_search_results_container" class="custom-ajax-search-container"></div>
-                        </div>
+        <?php if (empty($results)) { ?>
+            <div class="box box-primary">
+                <div class="box-body">
+                    <div class="alert alert-info" style="margin-bottom:0; border-radius: 8px;">
+                       <?php echo $this->lang->line('no_record_found'); ?>
                     </div>
                 </div>
-            </form>
-        </div>
-                    <?php if (empty($results)) { ?>
-                        <div class="d2-card">
-                            <div class="alert alert-info" style="margin-bottom:0; border-radius: 8px;">
-                               <?php echo $this->lang->line('no_record_found'); ?>
-                            </div>
-                        </div>
-                    <?php } else { 
-                        $total_records = count($results);
-                        $total_collected_val = 0;
-                        $reverted_count = 0;
-                        $fee_receipts_count = 0;
-                        $transport_receipts_count = 0;
-                        $unique_students = array();
+            </div>
+        <?php } else { 
+            $total_records = count($results);
+            $total_collected_val = 0;
+            $reverted_count = 0;
+            $fee_receipts_count = 0;
+            $transport_receipts_count = 0;
+            $unique_students = array();
 
-                        foreach ($results as $res_item) {
-                            if (!empty($res_item['student_id'])) {
-                                $unique_students[$res_item['student_id']] = true;
-                            } elseif (!empty($res_item['admission_no'])) {
-                                $unique_students[$res_item['admission_no']] = true;
-                            }
+            foreach ($results as $res_item) {
+                if (!empty($res_item['student_id'])) {
+                    $unique_students[$res_item['student_id']] = true;
+                } elseif (!empty($res_item['admission_no'])) {
+                    $unique_students[$res_item['admission_no']] = true;
+                }
 
-                            if ($res_item['custom_receipt_status'] != 'Reversed') {
-                                $total_collected_val += (two_digit_float($res_item['amount']) + two_digit_float($res_item['amount_fine']));
-                            } else {
-                                $reverted_count++;
-                            }
+                if ($res_item['custom_receipt_status'] != 'Reversed') {
+                    $total_collected_val += (two_digit_float($res_item['amount']) + two_digit_float($res_item['amount_fine']));
+                } else {
+                    $reverted_count++;
+                }
 
-                            $type_lower = strtolower($res_item['type'] ?? '');
-                            if (strpos($type_lower, 'transport') !== false || strpos($type_lower, 'bus') !== false) {
-                                $transport_receipts_count++;
-                            } else {
-                                $fee_receipts_count++;
-                            }
-                        }
-                        $total_unique_students = count($unique_students);
-                    ?>
-                        <!-- Summary Metrics Grid -->
-                        <div class="d2-metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-                            <div class="d2-metric-box">
-                                <div class="d2-metric-icon blue">
-                                    <i class="fa fa-file-text-o"></i>
-                                </div>
-                                <div>
-                                    <div class="d2-metric-label">Total Fee Receipts</div>
-                                    <div class="d2-metric-val"><?php echo $fee_receipts_count; ?></div>
-                                </div>
-                            </div>
-                            <div class="d2-metric-box">
-                                <div class="d2-metric-icon amber" style="background:#fef3c7; color:#d97706;">
-                                    <i class="fa fa-bus"></i>
-                                </div>
-                                <div>
-                                    <div class="d2-metric-label">Total Transport Receipts</div>
-                                    <div class="d2-metric-val"><?php echo $transport_receipts_count; ?></div>
-                                </div>
-                            </div>
-                            <div class="d2-metric-box">
-                                <div class="d2-metric-icon teal" style="background:#ccfbf1; color:#0f766e;">
-                                    <i class="fa fa-users"></i>
-                                </div>
-                                <div>
-                                    <div class="d2-metric-label">Total Unique Students</div>
-                                    <div class="d2-metric-val"><?php echo $total_unique_students; ?></div>
-                                </div>
-                            </div>
-                            <div class="d2-metric-box">
-                                <div class="d2-metric-icon indigo" style="background:#e0e7ff; color:#4338ca;">
-                                    <i class="fa fa-list-alt"></i>
-                                </div>
-                                <div>
-                                    <div class="d2-metric-label">Total Transactions Count</div>
-                                    <div class="d2-metric-val"><?php echo $total_records; ?></div>
-                                </div>
-                            </div>
-                        </div>
+                $type_lower = strtolower($res_item['type'] ?? '');
+                if (strpos($type_lower, 'transport') !== false || strpos($type_lower, 'bus') !== false) {
+                    $transport_receipts_count++;
+                } else {
+                    $fee_receipts_count++;
+                }
+            }
+            $total_unique_students = count($unique_students);
+        ?>
+            <!-- Modern KPI Summary Stat Grid -->
+            <div class="modern-stat-grid">
+                <div class="modern-stat-card">
+                    <div class="modern-stat-info">
+                        <div class="stat-label">Total Fee Receipts</div>
+                        <div class="stat-value"><?php echo $fee_receipts_count; ?></div>
+                    </div>
+                    <div class="modern-stat-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
+                        <i class="fa fa-file-text-o"></i>
+                    </div>
+                </div>
+                
+                <div class="modern-stat-card">
+                    <div class="modern-stat-info">
+                        <div class="stat-label">Transport Receipts</div>
+                        <div class="stat-value text-warning" style="color: #d97706;"><?php echo $transport_receipts_count; ?></div>
+                    </div>
+                    <div class="modern-stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
+                        <i class="fa fa-bus"></i>
+                    </div>
+                </div>
+                
+                <div class="modern-stat-card">
+                    <div class="modern-stat-info">
+                        <div class="stat-label">Unique Students</div>
+                        <div class="stat-value" style="color: #0284c7;"><?php echo $total_unique_students; ?></div>
+                    </div>
+                    <div class="modern-stat-icon" style="background: rgba(14, 165, 233, 0.12); color: #0284c7;">
+                        <i class="fa fa-graduation-cap"></i>
+                    </div>
+                </div>
+                
+                <div class="modern-stat-card">
+                    <div class="modern-stat-info">
+                        <div class="stat-label">Total Amount Collected</div>
+                        <div class="stat-value text-success" style="color: #059669; font-size: 20px;"><?php echo $currency_symbol . " " . number_format($total_collected_val, 2); ?></div>
+                    </div>
+                    <div class="modern-stat-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                        <i class="fa fa-inr"></i>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="d2-card">
-                            <div class="d2-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
-                                <span><i class="fa fa-table" style="color:#0284c7;"></i> Fee Collection List</span>
-                                <div style="display: flex; align-items: center; gap: 6px;">
-                                    <a class="btn btn-default btn-xs" id="btnExport" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('download_excel'); ?>" onclick="fnExcelReport();" style="border-radius: 6px; padding: 5px 10px; font-weight: 600;"><i class="fa fa-file-excel-o"></i> CSV</a>
-                                    <a class="btn btn-default btn-xs" id="print" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('print'); ?>" onclick="printDiv()" style="border-radius: 6px; padding: 5px 10px; font-weight: 600;"><i class="fa fa-print"></i> Print</a>
-                                </div>
-                            </div>
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title titlefix"><i class="fa fa-list text-muted" style="margin-right: 6px;"></i> Fee Collection List</h3>
+                    <div class="box-tools pull-right">
+                        <a class="btn btn-default btn-sm" id="btnExport" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('download_excel'); ?>" onclick="fnExcelReport();"><i class="fa fa-file-excel-o text-success"></i> CSV</a>
+                        <a class="btn btn-default btn-sm" id="print" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('print'); ?>" onclick="printDiv()"><i class="fa fa-print text-primary"></i> Print</a>
+                    </div>
+                </div>
                             
                             <div class="box-body table-responsive" id="transfee">
                                 <div id="printhead"><center><b><h4>Fee Collection List<br><?php $this->customlib->get_postmessage(); ?></h4></b></center></div>
@@ -338,14 +212,16 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                 </td>
                                                 <td>
                                                     <?php if($collect['custom_receipt_status'] == 'Reversed') { ?>
-                                                        <span class="d2-pill pill-danger">Reverted</span>
+                                                        <span class="label label-danger">Reverted</span>
                                                     <?php } else { ?>
-                                                        <span class="d2-pill pill-success">Received</span>
+                                                        <span class="label label-success">Received</span>
                                                     <?php } ?>
                                                 </td>
-                                                <td>
-                                                    <?php if($collect['custom_receipt_status'] == 'Collected') { ?>
-                                                        <button class="action-btn btn-print" onclick="printReceipt('<?php echo $collect['id']; ?>', '<?php echo $collect['inv_no']; ?>')" data-toggle="tooltip" title="Print"><i class="fa fa-print"></i></button>
+                                                <td class="text-right white-space-nowrap">
+                                                    <?php if($collect['custom_receipt_status'] == 'Collected' || empty($collect['custom_receipt_status']) || $collect['custom_receipt_status'] != 'Reversed') { ?>
+                                                        <a href="javascript:void(0);" class="btn btn-default btn-xs" onclick="printReceipt('<?php echo $collect['id']; ?>', '<?php echo $collect['inv_no']; ?>')" data-toggle="tooltip" title="<?php echo $this->lang->line('print'); ?>">
+                                                            <i class="fa fa-print text-primary"></i>
+                                                        </a>
                                                     <?php } ?>
                                                 </td>
                                             </tr>                    
@@ -601,104 +477,113 @@ $(document).ready(function() {
 </div>
 
 <style>
+    .search-student-wrapper {
+        position: relative;
+        z-index: 1050;
+    }
     .custom-ajax-search-container {
         width: 100%; 
-        min-width: 450px; /* Make it wide enough to fit all columns */
+        min-width: 480px; 
         max-width: 100vw;
         position: absolute; 
-        z-index: 999; 
-        background: #fff; 
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+        z-index: 99999 !important; 
+        background: #ffffff; 
+        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08); 
         display: none; 
-        max-height: 450px; 
+        max-height: 420px; 
         overflow-y: auto;
-        border-radius: 6px;
+        border-radius: 10px;
         padding: 10px;
-        border: 1px solid #e1e4e8;
-        top: 100%;
-        margin-top: 5px;
+        border: 1px solid #e2e8f0;
+        top: calc(100% + 6px);
+        left: 0;
     }
     .custom-ajax-search-item {
         display: flex;
         align-items: center;
-        padding: 12px;
-        margin-bottom: 8px;
+        padding: 10px 14px;
+        margin-bottom: 6px;
         background-color: #ffffff;
-        border: 1px solid #eef0f3;
+        border: 1px solid #f1f5f9;
         border-radius: 8px;
-        text-decoration: none;
-        color: #333;
-        transition: all 0.2s ease-in-out;
+        text-decoration: none !important;
+        color: #1e293b;
+        transition: all 0.15s ease-in-out;
     }
     .custom-ajax-search-item:nth-child(even) {
-        background-color: #f4f6f9;
+        background-color: #f8fafc;
     }
     .custom-ajax-search-item:last-child {
         margin-bottom: 0;
     }
     .custom-ajax-search-item:hover, .custom-ajax-search-item:focus {
-        background-color: var(--primary-theme-color, #2eab66);
-        color: #fff;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        border-color: var(--primary-theme-color, #2eab66);
+        background-color: var(--primary-theme-color, #4f46e5);
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        border-color: var(--primary-theme-color, #4f46e5);
         outline: none;
     }
+    .custom-ajax-search-item:hover .custom-ajax-search-name {
+        color: #ffffff !important;
+    }
+    .custom-ajax-search-item:hover .custom-ajax-search-meta {
+        color: #e0e7ff !important;
+    }
+    .custom-ajax-search-item:hover .custom-ajax-search-parents {
+        color: #ffffff !important;
+    }
+    .custom-ajax-search-item:hover .custom-ajax-search-icon {
+        color: #ffffff !important;
+    }
     .custom-ajax-search-avatar {
-        width: 50px;
-        height: 50px;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
         object-fit: cover;
-        margin-right: 15px;
-        border: 2px solid #fff;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        margin-right: 14px;
+        border: 2px solid #e2e8f0;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.06);
         background: #fff;
+        flex-shrink: 0;
     }
     .custom-ajax-search-details {
         flex: 1;
         display: flex;
-        justify-content: flex-start;
+        justify-content: space-between;
         align-items: center;
-        min-width: 0; /* Important for flex child truncation */
+        min-width: 0;
         gap: 12px;
     }
     .custom-ajax-search-col {
         display: flex;
         flex-direction: column;
-        flex: 0 0 200px;
-        width: 200px;
+        flex: 1 1 auto;
         min-width: 0;
     }
     .custom-ajax-search-name {
-        font-weight: 600;
-        font-size: 15px;
-        margin-bottom: 3px;
-        text-transform: uppercase;
+        font-weight: 700;
+        font-size: 14px;
+        margin-bottom: 2px;
+        color: #0f172a;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
     .custom-ajax-search-meta {
         font-size: 12px;
-        color: #6c757d;
+        color: #64748b;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    .custom-ajax-search-item:hover .custom-ajax-search-meta {
-        color: #e0f2e9;
-    }
     .custom-ajax-search-parents {
         display: flex;
         flex-direction: column;
-        font-size: 12px;
-        color: #495057;
-        text-transform: uppercase;
-        font-weight: 500;
+        font-size: 11px;
+        color: #475569;
+        font-weight: 600;
         min-width: 140px;
         flex-shrink: 0;
-    }
-    .custom-ajax-search-item:hover .custom-ajax-search-parents {
-        color: #fff;
     }
     .parent-badge {
         color: #fff !important;
@@ -714,32 +599,30 @@ $(document).ready(function() {
         flex-shrink: 0;
     }
     .badge-father {
-        background-color: #007bff !important;
+        background-color: #3b82f6 !important;
     }
     .badge-mother {
-        background-color: #e83e8c !important;
+        background-color: #ec4899 !important;
     }
     .custom-ajax-search-icon {
-        color: #adb5bd;
-        margin-left: 15px;
-        font-size: 18px;
-    }
-    .custom-ajax-search-item:hover .custom-ajax-search-icon {
-        color: #fff;
+        color: #94a3b8;
+        margin-left: 12px;
+        font-size: 16px;
+        flex-shrink: 0;
     }
     /* Scrollbar styling for the container */
     .custom-ajax-search-container::-webkit-scrollbar {
         width: 6px;
     }
     .custom-ajax-search-container::-webkit-scrollbar-track {
-        background: #f1f1f1; 
+        background: #f1f5f9; 
         border-radius: 4px;
     }
     .custom-ajax-search-container::-webkit-scrollbar-thumb {
-        background: #ccc; 
+        background: #cbd5e1; 
         border-radius: 4px;
     }
     .custom-ajax-search-container::-webkit-scrollbar-thumb:hover {
-        background: #999; 
+        background: #94a3b8; 
     }
 </style>

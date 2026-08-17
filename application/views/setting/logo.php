@@ -1,4 +1,65 @@
+<style>
+    .logo-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+    }
+    .logo-upload-card {
+        background: #ffffff;
+        border: 1px solid #f1f5f9;
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        transition: all 0.2s ease;
+    }
+    .logo-upload-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    .logo-card-header {
+        font-size: 14px;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .logo-preview-box {
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+    .logo-preview-box img {
+        max-width: 100%;
+        max-height: 90px;
+        object-fit: contain;
+    }
+    .logo-dimension-badge {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 12px;
+        text-align: center;
+    }
+</style>
+
 <div class="content-wrapper">
+    <section class="content-header">
+        <h1><i class="fa fa-sliders"></i> <?php echo $this->lang->line('system_settings'); ?></h1>
+    </section>
+
     <section class="content">
         <div class="row">
             <?php $this->load->view('setting/_settingmenu'); ?>
@@ -6,100 +67,89 @@
             <!-- left column -->
             <div class="col-lg-9 col-md-8 col-sm-8">
                 <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title titlefix"><i class="fa fa-picture-o text-muted" style="margin-right: 6px;"></i> <?php echo $this->lang->line('logo'); ?></h3>
+                    </div>
                     <div class="box-body">
-                        <div class="row">
-                            <div class="col-lg-3 col-md-6 col-sm-6">
-                                
-                                <div class="card-body-logo">
-                                <h4> <?php echo $this->lang->line('print_logo'); ?></h4> 
-                                    <div class="text-center">     
-                                        <?php
-                                        if ($result->image == "") {
-                                            ?>
-                                            <div class="card-body-logo-img"><img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/logo/images.png') ?>" class="" alt="" width="304" height="236"></div>
-                                            <?php
-                                        } else {
-                                            ?>
-                                            <div class="card-body-logo-img"><img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/logo/'.$result->image); ?>" class="" alt="" width="304" height="236"></div>
-                                            <?php
-                                        }
-                                        ?>
-                                        <p class="bolds ptt10">(170px X 184px)</p>
-                                    </div>    
-                                    <a href="#schsetting" role="button" class="btn btn-primary btn-sm upload_logo"><?php echo $this->lang->line('update'); ?></a>
-                                    <a href="#schsetting" role="button" class="btn btn-primary btn-sm upload_logo" style="display: none"> data-toggle="tooltip" title="<?php echo $this->lang->line('edit_print_logo'); ?>" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> <?php echo $this->lang->line('processing'); ?>"><i class="fa fa-picture-o"></i> <?php echo $this->lang->line('edit_print_logo'); ?></a>
-                                </div>    
+                        <div class="logo-card-grid">
+                            <!-- Print Logo -->
+                            <div class="logo-upload-card">
+                                <div>
+                                    <div class="logo-card-header">
+                                        <i class="fa fa-print text-primary"></i> <?php echo $this->lang->line('print_logo'); ?>
+                                    </div>
+                                    <div class="logo-preview-box">     
+                                        <?php if ($result->image == "") { ?>
+                                            <img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/logo/images.png') ?>" alt="Print Logo">
+                                        <?php } else { ?>
+                                            <img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/logo/'.$result->image); ?>" alt="Print Logo">
+                                        <?php } ?>
+                                    </div>
+                                    <div class="logo-dimension-badge">(170px × 184px)</div>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-block btn-sm upload_logo" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> <?php echo $this->lang->line('processing'); ?>">
+                                    <i class="fa fa-upload"></i> <?php echo $this->lang->line('edit_print_logo'); ?>
+                                </button>
                             </div> 
 
-                            <div class="col-lg-3 col-md-6 col-sm-6">
-                                <div class="card-body-logo">
-                                    <h4><?php echo $this->lang->line('admin_logo'); ?> </h4>
-                                    <div class="text-center"> 
-                                        <?php
-                                        if ($result->admin_logo == "") {
-                                            ?>
-                                            <div class="card-body-logo-img"><img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/admin_logo/images.png'); ?>" class="" alt="" width="204" height="60"></div>
-                                            <?php
-                                        } else {
-                                            ?>
-                                            <div class="card-body-logo-img"><img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/admin_logo/'.$result->admin_logo); ?>" class="" alt="" width="204" height="60"></div>
-                                            <?php
-                                        }
-                                        ?>
-                                        
-                                        <p class="bolds ptt10">(290px X 51px)</p>
-                                    </div> 
-                                    <a href="#schsetting" role="button" class="btn btn-primary btn-sm upload_admin_logo"><?php echo $this->lang->line('update'); ?></a>   
-                                    <a href="#admin_logo" role="button" class="btn btn-primary btn-sm upload_admin_logo" style="display:none"> data-toggle="tooltip" title="<?php echo $this->lang->line('edit_admin_logo'); ?>" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> <?php echo $this->lang->line('processing'); ?>"><i class="fa fa-picture-o"></i> <?php echo $this->lang->line('edit_admin_logo'); ?></a>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-3 col-md-6 col-sm-6">
-                                
-                                <div class="card-body-logo">
-                                <h4><?php echo $this->lang->line('admin_small_logo'); ?></h4>   
-                                    <div class="text-center"> 
-                                        <?php
-                                        if ($result->admin_small_logo == "") {
-                                            ?>
-                                            <img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/logo/images.png'); ?>" alt="">
-                                            <?php
-                                        } else {
-                                            ?>
-                                            <img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/admin_small_logo/'.$result->admin_small_logo); ?>" width="32" height="32">
-                                            <?php
-                                        }
-                                        ?>
-                                        
-                                        <p class="bolds ptt10">(32px X 32px)</p>
-                                    </div>    
-                                    <a href="#schsetting" role="button" class="btn btn-primary btn-sm upload_admin_small_logo"><?php echo $this->lang->line('update'); ?></a>
-                                    <a href="#admin_small_logo" role="button" class="btn btn-primary btn-sm upload_admin_small_logo" style="display: none" data-toggle="tooltip" title="<?php echo $this->lang->line('edit_admin_small_logo'); ?>" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> <?php echo $this->lang->line('processing'); ?>"><i class="fa fa-picture-o"></i> <?php echo $this->lang->line('edit_admin_small_logo'); ?></a>
-                                </div>
-                            </div>
-
-                             <div class="col-lg-3 col-md-6 col-sm-6">
-                                
-                                <div class="card-body-logo">
-                                <h4><?php echo $this->lang->line('app_logo'); ?> </h4> 
-                                    <div class="text-center">    
-                                        <?php
-                                        if ($result->app_logo == "") {
-                                            ?>
-                                            <div class="card-body-logo-img"><img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/logo/images.png'); ?>" class="" alt="" width="290" height="51"></div>
-                                            <?php
-                                        } else {
-                                            ?>
-                                            <div class="card-body-logo-img"><img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/logo/app_logo/'.$result->app_logo); ?>" width="290" height="51"></div>
-                                            <?php
-                                        }
-                                        ?>
-                                        
-                                        <p class="bolds ptt10">(290px X 51px)</p>
+                            <!-- Admin Logo -->
+                            <div class="logo-upload-card">
+                                <div>
+                                    <div class="logo-card-header">
+                                        <i class="fa fa-desktop text-success"></i> <?php echo $this->lang->line('admin_logo'); ?>
                                     </div>
-                                    <a href="#schsetting" role="button" class="btn btn-primary btn-sm upload_app_logo"><?php echo $this->lang->line('update'); ?></a>    
-                                    <a href="#app_logo" role="button" class="btn btn-primary btn-sm upload_app_logo" style="display: none" data-toggle="tooltip" title="<?php echo $this->lang->line('edit_app_logo'); ?>" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> <?php echo $this->lang->line('processing'); ?>"><i class="fa fa-picture-o"></i> <?php echo $this->lang->line('edit_app_logo'); ?></a>
+                                    <div class="logo-preview-box"> 
+                                        <?php if ($result->admin_logo == "") { ?>
+                                            <img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/admin_logo/images.png'); ?>" alt="Admin Logo">
+                                        <?php } else { ?>
+                                            <img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/admin_logo/'.$result->admin_logo); ?>" alt="Admin Logo">
+                                        <?php } ?>
+                                    </div> 
+                                    <div class="logo-dimension-badge">(290px × 51px)</div>
                                 </div>
+                                <button type="button" class="btn btn-primary btn-block btn-sm upload_admin_logo" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> <?php echo $this->lang->line('processing'); ?>">
+                                    <i class="fa fa-upload"></i> <?php echo $this->lang->line('edit_admin_logo'); ?>
+                                </button>
+                            </div>
+
+                            <!-- Admin Small Logo -->
+                            <div class="logo-upload-card">
+                                <div>
+                                    <div class="logo-card-header">
+                                        <i class="fa fa-square-o text-warning"></i> <?php echo $this->lang->line('admin_small_logo'); ?>
+                                    </div>
+                                    <div class="logo-preview-box"> 
+                                        <?php if ($result->admin_small_logo == "") { ?>
+                                            <img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/logo/images.png'); ?>" alt="Small Logo" style="width: 32px; height: 32px;">
+                                        <?php } else { ?>
+                                            <img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/admin_small_logo/'.$result->admin_small_logo); ?>" alt="Small Logo" style="width: 32px; height: 32px;">
+                                        <?php } ?>
+                                    </div>    
+                                    <div class="logo-dimension-badge">(32px × 32px)</div>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-block btn-sm upload_admin_small_logo" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> <?php echo $this->lang->line('processing'); ?>">
+                                    <i class="fa fa-upload"></i> <?php echo $this->lang->line('edit_admin_small_logo'); ?>
+                                </button>
+                            </div>
+
+                            <!-- App Logo -->
+                            <div class="logo-upload-card">
+                                <div>
+                                    <div class="logo-card-header">
+                                        <i class="fa fa-mobile text-info" style="font-size: 16px;"></i> <?php echo $this->lang->line('app_logo'); ?>
+                                    </div>
+                                    <div class="logo-preview-box">    
+                                        <?php if ($result->app_logo == "") { ?>
+                                            <img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/logo/images.png'); ?>" alt="App Logo">
+                                        <?php } else { ?>
+                                            <img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/logo/app_logo/'.$result->app_logo); ?>" alt="App Logo">
+                                        <?php } ?>
+                                    </div>
+                                    <div class="logo-dimension-badge">(290px × 51px)</div>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-block btn-sm upload_app_logo" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> <?php echo $this->lang->line('processing'); ?>">
+                                    <i class="fa fa-upload"></i> <?php echo $this->lang->line('edit_app_logo'); ?>
+                                </button>
                             </div>
                         </div>
                     </div>    

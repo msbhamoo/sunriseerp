@@ -28,37 +28,24 @@
         font-size: 22px;
     }
 
-    .ts-metrics-grid {
+    .modern-stat-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 16px;
-        margin-bottom: 20px;
     }
-    .ts-metric-box {
+    .modern-stat-card {
         background: #ffffff;
+        border: 1px solid #e2e8f0;
         border-radius: 14px;
         padding: 16px 20px;
-        border: 1px solid #f1f5f9;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         display: flex;
         align-items: center;
-        gap: 16px;
+        justify-content: space-between;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
-    .ts-metric-icon {
-        width: 46px;
-        height: 46px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-    }
-    .ts-metric-icon.blue { background: #e0f2fe; color: #0284c7; }
-    .ts-metric-icon.amber { background: #fef3c7; color: #d97706; }
-    .ts-metric-icon.rose { background: #ffe4e6; color: #e11d48; }
-
-    .ts-metric-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .ts-metric-val { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.2; }
+    .modern-stat-info .stat-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .modern-stat-info .stat-value { font-size: 20px; font-weight: 800; color: #0f172a; margin-top: 2px; }
+    .modern-stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
 
     /* Single Row Horizontal Scroll Container */
     .ts-row-container {
@@ -86,7 +73,7 @@
         flex: 0 0 300px;
         min-width: 300px;
         background: #ffffff;
-        border-radius: 16px;
+        border-radius: 14px;
         border: 1px solid #f1f5f9;
         box-shadow: 0 4px 18px rgba(0,0,0,0.03);
         display: flex;
@@ -120,15 +107,13 @@
     }
 
     .ts-class-header {
-        background: #f8fafc;
-        border-bottom: 1px solid rgba(0,0,0,0.05);
         padding: 14px 18px;
         font-size: 15px;
         font-weight: 800;
-        color: #0f172a;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
     }
 
     .ts-class-body {
@@ -143,8 +128,8 @@
     .ts-slot-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-left: 5px solid #0284c7;
-        border-radius: 12px;
+        border-left: 5px solid #3b82f6;
+        border-radius: 10px;
         padding: 12px 14px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.02);
     }
@@ -217,6 +202,9 @@
 </style>
 
 <div class="content-wrapper dashboard2-wrapper" style="min-height: 946px;">
+    <section class="content-header">
+        <h1><i class="fa fa-calendar-check-o"></i> Today's Schedule Overview</h1>
+    </section>
     <section class="content">
         <?php
         $total_classes = count($schedule);
@@ -235,41 +223,47 @@
         }
         ?>
 
-        <!-- Header Card -->
-        <div class="ts-header-card">
-            <div class="ts-header-title">
-                <i class="fa fa-calendar-check-o"></i> Today's Schedule Overview
-                <span style="font-size: 13px; font-weight: 600; color: #64748b;">(<?php echo date($this->customlib->getSchoolDateFormat()) . ' - ' . $day; ?>)</span>
-            </div>
-        </div>
-
-        <!-- Metrics Row -->
-        <div class="ts-metrics-grid">
-            <div class="ts-metric-box">
-                <div class="ts-metric-icon blue">
+        <!-- Modern Metrics Grid -->
+        <div class="modern-stat-grid" style="margin-bottom: 16px;">
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Total Active Classes</div>
+                    <div class="stat-value"><?php echo $total_classes; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
                     <i class="fa fa-th"></i>
                 </div>
-                <div>
-                    <div class="ts-metric-label">Total Class Sections</div>
-                    <div class="ts-metric-val"><?php echo $total_classes; ?></div>
+            </div>
+
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Substituted Periods</div>
+                    <div class="stat-value" style="color: #d97706;"><?php echo $total_substituted; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
+                    <i class="fa fa-exchange"></i>
                 </div>
             </div>
-            <div class="ts-metric-box">
-                <div class="ts-metric-icon amber">
-                    <i class="fa fa-refresh"></i>
+
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Uncovered Periods</div>
+                    <div class="stat-value" style="color: <?php echo ($total_uncovered > 0) ? '#dc2626' : '#059669'; ?>;">
+                        <?php echo $total_uncovered; ?>
+                    </div>
                 </div>
-                <div>
-                    <div class="ts-metric-label">Substituted Periods</div>
-                    <div class="ts-metric-val"><?php echo $total_substituted; ?></div>
-                </div>
-            </div>
-            <div class="ts-metric-box">
-                <div class="ts-metric-icon rose">
+                <div class="modern-stat-icon" style="background: rgba(239, 68, 68, 0.12); color: #ef4444;">
                     <i class="fa fa-exclamation-triangle"></i>
                 </div>
-                <div>
-                    <div class="ts-metric-label">Uncovered Absences</div>
-                    <div class="ts-metric-val"><?php echo $total_uncovered; ?></div>
+            </div>
+
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Schedule Date</div>
+                    <div class="stat-value" style="font-size: 16px; color: #0f172a;"><?php echo date($this->customlib->getSchoolDateFormat()) . ' (' . $day . ')'; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(2, 132, 199, 0.12); color: #0284c7;">
+                    <i class="fa fa-calendar"></i>
                 </div>
             </div>
         </div>

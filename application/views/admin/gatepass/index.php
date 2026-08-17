@@ -1,21 +1,74 @@
-<style>
-    .bootstrap-timepicker-widget {
-        z-index: 999999 !important;
+<?php
+$total_passes = count($gate_passes);
+$pending_count = 0;
+$approved_count = 0;
+$completed_count = 0;
+foreach ($gate_passes as $gp) {
+    if (isset($gp['status'])) {
+        if ($gp['status'] == 'Pending') { $pending_count++; }
+        elseif ($gp['status'] == 'Approved') { $approved_count++; }
+        elseif ($gp['status'] == 'Completed') { $completed_count++; }
     }
-</style>
+}
+?>
+
 <div class="content-wrapper">
     <section class="content-header">
-        <h1><i class="fa fa-building-o"></i> <?php echo $this->lang->line('front_office'); ?></h1>
+        <h1><i class="fa fa-id-card-o"></i> <?php echo $this->lang->line('front_office'); ?></h1>
     </section>
+    
     <section class="content">
+        <!-- Modern KPI Stat Grid -->
+        <div class="modern-stat-grid">
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Total Passes</div>
+                    <div class="stat-value"><?php echo $total_passes; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
+                    <i class="fa fa-id-badge"></i>
+                </div>
+            </div>
+            
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Pending Approval</div>
+                    <div class="stat-value text-warning" style="color: #d97706;"><?php echo $pending_count; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
+                    <i class="fa fa-hourglass-half"></i>
+                </div>
+            </div>
+            
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Approved Passes</div>
+                    <div class="stat-value text-success" style="color: #059669;"><?php echo $approved_count; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                    <i class="fa fa-check-circle"></i>
+                </div>
+            </div>
+            
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Completed / Returned</div>
+                    <div class="stat-value" style="color: #0284c7;"><?php echo $completed_count; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(14, 165, 233, 0.12); color: #0284c7;">
+                    <i class="fa fa-flag-checkered"></i>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-primary" id="route">
                     <div class="box-header ptbnull">
-                        <h3 class="box-title titlefix"><?php echo $this->lang->line('gate_pass_list'); ?></h3>
+                        <h3 class="box-title titlefix"><i class="fa fa-list text-muted" style="margin-right: 6px;"></i> <?php echo $this->lang->line('gate_pass_list'); ?></h3>
                         <?php if ($this->rbac->hasPrivilege('front_office_gate_pass', 'can_add')) { ?>
                             <div class="box-tools pull-right">
-                                <a data-toggle="modal" data-target="#myModal" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add_gate_pass'); ?></a>
+                                <button type="button" id="btn-open-gatepass-drawer" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add_gate_pass'); ?></button>
                             </div>
                         <?php } ?>
                     </div>
@@ -45,18 +98,18 @@
                                         foreach ($gate_passes as $gatepass) {
                                             ?>
                                             <tr>
-                                                <td class="mailbox-name"><?php echo $gatepass['gate_pass_no']; ?></td>
-                                                <td class="mailbox-name"><?php echo ucfirst($gatepass['user_type']); ?></td>
-                                                <td class="mailbox-name"><?php echo $gatepass['user_details']; ?></td>
-                                                <td class="mailbox-name"><?php echo isset($gatepass['father_name']) ? $gatepass['father_name'] : '-'; ?></td>
-                                                <td class="mailbox-name">
+                                                <td class="mailbox-name"><code style="background: #f1f5f9; color: #4f46e5; padding: 2px 6px; border-radius: 4px; font-weight: 600;"><?php echo html_escape($gatepass['gate_pass_no']); ?></code></td>
+                                                <td class="mailbox-name"><span class="badge" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1;"><?php echo ucfirst($gatepass['user_type']); ?></span></td>
+                                                <td class="mailbox-name"><strong style="color: #0f172a;"><?php echo html_escape($gatepass['user_details']); ?></strong></td>
+                                                <td class="mailbox-name"><?php echo isset($gatepass['father_name']) ? html_escape($gatepass['father_name']) : '-'; ?></td>
+                                                <td class="mailbox-name white-space-nowrap">
                                                     <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($gatepass['date'])); ?>
                                                 </td>
                                                 <td class="mailbox-name"><?php echo (empty($gatepass['in_time']) || $gatepass['in_time'] == '00:00:00' || $gatepass['in_time'] == null) ? 'Full Day' : 'Partial Time'; ?></td>
-                                                <td class="mailbox-name"><?php echo $gatepass['out_time']; ?></td>
-                                                <td class="mailbox-name"><?php echo $gatepass['in_time'] ? $gatepass['in_time'] : '-'; ?></td>
-                                                <td class="mailbox-name"><?php echo $gatepass['actual_in_time'] ? $gatepass['actual_in_time'] : '-'; ?></td>
-                                                <td class="mailbox-name"><?php echo $gatepass['reason']; ?></td>
+                                                <td class="mailbox-name"><?php echo html_escape($gatepass['out_time']); ?></td>
+                                                <td class="mailbox-name"><?php echo $gatepass['in_time'] ? html_escape($gatepass['in_time']) : '-'; ?></td>
+                                                <td class="mailbox-name"><?php echo $gatepass['actual_in_time'] ? html_escape($gatepass['actual_in_time']) : '-'; ?></td>
+                                                <td class="mailbox-name"><?php echo html_escape($gatepass['reason']); ?></td>
                                                 <td class="mailbox-name">
                                                     <?php
                                                     if ($gatepass['status'] == 'Pending') {
@@ -70,10 +123,10 @@
                                                     }
                                                     ?>
                                                 </td>
-                                                <td class="mailbox-date pull-right">
+                                                <td class="mailbox-date text-right white-space-nowrap">
                                                     <?php if ($this->rbac->hasPrivilege('front_office_gate_pass', 'can_edit')) { ?>
-                                                        <a onclick="updateStatus('<?php echo $gatepass['id']; ?>', '<?php echo $gatepass['status']; ?>', '<?php echo $gatepass['actual_in_time']; ?>')" class="btn btn-default btn-xs"  data-toggle="tooltip" title="<?php echo $this->lang->line('update_status'); ?>">
-                                                            <i class="fa fa-pencil"></i>
+                                                        <a onclick="updateStatus('<?php echo $gatepass['id']; ?>', '<?php echo $gatepass['status']; ?>', '<?php echo $gatepass['actual_in_time']; ?>')" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('update_status'); ?>">
+                                                            <i class="fa fa-pencil text-primary"></i>
                                                         </a>
                                                     <?php } ?>
                                                     
@@ -84,8 +137,8 @@
                                                     <?php } ?>
 
                                                     <?php if ($this->rbac->hasPrivilege('front_office_gate_pass', 'can_delete')) { ?>
-                                                        <a href="<?php echo base_url(); ?>admin/gatepass/delete/<?php echo $gatepass['id'] ?>" class="btn btn-default btn-xs"  data-toggle="tooltip" title="<?php echo $this->lang->line('delete'); ?>" onclick="return confirm('<?php echo $this->lang->line('delete_confirm') ?>');">
-                                                            <i class="fa fa-remove"></i>
+                                                        <a href="<?php echo base_url(); ?>admin/gatepass/delete/<?php echo $gatepass['id'] ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('delete'); ?>" onclick="return confirm('<?php echo $this->lang->line('delete_confirm') ?>');">
+                                                            <i class="fa fa-trash text-danger"></i>
                                                         </a>
                                                     <?php } ?>
                                                 </td>
@@ -104,84 +157,84 @@
     </section>
 </div>
 
-<!-- Add Modal -->
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="myModalLabel"><?php echo $this->lang->line('add_gate_pass'); ?></h4>
+<!-- Slide-in Right Drawer for Adding Gate Pass -->
+<div id="gatepass-drawer-overlay" class="modern-drawer-overlay"></div>
+<div id="gatepass-drawer-panel" class="modern-drawer-panel">
+    <form id="formadd" action="<?php echo site_url('admin/gatepass/create') ?>" method="post" accept-charset="utf-8">
+        <div class="modern-drawer-header">
+            <h4 class="modern-drawer-title"><i class="fa fa-id-badge" style="color: var(--primary-theme-color, #4f46e5);"></i> <?php echo $this->lang->line('add_gate_pass'); ?></h4>
+            <button type="button" class="modern-drawer-close" id="btn-close-gatepass-drawer">&times;</button>
+        </div>
+        <div class="modern-drawer-body">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label><?php echo $this->lang->line('user_type'); ?></label><small class="req"> *</small>
+                        <select class="form-control" name="user_type" id="user_type" onchange="resetUserSelect()">
+                            <option value="student"><?php echo $this->lang->line('student'); ?></option>
+                            <option value="staff"><?php echo $this->lang->line('staff'); ?></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label><?php echo $this->lang->line('name'); ?></label><small class="req"> *</small>
+                        <select class="form-control select2" style="width:100%" name="user_id" id="user_id">
+                        </select>
+                    </div>
+                </div>
             </div>
-            <form id="formadd" action="<?php echo site_url('admin/gatepass/create') ?>" method="post" accept-charset="utf-8">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label><?php echo $this->lang->line('user_type'); ?></label><small class="req"> *</small>
-                                <select class="form-control" name="user_type" id="user_type" onchange="resetUserSelect()">
-                                    <option value="student"><?php echo $this->lang->line('student'); ?></option>
-                                    <option value="staff"><?php echo $this->lang->line('staff'); ?></option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label><?php echo $this->lang->line('name'); ?></label><small class="req"> *</small>
-                                <select class="form-control select2" style="width:100%" name="user_id" id="user_id">
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label><?php echo $this->lang->line('date'); ?></label><small class="req"> *</small>
-                                <input type="text" name="date" class="form-control date" id="date" value="<?php echo date($this->customlib->getSchoolDateFormat()); ?>">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>Duration</label><small class="req"> *</small>
-                                <select class="form-control" name="pass_type" id="pass_type" onchange="toggleOutTime()">
-                                    <option value="Partial">Partial Time</option>
-                                    <option value="Full Day">Full Day</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4" id="out_time_container">
-                            <div class="form-group">
-                                <label><?php echo $this->lang->line('out_time'); ?></label><small class="req"> *</small>
-                                <div class="input-group">
-                                    <input type="text" name="out_time" class="form-control timepicker" id="out_time">
-                                    <div class="input-group-addon" style="cursor: pointer;" onclick="$('#out_time').focus();">
-                                        <i class="fa fa-clock-o"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4" id="in_time_container_add">
-                            <div class="form-group">
-                                <label><?php echo $this->lang->line('in_time'); ?> (Expected)</label><small class="req"> *</small>
-                                <div class="input-group">
-                                    <input type="text" name="in_time" class="form-control timepicker" id="in_time_add">
-                                    <div class="input-group-addon" style="cursor: pointer;" onclick="$('#in_time_add').focus();">
-                                        <i class="fa fa-clock-o"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label><?php echo $this->lang->line('reason'); ?></label>
-                                <textarea name="reason" class="form-control" id="reason"></textarea>
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label><?php echo $this->lang->line('date'); ?></label><small class="req"> *</small>
+                        <input type="text" name="date" class="form-control date" id="date" readonly value="<?php echo date($this->customlib->getSchoolDateFormat()); ?>">
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label>Duration</label><small class="req"> *</small>
+                        <select class="form-control" name="pass_type" id="pass_type" onchange="toggleOutTime()">
+                            <option value="Partial">Partial Time</option>
+                            <option value="Full Day">Full Day</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6" id="out_time_container">
+                    <div class="form-group">
+                        <label><?php echo $this->lang->line('out_time'); ?></label><small class="req"> *</small>
+                        <div class="input-group">
+                            <input type="text" name="out_time" class="form-control timepicker" id="out_time">
+                            <div class="input-group-addon" style="cursor: pointer;" onclick="$('#out_time').focus();">
+                                <i class="fa fa-clock-o"></i>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-info pull-right" id="submit" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><?php echo $this->lang->line('save') ?></button>
+                <div class="col-sm-6" id="in_time_container_add">
+                    <div class="form-group">
+                        <label><?php echo $this->lang->line('in_time'); ?> (Expected)</label><small class="req"> *</small>
+                        <div class="input-group">
+                            <input type="text" name="in_time" class="form-control timepicker" id="in_time_add">
+                            <div class="input-group-addon" style="cursor: pointer;" onclick="$('#in_time_add').focus();">
+                                <i class="fa fa-clock-o"></i>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </form>
+            </div>
+            <div class="form-group">
+                <label><?php echo $this->lang->line('reason'); ?></label>
+                <textarea name="reason" class="form-control" id="reason" rows="3" placeholder="State purpose for leaving campus..."></textarea>
+            </div>
         </div>
-    </div>
+        <div class="modern-drawer-footer">
+            <button type="button" class="btn btn-default" id="btn-cancel-gatepass-drawer"><?php echo $this->lang->line('cancel'); ?></button>
+            <button type="submit" class="btn btn-primary" id="submit" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-check"></i> <?php echo $this->lang->line('save') ?></button>
+        </div>
+    </form>
 </div>
 
 <!-- Status Modal -->
@@ -190,7 +243,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title"><?php echo $this->lang->line('update_status'); ?></h4>
+                <h4 class="modal-title"><i class="fa fa-pencil text-primary" style="margin-right: 6px;"></i> <?php echo $this->lang->line('update_status'); ?></h4>
             </div>
             <form id="statusform" action="<?php echo site_url('admin/gatepass/update_status') ?>" method="post">
                 <div class="modal-body">
@@ -215,17 +268,21 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-info"><?php echo $this->lang->line('save'); ?></button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo $this->lang->line('cancel'); ?></button>
+                    <button type="submit" class="btn btn-primary"><?php echo $this->lang->line('save'); ?></button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+
 <script>
     $(document).ready(function () {
         $('#user_id').select2({
-            dropdownParent: $('#myModal'),
+            width: '100%',
+            placeholder: 'Search name / roll no / ID',
+            allowClear: true,
             ajax: {
                 url: '<?php echo base_url(); ?>admin/gatepass/search_user',
                 type: 'get',
@@ -244,6 +301,15 @@
                 },
                 cache: false
             }
+        });
+
+        $('#btn-open-gatepass-drawer').on('click', function() {
+            $('#formadd').trigger("reset");
+            $('#user_id').val(null).trigger('change');
+            openGatepassDrawer();
+        });
+        $('#btn-close-gatepass-drawer, #btn-cancel-gatepass-drawer, #gatepass-drawer-overlay').on('click', function() {
+            closeGatepassDrawer();
         });
         
         $('.timepicker').timepicker({
@@ -348,5 +414,17 @@
                 popupWin.document.close();
             }
         });
+    }
+
+    function openGatepassDrawer() {
+        $('#gatepass-drawer-overlay').addClass('is-active');
+        $('#gatepass-drawer-panel').addClass('is-open');
+        $('body').addClass('drawer-open').css('overflow', 'hidden');
+    }
+
+    function closeGatepassDrawer() {
+        $('#gatepass-drawer-panel').removeClass('is-open');
+        $('#gatepass-drawer-overlay').removeClass('is-active');
+        $('body').removeClass('drawer-open').css('overflow', '');
     }
 </script>

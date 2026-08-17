@@ -1,16 +1,4 @@
-<?php
-// Generate a professional invoice HTML file including:
-// 1. Core School ERP & Management System Package: ₹ 1,23,000.00
-//    - Annual ERP Core License & Campus Setup: ₹ 65,000.00
-//    - Premium Addon Modules (Double-Entry Accounts, CBSE Examination, WhatsApp Cloud API): ₹ 38,000.00
-//    - Developer Installation, Data Migration & Database Configuration Services: ₹ 20,000.00
-//    --- Subtotal (School ERP System & Addons): ₹ 1,23,000.00 ---
-// 2. Additional / Extra Mobile Application & App Store Publishing Suite (Other than ERP Package):
-//    - Custom Mobile App Development & API Integration: ₹ 60,000.00 (Extra)
-//    - Apple App Store Developer Account & Publishing: ₹ 9,000.00 (Annual Recurring - Extra)
-//    - Google Play Store Developer Account & Publishing: ₹ 2,100.00 (One-Time - Extra)
 
-$html = '
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -214,15 +202,3 @@ $html = '
     </div>
 </body>
 </html>
-';
-
-$output_file = __DIR__ . '/invoice_sunrise_school.html';
-file_put_contents($output_file, $html);
-
-$brain_dir = 'C:\Users\mahendra.singh\.gemini\antigravity-ide\brain\4efb1dc8-b20f-44c2-b651-973b41aa0dc3';
-if (is_dir($brain_dir)) {
-    file_put_contents($brain_dir . '/invoice_sunrise_school.html', $html);
-}
-
-echo "INVOICE_GENERATED_AT: " . $output_file . "\n";
-?>

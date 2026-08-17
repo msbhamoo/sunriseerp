@@ -5,31 +5,30 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 <script src="<?php echo base_url(); ?>backend/multiselect/js/jquery.min.js"></script>
 <script src="<?php echo base_url(); ?>backend/multiselect/js/jquery.multiselect.js"></script>
 <div class="content-wrapper">
+    <section class="content-header">
+        <h1><i class="fa fa-user-plus"></i> <?php echo $this->lang->line('student'); ?> <?php echo $this->lang->line('admission'); ?></h1>
+    </section>
+    
     <!-- Main content -->
     <section class="content">
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-primary">
-                    <div class="box-header ptbnull">
-                        <h4 class="box-title titlefix"><?php echo $this->lang->line('student'); ?>
-                            <?php echo $this->lang->line('admission'); ?> </h4>
+                    <div class="box-header with-border">
+                        <h3 class="box-title titlefix"><i class="fa fa-pencil text-muted" style="margin-right: 6px;"></i> <?php echo $this->lang->line('student'); ?> <?php echo $this->lang->line('admission'); ?></h3>
                         <div class="box-tools pull-right">
-                            <?php if ($this->rbac->hasPrivilege('import_student', 'can_view')) {?>
-                            <a href="<?php echo site_url('admin/customstudentimport') ?>">
-                                <button class="btn btn-info"><i class="fa fa-upload"></i>
-                                    Custom Import</button>
-                            </a>
-                            <a href="<?php echo site_url('admin/bulkstudentimage') ?>">
-                                <button class="btn btn-success"><i class="fa fa-file-image-o"></i>
-                                    Bulk Image Upload</button>
-                            </a>
-                            <a href="<?php echo site_url('student/import') ?>">
-                                <button class="btn btn-primary"><i class="fa fa-upload"></i>
-                                    <?php echo $this->lang->line('import_student'); ?></button>
-                            </a>
+                            <?php if ($this->rbac->hasPrivilege('import_student', 'can_view')) { ?>
+                                <a href="<?php echo site_url('admin/customstudentimport') ?>" class="btn btn-sm btn-default">
+                                    <i class="fa fa-upload text-info"></i> Custom Import
+                                </a>
+                                <a href="<?php echo site_url('admin/bulkstudentimage') ?>" class="btn btn-sm btn-default">
+                                    <i class="fa fa-file-image-o text-success"></i> Bulk Image Upload
+                                </a>
+                                <a href="<?php echo site_url('student/import') ?>" class="btn btn-sm btn-primary">
+                                    <i class="fa fa-upload"></i> <?php echo $this->lang->line('import_student'); ?>
+                                </a>
                             <?php } ?>
                         </div>
-
                     </div>
                     <form id="form1" action="<?php echo site_url('student/create') ?>" id="employeeform"
                         name="employeeform" method="post" accept-charset="utf-8" enctype="multipart/form-data">

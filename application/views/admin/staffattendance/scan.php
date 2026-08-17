@@ -57,6 +57,49 @@
     </section>
 </div>
 
+<!-- Attendance Scan Pop-Up Modal -->
+<div class="modal fade" id="scanResultModal" tabindex="-1" role="dialog" aria-labelledby="scanResultModalLabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width:400px; margin: 40px auto;">
+        <div class="modal-content" style="border-radius:12px; border:none; box-shadow:0 12px 35px rgba(0,0,0,0.25); overflow:hidden;">
+            <div class="modal-header" id="modal-header-bg" style="background:#28a745; color:#fff; padding:22px 15px; text-align:center; position:relative;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color:#fff; opacity:0.8; position:absolute; right:15px; top:12px; font-size:24px;"><span aria-hidden="true">&times;</span></button>
+                <div id="modal-icon" style="font-size:42px; margin-bottom:6px; line-height:1;">
+                    <i class="fa fa-check-circle"></i>
+                </div>
+                <h4 class="modal-title" id="modal-status-title" style="font-weight:700; margin:0; font-size:18px; text-transform:uppercase; letter-spacing:0.5px;">Check-In Successful</h4>
+            </div>
+            <div class="modal-body" style="padding:22px 25px;">
+                <p id="modal-message-text" class="text-center text-muted" style="font-size:14px; margin-bottom:18px; font-weight:500;"></p>
+                
+                <div style="background:#f8f9fa; border-radius:10px; padding:16px; border:1px solid #e9ecef;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px dashed #dee2e6; padding-bottom:8px;">
+                        <span style="color:#6c757d; font-size:13px; font-weight:600;"><i class="fa fa-calendar" style="width:16px; text-align:center;"></i> Date:</span>
+                        <span id="modal-date" style="font-weight:600; color:#333; font-size:13px;">-</span>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px dashed #dee2e6; padding-bottom:8px;">
+                        <span style="color:#6c757d; font-size:13px; font-weight:600;"><i class="fa fa-sign-in" style="width:16px; text-align:center;"></i> Check-In Time:</span>
+                        <span id="modal-in-time" style="font-weight:700; color:#28a745; font-size:14px;">-</span>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px dashed #dee2e6; padding-bottom:8px;">
+                        <span style="color:#6c757d; font-size:13px; font-weight:600;"><i class="fa fa-sign-out" style="width:16px; text-align:center;"></i> Check-Out Time:</span>
+                        <span id="modal-out-time" style="font-weight:700; color:#dc3545; font-size:14px;">-</span>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#6c757d; font-size:13px; font-weight:600;"><i class="fa fa-info-circle" style="width:16px; text-align:center;"></i> Attendance Status:</span>
+                        <span id="modal-att-status" class="label label-success" style="font-size:12px; padding:5px 12px; border-radius:12px; text-transform:capitalize;">Present</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="text-align:center; background:#f8f9fa; border-top:1px solid #e9ecef; padding:14px 20px;">
+                <button type="button" class="btn btn-primary btn-block btn-lg" data-dismiss="modal" style="border-radius:8px; font-weight:600; font-size:15px; padding:10px 16px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">OK / Done</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php if (!empty($setting['is_enabled'])) { ?>
 <script src="<?php echo base_url('backend/plugins/jsqr/jsQR.js'); ?>"></script>
 <script type="text/javascript">
@@ -180,14 +223,70 @@
         chooseBox.style.display = 'none';
     }
 
+    function showAttendanceModal(res) {
+        var s = res.status;
+        var inTime = res.in_time || '--';
+        var outTime = res.out_time || '--';
+        var attType = res.attendance_type || 'Present';
+        var attDate = res.date || '<?php echo date("d M Y"); ?>';
+
+        var title = 'Attendance Status';
+        var iconHtml = '<i class="fa fa-check-circle"></i>';
+        var headerBg = '#28a745'; // default green
+        var badgeClass = 'label-success';
+
+        var lowerType = attType.toLowerCase();
+        if (lowerType.indexOf('late') !== -1) {
+            badgeClass = 'label-warning';
+        } else if (lowerType.indexOf('half') !== -1) {
+            badgeClass = 'label-info';
+        } else if (lowerType.indexOf('absent') !== -1) {
+            badgeClass = 'label-danger';
+        }
+
+        if (s === 'marked_in') {
+            title = 'Check-In Successful';
+            headerBg = '#28a745';
+            iconHtml = '<i class="fa fa-sign-in"></i>';
+        } else if (s === 'marked_out') {
+            title = 'Check-Out Successful';
+            headerBg = '#007bff';
+            iconHtml = '<i class="fa fa-sign-out"></i>';
+        } else if (s === 'already_complete') {
+            title = 'Attendance Completed';
+            headerBg = '#17a2b8';
+            iconHtml = '<i class="fa fa-check-square-o"></i>';
+        } else if (s === 'cooldown') {
+            title = 'Already Checked In';
+            headerBg = '#f39c12';
+            iconHtml = '<i class="fa fa-clock-o"></i>';
+        } else if (s === 'break_out') {
+            title = 'Stepped Out';
+            headerBg = '#e67e22';
+            iconHtml = '<i class="fa fa-coffee"></i>';
+        } else if (s === 'break_in') {
+            title = 'Welcome Back';
+            headerBg = '#27ae60';
+            iconHtml = '<i class="fa fa-level-up"></i>';
+        }
+
+        $('#modal-header-bg').css('background-color', headerBg);
+        $('#modal-icon').html(iconHtml);
+        $('#modal-status-title').text(title);
+        $('#modal-message-text').text(res.message || '');
+        $('#modal-date').text(attDate);
+        $('#modal-in-time').text(inTime);
+        $('#modal-out-time').text(outTime);
+        $('#modal-att-status').text(attType).attr('class', 'label ' + badgeClass);
+
+        $('#scanResultModal').modal('show');
+    }
+
     function handleResult(res) {
         var s = res.status;
         hideAllPanels();
-        if (s === 'marked_in' || s === 'marked_out' || s === 'break_out' || s === 'break_in') {
-            showStatus('<i class="fa fa-check-circle"></i> ' + res.message + (res.time ? ' (' + res.time + ')' : ''), 'alert-success');
-            rescanBtn.style.display = 'inline-block';
-        } else if (s === 'already_complete' || s === 'cooldown') {
-            showStatus('<i class="fa fa-info-circle"></i> ' + res.message, 'alert-info');
+        if (s === 'marked_in' || s === 'marked_out' || s === 'break_out' || s === 'break_in' || s === 'already_complete' || s === 'cooldown') {
+            showAttendanceModal(res);
             rescanBtn.style.display = 'inline-block';
         } else if (s === 'confirm_early') {
             statusEl.style.display = 'none';

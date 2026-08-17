@@ -1,19 +1,282 @@
+<style type="text/css">
+    /* Table & Status Badges */
+    .approval-table-wrapper {
+        margin-top: 10px;
+    }
+    .approval-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 11px;
+        transition: all 0.15s ease;
+    }
+    .approval-action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .reason-chip {
+        display: inline-block;
+        background: #f1f5f9;
+        color: #475569;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    /* Right-Sidebar Drawer (Matching Standard System Drawer) */
+    .modal-right-panel .modal-dialog {
+        position: fixed;
+        margin: 0;
+        width: 560px;
+        height: 100%;
+        right: 0px;
+        top: 0px;
+        z-index: 1050;
+    }
+    @media (max-width: 768px) {
+        .modal-right-panel .modal-dialog {
+            width: 100%;
+        }
+    }
+    .modal-right-panel .modal-content {
+        height: 100%;
+        overflow-y: auto;
+        border-radius: 0;
+        border: none;
+        box-shadow: -10px 0 35px rgba(15, 23, 42, 0.18);
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+    }
+    .modal-right-panel .modal-header {
+        background: #ffffff;
+        color: #0f172a;
+        border-radius: 0;
+        padding: 18px 24px;
+        flex-shrink: 0;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .modal-right-panel .modal-header .modal-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .modal-right-panel .modal-header .modal-title i {
+        color: #114B5F;
+        font-size: 18px;
+    }
+    .modal-right-panel .modal-header .close {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+        color: #64748b;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 1;
+        transition: all 0.2s ease;
+        margin: 0;
+        padding: 0;
+    }
+    .modal-right-panel .modal-header .close:hover {
+        background: #fee2e2;
+        color: #ef4444;
+        border-color: #fca5a5;
+        opacity: 1;
+    }
+    .modal-right-panel.fade .modal-dialog {
+        right: -600px;
+        -webkit-transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        -moz-transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-right-panel.fade.in .modal-dialog {
+        right: 0;
+    }
+    .modal-right-panel .modal-body {
+        padding: 24px 28px;
+        flex: 1 1 auto;
+        background: #ffffff;
+        overflow-y: scroll !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    .modal-right-panel .modal-footer {
+        padding: 16px 28px;
+        border-top: 1px solid #e2e8f0;
+        background: #ffffff;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        align-items: center;
+        flex-shrink: 0;
+    }
+    .student-search-box {
+        position: relative;
+        margin-bottom: 18px;
+    }
+    .student-search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+        max-height: 280px;
+        overflow-y: auto;
+        z-index: 1100;
+        display: none;
+        margin-top: 6px;
+        padding: 6px;
+    }
+    .student-search-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 12px;
+        margin-bottom: 4px;
+        border-radius: 8px;
+        border: 1px solid #f1f5f9;
+        background: #ffffff;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-decoration: none !important;
+        color: #1e293b !important;
+    }
+    .student-search-item:hover {
+        background: #114B5F !important;
+        color: #ffffff !important;
+        border-color: #114B5F !important;
+    }
+    .student-search-item:hover .st-subtext,
+    .student-search-item:hover .st-badge,
+    .student-search-item:hover i {
+        color: #ffffff !important;
+        opacity: 0.95;
+    }
+    .student-card-preview {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 18px;
+    }
+    .fee-stat-badge {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+    }
+    .fee-stat-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 2px;
+        letter-spacing: 0.5px;
+    }
+    .fee-stat-value {
+        font-size: 16px;
+        font-weight: 800;
+    }
+</style>
+
 <div class="content-wrapper">
     <section class="content-header">
         <h1>
-            <i class="fa fa-money"></i> <?php echo $this->lang->line('fees_collection'); ?></h1>
+            <i class="fa fa-money"></i> <?php echo $this->lang->line('fees_collection'); ?>
+        </h1>
     </section>
+
     <section class="content">
+        <?php
+        // Calculate Metrics
+        $total_req = count($requests);
+        $pending_count = 0;
+        $approved_count = 0;
+        $rejected_count = 0;
+
+        foreach ($requests as $r) {
+            if ($r['status'] == 'pending' || $r['status'] == 'provisional') {
+                $pending_count++;
+            } elseif ($r['status'] == 'approved') {
+                $approved_count++;
+            } else {
+                $rejected_count++;
+            }
+        }
+        ?>
+
+        <!-- KPI Metrics Grid -->
+        <div class="modern-stat-grid" style="margin-bottom: 16px;">
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Total Requests</div>
+                    <div class="stat-value"><?php echo $total_req; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
+                    <i class="fa fa-list"></i>
+                </div>
+            </div>
+
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Pending / Provisional</div>
+                    <div class="stat-value text-warning" style="color: #d97706;"><?php echo $pending_count; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
+                    <i class="fa fa-clock-o"></i>
+                </div>
+            </div>
+
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Approved Discounts</div>
+                    <div class="stat-value text-success" style="color: #059669;"><?php echo $approved_count; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(16, 185, 129, 0.12); color: #059669;">
+                    <i class="fa fa-check-circle"></i>
+                </div>
+            </div>
+
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Rejected Requests</div>
+                    <div class="stat-value text-danger" style="color: #dc2626;"><?php echo $rejected_count; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(239, 68, 68, 0.12); color: #ef4444;">
+                    <i class="fa fa-times-circle"></i>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-primary">
-                    <div class="box-header ptbnull">
+                    <div class="box-header with-border">
                         <h3 class="box-title titlefix">
-                            <i class="fa fa-check-circle"></i> Dynamic Discount Approvals
+                            <i class="fa fa-tags text-muted" style="margin-right: 6px;"></i> Dynamic Discount Approvals
                         </h3>
                         <div class="box-tools pull-right">
                             <?php if ($this->rbac->hasPrivilege('fee_discount_approval', 'can_edit')) { ?>
-                            <button type="button" class="btn btn-sm btn-primary" id="openDirectDiscountBtn">
+                            <button type="button" class="btn btn-sm btn-primary" id="openDirectDiscountBtn" style="border-radius: 8px; font-weight: 600;">
                                 <i class="fa fa-plus"></i> Apply Student Discount
                             </button>
                             <?php } ?>
@@ -47,18 +310,26 @@
                                         foreach ($requests as $request) { ?>
                                             <tr>
                                                 <td><?php echo date($this->customlib->getSchoolDateFormat(), strtotime($request['created_at'])); ?></td>
-                                                <td><?php echo $request['firstname'] . " " . $request['lastname'] . " (" . $request['admission_no'] . ")"; ?></td>
-                                                <td><?php echo $request['class'] . " (" . $request['section'] . ")"; ?></td>
-                                                <td><?php echo ucfirst($request['discount_type']); ?></td>
                                                 <td>
+                                                    <strong><?php echo $request['firstname'] . " " . $request['lastname']; ?></strong>
+                                                    <div class="text-muted" style="font-size: 11px;">Adm: <?php echo $request['admission_no']; ?></div>
+                                                </td>
+                                                <td><?php echo $request['class'] . " (" . $request['section'] . ")"; ?></td>
+                                                <td><span class="label label-default" style="text-transform: uppercase;"><?php echo ucfirst($request['discount_type']); ?></span></td>
+                                                <td>
+                                                    <strong style="color: #0f172a;">
                                                     <?php if ($request['discount_type'] == 'fix') {
                                                         echo $currency_symbol . $request['amount'];
                                                     } else {
                                                         echo $request['percentage'] . "%";
                                                     } ?>
+                                                    </strong>
                                                 </td>
-                                                <td><?php echo $request['reason']; ?></td>
-                                                <td><?php echo $request['staff_name'] . " " . $request['staff_surname'] . " (" . $request['staff_employee_id'] . ")"; ?></td>
+                                                <td><span class="reason-chip"><?php echo $request['reason']; ?></span></td>
+                                                <td>
+                                                    <div style="font-weight: 600;"><?php echo $request['staff_name'] . " " . $request['staff_surname']; ?></div>
+                                                    <div class="text-muted" style="font-size: 11px;"><?php echo $request['staff_employee_id']; ?></div>
+                                                </td>
                                                 <td>
                                                     <?php
                                                     if ($request['status'] == 'pending') {
@@ -75,10 +346,10 @@
                                                 <td class="text-right">
                                                     <?php if ($request['status'] == 'pending' || $request['status'] == 'provisional') { ?>
                                                         <?php if ($this->rbac->hasPrivilege('fee_discount_approval', 'can_edit')) { ?>
-                                                            <a href="<?php echo base_url(); ?>admin/feediscount/approveRequest/<?php echo $request['id']; ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="Approve" onclick="return confirm('Are you sure you want to approve this discount?');">
+                                                            <a href="<?php echo base_url(); ?>admin/feediscount/approveRequest/<?php echo $request['id']; ?>" class="btn btn-default btn-xs approval-action-btn" data-toggle="tooltip" title="Approve" onclick="return confirm('Are you sure you want to approve this discount?');">
                                                                 <i class="fa fa-check text-success"></i> Approve
                                                             </a>
-                                                            <a href="#" class="btn btn-default btn-xs reject_btn" data-toggle="tooltip" title="Reject" data-id="<?php echo $request['id']; ?>">
+                                                            <a href="#" class="btn btn-default btn-xs reject_btn approval-action-btn" data-toggle="tooltip" title="Reject" data-id="<?php echo $request['id']; ?>">
                                                                 <i class="fa fa-times text-danger"></i> Reject
                                                             </a>
                                                         <?php } ?>
@@ -98,136 +369,14 @@
 </div>
 
 <!-- Right-Sidebar Modal for Direct Student Discount -->
-<style type="text/css">
-    .modal-right-panel .modal-dialog {
-        position: fixed;
-        margin: 0;
-        width: 540px;
-        height: 100%;
-        right: 0px;
-        top: 0px;
-        z-index: 1050;
-    }
-    @media (max-width: 768px) {
-        .modal-right-panel .modal-dialog {
-            width: 100%;
-        }
-    }
-    .modal-right-panel .modal-content {
-        height: 100%;
-        overflow-y: auto;
-        border-radius: 0;
-        border: none;
-        box-shadow: -5px 0 25px rgba(0,0,0,0.15);
-        display: flex;
-        flex-direction: column;
-    }
-    .modal-right-panel .modal-header {
-        background: #2e4a4f;
-        color: #fff;
-        border-radius: 0;
-        padding: 15px 20px;
-        flex-shrink: 0;
-    }
-    .modal-right-panel .modal-header .close {
-        color: #fff;
-        opacity: 0.8;
-        font-size: 24px;
-    }
-    .modal-right-panel .modal-header .close:hover {
-        opacity: 1;
-    }
-    .modal-right-panel.fade .modal-dialog {
-        right: -540px;
-        -webkit-transition: right 0.3s ease-out;
-        -moz-transition: right 0.3s ease-out;
-        transition: right 0.3s ease-out;
-    }
-    .modal-right-panel.fade.in .modal-dialog {
-        right: 0;
-    }
-    .modal-right-panel .modal-body {
-        padding: 20px;
-        flex: 1 1 auto;
-        background: #f8fafc;
-    }
-    .student-search-box {
-        position: relative;
-        margin-bottom: 15px;
-    }
-    .student-search-results {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: #fff;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        max-height: 280px;
-        overflow-y: auto;
-        z-index: 1000;
-        display: none;
-        margin-top: 4px;
-        padding: 6px;
-    }
-    .student-search-item {
-        display: flex;
-        align-items: center;
-        padding: 8px 12px;
-        margin-bottom: 4px;
-        border-radius: 6px;
-        border: 1px solid #edf2f7;
-        background: #fff;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        text-decoration: none !important;
-        color: #2d3748 !important;
-    }
-    .student-search-item:hover {
-        background: #2eab66 !important;
-        color: #fff !important;
-        border-color: #2eab66 !important;
-    }
-    .student-search-item:hover .st-subtext,
-    .student-search-item:hover .st-badge {
-        color: #fff !important;
-        opacity: 0.95;
-    }
-    .student-card-preview {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 14px;
-        margin-bottom: 15px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .fee-stat-badge {
-        background: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        padding: 8px 10px;
-        text-align: center;
-    }
-    .fee-stat-title {
-        font-size: 11px;
-        text-transform: uppercase;
-        font-weight: 600;
-        color: #64748b;
-        margin-bottom: 2px;
-    }
-    .fee-stat-value {
-        font-size: 15px;
-        font-weight: 700;
-    }
-</style>
-
 <div class="modal fade modal-right-panel" id="directDiscountModal" tabindex="-1" role="dialog" aria-labelledby="directDiscountModalLabel">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
+                <h4 class="modal-title" id="directDiscountModalLabel">
+                    <i class="fa fa-plus-circle" style="color: #114B5F; font-size: 18px;"></i> Apply Student Fee Discount
+                </h4>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="directDiscountModalLabel"><i class="fa fa-percent"></i> Apply Student Fee Discount</h4>
             </div>
             <div class="modal-body">
                 <!-- Search Input -->
@@ -314,15 +463,15 @@
                     </div>
 
                     <!-- Discount Application Form -->
-                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                        <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 700; color: #1e293b;">
-                            <i class="fa fa-tag text-success"></i> Discount Details
+                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
+                        <h4 style="margin: 0 0 14px 0; font-size: 14px; font-weight: 700; color: #1e293b;">
+                            <i class="fa fa-tag" style="color: #114B5F;"></i> Discount Details
                         </h4>
                         <form id="direct_discount_form">
                             <input type="hidden" name="student_session_id" id="form_student_session_id" value="">
                             
-                            <div class="form-group" style="margin-bottom: 12px;">
-                                <label style="font-size: 12px; font-weight: 600; color: #475569;">Discount Type <small class="text-danger">*</small></label>
+                            <div class="form-group" style="margin-bottom: 14px;">
+                                <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Discount Type <small class="text-danger">*</small></label>
                                 <div style="display: flex; gap: 20px; align-items: center; margin-top: 4px;">
                                     <label class="radio-inline" style="font-size: 13px; font-weight: 500;">
                                         <input type="radio" name="discount_type" value="fix" checked class="discount_type_radio"> Fixed Amount (<?php echo $currency_symbol; ?>)
@@ -333,21 +482,21 @@
                                 </div>
                             </div>
 
-                            <div class="form-group" id="discount_amount_group" style="margin-bottom: 12px;">
-                                <label style="font-size: 12px; font-weight: 600; color: #475569;">Discount Amount (<?php echo $currency_symbol; ?>) <small class="text-danger">*</small></label>
-                                <input type="number" step="0.01" min="0" class="form-control input-sm" name="amount" id="discount_amount_val" placeholder="e.g. 500" required>
+                            <div class="form-group" id="discount_amount_group" style="margin-bottom: 14px;">
+                                <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Discount Amount (<?php echo $currency_symbol; ?>) <small class="text-danger">*</small></label>
+                                <input type="number" step="0.01" min="0" class="form-control" name="amount" id="discount_amount_val" placeholder="e.g. 500" required>
                                 <span class="text-danger" id="err_amount" style="font-size: 11px;"></span>
                             </div>
 
-                            <div class="form-group" id="discount_percentage_group" style="display: none; margin-bottom: 12px;">
-                                <label style="font-size: 12px; font-weight: 600; color: #475569;">Discount Percentage (%) <small class="text-danger">*</small></label>
-                                <input type="number" step="0.01" min="0" max="100" class="form-control input-sm" name="percentage" id="discount_percentage_val" placeholder="e.g. 10">
+                            <div class="form-group" id="discount_percentage_group" style="display: none; margin-bottom: 14px;">
+                                <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Discount Percentage (%) <small class="text-danger">*</small></label>
+                                <input type="number" step="0.01" min="0" max="100" class="form-control" name="percentage" id="discount_percentage_val" placeholder="e.g. 10">
                                 <span class="text-danger" id="err_percentage" style="font-size: 11px;"></span>
                             </div>
 
-                            <div class="form-group" style="margin-bottom: 12px;">
-                                <label style="font-size: 12px; font-weight: 600; color: #475569;">Discount Reason / Type <small class="text-danger">*</small> <small class="text-muted">(Select or type to add new)</small></label>
-                                <select class="form-control input-sm select2_discount_reason" name="reason" id="discount_reason_val" style="width: 100%;" required>
+                            <div class="form-group" style="margin-bottom: 14px;">
+                                <label style="font-size: 12.5px; font-weight: 600; color: #334155;">Discount Reason / Type <small class="text-danger">*</small> <small class="text-muted">(Select or type to add new)</small></label>
+                                <select class="form-control select2_discount_reason" name="reason" id="discount_reason_val" style="width: 100%;" required>
                                     <option value="">-- Select or Type New Reason --</option>
                                     <?php if (!empty($discount_categories)) {
                                         foreach ($discount_categories as $cat) { ?>
@@ -359,7 +508,7 @@
                             </div>
 
                             <!-- Live Calculated Balance Preview -->
-                            <div id="new_balance_preview" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 10px 12px; margin-bottom: 14px; display: none;">
+                            <div id="new_balance_preview" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; display: none;">
                                 <div style="display: flex; justify-content: space-between; font-size: 12px; color: #166534; font-weight: 600;">
                                     <span>Calculated Discount:</span>
                                     <span id="preview_discount_val">0.00</span>
@@ -370,10 +519,10 @@
                                 </div>
                             </div>
 
-                            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                                <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-success btn-sm" id="submitDirectDiscountBtn">
-                                    <i class="fa fa-check"></i> Apply Discount
+                            <div class="modal-footer" style="padding: 16px 0 0 0; margin-top: 18px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px;">
+                                <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 8px; font-weight: 600; padding: 6px 18px;">Cancel</button>
+                                <button type="submit" class="btn btn-primary" id="submitDirectDiscountBtn" style="border-radius: 8px; font-weight: 600; padding: 6px 18px; background: #114B5F; border-color: #114B5F;">
+                                    <i class="fa fa-check"></i> Save
                                 </button>
                             </div>
                         </form>

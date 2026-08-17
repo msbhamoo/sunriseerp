@@ -1,4 +1,23 @@
 <?php
+/*
+ |--------------------------------------------------------------------------
+ | CORS handling (for web / browser-based clients)
+ |--------------------------------------------------------------------------
+ | Allows the Flutter web build (served from a different origin) to call this
+ | API. Answers the browser's preflight OPTIONS request so custom headers
+ | (Auth-Key, Client-Service, User-ID, Authorization, Student-ID) are allowed.
+ |
+ | NOTE: '*' allows any origin. Before production, replace '*' with your app's
+ | actual origin, e.g. header('Access-Control-Allow-Origin: https://app.sunriseschool.in');
+ */
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Auth-Key, Client-Service, User-ID, Authorization, Student-ID');
+header('Access-Control-Max-Age: 86400');
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 /**
  * CodeIgniter
  *

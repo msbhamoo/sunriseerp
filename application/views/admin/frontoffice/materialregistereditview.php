@@ -4,10 +4,10 @@
     </section>
     <section class="content">
         <div class="row">
-            <div class="col-md-8 col-md-offset-2">
+            <div class="col-md-10 col-md-offset-1">
                 <div class="box box-primary">
                     <div class="box-header with-border">
-                        <h3 class="box-title"><?php echo $this->lang->line('edit_material_entry'); ?></h3>
+                        <h3 class="box-title"><i class="fa fa-pencil-square-o text-primary" style="margin-right: 6px;"></i> <?php echo $this->lang->line('edit_material_entry'); ?></h3>
                         <div class="box-tools pull-right">
                             <a href="<?php echo site_url('admin/materialregister'); ?>" class="btn btn-default btn-sm"><i class="fa fa-arrow-left"></i> <?php echo $this->lang->line('back'); ?></a>
                         </div>
@@ -18,7 +18,7 @@
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label><?php echo $this->lang->line('direction'); ?></label> <small class="req"> *</small>
+                                        <label><?php echo $this->lang->line('direction'); ?></label> <small class="req">*</small>
                                         <select class="form-control" name="direction">
                                             <option value="inward" <?php echo set_select('direction', 'inward', $material_data['direction'] == 'inward'); ?>><?php echo $this->lang->line('inward'); ?></option>
                                             <option value="outward" <?php echo set_select('direction', 'outward', $material_data['direction'] == 'outward'); ?>><?php echo $this->lang->line('outward'); ?></option>
@@ -28,14 +28,14 @@
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label><?php echo $this->lang->line('date'); ?></label> <small class="req"> *</small>
+                                        <label><?php echo $this->lang->line('date'); ?></label> <small class="req">*</small>
                                         <input type="text" class="form-control date" name="date" readonly value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat(), strtotime($material_data['date']))); ?>"/>
                                         <span class="text-danger"><?php echo form_error('date'); ?></span>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label><?php echo $this->lang->line('material_name'); ?></label> <small class="req"> *</small>
+                                        <label><?php echo $this->lang->line('material_name'); ?></label> <small class="req">*</small>
                                         <?php echo material_select('material_name', 'item', $masters['item'], set_value('material_name', $material_data['material_name']), $this->lang->line('select')); ?>
                                         <span class="text-danger"><?php echo form_error('material_name'); ?></span>
                                     </div>
@@ -57,7 +57,7 @@
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label><?php echo $this->lang->line('carried_by'); ?></label>
-                                        <input class="form-control" name="carried_by" value="<?php echo set_value('carried_by', $material_data['carried_by']); ?>"/>
+                                        <input class="form-control" name="carried_by" placeholder="e.g. John Doe" value="<?php echo set_value('carried_by', $material_data['carried_by']); ?>"/>
                                     </div>
                                 </div>
                             </div>
@@ -65,7 +65,7 @@
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label><?php echo $this->lang->line('contact'); ?></label>
-                                        <input class="form-control" name="contact" value="<?php echo set_value('contact', $material_data['contact']); ?>"/>
+                                        <input class="form-control" name="contact" placeholder="e.g. +91 9876543210" value="<?php echo set_value('contact', $material_data['contact']); ?>"/>
                                     </div>
                                 </div>
                                 <div class="col-sm-8">
@@ -99,7 +99,7 @@
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label><?php echo $this->lang->line('received_issued_by'); ?></label>
-                                        <select class="form-control" name="staff_id">
+                                        <select class="form-control staff-select2" name="staff_id">
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
                                             <?php foreach ($stafflist as $s) { ?>
                                                 <option value="<?php echo $s['id']; ?>" <?php echo set_select('staff_id', $s['id'], $material_data['staff_id'] == $s['id']); ?>><?php echo $s['name'] . ' ' . $s['surname'] . ' (' . $s['employee_id'] . ')'; ?></option>
@@ -120,17 +120,16 @@
                                         <select class="form-control staff-select2" name="approved_by">
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
                                             <?php
-                                            $staff_names = array();
-                                            foreach ($stafflist as $s) {
-                                                $full          = $s['name'] . ' ' . $s['surname'];
-                                                $staff_names[] = $full;
-                                                echo '<option value="' . html_escape($full) . '" ' . ($appr == $full ? 'selected' : '') . '>' . html_escape($full . ' (' . $s['employee_id'] . ')') . '</option>';
-                                            }
-                                            // Keep any previously stored value that no longer matches a staff record.
-                                            if ($appr !== '' && !in_array($appr, $staff_names, true)) {
-                                                echo '<option value="' . html_escape($appr) . '" selected>' . html_escape($appr) . '</option>';
-                                            }
-                                            ?>
+                                             $staff_names = array();
+                                             foreach ($stafflist as $s) {
+                                                 $full          = $s['name'] . ' ' . $s['surname'];
+                                                 $staff_names[] = $full;
+                                                 echo '<option value="' . html_escape($full) . '" ' . ($appr == $full ? 'selected' : '') . '>' . html_escape($full . ' (' . $s['employee_id'] . ')') . '</option>';
+                                             }
+                                             if ($appr !== '' && !in_array($appr, $staff_names, true)) {
+                                                 echo '<option value="' . html_escape($appr) . '" selected>' . html_escape($appr) . '</option>';
+                                             }
+                                             ?>
                                         </select>
                                     </div>
                                 </div>
@@ -139,21 +138,23 @@
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label><?php echo $this->lang->line('in_time'); ?></label>
-                                        <input class="form-control" name="in_time" value="<?php echo set_value('in_time', $material_data['in_time']); ?>"/>
+                                        <input class="form-control" name="in_time" placeholder="HH:MM" value="<?php echo set_value('in_time', $material_data['in_time']); ?>"/>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label><?php echo $this->lang->line('out_time'); ?></label>
-                                        <input class="form-control" name="out_time" value="<?php echo set_value('out_time', $material_data['out_time']); ?>"/>
+                                        <input class="form-control" name="out_time" placeholder="HH:MM" value="<?php echo set_value('out_time', $material_data['out_time']); ?>"/>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label><?php echo $this->lang->line('attachment'); ?></label>
-                                        <input type="file" name="image"/>
+                                        <input type="file" name="image" class="form-control" style="padding: 4px; height: auto;"/>
                                         <?php if (!empty($material_data['image'])) { ?>
-                                            <a href="<?php echo site_url('admin/materialregister/download/' . $material_data['id']); ?>"><i class="fa fa-paperclip"></i> <?php echo $this->lang->line('current_file'); ?></a>
+                                            <div style="margin-top: 6px;">
+                                                <a href="<?php echo site_url('admin/materialregister/download/' . $material_data['id']); ?>" class="btn btn-default btn-xs"><i class="fa fa-paperclip"></i> <?php echo $this->lang->line('current_file'); ?></a>
+                                            </div>
                                         <?php } ?>
                                         <span class="text-danger"><?php echo form_error('image'); ?></span>
                                     </div>
@@ -161,12 +162,12 @@
                             </div>
                             <div class="form-group">
                                 <label><?php echo $this->lang->line('remarks'); ?></label>
-                                <textarea class="form-control" name="remarks" rows="2"><?php echo set_value('remarks', $material_data['remarks']); ?></textarea>
+                                <textarea class="form-control" name="remarks" rows="2" placeholder="Enter any extra details..."><?php echo set_value('remarks', $material_data['remarks']); ?></textarea>
                             </div>
                         </div>
                         <div class="box-footer">
                             <a href="<?php echo site_url('admin/materialregister'); ?>" class="btn btn-default"><?php echo $this->lang->line('cancel'); ?></a>
-                            <button type="submit" class="btn btn-info pull-right"><?php echo $this->lang->line('update'); ?></button>
+                            <button type="submit" class="btn btn-primary pull-right"><i class="fa fa-check"></i> <?php echo $this->lang->line('update'); ?></button>
                         </div>
                     </form>
                 </div>

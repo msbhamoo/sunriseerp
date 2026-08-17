@@ -3,16 +3,19 @@
         margin-top: 10px;
     }
     .checkbox-inline+.checkbox-inline, .radio-inline+.radio-inline {
-    margin-left: 8px;}
+        margin-left: 8px;
+    }
 	
-	/* Right Panel Modal Styles */
+	/* Right Panel Modal / Sidebar Drawer Styles */
 	.modal-right-panel .modal-dialog {
 		position: fixed;
 		margin: 0;
-		width: 500px;
+		width: 560px;
+		max-width: 100%;
 		height: 100%;
 		right: 0px;
 		top: 0px;
+		z-index: 1050;
 	}
 
 	@media (max-width: 768px) {
@@ -23,22 +26,83 @@
 
 	.modal-right-panel form {
 		height: 100%;
+		display: flex;
+		flex-direction: column;
+		margin: 0;
 	}
 
 	.modal-right-panel .modal-content {
 		height: 100%;
-		overflow-y: auto;
-		border-radius: 0;
-		border: none;
-		box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+		overflow: hidden !important;
+		border-radius: 0 !important;
+		border: none !important;
+		box-shadow: -10px 0 35px rgba(15, 23, 42, 0.18) !important;
+		display: flex !important;
+		flex-direction: column !important;
+		background: #ffffff !important;
+		font-family: 'Inter', system-ui, -apple-system, sans-serif;
+	}
+
+	.modal-right-panel .modal-header {
+		background: #ffffff !important;
+		color: #0f172a !important;
+		border-radius: 0 !important;
+		padding: 18px 24px !important;
+		flex-shrink: 0 !important;
+		border-bottom: 1px solid #e2e8f0 !important;
+		display: flex !important;
+		align-items: center !important;
+		justify-content: space-between !important;
+		position: sticky;
+		top: 0;
+		z-index: 10;
+	}
+
+	.modal-right-panel .modal-header .modal-title {
+		font-size: 17px !important;
+		font-weight: 700 !important;
+		color: #0f172a !important;
+		margin: 0 !important;
+		display: flex !important;
+		align-items: center !important;
+		gap: 10px !important;
+		text-align: left !important;
+	}
+
+	.modal-right-panel .modal-header .modal-title i {
+		color: #114B5F !important;
+		font-size: 18px !important;
+	}
+
+	.modal-right-panel .modal-header .close {
+		background: #f8fafc !important;
+		border: 1px solid #e2e8f0 !important;
+		border-radius: 8px !important;
+		width: 32px !important;
+		height: 32px !important;
+		font-size: 16px !important;
+		color: #64748b !important;
+		cursor: pointer !important;
+		display: inline-flex !important;
+		align-items: center !important;
+		justify-content: center !important;
+		opacity: 1 !important;
+		transition: all 0.2s ease !important;
+		margin: 0 !important;
+		padding: 0 !important;
+	}
+
+	.modal-right-panel .modal-header .close:hover {
+		background: #fee2e2 !important;
+		color: #ef4444 !important;
+		border-color: #fca5a5 !important;
 	}
 
 	.modal-right-panel.fade .modal-dialog {
-		right: -500px;
-		-webkit-transition: right 0.3s ease-out;
-		-moz-transition: right 0.3s ease-out;
-		-o-transition: right 0.3s ease-out;
-		transition: right 0.3s ease-out;
+		right: -600px;
+		-webkit-transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+		-moz-transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+		transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 		-webkit-transform: none;
 		-ms-transform: none;
 		-o-transform: none;
@@ -47,6 +111,31 @@
 
 	.modal-right-panel.fade.in .modal-dialog {
 		right: 0;
+	}
+
+	.modal-right-panel .modal-body {
+		padding: 22px 26px !important;
+		flex: 1 1 auto !important;
+		background: #ffffff !important;
+		overflow-y: auto !important;
+		overflow-x: hidden !important;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.modal-right-panel .modal-footer,
+	.modal-right-panel .fees-footer {
+		padding: 14px 26px !important;
+		border-top: 1px solid #e2e8f0 !important;
+		background: #ffffff !important;
+		display: flex !important;
+		justify-content: flex-end !important;
+		gap: 10px !important;
+		align-items: center !important;
+		flex-shrink: 0 !important;
+		position: sticky !important;
+		bottom: 0 !important;
+		z-index: 10 !important;
+		margin-top: auto !important;
 	}
 </style>
 <?php
@@ -917,8 +1006,8 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
+                <h4 class="modal-title fees_title"><i class="fa fa-money" style="color: #114B5F; font-size: 18px;"></i> <?php echo $this->lang->line('collect_fees'); ?></h4>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title title text-center fees_title"></h4>
             </div>
             <div class="modal-body minheight260"> 
 
@@ -1039,8 +1128,8 @@ echo $currency_symbol . amountFormat(($total_balance_amount - $alot_fee_discount
 <input  type="hidden" class="form-control" id="group_guardian_email" name="guardian_email" value="<?php echo $student['guardian_email'] ?>" readonly="readonly"/>
 <!-- //================ -->
                 <div class="modal-header">
+                    <h4 class="modal-title"><i class="fa fa-money" style="color: #114B5F; font-size: 18px;"></i> <?php echo $this->lang->line('collect_fees'); ?></h4>
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title"><?php echo $this->lang->line('collect_fees'); ?></h4>
                 </div>
                 <div class="modal-body">
 

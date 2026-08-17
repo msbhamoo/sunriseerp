@@ -568,21 +568,36 @@ class Staffattendance extends Admin_Controller
         }
         if ($state['state'] === 'on_break') {
             json_output(200, array(
-                'status'  => 'choose',
-                'actions' => array('break_in'),
-                'message' => 'You stepped out at ' . $state['since'] . '. Scan confirmed — step back in?',
+                'status'          => 'choose',
+                'actions'         => array('break_in'),
+                'message'         => 'You stepped out at ' . $state['since'] . '. Scan confirmed — step back in?',
+                'in_time'         => isset($state['in']) ? $state['in'] : 'N/A',
+                'out_time'        => isset($state['out']) ? $state['out'] : 'Stepped Out',
+                'attendance_type' => isset($state['attendance_type']) ? $state['attendance_type'] : 'Present',
+                'date'            => isset($state['date']) ? $state['date'] : date('d M Y')
             ));
             return;
         }
         if ($state['state'] === 'complete') {
-            json_output(200, array('status' => 'already_complete', 'message' => 'Your attendance for today is already complete (in ' . $state['in'] . ', out ' . $state['out'] . ').'));
+            json_output(200, array(
+                'status'          => 'already_complete',
+                'message'         => 'Your attendance for today is already complete.',
+                'in_time'         => $state['in'],
+                'out_time'        => $state['out'],
+                'attendance_type' => isset($state['attendance_type']) ? $state['attendance_type'] : 'Present',
+                'date'            => isset($state['date']) ? $state['date'] : date('d M Y')
+            ));
             return;
         }
         // state === 'in'
         json_output(200, array(
-            'status'  => 'choose',
-            'actions' => array('break_out', 'final_out'),
-            'message' => 'You are checked in (' . $state['in'] . '). What would you like to do?',
+            'status'          => 'choose',
+            'actions'         => array('break_out', 'final_out'),
+            'message'         => 'You are checked in at ' . $state['in'] . ' (Marked as ' . (isset($state['attendance_type']) ? $state['attendance_type'] : 'Present') . '). What would you like to do?',
+            'in_time'         => $state['in'],
+            'out_time'        => isset($state['out']) ? $state['out'] : 'Not Checked Out Yet',
+            'attendance_type' => isset($state['attendance_type']) ? $state['attendance_type'] : 'Present',
+            'date'            => isset($state['date']) ? $state['date'] : date('d M Y')
         ));
     }
 

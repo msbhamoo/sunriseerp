@@ -1,114 +1,26 @@
 <?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
-<style type="text/css">
-    .dashboard2-wrapper { 
-        background-color: #f8fafc; 
-        font-family: 'Inter', system-ui, -apple-system, sans-serif; 
-    }
-    .stl-card { 
-        background: #ffffff; 
-        border-radius: 14px; 
-        padding: 20px 24px; 
-        margin-bottom: 20px; 
-        box-shadow: 0 4px 18px rgba(0,0,0,0.02); 
-        border: 1px solid #f1f5f9; 
-    }
-    .stl-header-card {
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 20px 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-        border: 1px solid #f1f5f9;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .stl-header-title {
-        font-size: 20px;
-        font-weight: 800;
-        color: #0f172a;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .stl-header-title i {
-        color: #0284c7;
-        font-size: 22px;
-    }
 
-    .stl-title { 
-        font-size: 15px; 
-        font-weight: 800; 
-        color: #0f172a; 
-        margin-bottom: 16px; 
-        border-bottom: 1px solid #f1f5f9; 
-        padding-bottom: 12px; 
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .btn-sleek { 
-        border-radius: 8px; 
-        box-shadow: none; 
-        border: none; 
-        padding: 8px 18px; 
-        font-weight: 700; 
-        background: #0284c7;
-        color: #fff;
-        transition: all 0.2s ease;
-    }
-    .btn-sleek:hover {
-        background: #0369a1;
-        color: #fff;
-        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
-    }
-
-    .table>thead>tr>th { 
-        border-bottom: 2px solid #f1f5f9; 
-        color: #64748b; 
-        font-size: 11px; 
-        font-weight: 700;
-        text-transform: uppercase; 
-        letter-spacing: 0.5px;
-        background: #f8fafc;
-        padding: 12px;
-    }
-    .table>tbody>tr>td { 
-        vertical-align: middle; 
-        border-top: 1px solid #f1f5f9; 
-        font-size: 13px;
-        color: #334155;
-        padding: 12px;
-    }
-</style>
-
-<div class="content-wrapper dashboard2-wrapper" style="min-height: 946px;">
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1><i class="fa fa-graduation-cap"></i> <?php echo $this->lang->line('student_information'); ?></h1>
+    </section>
+    
     <section class="content">
-        <!-- Header Card -->
-        <div class="stl-header-card">
-            <div>
-                <div class="stl-header-title">
-                    <i class="fa fa-users"></i> <?php echo $this->lang->line('student_list'); ?>
-                </div>
-                <small style="color: #64748b; font-weight: 500;"><?php echo $this->lang->line('student_information'); ?></small>
-            </div>
-            <div>
-                <?php if ($this->rbac->hasPrivilege('student', 'can_add')) { ?>
-                    <a href="<?php echo base_url(); ?>student/create" class="btn btn-sm btn-primary" style="border-radius: 8px; font-weight: 700;"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add_student'); ?></a>
-                <?php } ?>
-            </div>
-        </div>
-
         <!-- Main content -->
         <div class="row">
             <div class="col-md-12">
-                <div class="stl-card">
-                    <div class="stl-title"><i class="fa fa-search" style="color:#0284c7;"></i> <?php echo $this->lang->line('select_criteria'); ?></div>
-                    <div class="box-body" style="padding:0;">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title"><i class="fa fa-filter text-muted" style="margin-right: 6px;"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
+                        <div class="box-tools pull-right">
+                            <?php if ($this->rbac->hasPrivilege('student', 'can_add')) { ?>
+                                <a href="<?php echo base_url(); ?>student/create" class="btn btn-sm btn-primary"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add_student'); ?></a>
+                            <?php } ?>
+                        </div>
+                    </div>
+                    <div class="box-body">
 
                         <?php if ($this->session->flashdata('msg')) { ?> 
                             <div class="alert alert-success" style="border-radius: 8px;"> 
@@ -120,10 +32,10 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                             <form role="form" id="student_list_form" method="post" class="class_search_form">
                                 <?php echo $this->customlib->getCSRF(); ?>
                                 
-                                <div class="col-md-2">
+                                <div class="col-md-2 col-sm-4">
                                     <div class="form-group">
-                                        <label style="font-weight: 700; color: #475569;"><?php echo $this->lang->line('class'); ?></label>
-                                        <select id="class_id" name="class_id" class="form-control" style="border-radius: 8px;">
+                                        <label><?php echo $this->lang->line('class'); ?></label>
+                                        <select id="class_id" name="class_id" class="form-control">
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
                                             <?php foreach ($classlist as $class) { ?>
                                                 <option value="<?php echo $class['id'] ?>"><?php echo $class['class'] ?></option>
@@ -131,18 +43,18 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-2 col-sm-4">
                                     <div class="form-group">
-                                        <label style="font-weight: 700; color: #475569;"><?php echo $this->lang->line('section'); ?></label>
-                                        <select id="section_id" name="section_id" class="form-control" style="border-radius: 8px;">
+                                        <label><?php echo $this->lang->line('section'); ?></label>
+                                        <select id="section_id" name="section_id" class="form-control">
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-2 col-sm-4">
                                     <div class="form-group">
-                                        <label style="font-weight: 700; color: #475569;"><?php echo $this->lang->line('category'); ?></label>
-                                        <select id="category_id" name="category_id" class="form-control" style="border-radius: 8px;">
+                                        <label><?php echo $this->lang->line('category'); ?></label>
+                                        <select id="category_id" name="category_id" class="form-control">
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
                                             <?php foreach ($categorylist as $category) { ?>
                                                 <option value="<?php echo $category['id'] ?>"><?php echo $category['category'] ?></option>
@@ -150,10 +62,10 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-2 col-sm-4">
                                     <div class="form-group">
-                                        <label style="font-weight: 700; color: #475569;"><?php echo $this->lang->line('gender'); ?></label>
-                                        <select id="gender" name="gender" class="form-control" style="border-radius: 8px;">
+                                        <label><?php echo $this->lang->line('gender'); ?></label>
+                                        <select id="gender" name="gender" class="form-control">
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
                                             <?php
                                             foreach ($this->customlib->getGender() as $gender_key => $gender_value) {
@@ -163,34 +75,34 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-2 col-sm-4">
                                     <div class="form-group">
-                                        <label style="font-weight: 700; color: #475569;"><?php echo $this->lang->line('sort_by'); ?></label>
-                                        <select id="custom_sort_by" name="custom_sort_by" class="form-control" style="border-radius: 8px;">
+                                        <label><?php echo $this->lang->line('sort_by'); ?></label>
+                                        <select id="custom_sort_by" name="custom_sort_by" class="form-control">
                                             <option value="Recent Admission"><?php echo $this->lang->line('recent_admission'); ?></option>
                                             <option value="Name"><?php echo $this->lang->line('student_name'); ?></option>
                                             <option value="Scholar No"><?php echo $this->lang->line('scholar_no'); ?></option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-2 col-sm-4">
                                     <div class="form-group">
-                                        <label style="font-weight: 700; color: #475569;"><?php echo $this->lang->line('sort_direction'); ?></label>
-                                        <select id="custom_sort_dir" name="custom_sort_dir" class="form-control" style="border-radius: 8px;">
+                                        <label><?php echo $this->lang->line('sort_direction'); ?></label>
+                                        <select id="custom_sort_dir" name="custom_sort_dir" class="form-control">
                                             <option value="Descending"><?php echo $this->lang->line('descending'); ?></option>
                                             <option value="Ascending"><?php echo $this->lang->line('ascending'); ?></option>
                                         </select>
                                     </div>
                                 </div>
 
-                                <div class="col-md-10">
+                                <div class="col-md-10 col-sm-9">
                                     <div class="form-group">
-                                        <input type="text" name="search_keyword" id="search_keyword" class="form-control" placeholder="Search by Sr No/Code/Name/Father Contact" style="border-radius: 8px;">
+                                        <input type="text" name="search_keyword" id="search_keyword" class="form-control" placeholder="Search by Sr No / Admission No / Name / Father Contact...">
                                     </div>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-2 col-sm-3">
                                     <div class="form-group">
-                                        <button type="submit" name="search" id="search_btn" value="search_filter" class="btn btn-primary btn-sleek btn-block"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                                        <button type="submit" name="search" id="search_btn" value="search_filter" class="btn btn-primary btn-block"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
                                     </div>
                                 </div>
                             </form>
@@ -198,14 +110,14 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                     </div>
                 </div>
 
-                <div class="stl-card">
-                    <div class="stl-title" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span><i class="fa fa-list" style="color:#0284c7;"></i> <?php echo $this->lang->line('student_list'); ?></span>
-                        <div class="box-tools">
-                            <button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#customExportModal" style="border-radius: 8px; font-weight: 700;"><i class="fa fa-download"></i> Export Options</button>
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title titlefix"><i class="fa fa-list text-muted" style="margin-right: 6px;"></i> <?php echo $this->lang->line('student_list'); ?></h3>
+                        <div class="box-tools pull-right">
+                            <button type="button" class="btn btn-sm btn-default" data-toggle="modal" data-target="#customExportModal"><i class="fa fa-download text-primary"></i> Export Options</button>
                         </div>
                     </div>
-                    <div class="box-body" style="padding: 10px 0 0 0;">
+                    <div class="box-body">
                         <div class="table-responsive" style="min-height: 300px;">
                             <table class="table table-striped table-bordered table-hover custom-student-list" id="custom-student-list" data-export-title="<?php echo $this->lang->line('student_list'); ?>">
                                 <thead>

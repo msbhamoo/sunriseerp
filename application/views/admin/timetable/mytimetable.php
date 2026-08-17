@@ -3,62 +3,7 @@
         background-color: #f8fafc;
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
-    .tt-header-card {
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 18px 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-        border: 1px solid #f1f5f9;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .tt-header-title {
-        font-size: 20px;
-        font-weight: 800;
-        color: #0f172a;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .tt-header-title i {
-        color: #6366f1;
-        font-size: 22px;
-    }
-    .tt-metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
-        margin-bottom: 20px;
-    }
-    .tt-metric-box {
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 16px 20px;
-        border: 1px solid #f1f5f9;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-    .tt-metric-icon {
-        width: 46px;
-        height: 46px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-    }
-    .tt-metric-icon.indigo { background: #e0e7ff; color: #4338ca; }
-    .tt-metric-icon.emerald { background: #d1fae5; color: #047857; }
-    .tt-metric-icon.purple { background: #f3e8ff; color: #7e22ce; }
     
-    .tt-metric-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .tt-metric-val { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.2; }
-
     /* Single Row Horizontal Scroll Container */
     .tt-row-container {
         display: flex;
@@ -87,7 +32,7 @@
         flex: 0 0 280px;
         min-width: 280px;
         background: #ffffff;
-        border-radius: 16px;
+        border-radius: 14px;
         border: 1px solid #f1f5f9;
         box-shadow: 0 4px 18px rgba(0,0,0,0.03);
         display: flex;
@@ -99,15 +44,23 @@
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(0,0,0,0.06);
     }
+    
+    /* Sticky First Column */
+    .tt-row-container > .tt-day-col:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        box-shadow: 4px 0 15px rgba(0,0,0,0.08);
+    }
 
     /* Pastel Theme Variations per Day */
-    .pastel-monday { --day-bg: #eef2ff; --day-header-bg: #e0e7ff; --day-accent: #4f46e5; --slot-bg: #f8fafc; --badge-bg: #e0e7ff; --badge-text: #3730a3; }
-    .pastel-tuesday { --day-bg: #ecfdf5; --day-header-bg: #d1fae5; --day-accent: #059669; --slot-bg: #f8fafc; --badge-bg: #d1fae5; --badge-text: #065f46; }
-    .pastel-wednesday { --day-bg: #fdf4ff; --day-header-bg: #fae8ff; --day-accent: #c026d3; --slot-bg: #f8fafc; --badge-bg: #fae8ff; --badge-text: #86198f; }
-    .pastel-thursday { --day-bg: #fff7ed; --day-header-bg: #ffedd5; --day-accent: #ea580c; --slot-bg: #f8fafc; --badge-bg: #ffedd5; --badge-text: #9a3412; }
-    .pastel-friday { --day-bg: #f0f9ff; --day-header-bg: #e0f2fe; --day-accent: #0284c7; --slot-bg: #f8fafc; --badge-bg: #e0f2fe; --badge-text: #075985; }
-    .pastel-saturday { --day-bg: #fef2f2; --day-header-bg: #fee2e2; --day-accent: #dc2626; --slot-bg: #f8fafc; --badge-bg: #fee2e2; --badge-text: #991b1b; }
-    .pastel-sunday { --day-bg: #f8fafc; --day-header-bg: #f1f5f9; --day-accent: #64748b; --slot-bg: #f8fafc; --badge-bg: #f1f5f9; --badge-text: #334155; }
+    .pastel-monday { --day-bg: #eef2ff; --day-header-bg: #e0e7ff; --day-accent: #4f46e5; --badge-bg: #e0e7ff; --badge-text: #3730a3; }
+    .pastel-tuesday { --day-bg: #ecfdf5; --day-header-bg: #d1fae5; --day-accent: #059669; --badge-bg: #d1fae5; --badge-text: #065f46; }
+    .pastel-wednesday { --day-bg: #fdf4ff; --day-header-bg: #fae8ff; --day-accent: #c026d3; --badge-bg: #fae8ff; --badge-text: #86198f; }
+    .pastel-thursday { --day-bg: #fff7ed; --day-header-bg: #ffedd5; --day-accent: #ea580c; --badge-bg: #ffedd5; --badge-text: #9a3412; }
+    .pastel-friday { --day-bg: #f0f9ff; --day-header-bg: #e0f2fe; --day-accent: #0284c7; --badge-bg: #e0f2fe; --badge-text: #075985; }
+    .pastel-saturday { --day-bg: #fef2f2; --day-header-bg: #fee2e2; --day-accent: #dc2626; --badge-bg: #fee2e2; --badge-text: #991b1b; }
+    .pastel-sunday { --day-bg: #f8fafc; --day-header-bg: #f1f5f9; --day-accent: #64748b; --badge-bg: #f1f5f9; --badge-text: #334155; }
 
     .tt-day-header {
         background: var(--day-header-bg);
@@ -135,13 +88,9 @@
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-left: 5px solid var(--day-accent);
-        border-radius: 12px;
+        border-radius: 10px;
         padding: 12px 14px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-        transition: all 0.2s ease;
-    }
-    .tt-slot-card:hover {
-        box-shadow: 0 4px 14px rgba(0,0,0,0.07);
     }
     .tt-slot-subject {
         font-size: 13px;
@@ -192,7 +141,11 @@
     }
 </style>
 
-<div class="content-wrapper dashboard2-wrapper" style="min-height: 946px;">
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1><i class="fa fa-calendar-check-o"></i> <?php echo $this->lang->line('teacher_time_table'); ?></h1>
+    </section>
+
     <section class="content">
         <?php
         $total_periods = 0;
@@ -223,49 +176,50 @@
         ];
         ?>
 
-        <!-- Header Card -->
-        <div class="tt-header-card">
-            <div class="tt-header-title">
-                <i class="fa fa-calendar-check-o"></i> <?php echo $this->lang->line('teacher_time_table'); ?>
-            </div>
-            <div>
-                <?php if (!empty($timetable)) { ?>
-                    <button type="button" title="<?php echo $this->lang->line('print'); ?>" class="btn btn-primary btn-sm print_timetable" data-staff_id="<?php echo $staff_id;?>" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>">
-                        <i class="fa fa-print"></i> <?php echo $this->lang->line('print'); ?>
-                    </button>
-                <?php } ?>
-            </div>
-        </div>
-
-        <!-- Summary Metrics -->
-        <div class="tt-metrics-grid">
-            <div class="tt-metric-box">
-                <div class="tt-metric-icon indigo">
-                    <i class="fa fa-book"></i>
-                </div>
-                <div>
-                    <div class="tt-metric-label">Total Assigned Periods</div>
-                    <div class="tt-metric-val"><?php echo $total_periods; ?></div>
+        <!-- Header Card Box -->
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title"><i class="fa fa-clock-o text-muted" style="margin-right: 6px;"></i> My Timetable Schedule</h3>
+                <div class="box-tools pull-right">
+                    <?php if (!empty($timetable)) { ?>
+                        <button type="button" title="<?php echo $this->lang->line('print'); ?>" class="btn btn-default btn-sm print_timetable" data-staff_id="<?php echo $staff_id;?>" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>">
+                            <i class="fa fa-print text-primary"></i> <?php echo $this->lang->line('print'); ?>
+                        </button>
+                    <?php } ?>
                 </div>
             </div>
-            <div class="tt-metric-box">
-                <div class="tt-metric-icon emerald">
-                    <div style="font-weight: 800; font-size: 15px; text-transform: uppercase;"><?php echo substr($current_day, 0, 3); ?></div>
-                </div>
-                <div>
-                    <div class="tt-metric-label">Today's Schedule</div>
-                    <div class="tt-metric-val">
-                        <?php echo isset($timetable[$current_day]) ? count($timetable[$current_day]) : 0; ?> <span style="font-size:12px; font-weight:600; color:#64748b;">periods</span>
+            <div class="box-body" style="padding-bottom: 0;">
+                <!-- Modern Summary Metrics -->
+                <div class="modern-stat-grid" style="margin-bottom: 16px;">
+                    <div class="modern-stat-card">
+                        <div class="modern-stat-info">
+                            <div class="stat-label">Total Assigned Periods</div>
+                            <div class="stat-value"><?php echo $total_periods; ?></div>
+                        </div>
+                        <div class="modern-stat-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
+                            <i class="fa fa-book"></i>
+                        </div>
                     </div>
-                </div>
-            </div>
-            <div class="tt-metric-box">
-                <div class="tt-metric-icon purple">
-                    <i class="fa fa-calendar"></i>
-                </div>
-                <div>
-                    <div class="tt-metric-label">Teaching Days</div>
-                    <div class="tt-metric-val"><?php echo $active_days; ?> <span style="font-size:12px; font-weight:600; color:#64748b;">days/week</span></div>
+                    
+                    <div class="modern-stat-card">
+                        <div class="modern-stat-info">
+                            <div class="stat-label">Today's Load (<?php echo substr($current_day, 0, 3); ?>)</div>
+                            <div class="stat-value text-success" style="color: #059669;"><?php echo isset($timetable[$current_day]) ? count($timetable[$current_day]) : 0; ?> <span style="font-size:12px; font-weight:600; color:#64748b;">periods</span></div>
+                        </div>
+                        <div class="modern-stat-icon" style="background: rgba(16, 185, 129, 0.12); color: #059669;">
+                            <i class="fa fa-clock-o"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="modern-stat-card">
+                        <div class="modern-stat-info">
+                            <div class="stat-label">Active Working Days</div>
+                            <div class="stat-value" style="color: #0284c7;"><?php echo $active_days; ?> <span style="font-size:12px; font-weight:600; color:#64748b;">days/week</span></div>
+                        </div>
+                        <div class="modern-stat-icon" style="background: rgba(2, 132, 199, 0.12); color: #0284c7;">
+                            <i class="fa fa-calendar-check-o"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

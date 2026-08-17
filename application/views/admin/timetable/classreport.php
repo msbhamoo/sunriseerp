@@ -1,74 +1,4 @@
 <style type="text/css">
-    .dashboard2-wrapper {
-        background-color: #f8fafc;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    }
-    .cr-header-card {
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 20px 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-        border: 1px solid #f1f5f9;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .cr-header-title {
-        font-size: 20px;
-        font-weight: 800;
-        color: #0f172a;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .cr-header-title i {
-        color: #4f46e5;
-        font-size: 22px;
-    }
-
-    .cr-search-card {
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 20px 24px;
-        margin-bottom: 24px;
-        border: 1px solid #f1f5f9;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-    }
-
-    .cr-metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
-        margin-bottom: 20px;
-    }
-    .cr-metric-box {
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 16px 20px;
-        border: 1px solid #f1f5f9;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-    .cr-metric-icon {
-        width: 46px;
-        height: 46px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-    }
-    .cr-metric-icon.indigo { background: #e0e7ff; color: #4338ca; }
-    .cr-metric-icon.emerald { background: #d1fae5; color: #047857; }
-    .cr-metric-icon.purple { background: #f3e8ff; color: #7e22ce; }
-
-    .cr-metric-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .cr-metric-val { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.2; }
-
     /* Single Row Horizontal Scroll Container */
     .cr-row-container {
         display: flex;
@@ -95,7 +25,7 @@
         flex: 0 0 280px;
         min-width: 280px;
         background: #ffffff;
-        border-radius: 16px;
+        border-radius: 14px;
         border: 1px solid #f1f5f9;
         box-shadow: 0 4px 18px rgba(0,0,0,0.03);
         display: flex;
@@ -163,7 +93,7 @@
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-left: 5px solid var(--day-accent);
-        border-radius: 12px;
+        border-radius: 10px;
         padding: 12px 14px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.02);
     }
@@ -193,51 +123,53 @@
     .cr-slot-meta i { color: var(--day-accent); margin-right: 4px; }
 </style>
 
-<div class="content-wrapper dashboard2-wrapper" style="min-height: 946px;">
-    <section class="content">
-        <!-- Header Card -->
-        <div class="cr-header-card">
-            <div class="cr-header-title">
-                <i class="fa fa-calendar"></i> <?php echo $this->lang->line('class_timetable'); ?>
-            </div>
-            <div>
-                <?php if($this->rbac->hasPrivilege('class_timetable', 'can_edit')) { ?>
-                    <a href="<?php echo site_url('admin/timetable/create') ?>" class="btn btn-sm btn-primary" style="border-radius: 8px; font-weight: 600;"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add'); ?></a>
-                <?php } ?>
-            </div>
-        </div>
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1><i class="fa fa-calendar"></i> <?php echo $this->lang->line('class_timetable'); ?></h1>
+    </section>
 
-        <!-- Search Selection Criteria Card -->
-        <div class="cr-search-card">
-            <form action="<?php echo site_url('admin/timetable/classreport') ?>" method="post" accept-charset="utf-8">
-                <?php echo $this->customlib->getCSRF(); ?>
-                <div class="row">
-                    <div class="col-md-5">
-                        <div class="form-group mb0">
-                            <label for="class_id" style="font-weight: 700; color: #475569;"><?php echo $this->lang->line('class'); ?> <small class="req">*</small></label>
-                            <select autofocus="" id="class_id" name="class_id" class="form-control" style="border-radius: 8px;">
-                                <option value=""><?php echo $this->lang->line('select'); ?></option>
-                                <?php foreach ($classlist as $class) { ?>
-                                    <option value="<?php echo $class['id'] ?>" <?php if (set_value('class_id') == $class['id']) echo "selected=selected"; ?>><?php echo $class['class'] ?></option>
-                                <?php } ?>
-                            </select>
-                            <span class="text-danger"><?php echo form_error('class_id'); ?></span>
-                        </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="form-group mb0">
-                            <label for="section_id" style="font-weight: 700; color: #475569;"><?php echo $this->lang->line('section'); ?> <small class="req">*</small></label>
-                            <select id="section_id" name="section_id" class="form-control" style="border-radius: 8px;">
-                                <option value=""><?php echo $this->lang->line('select'); ?></option>
-                            </select>
-                            <span class="text-danger"><?php echo form_error('section_id'); ?></span>
-                        </div>
-                    </div>
-                    <div class="col-md-2" style="display: flex; align-items: flex-end;">
-                        <button type="submit" class="btn btn-primary btn-block" name="search" style="border-radius: 8px; font-weight: 700; padding: 7px;"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
-                    </div>
+    <section class="content">
+        <!-- Criteria Selection Box -->
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title"><i class="fa fa-filter text-muted" style="margin-right: 6px;"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
+                <div class="box-tools pull-right">
+                    <?php if($this->rbac->hasPrivilege('class_timetable', 'can_edit')) { ?>
+                        <a href="<?php echo site_url('admin/timetable/create') ?>" class="btn btn-sm btn-primary"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add'); ?></a>
+                    <?php } ?>
                 </div>
-            </form>
+            </div>
+            <div class="box-body">
+                <form action="<?php echo site_url('admin/timetable/classreport') ?>" method="post" accept-charset="utf-8">
+                    <?php echo $this->customlib->getCSRF(); ?>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group mb0">
+                                <label for="class_id"><?php echo $this->lang->line('class'); ?> <small class="req">*</small></label>
+                                <select autofocus="" id="class_id" name="class_id" class="form-control">
+                                    <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                    <?php foreach ($classlist as $class) { ?>
+                                        <option value="<?php echo $class['id'] ?>" <?php if (set_value('class_id') == $class['id']) echo "selected=selected"; ?>><?php echo $class['class'] ?></option>
+                                    <?php } ?>
+                                </select>
+                                <span class="text-danger"><?php echo form_error('class_id'); ?></span>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="form-group mb0">
+                                <label for="section_id"><?php echo $this->lang->line('section'); ?> <small class="req">*</small></label>
+                                <select id="section_id" name="section_id" class="form-control">
+                                    <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                </select>
+                                <span class="text-danger"><?php echo form_error('section_id'); ?></span>
+                            </div>
+                        </div>
+                        <div class="col-md-2" style="display: flex; align-items: flex-end;">
+                            <button type="submit" class="btn btn-primary btn-block" name="search"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
 
         <?php if (isset($timetable)) { 
@@ -268,33 +200,33 @@
                 'Sunday'    => 'pastel-sunday'
             ];
         ?>
-            <!-- Metrics Overview -->
-            <div class="cr-metrics-grid">
-                <div class="cr-metric-box">
-                    <div class="cr-metric-icon indigo">
+            <!-- Modern KPI Metrics Overview -->
+            <div class="modern-stat-grid" style="margin-bottom: 16px;">
+                <div class="modern-stat-card">
+                    <div class="modern-stat-info">
+                        <div class="stat-label">Total Scheduled Periods</div>
+                        <div class="stat-value"><?php echo $total_periods; ?></div>
+                    </div>
+                    <div class="modern-stat-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
                         <i class="fa fa-book"></i>
                     </div>
-                    <div>
-                        <div class="cr-metric-label">Total Scheduled Periods</div>
-                        <div class="cr-metric-val"><?php echo $total_periods; ?></div>
+                </div>
+                <div class="modern-stat-card">
+                    <div class="modern-stat-info">
+                        <div class="stat-label">Today's Schedule (<?php echo substr($current_day, 0, 3); ?>)</div>
+                        <div class="stat-value text-success" style="color: #059669;"><?php echo isset($timetable[$current_day]) ? count($timetable[$current_day]) : 0; ?> <span style="font-size:12px; font-weight:600; color:#64748b;">periods</span></div>
+                    </div>
+                    <div class="modern-stat-icon" style="background: rgba(16, 185, 129, 0.12); color: #059669;">
+                        <i class="fa fa-clock-o"></i>
                     </div>
                 </div>
-                <div class="cr-metric-box">
-                    <div class="cr-metric-icon emerald">
-                        <div style="font-weight: 800; font-size: 15px; text-transform: uppercase;"><?php echo substr($current_day, 0, 3); ?></div>
+                <div class="modern-stat-card">
+                    <div class="modern-stat-info">
+                        <div class="stat-label">Active Days</div>
+                        <div class="stat-value" style="color: #0284c7;"><?php echo $active_days; ?> <span style="font-size:12px; font-weight:600; color:#64748b;">days/week</span></div>
                     </div>
-                    <div>
-                        <div class="cr-metric-label">Today's Schedule</div>
-                        <div class="cr-metric-val"><?php echo isset($timetable[$current_day]) ? count($timetable[$current_day]) : 0; ?> <span style="font-size:12px; font-weight:600; color:#64748b;">periods</span></div>
-                    </div>
-                </div>
-                <div class="cr-metric-box">
-                    <div class="cr-metric-icon purple">
+                    <div class="modern-stat-icon" style="background: rgba(2, 132, 199, 0.12); color: #0284c7;">
                         <i class="fa fa-calendar-check-o"></i>
-                    </div>
-                    <div>
-                        <div class="cr-metric-label">Active Days</div>
-                        <div class="cr-metric-val"><?php echo $active_days; ?> <span style="font-size:12px; font-weight:600; color:#64748b;">days/week</span></div>
                     </div>
                 </div>
             </div>

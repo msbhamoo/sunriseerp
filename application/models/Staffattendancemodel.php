@@ -327,15 +327,31 @@ class Staffattendancemodel extends MY_Model {
     }
 
     /**
+     * Get attendance status type display name by type ID (e.g. Present, Late, Half Day).
+     */
+    public function getAttendanceTypeName($type_id)
+    {
+        if (empty($type_id)) {
+            return 'Present';
+        }
+        $type_row = $this->db->where('id', $type_id)->get('staff_attendance_type')->row();
+        if ($type_row) {
+            if (!empty($type_row->type)) {
+                return $type_row->type;
+            }
+            if (!empty($type_row->lang_name)) {
+                return $type_row->lang_name;
+            }
+        }
+        return 'Present';
+    }
+
+    /**
      * QR-driven attendance marking with cooldown + early-exit guards.
      *
      * $opts keys: cooldown_minutes, earliest_out_source ('schedule'|'manual'),
      *             manual_earliest_out_time, confirm_early (bool), reason,
      *             source (string, e.g. 'qr').
-     *
-     * Returns array('status' => code, 'message' => text, 'time' => H:i).
-     * Codes: no_schedule, marked_in, cooldown, confirm_early, marked_out,
-     *        already_complete, error.
      */
     public function qrMark($staff_id, $role_id, $opts = array())
     {
@@ -364,8 +380,6 @@ class Staffattendancemodel extends MY_Model {
             if ($has_source_col) {
                 $data['attendance_source'] = $source;
             }
-            // Flag as QR so the attendance list shows the "QR / Barcode" source
-            // (the list view keys off qrcode_attendance, default 0 = Manual).
             if ($this->db->field_exists('qrcode_attendance', 'staff_attendance')) {
                 $data['qrcode_attendance'] = 1;
             }
@@ -377,14 +391,29 @@ class Staffattendancemodel extends MY_Model {
                 $data['updated_at'] = date('Y-m-d H:i:s');
                 $this->db->where('id', $row->id)->update('staff_attendance', $data);
             }
-            return array('status' => 'marked_in', 'message' => 'Attendance marked. Welcome!', 'time' => date('h:i A', strtotime($now)));
+
+            $type_name = $this->getAttendanceTypeName($range->staff_attendence_type_id);
+            return array(
+                'status'          => 'marked_in',
+                'message'         => 'Check-in recorded successfully!',
+                'in_time'         => date('h:i A', strtotime($now)),
+                'out_time'        => 'Not Checked Out Yet',
+                'attendance_type' => $type_name,
+                'date'            => date('d M Y', strtotime($date)),
+                'time'            => date('h:i A', strtotime($now))
+            );
         }
 
         // ---- Row already complete ----
         if (!IsNullOrEmptyString($row->out_time)) {
+            $type_name = $this->getAttendanceTypeName($row->staff_attendance_type_id);
             return array(
-                'status'  => 'already_complete',
-                'message' => 'Your attendance for today is already complete (in ' . date('h:i A', strtotime($row->in_time)) . ', out ' . date('h:i A', strtotime($row->out_time)) . ').',
+                'status'          => 'already_complete',
+                'message'         => 'Your attendance for today is already complete.',
+                'in_time'         => date('h:i A', strtotime($row->in_time)),
+                'out_time'        => date('h:i A', strtotime($row->out_time)),
+                'attendance_type' => $type_name,
+                'date'            => date('d M Y', strtotime($date))
             );
         }
 
@@ -394,9 +423,14 @@ class Staffattendancemodel extends MY_Model {
         if ($cooldown > 0) {
             $secs_since_in = strtotime("1970-01-01 $now UTC") - strtotime("1970-01-01 {$row->in_time} UTC");
             if ($secs_since_in >= 0 && $secs_since_in < ($cooldown * 60)) {
+                $type_name = $this->getAttendanceTypeName($row->staff_attendance_type_id);
                 return array(
-                    'status'  => 'cooldown',
-                    'message' => 'You already marked in at ' . date('h:i A', strtotime($row->in_time)) . '. Scan again after your shift to mark out.',
+                    'status'          => 'cooldown',
+                    'message'         => 'You already marked check-in at ' . date('h:i A', strtotime($row->in_time)) . '. Scan again after your shift to mark out.',
+                    'in_time'         => date('h:i A', strtotime($row->in_time)),
+                    'out_time'        => 'Not Checked Out Yet',
+                    'attendance_type' => $type_name,
+                    'date'            => date('d M Y', strtotime($date))
                 );
             }
         }
@@ -438,7 +472,18 @@ class Staffattendancemodel extends MY_Model {
         }
         $this->db->where('id', $row->id)->update('staff_attendance', $update);
 
-        return array('status' => 'marked_out', 'message' => 'Marked out. Have a good day!', 'time' => date('h:i A', strtotime($now)));
+        $final_type_id = isset($update['staff_attendance_type_id']) ? $update['staff_attendance_type_id'] : $row->staff_attendance_type_id;
+        $type_name     = $this->getAttendanceTypeName($final_type_id);
+
+        return array(
+            'status'          => 'marked_out',
+            'message'         => 'Check-out recorded successfully! Have a good day.',
+            'in_time'         => date('h:i A', strtotime($row->in_time)),
+            'out_time'        => date('h:i A', strtotime($now)),
+            'attendance_type' => $type_name,
+            'date'            => date('d M Y', strtotime($date)),
+            'time'            => date('h:i A', strtotime($now))
+        );
     }
 
     /**
@@ -456,21 +501,42 @@ class Staffattendancemodel extends MY_Model {
             return array('state' => 'not_in');
         }
 
+        $type_name = $this->getAttendanceTypeName($att->staff_attendance_type_id);
+
         // Open break? (out_time set, in_time null)
         if ($this->db->table_exists('staff_attendance_break')) {
             $this->db->where('staff_id', $staff_id)->where('date', $date)
                      ->where('in_time IS NULL')->order_by('id', 'desc')->limit(1);
             $open = $this->db->get('staff_attendance_break')->row();
             if (!empty($open)) {
-                return array('state' => 'on_break', 'since' => date('h:i A', strtotime($open->out_time)));
+                return array(
+                    'state'           => 'on_break',
+                    'since'           => date('h:i A', strtotime($open->out_time)),
+                    'in'              => date('h:i A', strtotime($att->in_time)),
+                    'out'             => 'Stepped Out at ' . date('h:i A', strtotime($open->out_time)),
+                    'attendance_type' => $type_name,
+                    'date'            => date('d M Y', strtotime($date))
+                );
             }
         }
 
         if (!IsNullOrEmptyString($att->out_time)) {
-            return array('state' => 'complete', 'in' => date('h:i A', strtotime($att->in_time)), 'out' => date('h:i A', strtotime($att->out_time)));
+            return array(
+                'state'           => 'complete',
+                'in'              => date('h:i A', strtotime($att->in_time)),
+                'out'             => date('h:i A', strtotime($att->out_time)),
+                'attendance_type' => $type_name,
+                'date'            => date('d M Y', strtotime($date))
+            );
         }
 
-        return array('state' => 'in', 'in' => date('h:i A', strtotime($att->in_time)));
+        return array(
+            'state'           => 'in',
+            'in'              => date('h:i A', strtotime($att->in_time)),
+            'out'             => 'Not Checked Out Yet',
+            'attendance_type' => $type_name,
+            'date'            => date('d M Y', strtotime($date))
+        );
     }
 
     /**
@@ -501,7 +567,16 @@ class Staffattendancemodel extends MY_Model {
             'is_active'  => 1,
             'created_at' => date('Y-m-d H:i:s'),
         ));
-        return array('status' => 'break_out', 'message' => 'Stepped out. Scan again when you return.', 'time' => date('h:i A', strtotime($now)));
+
+        return array(
+            'status'          => 'break_out',
+            'message'         => 'Stepped out. Scan again when you return.',
+            'in_time'         => isset($st['in']) ? $st['in'] : 'N/A',
+            'out_time'        => 'Stepped Out at ' . date('h:i A', strtotime($now)),
+            'attendance_type' => isset($st['attendance_type']) ? $st['attendance_type'] : 'Present',
+            'date'            => date('d M Y', strtotime($date)),
+            'time'            => date('h:i A', strtotime($now))
+        );
     }
 
     /**
@@ -530,7 +605,18 @@ class Staffattendancemodel extends MY_Model {
 
         $h = intdiv($mins, 60); $mm = $mins % 60;
         $dur = ($h > 0 ? $h . 'h ' : '') . $mm . 'm';
-        return array('status' => 'break_in', 'message' => 'Welcome back. You were out for ' . $dur . '.', 'time' => date('h:i A', strtotime($now)));
+
+        $st = $this->getQrState($staff_id);
+
+        return array(
+            'status'          => 'break_in',
+            'message'         => 'Welcome back. You were out for ' . $dur . '.',
+            'in_time'         => isset($st['in']) ? $st['in'] : 'N/A',
+            'out_time'        => 'Not Checked Out Yet',
+            'attendance_type' => isset($st['attendance_type']) ? $st['attendance_type'] : 'Present',
+            'date'            => date('d M Y', strtotime($date)),
+            'time'            => date('h:i A', strtotime($now))
+        );
     }
 
     // =================================================================

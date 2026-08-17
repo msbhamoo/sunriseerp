@@ -1112,112 +1112,229 @@ if (!empty($image)) {
 </script>
 <!-- Global Search Modal -->
 <style>
+.global-search-modal .modal-dialog {
+    max-width: 580px;
+    margin: 40px auto;
+}
 .global-search-modal .modal-content {
-    border: none;
-    border-radius: 8px;
-    box-shadow: 0 4px 25px rgba(0,0,0,0.15);
-    font-family: 'Inter', sans-serif;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2) !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    overflow: visible !important;
+    background: #ffffff !important;
 }
 .global-search-modal .modal-header {
-    background-color: var(--bs-primary, #f0852e);
-    border-bottom: 1px solid #eaeaea;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    padding: 15px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    border-top-left-radius: 14px !important;
+    border-top-right-radius: 14px !important;
+    padding: 18px 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
 }
 .global-search-modal .modal-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #fff;
-    margin: 0;
+    font-size: 17px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
 }
 .global-search-modal .close {
-    color: #fff;
-    opacity: 0.9;
-    font-size: 22px;
-    font-weight: 400;
-    margin-top: -2px;
-    text-shadow: none;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 16px !important;
+    color: #64748b !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: 1 !important;
+    transition: all 0.2s ease !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 .global-search-modal .close:hover {
-    color: #fff;
-    opacity: 1;
+    background: #fee2e2 !important;
+    color: #ef4444 !important;
+    border-color: #fca5a5 !important;
+    opacity: 1 !important;
 }
 .global-search-modal .modal-body {
-    background: #f4f6f9;
-    padding: 25px 20px;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
+    background: #ffffff !important;
+    padding: 24px 28px !important;
+    border-bottom-left-radius: 14px !important;
+    border-bottom-right-radius: 14px !important;
+    overflow: visible !important;
 }
 .gs-input-group {
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    border-radius: 6px;
+    border-radius: 8px;
     display: flex;
     width: 100%;
+    border: 1px solid #cbd5e1;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+.gs-input-group:focus-within {
+    border-color: #114B5F;
+    box-shadow: 0 0 0 3px rgba(17, 75, 95, 0.15);
 }
 .gs-input {
-    border: 1px solid #eaeaea;
-    height: 46px;
-    border-radius: 6px 0 0 6px !important;
-    font-size: 15px;
+    border: none !important;
+    height: 44px;
+    font-size: 14.5px;
     box-shadow: none !important;
     flex: 1;
-    padding: 10px 15px;
-}
-.gs-input:focus {
-    border-color: var(--bs-primary, #f0852e);
-    outline: none;
+    padding: 10px 16px;
+    color: #0f172a;
+    outline: none !important;
 }
 .gs-btn {
-    background-color: var(--bs-primary, #f0852e);
-    color: #fff;
-    border: none;
-    height: 46px;
-    width: 50px;
-    border-radius: 0 6px 6px 0 !important;
+    background-color: #114B5F !important;
+    color: #ffffff !important;
+    border: none !important;
+    height: 44px;
+    width: 52px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 16px;
-    transition: background 0.2s;
+    cursor: pointer;
+    transition: background 0.2s ease;
 }
 .gs-btn:hover {
-    opacity: 0.9;
-    color: #fff;
+    background-color: #0c3847 !important;
+    color: #ffffff !important;
 }
 .gs-results {
-    background: #fff;
-    border-radius: 6px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    border: 1px solid #eaeaea;
-    margin-top: 8px;
-    max-height: 320px;
-    overflow-y: auto;
-    position: absolute;
-    width: 100%;
-    z-index: 1050;
+    background: #ffffff !important;
+    border-radius: 10px !important;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16) !important;
+    border: 1px solid #cbd5e1 !important;
+    margin-top: 6px !important;
+    max-height: 320px !important;
+    overflow-y: auto !important;
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 99999 !important;
     display: none;
+    padding: 6px !important;
+}
+.ajax-search-item {
+    display: flex !important;
+    align-items: center !important;
+    padding: 10px 12px !important;
+    margin-bottom: 4px !important;
+    border-radius: 8px !important;
+    border: 1px solid #f1f5f9 !important;
+    background: #ffffff !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    text-decoration: none !important;
+    color: #1e293b !important;
+}
+.ajax-search-item:hover {
+    background: #114B5F !important;
+    color: #ffffff !important;
+    border-color: #114B5F !important;
+}
+.ajax-search-item:hover .ajax-search-meta,
+.ajax-search-item:hover .ajax-search-parents,
+.ajax-search-item:hover .parent-badge,
+.ajax-search-item:hover .ajax-search-icon {
+    color: #ffffff !important;
+    opacity: 0.95;
+}
+.ajax-search-avatar {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    margin-right: 12px !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #f8fafc !important;
+}
+.ajax-search-details {
+    flex: 1 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    min-width: 0 !important;
+}
+.ajax-search-col {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+}
+.ajax-search-name {
+    font-weight: 700 !important;
+    font-size: 13.5px !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.ajax-search-meta {
+    font-size: 11.5px !important;
+    color: #64748b !important;
+    font-weight: 500 !important;
+    margin-top: 2px !important;
+}
+.ajax-search-parents {
+    font-size: 11px !important;
+    color: #64748b !important;
+    text-align: right !important;
+    flex-shrink: 0 !important;
+    margin-left: 10px !important;
+}
+.parent-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 15px !important;
+    height: 15px !important;
+    border-radius: 3px !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    margin-right: 4px !important;
+}
+.badge-father { background: #e0f2fe !important; color: #0369a1 !important; }
+.badge-mother { background: #fdf2f8 !important; color: #be185d !important; }
+.ajax-search-icon {
+    font-size: 12px !important;
+    color: #94a3b8 !important;
+    margin-left: 8px !important;
+}
+.ajax-search-no-result {
+    padding: 16px !important;
+    text-align: center !important;
+    color: #94a3b8 !important;
+    font-size: 13px !important;
 }
 .gs-card {
-    background: #fff;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    border: 1px solid #eaeaea;
-    margin-top: 25px;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 18px;
+    border: 1px solid #e2e8f0;
+    margin-top: 20px;
     display: none;
 }
 .gs-card-img-wrapper {
-    width: 110px;
-    height: 110px;
+    width: 90px;
+    height: 90px;
     border-radius: 50%;
-    border: 3px solid #f4f6f9;
+    border: 2px solid #e2e8f0;
     overflow: hidden;
     margin: 0 auto;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 .gs-card-img-wrapper img {
     width: 100%;
@@ -1229,71 +1346,54 @@ if (!empty($image)) {
     margin-bottom: 0;
 }
 .gs-table td {
-    padding: 10px 8px;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 6px 8px;
+    border-bottom: 1px solid #f1f5f9;
 }
 .gs-table tr:last-child td {
     border-bottom: none;
 }
 .gs-card-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #8a8a8a;
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
     text-transform: uppercase;
     width: 35%;
 }
 .gs-card-val {
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 700;
-    color: #2c2c2c;
+    color: #0f172a;
 }
 .gs-actions {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid #f0f0f0;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid #e2e8f0;
 }
 .gs-action-btn {
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 13px;
-    font-weight: 500;
-    border: 1px solid #ccc;
-    background: #fff;
-    color: #333;
-    transition: all 0.2s;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    transition: all 0.15s ease;
     text-decoration: none !important;
 }
 .gs-action-btn:hover { 
-    background: #f5f5f5; 
-    color: #333;
+    background: #f1f5f9; 
+    color: #0f172a;
 }
 .gs-action-btn.primary { 
-    background-color: var(--bs-primary, #f0852e);
-    color: #fff; 
-    border: none;
+    background-color: #114B5F !important;
+    color: #ffffff !important;
+    border: none !important;
 }
 .gs-action-btn.primary:hover { 
-    opacity: 0.9;
-    color: #fff;
-}
-.modal-search-item {
-    display: flex;
-    padding: 12px 15px;
-    border-bottom: 1px solid #eaeaea;
-    color: #333;
-    text-decoration: none !important;
-    align-items: center;
-    transition: background 0.2s;
-}
-.modal-search-item:hover {
-    background: #f8f9fa;
-    color: var(--bs-primary, #f0852e);
-}
-.modal-search-item:last-child {
-    border-bottom: none;
+    background-color: #0c3847 !important;
 }
 </style>
 
@@ -1301,7 +1401,7 @@ if (!empty($image)) {
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title" id="globalSearchModalLabel">Search Student</h4>
+        <h4 class="modal-title" id="globalSearchModalLabel"><i class="fa fa-search" style="color: #114B5F; font-size: 16px;"></i> Search Student</h4>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
       </div>
       <div class="modal-body">
@@ -1310,7 +1410,7 @@ if (!empty($image)) {
             <div style="position:relative;">
                 <div class="gs-input-group">
                     <input type="text" value="" name="search_text1" id="modal_search_text" class="gs-input" placeholder="Search by Name, Admission No, etc." autocomplete="off" autofocus>
-                    <button type="submit" name="search" class="gs-btn btn-primary"><i class="fa fa-search"></i></button>
+                    <button type="submit" name="search" class="gs-btn"><i class="fa fa-search"></i></button>
                 </div>
                 <div id="modal_ajax_search_results_container" class="gs-results"></div>
             </div>
@@ -1318,12 +1418,12 @@ if (!empty($image)) {
 
         <div id="modal_student_details" class="gs-card">
             <div class="row" style="margin:0; display:flex; align-items:center;">
-                <div class="col-sm-4 text-center" style="padding: 15px;">
+                <div class="col-sm-4 text-center" style="padding: 10px;">
                     <div class="gs-card-img-wrapper">
                         <img id="detail_student_image" src="">
                     </div>
                 </div>
-                <div class="col-sm-8" style="padding: 15px;">
+                <div class="col-sm-8" style="padding: 10px;">
                     <table class="gs-table">
                         <tbody>
                             <tr>
@@ -1352,19 +1452,19 @@ if (!empty($image)) {
             </div>
             
             <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_view')) { ?>
-            <div class="gs-fee-summary" style="margin-top: 20px; border-top: 1px solid #f0f0f0; padding-top: 15px;">
-                <h5 style="font-weight: 600; color: #2c2c2c; margin-bottom: 15px; font-size: 14px;">Fees Summary</h5>
-                <table class="gs-table" style="font-size: 13px;">
+            <div class="gs-fee-summary" style="margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+                <h5 style="font-weight: 700; color: #1e293b; margin-bottom: 10px; font-size: 13px;">Fees Summary</h5>
+                <table class="gs-table" style="font-size: 12.5px;">
                     <thead>
                         <tr>
-                            <th style="color: #8a8a8a; text-transform: uppercase; font-size: 11px; padding: 8px; border-bottom: 1px solid #eaeaea;">Fee Head</th>
-                            <th style="color: #8a8a8a; text-transform: uppercase; font-size: 11px; padding: 8px; border-bottom: 1px solid #eaeaea;">Total Fees</th>
-                            <th style="color: #8a8a8a; text-transform: uppercase; font-size: 11px; padding: 8px; border-bottom: 1px solid #eaeaea;">Collected</th>
-                            <th style="color: #8a8a8a; text-transform: uppercase; font-size: 11px; padding: 8px; border-bottom: 1px solid #eaeaea;">Due</th>
+                            <th style="color: #64748b; text-transform: uppercase; font-size: 11px; padding: 6px 8px; border-bottom: 1px solid #e2e8f0;">Fee Head</th>
+                            <th style="color: #64748b; text-transform: uppercase; font-size: 11px; padding: 6px 8px; border-bottom: 1px solid #e2e8f0;">Total Fees</th>
+                            <th style="color: #64748b; text-transform: uppercase; font-size: 11px; padding: 6px 8px; border-bottom: 1px solid #e2e8f0;">Collected</th>
+                            <th style="color: #64748b; text-transform: uppercase; font-size: 11px; padding: 6px 8px; border-bottom: 1px solid #e2e8f0;">Due</th>
                         </tr>
                     </thead>
                     <tbody id="detail_student_fees_body">
-                        <tr><td colspan="4" class="text-center" style="padding: 15px;"><i class="fa fa-spinner fa-spin"></i> Loading fees...</td></tr>
+                        <tr><td colspan="4" class="text-center" style="padding: 12px;"><i class="fa fa-spinner fa-spin"></i> Loading fees...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1373,7 +1473,7 @@ if (!empty($image)) {
             <div class="gs-actions">
                 <a id="btn_view_profile" href="#" class="gs-action-btn"><i class="fa fa-user"></i> View Profile</a>
                 <?php if ($this->rbac->hasPrivilege('collect_fees', 'can_add')) { ?>
-                <a id="btn_collect_fee" href="#" class="gs-action-btn btn-primary primary"><i class="fa fa-money"></i> Collect Fee</a>
+                <a id="btn_collect_fee" href="#" class="gs-action-btn primary"><i class="fa fa-money"></i> Collect Fee</a>
                 <?php } ?>
             </div>
         </div>

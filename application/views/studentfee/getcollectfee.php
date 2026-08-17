@@ -1,104 +1,172 @@
-<?php
-$currency_symbol = $this->customlib->getSchoolCurrencyFormat();
-?>
 <style type="text/css">
+	.balanceformpopup, .getcollectfee-container {
+		font-family: 'Inter', system-ui, -apple-system, sans-serif;
+	}
 	.collect_grp_fees {
 		font-size: 15px;
-		font-weight: 600;
-		padding-bottom: 15px;
+		font-weight: 700;
+		color: #0f172a;
+		padding-bottom: 12px;
 	}
 
+	.drawer-form-group {
+		margin-bottom: 14px;
+	}
+	.drawer-form-group label.control-label {
+		font-size: 12.5px;
+		font-weight: 600;
+		color: #334155;
+		text-align: left;
+		padding-top: 6px;
+	}
+	.drawer-form-control, 
+	.form-horizontal .form-control {
+		height: 38px;
+		border: 1px solid #cbd5e1;
+		border-radius: 8px;
+		padding: 6px 12px;
+		font-size: 13.5px;
+		color: #0f172a;
+		box-shadow: none;
+		transition: all 0.2s ease;
+		background: #ffffff;
+	}
+	.drawer-form-control:focus, 
+	.form-horizontal .form-control:focus {
+		border-color: #114B5F;
+		box-shadow: 0 0 0 3px rgba(17, 75, 95, 0.12);
+		outline: none;
+	}
+	textarea.form-control {
+		height: auto !important;
+		min-height: 60px;
+		resize: vertical;
+	}
+
+	/* Custom Payment Mode Pill Buttons */
+	.payment-modes-wrap {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+		margin-top: 2px;
+	}
+	.payment-mode-pill {
+		position: relative;
+		margin: 0 !important;
+		cursor: pointer;
+		font-weight: 500;
+	}
+	.payment-mode-pill input[type="radio"] {
+		position: absolute;
+		opacity: 0;
+		cursor: pointer;
+	}
+	.payment-mode-pill span {
+		display: inline-flex;
+		align-items: center;
+		padding: 6px 12px;
+		border-radius: 7px;
+		border: 1px solid #cbd5e1;
+		background: #f8fafc;
+		color: #475569;
+		font-size: 12.5px;
+		transition: all 0.15s ease;
+		user-select: none;
+	}
+	.payment-mode-pill input[type="radio"]:checked + span {
+		background: #114B5F;
+		border-color: #114B5F;
+		color: #ffffff;
+		font-weight: 600;
+		box-shadow: 0 2px 6px rgba(17, 75, 95, 0.2);
+	}
+	.payment-mode-pill:hover span {
+		border-color: #94a3b8;
+	}
+
+	/* Ledger banner styling */
+	.drawer-ledger-banner {
+		background: #f0fdfa;
+		border: 1px solid #ccfbf1;
+		border-radius: 8px;
+		padding: 10px 14px;
+		font-size: 12px;
+		color: #134e4a;
+		line-height: 1.6;
+	}
+	.drawer-ledger-banner i {
+		color: #0d9488;
+		margin-right: 4px;
+	}
+
+	/* Fees List */
 	.fees-list {
 		list-style: none;
-		margin: 0;
+		margin: 12px 0 0 0;
 		padding: 0;
 	}
-
 	.fees-list>.item {
-		border-radius: 3px;
-		-webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-		box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-		padding: 10px 0;
-		/*background: #fff;*/
+		border-radius: 8px;
+		border: 1px solid #e2e8f0;
+		padding: 10px 14px;
+		margin-bottom: 8px;
+		background: #f8fafc;
+		transition: all 0.15s ease;
 	}
-
-	.fees-list>.item:before,
-	.fees-list>.item:after {
-		content: " ";
-		display: table;
+	.fees-list>.item:hover {
+		border-color: #cbd5e1;
+		background: #ffffff;
+		box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
 	}
-
-	.fees-list>.item:after {
-		clear: both;
-	}
-
-	.fees-list .product-img {
-		float: left;
-	}
-
-	.fees-list .product-img img {
-		width: 50px;
-		height: 50px;
-	}
-
-	.fees-list .product-info {
-		margin-left: 0px;
-	}
-
-	.fees-list .product-title {
-		font-family: 'Roboto-Medium';
-		font-size: 15px;
-		display: inline-flex;
-		justify-content: space-between;
-		align-items: center;
-		width: 100%;
-		/*color: #333;*/
-	}
-
-	.fees-list .product-title span {
-
-		font-size: 15px;
-		display: inline;
-		font-weight: 100 !important;
-	}
-
-	.fees-list .product-description {
-		display: flex;
-		/*color: #000;*/
-		overflow: hidden;
-		white-space: nowrap;
-		text-overflow: ellipsis;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.fees-list-in-box>.item {
-		-webkit-box-shadow: none;
-		box-shadow: none;
-		border-radius: 0;
-		/*padding: 15px 0px 0px 0px;*/
-		border-bottom: 1px solid var(--bs-hr-color);
-
-	}
-
-	.fees-list-in-box>.item:last-of-type {
-		/*border-bottom-width: 100;*/
-		margin-bottom: 10px;
-	}
-
 	.fees-footer {
-		margin-top: 15px;
-		border-top-color: var(--bs-hr-color);
+		margin-top: auto;
+		padding: 14px 0 0 0;
+		border-top: 1px solid #e2e8f0;
+		background: #ffffff;
+		position: sticky;
+		bottom: 0;
+		z-index: 10;
 	}
-
-	.fees-footer {
-		padding: 15px 0px 0px 0px;
-		text-align: right;
-		border-top: 1px solid var(--bs-hr-color);
+	.payment_collect, .save_button {
+		background-color: #114B5F !important;
+		border-color: #114B5F !important;
+		color: #ffffff !important;
+		font-weight: 600 !important;
+		padding: 8px 20px !important;
+		border-radius: 8px !important;
+		font-size: 13.5px !important;
+		transition: all 0.2s ease !important;
+	}
+	.payment_collect:hover, .save_button:hover {
+		background-color: #0c3847 !important;
+		border-color: #0c3847 !important;
+	}
+	.btn-drawer-cancel {
+		background: #ffffff;
+		border: 1px solid #cbd5e1;
+		color: #475569;
+		font-weight: 600;
+		padding: 8px 18px;
+		border-radius: 8px;
+		font-size: 13px;
+		transition: all 0.15s ease;
+	}
+	.btn-drawer-cancel:hover {
+		background: #f1f5f9;
+		color: #0f172a;
+	}
+	.drawer-empty-state {
+		text-align: center;
+		padding: 24px 16px;
+		background: #f8fafc;
+		border: 1px dashed #cbd5e1;
+		border-radius: 10px;
+		color: #64748b;
+		font-size: 13.5px;
 	}
 </style>
 
-<div class="row">
+<div class="row getcollectfee-container">
 	<div class="col-lg-12">
 		<div class="form-horizontal pr-0-5 pr-rtl-0">
 
@@ -116,10 +184,10 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 			}
 			?>
 			<?php if (isset($custom_receipt_settings)) { ?>
-			<div class="form-group row">
+			<div class="form-group row drawer-form-group">
 				<label class="col-lg-3 col-md-3 col-sm-3 control-label"><?php echo $this->lang->line('receipt_no') ? $this->lang->line('receipt_no') : 'Receipt No.'; ?></label>
 				<div class="col-lg-9 col-md-9 col-sm-9">
-					<p class="form-control-static" style="padding-top: 7px; font-weight: bold; margin-bottom: 0;">
+					<p class="form-control-static" style="padding-top: 6px; font-weight: 700; color: #0f172a; margin-bottom: 0;">
 					<?php 
 					$receipt_texts = [];
 					if ($has_common_fee && $has_transport_fee) {
@@ -137,7 +205,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 			</div>
 			<?php } ?>
 
-			<div class="form-group row">
+			<div class="form-group row drawer-form-group">
 				<label for="inputEmail3" class="col-lg-3 col-md-3 col-sm-3 control-label"><?php echo $this->lang->line('date'); ?> <small class="req"> *</small></label>
 				<div class="col-lg-9 col-md-9 col-sm-9">
 					<input id="date" name="collected_date" placeholder="" type="text" class="form-control date_fee" value="<?php echo date($this->customlib->getSchoolDateFormat()); ?>" readonly="readonly" autocomplete="off">
@@ -145,25 +213,23 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 				</div>
 			</div>
 
-			<div class="form-group row">
+			<div class="form-group row drawer-form-group">
 				<label for="inputPassword3" class="col-lg-3 col-md-3 col-sm-3 control-label"> <?php echo $this->lang->line('payment_mode'); ?></label>
 				<div class="col-lg-9 col-md-9 col-sm-9">
-					<div style="margin-bottom: 5px;">
-						<label class="radio-inline"><input type="radio" name="payment_mode_fee" value="Cash" checked="checked"> <?php echo $this->lang->line('cash'); ?></label>
-						<label class="radio-inline"><input type="radio" name="payment_mode_fee" value="Cheque"> <?php echo $this->lang->line('cheque'); ?></label>
-						<label class="radio-inline"><input type="radio" name="payment_mode_fee" value="DD"><?php echo $this->lang->line('dd'); ?></label>
-						<label class="radio-inline"><input type="radio" name="payment_mode_fee" value="bank_transfer"><?php echo $this->lang->line('bank_transfer'); ?></label>
+					<div class="payment-modes-wrap">
+						<label class="payment-mode-pill"><input type="radio" name="payment_mode_fee" value="Cash" checked="checked"> <span><i class="fa fa-money" style="margin-right:4px;"></i> <?php echo $this->lang->line('cash'); ?></span></label>
+						<label class="payment-mode-pill"><input type="radio" name="payment_mode_fee" value="Cheque"> <span><i class="fa fa-file-text-o" style="margin-right:4px;"></i> <?php echo $this->lang->line('cheque'); ?></span></label>
+						<label class="payment-mode-pill"><input type="radio" name="payment_mode_fee" value="DD"> <span><i class="fa fa-bank" style="margin-right:4px;"></i> <?php echo $this->lang->line('dd'); ?></span></label>
+						<label class="payment-mode-pill"><input type="radio" name="payment_mode_fee" value="bank_transfer"> <span><i class="fa fa-exchange" style="margin-right:4px;"></i> <?php echo $this->lang->line('bank_transfer'); ?></span></label>
+						<label class="payment-mode-pill"><input type="radio" name="payment_mode_fee" value="upi"> <span><i class="fa fa-mobile" style="margin-right:4px; font-size: 14px;"></i> <?php echo $this->lang->line('upi'); ?></span></label>
+						<label class="payment-mode-pill"><input type="radio" name="payment_mode_fee" value="card"> <span><i class="fa fa-credit-card" style="margin-right:4px;"></i> <?php echo $this->lang->line('card'); ?></span></label>
 					</div>
-					<div>
-						<label class="radio-inline"><input type="radio" name="payment_mode_fee" value="upi"><?php echo $this->lang->line('upi'); ?></label>
-						<label class="radio-inline"><input type="radio" name="payment_mode_fee" value="card"><?php echo $this->lang->line('card'); ?></label>
-						<span class="text-danger" id="payment_mode_error"></span>
-					</div>
+					<span class="text-danger" id="payment_mode_error"></span>
 				</div>
 				<span id="form_collection_payment_mode_fee_error" class="text text-danger"></span>
 			</div>
 			
-			<div class="form-group row" id="bank_account_row" style="display: none;">
+			<div class="form-group row drawer-form-group" id="bank_account_row" style="display: none;">
 				<label class="col-lg-3 col-md-3 col-sm-3 control-label"> Bank Account</label>
 				<div class="col-lg-9 col-md-9 col-sm-9">
 					<select class="form-control" name="bank_account_id" id="bank_account_id">
@@ -175,41 +241,40 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 				</div>
 			</div>
 
-			<div class="form-group row">
+			<div class="form-group row drawer-form-group">
 				<label for="inputPassword3" class="col-lg-3 col-md-3 col-sm-3 control-label"> <?php echo $this->lang->line('note') ?></label>
 				<div class="col-lg-9 col-md-9 col-sm-9">
-					<textarea class="form-control" rows="2" name="fee_gupcollected_note" id="description" placeholder=""></textarea>
+					<textarea class="form-control" rows="2" name="fee_gupcollected_note" id="description" placeholder="Optional notes..."></textarea>
 					<span id="form_collection_fee_gupcollected_note_error" class="text text-danger"></span>
 				</div>
 			</div>
-			<div class="form-group row" id="reference_row" style="display: none;">
+			<div class="form-group row drawer-form-group" id="reference_row" style="display: none;">
 				<label for="inputPassword3" class="col-lg-3 col-md-3 col-sm-3 control-label" id="ref_label"> <?php echo $this->lang->line('reference_no') ? $this->lang->line('reference_no') : 'Reference No'; ?></label>
 				<div class="col-lg-9 col-md-9 col-sm-9">
 					<input class="form-control" name="reference_no" id="reference_no" placeholder="">
 					<span id="form_collection_reference_no_error" class="text text-danger"></span>
 				</div>
 			</div>
-			<div class="form-group row" id="date_row" style="display: none;">
+			<div class="form-group row drawer-form-group" id="date_row" style="display: none;">
 				<label for="inputPassword3" class="col-lg-3 col-md-3 col-sm-3 control-label" id="date_label"> Payment Date</label>
 				<div class="col-lg-9 col-md-9 col-sm-9">
 					<input class="form-control date_fee" name="cheque_date" id="cheque_date" placeholder="" value="<?php echo date($this->customlib->getSchoolDateFormat()); ?>" readonly="readonly" autocomplete="off">
 					<span id="form_collection_cheque_date_error" class="text text-danger"></span>
 				</div>
 			</div>
-			<div class="form-group row">
+			<div class="form-group row drawer-form-group">
 				<div class="col-lg-3 col-md-3 col-sm-3"></div>
 				<div class="col-lg-9 col-md-9 col-sm-9">
-					<div id="ledger_info" class="alert alert-info" style="margin-bottom: 0; padding: 10px 15px; border-radius: 4px; font-size: 13px;" data-income="<?php echo $income_ledger_name; ?>" data-category="<?php echo $category_head_name ? $category_head_name : 'Default'; ?>">
-						<i class="fa fa-info-circle"></i> Depositing to Ledger (Dr): <strong><?php echo $cash_ledger_name; ?></strong><br>
-                        <i class="fa fa-credit-card"></i> Income Ledger (Cr): <strong><?php echo $income_ledger_name; ?></strong><br>
-                        <i class="fa fa-tags"></i> Category/Head: <strong><?php echo $category_head_name ? $category_head_name : 'Default'; ?></strong>
+					<div id="ledger_info" class="drawer-ledger-banner" data-income="<?php echo $income_ledger_name; ?>" data-category="<?php echo $category_head_name ? $category_head_name : 'Default'; ?>">
+						<div><i class="fa fa-info-circle"></i> Depositing to Ledger (Dr): <strong><?php echo $cash_ledger_name; ?></strong></div>
+                        <div><i class="fa fa-credit-card"></i> Income Ledger (Cr): <strong><?php echo $income_ledger_name; ?></strong></div>
+                        <div><i class="fa fa-tags"></i> Category/Head: <strong><?php echo $category_head_name ? $category_head_name : 'Default'; ?></strong></div>
 					</div>
 				</div>
 			</div>
 		</div>
 
 		<ul class="fees-list fees-list-in-box">
-			<hr>
 		<div class="scroll-lg">	
 			
 			<?php
@@ -600,17 +665,19 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 	
 	<div class="fees-footer">
 		<div class="row">
-			<div class="col-md-12">
-				<button type="submit" class="btn btn-primary pull-right payment_collect" data-loading-text="<i class='fa fa-spinner fa-spin '></i><?php echo $this->lang->line('processing') ?>"><i class="fa fa-money"></i> <?php echo $this->lang->line('pay'); ?></button>
+			<div class="col-md-12" style="display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
+				<button type="button" class="btn btn-drawer-cancel" data-dismiss="modal"><?php echo $this->lang->line('cancel'); ?></button>
+				<button type="submit" class="btn btn-primary payment_collect" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('processing') ?>"><i class="fa fa-money"></i> <?php echo $this->lang->line('pay'); ?></button>
 			</div>
 		</div>
 	</div>
 
 	<?php } else {  ?>
 
-		<div class="row">
+		<div class="row" style="margin-top: 15px;">
 			<div class="col-md-12">
-				<div class="alert alert-info mb0">
+				<div class="drawer-empty-state">
+					<i class="fa fa-info-circle" style="font-size: 24px; color: #94a3b8; display: block; margin-bottom: 8px;"></i>
 					<?php echo $this->lang->line('no_fees_found'); ?>
 				</div>
 			</div>
