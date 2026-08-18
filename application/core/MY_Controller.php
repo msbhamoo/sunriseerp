@@ -172,6 +172,14 @@ class MY_Controller extends CI_Controller
 
         $this->load->language($lang_array, $language);
         
+        // Ensure School TimeZone is applied globally for all controllers & AJAX requests
+        if (isset($this->customlib) && method_exists($this->customlib, 'getTimeZone')) {
+            $school_tz = $this->customlib->getTimeZone();
+            if (!empty($school_tz)) {
+                date_default_timezone_set($school_tz);
+            }
+        }
+        
         // Audit Log User Tracking
         if (isset($this->customlib) && isset($this->db)) {
             $audit_user_id = $this->customlib->getStaffID();

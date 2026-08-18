@@ -1,48 +1,238 @@
 <?php
 $theme_setting = $this->customlib->getCurrentThemeSetting();
-$theme_color = isset($theme_setting['theme_color']) ? $theme_setting['theme_color'] : '#4f46e5';
+$theme_color = isset($theme_setting['theme_color']) ? $theme_setting['theme_color'] : '#114B5F';
 ?>
 <?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
 <style type="text/css">
 /* ============================================================
-   STUDENT PROFILE 2.0 — Scoped Design System
-   Matches dashboard2.php design language
-   All classes namespaced under .sp2-wrapper
+   STAFF PROFILE 3.0 — Unified SaaS Profile Design System
+   Matches studentShow.php and modern ERP theme (#114B5F)
    ============================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 .sp2-wrapper {
-    background: #f4f6f9;
-    font-family: 'Inter', sans-serif;
+    background: #f8fafc;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     min-height: 100vh;
+    padding-bottom: 30px;
 }
 
-
-
-/* ---------- Cards ---------- */
-.sp2-card {
-    background: #fff;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 18px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    border: 1px solid #eaeaea;
+/* ---------- Master Top Profile Hero Banner ---------- */
+.sp3-top-banner {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    padding: 22px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
-.sp2-card-header {
-    padding: 14px 18px;
-    border-bottom: 1px solid #eaeaea;
-    background: #fcfcfc;
-    font-weight: 700;
-    font-size: 14px;
-    color: #222;
-    border-radius: 10px 10px 0 0;
+.sp3-banner-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 16px;
+    width: 100%;
+}
+.sp3-top-left {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.sp3-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+.sp3-avatar {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    border: 2px solid #e2e8f0;
+    object-fit: cover;
+    background: #f8fafc;
+    display: block;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    flex-shrink: 0;
+}
+.sp3-avatar-placeholder {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+.sp3-user-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.4px;
     display: flex;
     align-items: center;
     gap: 8px;
 }
-.sp2-card-header i { color: <?php echo $theme_color; ?>; }
+.sp3-status-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-size: 11px;
+}
+.sp3-status-active {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1.5px solid #10b981;
+}
+.sp3-status-inactive {
+    background: #fff1f2;
+    color: #e11d48;
+    border: 1.5px solid #f43f5e;
+}
+.sp3-pills-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+.sp3-tag {
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.sp3-top-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+.sp3-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+.sp3-btn:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #94a3b8;
+    text-decoration: none;
+}
+.sp3-btn-primary {
+    background: #114B5F !important;
+    border-color: #114B5F !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(17, 75, 95, 0.2) !important;
+}
+.sp3-btn-primary:hover {
+    background: #0c3847 !important;
+    border-color: #0c3847 !important;
+    color: #ffffff !important;
+}
+
+/* Quick specs row directly inside the banner */
+.sp3-quick-specs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    padding-top: 14px;
+    border-top: 1px solid #f1f5f9;
+}
+.sp3-spec-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.sp3-spec-card-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+.sp3-spec-card-value {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* Pill Badges */
+.sp2-pill {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-block;
+}
+.sp2-pill-blue   { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+.sp2-pill-teal   { background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4; }
+.sp2-pill-purple { background: #faf5ff; color: #7e22ce; border: 1px solid #e9d5ff; }
+.sp2-pill-amber  { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.sp2-pill-rose   { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
+
+/* ---------- Cards ---------- */
+.sp2-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    border: 1px solid #e2e8f0;
+}
+.sp2-card-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid #f1f5f9;
+    background: #f8fafc;
+    font-weight: 700;
+    font-size: 13px;
+    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.sp2-card-header i { color: #114B5F; }
 .sp2-card-body {
     padding: 18px;
 }
@@ -52,202 +242,32 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
     gap: 12px;
 }
 .sp2-data-box {
-    background: #f9fafb;
-    border: 1px solid #f0f0f0;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
     padding: 12px 14px;
+    transition: all 0.15s ease;
+}
+.sp2-data-box:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
 .sp2-data-box-label {
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 700;
-    color: #8a8a8a;
+    color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.6px;
     margin-bottom: 4px;
 }
 .sp2-data-box-value {
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 700;
-    color: #222;
+    color: #0f172a;
     word-break: break-word;
 }
-.sp2-card-sm {
-    padding: 14px 18px;
-}
-
-/* ---------- Section Title ---------- */
-.sp2-section-title {
-    font-size: 11px;
-    font-weight: 700;
-    color: #8a8a8a;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.sp2-section-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #f0f0f0;
-}
-
-/* ---------- Hero Header ---------- */
-.sp2-hero {
-    background: linear-gradient(135deg, <?php echo $theme_color; ?> 0%, #3026ad 100%);
-    border-radius: 12px;
-    padding: 24px 24px 0 24px;
-    margin-bottom: 18px;
-    position: relative;
-    box-shadow: 0 4px 20px rgba(79,70,229,0.25);
-}
-.sp2-hero-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 12px;
-    overflow: hidden;
-    z-index: 0;
-}
-.sp2-hero-bg::before {
-    content: '';
-    position: absolute;
-    top: -40px;
-    right: -40px;
-    width: 160px;
-    height: 160px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 50%;
-}
-.sp2-hero-bg::after {
-    content: '';
-    position: absolute;
-    bottom: -20px;
-    left: 30%;
-    width: 100px;
-    height: 100px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 50%;
-}
-.sp2-hero-body {
-    display: flex;
-    align-items: flex-end;
-    gap: 20px;
-    position: relative;
-    z-index: 1;
-}
-.sp2-hero-avatar-wrap {
-    flex-shrink: 0;
-}
-.sp2-hero-avatar {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.8);
-    object-fit: cover;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
-    display: block;
-    margin-bottom: 0;
-}
-.sp2-hero-avatar-placeholder {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.5);
-    background: rgba(255,255,255,0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-    color: rgba(255,255,255,0.8);
-    margin-bottom: 0;
-}
-.sp2-hero-info {
-    flex: 1;
-    padding-bottom: 20px;
-}
-.sp2-hero-name {
-    font-size: 22px;
-    font-weight: 800;
-    color: #fff;
-    margin: 0 0 8px 0;
-    line-height: 1.2;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-.sp2-hero-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-    margin-bottom: 10px;
-}
-.sp2-hero-pill {
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    background: rgba(255,255,255,0.2);
-    color: rgba(255,255,255,0.95);
-    border: 1px solid rgba(255,255,255,0.25);
-    backdrop-filter: blur(4px);
-}
-.sp2-hero-pill.disabled-pill {
-    background: rgba(216,69,106,0.6);
-    border-color: rgba(216,69,106,0.8);
-}
-.sp2-hero-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding-bottom: 20px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 2;
-}
-.sp2-btn {
-    padding: 6px 13px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    border: 1px solid rgba(255,255,255,0.35);
-    background: rgba(255,255,255,0.15);
-    color: #fff;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    transition: all 0.2s;
-    white-space: nowrap;
-    backdrop-filter: blur(4px);
-}
-.sp2-btn:hover {
-    background: rgba(255,255,255,0.3);
-    color: #fff;
-    text-decoration: none;
-    transform: translateY(-1px);
-}
-.sp2-btn.sp2-btn-danger {
-    background: rgba(216,69,106,0.3);
-    border-color: rgba(216,69,106,0.6);
-}
-.sp2-btn.sp2-btn-success {
-    background: rgba(59,155,101,0.35);
-    border-color: rgba(59,155,101,0.6);
-}
-.sp2-btn.sp2-btn-solid {
-    background: rgba(255,255,255,0.9);
-    color: <?php echo $theme_color; ?>;
-    border-color: transparent;
-}
-.sp2-btn.sp2-btn-solid:hover {
-    background: #fff;
-    color: <?php echo $theme_color; ?>;
 }
 
 /* Disabled student banner */
@@ -1128,71 +1148,103 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
     opacity: 0.4;
 }
 .sp2-dropdown-menu {
-    background: #fff;
-    border: 1px solid #eaeaea;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    min-width: 180px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+    min-width: 200px;
+    padding: 6px;
+    margin-top: 6px;
+}
+.sp2-dropdown-menu li {
+    margin: 0;
 }
 .sp2-dropdown-menu li a {
     font-size: 13px;
-    padding: 8px 16px;
-    color: #333;
-}
-.sp2-dropdown-menu li a:hover { background: #f4f6f9; color: <?php echo $theme_color; ?>; }
-
-/* Responsive for sidebar layout */
-@media (max-width: 768px) {
-    .sp2-hero-body { flex-wrap: wrap; }
-    .sp2-hero-actions { justify-content: flex-start; }
-    .sp2-fee-stat-grid { grid-template-columns: repeat(2, 1fr); }
-    .sp2-att-grid { grid-template-columns: repeat(2, 1fr); }
-}
-/* ---------- Tab Navigation (Pill Glass UI) ---------- */
-.nav-tabs-custom > .nav-tabs { border-bottom-color: transparent !important; }
-.nav-tabs-custom { box-shadow: none !important; background: transparent !important; }
-.sp2-tabs-nav {
+    font-weight: 500;
+    padding: 8px 12px;
+    color: #334155;
+    border-radius: 6px;
     display: flex;
-    gap: 8px;
-    background: #fff;
-    padding: 10px 14px;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.15s ease;
+}
+.sp2-dropdown-menu li a i {
+    font-size: 14px;
+    color: #64748b;
+    width: 16px;
+    text-align: center;
+    transition: color 0.15s ease;
+}
+.sp2-dropdown-menu li a:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+.sp2-dropdown-menu li a:hover i {
+    color: #114B5F;
+}
+.sp2-dropdown-menu .divider {
+    height: 1px;
+    margin: 4px 0;
+    overflow: hidden;
+    background-color: #f1f5f9;
+}
+
+/* ---------- Tab Navigation (Modern Horizontal Toolbar) ---------- */
+.sp2-tabs-wrapper {
+    background: #ffffff;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-    border: 0px solid #f0f0f0;
-    border-bottom: none;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    padding: 6px 10px;
+    margin-bottom: 20px;
     overflow-x: auto;
-    margin-bottom: 20px !important;
+}
+.sp2-tabs-nav {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    list-style: none !important;
+    width: max-content;
 }
 .sp2-tabs-nav > li {
-    float: none;
-    margin: 0;
+    float: none !important;
+    margin: 0 !important;
     border: none !important;
+    flex-shrink: 0 !important;
 }
 .sp2-tabs-nav > li > a {
-    border: none !important;
+    border: 1px solid transparent !important;
     background: transparent !important;
-    color: #6b7280 !important;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 8px 16px;
-    border-radius: 20px !important;
-    transition: all 0.2s;
-    margin-right: 0;
+    color: #64748b !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 8px 14px !important;
+    border-radius: 8px !important;
+    transition: all 0.15s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
 }
 .sp2-tabs-nav > li > a:hover {
-    color: #222 !important;
-    background: #f3f4f6 !important;
+    color: #0f172a !important;
+    background: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
 }
 .sp2-tabs-nav > li.active > a,
 .sp2-tabs-nav > li.active > a:hover,
 .sp2-tabs-nav > li.active > a:focus {
-    background: linear-gradient(135deg, <?php echo $theme_color; ?> 0%, #3026ad 100%) !important;
-    color: #fff !important;
-    box-shadow: 0 4px 10px rgba(79,70,229,0.25);
-    border: none !important;
-}
-.sp2-tabs-nav > li.active {
-    border: none !important;
+    background: #114B5F !important;
+    color: #ffffff !important;
+    border-color: #114B5F !important;
+    box-shadow: 0 2px 6px rgba(17, 75, 95, 0.25) !important;
 }
 </style>
 <div class="sp2-wrapper content-wrapper">
@@ -1274,258 +1326,193 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
             </aside>
         </div>
     </div>
-    <section class="content">
-        <div class="row">
-            <div class="col-md-3">
-<div class="sp2-hero" style="margin-bottom:14px;">
-    <div class="sp2-hero-bg"></div>
-    <div class="sp2-hero-body" style="flex-direction: column; align-items: center; text-align: center; gap: 10px; padding-bottom: 20px;">
-        <div class="sp2-hero-avatar-wrap">
-            <?php
-            $image = $staff['image'];
-            if (!empty($image)) {
-                $file = $staff['image'];
-            } else {
-                if ($staff['gender'] == 'Male') {
-                    $file = "default_male.jpg";
-                } else {
-                    $file = "default_female.jpg";
-                }
-            }
-            ?>
-            <img class="sp2-hero-avatar" src="<?php echo $this->media_storage->getImageURL("uploads/staff_images/" . $file); ?>" alt="User profile picture">
-        </div>
-        <div class="sp2-hero-info" style="padding-bottom: 0;">
-            <h3 class="sp2-hero-name" style="font-size: 18px;"><?php echo $staff['name'] . " " . $staff['surname']; ?></h3>
-            <div class="sp2-hero-pills" style="justify-content: center;">
-                <span class="sp2-hero-pill"><?php echo $staff['user_type']; ?></span>
-            </div>
-            <?php if ($staff['user_type'] == 'Teacher') {
-            ?>
-
-                <?php if ($rate_canview == 1) { ?><center>
-                        <h3><?php
-                            $stage     = (int) ($rate);
-                            $stagehalf = "";
-                            $half      = fmod($rate, 1);
-                            if ($half != 0) {
-                                $stagehalf = $stage + 1;
-                            }
-
-                            for ($i = 1; $i <= 5; $i++) {
-                            ?>
-                                <span class="fa fa-star<?php
-                                                        if ($i == $stagehalf && ($half > 0 && $half < 1)) {
-                                                            echo '-half-o checked';
-                                                        }
-                                                        ?> " <?php if ($stage >= $i) { ?> style="color:orange;" <?php } ?>></span>
-                            <?php
-                            }
-                            ?>
-                        </h3>
-                    </center>
-                    <center>
-                        <h5><?php echo substr($rate, 0, 3); ?> average based on <?php echo $reviews; ?> <?php echo $this->lang->line('reviews'); ?>.</h5>
-                    </center> <?php }
-                        } ?>
-        </div>
-    </div>
-</div>
-<div class="sp2-card sp2-card-sm">
-    <div class="sp2-info-row">
-    <div class="sp2-info-label"><?php echo $this->lang->line('staff_id'); ?></div>
-    <div class="sp2-info-value"><?php echo $staff['employee_id']; ?></div>
-</div>
-<div class="sp2-info-row">
-    <div class="sp2-info-label"><?php echo $this->lang->line('role'); ?></div>
-    <div class="sp2-info-value"><?php echo $staff['user_type']; ?></div>
-</div>
-<div class="sp2-info-row">
-    <div class="sp2-info-label"><?php echo $this->lang->line('designation'); ?></div>
-    <div class="sp2-info-value"><?php echo $staff['designation']; ?></div>
-</div>
-<div class="sp2-info-row">
-    <div class="sp2-info-label"><?php echo $this->lang->line('department'); ?></div>
-    <div class="sp2-info-value"><?php echo $staff['department']; ?></div>
-</div>
-<div class="sp2-info-row">
-    <div class="sp2-info-label"><?php echo $this->lang->line('epf_no'); ?></div>
-    <div class="sp2-info-value"><?php echo $staff['epf_no']; ?></div>
-</div>
-<div class="sp2-info-row">
-    <div class="sp2-info-label"><?php echo $this->lang->line('basic_salary'); ?></div>
-    <div class="sp2-info-value"><?php if (!empty($staff['basic_salary'])) {
-                                                                                                                            echo amountFormat($staff['basic_salary']);
-                                                                                                                        } ?></div>
-</div>
-<div class="sp2-info-row">
-    <div class="sp2-info-label"><?php echo $this->lang->line('contract_type'); ?></div>
-    <div class="sp2-info-value"><?php
-                                                                                                                                if (array_key_exists($staff['contract_type'], $contract_type)) {
-                                                                                                                                    echo $contract_type[$staff['contract_type']];
-                                                                                                                                }
-                                                                                                                                ?></div>
-</div>
-<div class="sp2-info-row">
-    <div class="sp2-info-label"><?php echo $this->lang->line('work_shift'); ?></div>
-    <div class="sp2-info-value"><?php echo $staff['shift']; ?></div>
-</div>
-<div class="sp2-info-row">
-    <div class="sp2-info-label"><?php echo $this->lang->line('work_location'); ?></div>
-    <div class="sp2-info-value"><?php echo $staff['location']; ?></div>
-</div>
-<div class="sp2-info-row">
-    <div class="sp2-info-label"><?php echo $this->lang->line('date_of_joining'); ?></div>
-    <div class="sp2-info-value"><?php
-                                                                                                                                if (!empty($staff["date_of_joining"]) && $staff["date_of_joining"] != '0000-00-00') {
-                                                                                                                                    echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($staff['date_of_joining']));
-                                                                                                                                }
-                                                                                                                                ?></div>
-</div>
-<div class="sp2-info-row">
-    <div class="sp2-info-label"><?php echo $this->lang->line('barcode'); ?></div>
-    <div class="sp2-info-value"><?php if (file_exists("./uploads/staff_id_card/barcodes/" . $staff['id'] . ".png")) { ?>
-                                        <a class="pull-right text-aqua" href="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/barcodes/' . $staff['id'] . '.png'); ?>" target="_blank">
-                                            <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/barcodes/' . $staff['id'] . '.png'); ?>" width="auto" height="auto" /></a>
-                                    <?php } ?></div>
-</div>
-<div class="sp2-info-row">
-    <div class="sp2-info-label"><?php echo $this->lang->line('qrcode'); ?></div>
-    <div class="sp2-info-value"><?php if (file_exists("./uploads/staff_id_card/qrcode/" . $staff['id'] . ".png")) { ?>
-                                        <a class="pull-right text-aqua" href="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/qrcode/' . $staff['id'] . '.png'); ?>" target="_blank">
-                                            <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/qrcode/' . $staff['id'] . '.png'); ?>" width="auto" height="auto" class="h-50 qrcodeimg" /></a>
-                                    <?php } ?></div>
-</div>
-<div class="sp2-info-row">
-    <div class="sp2-info-label"><?php echo $this->lang->line('date_of_leaving'); ?></div>
-    <div class="sp2-info-value"><?php
-
-                                                                                                                                echo $this->customlib->dateformat($staff['date_of_leaving']);
-
-                                                                                                                                ?></div>
-</div>
-<div class="sp2-info-row">
-    <div class="sp2-info-label"><?php echo $this->lang->line('disable_date'); ?></div>
-    <div class="sp2-info-value"><?php
-
-                                                                                                                            echo $this->customlib->dateformat($staff['disable_at']);
-
-                                                                                                                            ?></div>
-</div>
-</div>
-</div>
-
-            <div class="col-md-9">
-                <div class="nav-tabs-custom theme-shadow">
-                    <ul class="sp2-tabs-nav nav nav-tabs" style="margin-bottom:0;">
-                        <li class="active"><a href="#activity" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('profile'); ?></a></li>
-                        <li class=""><a href="#payroll" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('payroll'); ?></a></li>
-                        <li class=""><a href="#leaves" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('leaves'); ?></a></li>
-                        <li class=""><a href="#attendance" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('attendance'); ?></a></li>
-                        <?php if ($sch_setting->staff_upload_documents) { ?>
-                            <li class=""><a href="#documents" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('documents'); ?></a></li>
-                        <?php } ?>
-                        <?php if ($this->rbac->hasPrivilege('staff_timeline', 'can_view')) { ?>
-                            <li class=""><a href="#timelineh" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('timeline'); ?></a></li>
-                        <?php } ?>
-                        <?php if ($staff['user_type'] == 2) {
-                        ?>
-                            <li class=""><a href="#reviews" data-toggle="tab" aria-expanded="true"><?php echo $this->lang->line('reviews'); ?></a></li>
+    <section class="content" style="padding-top: 15px;">
+        <!-- ===== SP3 TOP PROFILE HERO BANNER WITH INLINE SPECS ===== -->
+        <div class="sp3-top-banner">
+            <div class="sp3-banner-main">
+                <div class="sp3-top-left">
+                    <div class="sp3-avatar-wrap">
                         <?php
+                        $image = $staff['image'];
+                        if (!empty($image)) {
+                            $file = $staff['image'];
+                        } else {
+                            if ($staff['gender'] == 'Male') {
+                                $file = "default_male.jpg";
+                            } else {
+                                $file = "default_female.jpg";
+                            }
                         }
-                        $userdata            = $this->customlib->getUserData();
-                        $logged_in_User      = $this->customlib->getLoggedInUserData();
-                        $logged_in_User_Role = json_decode($this->customlib->getStaffRole());
-                        $a                   = false;
-                        if ($staff['id'] == $logged_in_User['id']) {
+                        ?>
+                        <img class="sp3-avatar" src="<?php echo $this->media_storage->getImageURL("uploads/staff_images/" . $file); ?>" alt="Staff profile picture">
+                    </div>
+                    <div>
+                        <h1 class="sp3-user-title">
+                            <?php echo $staff['name'] . " " . $staff['surname']; ?>
+                            <?php if ($staff["is_active"] == 1) { ?>
+                                <span class="sp3-status-indicator sp3-status-active" data-toggle="tooltip" title="Active Staff"><i class="fa fa-check"></i></span>
+                            <?php } else { ?>
+                                <span class="sp3-status-indicator sp3-status-inactive" data-toggle="tooltip" title="Inactive / Disabled Staff"><i class="fa fa-times"></i></span>
+                            <?php } ?>
+                        </h1>
+                        <div class="sp3-pills-row">
+                            <span class="sp3-tag"><i class="fa fa-id-badge" style="color:#114B5F;"></i> <?php echo $this->lang->line('staff_id'); ?>: <strong><?php echo $staff['employee_id']; ?></strong></span>
+                            <span class="sp3-tag"><i class="fa fa-user-circle-o" style="color:#114B5F;"></i> <strong><?php echo $staff['user_type']; ?></strong></span>
+                            <?php if (!empty($staff['designation'])) { ?>
+                                <span class="sp3-tag"><i class="fa fa-briefcase" style="color:#114B5F;"></i> <strong><?php echo $staff['designation']; ?></strong></span>
+                            <?php } ?>
+                            <?php if (!empty($staff['department'])) { ?>
+                                <span class="sp3-tag"><i class="fa fa-building-o" style="color:#114B5F;"></i> <strong><?php echo $staff['department']; ?></strong></span>
+                            <?php } ?>
+                        </div>
+                    </div>
+                </div>
+
+                <?php
+                $userdata            = $this->customlib->getUserData();
+                $logged_in_User      = $this->customlib->getLoggedInUserData();
+                $logged_in_User_Role = json_decode($this->customlib->getStaffRole());
+                $a                   = false;
+                if ($staff['id'] == $logged_in_User['id']) {
+                    $a = true;
+                } elseif ($logged_in_User_Role->id == 7 && $logged_in_User_Role->name == "Super Admin") {
+                    if ($staff["role_id"] == 7) {
+                        if ($staff["role_id"] == 7 && $staff['id'] != $logged_in_User['id']) {
+                            $a = false;
+                        } else {
                             $a = true;
-                        } elseif ($logged_in_User_Role->id == 7 && $logged_in_User_Role->name == "Super Admin") {
-                            if ($staff["role_id"] == 7) {
-                                if ($staff["role_id"] == 7 && $staff['id'] != $logged_in_User['id']) {
-                                    $a = false;
-                                } else {
-                                    $a = true;
-                                }
-                            } else {
-                                $a = true;
-                            }
                         }
+                    } else {
+                        $a = true;
+                    }
+                }
+                $can_edit = 0;
+                if ($this->rbac->hasPrivilege('staff', 'can_edit') || ($a && $this->rbac->hasPrivilege('staff_edit_self', 'can_edit'))) {
+                    if ($logged_in_User_Role->id == 7) {
+                        if ($a) { $can_edit = 1; }
+                    } else {
+                        $can_edit = 1;
+                    }
+                }
+                ?>
 
-                        ?>
+                <!-- Right Aligned Action CTAs -->
+                <div class="sp3-top-actions">
+                    <?php if ($can_edit == 1) { ?>
+                        <a href="<?php echo base_url('admin/staff/edit/' . $id); ?>" class="sp3-btn sp3-btn-primary" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>"><i class="fa fa-pencil"></i> <?php echo $this->lang->line('edit'); ?></a>
+                    <?php } ?>
+
+                    <!-- 3-Dots Action Dropdown Menu -->
+                    <div class="dropdown" style="display: inline-block;">
+                        <button class="sp3-btn dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="padding: 8px 12px;">
+                            <i class="fa fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-right sp2-dropdown-menu" style="right: 0; left: auto; padding: 6px 0; min-width: 200px;">
+                            <?php if ($a || $logged_in_User_Role->id == 7) { ?>
+                                <li><a href="#" class="change_password"><i class="fa fa-key" style="width: 18px; color: #16a34a;"></i> <?php echo $this->lang->line('change_password'); ?></a></li>
+                            <?php } ?>
+
+                            <?php if ($enable_disable == 1 || $logged_in_User_Role->id == 7) { ?>
+                                <?php if ($staff["is_active"] == 1) { ?>
+                                    <?php if ($this->rbac->hasPrivilege('disable_staff', 'can_view') || $logged_in_User_Role->id == 7) { ?>
+                                        <li role="separator" class="divider" style="margin: 4px 0;"></li>
+                                        <?php if ($logged_in_User_Role->id == 7) { ?>
+                                            <li><a style="cursor:pointer; color: #e11d48;" onclick="disable_staff('<?php echo $id; ?>');"><i class="fa fa-thumbs-o-down" style="width: 18px; color: #e11d48;"></i> <?php echo $this->lang->line('disable'); ?></a></li>
+                                        <?php } else { ?>
+                                            <li><a href="<?php echo base_url('admin/staff/disablestaff/' . $id); ?>" style="cursor:pointer; color: #e11d48;" onclick="return confirm('<?php echo $this->lang->line('are_you_sure_you_want_to_disable_this_record'); ?>')"><i class="fa fa-thumbs-o-down" style="width: 18px; color: #e11d48;"></i> <?php echo $this->lang->line('disable'); ?></a></li>
+                                        <?php } ?>
+                                    <?php } ?>
+                                <?php } else if ($staff["is_active"] == 0) { ?>
+                                    <li role="separator" class="divider" style="margin: 4px 0;"></li>
+                                    <?php if ($logged_in_User_Role->id == 7) { ?>
+                                        <li><a href="<?php echo base_url('admin/staff/enablestaff/' . $id); ?>" style="cursor:pointer; color: #16a34a;" onclick="return confirm('<?php echo $this->lang->line('are_you_sure_you_want_to_enable_this_record'); ?>');"><i class="fa fa-thumbs-o-up" style="width: 18px; color: #16a34a;"></i> <?php echo $this->lang->line('enable'); ?></a></li>
+                                        <li><a href="<?php echo base_url('admin/staff/delete/' . $id); ?>" style="cursor:pointer; color: #e11d48;" onclick="return confirm('<?php echo $this->lang->line('are_you_sure_want_to_delete'); ?>');"><i class="fa fa-trash" style="width: 18px; color: #e11d48;"></i> <?php echo $this->lang->line('delete'); ?></a></li>
+                                    <?php } else { ?>
+                                        <?php if ($this->rbac->hasPrivilege('disable_staff', 'can_view')) { ?>
+                                            <li><a href="<?php echo base_url('admin/staff/enablestaff/' . $id); ?>" style="cursor:pointer; color: #16a34a;" onclick="return confirm('<?php echo $this->lang->line('are_you_sure_you_want_to_enable_this_record'); ?>');"><i class="fa fa-thumbs-o-up" style="width: 18px; color: #16a34a;"></i> <?php echo $this->lang->line('enable'); ?></a></li>
+                                        <?php } ?>
+                                        <?php if ($this->rbac->hasPrivilege('staff', 'can_delete')) { ?>
+                                            <li><a href="<?php echo base_url('admin/staff/delete/' . $id); ?>" style="cursor:pointer; color: #e11d48;" onclick="return confirm('<?php echo $this->lang->line('are_you_sure_want_to_delete'); ?>');"><i class="fa fa-trash" style="width: 18px; color: #e11d48;"></i> <?php echo $this->lang->line('delete'); ?></a></li>
+                                        <?php } ?>
+                                    <?php } ?>
+                                <?php } ?>
+                            <?php } ?>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inline Quick Details Specs Bar -->
+            <div class="sp3-quick-specs">
+                <div class="sp3-spec-card">
+                    <div class="sp3-spec-card-label"><?php echo $this->lang->line('role'); ?></div>
+                    <div class="sp3-spec-card-value"><span class="sp2-pill sp2-pill-blue"><?php echo $staff['user_type']; ?></span></div>
+                </div>
+                <div class="sp3-spec-card">
+                    <div class="sp3-spec-card-label"><?php echo $this->lang->line('department'); ?></div>
+                    <div class="sp3-spec-card-value"><span class="sp2-pill sp2-pill-teal"><?php echo !empty($staff['department']) ? $staff['department'] : '-'; ?></span></div>
+                </div>
+                <div class="sp3-spec-card">
+                    <div class="sp3-spec-card-label"><?php echo $this->lang->line('designation'); ?></div>
+                    <div class="sp3-spec-card-value"><span class="sp2-pill sp2-pill-purple"><?php echo !empty($staff['designation']) ? $staff['designation'] : '-'; ?></span></div>
+                </div>
+                <div class="sp3-spec-card">
+                    <div class="sp3-spec-card-label"><?php echo $this->lang->line('gender'); ?></div>
+                    <div class="sp3-spec-card-value">
                         <?php
-
-                        if ($enable_disable == 1) {
-                            if ($staff["is_active"] == 1) {
-                                if ($this->rbac->hasPrivilege('disable_staff', 'can_view')) {
-                                    if ($logged_in_User_Role->id == 7) {
-                                        if ($a) {
+                        $g = strtolower((string)$staff['gender']);
+                        $gpill = ($g == 'female') ? 'sp2-pill-purple' : 'sp2-pill-amber';
                         ?>
-                                            <li class="pull-right"><a class="text-red" data-toggle="tooltip" data-placement="bottom" title="<?php echo $this->lang->line('disable'); ?>" onclick="disable_staff('<?php echo $id; ?>');"></i> <i class="fa fa-thumbs-o-down"></i></a></li>
-                                        <?php
-                                        }
-                                    } else {
-                                        ?>
-                                        <li class="pull-right"><a href="<?php echo base_url('admin/staff/disablestaff/' . $id); ?>" class="text-red" data-toggle="tooltip" data-placement="bottom" title="<?php echo $this->lang->line('disable'); ?>" onclick="return confirm('<?php echo $this->lang->line('are_you_sure_you_want_to_disable_this_record'); ?>')"></i> <i class="fa fa-thumbs-o-down"></i></a></li>
-                                    <?php
-                                    }
-                                }
-                            } else if ($staff["is_active"] == 0) {
-                                if ($logged_in_User_Role->id == 7) {
-                                    if ($a) {
-                                    ?>
+                        <span class="sp2-pill <?php echo $gpill; ?>"><?php echo !empty($staff['gender']) ? $this->lang->line($g) : '-'; ?></span>
+                    </div>
+                </div>
+                <?php if (!empty($staff['contact_no'])) { ?>
+                <div class="sp3-spec-card">
+                    <div class="sp3-spec-card-label"><?php echo $this->lang->line('phone'); ?></div>
+                    <div class="sp3-spec-card-value"><?php echo $staff['contact_no']; ?></div>
+                </div>
+                <?php } ?>
+                <?php if (!empty($staff["date_of_joining"]) && $staff["date_of_joining"] != '0000-00-00') { ?>
+                <div class="sp3-spec-card">
+                    <div class="sp3-spec-card-label"><?php echo $this->lang->line('date_of_joining'); ?></div>
+                    <div class="sp3-spec-card-value"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($staff['date_of_joining'])); ?></div>
+                </div>
+                <?php } ?>
+                <?php if (!empty($staff['shift'])) { ?>
+                <div class="sp3-spec-card">
+                    <div class="sp3-spec-card-label"><?php echo $this->lang->line('work_shift'); ?></div>
+                    <div class="sp3-spec-card-value"><?php echo $staff['shift']; ?></div>
+                </div>
+                <?php } ?>
+                <?php if (!empty($staff['epf_no'])) { ?>
+                <div class="sp3-spec-card">
+                    <div class="sp3-spec-card-label"><?php echo $this->lang->line('epf_no'); ?></div>
+                    <div class="sp3-spec-card-value"><?php echo $staff['epf_no']; ?></div>
+                </div>
+                <?php } ?>
+            </div>
+        </div>
 
-                                        <li class="pull-right"><a href="<?php echo base_url('admin/staff/delete/' . $id); ?>" class="text-red" data-toggle="tooltip" data-placement="bottom" title="<?php echo $this->lang->line('delete'); ?>" onclick="return confirm('<?php echo $this->lang->line('are_you_sure_want_to_delete'); ?>');"></i><i class="fa fa-trash"></i></a></li>
-                                        <li class="pull-right"><a href="<?php echo base_url('admin/staff/enablestaff/' . $id); ?>" class="text-green" data-toggle="tooltip" data-placement="bottom" title="<?php echo $this->lang->line('enable'); ?>" onclick="return confirm('<?php echo $this->lang->line('are_you_sure_you_want_to_enable_this_record'); ?>');"><i class="fa fa-thumbs-o-up"></i></a></li>
-
-                                    <?php
-                                    }
-                                } else {
-                                    if ($this->rbac->hasPrivilege('staff', 'can_delete')) {
-                                    ?>
-
-                                        <li class="pull-right"><a href="<?php echo base_url('admin/staff/delete/' . $id); ?>" class="text-red" data-toggle="tooltip" data-placement="bottom" title="<?php echo $this->lang->line('delete'); ?>" onclick="return confirm('<?php echo $this->lang->line('are_you_sure_want_to_delete'); ?>');"></i><i class="fa fa-trash"></i></a></li>
-                                    <?php }
-                                    if ($this->rbac->hasPrivilege('disable_staff', 'can_view')) {
-                                    ?>
-
-                                        <li class="pull-right"><a href="<?php echo base_url('admin/staff/enablestaff/' . $id); ?>" class="text-green" data-toggle="tooltip" data-placement="bottom" title="<?php echo $this->lang->line('enable'); ?>" onclick="return confirm('<?php echo $this->lang->line('are_you_sure_you_want_to_enable_this_record'); ?>');"><i class="fa fa-thumbs-o-up"></i></a></li>
-
-                        <?php
-                                    }
-                                }
-                            }
-                        }
-                        ?>
-
-                        <li class="pull-right">
-                            <?php if ($a) {
-                            ?>
-                                <a href="#" class="change_password text-green" data-toggle="tooltip" data-placement="bottom" title="<?php echo $this->lang->line('change_password'); ?>"></i> <i class="fa fa-key"></i></a>
-
-                            <?php
-                            }
-                            ?>
-                        </li>
-                        <?php
-                        $is_self_profile = ($logged_in_User_Role->id == $id || (isset($staff['id']) && $logged_in_User_Role->id == $staff['id']));
-                        if ($this->rbac->hasPrivilege('staff', 'can_edit') || ($a && $this->rbac->hasPrivilege('staff_edit_self', 'can_edit'))) {
-
-                            if ($logged_in_User_Role->id == 7) {
-                                if ($a) {
-                        ?>
-
-                                    <li class="pull-right"><a href="<?php echo base_url('admin/staff/edit/' . $id); ?>" data-toggle="tooltip" data-placement="bottom" title="<?php echo $this->lang->line('edit'); ?>" class="text-light"><i class="fa fa-pencil"></i></a></li>
-                                <?php
-                                }
-                            } else {
-                                ?>
-
-                                <li class="pull-right"><a href="<?php echo base_url('admin/staff/edit/' . $id); ?>" data-toggle="tooltip" data-placement="bottom" title="<?php echo $this->lang->line('edit'); ?>" class="text-light"><i class="fa fa-pencil"></i></a></li>
-                        <?php
-                            }
-                        }
-                        ?>
-                    </ul>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="nav-tabs-custom theme-shadow">
+                    <div class="sp2-tabs-wrapper">
+                        <ul class="sp2-tabs-nav nav nav-tabs">
+                            <li class="active"><a href="#activity" data-toggle="tab" aria-expanded="true"><i class="fa fa-user-circle"></i> <?php echo $this->lang->line('profile'); ?></a></li>
+                            <li class=""><a href="#payroll" data-toggle="tab" aria-expanded="false"><i class="fa fa-money"></i> <?php echo $this->lang->line('payroll'); ?></a></li>
+                            <li class=""><a href="#leaves" data-toggle="tab" aria-expanded="false"><i class="fa fa-calendar-check-o"></i> <?php echo $this->lang->line('leaves'); ?></a></li>
+                            <li class=""><a href="#attendance" data-toggle="tab" aria-expanded="false"><i class="fa fa-clock-o"></i> <?php echo $this->lang->line('attendance'); ?></a></li>
+                            <?php if ($sch_setting->staff_upload_documents) { ?>
+                                <li class=""><a href="#documents" data-toggle="tab" aria-expanded="false"><i class="fa fa-file-text-o"></i> <?php echo $this->lang->line('documents'); ?></a></li>
+                            <?php } ?>
+                            <?php if ($this->rbac->hasPrivilege('staff_timeline', 'can_view')) { ?>
+                                <li class=""><a href="#timelineh" data-toggle="tab" aria-expanded="false"><i class="fa fa-hourglass-half"></i> <?php echo $this->lang->line('timeline'); ?></a></li>
+                            <?php } ?>
+                            <?php if ($staff['user_type'] == 2) { ?>
+                                <li class=""><a href="#reviews" data-toggle="tab" aria-expanded="false"><i class="fa fa-star"></i> <?php echo $this->lang->line('reviews'); ?></a></li>
+                            <?php } ?>
+                        </ul>
+                    </div>
                     <div class="tab-content">
                         <div class="tab-pane active" id="activity">
                             <div class="sp2-card">

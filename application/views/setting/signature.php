@@ -1,24 +1,137 @@
 <?php
 $signatures = [
-    'sign_principal' => 'Principal',
-    'sign_vice_principal' => 'Vice Principal',
-    'sign_class_teacher' => 'Class Teacher',
-    'sign_exam_incharge' => 'Examination In-charge',
-    'sign_academic_coordinator' => 'Academic Coordinator',
-    'sign_headmaster' => 'Headmaster / Headmistress',
-    'sign_manager' => 'Manager',
-    'sign_secretary' => 'Secretary',
-    'sign_director' => 'Director',
-    'sign_chairman' => 'Chairman',
-    'sign_admin_officer' => 'Administrative Officer',
-    'sign_accounts_officer' => 'Accounts Officer',
-    'sign_admission_incharge' => 'Admission In-charge',
-    'sign_cbse_coordinator' => 'CBSE Coordinator',
-    'sign_school_seal' => 'School Seal / Stamp'
+    'sign_principal' => ['title' => 'Principal', 'icon' => 'fa-graduation-cap text-primary'],
+    'sign_vice_principal' => ['title' => 'Vice Principal', 'icon' => 'fa-graduation-cap text-info'],
+    'sign_class_teacher' => ['title' => 'Class Teacher', 'icon' => 'fa-user text-success'],
+    'sign_exam_incharge' => ['title' => 'Examination In-charge', 'icon' => 'fa-file-text-o text-warning'],
+    'sign_academic_coordinator' => ['title' => 'Academic Coordinator', 'icon' => 'fa-book text-primary'],
+    'sign_headmaster' => ['title' => 'Headmaster / Headmistress', 'icon' => 'fa-university text-danger'],
+    'sign_manager' => ['title' => 'Manager', 'icon' => 'fa-briefcase text-info'],
+    'sign_secretary' => ['title' => 'Secretary', 'icon' => 'fa-id-card-o text-success'],
+    'sign_director' => ['title' => 'Director', 'icon' => 'fa-star text-warning'],
+    'sign_chairman' => ['title' => 'Chairman', 'icon' => 'fa-trophy text-primary'],
+    'sign_admin_officer' => ['title' => 'Administrative Officer', 'icon' => 'fa-shield text-danger'],
+    'sign_accounts_officer' => ['title' => 'Accounts Officer', 'icon' => 'fa-money text-success'],
+    'sign_admission_incharge' => ['title' => 'Admission In-charge', 'icon' => 'fa-user-plus text-info'],
+    'sign_cbse_coordinator' => ['title' => 'CBSE Coordinator', 'icon' => 'fa-certificate text-warning'],
+    'sign_school_seal' => ['title' => 'School Seal / Stamp', 'icon' => 'fa-stamp text-danger']
 ];
 ?>
 
+<style>
+    .logo-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 16px;
+    }
+    .logo-upload-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+        transition: all 0.2s ease;
+    }
+    .logo-upload-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+        transform: translateY(-2px);
+    }
+    .logo-card-header {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .logo-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .logo-preview-box {
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        min-height: 100px;
+        max-height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+        margin-bottom: 10px;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .logo-preview-box:hover {
+        border-color: #114B5F;
+        background: #f0fdfa;
+    }
+    .logo-preview-box img {
+        max-width: 100%;
+        max-height: 80px;
+        object-fit: contain;
+    }
+    .logo-dimension-badge {
+        font-size: 11px;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    .signature-staff-wrapper {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed #e2e8f0;
+    }
+    .signature-staff-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        display: block;
+    }
+    .signature-staff-select {
+        height: 32px;
+        font-size: 12px;
+        border-radius: 6px;
+        border: 1px solid #cbd5e1;
+        color: #1e293b;
+        background: #ffffff;
+    }
+    .btn-signature-upload {
+        background-color: #114B5F !important;
+        border-color: #114B5F !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        border-radius: 6px !important;
+        font-size: 12.5px !important;
+        padding: 6px 12px !important;
+        transition: all 0.2s ease !important;
+    }
+    .btn-signature-upload:hover {
+        background-color: #0c3847 !important;
+        border-color: #0c3847 !important;
+    }
+</style>
+
 <div class="content-wrapper">
+    <section class="content-header">
+        <h1><i class="fa fa-sliders"></i> <?php echo $this->lang->line('system_settings'); ?></h1>
+    </section>
+
     <section class="content">
         <div class="row">
             <?php $this->load->view('setting/_settingmenu'); ?>
@@ -26,56 +139,56 @@ $signatures = [
             <div class="col-lg-9 col-md-8 col-sm-8">
                 <div class="box box-primary">
                     <div class="box-header with-border">
-                        <h3 class="box-title">Upload Signatures & Seals</h3>
+                        <h3 class="box-title titlefix"><i class="fa fa-pencil-square-o text-muted" style="margin-right: 6px;"></i> Upload Signatures & Seals</h3>
                     </div>
                     <div class="box-body">
-                        <div class="row">
-                            <?php foreach($signatures as $field_name => $display_name): ?>
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <div class="card-body-logo" style="position: relative; margin-bottom: 20px; min-height: 250px; display: flex; flex-direction: column; justify-content: space-between; padding: 15px; border: 1px solid #e1e1e1; border-radius: 4px; background: #fff;">
-                                        <div>
-                                            <h4 style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid #f4f4f4; padding-bottom: 10px; margin-top: 0; color: #333;" title="<?php echo $display_name; ?>"><?php echo $display_name; ?></h4> 
-                                            
-                                            <a href="#modal-upload_signature" class="upload_signature_btn signature-img-container" data-signature_type="<?php echo $field_name; ?>" data-title="<?php echo $display_name; ?>" style="position: relative; display: block; text-align: center; margin: 15px 0; cursor: pointer; text-decoration: none !important; color: inherit; padding: 10px; border-radius: 4px; border: 1px dashed transparent; transition: all 0.3s;" onmouseover="this.style.border='1px dashed #ccc'; this.style.background='#f9f9f9'; this.querySelector('.signature-overlay').style.opacity='1';" onmouseout="this.style.border='1px dashed transparent'; this.style.background='transparent'; this.querySelector('.signature-overlay').style.opacity='0';">
-                                                <?php if (empty($result->{$field_name})) { ?>
-                                                    <div class="card-body-logo-img" style="height: 80px; display: flex; align-items: center; justify-content: center;">
-                                                        <img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/logo/images.png') ?>" style="max-height: 80px; max-width: 100%; opacity: 0.15;" alt="">
-                                                    </div>
-                                                <?php } else { ?>
-                                                    <div class="card-body-logo-img" style="height: 80px; display: flex; align-items: center; justify-content: center;">
-                                                        <img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/signatures/'.$result->{$field_name}); ?>" style="max-height: 80px; max-width: 100%;" alt="">
-                                                    </div>
-                                                <?php } ?>
-                                                
-                                                <div class="signature-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; border-radius: 4px;">
-                                                    <span style="color: #333; font-weight: 600; font-size: 13px;"><i class="fa fa-pencil" style="margin-right: 5px;"></i> Click to Update</span>
-                                                </div>
-                                                
-                                                <p class="text-muted ptt10" style="font-size: 11px; margin-bottom: 0;">(Max Height: 100px)</p>
-                                            </a>    
+                        <div class="logo-card-grid">
+                            <?php foreach($signatures as $field_name => $info): 
+                                $display_name = is_array($info) ? $info['title'] : $info;
+                                $icon_class = is_array($info) ? $info['icon'] : 'fa-pencil text-primary';
+                            ?>
+                                <div class="logo-upload-card">
+                                    <div>
+                                        <div class="logo-card-header">
+                                            <span class="logo-card-title" title="<?php echo $display_name; ?>">
+                                                <i class="fa <?php echo $icon_class; ?>"></i> <?php echo $display_name; ?>
+                                            </span>
+                                            <?php if (!empty($result->{$field_name})) { ?>
+                                                <a href="javascript:void(0);" class="text-danger remove_signature_btn" data-signature_type="<?php echo $field_name; ?>" title="Remove Signature" style="font-size: 12px;">
+                                                    <i class="fa fa-trash"></i>
+                                                </a>
+                                            <?php } ?>
                                         </div>
+                                        
+                                        <div class="logo-preview-box upload_signature_btn" data-signature_type="<?php echo $field_name; ?>" data-title="<?php echo $display_name; ?>" title="Click to upload/change">     
+                                            <?php if (empty($result->{$field_name})) { ?>
+                                                <img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/logo/images.png') ?>" style="opacity: 0.25;" alt="Placeholder">
+                                            <?php } else { ?>
+                                                <img src="<?php echo $this->media_storage->getImageURL('uploads/school_content/signatures/'.$result->{$field_name}); ?>" alt="<?php echo $display_name; ?>">
+                                            <?php } ?>
+                                        </div>
+                                        <div class="logo-dimension-badge">(Max Height: 100px)</div>
+                                    </div>
 
-                                        <div>
-                                            <div class="form-group" style="margin-bottom: 0;">
-                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                                                    <label style="font-size: 12px; font-weight: normal; color: #666; margin: 0;">Map to Staff:</label>
-                                                    <?php if (!empty($result->{$field_name})) { ?>
-                                                        <a href="javascript:void(0);" class="text-danger remove_signature_btn" data-signature_type="<?php echo $field_name; ?>" style="font-size: 11px;" title="Remove Signature"><i class="fa fa-trash"></i> Remove</a>
-                                                    <?php } ?>
-                                                </div>
-                                                <select class="form-control signature_staff_mapping input-sm" data-signature_type="<?php echo $field_name; ?>_staff">
-                                                    <option value="">Select Staff</option>
-                                                    <?php foreach ($staffs as $staff) { 
-                                                        $staff_name = $staff['name'] . ' ' . $staff['surname'] . ' (' . $staff['employee_id'] . ')';
-                                                        $staff_col = $field_name . '_staff';
-                                                        $selected = (isset($result->{$staff_col}) && $result->{$staff_col} == $staff['id']) ? 'selected' : '';
-                                                    ?>
-                                                        <option value="<?php echo $staff['id']; ?>" <?php echo $selected; ?>><?php echo $staff_name; ?></option>
-                                                    <?php } ?>
-                                                </select>
-                                            </div>
+                                    <div>
+                                        <button type="button" class="btn btn-block btn-signature-upload upload_signature_btn" data-signature_type="<?php echo $field_name; ?>" data-title="<?php echo $display_name; ?>">
+                                            <i class="fa fa-upload"></i> <?php echo !empty($result->{$field_name}) ? 'Change Signature' : 'Upload Signature'; ?>
+                                        </button>
+
+                                        <div class="signature-staff-wrapper">
+                                            <label class="signature-staff-label">Map to Staff</label>
+                                            <select class="form-control signature_staff_mapping signature-staff-select" data-signature_type="<?php echo $field_name; ?>_staff">
+                                                <option value="">-- Unassigned --</option>
+                                                <?php foreach ($staffs as $staff) { 
+                                                    $staff_name = $staff['name'] . ' ' . $staff['surname'] . ' (' . $staff['employee_id'] . ')';
+                                                    $staff_col = $field_name . '_staff';
+                                                    $selected = (isset($result->{$staff_col}) && $result->{$staff_col} == $staff['id']) ? 'selected' : '';
+                                                ?>
+                                                    <option value="<?php echo $staff['id']; ?>" <?php echo $selected; ?>><?php echo $staff_name; ?></option>
+                                                <?php } ?>
+                                            </select>
                                         </div>
-                                    </div>    
+                                    </div>
                                 </div> 
                             <?php endforeach; ?>
                         </div>
@@ -89,22 +202,23 @@ $signatures = [
 <!-- Upload Modal -->
 <div class="modal fade" id="modal-upload_signature" tabindex="-1" role="dialog" aria-labelledby="signatureModalLabel">
     <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="signatureModalLabel">Upload Signature</h4>
+        <div class="modal-content" style="border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 20px 40px rgba(15,23,42,0.15);">
+            <div class="modal-header" style="background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 16px 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="border-radius: 8px; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; background: #f8fafc; border: 1px solid #e2e8f0;"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="signatureModalLabel" style="font-weight: 700; color: #0f172a; font-size: 16px;"><i class="fa fa-upload" style="color: #114B5F; margin-right: 6px;"></i> Upload Signature</h4>
             </div>
-            <div class="modal-body upload_logo_body">
+            <div class="modal-body upload_logo_body" style="padding: 24px;">
                 <form class="box_upload boxupload has-advanced-upload" method="post" action="<?php echo site_url('schsettings/ajax_edit_signature') ?>" enctype="multipart/form-data">
                     <input value="<?php echo $result->id; ?>" type="hidden" name="id" id="signature_setting_id"/>
                     <input type="hidden" name="signature_type" id="signature_type_field" value=""/>
                     <input type="file" name="file" id="file_signature" style="display:none;">
                     
-                    <div class="box__input upload-signature_area" id="uploadfile_signature" style="cursor: pointer;">
-                        <i class="fa fa-download box__icon"></i>
-                        <label style="cursor: pointer;">
+                    <div class="box__input upload-signature_area" id="uploadfile_signature" style="cursor: pointer; border: 2px dashed #cbd5e1; border-radius: 10px; background: #f8fafc; padding: 30px 20px; text-align: center; transition: all 0.2s;">
+                        <i class="fa fa-cloud-upload box__icon" style="font-size: 36px; color: #114B5F; margin-bottom: 10px; display: block;"></i>
+                        <label style="cursor: pointer; color: #334155; font-size: 14px;">
                             <strong><?php echo $this->lang->line('choose_a_file_or_drag_it_here'); ?></strong>
                         </label>
+                        <p style="color: #94a3b8; font-size: 12px; margin-top: 6px; margin-bottom: 0;">Supported formats: PNG, JPG, JPEG (Max Height: 100px)</p>
                     </div>
                 </form>
             </div>

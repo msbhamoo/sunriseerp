@@ -7,6 +7,14 @@ class Staffattendancemodel extends MY_Model {
         parent::__construct();
         $this->current_session = $this->setting_model->getCurrentSession();
         $this->current_date = $this->setting_model->getDateYmd();
+
+        // Ensure school timezone is always applied for accurate date/time calculations
+        if (isset($this->customlib) && method_exists($this->customlib, 'getTimeZone')) {
+            $tz = $this->customlib->getTimeZone();
+            if (!empty($tz)) {
+                date_default_timezone_set($tz);
+            }
+        }
     }
     
     public function addorUpdate($attendances)
@@ -405,13 +413,15 @@ class Staffattendancemodel extends MY_Model {
         }
 
         // ---- Row already complete ----
-        if (!IsNullOrEmptyString($row->out_time)) {
+        if (!IsNullOrEmptyString($row->out_time) && $row->out_time !== '00:00:00') {
             $type_name = $this->getAttendanceTypeName($row->staff_attendance_type_id);
+            $in_formatted = (!empty($row->in_time) && $row->in_time !== '00:00:00') ? date('h:i A', strtotime($row->in_time)) : '--';
+            $out_formatted = (!empty($row->out_time) && $row->out_time !== '00:00:00') ? date('h:i A', strtotime($row->out_time)) : '--';
             return array(
                 'status'          => 'already_complete',
                 'message'         => 'Your attendance for today is already complete.',
-                'in_time'         => date('h:i A', strtotime($row->in_time)),
-                'out_time'        => date('h:i A', strtotime($row->out_time)),
+                'in_time'         => $in_formatted,
+                'out_time'        => $out_formatted,
                 'attendance_type' => $type_name,
                 'date'            => date('d M Y', strtotime($date))
             );
@@ -420,7 +430,7 @@ class Staffattendancemodel extends MY_Model {
         // ---- OUT scan candidate: in_time set, out_time empty ----
         // Cooldown: ignore accidental rapid re-scans after the in-scan.
         $cooldown = isset($opts['cooldown_minutes']) ? (int) $opts['cooldown_minutes'] : 5;
-        if ($cooldown > 0) {
+        if ($cooldown > 0 && !empty($row->in_time) && $row->in_time !== '00:00:00') {
             $secs_since_in = strtotime("1970-01-01 $now UTC") - strtotime("1970-01-01 {$row->in_time} UTC");
             if ($secs_since_in >= 0 && $secs_since_in < ($cooldown * 60)) {
                 $type_name = $this->getAttendanceTypeName($row->staff_attendance_type_id);
@@ -474,11 +484,12 @@ class Staffattendancemodel extends MY_Model {
 
         $final_type_id = isset($update['staff_attendance_type_id']) ? $update['staff_attendance_type_id'] : $row->staff_attendance_type_id;
         $type_name     = $this->getAttendanceTypeName($final_type_id);
+        $in_formatted  = (!empty($row->in_time) && $row->in_time !== '00:00:00') ? date('h:i A', strtotime($row->in_time)) : date('h:i A', strtotime($now));
 
         return array(
             'status'          => 'marked_out',
             'message'         => 'Check-out recorded successfully! Have a good day.',
-            'in_time'         => date('h:i A', strtotime($row->in_time)),
+            'in_time'         => $in_formatted,
             'out_time'        => date('h:i A', strtotime($now)),
             'attendance_type' => $type_name,
             'date'            => date('d M Y', strtotime($date)),
@@ -497,11 +508,12 @@ class Staffattendancemodel extends MY_Model {
         $this->db->where('staff_id', $staff_id)->where('date', $date);
         $att = $this->db->get('staff_attendance')->row();
 
-        if (empty($att) || IsNullOrEmptyString($att->in_time)) {
+        if (empty($att) || IsNullOrEmptyString($att->in_time) || $att->in_time === '00:00:00') {
             return array('state' => 'not_in');
         }
 
         $type_name = $this->getAttendanceTypeName($att->staff_attendance_type_id);
+        $in_formatted = (!empty($att->in_time) && $att->in_time !== '00:00:00') ? date('h:i A', strtotime($att->in_time)) : '--';
 
         // Open break? (out_time set, in_time null)
         if ($this->db->table_exists('staff_attendance_break')) {
@@ -512,7 +524,7 @@ class Staffattendancemodel extends MY_Model {
                 return array(
                     'state'           => 'on_break',
                     'since'           => date('h:i A', strtotime($open->out_time)),
-                    'in'              => date('h:i A', strtotime($att->in_time)),
+                    'in'              => $in_formatted,
                     'out'             => 'Stepped Out at ' . date('h:i A', strtotime($open->out_time)),
                     'attendance_type' => $type_name,
                     'date'            => date('d M Y', strtotime($date))
@@ -520,10 +532,10 @@ class Staffattendancemodel extends MY_Model {
             }
         }
 
-        if (!IsNullOrEmptyString($att->out_time)) {
+        if (!IsNullOrEmptyString($att->out_time) && $att->out_time !== '00:00:00') {
             return array(
                 'state'           => 'complete',
-                'in'              => date('h:i A', strtotime($att->in_time)),
+                'in'              => $in_formatted,
                 'out'             => date('h:i A', strtotime($att->out_time)),
                 'attendance_type' => $type_name,
                 'date'            => date('d M Y', strtotime($date))
@@ -532,7 +544,7 @@ class Staffattendancemodel extends MY_Model {
 
         return array(
             'state'           => 'in',
-            'in'              => date('h:i A', strtotime($att->in_time)),
+            'in'              => $in_formatted,
             'out'             => 'Not Checked Out Yet',
             'attendance_type' => $type_name,
             'date'            => date('d M Y', strtotime($date))
