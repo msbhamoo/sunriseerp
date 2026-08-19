@@ -48,43 +48,39 @@ class Gatepass extends Admin_Controller
         $this->form_validation->set_rules('user_id', 'User', 'required');
         $this->form_validation->set_rules('date', 'Date', 'required');
         $this->form_validation->set_rules('out_time', 'Out Time', 'required');
-        
         $pass_type = $this->input->post('pass_type');
-        if ($pass_type != 'Full Day') {
-            $this->form_validation->set_rules('in_time', 'In Time (Expected)', 'required');
-        }
 
         if ($this->form_validation->run() == FALSE) {
             $msg = array(
                 'user_type' => form_error('user_type'),
-                'user_id' => form_error('user_id'),
-                'date' => form_error('date'),
-                'out_time' => form_error('out_time'),
-                'in_time' => form_error('in_time')
+                'user_id'   => form_error('user_id'),
+                'date'      => form_error('date'),
+                'out_time'  => form_error('out_time'),
+                'in_time'   => form_error('in_time')
             );
             echo json_encode(array('status' => 'fail', 'error' => $msg, 'message' => ''));
         } else {
             $gate_pass_no = $this->gatepass_model->generate_gate_pass_no();
 
-            if ($pass_type == 'Full Day') {
+            $in_time = ($pass_type == 'Full Day') ? null : $this->input->post('in_time');
+            if (empty($in_time)) {
                 $in_time = null;
-            } else {
-                $in_time = $this->input->post('in_time');
             }
 
             $data = array(
                 'gate_pass_no' => $gate_pass_no,
-                'user_type' => $user_type,
-                'user_id' => $user_id,
-                'date' => date('Y-m-d', $this->customlib->datetostrtotime($date)),
-                'out_time' => $out_time,
-                'in_time' => $in_time,
-                'reason' => $reason,
-                'status' => $this->input->post('status') ? $this->input->post('status') : 'Approved', // Auto-approve if created by Admin
-                'approved_by' => $this->customlib->getStaffID()
+                'user_type'    => $user_type,
+                'user_id'      => $user_id,
+                'date'         => date('Y-m-d', $this->customlib->datetostrtotime($date)),
+                'pass_type'    => $pass_type ? $pass_type : 'Partial',
+                'out_time'     => $out_time,
+                'in_time'      => $in_time,
+                'reason'       => $reason,
+                'status'       => $this->input->post('status') ? $this->input->post('status') : 'Approved', // Auto-approve if created by Admin
+                'approved_by'  => $this->customlib->getStaffID()
             );
 
-            $this->gatepass_model->add($data);
+            $insert_id = $this->gatepass_model->add($data);
 
             // System Notification
             $this->load->model('SystemNotificationSetting_model');
@@ -96,7 +92,7 @@ class Gatepass extends Admin_Controller
                 }
             }
 
-            echo json_encode(array('status' => 'success', 'message' => $this->lang->line('success_message')));
+            echo json_encode(array('status' => 'success', 'message' => $this->lang->line('success_message'), 'id' => $insert_id));
         }
     }
 

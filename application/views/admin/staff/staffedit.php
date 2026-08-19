@@ -49,7 +49,12 @@
                                             <div class="col-md-3">
                                                 <div class="form-group">
                                                     <label for="exampleInputEmail1"><?php echo $this->lang->line('staff_id'); ?></label><small class="req"> *</small>
-                                                    <input autofocus="" id="employee_id" name="employee_id" placeholder="" value="<?php echo $staff["employee_id"] ?>" type="text" class="form-control"  value="" />
+                                                    <?php if (isset($is_logged_in_superadmin) && !$is_logged_in_superadmin) { ?>
+                                                        <input id="employee_id" type="text" class="form-control" value="<?php echo $staff["employee_id"]; ?>" readonly disabled />
+                                                        <input type="hidden" name="employee_id" value="<?php echo $staff["employee_id"]; ?>" />
+                                                    <?php } else { ?>
+                                                        <input autofocus="" id="employee_id" name="employee_id" placeholder="" value="<?php echo $staff["employee_id"] ?>" type="text" class="form-control" />
+                                                    <?php } ?>
                                                     <span class="text-danger"><?php echo form_error('employee_id'); ?></span>
                                                 </div>
                                             </div>
@@ -58,7 +63,7 @@
                                             <div class="form-group">
                                                 <label for="exampleInputEmail1"><?php echo $this->lang->line('role'); ?></label><small class="req"> *</small>
                                                 <input type="hidden" name="editid" value="<?php echo $staff['id']; ?>">
-                                                <?php if (isset($can_change_role) && !$can_change_role) { ?>
+                                                <?php if (isset($is_logged_in_superadmin) && !$is_logged_in_superadmin) { ?>
                                                     <input type="text" class="form-control" value="<?php echo $staff["user_type"]; ?>" readonly disabled />
                                                     <input type="hidden" name="role" value="<?php echo $staff["role_id"]; ?>">
                                                 <?php } else { ?>
@@ -105,18 +110,31 @@ if ($staff["designation"] == $value["id"]) {
                                             <div class="col-md-3">
                                                 <div class="form-group">
                                                     <label for="exampleInputEmail1"><?php echo $this->lang->line('department'); ?></label>
-                                                    <select id="department" name="department" placeholder="" type="text" class="form-control" >
-                                                        <option value=""><?php echo $this->lang->line('select') ?></option>
-                                                        <?php foreach ($department as $key => $value) {
+                                                    <?php if (isset($is_logged_in_superadmin) && !$is_logged_in_superadmin) { 
+                                                        $dept_name = '';
+                                                        foreach ($department as $d_key => $d_val) {
+                                                            if ($staff["department"] == $d_val["id"]) {
+                                                                $dept_name = $d_val["department_name"];
+                                                                break;
+                                                            }
+                                                        }
+                                                    ?>
+                                                        <input type="text" class="form-control" value="<?php echo $dept_name; ?>" readonly disabled />
+                                                        <input type="hidden" name="department" value="<?php echo $staff["department"]; ?>" />
+                                                    <?php } else { ?>
+                                                        <select id="department" name="department" placeholder="" type="text" class="form-control" >
+                                                            <option value=""><?php echo $this->lang->line('select') ?></option>
+                                                            <?php foreach ($department as $key => $value) {
+            ?>
+                                                                <option value="<?php echo $value["id"] ?>" <?php
+    if ($staff["department"] == $value["id"]) {
+                echo "selected";
+            }
+            ?>><?php echo $value["department_name"] ?></option>
+                                                                    <?php }
         ?>
-                                                            <option value="<?php echo $value["id"] ?>" <?php
-if ($staff["department"] == $value["id"]) {
-            echo "selected";
-        }
-        ?>><?php echo $value["department_name"] ?></option>
-                                                                <?php }
-    ?>
-                                                    </select>
+                                                        </select>
+                                                    <?php } ?>
                                                     <span class="text-danger"><?php echo form_error('department'); ?></span>
                                                 </div>
                                             </div>

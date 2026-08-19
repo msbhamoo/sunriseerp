@@ -1156,17 +1156,17 @@ class Staff extends Admin_Controller
         $logged_in_role_id       = isset($userdata['role_id']) ? $userdata['role_id'] : 0;
         $logged_in_role_name     = isset($userdata['role']) ? strtolower($userdata['role']) : '';
         $is_logged_in_superadmin = ($logged_in_role_id == 7 || $logged_in_role_name == 'super admin');
-        $can_change_role         = ($is_logged_in_superadmin || $logged_in_role_id == 1 || $logged_in_role_name == 'admin');
+        $can_change_role         = $is_logged_in_superadmin;
 
-        $data['title']               = 'Edit Staff';
-        $data['id']                  = $id;
-        $genderList                  = $this->customlib->getGender();
-        $data['genderList']          = $genderList;
-        $payscaleList                = $this->staff_model->getPayroll();
-        $leavetypeList               = $this->staff_model->getLeaveType();
-        $data["leavetypeList"]       = $leavetypeList;
-        $data["payscaleList"]        = $payscaleList;
-        $staffRole                   = $this->staff_model->getStaffRole();
+        $data['title']                   = 'Edit Staff';
+        $data['id']                      = $id;
+        $genderList                      = $this->customlib->getGender();
+        $data['genderList']              = $genderList;
+        $payscaleList                    = $this->staff_model->getPayroll();
+        $leavetypeList                   = $this->staff_model->getLeaveType();
+        $data["leavetypeList"]           = $leavetypeList;
+        $data["payscaleList"]            = $payscaleList;
+        $staffRole                       = $this->staff_model->getStaffRole();
         if (!$is_logged_in_superadmin) {
             $filteredStaffRole = array();
             foreach ($staffRole as $role_item) {
@@ -1315,6 +1315,12 @@ class Staff extends Admin_Controller
                     $this->customfield_model->updateRecord($custom_value_array, $id, 'staff');
                 }
 
+                if ($is_logged_in_superadmin) {
+                    $department = empty2null($this->input->post("department"));
+                } else {
+                    $department = empty2null($staff['department']);
+                }
+
                 $data1 = array(
                     'id'                   => $id,
                     'department'           => $department,
@@ -1356,11 +1362,15 @@ class Staff extends Admin_Controller
                 $data1['date_of_leaving'] = $this->customlib->dateFormatToYYYYMMDD($date_of_leaving);
 
                 if (!$this->sch_setting_detail->staffid_auto_insert) {
-                    $data1['employee_id'] = $employee_id;
+                    if ($is_logged_in_superadmin) {
+                        $data1['employee_id'] = $employee_id;
+                    } else {
+                        $data1['employee_id'] = $staff['employee_id'];
+                    }
 
                     //***** generate barcode and qrcode of staff ******//
                     $scan_type = $this->sch_setting_detail->scan_code_type;
-                    $this->customlib->generatestaffbarcode($employee_id, $id, $scan_type);
+                    $this->customlib->generatestaffbarcode($data1['employee_id'], $id, $scan_type);
                     //***** generate barcode and qrcode of staff ******//
                 }
 

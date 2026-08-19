@@ -27,10 +27,19 @@ class Materialregister extends Admin_Controller
 
         $this->form_validation->set_rules('direction', $this->lang->line('direction'), 'required');
         $this->form_validation->set_rules('date', $this->lang->line('date'), 'required');
-        $this->form_validation->set_rules('material_name', $this->lang->line('material_name'), 'required');
+        $this->form_validation->set_rules('material_name[]', $this->lang->line('material_name'), 'required');
         $this->form_validation->set_rules('image', $this->lang->line('attachment'), 'callback_handle_upload[image]');
 
         if ($this->form_validation->run() == false) {
+            if ($this->input->is_ajax_request()) {
+                $errors = array(
+                    'direction'     => form_error('direction'),
+                    'date'          => form_error('date'),
+                    'material_name' => form_error('material_name[]'),
+                );
+                echo json_encode(array('status' => 'fail', 'error' => $errors));
+                return;
+            }
             $this->materialregister_model->ensure_sidebar_title();
             $data['material_list']     = $this->materialregister_model->get();
             $data['stafflist']         = $this->staff_model->searchFullText("", 1);
@@ -43,12 +52,61 @@ class Materialregister extends Admin_Controller
             if (!$this->rbac->hasPrivilege('material_register', 'can_add')) {
                 access_denied();
             }
-            $insert          = $this->build_data();
+            $items           = $this->build_items();
+            $insert          = $this->build_data($items);
             $insert['image'] = $this->do_upload();
-            $this->materialregister_model->add($insert);
+            $insert_id       = $this->materialregister_model->add($insert, $items);
+            
+            if ($this->input->is_ajax_request()) {
+                echo json_encode(array(
+                    'status'  => 'success',
+                    'message' => $this->lang->line('success_message'),
+                    'id'      => $insert_id
+                ));
+                return;
+            }
+
             $this->session->set_flashdata('msg', '<div class="alert alert-success">' . $this->lang->line('success_message') . '</div>');
             redirect('admin/materialregister');
         }
+    }
+
+    public function print_slip($id)
+    {
+        if (!$this->rbac->hasPrivilege('material_register', 'can_view')) {
+            access_denied();
+        }
+        $data['material']    = $this->materialregister_model->get($id);
+        if (empty($data['material'])) {
+            show_404();
+        }
+        $data['sch_setting'] = $this->setting_model->getSetting();
+        $this->load->view('admin/frontoffice/_print_material_slip', $data);
+    }
+
+    public function quick_update_time()
+    {
+        if (!$this->rbac->hasPrivilege('material_register', 'can_edit')) {
+            echo json_encode(array('status' => 'fail', 'message' => $this->lang->line('access_denied')));
+            return;
+        }
+
+        $id        = $this->input->post('id');
+        $time_type = $this->input->post('time_type'); // 'out_time' or 'in_time'
+        $time_val  = $this->input->post('time_val');
+
+        if (empty($id) || !in_array($time_type, array('out_time', 'in_time')) || empty($time_val)) {
+            echo json_encode(array('status' => 'fail', 'message' => 'Invalid parameters'));
+            return;
+        }
+
+        $update_data = array($time_type => $time_val);
+        $this->db->where('id', $id)->update('material_register', $update_data);
+
+        echo json_encode(array(
+            'status'  => 'success',
+            'message' => $this->lang->line('update_message')
+        ));
     }
 
     public function get_details_json($id)
@@ -75,7 +133,7 @@ class Materialregister extends Admin_Controller
 
         $this->form_validation->set_rules('direction', $this->lang->line('direction'), 'required');
         $this->form_validation->set_rules('date', $this->lang->line('date'), 'required');
-        $this->form_validation->set_rules('material_name', $this->lang->line('material_name'), 'required');
+        $this->form_validation->set_rules('material_name[]', $this->lang->line('material_name'), 'required');
         $this->form_validation->set_rules('image', $this->lang->line('attachment'), 'callback_handle_upload[image]');
 
         if ($this->form_validation->run() == false) {
@@ -90,7 +148,8 @@ class Materialregister extends Admin_Controller
             $this->load->view('layout/footer');
         } else {
             $existing        = $this->materialregister_model->get($id);
-            $update          = $this->build_data();
+            $items           = $this->build_items();
+            $update          = $this->build_data($items);
             $new_image       = $this->do_upload();
             if (!empty($new_image)) {
                 if (!empty($existing['image']) && file_exists($this->upload_path . $existing['image'])) {
@@ -98,7 +157,7 @@ class Materialregister extends Admin_Controller
                 }
                 $update['image'] = $new_image;
             }
-            $this->materialregister_model->update($id, $update);
+            $this->materialregister_model->update($id, $update, $items);
             $this->session->set_flashdata('msg', '<div class="alert alert-success">' . $this->lang->line('update_message') . '</div>');
             redirect('admin/materialregister');
         }
@@ -195,20 +254,75 @@ class Materialregister extends Admin_Controller
         return $out;
     }
 
+    // Extract posted items array
+    private function build_items()
+    {
+        $material_names = $this->input->post('material_name');
+        $quantities     = $this->input->post('quantity');
+        $units          = $this->input->post('unit');
+        $total_costs    = $this->input->post('total_cost');
+
+        $items = array();
+        if (is_array($material_names)) {
+            foreach ($material_names as $k => $name) {
+                $trimmed = trim((string) $name);
+                if ($trimmed !== '') {
+                    $items[] = array(
+                        'material_name' => $trimmed,
+                        'quantity'      => isset($quantities[$k]) ? trim((string) $quantities[$k]) : '',
+                        'unit'          => isset($units[$k]) ? trim((string) $units[$k]) : '',
+                        'total_cost'    => isset($total_costs[$k]) ? trim((string) $total_costs[$k]) : '',
+                    );
+                }
+            }
+        } elseif (!empty($material_names)) {
+            $items[] = array(
+                'material_name' => trim((string) $material_names),
+                'quantity'      => is_array($quantities) ? (isset($quantities[0]) ? trim((string) $quantities[0]) : '') : trim((string) $quantities),
+                'unit'          => is_array($units) ? (isset($units[0]) ? trim((string) $units[0]) : '') : trim((string) $units),
+                'total_cost'    => is_array($total_costs) ? (isset($total_costs[0]) ? trim((string) $total_costs[0]) : '') : trim((string) $total_costs),
+            );
+        }
+        return $items;
+    }
+
     // Map posted fields to a DB row.
-    private function build_data()
+    private function build_data($items = array())
     {
         $direction    = $this->input->post('direction') == 'outward' ? 'outward' : 'inward';
         $gate_pass_no = trim((string) $this->input->post('gate_pass_no'));
         if ($gate_pass_no === '') {
             $gate_pass_no = $this->materialregister_model->generate_gate_pass_no();
         }
+
+        // Summary representation for the main table row
+        $primary_name = '';
+        $primary_qty  = '';
+        $primary_unit = '';
+        $primary_cost = 0;
+        $has_cost     = false;
+
+        if (!empty($items)) {
+            $names_list = array();
+            foreach ($items as $it) {
+                $names_list[] = $it['material_name'];
+                if (isset($it['total_cost']) && $it['total_cost'] !== '') {
+                    $primary_cost += (float) str_replace(',', '', $it['total_cost']);
+                    $has_cost = true;
+                }
+            }
+            $primary_name = implode(', ', $names_list);
+            $primary_qty  = isset($items[0]['quantity']) ? $items[0]['quantity'] : '';
+            $primary_unit = isset($items[0]['unit']) ? $items[0]['unit'] : '';
+        }
+
         return array(
             'direction'     => $direction,
             'date'          => date('Y-m-d', $this->customlib->datetostrtotime($this->input->post('date'))),
-            'material_name' => $this->input->post('material_name'),
-            'quantity'      => $this->input->post('quantity'),
-            'unit'          => $this->input->post('unit'),
+            'material_name' => $primary_name,
+            'quantity'      => $primary_qty,
+            'unit'          => $primary_unit,
+            'total_cost'    => $has_cost ? (string) $primary_cost : '',
             'carried_by'    => $this->input->post('carried_by'),
             'contact'       => $this->input->post('contact'),
             'party_name'    => $this->input->post('party_name'),
