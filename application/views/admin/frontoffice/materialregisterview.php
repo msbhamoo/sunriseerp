@@ -774,6 +774,14 @@ foreach ($material_list as $m) {
     top: 50% !important;
     transform: translateY(-50%) !important;
 }
+
+/* Keep table horizontally scrollable while allowing space for dropdown menus */
+.table-responsive {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    padding-bottom: 70px;
+    margin-bottom: -70px;
+}
 </style>
 
     <template id="material-item-template">

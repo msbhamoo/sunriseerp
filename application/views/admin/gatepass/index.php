@@ -153,11 +153,11 @@ foreach ($gate_passes as $gp) {
                                                         <button class="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border-radius: 6px; padding: 4px 8px; color: #475569; background: #f8fafc; border-color: #e2e8f0;">
                                                             <i class="fa fa-ellipsis-v"></i>
                                                         </button>
-                                                        <ul class="dropdown-menu dropdown-menu-right" style="border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; min-width: 140px; padding: 4px 0; font-size: 13px;">
+                                                        <ul class="dropdown-menu dropdown-menu-right" style="border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; min-width: 150px; padding: 4px 0; font-size: 13px; z-index: 1050;">
                                                             <?php if ($this->rbac->hasPrivilege('front_office_gate_pass', 'can_edit')) { ?>
                                                                 <li>
                                                                     <a href="javascript:void(0);" onclick="updateStatus('<?php echo $gatepass['id']; ?>', '<?php echo $gatepass['status']; ?>', '<?php echo $gatepass['actual_in_time']; ?>')">
-                                                                        <i class="fa fa-pencil text-primary" style="width: 18px;"></i> <?php echo $this->lang->line('update_status'); ?>
+                                                                        <i class="fa fa-pencil text-warning" style="width: 18px;"></i> <?php echo $this->lang->line('edit') ? $this->lang->line('edit') : 'Edit'; ?> / Status
                                                                     </a>
                                                                 </li>
                                                             <?php } ?>
@@ -381,6 +381,13 @@ foreach ($gate_passes as $gp) {
     right: 6px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
+}
+/* Keep table horizontally scrollable while allowing space for dropdown menus */
+.table-responsive {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    padding-bottom: 70px;
+    margin-bottom: -70px;
 }
 </style>
 
