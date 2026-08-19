@@ -137,6 +137,16 @@ class Materialregister extends Admin_Controller
         $this->form_validation->set_rules('image', $this->lang->line('attachment'), 'callback_handle_upload[image]');
 
         if ($this->form_validation->run() == false) {
+            if ($this->input->is_ajax_request()) {
+                $msg = array(
+                    'direction'       => form_error('direction'),
+                    'date'            => form_error('date'),
+                    'material_name[]' => form_error('material_name[]'),
+                    'image'           => form_error('image'),
+                );
+                echo json_encode(array('status' => 'fail', 'error' => $msg, 'message' => ''));
+                return;
+            }
             $data['material_data'] = $this->materialregister_model->get($id);
             if (empty($data['material_data'])) {
                 show_404();
@@ -158,6 +168,16 @@ class Materialregister extends Admin_Controller
                 $update['image'] = $new_image;
             }
             $this->materialregister_model->update($id, $update, $items);
+            
+            if ($this->input->is_ajax_request()) {
+                echo json_encode(array(
+                    'status'  => 'success',
+                    'message' => $this->lang->line('update_message'),
+                    'id'      => $id
+                ));
+                return;
+            }
+
             $this->session->set_flashdata('msg', '<div class="alert alert-success">' . $this->lang->line('update_message') . '</div>');
             redirect('admin/materialregister');
         }
@@ -260,6 +280,7 @@ class Materialregister extends Admin_Controller
         $material_names = $this->input->post('material_name');
         $quantities     = $this->input->post('quantity');
         $units          = $this->input->post('unit');
+        $cost_per_units = $this->input->post('cost_per_unit');
         $total_costs    = $this->input->post('total_cost');
 
         $items = array();
@@ -271,6 +292,7 @@ class Materialregister extends Admin_Controller
                         'material_name' => $trimmed,
                         'quantity'      => isset($quantities[$k]) ? trim((string) $quantities[$k]) : '',
                         'unit'          => isset($units[$k]) ? trim((string) $units[$k]) : '',
+                        'cost_per_unit' => isset($cost_per_units[$k]) ? trim((string) $cost_per_units[$k]) : '',
                         'total_cost'    => isset($total_costs[$k]) ? trim((string) $total_costs[$k]) : '',
                     );
                 }
@@ -278,9 +300,10 @@ class Materialregister extends Admin_Controller
         } elseif (!empty($material_names)) {
             $items[] = array(
                 'material_name' => trim((string) $material_names),
-                'quantity'      => is_array($quantities) ? (isset($quantities[0]) ? trim((string) $quantities[0]) : '') : trim((string) $quantities),
-                'unit'          => is_array($units) ? (isset($units[0]) ? trim((string) $units[0]) : '') : trim((string) $units),
-                'total_cost'    => is_array($total_costs) ? (isset($total_costs[0]) ? trim((string) $total_costs[0]) : '') : trim((string) $total_costs),
+                'quantity'      => (string) $this->input->post('quantity'),
+                'unit'          => (string) $this->input->post('unit'),
+                'cost_per_unit' => (string) $this->input->post('cost_per_unit'),
+                'total_cost'    => (string) $this->input->post('total_cost'),
             );
         }
         return $items;
@@ -322,6 +345,7 @@ class Materialregister extends Admin_Controller
             'material_name' => $primary_name,
             'quantity'      => $primary_qty,
             'unit'          => $primary_unit,
+            'cost_per_unit' => isset($items[0]['cost_per_unit']) ? $items[0]['cost_per_unit'] : null,
             'total_cost'    => $has_cost ? (string) $primary_cost : '',
             'carried_by'    => $this->input->post('carried_by'),
             'contact'       => $this->input->post('contact'),

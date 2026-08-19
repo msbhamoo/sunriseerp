@@ -141,6 +141,7 @@ if (!function_exists('main_menu_array')) {
                 'dispatch'        => array('index','editdispatch'),
                 'receive'         => array('index','editreceive'),
                 'complaint'       => array('index','edit'),
+                'gatepass'        => array('index','create','delete','print_gatepass','update_status'),
                 'materialregister'=> array('index','edit','delete','download'),
                 'visitorspurpose' => array('index','edit'),
             ),
@@ -467,15 +468,22 @@ if (!function_exists("activate_submenu")) {
         // Getting router class to active.
         $class  = $CI->router->fetch_class();
         $method = $CI->router->fetch_method();
-        $classes = explode(',', $arg_class);
-        if (is_array($arg_methods)) {
+
+        $arg_class = trim((string)$arg_class);
+        if ($arg_class === '') {
+            return '';
+        }
+
+        $classes = array_filter(array_map('trim', explode(',', $arg_class)));
+        if (is_array($arg_methods) && !empty($arg_methods)) {
             foreach ($arg_methods as $arg_methods_key => $arg_methods_value) {
-                if ($method == $arg_methods_value && in_array($class, $classes)) {
+                $arg_methods_value = trim($arg_methods_value);
+                if ($arg_methods_value !== '' && $method == $arg_methods_value && in_array($class, $classes)) {
                     return $class_active;
-                    break;
                 }
             }
         }
+        return '';
     }
 
 }

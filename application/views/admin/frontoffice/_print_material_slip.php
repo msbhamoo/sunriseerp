@@ -235,9 +235,10 @@ $dir_label   = ($material['direction'] == 'inward') ? 'INWARD MATERIAL GATE PASS
                     <tr>
                         <th style="width: 40px; text-align: center;">#</th>
                         <th>Material / Item Description</th>
-                        <th style="width: 100px;">Quantity</th>
-                        <th style="width: 90px;">Unit</th>
-                        <th style="width: 110px; text-align: right;">Total Cost</th>
+                        <th style="width: 90px;">Quantity</th>
+                        <th style="width: 80px;">Unit</th>
+                        <th style="width: 95px; text-align: right;">Rate / Unit</th>
+                        <th style="width: 105px; text-align: right;">Total Cost</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -248,6 +249,7 @@ $dir_label   = ($material['direction'] == 'inward') ? 'INWARD MATERIAL GATE PASS
                             'material_name' => $material['material_name'],
                             'quantity'      => $material['quantity'],
                             'unit'          => $material['unit'],
+                            'cost_per_unit' => isset($material['cost_per_unit']) ? $material['cost_per_unit'] : null,
                             'total_cost'    => $material['total_cost'],
                         );
                     }
@@ -256,6 +258,7 @@ $dir_label   = ($material['direction'] == 'inward') ? 'INWARD MATERIAL GATE PASS
                     if (!empty($items_list)) {
                         foreach ($items_list as $i => $it) {
                             $c_val = isset($it['total_cost']) && $it['total_cost'] !== '' ? (float)str_replace(',', '', $it['total_cost']) : null;
+                            $r_val = isset($it['cost_per_unit']) && $it['cost_per_unit'] !== '' ? (float)str_replace(',', '', $it['cost_per_unit']) : null;
                             if ($c_val !== null) {
                                 $grand_cost += $c_val;
                                 $has_cost = true;
@@ -266,20 +269,21 @@ $dir_label   = ($material['direction'] == 'inward') ? 'INWARD MATERIAL GATE PASS
                                 <td><strong><?php echo html_escape($it['material_name']); ?></strong></td>
                                 <td><?php echo html_escape($it['quantity'] ? $it['quantity'] : '-'); ?></td>
                                 <td><?php echo html_escape($it['unit'] ? $it['unit'] : '-'); ?></td>
-                                <td style="text-align: right;"><?php echo ($c_val !== null) ? number_format($c_val, 2) : '-'; ?></td>
+                                <td style="text-align: right;"><?php echo ($r_val !== null) ? number_format($r_val, 2) : '-'; ?></td>
+                                <td style="text-align: right; font-weight: bold;"><?php echo ($c_val !== null) ? number_format($c_val, 2) : '-'; ?></td>
                             </tr>
                             <?php
                         }
                     } else {
-                        echo '<tr><td colspan="5" style="text-align: center;">No items recorded</td></tr>';
+                        echo '<tr><td colspan="6" style="text-align: center;">No items recorded</td></tr>';
                     }
                     ?>
                 </tbody>
                 <?php if ($has_cost) { ?>
                     <tfoot>
                         <tr>
-                            <td colspan="4" style="text-align: right;">Grand Total:</td>
-                            <td style="text-align: right; color: var(--primary-color);"><?php echo number_format($grand_cost, 2); ?></td>
+                            <td colspan="5" style="text-align: right; font-weight: bold;">Grand Total:</td>
+                            <td style="text-align: right; font-weight: bold; color: var(--primary-color);"><?php echo number_format($grand_cost, 2); ?></td>
                         </tr>
                     </tfoot>
                 <?php } ?>

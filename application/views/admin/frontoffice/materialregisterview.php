@@ -209,21 +209,45 @@ foreach ($material_list as $m) {
                                             </td>
                                             <td><code style="background: #f1f5f9; color: #4f46e5; padding: 2px 6px; border-radius: 4px; font-weight: 600;"><?php echo html_escape($value['gate_pass_no']); ?></code></td>
                                             <td class="text-right white-space-nowrap">
-                                                <button type="button" class="btn btn-default btn-xs btn-view-slip" data-id="<?php echo $value['id']; ?>" data-toggle="tooltip" title="<?php echo $this->lang->line('view'); ?>">
-                                                    <i class="fa fa-eye"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-default btn-xs" onclick="printMaterialSlip('<?php echo $value['id']; ?>')" data-toggle="tooltip" title="<?php echo $this->lang->line('print'); ?>">
-                                                    <i class="fa fa-print"></i>
-                                                </button>
-                                                <?php if (!empty($value['image'])) { ?>
-                                                    <a href="<?php echo site_url('admin/materialregister/download/' . $value['id']); ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('attachment'); ?>"><i class="fa fa-paperclip"></i></a>
-                                                <?php } ?>
-                                                <?php if ($this->rbac->hasPrivilege('material_register', 'can_edit')) { ?>
-                                                    <a href="<?php echo site_url('admin/materialregister/edit/' . $value['id']); ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>"><i class="fa fa-pencil text-primary"></i></a>
-                                                <?php } ?>
-                                                <?php if ($this->rbac->hasPrivilege('material_register', 'can_delete')) { ?>
-                                                    <a href="<?php echo site_url('admin/materialregister/delete/' . $value['id']); ?>" class="btn btn-default btn-xs" onclick="return confirm('<?php echo $this->lang->line('delete_confirm'); ?>');" data-toggle="tooltip" title="<?php echo $this->lang->line('delete'); ?>"><i class="fa fa-trash text-danger"></i></a>
-                                                <?php } ?>
+                                                <div class="dropdown" style="display: inline-block;">
+                                                    <button class="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border-radius: 6px; padding: 4px 8px; color: #475569; background: #f8fafc; border-color: #e2e8f0;">
+                                                        <i class="fa fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-right" style="border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; min-width: 140px; padding: 4px 0; font-size: 13px;">
+                                                        <li>
+                                                            <a href="javascript:void(0);" class="btn-view-slip" data-id="<?php echo $value['id']; ?>">
+                                                                <i class="fa fa-eye text-info" style="width: 18px;"></i> <?php echo $this->lang->line('view'); ?>
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a href="javascript:void(0);" onclick="printMaterialSlip('<?php echo $value['id']; ?>')">
+                                                                <i class="fa fa-print text-primary" style="width: 18px;"></i> <?php echo $this->lang->line('print'); ?>
+                                                            </a>
+                                                        </li>
+                                                        <?php if (!empty($value['image'])) { ?>
+                                                            <li>
+                                                                <a href="<?php echo site_url('admin/materialregister/download/' . $value['id']); ?>" target="_blank">
+                                                                    <i class="fa fa-paperclip text-muted" style="width: 18px;"></i> <?php echo $this->lang->line('attachment'); ?>
+                                                                </a>
+                                                            </li>
+                                                        <?php } ?>
+                                                        <?php if ($this->rbac->hasPrivilege('material_register', 'can_edit')) { ?>
+                                                            <li>
+                                                                <a href="javascript:void(0);" class="btn-edit-material" onclick="openEditMaterialDrawer('<?php echo $value['id']; ?>')">
+                                                                    <i class="fa fa-pencil text-warning" style="width: 18px;"></i> <?php echo $this->lang->line('edit'); ?>
+                                                                </a>
+                                                            </li>
+                                                        <?php } ?>
+                                                        <?php if ($this->rbac->hasPrivilege('material_register', 'can_delete')) { ?>
+                                                            <li role="separator" class="divider" style="margin: 4px 0;"></li>
+                                                            <li>
+                                                                <a href="<?php echo site_url('admin/materialregister/delete/' . $value['id']); ?>" onclick="return confirm('<?php echo $this->lang->line('delete_confirm'); ?>');" style="color: #ef4444;">
+                                                                    <i class="fa fa-trash text-danger" style="width: 18px;"></i> <?php echo $this->lang->line('delete'); ?>
+                                                                </a>
+                                                            </li>
+                                                        <?php } ?>
+                                                    </ul>
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php } ?>
@@ -286,26 +310,32 @@ foreach ($material_list as $m) {
                                 <?php echo material_select_array('material_name[]', 'item', $masters['item'], '', $this->lang->line('select')); ?>
                             </div>
                             <div class="row">
-                                <div class="col-xs-4" style="padding-right: 4px;">
+                                <div class="col-xs-3" style="padding-right: 3px;">
                                     <div class="form-group" style="margin-bottom: 0;">
-                                        <label style="font-size: 12px; color: #64748b;"><?php echo $this->lang->line('quantity'); ?></label>
-                                        <?php echo material_select_array('quantity[]', 'quantity', $masters['quantity'], '', $this->lang->line('select')); ?>
+                                        <label style="font-size: 11px; color: #64748b;"><?php echo $this->lang->line('quantity'); ?></label>
+                                        <?php echo material_select_array('quantity[]', 'quantity', $masters['quantity'], '', $this->lang->line('select'), 'calc-qty'); ?>
                                     </div>
                                 </div>
-                                <div class="col-xs-3" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="col-xs-3" style="padding-left: 3px; padding-right: 3px;">
                                     <div class="form-group" style="margin-bottom: 0;">
-                                        <label style="font-size: 12px; color: #64748b;"><?php echo $this->lang->line('unit'); ?></label>
+                                        <label style="font-size: 11px; color: #64748b;"><?php echo $this->lang->line('unit'); ?></label>
                                         <?php echo material_select_array('unit[]', 'unit', $masters['unit'], '', $this->lang->line('select')); ?>
                                     </div>
                                 </div>
-                                <div class="col-xs-4" style="padding-left: 4px; padding-right: 4px;">
+                                <div class="col-xs-3" style="padding-left: 3px; padding-right: 3px;">
                                     <div class="form-group" style="margin-bottom: 0;">
-                                        <label style="font-size: 12px; color: #64748b;">Total Cost</label>
-                                        <input type="number" step="any" min="0" class="form-control" name="total_cost[]" placeholder="0.00" style="height: 34px; font-size: 13px;"/>
+                                        <label style="font-size: 11px; color: #64748b;">Rate / Unit</label>
+                                        <input type="number" step="any" min="0" class="form-control calc-rate" name="cost_per_unit[]" placeholder="0.00" style="height: 34px; font-size: 13px; padding: 4px 6px;"/>
                                     </div>
                                 </div>
-                                <div class="col-xs-1" style="padding-left: 2px; padding-right: 2px; display: flex; align-items: flex-end; justify-content: center; height: 59px;">
-                                    <button type="button" class="btn btn-danger btn-xs btn-remove-item-row" title="Remove Item" style="display: none; border-radius: 4px; padding: 5px 8px;">
+                                <div class="col-xs-2" style="padding-left: 3px; padding-right: 2px;">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label style="font-size: 11px; color: #64748b;">Total Cost</label>
+                                        <input type="number" step="any" min="0" class="form-control calc-total" name="total_cost[]" placeholder="0.00" style="height: 34px; font-size: 13px; padding: 4px 6px; font-weight: 600; color: #0f172a;"/>
+                                    </div>
+                                </div>
+                                <div class="col-xs-1" style="padding-left: 2px; padding-right: 2px; display: flex; align-items: flex-end; justify-content: center; height: 57px;">
+                                    <button type="button" class="btn btn-danger btn-xs btn-remove-item-row" title="Remove Item" style="display: none; border-radius: 4px; padding: 5px 6px;">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </div>
@@ -424,6 +454,178 @@ foreach ($material_list as $m) {
     </div>
 <?php } ?>
 
+<!-- Right Side Slide-in Drawer for Editing Material Entry -->
+<?php if ($this->rbac->hasPrivilege('material_register', 'can_edit')) { ?>
+    <div id="material-edit-drawer-panel" class="modern-drawer-panel">
+        <form id="materialeditform" action="" method="post" enctype="multipart/form-data">
+            <div class="modern-drawer-header">
+                <h4 class="modern-drawer-title"><i class="fa fa-pencil" style="color: var(--primary-theme-color, #4f46e5);"></i> <?php echo $this->lang->line('edit_material_entry'); ?></h4>
+                <button type="button" class="modern-drawer-close" id="btn-close-material-edit-drawer">&times;</button>
+            </div>
+            <?php echo $this->customlib->getCSRF(); ?>
+            <input type="hidden" name="id" id="edit_id" value="">
+            <div class="modern-drawer-body">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label><?php echo $this->lang->line('direction'); ?></label> <small class="req">*</small>
+                            <select class="form-control" name="direction" id="edit_direction">
+                                <option value="inward"><?php echo $this->lang->line('inward'); ?></option>
+                                <option value="outward"><?php echo $this->lang->line('outward'); ?></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label><?php echo $this->lang->line('date'); ?></label> <small class="req">*</small>
+                            <input type="text" class="form-control date" name="date" id="edit_date" readonly/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Repeatable Materials/Items Section -->
+                <div class="material-items-wrapper" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <label style="margin: 0; font-weight: 700; color: #1e293b; font-size: 13px;">
+                            <i class="fa fa-cubes text-primary" style="margin-right: 5px;"></i> Materials / Items <small class="req">*</small>
+                        </label>
+                        <button type="button" class="btn btn-primary btn-xs btn-add-item-row" style="border-radius: 4px; padding: 4px 10px; font-weight: 600;">
+                            <i class="fa fa-plus"></i> Add Item
+                        </button>
+                    </div>
+
+                    <div id="material-edit-items-container">
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label><?php echo $this->lang->line('carried_by'); ?></label>
+                            <input class="form-control" name="carried_by" id="edit_carried_by" placeholder="e.g. John Doe"/>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label><?php echo $this->lang->line('contact'); ?></label>
+                            <input class="form-control" name="contact" id="edit_contact" placeholder="e.g. +91 9876543210"/>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label><?php echo $this->lang->line('party_name'); ?></label>
+                    <select class="form-control material-select2" data-type="party" data-placeholder="<?php echo $this->lang->line('from_to_hint'); ?>" name="party_name" id="edit_party_name">
+                        <option value=""></option>
+                        <?php foreach ($masters['party'] as $o) { ?>
+                            <option value="<?php echo html_escape($o); ?>"><?php echo html_escape($o); ?></option>
+                        <?php } ?>
+                    </select>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label><?php echo $this->lang->line('vehicle_no'); ?></label>
+                            <select class="form-control material-select2" data-type="vehicle" data-placeholder="<?php echo $this->lang->line('select'); ?>" name="vehicle_no" id="edit_vehicle_no">
+                                <option value=""></option>
+                                <?php foreach ($masters['vehicle'] as $o) { ?>
+                                    <option value="<?php echo html_escape($o); ?>"><?php echo html_escape($o); ?></option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label><?php echo $this->lang->line('gate_pass_no'); ?></label>
+                            <input class="form-control" name="gate_pass_no" id="edit_gate_pass_no"/>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label><?php echo $this->lang->line('driver_name'); ?></label>
+                    <select class="form-control material-select2" data-type="driver" data-placeholder="<?php echo $this->lang->line('select'); ?>" name="driver_name" id="edit_driver_name">
+                        <option value=""></option>
+                        <?php foreach ($masters['driver'] as $o) { ?>
+                            <option value="<?php echo html_escape($o); ?>"><?php echo html_escape($o); ?></option>
+                        <?php } ?>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label><?php echo $this->lang->line('received_issued_by'); ?></label>
+                    <select class="form-control staff-select2" name="staff_id" id="edit_staff_id">
+                        <option value=""><?php echo $this->lang->line('select'); ?></option>
+                        <?php foreach ($stafflist as $s) { ?>
+                            <option value="<?php echo $s['id']; ?>"><?php echo html_escape($s['name'] . ' ' . $s['surname'] . ' (' . $s['employee_id'] . ')'); ?></option>
+                        <?php } ?>
+                    </select>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label><?php echo $this->lang->line('department'); ?></label>
+                            <select class="form-control material-select2" data-type="department" data-placeholder="<?php echo $this->lang->line('select'); ?>" name="department" id="edit_department">
+                                <option value=""></option>
+                                <?php foreach ($masters['department'] as $o) { ?>
+                                    <option value="<?php echo html_escape($o); ?>"><?php echo html_escape($o); ?></option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label><?php echo $this->lang->line('approved_by'); ?></label>
+                            <select class="form-control staff-select2" name="approved_by" id="edit_approved_by">
+                                <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                <?php foreach ($stafflist as $s) { ?>
+                                    <option value="<?php echo html_escape($s['name'] . ' ' . $s['surname']); ?>"><?php echo html_escape($s['name'] . ' ' . $s['surname'] . ' (' . $s['employee_id'] . ')'); ?></option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label><?php echo $this->lang->line('in_time'); ?></label>
+                            <input class="form-control" name="in_time" id="edit_in_time" placeholder="HH:MM"/>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label><?php echo $this->lang->line('out_time'); ?></label>
+                            <input class="form-control" name="out_time" id="edit_out_time" placeholder="HH:MM"/>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label style="font-weight: 600; color: #1e293b;"><?php echo $this->lang->line('attachment') ? $this->lang->line('attachment') : 'Attachment (Photo / Challan)'; ?></label>
+                    <div class="custom-file-upload-box" style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 16px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s ease; position: relative;" onclick="$('#edit_material_image_input').trigger('click');">
+                        <input type="file" name="image" id="edit_material_image_input" style="display: none;" accept=".jpg,.jpeg,.png,.gif,.pdf" onchange="var name = this.files[0] ? this.files[0].name : ''; $('#edit-upload-file-name-display').text(name || 'Click or drag files here to replace');"/>
+                        <i class="fa fa-cloud-upload" style="font-size: 28px; color: #6366f1; margin-bottom: 6px;"></i>
+                        <div id="edit-upload-file-name-display" style="font-size: 13px; font-weight: 600; color: #334155;">Click to replace document / photo</div>
+                        <small class="text-muted" style="display: block; margin-top: 4px;" id="edit-current-attachment-hint"><?php echo $this->lang->line('photo_challan_hint') ? $this->lang->line('photo_challan_hint') : 'JPG, PNG, GIF or PDF up to 5 MB'; ?></small>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label><?php echo $this->lang->line('remarks'); ?></label>
+                    <textarea class="form-control" name="remarks" id="edit_remarks" rows="2" placeholder="Enter any extra details or observations..."></textarea>
+                </div>
+            </div>
+            <div class="modern-drawer-footer" style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" class="btn btn-default" id="btn-cancel-material-edit-drawer"><?php echo $this->lang->line('cancel'); ?></button>
+                <button type="submit" class="btn btn-primary" id="btn-update-material" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-check"></i> <?php echo $this->lang->line('save'); ?></button>
+            </div>
+        </form>
+    </div>
+<?php } ?>
+
 <!-- View / Print Material Gate Pass Slip Modal -->
 <div class="modal fade" id="viewSlipModal" tabindex="-1" role="dialog" aria-labelledby="viewSlipModalLabel">
     <div class="modal-dialog modal-lg" role="document">
@@ -483,11 +685,12 @@ foreach ($material_list as $m) {
                         <table class="table table-bordered table-striped" style="margin-bottom: 0;">
                             <thead>
                                 <tr style="background: #f8fafc;">
-                                    <th style="width: 50px; text-align: center;">#</th>
+                                    <th style="width: 40px; text-align: center;">#</th>
                                     <th>Item / Material Name</th>
-                                    <th style="width: 110px;">Quantity</th>
-                                    <th style="width: 100px;">Unit</th>
-                                    <th style="width: 120px; text-align: right;">Total Cost</th>
+                                    <th style="width: 90px;">Quantity</th>
+                                    <th style="width: 90px;">Unit</th>
+                                    <th style="width: 100px; text-align: right;">Rate / Unit</th>
+                                    <th style="width: 110px; text-align: right;">Total Cost</th>
                                 </tr>
                             </thead>
                             <tbody id="slip-items-tbody">
@@ -540,6 +743,37 @@ foreach ($material_list as $m) {
 .bootstrap-timepicker-widget {
     z-index: 100000 !important;
 }
+
+/* Fix Select2 Clear 'x' icon positioning & UI */
+.select2-container--default .select2-selection--single .select2-selection__clear {
+    position: absolute !important;
+    right: 26px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    z-index: 5 !important;
+    line-height: 1 !important;
+    transition: color 0.15s ease !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__clear:hover {
+    color: #ef4444 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    padding-right: 44px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    right: 6px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+}
 </style>
 
     <template id="material-item-template">
@@ -549,26 +783,32 @@ foreach ($material_list as $m) {
                 <?php echo material_select_array('material_name[]', 'item', $masters['item'], '', $this->lang->line('select')); ?>
             </div>
             <div class="row">
-                <div class="col-xs-4" style="padding-right: 4px;">
+                <div class="col-xs-3" style="padding-right: 3px;">
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label style="font-size: 12px; color: #64748b;"><?php echo $this->lang->line('quantity'); ?></label>
-                        <?php echo material_select_array('quantity[]', 'quantity', $masters['quantity'], '', $this->lang->line('select')); ?>
+                        <label style="font-size: 11px; color: #64748b;"><?php echo $this->lang->line('quantity'); ?></label>
+                        <?php echo material_select_array('quantity[]', 'quantity', $masters['quantity'], '', $this->lang->line('select'), 'calc-qty'); ?>
                     </div>
                 </div>
-                <div class="col-xs-3" style="padding-left: 4px; padding-right: 4px;">
+                <div class="col-xs-3" style="padding-left: 3px; padding-right: 3px;">
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label style="font-size: 12px; color: #64748b;"><?php echo $this->lang->line('unit'); ?></label>
+                        <label style="font-size: 11px; color: #64748b;"><?php echo $this->lang->line('unit'); ?></label>
                         <?php echo material_select_array('unit[]', 'unit', $masters['unit'], '', $this->lang->line('select')); ?>
                     </div>
                 </div>
-                <div class="col-xs-4" style="padding-left: 4px; padding-right: 4px;">
+                <div class="col-xs-3" style="padding-left: 3px; padding-right: 3px;">
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label style="font-size: 12px; color: #64748b;">Total Cost</label>
-                        <input type="number" step="any" min="0" class="form-control" name="total_cost[]" placeholder="0.00" style="height: 34px; font-size: 13px;"/>
+                        <label style="font-size: 11px; color: #64748b;">Rate / Unit</label>
+                        <input type="number" step="any" min="0" class="form-control calc-rate" name="cost_per_unit[]" placeholder="0.00" style="height: 34px; font-size: 13px; padding: 4px 6px;"/>
                     </div>
                 </div>
-                <div class="col-xs-1" style="padding-left: 2px; padding-right: 2px; display: flex; align-items: flex-end; justify-content: center; height: 59px;">
-                    <button type="button" class="btn btn-danger btn-xs btn-remove-item-row" title="Remove Item" style="border-radius: 4px; padding: 5px 8px;">
+                <div class="col-xs-2" style="padding-left: 3px; padding-right: 2px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 11px; color: #64748b;">Total Cost</label>
+                        <input type="number" step="any" min="0" class="form-control calc-total" name="total_cost[]" placeholder="0.00" style="height: 34px; font-size: 13px; padding: 4px 6px; font-weight: 600; color: #0f172a;"/>
+                    </div>
+                </div>
+                <div class="col-xs-1" style="padding-left: 2px; padding-right: 2px; display: flex; align-items: flex-end; justify-content: center; height: 57px;">
+                    <button type="button" class="btn btn-danger btn-xs btn-remove-item-row" title="Remove Item" style="border-radius: 4px; padding: 5px 6px;">
                         <i class="fa fa-trash"></i>
                     </button>
                 </div>
@@ -608,6 +848,21 @@ foreach ($material_list as $m) {
         $(document).on('click', '.btn-remove-item-row', function () {
             $(this).closest('.material-item-row').remove();
             updateRemoveButtonsVisibility();
+        });
+
+        // Auto-calculate Total Cost = Quantity * Rate / Unit
+        $(document).on('input change keyup', '.calc-rate, select[name="quantity[]"]', function () {
+            var $row = $(this).closest('.material-item-row');
+            var qtyRaw = $row.find('select[name="quantity[]"]').val() || '';
+            var rateRaw = $row.find('.calc-rate').val() || '';
+
+            var qtyNum = parseFloat(qtyRaw.replace(/[^0-9.]/g, ''));
+            var rateNum = parseFloat(rateRaw);
+
+            if (!isNaN(qtyNum) && !isNaN(rateNum) && qtyNum > 0 && rateNum >= 0) {
+                var total = (qtyNum * rateNum).toFixed(2);
+                $row.find('.calc-total').val(total);
+            }
         });
 
         // Track submit button clicked
@@ -668,7 +923,7 @@ foreach ($material_list as $m) {
         }
 
         // View slip details
-        $('.btn-view-slip').on('click', function () {
+        $(document).on('click', '.btn-view-slip', function () {
             var id = $(this).data('id');
             $.getJSON(MATERIAL_DETAILS_URL + id, function (res) {
                 if (res.status === 'success') {
@@ -701,6 +956,7 @@ foreach ($material_list as $m) {
                     if (d.items && d.items.length > 0) {
                         $.each(d.items, function (idx, itm) {
                             var costVal = itm.total_cost ? parseFloat(itm.total_cost) : null;
+                            var rateVal = itm.cost_per_unit ? parseFloat(itm.cost_per_unit) : null;
                             if (costVal !== null && !isNaN(costVal)) {
                                 grandTotalCost += costVal;
                                 hasAnyCost = true;
@@ -710,11 +966,13 @@ foreach ($material_list as $m) {
                                 '<td><strong style="color: #0f172a;">' + $('<div>').text(itm.material_name).html() + '</strong></td>' +
                                 '<td>' + $('<div>').text(itm.quantity || '-').html() + '</td>' +
                                 '<td>' + $('<div>').text(itm.unit || '-').html() + '</td>' +
-                                '<td style="text-align: right;">' + (costVal !== null && !isNaN(costVal) ? costVal.toFixed(2) : (itm.total_cost || '-')) + '</td>' +
+                                '<td style="text-align: right;">' + (rateVal !== null && !isNaN(rateVal) ? rateVal.toFixed(2) : '-') + '</td>' +
+                                '<td style="text-align: right; font-weight: 600;">' + (costVal !== null && !isNaN(costVal) ? costVal.toFixed(2) : (itm.total_cost || '-')) + '</td>' +
                             '</tr>');
                         });
                     } else if (d.material_name) {
                         var costVal = d.total_cost ? parseFloat(d.total_cost) : null;
+                        var rateVal = d.cost_per_unit ? parseFloat(d.cost_per_unit) : null;
                         if (costVal !== null && !isNaN(costVal)) {
                             grandTotalCost += costVal;
                             hasAnyCost = true;
@@ -724,15 +982,16 @@ foreach ($material_list as $m) {
                             '<td><strong style="color: #0f172a;">' + $('<div>').text(d.material_name).html() + '</strong></td>' +
                             '<td>' + $('<div>').text(d.quantity || '-').html() + '</td>' +
                             '<td>' + $('<div>').text(d.unit || '-').html() + '</td>' +
-                            '<td style="text-align: right;">' + (costVal !== null && !isNaN(costVal) ? costVal.toFixed(2) : (d.total_cost || '-')) + '</td>' +
+                            '<td style="text-align: right;">' + (rateVal !== null && !isNaN(rateVal) ? rateVal.toFixed(2) : '-') + '</td>' +
+                            '<td style="text-align: right; font-weight: 600;">' + (costVal !== null && !isNaN(costVal) ? costVal.toFixed(2) : (d.total_cost || '-')) + '</td>' +
                         '</tr>');
                     } else {
-                        $itemsTbody.append('<tr><td colspan="5" class="text-center text-muted">No items recorded</td></tr>');
+                        $itemsTbody.append('<tr><td colspan="6" class="text-center text-muted">No items recorded</td></tr>');
                     }
 
                     if (hasAnyCost) {
                         $itemsTfoot.append('<tr>' +
-                            '<td colspan="4" class="text-right">Grand Total:</td>' +
+                            '<td colspan="5" class="text-right">Grand Total:</td>' +
                             '<td style="text-align: right; color: #4338ca;">' + grandTotalCost.toFixed(2) + '</td>' +
                         '</tr>');
                     }
@@ -865,6 +1124,188 @@ foreach ($material_list as $m) {
         $('#material-drawer-overlay').removeClass('is-active');
         $('body').removeClass('drawer-open').css('overflow', '');
     }
+
+    function closeMaterialEditDrawer() {
+        $('#material-edit-drawer-panel').removeClass('is-open');
+        $('#material-drawer-overlay').removeClass('is-active');
+        $('body').removeClass('drawer-open').css('overflow', '');
+    }
+
+    $('#btn-close-material-edit-drawer, #btn-cancel-material-edit-drawer').on('click', function () {
+        closeMaterialEditDrawer();
+    });
+
+    function openEditMaterialDrawer(id) {
+        $.getJSON(MATERIAL_DETAILS_URL + id, function (res) {
+            if (res.status === 'success') {
+                var d = res.data;
+                $('#edit_id').val(d.id);
+                $('#materialeditform').attr('action', '<?php echo site_url('admin/materialregister/edit/'); ?>' + d.id);
+                $('#edit_direction').val(d.direction);
+                $('#edit_date').val(d.formatted_date || d.date);
+                $('#edit_carried_by').val(d.carried_by || '');
+                $('#edit_contact').val(d.contact || '');
+                $('#edit_gate_pass_no').val(d.gate_pass_no || '');
+                $('#edit_in_time').val(d.in_time || '');
+                $('#edit_out_time').val(d.out_time || '');
+                $('#edit_remarks').val(d.remarks || '');
+
+                if (d.party_name) {
+                    if (!$('#edit_party_name').find("option[value='" + d.party_name + "']").length) {
+                        $('#edit_party_name').append(new Option(d.party_name, d.party_name, true, true));
+                    }
+                    $('#edit_party_name').val(d.party_name).trigger('change');
+                } else {
+                    $('#edit_party_name').val(null).trigger('change');
+                }
+
+                if (d.vehicle_no) {
+                    if (!$('#edit_vehicle_no').find("option[value='" + d.vehicle_no + "']").length) {
+                        $('#edit_vehicle_no').append(new Option(d.vehicle_no, d.vehicle_no, true, true));
+                    }
+                    $('#edit_vehicle_no').val(d.vehicle_no).trigger('change');
+                } else {
+                    $('#edit_vehicle_no').val(null).trigger('change');
+                }
+
+                if (d.driver_name) {
+                    if (!$('#edit_driver_name').find("option[value='" + d.driver_name + "']").length) {
+                        $('#edit_driver_name').append(new Option(d.driver_name, d.driver_name, true, true));
+                    }
+                    $('#edit_driver_name').val(d.driver_name).trigger('change');
+                } else {
+                    $('#edit_driver_name').val(null).trigger('change');
+                }
+
+                $('#edit_staff_id').val(d.staff_id || '').trigger('change');
+
+                if (d.department) {
+                    if (!$('#edit_department').find("option[value='" + d.department + "']").length) {
+                        $('#edit_department').append(new Option(d.department, d.department, true, true));
+                    }
+                    $('#edit_department').val(d.department).trigger('change');
+                } else {
+                    $('#edit_department').val(null).trigger('change');
+                }
+
+                $('#edit_approved_by').val(d.approved_by || '').trigger('change');
+
+                if (d.image) {
+                    $('#edit-current-attachment-hint').html('Current file: <strong>' + d.image + '</strong>');
+                } else {
+                    $('#edit-current-attachment-hint').text('JPG, PNG, GIF or PDF up to 5 MB');
+                }
+
+                // Render editable item rows
+                var $container = $('#material-edit-items-container');
+                $container.empty();
+
+                var items = d.items && d.items.length ? d.items : [];
+                if (!items.length && d.material_name) {
+                    items.push({
+                        material_name: d.material_name,
+                        quantity: d.quantity,
+                        unit: d.unit,
+                        total_cost: d.total_cost
+                    });
+                }
+                if (!items.length) {
+                    items.push({ material_name: '', quantity: '', unit: '', total_cost: '' });
+                }
+
+                var template = document.getElementById('material-item-template');
+                $.each(items, function (idx, item) {
+                    if (template) {
+                        var clone = $(template.content.cloneNode(true));
+                        $container.append(clone);
+                        var $lastRow = $container.find('.material-item-row:last');
+                        initMaterialSelect2($lastRow);
+
+                        if (item.material_name) {
+                            var $matSelect = $lastRow.find('select[name="material_name[]"]');
+                            if (!$matSelect.find('option[value="' + item.material_name + '"]').length) {
+                                $matSelect.append(new Option(item.material_name, item.material_name, true, true));
+                            }
+                            $matSelect.val(item.material_name).trigger('change');
+                        }
+
+                        if (item.quantity) {
+                            var $qtySelect = $lastRow.find('select[name="quantity[]"]');
+                            if (!$qtySelect.find('option[value="' + item.quantity + '"]').length) {
+                                $qtySelect.append(new Option(item.quantity, item.quantity, true, true));
+                            }
+                            $qtySelect.val(item.quantity).trigger('change');
+                        }
+
+                        if (item.unit) {
+                            var $unitSelect = $lastRow.find('select[name="unit[]"]');
+                            if (!$unitSelect.find('option[value="' + item.unit + '"]').length) {
+                                $unitSelect.append(new Option(item.unit, item.unit, true, true));
+                            }
+                            $unitSelect.val(item.unit).trigger('change');
+                        }
+
+                        if (item.cost_per_unit) {
+                            $lastRow.find('input[name="cost_per_unit[]"]').val(item.cost_per_unit);
+                        }
+
+                        if (item.total_cost) {
+                            $lastRow.find('input[name="total_cost[]"]').val(item.total_cost);
+                        }
+                    }
+                });
+
+                updateRemoveButtonsVisibility();
+                initMaterialSelect2($('#materialeditform'));
+
+                $('#material-drawer-overlay').addClass('is-active');
+                $('#material-edit-drawer-panel').addClass('is-open');
+                $('body').addClass('drawer-open').css('overflow', 'hidden');
+            }
+        });
+    }
+
+    // Submit handler for Edit Drawer
+    $('#materialeditform').on('submit', function (e) {
+        e.preventDefault();
+        var $btn = $('#btn-update-material');
+        $('#materialeditform').find('.text-danger').remove();
+
+        $.ajax({
+            url: $(this).attr('action'),
+            type: "POST",
+            data: new FormData(this),
+            dataType: 'json',
+            contentType: false,
+            cache: false,
+            processData: false,
+            beforeSend: function () {
+                $btn.button('loading');
+            },
+            success: function (res) {
+                if (res.status == "fail") {
+                    $.each(res.error, function (index, value) {
+                        if (value != '') {
+                            var $elem = $('#materialeditform [name="' + index + '"]');
+                            if ($elem.length) {
+                                $elem.closest('.form-group').append('<span class="text-danger">' + value + '</span>');
+                            }
+                        }
+                    });
+                } else {
+                    successMsg(res.message || 'Updated successfully');
+                    closeMaterialEditDrawer();
+                    window.location.reload(true);
+                }
+            },
+            error: function () {
+                $('#materialeditform')[0].submit();
+            },
+            complete: function () {
+                $btn.button('reset');
+            }
+        });
+    });
 
     function initMaterialSelect2(context) {
         var $ctx = context ? $(context) : $(document);

@@ -149,23 +149,37 @@ foreach ($gate_passes as $gp) {
                                                     ?>
                                                 </td>
                                                 <td class="mailbox-date text-right white-space-nowrap">
-                                                    <?php if ($this->rbac->hasPrivilege('front_office_gate_pass', 'can_edit')) { ?>
-                                                        <a onclick="updateStatus('<?php echo $gatepass['id']; ?>', '<?php echo $gatepass['status']; ?>', '<?php echo $gatepass['actual_in_time']; ?>')" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('update_status'); ?>">
-                                                            <i class="fa fa-pencil text-primary"></i>
-                                                        </a>
-                                                    <?php } ?>
-                                                    
-                                                    <?php if ($gatepass['status'] == 'Approved' || $gatepass['status'] == 'Completed') { ?>
-                                                        <a onclick="printGatePass('<?php echo $gatepass['id']; ?>')" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('print'); ?>">
-                                                            <i class="fa fa-print"></i>
-                                                        </a>
-                                                    <?php } ?>
+                                                    <div class="dropdown" style="display: inline-block;">
+                                                        <button class="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border-radius: 6px; padding: 4px 8px; color: #475569; background: #f8fafc; border-color: #e2e8f0;">
+                                                            <i class="fa fa-ellipsis-v"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu dropdown-menu-right" style="border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; min-width: 140px; padding: 4px 0; font-size: 13px;">
+                                                            <?php if ($this->rbac->hasPrivilege('front_office_gate_pass', 'can_edit')) { ?>
+                                                                <li>
+                                                                    <a href="javascript:void(0);" onclick="updateStatus('<?php echo $gatepass['id']; ?>', '<?php echo $gatepass['status']; ?>', '<?php echo $gatepass['actual_in_time']; ?>')">
+                                                                        <i class="fa fa-pencil text-primary" style="width: 18px;"></i> <?php echo $this->lang->line('update_status'); ?>
+                                                                    </a>
+                                                                </li>
+                                                            <?php } ?>
+                                                            
+                                                            <?php if ($gatepass['status'] == 'Approved' || $gatepass['status'] == 'Completed') { ?>
+                                                                <li>
+                                                                    <a href="javascript:void(0);" onclick="printGatePass('<?php echo $gatepass['id']; ?>')">
+                                                                        <i class="fa fa-print text-info" style="width: 18px;"></i> <?php echo $this->lang->line('print'); ?>
+                                                                    </a>
+                                                                </li>
+                                                            <?php } ?>
 
-                                                    <?php if ($this->rbac->hasPrivilege('front_office_gate_pass', 'can_delete')) { ?>
-                                                        <a href="<?php echo base_url(); ?>admin/gatepass/delete/<?php echo $gatepass['id'] ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('delete'); ?>" onclick="return confirm('<?php echo $this->lang->line('delete_confirm') ?>');">
-                                                            <i class="fa fa-trash text-danger"></i>
-                                                        </a>
-                                                    <?php } ?>
+                                                            <?php if ($this->rbac->hasPrivilege('front_office_gate_pass', 'can_delete')) { ?>
+                                                                <li role="separator" class="divider" style="margin: 4px 0;"></li>
+                                                                <li>
+                                                                    <a href="<?php echo base_url(); ?>admin/gatepass/delete/<?php echo $gatepass['id'] ?>" onclick="return confirm('<?php echo $this->lang->line('delete_confirm') ?>');" style="color: #ef4444;">
+                                                                        <i class="fa fa-trash text-danger" style="width: 18px;"></i> <?php echo $this->lang->line('delete'); ?>
+                                                                    </a>
+                                                                </li>
+                                                            <?php } ?>
+                                                        </ul>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             <?php
@@ -336,6 +350,37 @@ foreach ($gate_passes as $gp) {
 .bootstrap-timepicker-widget.dropdown-menu,
 .bootstrap-timepicker-widget {
     z-index: 100000 !important;
+}
+
+/* Fix Select2 Clear 'x' icon positioning & UI */
+.select2-container--default .select2-selection--single .select2-selection__clear {
+    position: absolute !important;
+    right: 26px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    z-index: 5 !important;
+    line-height: 1 !important;
+    transition: color 0.15s ease !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__clear:hover {
+    color: #ef4444 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    padding-right: 44px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    right: 6px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
 }
 </style>
 

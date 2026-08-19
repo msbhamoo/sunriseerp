@@ -27,6 +27,7 @@ class Materialregister_model extends MY_Model
                         'material_name'        => $item['material_name'],
                         'quantity'             => isset($item['quantity']) ? $item['quantity'] : '',
                         'unit'                 => isset($item['unit']) ? $item['unit'] : '',
+                        'cost_per_unit'        => isset($item['cost_per_unit']) ? $item['cost_per_unit'] : '',
                         'total_cost'           => isset($item['total_cost']) ? $item['total_cost'] : '',
                     ));
                 }
@@ -162,6 +163,7 @@ class Materialregister_model extends MY_Model
                         'material_name'        => $item['material_name'],
                         'quantity'             => isset($item['quantity']) ? $item['quantity'] : '',
                         'unit'                 => isset($item['unit']) ? $item['unit'] : '',
+                        'cost_per_unit'        => isset($item['cost_per_unit']) ? $item['cost_per_unit'] : '',
                         'total_cost'           => isset($item['total_cost']) ? $item['total_cost'] : '',
                     ));
                 }
