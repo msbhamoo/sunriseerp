@@ -157,20 +157,29 @@
                                                         <?php echo count($chapters); ?> Chapters / Units
                                                     </span>
                                                 </div>
-                                                <div style="max-height: 100px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 3px;">
-                                                    <?php foreach ($chapters as $ch) { ?>
-                                                        <span class="chapter-pill-tag"><?php echo htmlspecialchars($ch); ?></span>
+                                                <div style="display: flex; flex-wrap: wrap; gap: 3px;">
+                                                    <?php 
+                                                    $ch_limit = 6;
+                                                    $rendered_count = 0;
+                                                    foreach ($chapters as $ch) { 
+                                                        if ($rendered_count < $ch_limit) { ?>
+                                                            <span class="chapter-pill-tag"><?php echo htmlspecialchars($ch); ?></span>
+                                                        <?php }
+                                                        $rendered_count++;
+                                                    } 
+                                                    if (count($chapters) > $ch_limit) { ?>
+                                                        <span class="chapter-pill-tag" style="background: #e0e7ff; color: #4338ca; font-weight: 600;">+<?php echo count($chapters) - $ch_limit; ?> more</span>
                                                     <?php } ?>
                                                 </div>
                                             </td>
-                                            <td style="font-size: 12px; color: #64748b;">
+                                            <td style="font-size: 12px; color: #64748b; white-space: nowrap;">
                                                 <?php echo !empty($row['updated_at']) ? date('d M Y, h:i A', strtotime($row['updated_at'])) : '-'; ?>
                                             </td>
-                                            <td class="text-right">
-                                                <button type="button" class="btn btn-default btn-xs" onclick='openEditSyllabusModal(<?php echo json_encode($row); ?>)' title="Edit Chapter List" style="border-color: #cbd5e1; color: #4338ca;">
+                                            <td class="text-right white-space-nowrap">
+                                                <button type="button" class="btn btn-default btn-xs" onclick='openEditSyllabusModal(<?php echo htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8'); ?>)' title="Edit Chapter List" style="border-color: #cbd5e1; color: #4338ca;">
                                                     <i class="fa fa-pencil"></i> Edit
                                                 </button>
-                                                <button type="button" class="btn btn-default btn-xs" onclick="reSyncSingleSyllabus('<?php echo htmlspecialchars($row['class_name']); ?>', '<?php echo htmlspecialchars($row['subject_name']); ?>')" title="Re-fetch via AI" style="border-color: #cbd5e1; color: #059669;">
+                                                <button type="button" class="btn btn-default btn-xs" onclick="reSyncSingleSyllabus('<?php echo htmlspecialchars($row['class_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($row['subject_name'], ENT_QUOTES); ?>')" title="Re-fetch via AI" style="border-color: #cbd5e1; color: #059669;">
                                                     <i class="fa fa-refresh"></i> AI Sync
                                                 </button>
                                                 <button type="button" class="btn btn-default btn-xs text-danger" onclick="deleteSyllabus(<?php echo $row['id']; ?>)" title="Remove Entry" style="border-color: #cbd5e1;">
