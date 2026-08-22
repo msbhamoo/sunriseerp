@@ -611,27 +611,47 @@ foreach ($recent_papers as $rp) {
 
             <!-- 3. Blueprint Total Marks Selection -->
             <div class="form-group">
-                <label>Exam Blueprint / Total Marks</label>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="margin: 0; font-weight: 700; color: #1e293b;">Exam Blueprint / Total Marks</label>
+                    <span id="customMarksToggle" onclick="$('#customMarksRow').slideToggle(150)" style="font-size: 11px; font-weight: 600; color: #6366f1; cursor: pointer;">
+                        <i class="fa fa-sliders"></i> Custom Marks
+                    </span>
+                </div>
                 <div class="row" style="margin: 0 -5px;">
-                    <div class="col-xs-4" style="padding: 0 5px;">
+                    <div class="col-xs-3" style="padding: 0 4px;">
                         <div class="blueprint-pill active text-center" data-marks="80" onclick="selectBlueprint(this, 80)">
-                            <h5>80 M</h5>
-                            <p>Board / Term</p>
+                            <h5 style="margin: 2px 0; font-size: 14px; font-weight: 700;">80 M</h5>
+                            <p style="margin: 0; font-size: 10px; color: #64748b;">Board/Term</p>
                         </div>
                     </div>
-                    <div class="col-xs-4" style="padding: 0 5px;">
+                    <div class="col-xs-3" style="padding: 0 4px;">
+                        <div class="blueprint-pill text-center" data-marks="70" onclick="selectBlueprint(this, 70)">
+                            <h5 style="margin: 2px 0; font-size: 14px; font-weight: 700;">70 M</h5>
+                            <p style="margin: 0; font-size: 10px; color: #64748b;">Sci/Practical</p>
+                        </div>
+                    </div>
+                    <div class="col-xs-3" style="padding: 0 4px;">
                         <div class="blueprint-pill text-center" data-marks="40" onclick="selectBlueprint(this, 40)">
-                            <h5>40 M</h5>
-                            <p>Periodic Test</p>
+                            <h5 style="margin: 2px 0; font-size: 14px; font-weight: 700;">40 M</h5>
+                            <p style="margin: 0; font-size: 10px; color: #64748b;">Periodic Test</p>
                         </div>
                     </div>
-                    <div class="col-xs-4" style="padding: 0 5px;">
+                    <div class="col-xs-3" style="padding: 0 4px;">
                         <div class="blueprint-pill text-center" data-marks="20" onclick="selectBlueprint(this, 20)">
-                            <h5>20 M</h5>
-                            <p>Unit / Quiz</p>
+                            <h5 style="margin: 2px 0; font-size: 14px; font-weight: 700;">20 M</h5>
+                            <p style="margin: 0; font-size: 10px; color: #64748b;">Unit / Quiz</p>
                         </div>
                     </div>
                 </div>
+
+                <!-- Optional Custom Marks Direct Input -->
+                <div id="customMarksRow" style="display: none; margin-top: 8px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 8px 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label style="font-size: 11px; margin: 0; color: #475569; white-space: nowrap;">Specify Exact Total Marks:</label>
+                        <input type="number" id="custom_total_marks" class="form-control input-sm" placeholder="e.g. 25, 35, 50, 100" min="5" max="200" oninput="setCustomMarks(this.value)" style="width: 120px; font-weight: 700; height: 30px;">
+                    </div>
+                </div>
+
                 <input type="hidden" id="gen_total_marks" value="80">
             </div>
 
@@ -1114,12 +1134,18 @@ function fetchChaptersForCurrentSelection(forceReload) {
                 $('#ncertChapterBrowserBox').slideDown();
             } else {
                 $('#ncertChapterBrowserBox').hide();
+                if (forceReload) {
+                    alert('Could not fetch chapters: ' + (res.message || 'Please check your AI API key or network connection.'));
+                }
             }
         },
-        error: function() {
+        error: function(xhr, status, err) {
             $('#ncertLoadingBox').hide();
             $('#btnFetchAiChapters').prop('disabled', false).html('<i class="fa fa-refresh"></i> Re-Fetch via AI');
             $('#ncertChapterBrowserBox').hide();
+            if (forceReload) {
+                alert('Network error while fetching chapters. Please click Re-Fetch via AI again.');
+            }
         }
     });
 }
@@ -1141,6 +1167,14 @@ function selectBlueprint(element, marks) {
     $('.blueprint-pill').removeClass('active');
     $(element).addClass('active');
     $('#gen_total_marks').val(marks);
+    $('#custom_total_marks').val('');
+}
+
+function setCustomMarks(marks) {
+    if (marks && parseInt(marks) > 0) {
+        $('.blueprint-pill').removeClass('active');
+        $('#gen_total_marks').val(parseInt(marks));
+    }
 }
 
 function startGeneration() {
