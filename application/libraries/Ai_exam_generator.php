@@ -861,14 +861,28 @@ EOT;
         }
 
         $parsed = $this->extract_json($response['raw_text']);
-        if (!$parsed || empty($parsed['chapters']) || !is_array($parsed['chapters'])) {
-            return ['status' => 'error', 'message' => 'Invalid chapter structure returned by AI.'];
+        $chapters_list = [];
+
+        if (is_array($parsed)) {
+            if (isset($parsed['chapters']) && is_array($parsed['chapters'])) {
+                $chapters_list = $parsed['chapters'];
+            } elseif (isset($parsed['units']) && is_array($parsed['units'])) {
+                $chapters_list = $parsed['units'];
+            } elseif (isset($parsed['syllabus']) && is_array($parsed['syllabus'])) {
+                $chapters_list = $parsed['syllabus'];
+            } elseif (isset($parsed[0]) && is_string($parsed[0])) {
+                $chapters_list = $parsed;
+            }
+        }
+
+        if (empty($chapters_list)) {
+            return ['status' => 'error', 'message' => 'Invalid chapter structure returned by AI: ' . substr($response['raw_text'], 0, 150)];
         }
 
         return [
             'status'     => 'success',
             'model_used' => $model_used,
-            'chapters'   => $parsed['chapters']
+            'chapters'   => $chapters_list
         ];
     }
 }
