@@ -46,25 +46,37 @@ class Ai_exam_generator
         // Build CBSE Exam Prompt
         $prompt = $this->build_cbse_prompt($class_name, $subject_name, $chapter, $total_marks, $difficulty, $language, $academic_session, $blooms_taxonomy, $question_distribution, $generate_multi_sets);
 
+        // Provider execution with automatic robust fallback
         $response = null;
         if (($api_engine === 'openrouter' || $api_engine === 'openrouter_ox') && !empty($active_openrouter_key)) {
             $response = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
+            if (isset($response['error']) && !empty($active_gemini_key)) {
+                $fallback = $this->call_gemini($prompt, $active_gemini_key);
+                if (!isset($fallback['error'])) $response = $fallback;
+            }
         } elseif ($api_engine === 'groq' && !empty($active_groq_key)) {
             $response = $this->call_groq($prompt, $active_groq_key);
+            if (isset($response['error']) && !empty($active_gemini_key)) {
+                $fallback = $this->call_gemini($prompt, $active_gemini_key);
+                if (!isset($fallback['error'])) $response = $fallback;
+            }
+        } elseif ($api_engine === 'gemini' && !empty($active_gemini_key)) {
+            $response = $this->call_gemini($prompt, $active_gemini_key);
+            if (isset($response['error']) && !empty($active_openrouter_key)) {
+                $fallback = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
+                if (!isset($fallback['error'])) $response = $fallback;
+            }
         } elseif ($api_engine === 'openai' && !empty($active_openai_key)) {
             $response = $this->call_openai($prompt, $active_openai_key);
         } else {
             if (!empty($active_openrouter_key)) {
                 $response = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
-            } elseif (!empty($active_gemini_key)) {
+            }
+            if ((!$response || isset($response['error'])) && !empty($active_gemini_key)) {
                 $response = $this->call_gemini($prompt, $active_gemini_key);
-            } elseif (!empty($active_groq_key)) {
+            }
+            if ((!$response || isset($response['error'])) && !empty($active_groq_key)) {
                 $response = $this->call_groq($prompt, $active_groq_key);
-            } else {
-                return [
-                    'status'  => 'error',
-                    'message' => 'No AI API Key provided. Please provide an OpenRouter, Google Gemini, or Groq API Key in AI Settings.'
-                ];
             }
         }
 
@@ -152,10 +164,32 @@ EOT;
     }
 
     /**
+     * Check if the selected class is Kindergarten / Pre-Primary
+     */
+    private function is_preprimary_class($class_name)
+    {
+        $cl = strtolower(trim($class_name));
+        return (
+            strpos($cl, 'nursery') !== false ||
+            strpos($cl, 'lkg') !== false ||
+            strpos($cl, 'ukg') !== false ||
+            strpos($cl, 'kg') !== false ||
+            strpos($cl, 'prep') !== false ||
+            strpos($cl, 'kindergarten') !== false ||
+            strpos($cl, 'play') !== false ||
+            strpos($cl, 'pre-primary') !== false
+        );
+    }
+
+    /**
      * Build Prompt with Bloom's Taxonomy, Multi-Sets, and SVG Diagrams
      */
     private function build_cbse_prompt($class_name, $subject_name, $chapter, $total_marks, $difficulty, $language, $academic_session, $blooms_taxonomy, $question_distribution, $generate_multi_sets)
     {
+        if ($this->is_preprimary_class($class_name)) {
+            return $this->build_preprimary_worksheet_prompt($class_name, $subject_name, $chapter, $total_marks, $difficulty, $language, $academic_session, $generate_multi_sets);
+        }
+
         $distribution_instructions = "";
         if (!empty($question_distribution) && is_array($question_distribution)) {
             $distribution_instructions = "CUSTOM QUESTION TYPE BREAKDOWN REQUESTED BY TEACHER:\n";
@@ -329,6 +363,110 @@ Output MUST be a single valid JSON object strictly matching this schema with NO 
                 {"sub_q": "(ii) Question 2...", "marks": 1, "answer": "Answer 2"},
                 {"sub_q": "(iii) Question 3...", "marks": 2, "answer": "Answer 3"}
               ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+EOT;
+        return $prompt;
+    }
+
+    /**
+     * Specialized Prompt for Kindergarten / Pre-Primary Activity Worksheets (Nursery, LKG, UKG)
+     */
+    private function build_preprimary_worksheet_prompt($class_name, $subject_name, $chapter, $total_marks, $difficulty, $language, $academic_session, $generate_multi_sets)
+    {
+        $prompt = <<<EOT
+You are an expert Early Childhood Education (ECE / Pre-Primary) curriculum designer.
+Generate an engaging, colorful, pictorial activity worksheet exam paper for:
+- Class: {$class_name} (Early Childhood / Kindergarten)
+- Subject: {$subject_name} (e.g. English, Math / Number Work, EVS / General Awareness, Hindi)
+- Scope / Topics: {$chapter} (e.g. Fruits, Vegetables, Animals, Shapes, Colors, Numbers 1-10, Alphabets A-Z, Phonics)
+- Academic Session: {$academic_session}
+- Total Marks: {$total_marks}
+
+PRE-PRIMARY QUESTION & ACTIVITY FORMATS (Use appropriate mix for Kindergarten):
+1. MATCH THE PAIR (Matching column A picture/name with column B color, shadow, or parent):
+   - Example: 🍎 Apple -> Red | 🍌 Banana -> Yellow | 🍇 Grapes -> Purple
+2. COUNT & WRITE IN THE BOX (Visual counting with emojis or SVG objects):
+   - Example: "Count how many stars and write in the box: ⭐ ⭐ ⭐ ⭐ ⭐ ➡️ [____]"
+3. CIRCLE THE ODD ONE OUT / CIRCLE THE CORRECT PICTURE:
+   - Example: 🍎, 🍌, 🚗, 🥭 -> "Circle the vehicle among fruits!"
+4. COLORING & TRACING INSTRUCTIONS (Clean line outline SVG for children to color):
+   - Example: "Color the 🥭 Mango Yellow with Green leaf!" (Provide clean line outline in diagram_svg)
+5. FILL THE MISSING ALPHABET OR NUMBER:
+   - Example: "A, B, __, D, E, __, G" or "1, 2, __, 4, 5, __, 7"
+6. RECOGNIZE & NAME:
+   - Example: "Look at the picture and tick the first letter: [🦁 Lion] ➡️ (A) L  (B) M  (C) P"
+
+STRICT JSON OUTPUT FORMAT ONLY:
+Output MUST be a single valid JSON object strictly matching this schema with NO markdown code fences:
+{
+  "paper_title": "{$class_name} {$subject_name} Activity Worksheet",
+  "academic_session": "{$academic_session}",
+  "subject": "{$subject_name}",
+  "class": "{$class_name}",
+  "time_allowed": "1 Hour",
+  "max_marks": {$total_marks},
+  "is_multi_set": false,
+  "general_instructions": [
+    "Dear Parents / Teachers: Please read the instructions to the child gently.",
+    "Use crayons / colored pencils for coloring questions.",
+    "Attempt all fun activities!"
+  ],
+  "sets": {
+    "Set A": {
+      "sections": [
+        {
+          "section_name": "SECTION A: RECOGNIZE & MATCH",
+          "description": "Fun Matching & Identification Activities",
+          "questions": [
+            {
+              "q_no": 1,
+              "question_type": "singlechoice",
+              "marks": 2,
+              "question_text": "Look at the fruit 🍎 and choose the correct starting letter and color:",
+              "options": {
+                "A": "A for Apple (Red)",
+                "B": "M for Mango (Yellow)",
+                "C": "O for Orange (Orange)",
+                "D": "G for Grapes (Green)"
+              },
+              "correct_option": "A",
+              "diagram_svg": "<svg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'><circle cx='60' cy='65' r='38' fill='#fee2e2' stroke='#ef4444' stroke-width='3'/><path d='M60 27 Q65 15 75 18' stroke='#15803d' stroke-width='4' fill='none'/><ellipse cx='73' cy='22' rx='8' ry='4' fill='#22c55e'/></svg>",
+              "explanation": "Apple starts with letter A and is red."
+            },
+            {
+              "q_no": 2,
+              "question_type": "fill_in_the_blanks",
+              "marks": 2,
+              "question_text": "Count the balloons and write the number: 🎈 🎈 🎈 🎈 🎈 ➡️ [ _____ ]",
+              "correct_option": "5",
+              "explanation": "There are 5 balloons."
+            }
+          ]
+        },
+        {
+          "section_name": "SECTION B: COLORING & TRACING",
+          "description": "Creative Coloring and Missing Sequence",
+          "questions": [
+            {
+              "q_no": 3,
+              "question_type": "descriptive",
+              "marks": 3,
+              "question_text": "Color the Mango 🥭: Fill Yellow color inside the mango and Green color in the leaf!",
+              "diagram_svg": "<svg width='140' height='140' viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'><path d='M70,30 C95,30 115,55 105,90 C95,120 55,125 40,95 C25,65 45,30 70,30 Z' fill='#fffbeb' stroke='#f59e0b' stroke-width='3' stroke-dasharray='4,3'/><path d='M70,30 Q75,10 90,15' stroke='#15803d' stroke-width='3' fill='none'/><ellipse cx='86' cy='18' rx='10' ry='5' fill='#f0fdf4' stroke='#16a34a' stroke-width='2'/><text x='52' y='80' font-family='Arial' font-size='11' fill='#94a3b8'>Color Me</text></svg>",
+              "answer_key": "Full marks (3M) for neat yellow coloring inside the outline and green on the leaf."
+            },
+            {
+              "q_no": 4,
+              "question_type": "descriptive",
+              "marks": 3,
+              "question_text": "Fill the missing letters in the apple train: A, __ , C, __ , E, __ , G",
+              "answer_key": "Missing letters: B, D, F (1 mark each)"
             }
           ]
         }
@@ -681,12 +819,33 @@ EOT;
         if (($api_engine === 'openrouter' || $api_engine === 'openrouter_ox') && !empty($active_openrouter_key)) {
             $response   = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
             $model_used = 'OpenRouter (01-ai/ox-alpha)';
+            if (isset($response['error']) && !empty($active_gemini_key)) {
+                $fallback = $this->call_gemini($prompt, $active_gemini_key);
+                if (!isset($fallback['error'])) {
+                    $response = $fallback;
+                    $model_used = 'Google Gemini (gemini-2.0-flash)';
+                }
+            }
         } elseif ($api_engine === 'groq' && !empty($active_groq_key)) {
             $response   = $this->call_groq($prompt, $active_groq_key);
             $model_used = 'Groq (llama-3.3-70b-versatile)';
+            if (isset($response['error']) && !empty($active_gemini_key)) {
+                $fallback = $this->call_gemini($prompt, $active_gemini_key);
+                if (!isset($fallback['error'])) {
+                    $response = $fallback;
+                    $model_used = 'Google Gemini (gemini-2.0-flash)';
+                }
+            }
         } elseif (!empty($active_gemini_key)) {
             $response   = $this->call_gemini($prompt, $active_gemini_key);
             $model_used = 'Google Gemini (gemini-2.0-flash)';
+            if (isset($response['error']) && !empty($active_openrouter_key)) {
+                $fallback = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
+                if (!isset($fallback['error'])) {
+                    $response = $fallback;
+                    $model_used = 'OpenRouter (01-ai/ox-alpha)';
+                }
+            }
         } elseif (!empty($active_openrouter_key)) {
             $response   = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
             $model_used = 'OpenRouter (01-ai/ox-alpha)';

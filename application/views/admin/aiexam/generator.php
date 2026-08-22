@@ -17,9 +17,7 @@ foreach ($recent_papers as $rp) {
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
 <!-- Include html-docx for direct MS Word download -->
-<script src="https://cdn.jsdelivr.net/npm/html-docx-js@0.3.1/dist/html-docx.js"></script>
-<!-- Include NCERT Syllabus Catalog -->
-<script src="<?php echo base_url(); ?>application/views/cbseexam/ai_question_generator/ncert_curriculum.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/html-docx-js@0.3.1/dist/html-docx.js"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -575,6 +573,17 @@ foreach ($recent_papers as $rp) {
                 </div>
             </div>
 
+            <!-- Pre-Primary / Kindergarten Mode Alert Banner (Dynamic) -->
+            <div id="preprimaryModeBox" style="display: none; background: #fefce8; border: 1px solid #fef08a; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 16px;">🎨</span>
+                    <div>
+                        <strong style="font-size: 12px; color: #854d0e;">Pre-Primary Worksheet Mode Activated</strong>
+                        <div style="font-size: 11px; color: #a16207;">Auto-generating child-friendly pictorial activities: Coloring outlines, Matching columns, Fruit/Animal identification, and Visual counting.</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 2. NCERT / Curriculum Chapters & Scope -->
             <div class="form-group">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
@@ -1036,6 +1045,27 @@ function closeGeneratorDrawer() {
 }
 
 function onClassOrSubjectChange() {
+    const className = ($('#gen_class_id option:selected').data('name') || '').toLowerCase();
+    const isPreprimary = (
+        className.indexOf('nursery') !== -1 ||
+        className.indexOf('lkg') !== -1 ||
+        className.indexOf('ukg') !== -1 ||
+        className.indexOf('kg') !== -1 ||
+        className.indexOf('prep') !== -1 ||
+        className.indexOf('play') !== -1 ||
+        className.indexOf('kindergarten') !== -1
+    );
+
+    if (isPreprimary) {
+        $('#preprimaryModeBox').slideDown(200);
+        // Adjust default marks if currently 80M
+        if ($('#gen_total_marks').val() == '80') {
+            selectBlueprint($('.blueprint-pill[data-marks="20"]')[0], 20);
+        }
+    } else {
+        $('#preprimaryModeBox').slideUp(200);
+    }
+
     fetchChaptersForCurrentSelection(false);
 }
 
@@ -1181,16 +1211,47 @@ function startGeneration() {
                 renderPaper(currentPaperData, activeSetName);
                 $('#modalPaperTitle').text(currentPaperData.paper_title || 'CBSE Examination Paper');
                 $('#modalViewPaper').modal('show');
-                setTimeout(function() {
-                    window.location.reload(true);
-                }, 4000);
+
+                // If a new paper row was saved, prepend to table dynamically (no disruptive reload)
+                if (res.saved_paper_id) {
+                    const newId = res.saved_paper_id;
+                    const pTitle = currentPaperData.paper_title || `${className} ${subjectName} Examination`;
+                    const newRowHtml = `
+                        <tr id="row_paper_${newId}" style="background: #f0fdf4;">
+                            <td class="font-weight-600">${newId}</td>
+                            <td>
+                                <strong style="color: #0f172a;">${pTitle}</strong>
+                                <br><small class="text-muted"><i class="fa fa-book"></i> ${chapter}</small>
+                            </td>
+                            <td><span class="badge" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;">${className}</span></td>
+                            <td><span class="badge" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;">${subjectName}</span></td>
+                            <td><strong>${totalMarks} M</strong></td>
+                            <td class="text-muted" style="font-size: 11px;"><i class="fa fa-clock-o"></i> Just now</td>
+                            <td class="text-right white-space-nowrap">
+                                <button type="button" class="btn btn-default btn-xs" onclick="openViewPaperModal(${newId})" title="View Question Paper" style="border-radius: 4px; padding: 3px 8px; color: #4f46e5;"><i class="fa fa-eye"></i></button>
+                                <button type="button" class="btn btn-default btn-xs" onclick="openViewPaperModal(${newId}, true)" title="View with Answer Key & Marking Scheme" style="border-radius: 4px; padding: 3px 8px; color: #16a34a;"><i class="fa fa-key"></i></button>
+                                <button type="button" class="btn btn-default btn-xs" onclick="deleteSavedPaperRow(${newId})" title="Delete Paper" style="border-radius: 4px; padding: 3px 8px; color: #ef4444;"><i class="fa fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                    $('#tblGeneratedPapers tbody').prepend(newRowHtml);
+                }
             } else {
                 alert('Generation Error: ' + (res.message || 'Unknown error occurred.'));
             }
         },
         error: function(xhr, status, err) {
             $('#btnGeneratePaper').prop('disabled', false).html('<i class="fa fa-bolt"></i> Generate & Save Paper');
-            alert('Request Failed: ' + err);
+            let errMsg = err;
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errMsg = xhr.responseJSON.message;
+            } else if (xhr.responseText) {
+                try {
+                    let parsed = JSON.parse(xhr.responseText);
+                    if (parsed.message) errMsg = parsed.message;
+                } catch(e) {}
+            }
+            alert('Request Failed: ' + errMsg);
         }
     });
 }
@@ -1698,6 +1759,7 @@ function saveToQuestionBank() {
 let bulkSyncPairsList = [];
 let bulkSyncCurrentIndex = 0;
 let isBulkSyncRunning = false;
+let bulkSyncCurrentXHR = null;
 
 function openBulkSyncModal() {
     $('#modalBulkSync').modal('show');
@@ -1705,6 +1767,7 @@ function openBulkSyncModal() {
     $('#bulkSyncLogBox').hide().html('');
     $('#bulkSyncStatus').text('Ready to fetch curriculum chapters for all active school classes and subjects.');
     $('#btnStartBulkSync').prop('disabled', false).html('<i class="fa fa-play"></i> Start Background Sync');
+    $('#btnStopBulkSync').hide();
 }
 
 function startBulkSyncQueue() {
@@ -1742,14 +1805,20 @@ function startBulkSyncQueue() {
 
 function stopBulkSyncQueue() {
     isBulkSyncRunning = false;
-    $('#btnStopBulkSync').prop('disabled', true).html('<i class="fa fa-ban"></i> Stopping...');
+
+    // Immediately abort any running in-flight HTTP request
+    if (bulkSyncCurrentXHR) {
+        try {
+            bulkSyncCurrentXHR.abort();
+        } catch(e) {}
+        bulkSyncCurrentXHR = null;
+    }
+
+    $('#btnStopBulkSync').hide();
     $('#bulkSyncStatus').html('<strong style="color: #dc2626;"><i class="fa fa-pause-circle"></i> Sync process stopped by user.</strong>');
     $('#bulkSyncProgressBar').removeClass('active');
     $('#bulkSyncLogBox').append('<div style="color: #f87171; margin-top: 6px;">⛔ Sync halted. Synced chapters up to this point remain saved in the database.</div>');
     $('#btnStartBulkSync').prop('disabled', false).html('<i class="fa fa-play"></i> Resume Sync');
-    setTimeout(() => {
-        $('#btnStopBulkSync').hide();
-    }, 600);
 }
 
 function processNextBulkSyncPair() {
@@ -1786,7 +1855,7 @@ function processNextBulkSyncPair() {
 
     const apiEngine = $('#gen_engine').val() || 'gemini';
 
-    $.ajax({
+    bulkSyncCurrentXHR = $.ajax({
         url: '<?php echo base_url(); ?>admin/aiexamgenerator/get_or_fetch_chapters_ajax',
         type: 'POST',
         dataType: 'json',
@@ -1797,6 +1866,7 @@ function processNextBulkSyncPair() {
             force_reload: 0
         },
         success: function(res) {
+            bulkSyncCurrentXHR = null;
             if (!isBulkSyncRunning) return;
             let count = (res.chapters && res.chapters.length) ? res.chapters.length : 0;
             let modelLabel = res.model_used ? ` [${res.model_used}]` : '';
@@ -1810,8 +1880,9 @@ function processNextBulkSyncPair() {
             bulkSyncCurrentIndex++;
             setTimeout(processNextBulkSyncPair, 300); // 300ms pacing between AI queries
         },
-        error: function(xhr) {
-            if (!isBulkSyncRunning) return;
+        error: function(xhr, textStatus) {
+            bulkSyncCurrentXHR = null;
+            if (!isBulkSyncRunning || textStatus === 'abort') return;
             $('#bulkSyncLogBox').append(`<div style="color: #f87171;">[${bulkSyncCurrentIndex + 1}/${total}] ✖ ${item.class_name} - ${item.subject_name}: HTTP error, skipping...</div>`);
             bulkSyncCurrentIndex++;
             setTimeout(processNextBulkSyncPair, 300);

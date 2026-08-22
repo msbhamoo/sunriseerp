@@ -358,18 +358,22 @@ class Aiexamgenerator extends Admin_Controller
             $this->db->where('subject_name', $subject_name);
             $this->db->delete('cbse_syllabus_chapters');
 
-            $this->db->insert('cbse_syllabus_chapters', [
+            $insert_ok = $this->db->insert('cbse_syllabus_chapters', [
                 'class_name'    => $class_name,
                 'subject_name'  => $subject_name,
-                'chapters_json' => json_encode($chapters),
+                'chapters_json' => json_encode($chapters, JSON_UNESCAPED_UNICODE),
                 'updated_at'    => date('Y-m-d H:i:s')
             ]);
+
+            $db_error = $this->db->error();
 
             echo json_encode([
                 'status'     => 'success',
                 'source'     => 'ai_fetched_and_cached',
                 'model_used' => isset($ai_result['model_used']) ? $ai_result['model_used'] : 'AI Model',
-                'chapters'   => $chapters
+                'chapters'   => $chapters,
+                'saved_in_db'=> $insert_ok ? true : false,
+                'db_error'   => !empty($db_error['message']) ? $db_error['message'] : null
             ]);
         } else {
             echo json_encode([
