@@ -1134,18 +1134,23 @@ function fetchChaptersForCurrentSelection(forceReload) {
                 $('#ncertChapterBrowserBox').slideDown();
             } else {
                 $('#ncertChapterBrowserBox').hide();
-                if (forceReload) {
-                    alert('Could not fetch chapters: ' + (res.message || 'Please check your AI API key or network connection.'));
-                }
+                alert('Curriculum Fetch Notice: ' + (res.message || 'No chapters found. You can click "Re-Fetch via AI" or type custom topic names in the box below.'));
             }
         },
         error: function(xhr, status, err) {
             $('#ncertLoadingBox').hide();
             $('#btnFetchAiChapters').prop('disabled', false).html('<i class="fa fa-refresh"></i> Re-Fetch via AI');
             $('#ncertChapterBrowserBox').hide();
-            if (forceReload) {
-                alert('Network error while fetching chapters. Please click Re-Fetch via AI again.');
+            let errMsg = err;
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errMsg = xhr.responseJSON.message;
+            } else if (xhr.responseText) {
+                try {
+                    let parsed = JSON.parse(xhr.responseText);
+                    if (parsed.message) errMsg = parsed.message;
+                } catch(e) {}
             }
+            alert('Curriculum Network Error: ' + errMsg);
         }
     });
 }

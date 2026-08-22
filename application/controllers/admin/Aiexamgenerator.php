@@ -356,47 +356,64 @@ class Aiexamgenerator extends Admin_Controller
             }
         }
 
-        // 2. Fetch 1-time from AI Model (Gemini / OpenRouter ox-alpha / Groq)
-        $ai_result = $this->ai_exam_generator->fetch_subject_chapters_ai($class_name, $subject_name, $api_engine);
+        try {
+            // 2. Fetch 1-time from AI Model (Gemini / OpenRouter ox-alpha / Groq)
+            $ai_result = $this->ai_exam_generator->fetch_subject_chapters_ai($class_name, $subject_name, $api_engine);
 
-        if ($ai_result['status'] === 'success' && !empty($ai_result['chapters'])) {
-            $chapters = $ai_result['chapters'];
+            if ($ai_result['status'] === 'success' && !empty($ai_result['chapters'])) {
+                $chapters = $ai_result['chapters'];
 
-            // 3. Ensure MySQL connection is active after external AI API call (reconnect if timed out)
-            if (isset($this->db->conn_id) && $this->db->conn_id instanceof mysqli) {
-                if (!@$this->db->conn_id->ping()) {
-                    $this->db->reconnect();
+                // 3. Ensure MySQL connection is active after external AI API call (reconnect if timed out)
+                $db_alive = false;
+                try {
+                    if (isset($this->db->conn_id) && $this->db->conn_id instanceof mysqli) {
+                        $db_alive = @$this->db->conn_id->ping();
+                    }
+                } catch (\Throwable $te) {
+                    $db_alive = false;
                 }
+
+                if (!$db_alive) {
+                    try {
+                        $this->db->reconnect();
+                        if (!$this->db->conn_id) {
+                            $this->db->initialize();
+                        }
+                    } catch (\Throwable $te) {}
+                }
+
+                // Cache into Database so it NEVER makes external AI calls for this class+subject again
+                $this->db->where('class_name', $class_name);
+                $this->db->where('subject_name', $subject_name);
+                $this->db->delete('cbse_syllabus_chapters');
+
+                $insert_ok = $this->db->insert('cbse_syllabus_chapters', [
+                    'class_name'    => $class_name,
+                    'subject_name'  => $subject_name,
+                    'chapters_json' => json_encode($chapters, JSON_UNESCAPED_UNICODE),
+                    'updated_at'    => date('Y-m-d H:i:s')
+                ]);
+
+                $db_error = $this->db->error();
+
+                echo json_encode([
+                    'status'     => 'success',
+                    'source'     => 'ai_fetched_and_cached',
+                    'model_used' => isset($ai_result['model_used']) ? $ai_result['model_used'] : 'AI Model',
+                    'chapters'   => $chapters,
+                    'saved_in_db'=> $insert_ok ? true : false,
+                    'db_error'   => !empty($db_error['message']) ? $db_error['message'] : null
+                ]);
             } else {
-                $this->db->reconnect();
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => isset($ai_result['message']) ? $ai_result['message'] : 'Failed to fetch chapters from AI.'
+                ]);
             }
-
-            // Cache into Database so it NEVER makes external AI calls for this class+subject again
-            $this->db->where('class_name', $class_name);
-            $this->db->where('subject_name', $subject_name);
-            $this->db->delete('cbse_syllabus_chapters');
-
-            $insert_ok = $this->db->insert('cbse_syllabus_chapters', [
-                'class_name'    => $class_name,
-                'subject_name'  => $subject_name,
-                'chapters_json' => json_encode($chapters, JSON_UNESCAPED_UNICODE),
-                'updated_at'    => date('Y-m-d H:i:s')
-            ]);
-
-            $db_error = $this->db->error();
-
-            echo json_encode([
-                'status'     => 'success',
-                'source'     => 'ai_fetched_and_cached',
-                'model_used' => isset($ai_result['model_used']) ? $ai_result['model_used'] : 'AI Model',
-                'chapters'   => $chapters,
-                'saved_in_db'=> $insert_ok ? true : false,
-                'db_error'   => !empty($db_error['message']) ? $db_error['message'] : null
-            ]);
-        } else {
+        } catch (\Throwable $e) {
             echo json_encode([
                 'status'  => 'error',
-                'message' => isset($ai_result['message']) ? $ai_result['message'] : 'Failed to fetch chapters.'
+                'message' => 'Server Error: ' . $e->getMessage()
             ]);
         }
     }
