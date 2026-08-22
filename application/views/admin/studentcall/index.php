@@ -1791,6 +1791,12 @@
         });
     }
 
+    $('#followUpModal').on('hidden.bs.modal', function () {
+        if (typeof fetchCallLogsAjax === 'function') {
+            fetchCallLogsAjax();
+        }
+    });
+
     function openCallModalFromStatus(student_id, session_id, name) {
         $('#addCallModal').modal('show');
         setTimeout(function(){
@@ -1944,7 +1950,11 @@
                     $btn.button('reset');
                     if (res.status === 'success') {
                         $('#quickResolveModal').modal('hide');
-                        $('#searchForm').submit();
+                        if (typeof fetchCallLogsAjax === 'function') {
+                            fetchCallLogsAjax();
+                        } else {
+                            $('#searchForm').submit();
+                        }
                     } else {
                         alert(res.message);
                     }
@@ -1987,7 +1997,11 @@
                     $btn.button('reset');
                     if (res.status === 'success') {
                         $('#quickRescheduleModal').modal('hide');
-                        $('#searchForm').submit();
+                        if (typeof fetchCallLogsAjax === 'function') {
+                            fetchCallLogsAjax();
+                        } else {
+                            $('#searchForm').submit();
+                        }
                     } else {
                         alert(res.message);
                     }

@@ -84,9 +84,17 @@
                     if ($fw['status'] == 'Pending') $has_pending = true;
                     
                     $status_color = 'bg-aqua';
-                    if ($fw['status'] == 'Completed') $status_color = 'bg-green';
-                    else if ($fw['status'] == 'Pending') $status_color = 'bg-yellow';
-                    else if ($fw['status'] == 'Cancelled') $status_color = 'bg-red';
+                    $status_badge_class = 'label-info';
+                    if ($fw['status'] == 'Completed' || $fw['status'] == 'Resolved') {
+                        $status_color = 'bg-green';
+                        $status_badge_class = 'label-success';
+                    } else if ($fw['status'] == 'Pending') {
+                        $status_color = 'bg-yellow';
+                        $status_badge_class = 'label-warning';
+                    } else if ($fw['status'] == 'Cancelled') {
+                        $status_color = 'bg-red';
+                        $status_badge_class = 'label-danger';
+                    }
             ?>
                 <li class="time-label">
                     <span class="<?php echo $status_color; ?>">
@@ -97,7 +105,7 @@
                     <i class="fa fa-phone bg-blue"></i>
                     <div class="timeline-item">
                         <h3 class="timeline-header">
-                            <strong>Status:</strong> <span class="label label-default"><?php echo $fw['status']; ?></span>
+                            <strong>Status:</strong> <span class="label <?php echo $status_badge_class; ?>"><?php echo $fw['status']; ?></span>
                             <?php if(!empty($fw['call_status'])) { echo " | <strong>Outcome:</strong> <span class='label label-info'>" . $fw['call_status'] . "</span>"; } ?>
                             <?php if ($fw['status'] == 'Pending' && $this->rbac->hasPrivilege('student_call_log', 'can_edit')) { ?>
                                 <a href="#" class="pull-right btn btn-xs btn-primary edit_fw" data-id="<?php echo $fw['id']; ?>" data-remarks="<?php echo $fw['remarks']; ?>">Edit / Complete</a>
@@ -279,16 +287,30 @@
 
     $('#updateFwForm').submit(function(e){
         e.preventDefault();
+        var $btn = $(this).find('button[type="submit"]');
+        $btn.button('loading');
         $.ajax({
             url: '<?php echo site_url("admin/studentcall/edit_follow_up_task") ?>',
             type: "POST",
             data: $(this).serialize(),
             dataType: 'json',
             success: function (res) {
+                $btn.button('reset');
                 if(res.status == 'success'){
                     // refresh modal content
                     follow_up('<?php echo $call['id']; ?>');
+                    // Refresh underlying main tables
+                    if (typeof fetchCallLogsAjax === 'function') {
+                        fetchCallLogsAjax();
+                    }
+                    if ($('#pending_followup_table').length && $.fn.DataTable.isDataTable('#pending_followup_table')) {
+                        // refresh page or reload table if needed
+                    }
                 }
+            },
+            error: function() {
+                $btn.button('reset');
+                alert('Update failed. Please try again.');
             }
         });
     });
@@ -350,26 +372,42 @@
                     return '<tr ' + rowStyle + '><td>' + title + '</td><td>' + parseFloat(data.total).toFixed(2) + '</td><td>' + parseFloat(data.collected).toFixed(2) + '</td><td>' + last_amt + '</td><td>' + last_date + badge + '</td><td><b>' + parseFloat(data.due).toFixed(2) + '</b></td></tr>';
                 };
 
+                var totalDue = 0;
+                var totalFeeSum = 0;
                 if (res.academic) {
                     feeHtml += checkFeeRow('academic', 'Academic Fees', res.academic);
+                    totalDue += parseFloat(res.academic.due || 0);
+                    totalFeeSum += parseFloat(res.academic.total || 0);
                 }
                 if (res.transport && res.transport.total > 0) {
                     feeHtml += checkFeeRow('transport', 'Transport Fees', res.transport);
+                    totalDue += parseFloat(res.transport.due || 0);
+                    totalFeeSum += parseFloat(res.transport.total || 0);
                 }
                 if (res.hostel && res.hostel.total > 0) {
                     feeHtml += checkFeeRow('hostel', 'Hostel Fees', res.hostel);
+                    totalDue += parseFloat(res.hostel.due || 0);
+                    totalFeeSum += parseFloat(res.hostel.total || 0);
                 }
 
                 $('#modal_fee_summary_body').html(feeHtml);
 
+                var warningsHtml = '';
+                if (totalFeeSum > 0 && totalDue <= 0) {
+                    warningsHtml += '<div class="alert alert-success" style="margin: 10px 0; border-left: 5px solid #16a34a; background: #f0fdf4; color: #166534; padding: 10px 12px; font-size: 13px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">' +
+                        '<i class="fa fa-check-circle" style="font-size:16px; margin-right:6px; color:#16a34a;"></i>' +
+                        '<strong>ALL FEES FULLY PAID:</strong> Total Due balance is <strong>₹0.00</strong>. This follow-up task is auto-resolved with zero balance.' +
+                        '</div>';
+                }
+
                 if (recentPayment) {
                     var dayLabel = recentPayment.daysAgo === 0 ? 'Today' : (recentPayment.daysAgo === 1 ? 'Yesterday' : recentPayment.daysAgo + ' days ago');
-                    var warnHtml = '<div class="alert alert-danger" style="margin: 10px 0; border-left: 5px solid #dc2626; background: #fef2f2; color: #991b1b; padding: 10px 12px; font-size: 13px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">' +
+                    warningsHtml += '<div class="alert alert-danger" style="margin: 10px 0; border-left: 5px solid #dc2626; background: #fef2f2; color: #991b1b; padding: 10px 12px; font-size: 13px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">' +
                         '<i class="fa fa-exclamation-triangle" style="font-size:16px; margin-right:6px; color:#dc2626;"></i>' +
                         '<strong>RECENT FEE PAYMENT DETECTED:</strong> This student/family submitted a fee payment of <strong>₹' + recentPayment.amount + '</strong> (' + recentPayment.type + ') on <strong>' + recentPayment.date + '</strong> (' + dayLabel + '). Please verify payment details before requesting fee submission!' +
                         '</div>';
-                    $('#modal_recent_payment_warning').html(warnHtml);
                 }
+                $('#modal_recent_payment_warning').html(warningsHtml);
 
                 var attHtml = '';
                 if (res.history && (res.history.working_days !== undefined && res.history.working_days !== null)) {

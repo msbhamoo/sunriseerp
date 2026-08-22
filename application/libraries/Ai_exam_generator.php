@@ -1,0 +1,715 @@
+<?php
+
+if (!defined('BASEPATH')) {
+    exit('No direct script access allowed');
+}
+
+class Ai_exam_generator
+{
+    protected $CI;
+    protected $gemini_api_key;
+    protected $groq_api_key;
+
+    public function __construct()
+    {
+        $this->CI = &get_instance();
+        $sch_setting = $this->CI->setting_model->getSetting();
+        $this->gemini_api_key     = !empty($sch_setting->ai_gemini_api_key) ? $sch_setting->ai_gemini_api_key : (defined('GEMINI_API_KEY') ? GEMINI_API_KEY : '');
+        $this->groq_api_key       = !empty($sch_setting->ai_groq_api_key) ? $sch_setting->ai_groq_api_key : (defined('GROQ_API_KEY') ? GROQ_API_KEY : '');
+        $this->openrouter_api_key = !empty($sch_setting->ai_openrouter_api_key) ? $sch_setting->ai_openrouter_api_key : (defined('OPENROUTER_API_KEY') ? OPENROUTER_API_KEY : '');
+        $this->openai_api_key     = !empty($sch_setting->ai_openai_api_key) ? $sch_setting->ai_openai_api_key : (defined('OPENAI_API_KEY') ? OPENAI_API_KEY : '');
+    }
+
+    /**
+     * Generate structured CBSE Exam Paper / Sets
+     */
+    public function generate_paper($params)
+    {
+        $class_name            = isset($params['class_name']) ? $params['class_name'] : 'Class 10';
+        $subject_name          = isset($params['subject_name']) ? $params['subject_name'] : 'Science';
+        $chapter               = isset($params['chapter']) ? $params['chapter'] : 'Complete Syllabus';
+        $total_marks           = isset($params['total_marks']) ? intval($params['total_marks']) : 80;
+        $difficulty            = isset($params['difficulty']) ? $params['difficulty'] : 'Medium';
+        $language              = isset($params['language']) ? $params['language'] : 'English';
+        $academic_session      = isset($params['academic_session']) ? $params['academic_session'] : '2026-2027';
+        $blooms_taxonomy       = isset($params['blooms_taxonomy']) ? $params['blooms_taxonomy'] : null;
+        $generate_multi_sets   = !empty($params['generate_multi_sets']) && $params['generate_multi_sets'] == 'yes';
+        $question_distribution = isset($params['question_distribution']) ? $params['question_distribution'] : null;
+        $api_engine            = isset($params['api_engine']) ? $params['api_engine'] : 'gemini';
+        $custom_api_key        = isset($params['api_key']) ? trim($params['api_key']) : '';
+
+        $active_gemini_key     = !empty($custom_api_key) ? $custom_api_key : $this->gemini_api_key;
+        $active_groq_key       = !empty($custom_api_key) ? $custom_api_key : $this->groq_api_key;
+        $active_openrouter_key = !empty($custom_api_key) ? $custom_api_key : $this->openrouter_api_key;
+        $active_openai_key     = !empty($custom_api_key) ? $custom_api_key : $this->openai_api_key;
+
+        // Build CBSE Exam Prompt
+        $prompt = $this->build_cbse_prompt($class_name, $subject_name, $chapter, $total_marks, $difficulty, $language, $academic_session, $blooms_taxonomy, $question_distribution, $generate_multi_sets);
+
+        $response = null;
+        if (($api_engine === 'openrouter' || $api_engine === 'openrouter_ox') && !empty($active_openrouter_key)) {
+            $response = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
+        } elseif ($api_engine === 'groq' && !empty($active_groq_key)) {
+            $response = $this->call_groq($prompt, $active_groq_key);
+        } elseif ($api_engine === 'openai' && !empty($active_openai_key)) {
+            $response = $this->call_openai($prompt, $active_openai_key);
+        } else {
+            if (!empty($active_openrouter_key)) {
+                $response = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
+            } elseif (!empty($active_gemini_key)) {
+                $response = $this->call_gemini($prompt, $active_gemini_key);
+            } elseif (!empty($active_groq_key)) {
+                $response = $this->call_groq($prompt, $active_groq_key);
+            } else {
+                return [
+                    'status'  => 'error',
+                    'message' => 'No AI API Key provided. Please provide an OpenRouter, Google Gemini, or Groq API Key in AI Settings.'
+                ];
+            }
+        }
+
+        if (!$response || isset($response['error'])) {
+            return [
+                'status'  => 'error',
+                'message' => isset($response['error']) ? $response['error'] : 'Failed to communicate with AI service.'
+            ];
+        }
+
+        $parsed_data = $this->extract_json($response['raw_text']);
+        if (!$parsed_data) {
+            return [
+                'status'  => 'error',
+                'message' => 'Unable to parse AI response into structured CBSE format. Raw preview: ' . substr($response['raw_text'], 0, 200) . '...'
+            ];
+        }
+
+        return [
+            'status' => 'success',
+            'data'   => $parsed_data
+        ];
+    }
+
+    /**
+     * Fast Endpoint: Regenerate a Single Question
+     */
+    public function regenerate_single_question($params)
+    {
+        $class_name     = isset($params['class_name']) ? $params['class_name'] : 'Class 10';
+        $subject_name   = isset($params['subject_name']) ? $params['subject_name'] : 'Science';
+        $chapter        = isset($params['chapter']) ? $params['chapter'] : 'General';
+        $section_name   = isset($params['section_name']) ? $params['section_name'] : 'Section A';
+        $question_type  = isset($params['question_type']) ? $params['question_type'] : 'singlechoice';
+        $marks          = isset($params['marks']) ? intval($params['marks']) : 1;
+        $difficulty     = isset($params['difficulty']) ? $params['difficulty'] : 'Medium';
+        $language       = isset($params['language']) ? $params['language'] : 'English';
+        $custom_api_key = isset($params['api_key']) ? trim($params['api_key']) : '';
+        $api_engine     = isset($params['api_engine']) ? $params['api_engine'] : 'gemini';
+
+        $active_gemini_key = !empty($custom_api_key) ? $custom_api_key : $this->gemini_api_key;
+        $active_groq_key   = !empty($custom_api_key) ? $custom_api_key : $this->groq_api_key;
+
+        $prompt = <<<EOT
+You are an expert CBSE paper setter. Generate 1 replacement question for:
+- Class: {$class_name} | Subject: {$subject_name} | Chapter: {$chapter}
+- Section: {$section_name} | Question Type: {$question_type} | Marks: {$marks}
+- Difficulty: {$difficulty} | Language: {$language}
+
+Format LaTeX for Math/Chemistry. Include detailed answer key / explanation.
+OUTPUT ONLY 1 VALID JSON OBJECT matching this exact schema with NO markdown code fences:
+{
+  "question_type": "{$question_type}",
+  "marks": {$marks},
+  "question_text": "New replacement question text...",
+  "options": {
+    "A": "Option A",
+    "B": "Option B",
+    "C": "Option C",
+    "D": "Option D"
+  },
+  "correct_option": "A",
+  "or_question_text": "",
+  "answer_key": "Step-by-step marking answer key...",
+  "explanation": "Detailed explanation..."
+}
+EOT;
+
+        if ($api_engine === 'groq' && !empty($active_groq_key)) {
+            $response = $this->call_groq($prompt, $active_groq_key);
+        } else {
+            $response = !empty($active_gemini_key) ? $this->call_gemini($prompt, $active_gemini_key) : $this->call_groq($prompt, $active_groq_key);
+        }
+
+        if (!$response || isset($response['error'])) {
+            return ['status' => 'error', 'message' => isset($response['error']) ? $response['error'] : 'Failed to regenerate question.'];
+        }
+
+        $parsed = $this->extract_json($response['raw_text']);
+        if (!$parsed) {
+            return ['status' => 'error', 'message' => 'Unable to parse single question replacement.'];
+        }
+
+        return ['status' => 'success', 'question' => $parsed];
+    }
+
+    /**
+     * Build Prompt with Bloom's Taxonomy, Multi-Sets, and SVG Diagrams
+     */
+    private function build_cbse_prompt($class_name, $subject_name, $chapter, $total_marks, $difficulty, $language, $academic_session, $blooms_taxonomy, $question_distribution, $generate_multi_sets)
+    {
+        $distribution_instructions = "";
+        if (!empty($question_distribution) && is_array($question_distribution)) {
+            $distribution_instructions = "CUSTOM QUESTION TYPE BREAKDOWN REQUESTED BY TEACHER:\n";
+            if (!empty($question_distribution['mcq_count'])) $distribution_instructions .= "- Multiple Choice Questions (MCQ): {$question_distribution['mcq_count']} questions (1 Mark each)\n";
+            if (!empty($question_distribution['tf_count'])) $distribution_instructions .= "- True / False Questions: {$question_distribution['tf_count']} questions (1 Mark each)\n";
+            if (!empty($question_distribution['fib_count'])) $distribution_instructions .= "- Fill in the Blanks: {$question_distribution['fib_count']} questions (1 Mark each)\n";
+            if (!empty($question_distribution['ar_count'])) $distribution_instructions .= "- Assertion & Reasoning: {$question_distribution['ar_count']} questions (1 Mark each)\n";
+            if (!empty($question_distribution['sa1_count'])) $distribution_instructions .= "- Very Short Answer (VSA / 2 Marks): {$question_distribution['sa1_count']} questions (2 Marks each)\n";
+            if (!empty($question_distribution['sa2_count'])) $distribution_instructions .= "- Short Answer (SA / 3 Marks): {$question_distribution['sa2_count']} questions (3 Marks each)\n";
+            if (!empty($question_distribution['la_count'])) $distribution_instructions .= "- Long Answer (LA / 5 Marks): {$question_distribution['la_count']} questions with internal choice 'OR' (5 Marks each)\n";
+            if (!empty($question_distribution['case_count'])) $distribution_instructions .= "- Case-Study / Passage-based: {$question_distribution['case_count']} units (4 Marks each with sub-questions)\n";
+        }
+
+        $blooms_instructions = "";
+        if (!empty($blooms_taxonomy) && is_array($blooms_taxonomy)) {
+            $blooms_instructions = "BLOOM'S TAXONOMY COGNITIVE WEIGHTAGE DISTRIBUTION:\n" .
+                "- Remembering & Understanding (Recall facts, direct definitions): " . (!empty($blooms_taxonomy['remembering']) ? $blooms_taxonomy['remembering'] : 30) . "%\n" .
+                "- Application & Problem Solving (Formula execution, direct solutions): " . (!empty($blooms_taxonomy['applying']) ? $blooms_taxonomy['applying'] : 40) . "%\n" .
+                "- Analyzing, Evaluating & HOTS (High Order Thinking, multi-step synthesis): " . (!empty($blooms_taxonomy['hots']) ? $blooms_taxonomy['hots'] : 30) . "%\n";
+        }
+
+        $sets_instructions = "";
+        if ($generate_multi_sets) {
+            $sets_instructions = "MULTI-SET GENERATION (Anti-Cheating Sets A, B, and C):\n" .
+                "Generate 3 parallel question sets: 'Set A', 'Set B', and 'Set C'.\n" .
+                "Maintain identical difficulty and blueprint, but shuffle question order, randomize MCQ options, and vary numerical values in Math/Science calculations across sets.\n";
+        }
+
+        $prompt = <<<EOT
+You are an expert CBSE Board paper setter and NCERT curriculum specialist.
+Generate an authentic, complete CBSE examination question paper for:
+- Class: {$class_name}
+- Subject: {$subject_name}
+- Topics / Chapters: {$chapter}
+- Academic Session: {$academic_session}
+- Total Marks: {$total_marks}
+- Difficulty Level: {$difficulty}
+- Language: {$language}
+
+{$distribution_instructions}
+{$blooms_instructions}
+{$sets_instructions}
+
+DIAGRAM, MAP, CHEMISTRY, BIOLOGY & GEOMETRY RULES:
+1. BIOLOGY & HUMAN ANATOMY:
+   - For questions on Heart, Nephron, Digestive System, Brain, Plant Cell, or Stomata: Provide a clear labeled inline SVG diagram in 'diagram_svg' (with labeled parts (A), (B), (C), (D) for students to identify) OR a standard framed student drawing schematic.
+2. CHEMISTRY:
+   - For Chemical Apparatus (Electrolysis, Gas preparation, Titration, Distillation) or Organic Reaction schemes (Benzene ring, Hydrocarbon bonds, Functional groups): Embed valid SVG diagrams or structured chemical skeletal formulas in LaTeX ($CH_3-CH_2-OH$).
+3. PHYSICS:
+   - For Electric Circuits (Resistors in series/parallel, Voltmeter, Ammeter, Battery), Ray Optics (Concave/Convex mirrors, Lenses, Refraction through prism), or Magnetic field lines: Provide complete, clean inline SVG vectors in 'diagram_svg'.
+4. GEOMETRY & MATHEMATICS:
+   - For Circles (tangents, secants, cyclic quadrilaterals), Triangles (congruence, Thales theorem, medians), or Coordinate Graphs: Provide high-contrast vector SVG with angle and length markings ($AB=6\text{ cm}$, $\angle ABC=60^\circ$).
+5. GEOGRAPHY / MAP WORK:
+   - For Map-based identification questions (e.g. Major Soil types, Ports, Thermal Power plants, Rivers, National Parks): Provide an outline SVG Map with tagged identification pointers (i), (ii), (iii).
+6. If a question contains a Data Table, Frequency Distribution, or Values Matrix, format using standard markdown table with newlines:
+| Column 1 | Column 2 | Column 3 |
+|---|---|---|
+| Val 1 | Val 2 | Val 3 |
+Do NOT run table pipes and dashes together on one single line.
+
+STRICT JSON OUTPUT FORMAT ONLY:
+Output MUST be a single valid JSON object strictly matching this schema with NO markdown code fences (no ```json):
+{
+  "paper_title": "CBSE {$class_name} {$subject_name} Examination",
+  "academic_session": "{$academic_session}",
+  "subject": "{$subject_name}",
+  "class": "{$class_name}",
+  "time_allowed": "{$total_marks} marks duration (e.g. 3 Hours)",
+  "max_marks": {$total_marks},
+  "is_multi_set": {$this->bool_str($generate_multi_sets)},
+  "general_instructions": [
+    "This question paper contains sections divided logically by question types.",
+    "Section A comprises Objective questions (MCQs, True/False, Fill in blanks, Assertion-Reason) carrying 1 mark each.",
+    "Section B comprises Short Answer type questions carrying 2 marks each.",
+    "Section C comprises Short Answer type questions carrying 3 marks each.",
+    "Section D comprises Long Answer type questions carrying 5 marks each with internal choice.",
+    "Section E comprises Case-based integrated units of assessment carrying 4 marks each.",
+    "All questions are compulsory. Internal choice is provided in some questions."
+  ],
+  "sets": {
+    "Set A": {
+      "sections": [
+        {
+          "section_name": "SECTION A",
+          "description": "Objective Type Questions (1 Mark Each)",
+          "questions": [
+            {
+              "q_no": 1,
+              "question_type": "singlechoice",
+              "marks": 1,
+              "question_text": "MCQ Question text...",
+              "options": {
+                "A": "Option A text",
+                "B": "Option B text",
+                "C": "Option C text",
+                "D": "Option D text"
+              },
+              "correct_option": "A",
+              "diagram_svg": "",
+              "explanation": "Explanation..."
+            },
+            {
+              "q_no": 2,
+              "question_type": "true_false",
+              "marks": 1,
+              "question_text": "Statement for True/False...",
+              "correct_option": "True",
+              "explanation": "Reason why it is True/False..."
+            },
+            {
+              "q_no": 3,
+              "question_type": "fill_in_the_blanks",
+              "marks": 1,
+              "question_text": "The process of ______ is called photosynthesis.",
+              "correct_option": "converting light energy to chemical energy",
+              "explanation": "Photosynthesis concept..."
+            }
+          ]
+        },
+        {
+          "section_name": "SECTION B",
+          "description": "Short Answer Questions (2 Marks Each)",
+          "questions": [
+            {
+              "q_no": 4,
+              "question_type": "descriptive",
+              "marks": 2,
+              "question_text": "Question text...",
+              "answer_key": "Point 1: (1 Mark), Point 2: (1 Mark)"
+            }
+          ]
+        },
+        {
+          "section_name": "SECTION C",
+          "description": "Short Answer Questions (3 Marks Each)",
+          "questions": [
+            {
+              "q_no": 5,
+              "question_type": "descriptive",
+              "marks": 3,
+              "question_text": "Question text...",
+              "answer_key": "Detailed marking distribution"
+            }
+          ]
+        },
+        {
+          "section_name": "SECTION D",
+          "description": "Long Answer Questions (5 Marks Each)",
+          "questions": [
+            {
+              "q_no": 6,
+              "question_type": "descriptive",
+              "marks": 5,
+              "question_text": "Main question...",
+              "or_question_text": "Alternative OR question...",
+              "answer_key": "Step-wise 5-mark distribution"
+            }
+          ]
+        },
+        {
+          "section_name": "SECTION E",
+          "description": "Case-Based / Source-Based Integrated Questions (4 Marks Each)",
+          "questions": [
+            {
+              "q_no": 7,
+              "question_type": "descriptive",
+              "marks": 4,
+              "case_study_context": "Context passage / scenario...",
+              "sub_questions": [
+                {"sub_q": "(i) Question 1...", "marks": 1, "answer": "Answer 1"},
+                {"sub_q": "(ii) Question 2...", "marks": 1, "answer": "Answer 2"},
+                {"sub_q": "(iii) Question 3...", "marks": 2, "answer": "Answer 3"}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+EOT;
+        return $prompt;
+    }
+
+    private function bool_str($val) {
+        return $val ? 'true' : 'false';
+    }
+
+    /**
+     * Call Google Gemini REST API with dynamic model discovery via ListModels API
+     */
+    private function call_gemini($prompt, $api_key)
+    {
+        $available_models = [];
+        $list_url = "https://generativelanguage.googleapis.com/v1beta/models?key=" . urlencode($api_key);
+        
+        $ch = curl_init($list_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $list_res = curl_exec($ch);
+        curl_close($ch);
+
+        if ($list_res) {
+            $list_json = json_decode($list_res, true);
+            if (isset($list_json['models']) && is_array($list_json['models'])) {
+                foreach ($list_json['models'] as $m) {
+                    $methods = isset($m['supportedGenerationMethods']) ? $m['supportedGenerationMethods'] : [];
+                    if (in_array('generateContent', $methods) && !empty($m['name'])) {
+                        $name = str_replace('models/', '', $m['name']);
+                        $available_models[] = $name;
+                    }
+                }
+            }
+        }
+
+        $priority_order = [
+            'gemini-2.5-flash',
+            'gemini-2.0-flash',
+            'gemini-2.0-flash-exp',
+            'gemini-1.5-flash-8b',
+            'gemini-1.5-flash',
+            'gemini-1.5-pro',
+            'gemini-pro'
+        ];
+
+        $models_to_test = [];
+        foreach ($priority_order as $p) {
+            if (in_array($p, $available_models)) {
+                $models_to_test[] = $p;
+            }
+        }
+        foreach ($available_models as $am) {
+            if (!in_array($am, $models_to_test)) {
+                $models_to_test[] = $am;
+            }
+        }
+        if (empty($models_to_test)) {
+            $models_to_test = $priority_order;
+        }
+
+        $last_error = 'Unknown error';
+
+        foreach ($models_to_test as $model) {
+            foreach (['v1beta', 'v1'] as $ver) {
+                $url = "https://generativelanguage.googleapis.com/{$ver}/models/{$model}:generateContent?key=" . urlencode($api_key);
+
+                $payload = [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $prompt]
+                            ]
+                        ]
+                    ],
+                    'generationConfig' => [
+                        'temperature'      => 0.4,
+                        'responseMimeType' => 'application/json'
+                    ]
+                ];
+
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/json'
+                ]);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 90);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+                $result     = curl_exec($ch);
+                $http_code  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $curl_error = curl_error($ch);
+                curl_close($ch);
+
+                if ($curl_error) {
+                    $last_error = 'cURL Error: ' . $curl_error;
+                    continue;
+                }
+
+                $res_json = json_decode($result, true);
+                if ($http_code === 200 && isset($res_json['candidates'][0]['content']['parts'][0]['text'])) {
+                    return ['raw_text' => $res_json['candidates'][0]['content']['parts'][0]['text']];
+                }
+
+                if (isset($res_json['error']['message'])) {
+                    $last_error = $res_json['error']['message'];
+                } else {
+                    $last_error = "HTTP $http_code from {$ver}/models/{$model}";
+                }
+            }
+        }
+
+        return ['error' => 'Gemini API Error: ' . $last_error];
+    }
+
+    /**
+     * Call Groq Cloud API (LLaMA-3.3 70B)
+     */
+    private function call_groq($prompt, $api_key)
+    {
+        $url = "https://api.groq.com/openai/v1/chat/completions";
+
+        $payload = [
+            'model' => 'llama-3.3-70b-versatile',
+            'messages' => [
+                ['role' => 'system', 'content' => 'You are an expert CBSE examination paper generator. You output only raw valid JSON.'],
+                ['role' => 'user', 'content' => $prompt]
+            ],
+            'response_format' => ['type' => 'json_object'],
+            'temperature' => 0.4
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $api_key
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 90);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+        $result = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($ch);
+        curl_close($ch);
+
+        if ($curl_error) {
+            return ['error' => 'cURL Error: ' . $curl_error];
+        }
+
+        $res_json = json_decode($result, true);
+        if ($http_code !== 200) {
+            $msg = isset($res_json['error']['message']) ? $res_json['error']['message'] : "HTTP error $http_code";
+            return ['error' => 'Groq API Error: ' . $msg];
+        }
+
+        if (isset($res_json['choices'][0]['message']['content'])) {
+            return ['raw_text' => $res_json['choices'][0]['message']['content']];
+        }
+
+        return ['error' => 'Invalid structure returned by Groq API.'];
+    }
+
+    /**
+     * Call OpenRouter API (Supports 01-ai/ox-alpha, DeepSeek-R1, and Free Tier Models)
+     */
+    private function call_openrouter($prompt, $api_key, $model = 'ox-alpha')
+    {
+        $url = "https://openrouter.ai/api/v1/chat/completions";
+
+        // Models to try in priority order on OpenRouter
+        $models = [$model, '01-ai/ox-alpha', 'deepseek/deepseek-r1:free', 'meta-llama/llama-3.3-70b-instruct:free', 'openrouter/auto'];
+
+        $last_error = 'Unknown error';
+
+        foreach ($models as $m) {
+            $payload = [
+                'model' => $m,
+                'messages' => [
+                    ['role' => 'system', 'content' => 'You are an expert CBSE Senior Board examination question paper author. You output only raw valid JSON strictly matching the requested schema.'],
+                    ['role' => 'user', 'content' => $prompt]
+                ],
+                'response_format' => ['type' => 'json_object'],
+                'temperature' => 0.3
+            ];
+
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $api_key,
+                'HTTP-Referer: http://localhost/lms',
+                'X-Title: LMS AI Exam Studio'
+            ]);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+            $result = curl_exec($ch);
+            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curl_error = curl_error($ch);
+            curl_close($ch);
+
+            if ($curl_error) {
+                $last_error = 'cURL Error: ' . $curl_error;
+                continue;
+            }
+
+            $res_json = json_decode($result, true);
+            if ($http_code === 200 && isset($res_json['choices'][0]['message']['content'])) {
+                return ['raw_text' => $res_json['choices'][0]['message']['content']];
+            }
+
+            if (isset($res_json['error']['message'])) {
+                $last_error = "OpenRouter ({$m}): " . $res_json['error']['message'];
+            }
+        }
+
+        return ['error' => 'OpenRouter API Error: ' . $last_error];
+    }
+
+    /**
+     * Call OpenAI API (GPT-4o)
+     */
+    private function call_openai($prompt, $api_key)
+    {
+        $url = "https://api.openai.com/v1/chat/completions";
+
+        $payload = [
+            'model' => 'gpt-4o',
+            'messages' => [
+                ['role' => 'system', 'content' => 'You are an expert CBSE examination paper generator. You output only raw valid JSON.'],
+                ['role' => 'user', 'content' => $prompt]
+            ],
+            'response_format' => ['type' => 'json_object'],
+            'temperature' => 0.3
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $api_key
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 100);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+        $result = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($ch);
+        curl_close($ch);
+
+        if ($curl_error) {
+            return ['error' => 'cURL Error: ' . $curl_error];
+        }
+
+        $res_json = json_decode($result, true);
+        if ($http_code !== 200) {
+            $msg = isset($res_json['error']['message']) ? $res_json['error']['message'] : "HTTP error $http_code";
+            return ['error' => 'OpenAI API Error: ' . $msg];
+        }
+
+        if (isset($res_json['choices'][0]['message']['content'])) {
+            return ['raw_text' => $res_json['choices'][0]['message']['content']];
+        }
+
+        return ['error' => 'Invalid structure returned by OpenAI API.'];
+    }
+
+    /**
+     * Clean and extract valid JSON from LLM response
+     */
+    private function extract_json($raw_text)
+    {
+        $text = trim($raw_text);
+        $text = preg_replace('/^```(?:json)?\s*/i', '', $text);
+        $text = preg_replace('/\s*```$/', '', $text);
+        $text = trim($text);
+
+        $data = json_decode($text, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+            // Normalize sections if single set returned directly
+            if (!isset($data['sets']) && isset($data['sections'])) {
+                $data['sets'] = ['Set A' => ['sections' => $data['sections']]];
+            }
+            return $data;
+        }
+
+        $start = strpos($text, '{');
+        $end   = strrpos($text, '}');
+        if ($start !== false && $end !== false) {
+            $json_str = substr($text, $start, $end - $start + 1);
+            $data = json_decode($json_str, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+                if (!isset($data['sets']) && isset($data['sections'])) {
+                    $data['sets'] = ['Set A' => ['sections' => $data['sections']]];
+                }
+                return $data;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Fetch complete NCERT / CBSE Chapter List for any Class & Subject dynamically via AI & Database Cache
+     */
+    public function fetch_subject_chapters_ai($class_name, $subject_name, $api_engine = 'gemini', $custom_api_key = '')
+    {
+        $active_gemini_key     = !empty($custom_api_key) ? $custom_api_key : $this->gemini_api_key;
+        $active_groq_key       = !empty($custom_api_key) ? $custom_api_key : $this->groq_api_key;
+        $active_openrouter_key = !empty($custom_api_key) ? $custom_api_key : $this->openrouter_api_key;
+        $active_openai_key     = !empty($custom_api_key) ? $custom_api_key : $this->openai_api_key;
+
+        $prompt = <<<EOT
+You are an expert CBSE, NCERT, and State Education Curriculum Director.
+Provide the standard list of NCERT / CBSE curriculum chapters/units for:
+Class: {$class_name}
+Subject: {$subject_name}
+
+STRICT JSON OUTPUT FORMAT ONLY:
+Output MUST be a single valid JSON object strictly matching this schema with NO markdown fences:
+{
+  "class_name": "{$class_name}",
+  "subject_name": "{$subject_name}",
+  "chapters": [
+    "Chapter 1 - Chapter Name",
+    "Chapter 2 - Chapter Name"
+  ]
+}
+EOT;
+
+        $response   = null;
+        $model_used = 'Google Gemini (gemini-2.0-flash)';
+
+        if (($api_engine === 'openrouter' || $api_engine === 'openrouter_ox') && !empty($active_openrouter_key)) {
+            $response   = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
+            $model_used = 'OpenRouter (01-ai/ox-alpha)';
+        } elseif ($api_engine === 'groq' && !empty($active_groq_key)) {
+            $response   = $this->call_groq($prompt, $active_groq_key);
+            $model_used = 'Groq (llama-3.3-70b-versatile)';
+        } elseif (!empty($active_gemini_key)) {
+            $response   = $this->call_gemini($prompt, $active_gemini_key);
+            $model_used = 'Google Gemini (gemini-2.0-flash)';
+        } elseif (!empty($active_openrouter_key)) {
+            $response   = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
+            $model_used = 'OpenRouter (01-ai/ox-alpha)';
+        } elseif (!empty($active_groq_key)) {
+            $response   = $this->call_groq($prompt, $active_groq_key);
+            $model_used = 'Groq (llama-3.3-70b-versatile)';
+        } else {
+            return ['status' => 'error', 'message' => 'No AI API Key available.'];
+        }
+
+        if (!$response || isset($response['error'])) {
+            return ['status' => 'error', 'message' => isset($response['error']) ? $response['error'] : 'Failed to fetch chapters from AI.'];
+        }
+
+        $parsed = $this->extract_json($response['raw_text']);
+        if (!$parsed || empty($parsed['chapters']) || !is_array($parsed['chapters'])) {
+            return ['status' => 'error', 'message' => 'Invalid chapter structure returned by AI.'];
+        }
+
+        return [
+            'status'     => 'success',
+            'model_used' => $model_used,
+            'chapters'   => $parsed['chapters']
+        ];
+    }
+}

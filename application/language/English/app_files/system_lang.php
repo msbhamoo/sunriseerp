@@ -825,6 +825,7 @@ $lang['exam_to_date'] = "Exam To Date";
 $lang['exam_type'] = "Exam Type";	
 $lang['exam_weightage_must_be_equal_to'] = "Exam weightage must be equal to 100";	
 $lang['examinations'] = "Examinations";	
+$lang['cbse_ai_question_generator'] = "AI Question & Paper Generator";
 $lang['examinations_report'] = "Examinations Report";	
 $lang['exams_rank_report'] = "Exams Rank Report";	
 $lang['exams_report'] = "Exams Report";	
@@ -2796,4 +2797,8 @@ $lang['id_card'] = 'ID Card';
 $lang['lesson_plan'] = 'Lesson Plan / Diary';
 $lang['phone_handover'] = 'Phone Handover';
 $lang['compliance_tracking_note'] = 'Compliance items are for tracking and record keeping.';
+
+$lang['ai_exam_studio'] = 'AI Exam Studio';
+$lang['ai_paper_generator'] = 'AI Paper Generator';
+$lang['ai_answer_evaluator'] = 'AI Answer Sheet Evaluator';
 

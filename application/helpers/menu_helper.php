@@ -423,6 +423,13 @@ if (!function_exists('main_menu_array')) {
                 'reports'          => array('daybook','cashbook','bankbook','statement','outstanding','expincome_type','trialbalance','profitloss','balancesheet'),               
                 'settings'         => array('index'),
             ),
+
+            'aiexam' => array(
+                'aiexamgenerator'  => array('index'),
+                'aiexamevaluator'  => array('index'),
+                'aiexamsyllabus'   => array('index'),
+                'aisetting'        => array('index'),
+            ),
             
         );
         if (array_key_exists($find_array, $array)) {

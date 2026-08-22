@@ -128,16 +128,25 @@
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h4 class="modal-title" style="color: <?php echo $theme_color; ?>;"><i class="fa fa-plus-circle"></i> Generate Certificate</h4>      
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
         
         <!-- Search Area -->
-        <div class="form-group" style="position: relative;">
-            <label>Search Student <small class="text-danger"> *</small></label>
-            <input type="text" id="search_student" class="form-control" autocomplete="off" placeholder="Search by name or admission number...">
-            <div id="search_results" style="position: absolute; width: 100%; z-index: 999; background: #fff; border: 1px solid #ccc; display: none; max-height: 250px; overflow-y: auto; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">
-                <table class="table table-hover table-bordered mb-0">
-                    <thead style="background: #f4f4f4;">
-                        <tr><th>SR NO</th><th>NAME</th><th>FATHER'S NAME</th><th>MOTHER'S NAME</th><th>CONTACT</th></tr>
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label style="font-weight: 600;">Search Student <small class="text-danger"> *</small></label>
+            <div class="input-group">
+                <input type="text" id="search_student" class="form-control" autocomplete="off" placeholder="Search by student name, SR/admission number, father name, or mobile...">
+                <span class="input-group-addon"><i class="fa fa-search" id="search_spinner"></i></span>
+            </div>
+            <div id="search_results" style="display: none; margin-top: 10px; border: 1px solid #d2d6de; border-radius: 4px; max-height: 260px; overflow-y: auto; background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
+                <table class="table table-hover table-striped table-bordered" style="margin-bottom: 0;">
+                    <thead style="background: #f4f6f9; color: #333; position: sticky; top: 0; z-index: 2;">
+                        <tr>
+                            <th style="width: 15%;">SR NO</th>
+                            <th style="width: 25%;">NAME</th>
+                            <th style="width: 20%;">FATHER'S NAME</th>
+                            <th style="width: 20%;">MOTHER'S NAME</th>
+                            <th style="width: 20%;">CONTACT</th>
+                        </tr>
                     </thead>
                     <tbody id="search_results_body"></tbody>
                 </table>
@@ -286,6 +295,7 @@
 </div>
 
 <script type="text/javascript">
+var base_url = "<?php echo base_url(); ?>";
 $(document).ready(function() {
     $('.date').datepicker({
         format: '<?php echo $this->customlib->getSchoolDateFormat(true, true); ?>',
@@ -297,10 +307,11 @@ $(document).ready(function() {
     });
 
     var searchTimer;
-    $('#search_student').on('keyup', function() {
-        var term = $(this).val();
+    $('#search_student').on('keyup input', function() {
+        var term = $(this).val().trim();
         clearTimeout(searchTimer);
         if (term.length >= 2) {
+            $('#search_spinner').removeClass('fa-search').addClass('fa-spinner fa-spin');
             searchTimer = setTimeout(function() {
                 $.ajax({
                     url: base_url + 'admin/certificateregister/search_student_ajax',
@@ -308,35 +319,53 @@ $(document).ready(function() {
                     data: {searchterm: term},
                     dataType: 'json',
                     success: function(res) {
-                        if (res.length > 0) {
+                        $('#search_spinner').removeClass('fa-spinner fa-spin').addClass('fa-search');
+                        if (res && res.length > 0) {
                             var html = '';
                             $.each(res, function(i, row) {
                                 var existing = (row.existing_certs && row.existing_certs.length > 0) ? row.existing_certs.join(',') : '';
-                                html += '<tr style="cursor:pointer;" class="sel-student-row" data-id="'+row.student_id+'" data-session_id="'+row.student_session_id+'" data-adm="'+row.admission_no+'" data-fname="'+row.firstname+'" data-lname="'+(row.lastname?row.lastname:'')+'" data-father="'+row.father_name+'" data-mother="'+row.mother_name+'" data-class="'+row.class_name+'" data-sec="'+row.section_name+'" data-contact="'+row.mobileno+'" data-img="'+row.image+'" data-existing="'+existing+'">';
-                                html += '<td>'+row.admission_no+'</td>';
-                                html += '<td>'+row.firstname+' '+(row.lastname?row.lastname:'')+'</td>';
-                                html += '<td>'+row.father_name+'</td>';
-                                html += '<td>'+row.mother_name+'</td>';
-                                html += '<td>'+row.mobileno+'</td>';
+                                var fname = row.firstname ? row.firstname : '';
+                                var lname = row.lastname ? row.lastname : '';
+                                var father = row.father_name ? row.father_name : '-';
+                                var mother = row.mother_name ? row.mother_name : '-';
+                                var contact = row.mobileno ? row.mobileno : '-';
+                                var cname = row.class_name ? row.class_name : '-';
+                                var sname = row.section_name ? row.section_name : '-';
+
+                                html += '<tr style="cursor:pointer;" class="sel-student-row" data-id="'+row.student_id+'" data-session_id="'+row.student_session_id+'" data-adm="'+row.admission_no+'" data-fname="'+fname+'" data-lname="'+lname+'" data-father="'+father+'" data-mother="'+mother+'" data-class="'+cname+'" data-sec="'+sname+'" data-contact="'+contact+'" data-img="'+(row.image ? row.image : '')+'" data-existing="'+existing+'">';
+                                html += '<td><span class="label label-primary" style="font-size: 11px;">'+row.admission_no+'</span></td>';
+                                html += '<td><strong>'+fname+' '+lname+'</strong></td>';
+                                html += '<td>'+father+'</td>';
+                                html += '<td>'+mother+'</td>';
+                                html += '<td>'+contact+'</td>';
                                 html += '</tr>';
                             });
                             $('#search_results_body').html(html);
-                            $('#search_results').show();
+                            $('#search_results').slideDown(150);
                         } else {
-                            $('#search_results_body').html('<tr><td colspan="5" class="text-center text-danger">No active students found</td></tr>');
-                            $('#search_results').show();
+                            $('#search_results_body').html('<tr><td colspan="5" class="text-center text-danger" style="padding: 15px;"><i class="fa fa-info-circle"></i> No students found matching "'+term+'"</td></tr>');
+                            $('#search_results').slideDown(150);
                         }
+                    },
+                    error: function() {
+                        $('#search_spinner').removeClass('fa-spinner fa-spin').addClass('fa-search');
+                        $('#search_results_body').html('<tr><td colspan="5" class="text-center text-danger" style="padding: 15px;"><i class="fa fa-exclamation-triangle"></i> Error searching students. Please try again.</td></tr>');
+                        $('#search_results').slideDown(150);
                     }
                 });
             }, 300);
         } else {
             $('#search_results').hide();
+            $('#search_spinner').removeClass('fa-spinner fa-spin').addClass('fa-search');
         }
     });
 
     $(document).on('click', '.sel-student-row', function() {
-        $('#search_results').hide();
-        $('#search_student').val($(this).data('fname') + ' ' + $(this).data('lname'));
+        $('#search_results').slideUp(150);
+        var fname = $(this).data('fname');
+        var lname = $(this).data('lname');
+        var adm = $(this).data('adm');
+        $('#search_student').val(fname + (lname ? ' ' + lname : '') + ' (' + adm + ')');
         
         var std_id = $(this).data('id');
         var std_session_id = $(this).data('session_id');
@@ -364,8 +393,8 @@ $(document).ready(function() {
         if (!img) img = 'uploads/student_images/no_image.png';
         
         $('#sel_img').attr('src', base_url + img);
-        $('#sel_name').text($(this).data('fname') + ' ' + $(this).data('lname'));
-        $('#sel_admisno').text($(this).data('adm'));
+        $('#sel_name').text(fname + (lname ? ' ' + lname : ''));
+        $('#sel_admisno').text(adm);
         $('#sel_class').text($(this).data('class'));
         $('#sel_sec').text($(this).data('sec'));
         $('#sel_contact').text($(this).data('contact'));
@@ -373,7 +402,7 @@ $(document).ready(function() {
         $('#gen_student_id').val(std_id);
         $('#gen_student_session_id').val(std_session_id);
 
-        $('#student_details_container').show();
+        $('#student_details_container').fadeIn(200);
         
         // Fetch fee summary and scholar history
         $.ajax({
@@ -382,29 +411,35 @@ $(document).ready(function() {
             data: {student_session_id: std_session_id, student_id: std_id},
             dataType: 'json',
             success: function(res) {
-                $('#fee_ac_total').text(res.academic.total.toFixed(2));
-                $('#fee_ac_coll').text(res.academic.collected.toFixed(2));
-                $('#fee_ac_due').text(res.academic.due.toFixed(2));
-                if(res.academic.due > 0) $('#fee_ac_due').css('color', 'red'); else $('#fee_ac_due').css('color', 'green');
+                if (res && res.academic) {
+                    $('#fee_ac_total').text(Number(res.academic.total).toFixed(2));
+                    $('#fee_ac_coll').text(Number(res.academic.collected).toFixed(2));
+                    $('#fee_ac_due').text(Number(res.academic.due).toFixed(2));
+                    if(res.academic.due > 0) $('#fee_ac_due').css('color', 'red'); else $('#fee_ac_due').css('color', 'green');
+                }
                 
-                $('#fee_tr_total').text(res.transport.total.toFixed(2));
-                $('#fee_tr_coll').text(res.transport.collected.toFixed(2));
-                $('#fee_tr_due').text(res.transport.due.toFixed(2));
-                if(res.transport.due > 0) $('#fee_tr_due').css('color', 'red'); else $('#fee_tr_due').css('color', 'green');
+                if (res && res.transport) {
+                    $('#fee_tr_total').text(Number(res.transport.total).toFixed(2));
+                    $('#fee_tr_coll').text(Number(res.transport.collected).toFixed(2));
+                    $('#fee_tr_due').text(Number(res.transport.due).toFixed(2));
+                    if(res.transport.due > 0) $('#fee_tr_due').css('color', 'red'); else $('#fee_tr_due').css('color', 'green');
+                }
                 
-                $('#fee_ho_total').text(res.hostel.total.toFixed(2));
-                $('#fee_ho_coll').text(res.hostel.collected.toFixed(2));
-                $('#fee_ho_due').text(res.hostel.due.toFixed(2));
-                if(res.hostel.due > 0) $('#fee_ho_due').css('color', 'red'); else $('#fee_ho_due').css('color', 'green');
+                if (res && res.hostel) {
+                    $('#fee_ho_total').text(Number(res.hostel.total).toFixed(2));
+                    $('#fee_ho_coll').text(Number(res.hostel.collected).toFixed(2));
+                    $('#fee_ho_due').text(Number(res.hostel.due).toFixed(2));
+                    if(res.hostel.due > 0) $('#fee_ho_due').css('color', 'red'); else $('#fee_ho_due').css('color', 'green');
+                }
                 
                 // Populate Scholar Register history
-                if (res.history) {
-                    $('#sr_working_days').val(res.history.working_days);
-                    $('#sr_present_days').val(res.history.present_days);
-                    $('#sr_attendance').val(res.history.attendance_percentage);
-                    $('#sr_result').val(res.history.result);
-                    $('#sr_conduct').val(res.history.conduct);
-                    $('#sr_remarks').val(res.history.remarks);
+                if (res && res.history) {
+                    $('#sr_working_days').val(res.history.working_days !== undefined ? res.history.working_days : '');
+                    $('#sr_present_days').val(res.history.present_days !== undefined ? res.history.present_days : '');
+                    $('#sr_attendance').val(res.history.attendance_percentage !== undefined ? res.history.attendance_percentage : '');
+                    $('#sr_result').val(res.history.result !== undefined ? res.history.result : '');
+                    $('#sr_conduct').val(res.history.conduct !== undefined ? res.history.conduct : '');
+                    $('#sr_remarks').val(res.history.remarks !== undefined ? res.history.remarks : '');
                 } else {
                     $('#sr_working_days, #sr_present_days, #sr_attendance, #sr_result, #sr_conduct, #sr_remarks').val('');
                 }
@@ -412,10 +447,14 @@ $(document).ready(function() {
         });
     });
 
-    $(document).click(function(e) {
-        if (!$(e.target).closest('.form-group').length) {
-            $('#search_results').hide();
-        }
+    $('#createCertModal').on('hidden.bs.modal', function () {
+        $('#search_student').val('');
+        $('#search_results').hide();
+        $('#search_results_body').html('');
+        $('#student_details_container').hide();
+        $('#form_generate_cert')[0].reset();
+        $('#btn_submit_cert').prop('disabled', false).html('<i class="fa fa-save"></i> Generate');
+        $('#search_spinner').removeClass('fa-spinner fa-spin').addClass('fa-search');
     });
 
     $('#gen_cert_type').change(function() {

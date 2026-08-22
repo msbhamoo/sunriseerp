@@ -50,6 +50,9 @@ class Studentcall extends Admin_Controller
         $follow_up_date_to = $this->parse_input_date($this->input->post('follow_up_date_to'));
         $assigned_to = $this->input->post('assigned_to');
 
+        // Auto-resolve zero due fee followups so they are cleared from Pending tab & counters
+        $this->studentcall_model->auto_resolve_zero_due_fee_followups();
+
         // Defer heavy call-log fetch to AJAX (get_call_logs_ajax) for faster initial page load.
         $data['calls'] = [];
         $data['pending_calls'] = $this->studentcall_model->get_pending_followup_calls('all');
@@ -416,6 +419,7 @@ class Studentcall extends Admin_Controller
         if (!$this->rbac->hasPrivilege('student_call_log', 'can_view')) {
             access_denied();
         }
+        $this->studentcall_model->auto_resolve_zero_due_fee_followups(null, $call_id);
         $data['call'] = $this->studentcall_model->get_call($call_id);
         $data['followups'] = $this->studentcall_model->get_followups_by_call($call_id);
         $data['staff_list'] = $this->staff_model->get();
@@ -775,6 +779,7 @@ class Studentcall extends Admin_Controller
             return;
         }
 
+        $this->studentcall_model->auto_resolve_zero_due_fee_followups(null, $call_id);
         $call = $this->studentcall_model->get_call($call_id);
         if (!empty($call)) {
             $call['notes'] = fix_utf8_notes($call['notes'] ?? '');
@@ -813,6 +818,9 @@ class Studentcall extends Admin_Controller
             echo json_encode(['status' => 'fail', 'message' => 'Access Denied']);
             return;
         }
+
+        // Auto resolve fee calls where student has 0 due balance
+        $this->studentcall_model->auto_resolve_zero_due_fee_followups();
 
         $class_id = $this->input->post('class_id');
         $section_id = $this->input->post('section_id');

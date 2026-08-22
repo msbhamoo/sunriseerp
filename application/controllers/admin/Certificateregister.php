@@ -240,25 +240,48 @@ class Certificateregister extends Admin_Controller {
     }
 
     public function search_student_ajax() {
-        $searchterm = $this->input->post('searchterm');
+        $searchterm = trim($this->input->post('searchterm'));
         $current_session = $this->setting_model->getCurrentSession();
         
-        $this->db->select('students.id as student_id, students.admission_no, students.firstname, students.lastname, students.father_name, students.guardian_name as mother_name, students.mobileno, students.image, classes.class as class_name, sections.section as section_name, student_session.id as student_session_id');
+        $this->db->select('students.id as student_id, students.admission_no, students.firstname, students.lastname, students.father_name, IFNULL(students.mother_name, students.guardian_name) as mother_name, students.mobileno, students.image, classes.class as class_name, sections.section as section_name, student_session.id as student_session_id');
         $this->db->from('students');
         $this->db->join('student_session', 'student_session.student_id = students.id');
-        $this->db->join('classes', 'classes.id = student_session.class_id');
-        $this->db->join('sections', 'sections.id = student_session.section_id');
+        $this->db->join('classes', 'classes.id = student_session.class_id', 'left');
+        $this->db->join('sections', 'sections.id = student_session.section_id', 'left');
         $this->db->where('student_session.session_id', $current_session);
         
         $this->db->group_start();
         $this->db->like('students.firstname', $searchterm);
         $this->db->or_like('students.lastname', $searchterm);
         $this->db->or_like('students.admission_no', $searchterm);
+        $this->db->or_like("CONCAT_WS(' ', students.firstname, students.lastname)", $searchterm);
+        $this->db->or_like('students.father_name', $searchterm);
+        $this->db->or_like('students.mobileno', $searchterm);
         $this->db->group_end();
         
-        $this->db->limit(15);
+        $this->db->limit(20);
         $result = $this->db->get()->result_array();
         
+        if (empty($result)) {
+            $this->db->select('students.id as student_id, students.admission_no, students.firstname, students.lastname, students.father_name, IFNULL(students.mother_name, students.guardian_name) as mother_name, students.mobileno, students.image, classes.class as class_name, sections.section as section_name, student_session.id as student_session_id');
+            $this->db->from('students');
+            $this->db->join('student_session', 'student_session.student_id = students.id', 'left');
+            $this->db->join('classes', 'classes.id = student_session.class_id', 'left');
+            $this->db->join('sections', 'sections.id = student_session.section_id', 'left');
+            $this->db->group_start();
+            $this->db->like('students.firstname', $searchterm);
+            $this->db->or_like('students.lastname', $searchterm);
+            $this->db->or_like('students.admission_no', $searchterm);
+            $this->db->or_like("CONCAT_WS(' ', students.firstname, students.lastname)", $searchterm);
+            $this->db->or_like('students.father_name', $searchterm);
+            $this->db->or_like('students.mobileno', $searchterm);
+            $this->db->group_end();
+            $this->db->group_by('students.id');
+            $this->db->order_by('student_session.id', 'DESC');
+            $this->db->limit(20);
+            $result = $this->db->get()->result_array();
+        }
+
         foreach ($result as &$row) {
             $this->db->select('student_certificate_type_id');
             $this->db->where('student_id', $row['student_id']);

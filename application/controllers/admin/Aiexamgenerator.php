@@ -1,0 +1,425 @@
+<?php
+
+if (!defined('BASEPATH')) {
+    exit('No direct script access allowed');
+}
+
+class Aiexamgenerator extends Admin_Controller
+{
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('media_storage');
+        $this->load->library('Ai_exam_generator');
+        $this->load->model(['class_model', 'subject_model', 'question_model']);
+        $this->sch_setting_detail = $this->setting_model->getSetting();
+    }
+
+    /**
+     * Generator Main Studio View
+     */
+    public function index()
+    {
+        if (!$this->rbac->hasPrivilege('examination', 'can_view')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'aiexam');
+        $this->session->set_userdata('sub_menu', 'admin/aiexamgenerator');
+
+        $data['classlist']       = $this->class_model->get();
+        $data['subjectlist']     = $this->subject_model->get();
+        $data['sch_setting']     = $this->sch_setting_detail;
+        $data['current_session'] = $this->setting_model->getCurrentSessionName();
+
+        // Fetch recent papers history
+        $data['recent_papers']   = $this->get_saved_papers_list();
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/aiexam/generator', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    /**
+     * AJAX Endpoint: Generate Question Paper using AI & Auto-Save to History
+     */
+    public function generate_paper_ajax()
+    {
+        if (!$this->rbac->hasPrivilege('examination', 'can_view')) {
+            echo json_encode(['status' => 'error', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $class_id     = $this->input->post('class_id');
+        $subject_id   = $this->input->post('subject_id');
+        $class_name   = $this->input->post('class_name');
+        $subject_name = $this->input->post('subject_name');
+        $chapter      = $this->input->post('chapter');
+        $total_marks  = $this->input->post('total_marks');
+        $difficulty   = $this->input->post('difficulty');
+        $language     = $this->input->post('language');
+        $api_engine   = $this->input->post('api_engine');
+        $api_key      = $this->input->post('api_key');
+
+        if (empty($class_name) || empty($subject_name)) {
+            echo json_encode(['status' => 'error', 'message' => 'Class and Subject are required.']);
+            return;
+        }
+
+        $blooms_taxonomy       = $this->input->post('blooms_taxonomy');
+        $generate_multi_sets   = $this->input->post('generate_multi_sets');
+        $question_distribution = $this->input->post('question_distribution');
+
+        $current_session = $this->setting_model->getCurrentSessionName();
+
+        $params = [
+            'class_name'            => $class_name,
+            'subject_name'          => $subject_name,
+            'chapter'               => !empty($chapter) ? $chapter : 'Complete Syllabus',
+            'total_marks'           => !empty($total_marks) ? $total_marks : 80,
+            'difficulty'            => !empty($difficulty) ? $difficulty : 'Medium',
+            'language'              => !empty($language) ? $language : 'English',
+            'academic_session'      => !empty($current_session) ? $current_session : date('Y') . '-' . (date('y') + 1),
+            'blooms_taxonomy'       => is_array($blooms_taxonomy) ? $blooms_taxonomy : null,
+            'generate_multi_sets'   => $generate_multi_sets,
+            'question_distribution' => is_array($question_distribution) ? $question_distribution : null,
+            'api_engine'            => !empty($api_engine) ? $api_engine : 'gemini',
+            'api_key'               => !empty($api_key) ? trim($api_key) : ''
+        ];
+
+        $result = $this->ai_exam_generator->generate_paper($params);
+
+        // If generated successfully, automatically save into cbse_ai_generated_papers table
+        if ($result['status'] === 'success' && !empty($result['data'])) {
+            $paper_data = $result['data'];
+            $paper_title = isset($paper_data['paper_title']) ? $paper_data['paper_title'] : "Exam {$class_name} {$subject_name}";
+            
+            $history_data = [
+                'paper_title'  => $paper_title,
+                'class_id'     => !empty($class_id) ? $class_id : null,
+                'class_name'   => $class_name,
+                'subject_id'   => !empty($subject_id) ? $subject_id : null,
+                'subject_name' => $subject_name,
+                'chapter'      => !empty($chapter) ? $chapter : 'Complete Syllabus',
+                'total_marks'  => !empty($total_marks) ? intval($total_marks) : 80,
+                'difficulty'   => !empty($difficulty) ? $difficulty : 'Medium',
+                'language'     => !empty($language) ? $language : 'English',
+                'paper_json'   => json_encode($paper_data),
+                'created_by'   => $this->customlib->getStaffID(),
+                'created_at'   => date('Y-m-d H:i:s')
+            ];
+
+            $this->db->insert('cbse_ai_generated_papers', $history_data);
+            $result['saved_paper_id'] = $this->db->insert_id();
+        }
+
+        echo json_encode($result);
+    }
+
+    /**
+     * AJAX Endpoint: Regenerate a Single Question in-place
+     */
+    public function regenerate_single_question_ajax()
+    {
+        if (!$this->rbac->hasPrivilege('examination', 'can_view')) {
+            echo json_encode(['status' => 'error', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $params = [
+            'class_name'    => $this->input->post('class_name'),
+            'subject_name'  => $this->input->post('subject_name'),
+            'chapter'       => $this->input->post('chapter'),
+            'section_name'  => $this->input->post('section_name'),
+            'question_type' => $this->input->post('question_type'),
+            'marks'         => $this->input->post('marks'),
+            'difficulty'    => $this->input->post('difficulty'),
+            'language'      => $this->input->post('language'),
+            'api_engine'    => $this->input->post('api_engine'),
+            'api_key'       => $this->input->post('api_key')
+        ];
+
+        $result = $this->ai_exam_generator->regenerate_single_question($params);
+        echo json_encode($result);
+    }
+
+    /**
+     * AJAX Endpoint: Save User Edits to Archived Paper
+     */
+    public function save_edited_paper_ajax()
+    {
+        if (!$this->rbac->hasPrivilege('examination', 'can_view')) {
+            echo json_encode(['status' => 'error', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $paper_id   = $this->input->post('paper_id');
+        $paper_json = $this->input->post('paper_json');
+
+        if (empty($paper_id) || empty($paper_json)) {
+            echo json_encode(['status' => 'error', 'message' => 'Invalid parameters']);
+            return;
+        }
+
+        $this->db->where('id', $paper_id);
+        $this->db->update('cbse_ai_generated_papers', [
+            'paper_json' => $paper_json,
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+
+        echo json_encode(['status' => 'success', 'message' => 'Paper changes saved successfully!']);
+    }
+
+    /**
+     * AJAX Endpoint: Get a previously saved paper by ID
+     */
+    public function get_saved_paper_ajax()
+    {
+        if (!$this->rbac->hasPrivilege('examination', 'can_view')) {
+            echo json_encode(['status' => 'error', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $paper_id = $this->input->post('paper_id');
+        if (empty($paper_id)) {
+            echo json_encode(['status' => 'error', 'message' => 'Paper ID is required.']);
+            return;
+        }
+
+        $paper = $this->db->get_where('cbse_ai_generated_papers', ['id' => $paper_id])->row_array();
+        if ($paper && !empty($paper['paper_json'])) {
+            $data = json_decode($paper['paper_json'], true);
+            echo json_encode(['status' => 'success', 'data' => $data, 'paper_info' => $paper]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Paper not found.']);
+        }
+    }
+
+    /**
+     * AJAX Endpoint: Delete a saved paper
+     */
+    public function delete_saved_paper_ajax()
+    {
+        if (!$this->rbac->hasPrivilege('examination', 'can_view')) {
+            echo json_encode(['status' => 'error', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $paper_id = $this->input->post('paper_id');
+        if (empty($paper_id)) {
+            echo json_encode(['status' => 'error', 'message' => 'Paper ID is required.']);
+            return;
+        }
+
+        $this->db->where('id', $paper_id);
+        $this->db->delete('cbse_ai_generated_papers');
+
+        echo json_encode(['status' => 'success', 'message' => 'Paper deleted successfully.']);
+    }
+
+    /**
+     * AJAX Endpoint: Fetch Saved Papers List
+     */
+    public function get_saved_papers_list_ajax()
+    {
+        if (!$this->rbac->hasPrivilege('examination', 'can_view')) {
+            echo json_encode(['status' => 'error', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $list = $this->get_saved_papers_list();
+        echo json_encode(['status' => 'success', 'list' => $list]);
+    }
+
+    /**
+     * Helper to get list of saved papers
+     */
+    private function get_saved_papers_list()
+    {
+        $this->db->select('id, paper_title, class_name, subject_name, total_marks, created_at');
+        $this->db->from('cbse_ai_generated_papers');
+        $this->db->order_by('id', 'DESC');
+        $this->db->limit(30);
+        return $this->db->get()->result_array();
+    }
+
+    /**
+     * AJAX Endpoint: Push generated questions into LMS Question Bank
+     */
+    public function save_to_question_bank_ajax()
+    {
+        if (!$this->rbac->hasPrivilege('examination', 'can_view')) {
+            echo json_encode(['status' => 'error', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $class_id          = $this->input->post('class_id');
+        $subject_id        = $this->input->post('subject_id');
+        $questions_payload = $this->input->post('questions_payload');
+
+        if (empty($questions_payload)) {
+            echo json_encode(['status' => 'error', 'message' => 'No questions payload received.']);
+            return;
+        }
+
+        $questions = json_decode($questions_payload, true);
+        if (!is_array($questions) || empty($questions)) {
+            echo json_encode(['status' => 'error', 'message' => 'Invalid questions data format.']);
+            return;
+        }
+
+        $saved_count = 0;
+        foreach ($questions as $q) {
+            $question_type = isset($q['question_type']) ? $q['question_type'] : 'singlechoice';
+            $question_text = isset($q['question_text']) ? $q['question_text'] : '';
+
+            if (empty($question_text)) {
+                continue;
+            }
+
+            $options = isset($q['options']) && is_array($q['options']) ? $q['options'] : [];
+            $correct = isset($q['correct_option']) ? $q['correct_option'] : 'A';
+            
+            $insert_data = [
+                'subject_id'     => !empty($subject_id) ? $subject_id : null,
+                'class_id'       => !empty($class_id) ? $class_id : null,
+                'question_type'  => $question_type,
+                'question'       => $question_text,
+                'opt_a'          => isset($options['A']) ? $options['A'] : null,
+                'opt_b'          => isset($options['B']) ? $options['B'] : null,
+                'opt_c'          => isset($options['C']) ? $options['C'] : null,
+                'opt_d'          => isset($options['D']) ? $options['D'] : null,
+                'opt_e'          => isset($options['E']) ? $options['E'] : null,
+                'correct'        => 'opt_' . strtolower($correct),
+                'level'          => isset($q['level']) ? $q['level'] : 'medium',
+                'explanation'    => isset($q['explanation']) ? $q['explanation'] : null,
+                'created_at'     => date('Y-m-d H:i:s')
+            ];
+
+            if ($this->question_model->add($insert_data)) {
+                $saved_count++;
+            }
+        }
+
+        echo json_encode([
+            'status'  => 'success',
+            'message' => "Successfully saved {$saved_count} questions into Question Bank."
+        ]);
+    }
+
+    /**
+     * AJAX Endpoint: Get Cached NCERT Chapters or Fetch 1-Time via AI Model & Cache
+     */
+    public function get_or_fetch_chapters_ajax()
+    {
+        if (!$this->rbac->hasPrivilege('examination', 'can_view')) {
+            echo json_encode(['status' => 'error', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $class_name   = trim($this->input->post('class_name'));
+        $subject_name = trim($this->input->post('subject_name'));
+        $api_engine   = $this->input->post('api_engine');
+        $force_reload = $this->input->post('force_reload') == '1';
+
+        if (empty($class_name) || empty($subject_name)) {
+            echo json_encode(['status' => 'error', 'message' => 'Class and Subject are required.']);
+            return;
+        }
+
+        // 1. Check if chapters are already cached in database
+        if (!$force_reload) {
+            $cached = $this->db->get_where('cbse_syllabus_chapters', [
+                'class_name'   => $class_name,
+                'subject_name' => $subject_name
+            ])->row_array();
+
+            if ($cached && !empty($cached['chapters_json'])) {
+                $chapters = json_decode($cached['chapters_json'], true);
+                if (is_array($chapters) && count($chapters) > 0) {
+                    echo json_encode([
+                        'status'   => 'success',
+                        'source'   => 'database_cache',
+                        'chapters' => $chapters
+                    ]);
+                    return;
+                }
+            }
+        }
+
+        // 2. Fetch 1-time from AI Model (Gemini / OpenRouter ox-alpha / Groq)
+        $ai_result = $this->ai_exam_generator->fetch_subject_chapters_ai($class_name, $subject_name, $api_engine);
+
+        if ($ai_result['status'] === 'success' && !empty($ai_result['chapters'])) {
+            $chapters = $ai_result['chapters'];
+
+            // 3. Cache into Database so it NEVER makes external AI calls for this class+subject again
+            $this->db->where('class_name', $class_name);
+            $this->db->where('subject_name', $subject_name);
+            $this->db->delete('cbse_syllabus_chapters');
+
+            $this->db->insert('cbse_syllabus_chapters', [
+                'class_name'    => $class_name,
+                'subject_name'  => $subject_name,
+                'chapters_json' => json_encode($chapters),
+                'updated_at'    => date('Y-m-d H:i:s')
+            ]);
+
+            echo json_encode([
+                'status'     => 'success',
+                'source'     => 'ai_fetched_and_cached',
+                'model_used' => isset($ai_result['model_used']) ? $ai_result['model_used'] : 'AI Model',
+                'chapters'   => $chapters
+            ]);
+        } else {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => isset($ai_result['message']) ? $ai_result['message'] : 'Failed to fetch chapters.'
+            ]);
+        }
+    }
+
+    /**
+     * AJAX Endpoint: Get list of all Class + Subject pairs for bulk background sync
+     */
+    public function get_sync_pairs_ajax()
+    {
+        if (!$this->rbac->hasPrivilege('examination', 'can_view')) {
+            echo json_encode(['status' => 'error', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $classes  = $this->class_model->get();
+        $subjects = $this->subject_model->get();
+
+        $pairs = [];
+        if (!empty($classes) && !empty($subjects)) {
+            foreach ($classes as $cls) {
+                foreach ($subjects as $sub) {
+                    $className   = trim($cls['class']);
+                    $subjectName = trim($sub['name']);
+
+                    // Check if already in cache
+                    $cached = $this->db->get_where('cbse_syllabus_chapters', [
+                        'class_name'   => $className,
+                        'subject_name' => $subjectName
+                    ])->row_array();
+
+                    $pairs[] = [
+                        'class_id'     => $cls['id'],
+                        'class_name'   => $className,
+                        'subject_id'   => $sub['id'],
+                        'subject_name' => $subjectName,
+                        'is_cached'    => ($cached && !empty($cached['chapters_json'])) ? 1 : 0
+                    ];
+                }
+            }
+        }
+
+        echo json_encode([
+            'status'      => 'success',
+            'total_pairs' => count($pairs),
+            'pairs'       => $pairs
+        ]);
+    }
+}

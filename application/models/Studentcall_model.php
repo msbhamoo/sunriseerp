@@ -35,6 +35,53 @@ class Studentcall_model extends MY_Model
         }
     }
 
+    public function auto_resolve_zero_due_fee_followups($student_session_id = null, $call_id = null)
+    {
+        $this->db->select('f.id as followup_id, f.student_call_id, sc.student_session_id, sc.student_id, sc.call_purpose_id, p.purpose as purpose_name');
+        $this->db->from('student_call_followups f');
+        $this->db->join('student_calls sc', 'sc.id = f.student_call_id');
+        $this->db->join('student_session ss', 'ss.id = sc.student_session_id');
+        $this->db->join('student_call_purpose p', 'p.id = sc.call_purpose_id', 'left');
+        $this->db->where('f.status', 'Pending');
+        $this->db->where('ss.session_id', $this->current_session);
+        
+        if (!empty($student_session_id)) {
+            $this->db->where('sc.student_session_id', $student_session_id);
+        }
+        if (!empty($call_id)) {
+            $this->db->where('sc.id', $call_id);
+        }
+        
+        // Match purpose that relates to Fee or general/empty
+        $this->db->group_start();
+        $this->db->like('LOWER(p.purpose)', 'fee');
+        $this->db->or_where('sc.call_purpose_id IS NULL', null, false);
+        $this->db->or_where('sc.call_purpose_id', 0);
+        $this->db->or_where('sc.call_purpose_id', '');
+        $this->db->group_end();
+        
+        $pending = $this->db->get()->result_array();
+        if (!empty($pending)) {
+            foreach ($pending as $p_item) {
+                $fee_info = $this->get_student_fee_info($p_item['student_session_id']);
+                if (!empty($fee_info) && $fee_info['total_amount'] > 0 && $fee_info['due_amount'] <= 0) {
+                    // All fees paid! Auto resolve this follow-up
+                    $this->db->where('id', $p_item['followup_id']);
+                    $this->db->update('student_call_followups', [
+                        'status' => 'Resolved',
+                        'call_status' => 'Connected',
+                        'remarks' => 'Auto-Resolved: Fee balance is ₹0.00 (All fees fully paid)'
+                    ]);
+                    
+                    $this->db->where('id', $p_item['student_call_id']);
+                    $this->db->update('student_calls', [
+                        'call_status' => 'Connected'
+                    ]);
+                }
+            }
+        }
+    }
+
     public function merge_existing_duplicate_calls()
     {
         $sql = "SELECT student_id, call_purpose_id, COUNT(*) as cnt 
@@ -181,7 +228,7 @@ class Studentcall_model extends MY_Model
 
     public function get_calls($class_id = null, $section_id = null, $date_from = null, $date_to = null, $purpose_id = null, $status = null, $follow_up_date_from = null, $follow_up_date_to = null, $assigned_to = null)
     {
-        $this->db->select('student_calls.*, students.firstname, students.lastname, students.admission_no, students.father_name, students.father_phone, students.mother_phone, students.guardian_phone, students.mobileno, students.admission_type, students.shrestha, students.rte, students.is_staff_kid, students.staff_id, student_staff.name as student_staff_name, classes.class, sections.section, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname, pickup_point.name as pickup_point_name, (SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status NOT IN ("Completed", "Resolved") ORDER BY id DESC LIMIT 1) as next_follow_up_date, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id AND status NOT IN ("Completed", "Resolved")) as pending_count, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id) as total_followups, (SELECT CONCAT(staff.name, " ", staff.surname) FROM student_call_followups JOIN staff ON staff.id = student_call_followups.assigned_to WHERE student_call_id = student_calls.id AND student_call_followups.status NOT IN ("Completed", "Resolved") ORDER BY student_call_followups.id DESC LIMIT 1) as assigned_to_name');
+        $this->db->select('student_calls.*, students.firstname, students.lastname, students.admission_no, students.father_name, students.father_phone, students.mother_phone, students.guardian_phone, students.mobileno, students.admission_type, students.shrestha, students.rte, students.is_staff_kid, students.staff_id, student_staff.name as student_staff_name, classes.class, sections.section, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname, pickup_point.name as pickup_point_name, (SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id DESC LIMIT 1) as next_follow_up_date, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending") as pending_count, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id) as total_followups, (SELECT CONCAT(staff.name, " ", staff.surname) FROM student_call_followups JOIN staff ON staff.id = student_call_followups.assigned_to WHERE student_call_id = student_calls.id AND student_call_followups.status = "Pending" ORDER BY student_call_followups.id DESC LIMIT 1) as assigned_to_name');
         $this->db->from('student_calls');
         $this->db->join('student_session', 'student_session.id = student_calls.student_session_id');
         $this->db->join('students', 'students.id = student_calls.student_id');
@@ -220,12 +267,12 @@ class Studentcall_model extends MY_Model
             $this->db->where('EXISTS (SELECT 1 FROM student_call_followups WHERE student_call_followups.student_call_id = student_calls.id AND student_call_followups.assigned_to = '.(int)$assigned_to.')', NULL, FALSE);
         }
         if (!empty($follow_up_date_from) && !empty($follow_up_date_to)) {
-            $this->db->where('DATE((SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status NOT IN ("Completed", "Resolved") ORDER BY id DESC LIMIT 1)) >= '.$this->db->escape($follow_up_date_from), NULL, FALSE);
-            $this->db->where('DATE((SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status NOT IN ("Completed", "Resolved") ORDER BY id DESC LIMIT 1)) <= '.$this->db->escape($follow_up_date_to), NULL, FALSE);
+            $this->db->where('DATE((SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id DESC LIMIT 1)) >= '.$this->db->escape($follow_up_date_from), NULL, FALSE);
+            $this->db->where('DATE((SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id DESC LIMIT 1)) <= '.$this->db->escape($follow_up_date_to), NULL, FALSE);
         } elseif (!empty($follow_up_date_from)) {
-            $this->db->where('DATE((SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status NOT IN ("Completed", "Resolved") ORDER BY id DESC LIMIT 1)) >= '.$this->db->escape($follow_up_date_from), NULL, FALSE);
+            $this->db->where('DATE((SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id DESC LIMIT 1)) >= '.$this->db->escape($follow_up_date_from), NULL, FALSE);
         } elseif (!empty($follow_up_date_to)) {
-            $this->db->where('DATE((SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status NOT IN ("Completed", "Resolved") ORDER BY id DESC LIMIT 1)) <= '.$this->db->escape($follow_up_date_to), NULL, FALSE);
+            $this->db->where('DATE((SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id DESC LIMIT 1)) <= '.$this->db->escape($follow_up_date_to), NULL, FALSE);
         }
 
         $this->db->order_by('student_calls.id', 'desc');

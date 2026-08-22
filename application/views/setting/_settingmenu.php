@@ -120,6 +120,9 @@
             <li class="<?php echo set_SubSubmenu('admin/systemnotificationsetting'); ?>">
                 <a class="<?php echo set_SubSubmenu('admin/systemnotificationsetting'); ?>" href="<?php echo site_url('admin/systemnotificationsetting') ?>"><i class="fa fa-bell-o"></i> System Notifications</a>
             </li>
+            <li class="<?php echo set_SubSubmenu('admin/aisetting'); ?>">
+                <a class="<?php echo set_SubSubmenu('admin/aisetting'); ?>" href="<?php echo site_url('admin/aisetting') ?>"><i class="fa fa-magic" style="color: #8b5cf6;"></i> AI API Keys & Engines</a>
+            </li>
         </ul>
     </div>
 </div><!--./col-md-3--> 

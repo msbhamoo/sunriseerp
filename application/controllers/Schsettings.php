@@ -406,6 +406,10 @@ class Schsettings extends Admin_Controller
                 'daily_digest_time'       => $this->input->post('daily_digest_time'),
                 'weekly_digest_time'      => $this->input->post('weekly_digest_time'),
                 'monthly_digest_time'     => $this->input->post('monthly_digest_time'),
+                'ai_gemini_api_key'       => $this->input->post('ai_gemini_api_key'),
+                'ai_groq_api_key'         => $this->input->post('ai_groq_api_key'),
+                'ai_openai_api_key'       => $this->input->post('ai_openai_api_key'),
+                'ai_default_model'        => $this->input->post('ai_default_model'),
             );
 
             $this->setting_model->add($data);

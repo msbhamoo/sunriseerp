@@ -41,7 +41,11 @@ if (!empty($side_list)) {
             }
         }
         if ($module_access) {
-            if ($this->module_lib->hasModule($side_list_value->short_code) && $this->module_lib->hasActive($side_list_value->short_code)) {
+            $has_module_active = true;
+            if (!empty($side_list_value->permission_group_id) && !empty($side_list_value->short_code)) {
+                $has_module_active = ($this->module_lib->hasModule($side_list_value->short_code) && $this->module_lib->hasActive($side_list_value->short_code));
+            }
+            if ($has_module_active) {
 
                 $modern_icons = [
                     'front_office' => ['icon' => 'icon-monitor', 'color' => '#3b82f6'], // Blue
@@ -80,6 +84,7 @@ if (!empty($side_list)) {
                     'accounts' => ['icon' => 'icon-calculator', 'color' => '#10b981'], // Emerald
                     'scholarship_exam' => ['icon' => 'icon-award', 'color' => '#f59e0b'], // Amber/Gold
                     'call_log' => ['icon' => 'icon-phone-call', 'color' => '#06b6d4'], // Cyan/Teal
+                    'ai_exam_studio' => ['icon' => 'icon-sparkles', 'color' => '#8b5cf6'], // Purple Magic
                     'annual_calendar' => ['icon' => 'icon-calendar', 'color' => '#3b82f6'], // Blue
                     'calendar' => ['icon' => 'icon-calendar', 'color' => '#3b82f6'], // Blue
                     'calendar_js' => ['icon' => 'icon-calendar', 'color' => '#3b82f6'], // Blue
@@ -174,6 +179,13 @@ foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
                             <li class="<?php echo set_Submenu('admin/feediscount/approvalQueue'); ?>"><a href="<?php echo site_url('admin/feediscount/approvalQueue'); ?>"><i class="icon-circle-small"></i>Discount Approval</a></li>
                             <?php
                         }
+                    }
+
+                    if ($side_list_value->lang_key == 'ai_exam_studio' || $side_list_value->lang_key == 'aiexam') {
+                        ?>
+                        <li class="<?php echo set_Submenu('admin/aiexamsyllabus'); ?>"><a href="<?php echo site_url('admin/aiexamsyllabus'); ?>"><i class="icon-circle-small"></i>Curriculum & Syllabus Catalog</a></li>
+                        <li class="<?php echo set_Submenu('admin/aisetting'); ?>"><a href="<?php echo site_url('admin/aisetting'); ?>"><i class="icon-circle-small"></i>AI Engine Configuration</a></li>
+                        <?php
                     }
 
                     ?>

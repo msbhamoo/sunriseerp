@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Journey Prototype</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #114B5F;
+            --primary-light: #f0fdfa;
+            --primary-border: #99f6e4;
+            --accent: #0284c7;
+            --success: #10b981;
+            --bg-gray: #f8fafc;
+            --border-color: #e2e8f0;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            color: var(--text-dark);
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .header-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            margin-bottom: 24px;
+        }
+
+        .header-title h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-title p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .btn-add {
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(17, 75, 95, 0.25);
+        }
+
+        .btn-add:hover {
+            background: #0c3847;
+            transform: translateY(-1px);
+        }
+
+        /* Timeline Container */
+        .timeline-wrapper {
+            position: relative;
+            padding-left: 32px;
+        }
+
+        .timeline-wrapper::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 20px;
+            bottom: 20px;
+            width: 2px;
+            background: linear-gradient(to bottom, #114B5F, #cbd5e1);
+        }
+
+        /* Milestone Card */
+        .milestone-item {
+            position: relative;
+            margin-bottom: 28px;
+        }
+
+        .milestone-node {
+            position: absolute;
+            left: -32px;
+            top: 18px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 3px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 13px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            z-index: 2;
+        }
+
+        .milestone-card {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 22px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            transition: all 0.2s ease;
+        }
+
+        .milestone-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+        }
+
+        .milestone-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .school-info {
+            display: flex;
+            gap: 16px;
+        }
+
+        .school-logo {
+            width: 52px;
+            height: 52px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .school-details h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .school-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .pill {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .pill-blue {
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+        }
+
+        .pill-green {
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+        }
+
+        .pill-gray {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .verified-badge {
+            color: #059669;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .actions-wrap {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: #ffffff;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-icon:hover {
+            color: var(--primary);
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+
+        .btn-icon.delete:hover {
+            color: #e11d48;
+            border-color: #fecdd3;
+            background: #fff1f2;
+        }
+
+        /* Marks Breakdown */
+        .marks-section {
+            margin-top: 18px;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .marks-header {
+            padding: 10px 16px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .marks-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .marks-table th {
+            text-align: left;
+            padding: 9px 16px;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+        }
+
+        .marks-table td {
+            padding: 10px 16px;
+            border-top: 1px solid #f1f5f9;
+            color: #1e293b;
+        }
+
+        .marks-table tr:hover {
+            background: #ffffff;
+        }
+
+        .progress-bar-bg {
+            width: 80px;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: #10b981;
+            border-radius: 4px;
+        }
+
+        /* Document / Attachment */
+        .attachment-card {
+            margin-top: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--primary);
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+
+        .attachment-card:hover {
+            background: #f0fdfa;
+            border-color: #99f6e4;
+        }
+
+        /* Modal Preview Layout */
+        .modal-demo {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            margin-top: 36px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+
+        .modal-header-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .form-control {
+            padding: 9px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            background: #ffffff;
+        }
+
+        .subject-repeater-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 40px;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .btn-sub-add {
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px dashed #93c5fd;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Top Header -->
+    <div class="header-card">
+        <div class="header-title">
+            <h2><i class="fa fa-graduation-cap" style="color: var(--primary);"></i> Student Academic Journey</h2>
+            <p>Complete multi-year educational milestones, class history & subject-wise scorecards</p>
+        </div>
+        <button class="btn-add">
+            <i class="fa fa-plus"></i> Add Academic Milestone
+        </button>
+    </div>
+
+    <!-- Timeline Wrapper -->
+    <div class="timeline-wrapper">
+
+        <!-- Milestone 1 -->
+        <div class="milestone-item">
+            <div class="milestone-node"><i class="fa fa-graduation-cap"></i></div>
+            <div class="milestone-card">
+                <div class="milestone-top">
+                    <div class="school-info">
+                        <div class="school-logo">
+                            <i class="fa fa-university"></i>
+                        </div>
+                        <div class="school-details">
+                            <h3>St. Xavier Senior Secondary School, Kolkata</h3>
+                            <div class="school-meta">
+                                <span class="pill pill-blue"><i class="fa fa-book"></i> Class 12th - Science (PCM)</span>
+                                <span class="pill pill-green"><i class="fa fa-trophy"></i> 92.4% Overall (Grade A1)</span>
+                                <span class="pill pill-gray"><i class="fa fa-calendar"></i> Session: 2022 - 2023</span>
+                                <span class="verified-badge"><i class="fa fa-check-circle"></i> Verified Record</span>
+                            </div>
+                            <p style="font-size: 12.5px; color: #64748b; margin-top: 4px;">Board: CBSE &bull; Roll No: 1245893 &bull; Result: Passed with Distinction</p>
+                        </div>
+                    </div>
+                    <div class="actions-wrap">
+                        <button class="btn-icon" title="Edit Milestone"><i class="fa fa-pencil"></i></button>
+                        <button class="btn-icon delete" title="Delete Milestone"><i class="fa fa-trash"></i></button>
+                    </div>
+                </div>
+
+                <!-- Subject Breakdown Table -->
+                <div class="marks-section">
+                    <div class="marks-header">
+                        <span><i class="fa fa-list-check" style="color: var(--primary);"></i> Subject-Wise Performance Breakdown</span>
+                        <span style="color: #059669; font-weight: 700;">Total: 462 / 500</span>
+                    </div>
+                    <table class="marks-table">
+                        <thead>
+                            <tr>
+                                <th>Subject Name</th>
+                                <th>Max Marks</th>
+                                <th>Marks Obtained</th>
+                                <th>Performance</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><b>Mathematics</b></td>
+                                <td>100</td>
+                                <td><b>95</b></td>
+                                <td>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 95%;"></div></div>
+                                    95%
+                                </td>
+                                <td><span class="pill pill-green">A1</span></td>
+                            </tr>
+                            <tr>
+                                <td><b>Physics</b></td>
+                                <td>100</td>
+                                <td><b>92</b></td>
+                                <td>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 92%;"></div></div>
+                                    92%
+                                </td>
+                                <td><span class="pill pill-green">A1</span></td>
+                            </tr>
+                            <tr>
+                                <td><b>Chemistry</b></td>
+                                <td>100</td>
+                                <td><b>94</b></td>
+                                <td>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 94%;"></div></div>
+                                    94%
+                                </td>
+                                <td><span class="pill pill-green">A1</span></td>
+                            </tr>
+                            <tr>
+                                <td><b>Computer Science</b></td>
+                                <td>100</td>
+                                <td><b>98</b></td>
+                                <td>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 98%;"></div></div>
+                                    98%
+                                </td>
+                                <td><span class="pill pill-green">A1</span></td>
+                            </tr>
+                            <tr>
+                                <td><b>English Core</b></td>
+                                <td>100</td>
+                                <td><b>83</b></td>
+                                <td>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 83%; background: #0284c7;"></div></div>
+                                    83%
+                                </td>
+                                <td><span class="pill pill-blue">A2</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <a href="#" class="attachment-card">
+                    <i class="fa fa-file-pdf" style="color: #ef4444; font-size: 16px;"></i>
+                    <span>Download Marksheet / Transcript (Class_12_Final.pdf)</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Milestone 2 -->
+        <div class="milestone-item">
+            <div class="milestone-node"><i class="fa fa-school"></i></div>
+            <div class="milestone-card">
+                <div class="milestone-top">
+                    <div class="school-info">
+                        <div class="school-logo">
+                            <i class="fa fa-landmark"></i>
+                        </div>
+                        <div class="school-details">
+                            <h3>Delhi Public School, Patna</h3>
+                            <div class="school-meta">
+                                <span class="pill pill-blue"><i class="fa fa-book"></i> Class 10th - Secondary</span>
+                                <span class="pill pill-green"><i class="fa fa-trophy"></i> 95.8% Overall (Grade A1)</span>
+                                <span class="pill pill-gray"><i class="fa fa-calendar"></i> Session: 2020 - 2021</span>
+                                <span class="verified-badge"><i class="fa fa-check-circle"></i> Verified Record</span>
+                            </div>
+                            <p style="font-size: 12.5px; color: #64748b; margin-top: 4px;">Board: CBSE &bull; Roll No: 1084221 &bull; Result: Passed (School Topper)</p>
+                        </div>
+                    </div>
+                    <div class="actions-wrap">
+                        <button class="btn-icon" title="Edit Milestone"><i class="fa fa-pencil"></i></button>
+                        <button class="btn-icon delete" title="Delete Milestone"><i class="fa fa-trash"></i></button>
+                    </div>
+                </div>
+
+                <!-- Subject Breakdown Table -->
+                <div class="marks-section">
+                    <div class="marks-header">
+                        <span><i class="fa fa-list-check" style="color: var(--primary);"></i> Subject-Wise Performance Breakdown</span>
+                        <span style="color: #059669; font-weight: 700;">Total: 479 / 500</span>
+                    </div>
+                    <table class="marks-table">
+                        <thead>
+                            <tr>
+                                <th>Subject Name</th>
+                                <th>Max Marks</th>
+                                <th>Marks Obtained</th>
+                                <th>Performance</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><b>Mathematics</b></td>
+                                <td>100</td>
+                                <td><b>99</b></td>
+                                <td>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 99%;"></div></div>
+                                    99%
+                                </td>
+                                <td><span class="pill pill-green">A1</span></td>
+                            </tr>
+                            <tr>
+                                <td><b>Science</b></td>
+                                <td>100</td>
+                                <td><b>97</b></td>
+                                <td>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 97%;"></div></div>
+                                    97%
+                                </td>
+                                <td><span class="pill pill-green">A1</span></td>
+                            </tr>
+                            <tr>
+                                <td><b>Social Science</b></td>
+                                <td>100</td>
+                                <td><b>96</b></td>
+                                <td>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 96%;"></div></div>
+                                    96%
+                                </td>
+                                <td><span class="pill pill-green">A1</span></td>
+                            </tr>
+                            <tr>
+                                <td><b>English</b></td>
+                                <td>100</td>
+                                <td><b>93</b></td>
+                                <td>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 93%;"></div></div>
+                                    93%
+                                </td>
+                                <td><span class="pill pill-green">A1</span></td>
+                            </tr>
+                            <tr>
+                                <td><b>Hindi</b></td>
+                                <td>100</td>
+                                <td><b>94</b></td>
+                                <td>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 94%;"></div></div>
+                                    94%
+                                </td>
+                                <td><span class="pill pill-green">A1</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <a href="#" class="attachment-card">
+                    <i class="fa fa-file-pdf" style="color: #ef4444; font-size: 16px;"></i>
+                    <span>Download Marksheet / Transcript (Class_10_Final.pdf)</span>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal Form Demonstration -->
+    <div class="modal-demo">
+        <div class="modal-header-title">
+            <span><i class="fa fa-plus-circle" style="color: var(--primary);"></i> Form Layout: Add Academic Milestone Modal</span>
+            <span class="pill pill-blue">Interactive Modal View</span>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label">School / College / Institute Name *</label>
+                <input type="text" class="form-control" placeholder="e.g. St. Xavier High School" value="St. Xavier High School">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Class / Degree / Standard *</label>
+                <input type="text" class="form-control" placeholder="e.g. Class 10th or Class 12th" value="Class 10th - CBSE">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Academic Year / Session *</label>
+                <input type="text" class="form-control" placeholder="e.g. 2022 - 2023" value="2022 - 2023">
+            </div>
+        </div>
+
+        <div style="margin-top: 18px; margin-bottom: 8px;">
+            <label class="form-label" style="font-size: 13px; font-weight: 700; color: #1e293b;">
+                <i class="fa fa-list-ol" style="color: var(--primary);"></i> Subject-Wise Marks Matrix
+            </label>
+        </div>
+
+        <div class="subject-repeater-row">
+            <input type="text" class="form-control" placeholder="Subject Name (e.g. Mathematics)" value="Mathematics">
+            <input type="number" class="form-control" placeholder="Marks Obtained" value="95">
+            <input type="number" class="form-control" placeholder="Max Marks" value="100">
+            <button class="btn-icon delete"><i class="fa fa-trash"></i></button>
+        </div>
+
+        <div class="subject-repeater-row">
+            <input type="text" class="form-control" placeholder="Subject Name (e.g. Science)" value="Science">
+            <input type="number" class="form-control" placeholder="Marks Obtained" value="92">
+            <input type="number" class="form-control" placeholder="Max Marks" value="100">
+            <button class="btn-icon delete"><i class="fa fa-trash"></i></button>
+        </div>
+
+        <button class="btn-sub-add">
+            <i class="fa fa-plus"></i> Add Another Subject
+        </button>
+
+        <div style="margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button class="btn-icon" style="width: auto; padding: 8px 16px;">Cancel</button>
+            <button class="btn-add" style="padding: 8px 20px;">Save Milestone</button>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
