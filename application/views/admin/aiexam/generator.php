@@ -994,9 +994,14 @@ foreach ($recent_papers as $rp) {
 
                 <div id="bulkSyncLogBox" style="max-height: 180px; overflow-y: auto; background: #0f172a; color: #38bdf8; font-family: monospace; font-size: 11px; padding: 10px; border-radius: 6px; display: none;"></div>
             </div>
-            <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0;">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="btnStartBulkSync" onclick="startBulkSyncQueue()"><i class="fa fa-play"></i> Start Background Sync</button>
+            <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <button type="button" class="btn btn-danger btn-sm" id="btnStopBulkSync" onclick="stopBulkSyncQueue()" style="display: none;">
+                    <i class="fa fa-stop"></i> Stop / Cancel Sync
+                </button>
+                <div style="margin-left: auto; display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="btnStartBulkSync" onclick="startBulkSyncQueue()"><i class="fa fa-play"></i> Start Background Sync</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1705,9 +1710,10 @@ function openBulkSyncModal() {
 function startBulkSyncQueue() {
     const btn = $('#btnStartBulkSync');
     btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Initializing...');
+    $('#btnStopBulkSync').show().prop('disabled', false).html('<i class="fa fa-stop"></i> Stop Sync');
     $('#bulkSyncStatus').text('Retrieving class and subject roster...');
     $('#bulkSyncProgressBox').show();
-    $('#bulkSyncProgressBar').css('width', '0%').text('0%');
+    $('#bulkSyncProgressBar').css('width', '0%').text('0%').removeClass('progress-bar-success').addClass('progress-bar-striped active');
     $('#bulkSyncLogBox').show().html('<div style="color:#a78bfa;">Starting background curriculum pre-fetch...</div>');
 
     $.ajax({
@@ -1723,21 +1729,40 @@ function startBulkSyncQueue() {
             } else {
                 $('#bulkSyncStatus').text('No classes or subjects found to sync.');
                 btn.prop('disabled', false).html('<i class="fa fa-play"></i> Start Background Sync');
+                $('#btnStopBulkSync').hide();
             }
         },
         error: function() {
             $('#bulkSyncStatus').text('Failed to fetch class and subject roster.');
             btn.prop('disabled', false).html('<i class="fa fa-play"></i> Start Background Sync');
+            $('#btnStopBulkSync').hide();
         }
     });
 }
 
+function stopBulkSyncQueue() {
+    isBulkSyncRunning = false;
+    $('#btnStopBulkSync').prop('disabled', true).html('<i class="fa fa-ban"></i> Stopping...');
+    $('#bulkSyncStatus').html('<strong style="color: #dc2626;"><i class="fa fa-pause-circle"></i> Sync process stopped by user.</strong>');
+    $('#bulkSyncProgressBar').removeClass('active');
+    $('#bulkSyncLogBox').append('<div style="color: #f87171; margin-top: 6px;">⛔ Sync halted. Synced chapters up to this point remain saved in the database.</div>');
+    $('#btnStartBulkSync').prop('disabled', false).html('<i class="fa fa-play"></i> Resume Sync');
+    setTimeout(() => {
+        $('#btnStopBulkSync').hide();
+    }, 600);
+}
+
 function processNextBulkSyncPair() {
-    if (!isBulkSyncRunning || bulkSyncCurrentIndex >= bulkSyncPairsList.length) {
+    if (!isBulkSyncRunning) {
+        return;
+    }
+
+    if (bulkSyncCurrentIndex >= bulkSyncPairsList.length) {
         // Complete
         $('#bulkSyncProgressBar').css('width', '100%').text('100% Complete!').removeClass('active').addClass('progress-bar-success');
         $('#bulkSyncStatus').html('<strong style="color: #16a34a;"><i class="fa fa-check-circle"></i> All class & subject chapters synced and saved in database!</strong>');
-        $('#btnStartBulkSync').html('<i class="fa fa-check"></i> Sync Complete');
+        $('#btnStartBulkSync').html('<i class="fa fa-check"></i> Sync Complete').prop('disabled', false);
+        $('#btnStopBulkSync').hide();
         $('#bulkSyncLogBox').append('<div style="color: #4ade80; margin-top: 6px;">✔ Completed! All chapter lists permanently cached in database.</div>');
         return;
     }
@@ -1772,6 +1797,7 @@ function processNextBulkSyncPair() {
             force_reload: 0
         },
         success: function(res) {
+            if (!isBulkSyncRunning) return;
             let count = (res.chapters && res.chapters.length) ? res.chapters.length : 0;
             let modelLabel = res.model_used ? ` [${res.model_used}]` : '';
             if (res.status === 'success') {
@@ -1785,6 +1811,7 @@ function processNextBulkSyncPair() {
             setTimeout(processNextBulkSyncPair, 300); // 300ms pacing between AI queries
         },
         error: function(xhr) {
+            if (!isBulkSyncRunning) return;
             $('#bulkSyncLogBox').append(`<div style="color: #f87171;">[${bulkSyncCurrentIndex + 1}/${total}] ✖ ${item.class_name} - ${item.subject_name}: HTTP error, skipping...</div>`);
             bulkSyncCurrentIndex++;
             setTimeout(processNextBulkSyncPair, 300);
