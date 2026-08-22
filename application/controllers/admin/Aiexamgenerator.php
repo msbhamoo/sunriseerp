@@ -91,6 +91,15 @@ class Aiexamgenerator extends Admin_Controller
 
         // If generated successfully, automatically save into cbse_ai_generated_papers table
         if ($result['status'] === 'success' && !empty($result['data'])) {
+            // Ensure DB connection is active after external AI API call
+            if (isset($this->db->conn_id) && $this->db->conn_id instanceof mysqli) {
+                if (!@$this->db->conn_id->ping()) {
+                    $this->db->reconnect();
+                }
+            } else {
+                $this->db->reconnect();
+            }
+
             $paper_data = $result['data'];
             $paper_title = isset($paper_data['paper_title']) ? $paper_data['paper_title'] : "Exam {$class_name} {$subject_name}";
             
@@ -104,7 +113,7 @@ class Aiexamgenerator extends Admin_Controller
                 'total_marks'  => !empty($total_marks) ? intval($total_marks) : 80,
                 'difficulty'   => !empty($difficulty) ? $difficulty : 'Medium',
                 'language'     => !empty($language) ? $language : 'English',
-                'paper_json'   => json_encode($paper_data),
+                'paper_json'   => json_encode($paper_data, JSON_UNESCAPED_UNICODE),
                 'created_by'   => $this->customlib->getStaffID(),
                 'created_at'   => date('Y-m-d H:i:s')
             ];
@@ -353,7 +362,16 @@ class Aiexamgenerator extends Admin_Controller
         if ($ai_result['status'] === 'success' && !empty($ai_result['chapters'])) {
             $chapters = $ai_result['chapters'];
 
-            // 3. Cache into Database so it NEVER makes external AI calls for this class+subject again
+            // 3. Ensure MySQL connection is active after external AI API call (reconnect if timed out)
+            if (isset($this->db->conn_id) && $this->db->conn_id instanceof mysqli) {
+                if (!@$this->db->conn_id->ping()) {
+                    $this->db->reconnect();
+                }
+            } else {
+                $this->db->reconnect();
+            }
+
+            // Cache into Database so it NEVER makes external AI calls for this class+subject again
             $this->db->where('class_name', $class_name);
             $this->db->where('subject_name', $subject_name);
             $this->db->delete('cbse_syllabus_chapters');
