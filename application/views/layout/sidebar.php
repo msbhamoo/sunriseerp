@@ -181,13 +181,6 @@ foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
                         }
                     }
 
-                    if ($side_list_value->lang_key == 'ai_exam_studio' || $side_list_value->lang_key == 'aiexam') {
-                        ?>
-                        <li class="<?php echo set_Submenu('admin/aiexamsyllabus'); ?>"><a href="<?php echo site_url('admin/aiexamsyllabus'); ?>"><i class="icon-circle-small"></i>Curriculum & Syllabus Catalog</a></li>
-                        <li class="<?php echo set_Submenu('admin/aisetting'); ?>"><a href="<?php echo site_url('admin/aisetting'); ?>"><i class="icon-circle-small"></i>AI Engine Configuration</a></li>
-                        <?php
-                    }
-
                     ?>
                         </ul>
                             <?php
