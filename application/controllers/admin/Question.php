@@ -650,6 +650,7 @@ class Question extends Admin_Controller
 
                 $staff_id = $this->customlib->getStaffID();
                 $saved_count = 0;
+                $last_db_error = '';
 
                 foreach ($result['questions'] as $q) {
                     $q_text = '';
@@ -666,34 +667,49 @@ class Question extends Admin_Controller
                     if (empty($q_text)) continue;
 
                     $options = isset($q['options']) && is_array($q['options']) ? $q['options'] : [];
-                    $opt_a   = isset($options['A']) ? $options['A'] : (isset($q['opt_a']) ? $q['opt_a'] : null);
-                    $opt_b   = isset($options['B']) ? $options['B'] : (isset($q['opt_b']) ? $q['opt_b'] : null);
-                    $opt_c   = isset($options['C']) ? $options['C'] : (isset($q['opt_c']) ? $q['opt_c'] : null);
-                    $opt_d   = isset($options['D']) ? $options['D'] : (isset($q['opt_d']) ? $q['opt_d'] : null);
-                    $opt_e   = isset($options['E']) ? $options['E'] : (isset($q['opt_e']) ? $q['opt_e'] : null);
+                    $opt_a   = isset($options['A']) ? $options['A'] : (isset($q['opt_a']) ? $q['opt_a'] : '');
+                    $opt_b   = isset($options['B']) ? $options['B'] : (isset($q['opt_b']) ? $q['opt_b'] : '');
+                    $opt_c   = isset($options['C']) ? $options['C'] : (isset($q['opt_c']) ? $q['opt_c'] : '');
+                    $opt_d   = isset($options['D']) ? $options['D'] : (isset($q['opt_d']) ? $q['opt_d'] : '');
+                    $opt_e   = isset($options['E']) ? $options['E'] : (isset($q['opt_e']) ? $q['opt_e'] : '');
 
                     $q_type  = isset($q['question_type']) ? $q['question_type'] : $question_type;
-                    $correct = isset($q['correct_option']) ? $q['correct_option'] : (isset($q['correct']) ? $q['correct'] : (isset($q['answer']) ? $q['answer'] : 'A'));
+                    $correct = isset($q['correct_option']) ? $q['correct_option'] : (isset($q['correct']) ? $q['correct'] : (isset($q['answer']) ? $q['answer'] : ''));
+
+                    // Format correct string based on question type
+                    if ($q_type === 'singlechoice') {
+                        $c_char = strtoupper(substr(trim($correct), 0, 1));
+                        $correct_val = in_array($c_char, ['A','B','C','D','E']) ? ('opt_' . strtolower($c_char)) : 'opt_a';
+                    } elseif ($q_type === 'true_false') {
+                        $c_str = strtolower(trim($correct));
+                        $correct_val = (strpos($c_str, 'true') !== false || $c_str === 'a') ? 'true' : 'false';
+                    } elseif ($q_type === 'multichoice') {
+                        $correct_val = is_array($correct) ? json_encode($correct) : json_encode([$correct]);
+                    } else {
+                        $correct_val = '';
+                    }
 
                     $insert_data = [
-                        'subject_id'    => !empty($subject_id) ? $subject_id : null,
-                        'class_id'      => !empty($class_id) ? $class_id : null,
+                        'subject_id'    => !empty($subject_id) ? $subject_id : 0,
+                        'class_id'      => !empty($class_id) ? $class_id : 0,
                         'question_type' => $q_type,
                         'question'      => $q_text,
-                        'opt_a'         => $opt_a,
-                        'opt_b'         => $opt_b,
-                        'opt_c'         => $opt_c,
-                        'opt_d'         => $opt_d,
-                        'opt_e'         => $opt_e,
-                        'correct'       => (!empty($opt_a) || !empty($opt_b)) ? ('opt_' . strtolower(substr(trim($correct), 0, 1))) : $correct,
+                        'opt_a'         => $opt_a ? $opt_a : '',
+                        'opt_b'         => $opt_b ? $opt_b : '',
+                        'opt_c'         => $opt_c ? $opt_c : '',
+                        'opt_d'         => $opt_d ? $opt_d : '',
+                        'opt_e'         => $opt_e ? $opt_e : '',
+                        'correct'       => $correct_val,
                         'level'         => isset($q['level']) ? $q['level'] : $level,
-                        'explanation'   => isset($q['explanation']) ? $q['explanation'] : (isset($q['solution']) ? $q['solution'] : null),
-                        'staff_id'      => $staff_id,
-                        'created_at'    => date('Y-m-d H:i:s')
+                        'staff_id'      => $staff_id ? $staff_id : 1,
                     ];
 
-                    if ($this->question_model->add($insert_data) || $this->db->insert('questions', $insert_data)) {
+                    $ins = $this->db->insert('questions', $insert_data);
+                    if ($ins) {
                         $saved_count++;
+                    } else {
+                        $err = $this->db->error();
+                        $last_db_error = !empty($err['message']) ? $err['message'] : 'DB insert failed';
                     }
                 }
 
@@ -703,7 +719,7 @@ class Question extends Admin_Controller
                     $result['message'] = "Successfully generated & added {$saved_count} questions to Question Bank!";
                 } else {
                     $result['status'] = 'error';
-                    $result['message'] = "Questions were received but could not be saved to database.";
+                    $result['message'] = "Questions received from AI, but DB insert failed: " . $last_db_error;
                 }
             }
 
