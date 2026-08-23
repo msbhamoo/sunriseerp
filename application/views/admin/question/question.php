@@ -1133,14 +1133,14 @@ $('#myimgModal').on('shown.bs.modal', function (event) {
 
 <!-- Slide-in Right Side Drawer: AI Instant Question Generator -->
 <div id="drawerAiQuestionOverlay" class="modern-drawer-overlay" onclick="closeAiQuestionDrawer()"></div>
-<div id="drawerAiQuestionPanel" class="modern-drawer-panel" style="width: 640px !important;">
-    <div class="modern-drawer-header" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: #ffffff;">
+<div id="drawerAiQuestionPanel" class="modern-drawer-panel" style="width: 680px !important; max-width: 95vw !important; display: flex !important; flex-direction: column !important; height: 100vh !important; max-height: 100vh !important; overflow: hidden !important;">
+    <div class="modern-drawer-header" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: #ffffff; flex-shrink: 0;">
         <h4 class="modern-drawer-title" style="color: #ffffff;">
             <i class="fa fa-bolt" style="color: #fbbf24;"></i> AI Question Generator Studio
         </h4>
         <button type="button" class="modern-drawer-close" style="color: #cbd5e1;" onclick="closeAiQuestionDrawer()">&times;</button>
     </div>
-    <div class="modern-drawer-body" style="padding: 20px 24px;">
+    <div class="modern-drawer-body" style="padding: 20px 24px 60px 24px; flex: 1 1 auto; overflow-y: auto !important; overflow-x: hidden; -webkit-overflow-scrolling: touch; max-height: calc(100vh - 130px);">
         <form id="aiQuestionGenForm">
             <div class="row">
                 <div class="col-sm-6">
@@ -1176,7 +1176,7 @@ $('#myimgModal').on('shown.bs.modal', function (event) {
                     <button type="button" class="btn btn-default btn-xs" onclick="toggleAllChapters(true)" style="border-radius: 4px; font-weight: 600;">Select All</button>
                     <button type="button" class="btn btn-default btn-xs" onclick="toggleAllChapters(false)" style="border-radius: 4px; font-weight: 600;">Clear All</button>
                 </div>
-                <div id="ai_chapter_checklist_container" style="max-height: 150px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; background: #f8fafc;">
+                <div id="ai_chapter_checklist_container" style="max-height: 180px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; background: #f8fafc;">
                     <label style="font-weight: 500; font-size: 12px; display: block; margin-bottom: 4px; color: #64748b;">
                         <input type="checkbox" id="chk_all_chapters" value="Complete Syllabus" checked onchange="onAllChaptersCheckboxChange()"> <strong>All Chapters (Complete Subject Syllabus)</strong>
                     </label>
