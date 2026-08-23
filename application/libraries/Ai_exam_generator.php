@@ -616,9 +616,10 @@ EOT;
     {
         $url = "https://openrouter.ai/api/v1/chat/completions";
         
-        // Models list: Primary stealth/ox-alpha, then free fallback z-ai/glm-5.2:free
+        // Models list: Primary stealth/ox-alpha, then free fallbacks
         $models = [
             'stealth/ox-alpha',
+            'cognitivecomputations/dolphin-mistral-24b:free',
             'z-ai/glm-5.2:free'
         ];
 
@@ -632,10 +633,14 @@ EOT;
                     ['role' => 'system', 'content' => 'You are an expert CBSE examination question author. Output only raw valid JSON matching the requested schema.'],
                     ['role' => 'user', 'content' => $prompt]
                 ],
-                'response_format' => ['type' => 'json_object'],
                 'temperature' => 0.3,
                 'max_tokens' => 3000
             ];
+
+            // Only add response_format if not z-ai/glm which doesn't support strict json_object mode
+            if (strpos($m, 'glm') === false) {
+                $payload['response_format'] = ['type' => 'json_object'];
+            }
 
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
