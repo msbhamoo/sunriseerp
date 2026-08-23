@@ -87,9 +87,126 @@ class Aiexamsyllabus extends Admin_Controller
             'updated_at'    => date('Y-m-d H:i:s')
         ]);
 
+        // Automatically sync chapters into LMS Lesson Plan & Status (lesson & topic tables)
+        $this->sync_single_syllabus_to_lessons($class_name, $subject_name, $chapters);
+
         echo json_encode([
             'status'  => 'success',
-            'message' => 'Curriculum syllabus chapters saved successfully!'
+            'message' => 'Curriculum chapters saved and synchronized with Lesson Plan & Syllabus Status!'
+        ]);
+    }
+
+    /**
+     * Helper: Sync chapters array into LMS Lesson Plan tables (`lesson` & `topic`)
+     */
+    private function sync_single_syllabus_to_lessons($class_name, $subject_name, $chapters)
+    {
+        $current_session = $this->setting_model->getCurrentSession();
+        
+        // Find matching class
+        $this->db->select('id');
+        $this->db->from('classes');
+        $this->db->where('class', $class_name);
+        $class_row = $this->db->get()->row_array();
+        if (empty($class_row)) return 0;
+        $class_id = $class_row['id'];
+
+        // Find matching subject
+        $this->db->select('id');
+        $this->db->from('subjects');
+        $this->db->where('name', $subject_name);
+        $sub_row = $this->db->get()->row_array();
+        if (empty($sub_row)) return 0;
+        $subject_id = $sub_row['id'];
+
+        // Find subject group mapping
+        $sql = "SELECT sgs.id as subject_group_subject_id, sgcs.id as subject_group_class_sections_id
+                FROM subject_group_subjects sgs
+                INNER JOIN subject_groups sg ON sg.id = sgs.subject_group_id
+                INNER JOIN subject_group_class_sections sgcs ON sgcs.subject_group_id = sg.id
+                INNER JOIN class_sections cs ON cs.id = sgcs.class_section_id
+                WHERE cs.class_id = ? AND sgs.subject_id = ? AND sg.session_id = ?
+                LIMIT 1";
+        $map = $this->db->query($sql, [$class_id, $subject_id, $current_session])->row_array();
+
+        if (empty($map)) return 0;
+
+        $sg_sub_id = $map['subject_group_subject_id'];
+        $sg_cs_id  = $map['subject_group_class_sections_id'];
+
+        $synced_lessons = 0;
+        foreach ($chapters as $ch_name) {
+            $ch_clean = trim($ch_name);
+            if (empty($ch_clean)) continue;
+
+            // Check if lesson already exists
+            $this->db->select('id');
+            $this->db->from('lesson');
+            $this->db->where('subject_group_subject_id', $sg_sub_id);
+            $this->db->where('subject_group_class_sections_id', $sg_cs_id);
+            $this->db->where('name', $ch_clean);
+            $this->db->where('session_id', $current_session);
+            $existing_lesson = $this->db->get()->row_array();
+
+            $lesson_id = null;
+            if (!empty($existing_lesson)) {
+                $lesson_id = $existing_lesson['id'];
+            } else {
+                $this->db->insert('lesson', [
+                    'name'                            => $ch_clean,
+                    'subject_group_subject_id'        => $sg_sub_id,
+                    'subject_group_class_sections_id' => $sg_cs_id,
+                    'session_id'                      => $current_session
+                ]);
+                $lesson_id = $this->db->insert_id();
+                $synced_lessons++;
+            }
+
+            // Ensure at least 1 default core topic is created under this lesson for Syllabus Status tracking
+            if ($lesson_id) {
+                $this->db->select('id');
+                $this->db->from('topic');
+                $this->db->where('lesson_id', $lesson_id);
+                $this->db->where('session_id', $current_session);
+                $existing_topic = $this->db->get()->row_array();
+
+                if (empty($existing_topic)) {
+                    $this->db->insert('topic', [
+                        'name'       => $ch_clean . ' - Core Concepts & Learning Objectives',
+                        'lesson_id'  => $lesson_id,
+                        'session_id' => $current_session,
+                        'status'     => 0
+                    ]);
+                }
+            }
+        }
+
+        return $synced_lessons;
+    }
+
+    /**
+     * AJAX Endpoint: Bulk 2-Way Sync between AI Syllabus and Lesson Plan / Syllabus Status
+     */
+    public function sync_all_with_lessonplan_ajax()
+    {
+        if (!$this->rbac->hasPrivilege('examination', 'can_edit')) {
+            echo json_encode(['status' => 'error', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $all_syllabi = $this->db->get('cbse_syllabus_chapters')->result_array();
+        $synced_count = 0;
+
+        foreach ($all_syllabi as $s) {
+            $chapters = json_decode($s['chapters_json'], true);
+            if (is_array($chapters)) {
+                $synced_count += $this->sync_single_syllabus_to_lessons($s['class_name'], $s['subject_name'], $chapters);
+            }
+        }
+
+        echo json_encode([
+            'status'  => 'success',
+            'message' => "Successfully synchronized curriculum chapters with LMS Lesson Plan & Syllabus Status! ({$synced_count} lessons updated/created)."
         ]);
     }
 

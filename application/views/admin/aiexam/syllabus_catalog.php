@@ -54,13 +54,118 @@
     font-size: 11px;
     margin: 2px;
 }
+.subject-chip-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    margin: 2px 4px 2px 0;
+}
+
+/* Slide-in Right Side Drawer */
+.modern-drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(3px);
+    z-index: 1040;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.25s ease-in-out;
+}
+.modern-drawer-overlay.is-active {
+    display: block;
+    opacity: 1;
+}
+.modern-drawer-panel {
+    position: fixed;
+    top: 0;
+    right: -720px;
+    width: 680px;
+    max-width: 95vw;
+    height: 100vh;
+    background: #ffffff;
+    box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.15);
+    z-index: 1050;
+    transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+}
+.modern-drawer-panel.is-open {
+    right: 0;
+}
+.modern-drawer-header {
+    padding: 18px 24px;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modern-drawer-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.modern-drawer-close {
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    color: #64748b;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+}
+.modern-drawer-close:hover {
+    color: #0f172a;
+}
+.modern-drawer-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+    background: #f8fafc;
+}
+.modern-drawer-footer {
+    padding: 14px 24px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.subject-card-drawer {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    transition: all 0.2s ease;
+}
+.subject-card-drawer:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
 </style>
 
 <div class="content-wrapper">
     <section class="content-header">
         <h1>
-            <i class="fa fa-book" style="color: #6366f1;"></i> Curriculum & Syllabus Catalog
-            <small>AI-Generated & Cached Chapter Blueprints</small>
+            <i class="fa fa-book" style="color: #6366f1;"></i> Curriculum & Syllabus Repository
+            <small>1 Row Per Class &bull; Full Right Drawer Management</small>
         </h1>
     </section>
 
@@ -69,35 +174,41 @@
         <div class="modern-stat-grid">
             <div class="modern-stat-card">
                 <div class="modern-stat-info">
-                    <div class="stat-label">Saved Subject Syllabi</div>
-                    <div class="stat-value"><?php echo count($syllabus_list); ?></div>
-                </div>
-                <div class="modern-stat-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
-                    <i class="fa fa-database"></i>
-                </div>
-            </div>
-
-            <div class="modern-stat-card">
-                <div class="modern-stat-info">
-                    <div class="stat-label">Total Classes Covered</div>
-                    <div class="stat-value text-success" style="color: #059669;">
+                    <div class="stat-label">Total Classes</div>
+                    <div class="stat-value text-primary" style="color: #4f46e5;">
                         <?php 
-                        $distinct_classes = [];
+                        $grouped_classes = [];
                         foreach ($syllabus_list as $s) {
-                            $distinct_classes[$s['class_name']] = true;
+                            $c_name = trim($s['class_name']);
+                            if (!isset($grouped_classes[$c_name])) {
+                                $grouped_classes[$c_name] = [];
+                            }
+                            $grouped_classes[$c_name][] = $s;
                         }
-                        echo count($distinct_classes);
+                        echo count($grouped_classes);
                         ?>
                     </div>
                 </div>
-                <div class="modern-stat-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                <div class="modern-stat-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
                     <i class="fa fa-graduation-cap"></i>
                 </div>
             </div>
 
             <div class="modern-stat-card">
                 <div class="modern-stat-info">
-                    <div class="stat-label">Cache Engine</div>
+                    <div class="stat-label">Mapped Subject Syllabi</div>
+                    <div class="stat-value text-success" style="color: #059669;">
+                        <?php echo count($syllabus_list); ?>
+                    </div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                    <i class="fa fa-book"></i>
+                </div>
+            </div>
+
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">AI Retrieval Speed</div>
                     <div class="stat-value" style="color: #0284c7; font-size: 18px;">Instant 0ms</div>
                 </div>
                 <div class="modern-stat-icon" style="background: rgba(14, 165, 233, 0.12); color: #0284c7;">
@@ -111,9 +222,15 @@
                 <div class="box box-primary" style="border-radius: 12px; overflow: hidden; border-top: 3px solid #6366f1;">
                     <div class="box-header ptbnull" style="padding: 14px 18px;">
                         <h3 class="box-title titlefix">
-                            <i class="fa fa-list text-muted" style="margin-right: 6px;"></i> NCERT & CBSE Subject Chapter Syllabi
+                            <i class="fa fa-list text-muted" style="margin-right: 6px;"></i> NCERT & CBSE Curriculum by Class
                         </h3>
                         <div class="box-tools pull-right" style="display: flex; gap: 8px;">
+                            <button type="button" class="btn btn-default btn-sm" id="btnSyncLessonPlan" onclick="syncWithLessonPlan()" style="font-weight: 600; color: #059669; border-color: #cbd5e1; border-radius: 6px;" title="Push all curriculum chapters into LMS Lesson Plan & Syllabus Status">
+                                <i class="fa fa-refresh"></i> Sync to Lesson Plan & Status
+                            </button>
+                            <a href="<?php echo base_url(); ?>admin/syllabus/status" class="btn btn-default btn-sm" style="font-weight: 600; color: #4338ca; border-color: #cbd5e1; border-radius: 6px;">
+                                <i class="fa fa-tasks"></i> View Syllabus Status
+                            </a>
                             <a href="<?php echo base_url(); ?>admin/aiexamgenerator" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border: none; font-weight: 700; padding: 6px 14px; border-radius: 6px;">
                                 <i class="fa fa-bolt"></i> AI Exam Studio
                             </a>
@@ -125,74 +242,66 @@
                                 <thead>
                                     <tr style="background: #f8fafc;">
                                         <th style="width: 50px;">#</th>
-                                        <th style="width: 140px;">Class</th>
-                                        <th style="width: 160px;">Subject</th>
-                                        <th>Cached Chapter Syllabus & Scope</th>
-                                        <th style="width: 120px;">Last Synced</th>
-                                        <th style="width: 130px;" class="text-right noExport">Actions</th>
+                                        <th style="width: 160px;">Class / Grade</th>
+                                        <th style="width: 140px;">Subjects Count</th>
+                                        <th>Configured Subjects & Chapters</th>
+                                        <th style="width: 160px;" class="text-right noExport">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php if (!empty($syllabus_list)) { 
+                                    <?php if (!empty($grouped_classes)) { 
                                         $i = 1;
-                                        foreach ($syllabus_list as $row) {
-                                            $chapters = json_decode($row['chapters_json'], true);
-                                            if (!is_array($chapters)) $chapters = [];
+                                        foreach ($grouped_classes as $c_name => $subjects) {
+                                            $total_chapters_class = 0;
+                                            foreach ($subjects as $sb) {
+                                                $ch_arr = json_decode($sb['chapters_json'], true);
+                                                if (is_array($ch_arr)) {
+                                                    $total_chapters_class += count($ch_arr);
+                                                }
+                                            }
                                     ?>
                                         <tr>
-                                            <td><?php echo $i++; ?></td>
+                                            <td style="font-weight: 600; color: #64748b;"><?php echo $i++; ?></td>
                                             <td>
-                                                <span class="label label-primary" style="font-size: 12px; background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe;">
-                                                    <?php echo htmlspecialchars($row['class_name']); ?>
+                                                <span class="label label-primary" style="font-size: 13px; font-weight: 700; background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 4px 10px; border-radius: 6px;">
+                                                    <?php echo htmlspecialchars($c_name); ?>
                                                 </span>
                                             </td>
                                             <td>
-                                                <strong style="color: #0f172a; font-size: 13px;">
-                                                    <?php echo htmlspecialchars($row['subject_name']); ?>
-                                                </strong>
+                                                <span class="badge" style="background: #e2e8f0; color: #334155; font-size: 12px; font-weight: 700; padding: 4px 8px;">
+                                                    <i class="fa fa-book"></i> <?php echo count($subjects); ?> Subjects
+                                                </span>
+                                                <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
+                                                    <?php echo $total_chapters_class; ?> total chapters
+                                                </div>
                                             </td>
                                             <td>
-                                                <div style="margin-bottom: 4px;">
-                                                    <span class="badge" style="background: #e2e8f0; color: #334155; font-size: 11px;">
-                                                        <?php echo count($chapters); ?> Chapters / Units
-                                                    </span>
-                                                </div>
-                                                <div style="display: flex; flex-wrap: wrap; gap: 3px;">
+                                                <div style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center;">
                                                     <?php 
-                                                    $ch_limit = 6;
-                                                    $rendered_count = 0;
-                                                    foreach ($chapters as $ch) { 
-                                                        if ($rendered_count < $ch_limit) { ?>
-                                                            <span class="chapter-pill-tag"><?php echo htmlspecialchars($ch); ?></span>
-                                                        <?php }
-                                                        $rendered_count++;
-                                                    } 
-                                                    if (count($chapters) > $ch_limit) { ?>
-                                                        <span class="chapter-pill-tag" style="background: #e0e7ff; color: #4338ca; font-weight: 600;">+<?php echo count($chapters) - $ch_limit; ?> more</span>
+                                                    foreach ($subjects as $sb) {
+                                                        $ch_count = 0;
+                                                        $ch_arr = json_decode($sb['chapters_json'], true);
+                                                        if (is_array($ch_arr)) $ch_count = count($ch_arr);
+                                                    ?>
+                                                        <span class="subject-chip-badge">
+                                                            <span><?php echo htmlspecialchars($sb['subject_name']); ?></span>
+                                                            <span class="badge" style="background: #3b82f6; color: #ffffff; font-size: 10px;"><?php echo $ch_count; ?> Ch</span>
+                                                        </span>
                                                     <?php } ?>
                                                 </div>
                                             </td>
-                                            <td style="font-size: 12px; color: #64748b; white-space: nowrap;">
-                                                <?php echo !empty($row['updated_at']) ? date('d M Y, h:i A', strtotime($row['updated_at'])) : '-'; ?>
-                                            </td>
                                             <td class="text-right white-space-nowrap">
-                                                <button type="button" class="btn btn-default btn-xs" onclick='openEditSyllabusModal(<?php echo htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8'); ?>)' title="Edit Chapter List" style="border-color: #cbd5e1; color: #4338ca;">
-                                                    <i class="fa fa-pencil"></i> Edit
-                                                </button>
-                                                <button type="button" class="btn btn-default btn-xs" onclick="reSyncSingleSyllabus('<?php echo htmlspecialchars($row['class_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($row['subject_name'], ENT_QUOTES); ?>')" title="Re-fetch via AI" style="border-color: #cbd5e1; color: #059669;">
-                                                    <i class="fa fa-refresh"></i> AI Sync
-                                                </button>
-                                                <button type="button" class="btn btn-default btn-xs text-danger" onclick="deleteSyllabus(<?php echo $row['id']; ?>)" title="Remove Entry" style="border-color: #cbd5e1;">
-                                                    <i class="fa fa-trash"></i>
+                                                <button type="button" class="btn btn-primary btn-sm" onclick='openClassSyllabusDrawer("<?php echo htmlspecialchars($c_name, ENT_QUOTES, 'UTF-8'); ?>", <?php echo htmlspecialchars(json_encode($subjects), ENT_QUOTES, 'UTF-8'); ?>)' style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none; font-weight: 700; border-radius: 6px; padding: 5px 12px; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.25);">
+                                                    <i class="fa fa-eye"></i> View Syllabi Drawer
                                                 </button>
                                             </td>
                                         </tr>
                                     <?php } } else { ?>
                                         <tr>
-                                            <td colspan="6" class="text-center" style="padding: 40px 20px; color: #64748b;">
+                                            <td colspan="5" class="text-center" style="padding: 40px 20px; color: #64748b;">
                                                 <i class="fa fa-book" style="font-size: 32px; color: #cbd5e1; margin-bottom: 10px; display: block;"></i>
                                                 <strong>No cached curriculum syllabi found yet.</strong>
-                                                <p style="margin-top: 6px; font-size: 13px;">Generate a question paper or click "Sync All Syllabi via AI" in the AI Exam Studio to auto-populate chapter lists.</p>
+                                                <p style="margin-top: 6px; font-size: 13px;">Generate a question paper or sync syllabus via AI in AI Exam Studio to auto-populate chapter lists.</p>
                                                 <a href="<?php echo base_url(); ?>admin/aiexamgenerator" class="btn btn-primary btn-sm" style="margin-top: 10px;">
                                                     <i class="fa fa-bolt"></i> Go to AI Exam Studio
                                                 </a>
@@ -209,14 +318,31 @@
     </section>
 </div>
 
-<!-- Modal: Edit Chapters List -->
-<div class="modal fade" id="modalEditSyllabus" tabindex="-1" role="dialog">
+<!-- Slide-in Right Side Drawer: Class All Subjects Syllabus -->
+<div id="drawerClassSyllabusOverlay" class="modern-drawer-overlay" onclick="closeClassSyllabusDrawer()"></div>
+<div id="drawerClassSyllabusPanel" class="modern-drawer-panel">
+    <div class="modern-drawer-header">
+        <h4 class="modern-drawer-title">
+            <i class="fa fa-graduation-cap" style="color: #6366f1;"></i> <span id="drawerClassTitle">Class Curriculum Scope</span>
+        </h4>
+        <button type="button" class="modern-drawer-close" onclick="closeClassSyllabusDrawer()">&times;</button>
+    </div>
+    <div class="modern-drawer-body" id="drawerClassSubjectsContent">
+        <!-- Injected dynamically by JavaScript -->
+    </div>
+    <div class="modern-drawer-footer">
+        <button type="button" class="btn btn-default btn-sm" onclick="closeClassSyllabusDrawer()">Close Drawer</button>
+    </div>
+</div>
+
+<!-- Modal: Quick Edit Single Subject Chapters -->
+<div class="modal fade" id="modalEditSyllabus" tabindex="-1" role="dialog" style="z-index: 1060;">
     <div class="modal-dialog" role="document">
-        <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
+        <div class="modal-content" style="border-radius: 12px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);">
             <div class="modal-header" style="background: #ffffff; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding: 16px 20px;">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                 <h4 class="modal-title" style="font-weight: 700;">
-                    <i class="fa fa-edit text-primary"></i> Edit Curriculum Chapters: <span id="edit_syllabus_title"></span>
+                    <i class="fa fa-edit text-primary"></i> Edit Subject Curriculum: <span id="edit_syllabus_title"></span>
                 </h4>
             </div>
             <div class="modal-body" style="padding: 20px;">
@@ -225,7 +351,7 @@
                 <div class="form-group">
                     <label style="font-weight: 600;">Chapters / Units List (1 per line):</label>
                     <textarea id="edit_chapters_raw" class="form-control" rows="12" style="font-family: inherit; font-size: 13px;"></textarea>
-                    <small class="text-muted">Enter or edit chapter names. Each line will become a selectable chapter badge in the AI Exam Generator.</small>
+                    <small class="text-muted">Enter or edit chapter names. Each line represents a distinct chapter.</small>
                 </div>
             </div>
             <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0;">
@@ -237,6 +363,69 @@
 </div>
 
 <script>
+let currentOpenClassSubjects = [];
+
+function openClassSyllabusDrawer(className, subjects) {
+    currentOpenClassSubjects = subjects;
+    $('#drawerClassTitle').html(`<span class="badge" style="background:#e0e7ff; color:#4338ca; font-size:14px;">${className}</span> Curriculum & Syllabus Scope`);
+    
+    let html = '';
+    if (!subjects || subjects.length === 0) {
+        html = `<div style="text-align:center; padding:40px; color:#64748b;">No subjects mapped for this class yet.</div>`;
+    } else {
+        subjects.forEach(function(sb, idx) {
+            let chapters = [];
+            try {
+                chapters = JSON.parse(sb.chapters_json);
+            } catch(e) {}
+            if (!Array.isArray(chapters)) chapters = [];
+
+            html += `
+                <div class="subject-card-drawer">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                        <div>
+                            <h4 style="margin:0; font-size:15px; font-weight:700; color:#0f172a;">
+                                <i class="fa fa-book" style="color:#6366f1; margin-right:4px;"></i> ${sb.subject_name}
+                            </h4>
+                            <small class="text-muted"><i class="fa fa-clock-o"></i> Synced: ${sb.updated_at ? sb.updated_at : 'Cached'}</small>
+                        </div>
+                        <div style="display:flex; gap:6px;">
+                            <button type="button" class="btn btn-default btn-xs" onclick='openEditSyllabusModal(${JSON.stringify(sb)})' style="color:#4338ca; border-color:#cbd5e1; font-weight:600;">
+                                <i class="fa fa-pencil"></i> Edit
+                            </button>
+                            <button type="button" class="btn btn-default btn-xs" onclick='reSyncSingleSyllabus("${className}", "${sb.subject_name}")' style="color:#059669; border-color:#cbd5e1; font-weight:600;">
+                                <i class="fa fa-refresh"></i> AI Sync
+                            </button>
+                            <button type="button" class="btn btn-default btn-xs text-danger" onclick='deleteSyllabus(${sb.id})' style="border-color:#cbd5e1;">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge" style="background:#f1f5f9; color:#475569; font-size:11px; margin-bottom:6px;">
+                            ${chapters.length} Chapters / Learning Units
+                        </span>
+                        <div style="display:flex; flex-wrap:wrap; gap:3px; max-height:160px; overflow-y:auto;">
+                            ${chapters.map((ch, cIdx) => `<span class="chapter-pill-tag">Chapter ${cIdx + 1}: ${ch}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    $('#drawerClassSubjectsContent').html(html);
+    $('#drawerClassSyllabusOverlay').addClass('is-active');
+    $('#drawerClassSyllabusPanel').addClass('is-open');
+    $('body').css('overflow', 'hidden');
+}
+
+function closeClassSyllabusDrawer() {
+    $('#drawerClassSyllabusPanel').removeClass('is-open');
+    $('#drawerClassSyllabusOverlay').removeClass('is-active');
+    $('body').css('overflow', '');
+}
+
 function openEditSyllabusModal(row) {
     $('#edit_class_name').val(row.class_name);
     $('#edit_subject_name').val(row.subject_name);
@@ -310,20 +499,27 @@ function reSyncSingleSyllabus(className, subjectName) {
     });
 }
 
-function deleteSyllabus(id) {
-    if (!confirm('Remove this syllabus entry from the cache?')) return;
+function syncWithLessonPlan() {
+    if (!confirm('Synchronize all cached curriculum chapters into LMS Lesson Plan (`lesson` & `topic`) for Syllabus Status tracking?')) return;
+
+    const btn = $('#btnSyncLessonPlan');
+    btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Syncing to Lesson Plan...');
 
     $.ajax({
-        url: '<?php echo base_url(); ?>admin/aiexamsyllabus/delete_syllabus_ajax',
+        url: '<?php echo base_url(); ?>admin/aiexamsyllabus/sync_all_with_lessonplan_ajax',
         type: 'POST',
         dataType: 'json',
-        data: { id: id },
         success: function(res) {
+            btn.prop('disabled', false).html('<i class="fa fa-refresh"></i> Sync to Lesson Plan & Status');
             if (res.status === 'success') {
-                location.reload();
+                alert(res.message);
             } else {
-                alert('Error: ' + res.message);
+                alert('Sync Error: ' + res.message);
             }
+        },
+        error: function() {
+            btn.prop('disabled', false).html('<i class="fa fa-refresh"></i> Sync to Lesson Plan & Status');
+            alert('Failed to connect to Lesson Plan sync service.');
         }
     });
 }
