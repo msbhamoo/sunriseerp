@@ -619,8 +619,8 @@ EOT;
         // Models list: Primary stealth/ox-alpha, then official active free models
         $models = [
             'stealth/ox-alpha',
-            'nvidia/nemotron-3-ultra-550b-a55b:free',
-            'poolside/laguna-s-2.1:free'
+            'nvidia/nemotron-nano-12b-v2-vl:free',
+            'nvidia/nemotron-3-ultra-550b-a55b:free'
         ];
 
         $site_url = defined('base_url') ? base_url() : 'https://sunriseschool.in';
@@ -795,12 +795,21 @@ EOT;
 
         if (($api_engine === 'openrouter' || $api_engine === 'openrouter_ox') && !empty($active_openrouter_key)) {
             $response   = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
-            $model_used = 'OpenRouter (01-ai/ox-alpha)';
-            if (isset($response['error']) && !empty($active_gemini_key)) {
-                $fallback = $this->call_gemini($prompt, $active_gemini_key);
-                if (!isset($fallback['error'])) {
-                    $response = $fallback;
-                    $model_used = 'Google Gemini (gemini-2.0-flash)';
+            $model_used = 'OpenRouter (nvidia/nemotron-nano-12b-v2-vl:free)';
+            if (isset($response['error'])) {
+                if (!empty($active_gemini_key)) {
+                    $fallback = $this->call_gemini($prompt, $active_gemini_key);
+                    if (!isset($fallback['error'])) {
+                        $response = $fallback;
+                        $model_used = 'Google Gemini (gemini-2.0-flash)';
+                    }
+                }
+                if (isset($response['error']) && !empty($active_groq_key)) {
+                    $fallback_groq = $this->call_groq($prompt, $active_groq_key);
+                    if (!isset($fallback_groq['error'])) {
+                        $response = $fallback_groq;
+                        $model_used = 'Groq (llama-3.3-70b-versatile)';
+                    }
                 }
             }
         } elseif ($api_engine === 'groq' && !empty($active_groq_key)) {
@@ -820,12 +829,26 @@ EOT;
                 $fallback = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
                 if (!isset($fallback['error'])) {
                     $response = $fallback;
-                    $model_used = 'OpenRouter (01-ai/ox-alpha)';
+                    $model_used = 'OpenRouter (nvidia/nemotron-nano-12b-v2-vl:free)';
+                }
+            }
+            if (isset($response['error']) && !empty($active_groq_key)) {
+                $fallback_groq = $this->call_groq($prompt, $active_groq_key);
+                if (!isset($fallback_groq['error'])) {
+                    $response = $fallback_groq;
+                    $model_used = 'Groq (llama-3.3-70b-versatile)';
                 }
             }
         } elseif (!empty($active_openrouter_key)) {
             $response   = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
-            $model_used = 'OpenRouter (01-ai/ox-alpha)';
+            $model_used = 'OpenRouter (nvidia/nemotron-nano-12b-v2-vl:free)';
+            if (isset($response['error']) && !empty($active_groq_key)) {
+                $fallback_groq = $this->call_groq($prompt, $active_groq_key);
+                if (!isset($fallback_groq['error'])) {
+                    $response = $fallback_groq;
+                    $model_used = 'Groq (llama-3.3-70b-versatile)';
+                }
+            }
         } elseif (!empty($active_groq_key)) {
             $response   = $this->call_groq($prompt, $active_groq_key);
             $model_used = 'Groq (llama-3.3-70b-versatile)';
