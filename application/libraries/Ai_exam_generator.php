@@ -648,8 +648,8 @@ EOT;
                 'HTTP-Referer: ' . $site_url,
                 'X-Title: Sunrise ERP AI Studio'
             ]);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 15); // Fast 15s per model
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 45); // Generous 45s so ox-alpha completes full JSON generation
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
             $result = curl_exec($ch);
