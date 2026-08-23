@@ -616,9 +616,10 @@ EOT;
     {
         $url = "https://openrouter.ai/api/v1/chat/completions";
         
-        // Models list: Primary stealth/ox-alpha, then official active free models
+        // Models list: Primary stealth/ox-alpha (Unlimited Free), then official active free models
         $models = [
             'stealth/ox-alpha',
+            'google/gemma-4-26b-a4b-it:free',
             'nvidia/nemotron-nano-12b-v2-vl:free',
             'nvidia/nemotron-3-ultra-550b-a55b:free'
         ];
