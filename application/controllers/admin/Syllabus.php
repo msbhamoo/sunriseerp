@@ -11,10 +11,11 @@ class Syllabus extends Admin_Controller
     {
         parent::__construct();
         $this->load->library('media_storage');
+        $this->load->model(['subjecttimetable_model', 'syllabus_model', 'section_model', 'class_model', 'lessonplan_model', 'staff_model']);
         $this->sch_current_session = $this->setting_model->getCurrentSession();
         $this->staff_id            = $this->customlib->getStaffID();
         $this->sch_setting_detail  = $this->setting_model->getSetting();
-        $this->start_weekday       = strtolower($this->sch_setting_detail->start_week);
+        $this->start_weekday       = !empty($this->sch_setting_detail->start_week) ? strtolower($this->sch_setting_detail->start_week) : 'monday';
         $this->load->library('SaasValidation');
     }
 
@@ -28,7 +29,7 @@ class Syllabus extends Admin_Controller
         $this->session->set_userdata('sub_menu', 'admin/syllabus');
         $my_role                 = $this->customlib->getStaffRole();
         $role                    = json_decode($my_role);
-        $data['role_id']         = $role->id;
+        $data['role_id']         = isset($role->id) ? $role->id : 0;
         $staff_list              = $this->staff_model->getEmployee('2');
         $data['staff_list']      = $staff_list;
         $monday                  = strtotime("last " . $this->start_weekday);
@@ -46,7 +47,8 @@ class Syllabus extends Admin_Controller
 
     public function get_weekdates()
     {
-        $this_week_start         = $this->customlib->dateFormatToYYYYMMDD($_POST['date']);
+        $input_date = !empty($_POST['date']) ? $_POST['date'] : date($this->customlib->getSchoolDateFormat());
+        $this_week_start         = $this->customlib->dateFormatToYYYYMMDD($input_date);
         $prev_week_start         = date("Y-m-d", strtotime('last ' . $this->start_weekday, strtotime($this_week_start)));
         $next_week_start         = date("Y-m-d", strtotime('next ' . $this->start_weekday, strtotime($this_week_start)));
         $this_week_end           = date("Y-m-d", strtotime($this_week_start . " +6 day"));
@@ -55,25 +57,28 @@ class Syllabus extends Admin_Controller
         $data['prev_week_start'] = $this->customlib->dateformat($prev_week_start);
         $data['next_week_start'] = $this->customlib->dateformat($next_week_start);
         $this->session->set_userdata('top_menu', 'Time_table');
-        $staff_id            = $_POST['staff_id'];
+        $staff_id            = !empty($_POST['staff_id']) ? $_POST['staff_id'] : $this->staff_id;
         $data['timetable']   = array();
         $days                = $this->customlib->getDaysname();
         $userdata            = $this->customlib->getUserData();
-        $role_id             = $userdata["role_id"];
+        $role_id             = isset($userdata["role_id"]) ? $userdata["role_id"] : null;
         $class_section_array = array();
-        if (isset($role_id) && ($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
+        if (isset($role_id) && ($userdata["role_id"] == 2) && isset($userdata["class_teacher"]) && ($userdata["class_teacher"] == "yes")) {
             $my_class = $this->class_model->get();
-            foreach ($my_class as $class_key => $class_value) {
-                $section = $this->section_model->getClassBySection($class_value['id']);
-                foreach ($section as $key => $value) {
-                    $class_section_array[$class_value['id']][] = $value['section_id'];
+            if (!empty($my_class)) {
+                foreach ($my_class as $class_key => $class_value) {
+                    $section = $this->section_model->getClassBySection($class_value['id']);
+                    if (!empty($section)) {
+                        foreach ($section as $key => $value) {
+                            $class_section_array[$class_value['id']][] = $value['section_id'];
+                        }
+                    }
                 }
             }
         }
 
         foreach ($days as $day_key => $day_value) {
             $data['timetable'][$day_key] = $this->subjecttimetable_model->getSyllabussubject($staff_id, $day_key, $class_section_array);
-
         }
 
         $data['staff_id'] = $staff_id;
