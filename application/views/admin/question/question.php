@@ -2,37 +2,267 @@
 <script src="<?php echo base_url(); ?>backend/js/ckeditor_config.js"></script>
 <script src="<?php echo base_url(); ?>backend/plugins/ckeditor/adapters/jquery.js"></script>
 
-<div class="content-wrapper">
-    <section class="content-header">
-        <h1><i class="fa fa-bus"></i> <?php //echo $this->lang->line('question'); ?></h1>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+.question-studio-wrapper {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Modern KPI Summary Stat Cards */
+.modern-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.modern-stat-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s ease;
+}
+.modern-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+}
+.modern-stat-info .stat-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+.modern-stat-info .stat-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.1;
+}
+.modern-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+/* Slide-in Right Side Drawer */
+.modern-drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1050;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.modern-drawer-overlay.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+.modern-drawer-panel {
+    position: fixed !important;
+    top: 0 !important;
+    right: -720px !important;
+    width: 680px !important;
+    max-width: 95vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    background: #ffffff !important;
+    z-index: 99999 !important;
+    box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.15) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.modern-drawer-panel.is-open {
+    right: 0 !important;
+}
+.modern-drawer-header {
+    background: #ffffff;
+    color: #0f172a;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+.modern-drawer-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.modern-drawer-close {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+    opacity: 0.8;
+    transition: all 0.15s ease;
+}
+.modern-drawer-close:hover {
+    color: #0f172a;
+    opacity: 1;
+}
+.modern-drawer-body {
+    padding: 22px 24px 40px 24px;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    flex: 1 1 auto;
+    background: #ffffff;
+    -webkit-overflow-scrolling: touch;
+}
+.modern-drawer-footer {
+    padding: 14px 24px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.ques-option-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.ques-option-card.is-correct {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #065f46;
+    font-weight: 600;
+}
+</style>
+
+<div class="content-wrapper question-studio-wrapper">
+    <section class="content-header" style="padding-top: 15px;">
+        <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <i class="fa fa-question-circle" style="color: #6366f1; margin-right: 8px;"></i> Question & Answer Bank Studio
+                <small style="font-size: 13px; color: #64748b; margin-left: 6px;">CBSE & School Question Repository</small>
+            </div>
+            <div class="box-tools pull-right" style="display: flex; gap: 8px;">
+                <?php if ($this->rbac->hasPrivilege('question_bank', 'can_add')) {?>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openAiQuestionModal()" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border: none; font-weight: 700; padding: 6px 14px; border-radius: 6px; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.35);">
+                        <i class="fa fa-bolt"></i> AI Question Generator
+                    </button>
+                    <button type="button" class="btn btn-default btn-sm question-btn" data-recordid="0" style="border: 1px solid #cbd5e1; font-weight: 600; padding: 6px 14px; border-radius: 6px; background: #ffffff; color: #334155;">
+                        <i class="fa fa-plus text-primary"></i> <?php echo $this->lang->line('add_question'); ?>
+                    </button>
+                <?php }?>
+                <?php if ($this->rbac->hasPrivilege('import_question', 'can_view')) {?>
+                    <button type="button" class="btn btn-default btn-sm import-question" data-toggle="modal" data-target="#myQuesImportModal" style="border: 1px solid #cbd5e1; font-weight: 600; padding: 6px 12px; border-radius: 6px; background: #ffffff;">
+                        <i class="fa fa-upload text-muted"></i> <?php echo $this->lang->line('import'); ?>
+                    </button>
+                <?php }?>
+                <?php if ($this->rbac->hasPrivilege('question_bank', 'can_delete')) {?>
+                    <button type="button" class="btn btn-default btn-sm text-danger deleteSelected" style="border: 1px solid #cbd5e1; font-weight: 600; padding: 6px 12px; border-radius: 6px; background: #ffffff;">
+                        <i class="fa fa-trash"></i> <?php echo $this->lang->line('bulk_delete'); ?>
+                    </button>
+                <?php }?>
+            </div>
+        </h1>
     </section>
-    <section class="content">
+
+    <section class="content" style="padding-top: 10px;">
+        <!-- Modern KPI Stat Grid -->
+        <div class="modern-stat-grid">
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Total Questions</div>
+                    <div class="stat-value" id="kpi_total_questions" style="color: #6366f1;">
+                        <?php 
+                        $total_q = $this->db->count_all('questions');
+                        echo number_format($total_q); 
+                        ?>
+                    </div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
+                    <i class="fa fa-database"></i>
+                </div>
+            </div>
+
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Active Classes</div>
+                    <div class="stat-value" style="color: #10b981;">
+                        <?php echo count($classlist); ?>
+                    </div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                    <i class="fa fa-graduation-cap"></i>
+                </div>
+            </div>
+
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Subject Repositories</div>
+                    <div class="stat-value" style="color: #0284c7;">
+                        <?php echo count($subjectlist); ?>
+                    </div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(2, 132, 199, 0.12); color: #0284c7;">
+                    <i class="fa fa-book"></i>
+                </div>
+            </div>
+
+            <div class="modern-stat-card">
+                <div class="modern-stat-info">
+                    <div class="stat-label">AI Generation</div>
+                    <div class="stat-value" style="color: #8b5cf6; font-size: 18px;">
+                        <i class="fa fa-bolt text-warning"></i> Active
+                    </div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(139, 92, 246, 0.12); color: #8b5cf6;">
+                    <i class="fa fa-sparkles"></i>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-md-12">
-                <div class="box box-primary" id="route">
-                    <div class="box-header ptbnull">
-                        <h3 class="box-title titlefix"><?php echo $this->lang->line('select_criteria'); ?></h3>
-                        <div class="box-tools box-tools-sm">
-                            <?php if ($this->rbac->hasPrivilege('question_bank', 'can_add')) {?>
-                                <button type="button" class="btn btn-primary" onclick="openAiQuestionModal()" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border: none; font-weight: 700; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.35);"><i class="fa fa-bolt"></i> AI Question Generator</button>
-                                <button class="btn btn-primary question-btn" data-recordid="0" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add_question'); ?></button>
-                            <?php }?>
-                            <?php if ($this->rbac->hasPrivilege('import_question', 'can_view')) {?>
-                                <button class="btn btn-primary import-question" data-toggle="modal" data-target="#myQuesImportModal" ><i class="fa fa-plus"></i> <?php echo $this->lang->line('import'); ?></button>
-                            <?php }?>
-                            <?php if ($this->rbac->hasPrivilege('question_bank', 'can_delete')) {?>
-                                <button class="btn btn-primary deleteSelected" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-trash"></i> <?php echo $this->lang->line('bulk_delete'); ?></button>
-                            <?Php }?>
-                        </div>
+                <!-- Search & Filters Box -->
+                <div class="box box-primary" style="border-radius: 12px; border-top: 3px solid #6366f1; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px;">
+                    <div class="box-header" style="padding: 14px 18px; border-bottom: 1px solid #f1f5f9;">
+                        <h3 class="box-title" style="font-size: 14px; font-weight: 700; color: #1e293b;">
+                            <i class="fa fa-filter text-muted" style="margin-right: 6px;"></i> <?php echo $this->lang->line('select_criteria'); ?>
+                        </h3>
                     </div>
-                    <div class="box-body">
+                    <div class="box-body" style="padding: 16px 18px;">
                         <form role="form" action="<?php echo site_url('admin/question/questionsearchvalidation') ?>" method="post" class="" id="questionsearchform">
                             <div class="row">
                                 <?php echo $this->customlib->getCSRF(); ?>
                                 <div class="col-sm-6 col-md-2">
-                                    <div class="form-group">
-                                        <label><?php echo $this->lang->line('class'); ?></label>
-                                        <select autofocus="" id="class_id" name="class" class="form-control" >
+                                    <div class="form-group" style="margin-bottom: 10px;">
+                                        <label style="font-size: 12px; font-weight: 600; color: #475569;"><?php echo $this->lang->line('class'); ?></label>
+                                        <select autofocus="" id="class_id" name="class" class="form-control" style="border-radius: 6px; font-size: 13px;">
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
                                             <?php
 foreach ($classlist as $class) {
@@ -50,9 +280,9 @@ foreach ($classlist as $class) {
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-md-2">
-                                    <div class="form-group">
-                                        <label><?php echo $this->lang->line('section'); ?></label>
-                                        <select  id="search_section_id" name="section" class="form-control" >
+                                    <div class="form-group" style="margin-bottom: 10px;">
+                                        <label style="font-size: 12px; font-weight: 600; color: #475569;"><?php echo $this->lang->line('section'); ?></label>
+                                        <select  id="search_section_id" name="section" class="form-control" style="border-radius: 6px; font-size: 13px;">
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
                                         </select>
                                         <span class="text-danger"><?php echo form_error('section_id'); ?></span>
@@ -125,14 +355,28 @@ foreach ($staff_list as $staff_list_key => $staff_list_value) {
                                 </div>
                             </div><!--./row-->
                         </form>
+                    <div class="box-header" style="padding: 14px 18px; border-top: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
+                        <h3 class="box-title" style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0;">
+                            <i class="fa fa-list text-primary" style="margin-right: 6px;"></i> <?php echo $this->lang->line('question_bank'); ?>
+                        </h3>
+                        <div class="box-tools pull-right" style="display: flex; gap: 8px;">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="openAiQuestionModal()" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border: none; font-weight: 700; padding: 6px 14px; border-radius: 6px; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.35);">
+                                <i class="fa fa-bolt"></i> AI Question Generator
+                            </button>
+                            <button type="button" class="btn btn-default btn-sm question-btn" data-recordid="0" style="border: 1px solid #cbd5e1; font-weight: 600; padding: 6px 14px; border-radius: 6px; background: #ffffff; color: #334155;">
+                                <i class="fa fa-plus text-primary"></i> <?php echo $this->lang->line('add_question'); ?>
+                            </button>
+                            <button type="button" class="btn btn-default btn-sm import-question" data-toggle="modal" data-target="#myQuesImportModal" style="border: 1px solid #cbd5e1; font-weight: 600; padding: 6px 12px; border-radius: 6px; background: #ffffff;">
+                                <i class="fa fa-upload text-muted"></i> <?php echo $this->lang->line('import'); ?>
+                            </button>
+                            <button type="button" class="btn btn-default btn-sm text-danger deleteSelected" style="border: 1px solid #cbd5e1; font-weight: 600; padding: 6px 12px; border-radius: 6px; background: #ffffff;">
+                                <i class="fa fa-trash"></i> <?php echo $this->lang->line('bulk_delete'); ?>
+                            </button>
+                        </div>
                     </div>
-                    <div class="box-header ptbnull"></div>
-                    <div class="box-header ptbnull">
-                        <h3 class="box-title titlefix"><i class="fa fa-users"></i><?php echo $this->lang->line('question_bank'); ?></h3>
-                    </div>
-                    <div class="box-body table-responsive">
+                    <div class="box-body table-responsive" style="padding: 14px 18px;">
                          <div id="import_msg"></div>
-                        <table class="table table-striped table-bordered table-hover all-list" data-export-title="<?php echo $this->lang->line('question_bank'); ?>">
+                         <table class="table table-striped table-bordered table-hover all-list" data-export-title="<?php echo $this->lang->line('question_bank'); ?>">
                             <thead>
                                 <tr>
                                      <th><?php if ($this->rbac->hasPrivilege('question_bank', 'can_delete')) {?><input type="checkbox" id="masterCheck" value="checkUncheckAll"><?php }?></th>
@@ -167,22 +411,59 @@ function findOption($questionOpt, $find)
 
 ?>
 <!-- Modal -->
-<div id="myModal" class="modal fade" role="dialog">
-    <div class="modal-dialog modal-lg">
-        <!-- Modal content-->
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title"><?php echo $this->lang->line('question') ?></h4>
-            </div>
-            <form action="<?php echo site_url('admin/question/add'); ?>" method="POST" id="formsubject">
-                <div class="modal-body add_question_body">
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('saving') ?>"><?php echo $this->lang->line('save') ?></button>
-                </div>
+<!-- Slide-in Right Side Drawer: View Question Details -->
+<div id="drawerQuestionViewOverlay" class="modern-drawer-overlay" onclick="closeQuestionViewDrawer()"></div>
+<div id="drawerQuestionViewPanel" class="modern-drawer-panel">
+    <div class="modern-drawer-header">
+        <h4 class="modern-drawer-title">
+            <i class="fa fa-eye" style="color: #6366f1;"></i> Question Inspection & Preview
+        </h4>
+        <button type="button" class="modern-drawer-close" onclick="closeQuestionViewDrawer()">&times;</button>
+    </div>
+    <div class="modern-drawer-body" id="drawerQuestionViewBody">
+        <div style="text-align: center; padding: 40px; color: #64748b;">
+            <i class="fa fa-spinner fa-spin fa-2x"></i>
+            <div style="margin-top: 10px;">Loading question details...</div>
         </div>
-        </form>
+    </div>
+    <div class="modern-drawer-footer">
+        <button type="button" class="btn btn-default btn-sm" onclick="closeQuestionViewDrawer()">Close</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btnDrawerEditTrigger" onclick="" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border: none; font-weight: 700;">
+            <i class="fa fa-pencil"></i> Edit Question
+        </button>
+    </div>
+</div>
+
+<!-- Slide-in Right Side Drawer: Add / Edit Question Editor -->
+<div id="drawerQuestionEditOverlay" class="modern-drawer-overlay" onclick="closeQuestionEditDrawer()"></div>
+<div id="drawerQuestionEditPanel" class="modern-drawer-panel">
+    <div class="modern-drawer-header">
+        <h4 class="modern-drawer-title" id="drawerQuestionEditTitle">
+            <i class="fa fa-edit" style="color: #6366f1;"></i> Question Studio Editor
+        </h4>
+        <button type="button" class="modern-drawer-close" onclick="closeQuestionEditDrawer()">&times;</button>
+    </div>
+    <form action="<?php echo site_url('admin/question/add'); ?>" method="POST" id="formsubject" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; margin-bottom: 0;">
+        <div class="modern-drawer-body add_question_body" id="drawerQuestionEditBody">
+            <div style="text-align: center; padding: 40px; color: #64748b;">
+                <i class="fa fa-spinner fa-spin fa-2x"></i>
+                <div style="margin-top: 10px;">Loading question form...</div>
+            </div>
+        </div>
+        <div class="modern-drawer-footer">
+            <button type="button" class="btn btn-default" onclick="closeQuestionEditDrawer()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="load" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border: none; font-weight: 700; padding: 8px 18px;" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Saving...">
+                <i class="fa fa-save"></i> Save Question
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="myModal" class="modal fade" role="dialog" style="display: none;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body add_question_body_legacy"></div>
+        </div>
     </div>
 </div>
 
@@ -320,101 +601,200 @@ if (set_value('class_id') == $class['id']) {
 </script>
 
 <script type="text/javascript">
-    $(document).ready(function () {
-        $('#myModal,#myQuesImportModal,#myimgModal').modal({
-            backdrop: 'static',
-            keyboard: false,
-            show: false
-        })
+function openQuestionViewDrawer(id) {
+    $('#drawerQuestionViewOverlay').addClass('is-active');
+    $('#drawerQuestionViewPanel').addClass('is-open');
+    $('body').css('overflow', 'hidden');
+    $('#btnDrawerEditTrigger').attr('onclick', `openQuestionEditDrawer(${id})`);
 
-        $(document).on('click', '.question-btn', function () {
-            var $this=$(this);
-            var recordid = $(this).data('recordid');
-            $('input[name=recordid]').val(recordid);
-            $.ajax({
-                type: 'POST',
-                url: baseurl + "admin/question/addform",
-                data: {'recordid': recordid},
-                dataType: 'JSON',
-                beforeSend: function () {
-                    $this.button('loading');
-                },
-                success: function (data) {
+    const viewBody = $('#drawerQuestionViewBody');
+    viewBody.html(`
+        <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+            <i class="fa fa-spinner fa-spin fa-2x text-primary"></i>
+            <div style="margin-top: 12px; font-weight: 600;">Fetching question details...</div>
+        </div>
+    `);
 
-                var ck= $('#myModal .add_question_body').html(data.page);
-                var elem = $('#myModal .add_question_body').find('.ckeditor');
-                var contentArray = [];
-                var i = 0;
-                $(elem).each(function(_, ckeditor) {
-                CKEDITOR.env.isCompatible = true;
-                CKEDITOR.replace(ckeditor, {
-                  toolbar: 'Ques',
-                  allowedContent : true,
-                  extraPlugins: 'ckeditor_wiris',
-                  enterMode : CKEDITOR.ENTER_BR,
-                  shiftEnterMode: CKEDITOR.ENTER_P,
-                   maxlength: '2',
-                  customConfig: baseurl+'/backend/js/ckeditor_config.js',
-
-                  });
-
-                 });
-
-                $('#myModal').modal('show');
-                    $this.button('reset');
-                },
-                error: function (xhr) { // if error occured
-                    alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
-                    $this.button('reset');
-                },
-                complete: function () {
-                    $this.button('reset');
+    $.ajax({
+        type: 'POST',
+        url: baseurl + "admin/question/getQuestionByID",
+        data: { 'recordid': id },
+        dataType: 'JSON',
+        success: function (data) {
+            if (data.status && data.result) {
+                const q = data.result;
+                let optHtml = '';
+                
+                if (q.question_type === 'singlechoice' || q.question_type === 'multichoice') {
+                    const opts = ['a', 'b', 'c', 'd', 'e'];
+                    opts.forEach(letter => {
+                        const optKey = 'opt_' + letter;
+                        if (q[optKey] && q[optKey].trim() !== '') {
+                            const isCorrect = (q.correct === optKey || (q.correct && q.correct.indexOf(optKey) !== -1));
+                            optHtml += `
+                                <div class="ques-option-card ${isCorrect ? 'is-correct' : ''}">
+                                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: ${isCorrect ? '#10b981' : '#e2e8f0'}; color: ${isCorrect ? '#ffffff' : '#334155'}; font-weight: 700; font-size: 12px;">
+                                        ${letter.toUpperCase()}
+                                    </span>
+                                    <div style="flex: 1;">${q[optKey]}</div>
+                                    ${isCorrect ? '<span class="label label-success"><i class="fa fa-check"></i> Correct Answer</span>' : ''}
+                                </div>
+                            `;
+                        }
+                    });
+                } else if (q.question_type === 'true_false') {
+                    optHtml = `
+                        <div class="ques-option-card ${q.correct === 'true' ? 'is-correct' : ''}">
+                            <span style="font-weight: 700;">A. True</span>
+                            ${q.correct === 'true' ? '<span class="label label-success pull-right"><i class="fa fa-check"></i> Correct</span>' : ''}
+                        </div>
+                        <div class="ques-option-card ${q.correct === 'false' ? 'is-correct' : ''}">
+                            <span style="font-weight: 700;">B. False</span>
+                            ${q.correct === 'false' ? '<span class="label label-success pull-right"><i class="fa fa-check"></i> Correct</span>' : ''}
+                        </div>
+                    `;
                 }
-            });
-        });
 
-        $(document).on('click', '.question-btn-edit', function () {
-            var $this = $(this);
-            var recordid = $this.data('recordid');
-            $('input[name=recordid]').val(recordid);
-            $.ajax({
-                type: 'POST',
-                url: baseurl + "admin/question/editform",
-                data: {'recordid': recordid},
-                dataType: 'JSON',
-                beforeSend: function () {
-                    $this.button('loading');
-                },
-                success: function (data) {
-console.log(data);
-                if (data.status) {
-                var ck= $('#myModal .add_question_body').html(data.page);
-                var elem = $('#myModal .add_question_body').find('.ckeditor');
-                   $(elem).each(function(_, ckeditor) {
- CKEDITOR.env.isCompatible = true;
-                CKEDITOR.replace(ckeditor, {
-                  toolbar: 'Ques',
-                     allowedContent : true,
-                  extraPlugins: 'ckeditor_wiris',
-                  enterMode : CKEDITOR.ENTER_BR,
-                  shiftEnterMode: CKEDITOR.ENTER_P,
-                     customConfig: baseurl+'/backend/js/ckeditor_config.js'
-                });
-                 });
-                $('#myModal').modal('show');
-                    }
-                    $this.button('reset');
-                },
-                error: function (xhr) { // if error occured
-                   alert("<?php echo $this->lang->line('error_occurred_please_try_again'); ?>");
-                    $this.button('reset');
-                },
-                complete: function () {
-                    $this.button('reset');
+                viewBody.html(`
+                    <div style="margin-bottom: 18px;">
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                            <span class="label label-primary" style="background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; font-size: 12px; padding: 4px 8px;">
+                                <i class="fa fa-graduation-cap"></i> ${q.class_name || 'Class'} ${(q.section_name ? '(' + q.section_name + ')' : '')}
+                            </span>
+                            <span class="label label-info" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-size: 12px; padding: 4px 8px;">
+                                <i class="fa fa-book"></i> ${q.name || 'Subject'} ${(q.code ? '(' + q.code + ')' : '')}
+                            </span>
+                            <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-size: 11px;">
+                                ${q.question_type || 'singlechoice'}
+                            </span>
+                            <span class="badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-size: 11px; text-transform: uppercase;">
+                                Level: ${q.level || 'medium'}
+                            </span>
+                        </div>
+
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; margin-bottom: 18px;">
+                            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">
+                                Question Text:
+                            </label>
+                            <div style="font-size: 15px; color: #0f172a; line-height: 1.6; font-weight: 500;">
+                                ${q.question}
+                            </div>
+                        </div>
+
+                        ${optHtml ? `
+                            <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block;">
+                                Options & Answer Key:
+                            </label>
+                            <div style="margin-bottom: 18px;">${optHtml}</div>
+                        ` : ''}
+
+                        ${q.explanation ? `
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; margin-top: 14px;">
+                                <strong style="color: #166534; font-size: 12px; display: block; margin-bottom: 4px;">
+                                    <i class="fa fa-lightbulb-o"></i> Solution / Marking Rubric:
+                                </strong>
+                                <div style="font-size: 13px; color: #14532d;">${q.explanation}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `);
+
+                // Auto render MathJax/KaTeX math equations if present
+                if (window.renderMathInElement) {
+                    renderMathInElement(document.getElementById('drawerQuestionViewBody'), {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false}
+                        ]
+                    });
                 }
-            });
-        });
+            } else {
+                viewBody.html('<div class="alert alert-danger">Unable to load question details.</div>');
+            }
+        },
+        error: function() {
+            viewBody.html('<div class="alert alert-danger">Error communicating with server.</div>');
+        }
     });
+}
+
+function closeQuestionViewDrawer() {
+    $('#drawerQuestionViewPanel').removeClass('is-open');
+    $('#drawerQuestionViewOverlay').removeClass('is-active');
+    $('body').css('overflow', '');
+}
+
+function openQuestionEditDrawer(recordid) {
+    closeQuestionViewDrawer();
+
+    $('#drawerQuestionEditOverlay').addClass('is-active');
+    $('#drawerQuestionEditPanel').addClass('is-open');
+    $('body').css('overflow', 'hidden');
+
+    const editTitle = (recordid && recordid > 0) ? `Edit Question #${recordid}` : 'Create New Question';
+    $('#drawerQuestionEditTitle').html(`<i class="fa fa-edit" style="color: #6366f1;"></i> ${editTitle}`);
+
+    const editBody = $('#drawerQuestionEditBody');
+    editBody.html(`
+        <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+            <i class="fa fa-spinner fa-spin fa-2x text-primary"></i>
+            <div style="margin-top: 12px; font-weight: 600;">Loading editor canvas...</div>
+        </div>
+    `);
+
+    const apiUrl = (recordid && recordid > 0) ? (baseurl + "admin/question/editform") : (baseurl + "admin/question/addform");
+
+    $.ajax({
+        type: 'POST',
+        url: apiUrl,
+        data: { 'recordid': recordid },
+        dataType: 'JSON',
+        success: function (data) {
+            if (data.status) {
+                editBody.html(data.page);
+                const elem = editBody.find('.ckeditor');
+                $(elem).each(function(_, ckeditor) {
+                    CKEDITOR.env.isCompatible = true;
+                    CKEDITOR.replace(ckeditor, {
+                        toolbar: 'Ques',
+                        allowedContent: true,
+                        extraPlugins: 'ckeditor_wiris',
+                        enterMode: CKEDITOR.ENTER_BR,
+                        shiftEnterMode: CKEDITOR.ENTER_P,
+                        customConfig: baseurl + '/backend/js/ckeditor_config.js'
+                    });
+                });
+            } else {
+                editBody.html('<div class="alert alert-danger">Failed to load question editor form.</div>');
+            }
+        },
+        error: function() {
+            editBody.html('<div class="alert alert-danger">Error communicating with server.</div>');
+        }
+    });
+}
+
+function closeQuestionEditDrawer() {
+    // Destroy CKEditor instances to avoid memory leaks
+    for (name in CKEDITOR.instances) {
+        try { CKEDITOR.instances[name].destroy(true); } catch(e) {}
+    }
+    $('#drawerQuestionEditPanel').removeClass('is-open');
+    $('#drawerQuestionEditOverlay').removeClass('is-active');
+    $('body').css('overflow', '');
+}
+
+$(document).ready(function () {
+    $(document).on('click', '.question-btn', function () {
+        const recordid = $(this).data('recordid') || 0;
+        openQuestionEditDrawer(recordid);
+    });
+
+    $(document).on('click', '.question-btn-edit', function () {
+        const recordid = $(this).data('recordid');
+        openQuestionEditDrawer(recordid);
+    });
+});
 
     $("form#formimportquestion").submit(function (e) {
      //stop submit the form, we will post it manually.

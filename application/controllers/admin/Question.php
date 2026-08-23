@@ -472,22 +472,20 @@ class Question extends Admin_Controller
 
                 $delete       = "'" . $this->lang->line("delete_confirm") . "'";
                 $delete_title = "'" . $this->lang->line("delete") . "'";
-                $editbtn      = "";
-                $deletebtn    = "";
-                $del_checkbox = "";
-
                 if ($this->rbac->hasPrivilege('question_bank', 'can_delete')) {
-                    $deletebtn    = '<a href="' . base_url() . 'admin/question/delete/' . $value->id . '" class="btn btn-primary btn-xs"  data-toggle="tooltip" title=' . $delete_title . ' onclick="return confirm(' . $delete . ')"><i class="fa fa-remove"></i></a>';
                     $del_checkbox = "<input type='checkbox' name='question_" . $value->id . "' data-question-id='" . $value->id . "' value='" . $value->id . "'>";
                 }
 
                 if ($this->rbac->hasPrivilege('question_bank', 'can_view')) {
-
-                    $viewbtn = '<a target="_blank" href="' . site_url('admin/question/read/' . $value->id) . '" class="btn btn-primary btn-xs"  data-toggle="tooltip" title=' . $this->lang->line("view") . ' ><i class="fa fa-eye"></i></a>';
+                    $viewbtn = '<button type="button" class="btn btn-default btn-xs" onclick="openQuestionViewDrawer(' . $value->id . ')" data-toggle="tooltip" title="' . $this->lang->line("view") . '" style="border-color: #cbd5e1; color: #4338ca; border-radius: 6px; padding: 3px 8px; margin-right: 3px;"><i class="fa fa-eye"></i></button>';
                 }
                 
                 if ($this->rbac->hasPrivilege('question_bank', 'can_edit')) {                
-                    $editbtn = '<button type="button" class="btn btn-primary btn-xs question-btn-edit" data-toggle="tooltip" id="load" data-recordid="' . $value->id . '" title="' . $this->lang->line("edit") . '" ><i class="fa fa-pencil"></i></button>';
+                    $editbtn = '<button type="button" class="btn btn-default btn-xs" onclick="openQuestionEditDrawer(' . $value->id . ')" data-toggle="tooltip" title="' . $this->lang->line("edit") . '" style="border-color: #cbd5e1; color: #059669; border-radius: 6px; padding: 3px 8px; margin-right: 3px;"><i class="fa fa-pencil"></i></button>';
+                }
+
+                if ($this->rbac->hasPrivilege('question_bank', 'can_delete')) {
+                    $deletebtn = '<a href="' . base_url() . 'admin/question/delete/' . $value->id . '" class="btn btn-default btn-xs text-danger" data-toggle="tooltip" title=' . $delete_title . ' onclick="return confirm(' . $delete . ')" style="border-color: #cbd5e1; border-radius: 6px; padding: 3px 8px;"><i class="fa fa-trash"></i></a>';
                 }
                 
                 $code = '';
@@ -497,28 +495,34 @@ class Question extends Admin_Controller
                 $row = array();
 
                 $row[] = $del_checkbox;
-                $row[] = $value->id;
-                $row[] = $value->class_name." (".$value->section_name.")";
-                $row[] = $value->name .' '. $code ;
-                $row[] = ($value->question_type != "") ? $question_type[$value->question_type] : "";
-                $row[] = ($value->level != "") ? $question_level[$value->level] : "";
-                $row[] = readmorelink($value->question, site_url('admin/question/read/' . $value->id));                
+                $row[] = '<span style="font-weight: 700; color: #6366f1;">#' . $value->id . '</span>';
+                $row[] = '<span class="label label-primary" style="font-size: 11px; background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe;">' . htmlspecialchars($value->class_name . ($value->section_name ? " (".$value->section_name.")" : "")) . '</span>';
+                $row[] = '<strong style="color: #0f172a;">' . htmlspecialchars($value->name . $code) . '</strong>';
+                $row[] = '<span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; font-weight: 600;">' . (($value->question_type != "") ? $question_type[$value->question_type] : "") . '</span>';
+                
+                $lvlColor = '#0284c7';
+                if ($value->level == 'hard') $lvlColor = '#dc2626';
+                elseif ($value->level == 'medium') $lvlColor = '#d97706';
+                elseif ($value->level == 'easy') $lvlColor = '#16a34a';
+                
+                $row[] = '<span style="color: '.$lvlColor.'; font-weight: 700; font-size: 11px; text-transform: uppercase;">' . (($value->level != "") ? $question_level[$value->level] : "") . '</span>';
+                $row[] = '<div style="max-height: 50px; overflow: hidden; cursor: pointer; color: #1e293b; font-size: 13px;" onclick="openQuestionViewDrawer(' . $value->id . ')">' . strip_tags($value->question) . '</div>';                
                 
                 if($superadmin_restriction == 'disabled'){
                     if($staffrole->id == 7){
-                        $row[] = $value->staff_name. ' ' .$value->staff_surname. ' (' .$value->employee_id. ')';
+                        $row[] = '<span style="font-size: 11px; color: #64748b;">' . $value->staff_name. ' ' .$value->staff_surname. '</span>';
                     }else{
                         if($value->created_role != 7){
-                            $row[] = $value->staff_name. ' ' .$value->staff_surname. ' (' .$value->employee_id. ')'; 
+                            $row[] = '<span style="font-size: 11px; color: #64748b;">' . $value->staff_name. ' ' .$value->staff_surname. '</span>'; 
                         }else{
                             $row[] = '';
                         } 
                     }
                 }else{
-                    $row[] = $value->staff_name. ' ' .$value->staff_surname. ' (' .$value->employee_id. ')';
+                    $row[] = '<span style="font-size: 11px; color: #64748b;">' . $value->staff_name. ' ' .$value->staff_surname. '</span>';
                 }              
                 
-                $row[] = $viewbtn . ' ' . $editbtn . ' ' . $deletebtn;
+                $row[] = '<div style="white-space: nowrap; display: flex; align-items: center; justify-content: flex-end;">' . $viewbtn . ' ' . $editbtn . ' ' . $deletebtn . '</div>';
 
                 if ($role_id == 2) {
                     $my_section = array();
