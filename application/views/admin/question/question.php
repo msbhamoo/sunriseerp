@@ -757,7 +757,7 @@ $('#myimgModal').on('shown.bs.modal', function (event) {
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label style="font-weight: 600; font-size: 13px;">2. Subject <small class="text-danger">*</small></label>
-                                <select id="ai_gen_subject" class="form-control" required>
+                                <select id="ai_gen_subject" class="form-control" onchange="onAiSubjectChange()" required>
                                     <option value="">-- Choose Class First --</option>
                                 </select>
                             </div>
@@ -765,9 +765,15 @@ $('#myimgModal').on('shown.bs.modal', function (event) {
                     </div>
 
                     <div class="form-group">
-                        <label style="font-weight: 600; font-size: 13px;">3. Chapter / Topic Scope</label>
-                        <input type="text" id="ai_gen_topic" class="form-control" placeholder="e.g. Chemical Reactions, Linear Equations, Complete Syllabus...">
-                        <small class="text-muted">Specify exact chapter name or leave blank for complete subject syllabus.</small>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label style="font-weight: 600; font-size: 13px; margin: 0;">3. Chapter / Syllabus Scope</label>
+                            <span id="aiChapterLoadingStatus" style="font-size: 11px; color: #6366f1; display: none;"><i class="fa fa-spinner fa-spin"></i> Loading syllabus...</span>
+                        </div>
+                        <select id="ai_gen_topic_select" class="form-control" onchange="onTopicSelectChange()">
+                            <option value="Complete Syllabus">-- Complete Subject Syllabus (All Chapters) --</option>
+                        </select>
+                        <input type="text" id="ai_gen_topic_custom" class="form-control" style="display: none; margin-top: 8px;" placeholder="Type custom topic name here...">
+                        <small class="text-muted" style="margin-top: 4px; display: block;">Select a specific NCERT chapter from the curriculum or choose "Type Custom Topic".</small>
                     </div>
 
                     <div class="row">
@@ -864,12 +870,71 @@ function onAiClassChange() {
     });
 }
 
+function onAiSubjectChange() {
+    const className = $('#ai_gen_class option:selected').data('name') || '';
+    const subjectName = $('#ai_gen_subject option:selected').data('name') || '';
+    const topicSelect = $('#ai_gen_topic_select');
+    const loadingStatus = $('#aiChapterLoadingStatus');
+
+    topicSelect.html('<option value="Complete Syllabus">-- Complete Subject Syllabus (All Chapters) --</option>');
+    $('#ai_gen_topic_custom').hide().val('');
+
+    if (!className || !subjectName) {
+        return;
+    }
+
+    loadingStatus.show();
+
+    $.ajax({
+        url: '<?php echo base_url(); ?>admin/aiexamgenerator/get_or_fetch_chapters_ajax',
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            class_name: className,
+            subject_name: subjectName,
+            api_engine: $('#ai_gen_engine').val() || 'gemini',
+            force_reload: 0
+        },
+        success: function(res) {
+            loadingStatus.hide();
+            if (res.status === 'success' && res.chapters && res.chapters.length > 0) {
+                topicSelect.empty();
+                topicSelect.append('<option value="Complete Syllabus">-- Complete Subject Syllabus (All ' + res.chapters.length + ' Chapters) --</option>');
+                res.chapters.forEach(function(ch, idx) {
+                    topicSelect.append(`<option value="${ch}">Chapter ${idx + 1}: ${ch}</option>`);
+                });
+                topicSelect.append('<option value="__custom__">✍️ Type Custom Topic...</option>');
+            } else {
+                topicSelect.append('<option value="__custom__">✍️ Type Custom Topic...</option>');
+            }
+        },
+        error: function() {
+            loadingStatus.hide();
+            topicSelect.append('<option value="__custom__">✍️ Type Custom Topic...</option>');
+        }
+    });
+}
+
+function onTopicSelectChange() {
+    const val = $('#ai_gen_topic_select').val();
+    if (val === '__custom__') {
+        $('#ai_gen_topic_custom').show().focus();
+    } else {
+        $('#ai_gen_topic_custom').hide();
+    }
+}
+
 function runAiQuestionGeneration() {
     const classId = $('#ai_gen_class').val();
     const className = $('#ai_gen_class option:selected').data('name');
     const subjectId = $('#ai_gen_subject').val();
     const subjectName = $('#ai_gen_subject option:selected').data('name');
-    const topic = $('#ai_gen_topic').val();
+    
+    let topic = $('#ai_gen_topic_select').val();
+    if (topic === '__custom__') {
+        topic = $('#ai_gen_topic_custom').val().trim() || 'Complete Syllabus';
+    }
+
     const qType = $('#ai_gen_type').val();
     const level = $('#ai_gen_level').val();
     const count = $('#ai_gen_count').val();
