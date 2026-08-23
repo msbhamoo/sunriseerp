@@ -943,10 +943,21 @@ Requirements:
 
         $response = null;
         if (($api_engine === 'openrouter' || $api_engine === 'openrouter_ox') && !empty($active_openrouter_key)) {
-            $response = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
-            if (isset($response['error']) && !empty($active_gemini_key)) {
-                $fallback = $this->call_gemini($prompt, $active_gemini_key);
-                if (!isset($fallback['error'])) $response = $fallback;
+            $response = $this->call_openrouter($prompt, $active_openrouter_key, 'stealth/ox-alpha');
+            // If OpenRouter times out or errors on live, immediately fallback to Gemini or Groq
+            if (isset($response['error'])) {
+                if (!empty($active_gemini_key)) {
+                    $fallback = $this->call_gemini($prompt, $active_gemini_key);
+                    if (!isset($fallback['error'])) {
+                        $response = $fallback;
+                    }
+                }
+                if (isset($response['error']) && !empty($active_groq_key)) {
+                    $fallback_groq = $this->call_groq($prompt, $active_groq_key);
+                    if (!isset($fallback_groq['error'])) {
+                        $response = $fallback_groq;
+                    }
+                }
             }
         } elseif ($api_engine === 'groq' && !empty($active_groq_key)) {
             $response = $this->call_groq($prompt, $active_groq_key);
@@ -956,12 +967,12 @@ Requirements:
             }
         } elseif (!empty($active_gemini_key)) {
             $response = $this->call_gemini($prompt, $active_gemini_key);
-            if (isset($response['error']) && !empty($active_openrouter_key)) {
-                $fallback = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
+            if (isset($response['error']) && !empty($active_groq_key)) {
+                $fallback = $this->call_groq($prompt, $active_groq_key);
                 if (!isset($fallback['error'])) $response = $fallback;
             }
         } elseif (!empty($active_openrouter_key)) {
-            $response = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
+            $response = $this->call_openrouter($prompt, $active_openrouter_key, 'stealth/ox-alpha');
         } elseif (!empty($active_groq_key)) {
             $response = $this->call_groq($prompt, $active_groq_key);
         } else {
