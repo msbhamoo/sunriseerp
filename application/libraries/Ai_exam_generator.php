@@ -531,14 +531,13 @@ EOT;
                 $models_to_test[] = $am;
             }
         }
-        if (empty($models_to_test)) {
-            $models_to_test = $priority_order;
-        }
+        // Test only the top 2 models to stay well within NGINX 30-60s proxy timeouts
+        $models_to_test = array_slice($models_to_test, 0, 2);
 
         $last_error = 'Unknown error';
 
         foreach ($models_to_test as $model) {
-            foreach (['v1beta', 'v1'] as $ver) {
+            foreach (['v1beta'] as $ver) {
                 $url = "https://generativelanguage.googleapis.com/{$ver}/models/{$model}:generateContent?key=" . urlencode($api_key);
 
                 $payload = [
@@ -562,7 +561,8 @@ EOT;
                 curl_setopt($ch, CURLOPT_HTTPHEADER, [
                     'Content-Type: application/json'
                 ]);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 35);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 18);
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
                 $result     = curl_exec($ch);
@@ -648,16 +648,12 @@ EOT;
     {
         $url = "https://openrouter.ai/api/v1/chat/completions";
 
-        // Models to try: official stealth/ox-alpha (Free 1M context released Aug 21, 2026), followed by reliable free frontier fallbacks
+        // Models to try: official stealth/ox-alpha free tier, then 1 fast fallback
         $primary = ($model === 'ox-alpha' || empty($model)) ? 'stealth/ox-alpha' : $model;
         $models = [
             $primary,
-            'stealth/ox-alpha',
-            'deepseek/deepseek-r1:free',
-            'google/gemini-2.0-flash-exp:free',
-            'meta-llama/llama-3.3-70b-instruct'
+            'deepseek/deepseek-r1:free'
         ];
-        // Ensure unique model list preserving order
         $models = array_values(array_unique($models));
 
         $last_error = 'Unknown error';
@@ -666,7 +662,7 @@ EOT;
             $payload = [
                 'model' => $m,
                 'messages' => [
-                    ['role' => 'system', 'content' => 'You are an expert CBSE Senior Board examination question paper author. You output only raw valid JSON strictly matching the requested schema.'],
+                    ['role' => 'system', 'content' => 'You are an expert CBSE examination question author. Output only raw valid JSON matching the requested schema.'],
                     ['role' => 'user', 'content' => $prompt]
                 ],
                 'response_format' => ['type' => 'json_object'],
@@ -683,7 +679,8 @@ EOT;
                 'HTTP-Referer: http://localhost/lms',
                 'X-Title: LMS AI Exam Studio'
             ]);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 35); // 35s max so NGINX never times out at 60s
+            curl_setopt($ch, CURLOPT_TIMEOUT, 18); // Fast 18s timeout per model so total request is under 30s
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 6);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
             $result = curl_exec($ch);
