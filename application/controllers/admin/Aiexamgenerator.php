@@ -419,7 +419,49 @@ class Aiexamgenerator extends Admin_Controller
     }
 
     /**
-     * AJAX Endpoint: Get list of all Class + Subject pairs for bulk background sync
+     * AJAX Endpoint: Fetch mapped subjects for a specific class based on Subject Group assignments
+     */
+    public function get_subjects_by_class_ajax()
+    {
+        if (!$this->rbac->hasPrivilege('examination', 'can_view')) {
+            echo json_encode(['status' => 'error', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $class_id = $this->input->post('class_id');
+        if (empty($class_id)) {
+            echo json_encode(['status' => 'error', 'message' => 'Class ID is required']);
+            return;
+        }
+
+        $current_session = $this->setting_model->getCurrentSession();
+
+        // Fetch all distinct subjects mapped to this class via subject_group_class_sections
+        $sql = "SELECT DISTINCT s.id, s.name, s.code, s.type 
+                FROM subjects s
+                INNER JOIN subject_group_subjects sgs ON sgs.subject_id = s.id
+                INNER JOIN subject_groups sg ON sg.id = sgs.subject_group_id
+                INNER JOIN subject_group_class_sections sgcs ON sgcs.subject_group_id = sg.id
+                INNER JOIN class_sections cs ON cs.id = sgcs.class_section_id
+                WHERE cs.class_id = " . $this->db->escape($class_id) . "
+                  AND sg.session_id = " . $this->db->escape($current_session) . "
+                ORDER BY s.name ASC";
+
+        $subjects = $this->db->query($sql)->result_array();
+
+        // Fallback: If no subject group mapped yet for this class, fallback to all active subjects
+        if (empty($subjects)) {
+            $subjects = $this->subject_model->get();
+        }
+
+        echo json_encode([
+            'status'   => 'success',
+            'subjects' => $subjects
+        ]);
+    }
+
+    /**
+     * AJAX Endpoint: Get list of all Class + Subject pairs mapped via Subject Groups for bulk background sync
      */
     public function get_sync_pairs_ajax()
     {
@@ -428,29 +470,63 @@ class Aiexamgenerator extends Admin_Controller
             return;
         }
 
-        $classes  = $this->class_model->get();
-        $subjects = $this->subject_model->get();
+        $current_session = $this->setting_model->getCurrentSession();
+
+        // Fetch only valid Class + Subject combinations defined in Subject Groups
+        $sql = "SELECT DISTINCT c.id AS class_id, c.class AS class_name, s.id AS subject_id, s.name AS subject_name
+                FROM classes c
+                INNER JOIN class_sections cs ON cs.class_id = c.id
+                INNER JOIN subject_group_class_sections sgcs ON sgcs.class_section_id = cs.id
+                INNER JOIN subject_groups sg ON sg.id = sgcs.subject_group_id
+                INNER JOIN subject_group_subjects sgs ON sgs.subject_group_id = sg.id
+                INNER JOIN subjects s ON s.id = sgs.subject_id
+                WHERE sg.session_id = " . $this->db->escape($current_session) . "
+                ORDER BY c.id ASC, s.name ASC";
+
+        $rows = $this->db->query($sql)->result_array();
 
         $pairs = [];
-        if (!empty($classes) && !empty($subjects)) {
-            foreach ($classes as $cls) {
-                foreach ($subjects as $sub) {
-                    $className   = trim($cls['class']);
-                    $subjectName = trim($sub['name']);
+        if (!empty($rows)) {
+            foreach ($rows as $row) {
+                $className   = trim($row['class_name']);
+                $subjectName = trim($row['subject_name']);
 
-                    // Check if already in cache
-                    $cached = $this->db->get_where('cbse_syllabus_chapters', [
-                        'class_name'   => $className,
-                        'subject_name' => $subjectName
-                    ])->row_array();
+                // Check if already cached in DB
+                $cached = $this->db->get_where('cbse_syllabus_chapters', [
+                    'class_name'   => $className,
+                    'subject_name' => $subjectName
+                ])->row_array();
 
-                    $pairs[] = [
-                        'class_id'     => $cls['id'],
-                        'class_name'   => $className,
-                        'subject_id'   => $sub['id'],
-                        'subject_name' => $subjectName,
-                        'is_cached'    => ($cached && !empty($cached['chapters_json'])) ? 1 : 0
-                    ];
+                $pairs[] = [
+                    'class_id'     => $row['class_id'],
+                    'class_name'   => $className,
+                    'subject_id'   => $row['subject_id'],
+                    'subject_name' => $subjectName,
+                    'is_cached'    => ($cached && !empty($cached['chapters_json'])) ? 1 : 0
+                ];
+            }
+        } else {
+            // Fallback: If no subject groups defined yet, pair classes with all subjects
+            $classes  = $this->class_model->get();
+            $subjects = $this->subject_model->get();
+            if (!empty($classes) && !empty($subjects)) {
+                foreach ($classes as $cls) {
+                    foreach ($subjects as $sub) {
+                        $className   = trim($cls['class']);
+                        $subjectName = trim($sub['name']);
+                        $cached = $this->db->get_where('cbse_syllabus_chapters', [
+                            'class_name'   => $className,
+                            'subject_name' => $subjectName
+                        ])->row_array();
+
+                        $pairs[] = [
+                            'class_id'     => $cls['id'],
+                            'class_name'   => $className,
+                            'subject_id'   => $sub['id'],
+                            'subject_name' => $subjectName,
+                            'is_cached'    => ($cached && !empty($cached['chapters_json'])) ? 1 : 0
+                        ];
+                    }
                 }
             }
         }

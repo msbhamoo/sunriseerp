@@ -550,7 +550,7 @@ foreach ($recent_papers as $rp) {
                 <div class="col-sm-6">
                     <div class="form-group">
                         <label>Select Class <small class="req">*</small></label>
-                        <select id="gen_class_id" name="class_id" class="form-control" onchange="onClassOrSubjectChange()" required>
+                        <select id="gen_class_id" name="class_id" class="form-control" onchange="onClassChange()" required>
                             <option value="">-- Choose Class --</option>
                             <?php if (!empty($classlist)) {
                                 foreach ($classlist as $cls) { ?>
@@ -562,12 +562,8 @@ foreach ($recent_papers as $rp) {
                 <div class="col-sm-6">
                     <div class="form-group">
                         <label>Select Subject <small class="req">*</small></label>
-                        <select id="gen_subject_id" name="subject_id" class="form-control" onchange="onClassOrSubjectChange()" required>
-                            <option value="">-- Choose Subject --</option>
-                            <?php if (!empty($subjectlist)) {
-                                foreach ($subjectlist as $sub) { ?>
-                                    <option value="<?php echo $sub['id']; ?>" data-name="<?php echo htmlspecialchars($sub['name']); ?>"><?php echo $sub['name']; ?></option>
-                            <?php } } ?>
+                        <select id="gen_subject_id" name="subject_id" class="form-control" onchange="onSubjectChange()" required>
+                            <option value="">-- Choose Class First --</option>
                         </select>
                     </div>
                 </div>
@@ -1064,7 +1060,8 @@ function closeGeneratorDrawer() {
     $('body').css('overflow', '');
 }
 
-function onClassOrSubjectChange() {
+function onClassChange() {
+    const classId = $('#gen_class_id').val();
     const className = ($('#gen_class_id option:selected').data('name') || '').toLowerCase();
     const isPreprimary = (
         className.indexOf('nursery') !== -1 ||
@@ -1078,7 +1075,6 @@ function onClassOrSubjectChange() {
 
     if (isPreprimary) {
         $('#preprimaryModeBox').slideDown(200);
-        // Adjust default marks if currently 80M
         if ($('#gen_total_marks').val() == '80') {
             selectBlueprint($('.blueprint-pill[data-marks="20"]')[0], 20);
         }
@@ -1086,6 +1082,39 @@ function onClassOrSubjectChange() {
         $('#preprimaryModeBox').slideUp(200);
     }
 
+    const subSelect = $('#gen_subject_id');
+    subSelect.html('<option value="">-- Loading Mapped Subjects... --</option>').prop('disabled', true);
+    $('#ncertChapterBrowserBox').hide();
+    $('#ncertLoadingBox').hide();
+
+    if (!classId) {
+        subSelect.html('<option value="">-- Choose Subject --</option>').prop('disabled', false);
+        return;
+    }
+
+    // Query subjects mapped via Subject Groups
+    $.ajax({
+        url: '<?php echo base_url(); ?>admin/aiexamgenerator/get_subjects_by_class_ajax',
+        type: 'POST',
+        dataType: 'json',
+        data: { class_id: classId },
+        success: function(res) {
+            subSelect.prop('disabled', false).html('<option value="">-- Choose Subject --</option>');
+            if (res.status === 'success' && res.subjects && res.subjects.length > 0) {
+                res.subjects.forEach(function(sub) {
+                    subSelect.append(`<option value="${sub.id}" data-name="${sub.name}">${sub.name}${sub.code ? ' (' + sub.code + ')' : ''}</option>`);
+                });
+            } else {
+                subSelect.append('<option value="">No subjects mapped</option>');
+            }
+        },
+        error: function() {
+            subSelect.prop('disabled', false).html('<option value="">-- Choose Subject --</option>');
+        }
+    });
+}
+
+function onSubjectChange() {
     fetchChaptersForCurrentSelection(false);
 }
 
