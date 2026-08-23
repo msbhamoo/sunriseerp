@@ -616,11 +616,11 @@ EOT;
     {
         $url = "https://openrouter.ai/api/v1/chat/completions";
         
-        // Models list: Primary stealth/ox-alpha, then free fallbacks
+        // Models list: Primary stealth/ox-alpha, then reliable free fallback
         $models = [
             'stealth/ox-alpha',
             'cognitivecomputations/dolphin-mistral-24b:free',
-            'z-ai/glm-5.2:free'
+            'meta-llama/llama-3.2-3b-instruct:free'
         ];
 
         $site_url = defined('base_url') ? base_url() : 'https://sunriseschool.in';
@@ -633,14 +633,10 @@ EOT;
                     ['role' => 'system', 'content' => 'You are an expert CBSE examination question author. Output only raw valid JSON matching the requested schema.'],
                     ['role' => 'user', 'content' => $prompt]
                 ],
+                'response_format' => ['type' => 'json_object'],
                 'temperature' => 0.3,
                 'max_tokens' => 3000
             ];
-
-            // Only add response_format if not z-ai/glm which doesn't support strict json_object mode
-            if (strpos($m, 'glm') === false) {
-                $payload['response_format'] = ['type' => 'json_object'];
-            }
 
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

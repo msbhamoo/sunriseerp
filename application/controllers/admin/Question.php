@@ -677,7 +677,9 @@ class Question extends Admin_Controller
                     $opt_d   = isset($options['D']) ? $options['D'] : (isset($q['opt_d']) ? $q['opt_d'] : '');
                     $opt_e   = isset($options['E']) ? $options['E'] : (isset($q['opt_e']) ? $q['opt_e'] : '');
 
-                    $q_type  = isset($q['question_type']) ? $q['question_type'] : $question_type;
+                    $default_q_type = !empty($question_types[0]) ? $question_types[0] : 'singlechoice';
+                    $default_level  = !empty($levels[0]) ? $levels[0] : 'medium';
+                    $q_type  = isset($q['question_type']) ? $q['question_type'] : $default_q_type;
                     $correct = isset($q['correct_option']) ? $q['correct_option'] : (isset($q['correct']) ? $q['correct'] : (isset($q['answer']) ? $q['answer'] : ''));
 
                     // Format correct string based on question type
@@ -704,7 +706,7 @@ class Question extends Admin_Controller
                         'opt_d'         => $opt_d ? $opt_d : '',
                         'opt_e'         => $opt_e ? $opt_e : '',
                         'correct'       => $correct_val,
-                        'level'         => isset($q['level']) ? $q['level'] : $level,
+                        'level'         => isset($q['level']) ? $q['level'] : $default_level,
                         'staff_id'      => $staff_id ? $staff_id : 1,
                     ];
 
