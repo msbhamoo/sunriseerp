@@ -562,7 +562,7 @@ EOT;
                 curl_setopt($ch, CURLOPT_HTTPHEADER, [
                     'Content-Type: application/json'
                 ]);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 90);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 35);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
                 $result     = curl_exec($ch);
@@ -616,7 +616,7 @@ EOT;
             'Content-Type: application/json',
             'Authorization: Bearer ' . $api_key
         ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 90);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         $result = curl_exec($ch);
@@ -648,8 +648,9 @@ EOT;
     {
         $url = "https://openrouter.ai/api/v1/chat/completions";
 
-        // Models to try in priority order on OpenRouter
-        $models = [$model, '01-ai/ox-alpha', 'deepseek/deepseek-r1:free', 'meta-llama/llama-3.3-70b-instruct:free', 'openrouter/auto'];
+        // Models to try: primary model plus 1 reliable high-speed fallback
+        $primary = ($model === 'ox-alpha' || empty($model)) ? '01-ai/ox-alpha' : $model;
+        $models = [$primary, 'meta-llama/llama-3.3-70b-instruct:free'];
 
         $last_error = 'Unknown error';
 
@@ -674,7 +675,7 @@ EOT;
                 'HTTP-Referer: http://localhost/lms',
                 'X-Title: LMS AI Exam Studio'
             ]);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 35); // 35s max so NGINX never times out at 60s
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
             $result = curl_exec($ch);

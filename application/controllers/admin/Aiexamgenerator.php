@@ -120,9 +120,60 @@ class Aiexamgenerator extends Admin_Controller
 
             $this->db->insert('cbse_ai_generated_papers', $history_data);
             $result['saved_paper_id'] = $this->db->insert_id();
+
+            // Auto-populate generated questions into LMS Question & Answer Bank (admin/question)
+            try {
+                $this->auto_save_paper_questions_to_bank($class_id, $subject_id, $paper_data);
+            } catch (\Throwable $qe) {}
         }
 
         echo json_encode($result);
+    }
+
+    /**
+     * Helper to auto-populate all questions from generated sets into the Question Bank
+     */
+    private function auto_save_paper_questions_to_bank($class_id, $subject_id, $paper_data)
+    {
+        if (empty($paper_data)) return;
+
+        $sets = isset($paper_data['sets']) ? $paper_data['sets'] : ['Set A' => ['sections' => (isset($paper_data['sections']) ? $paper_data['sections'] : [])]];
+        $staff_id = $this->customlib->getStaffID();
+
+        foreach ($sets as $setName => $setObj) {
+            if (empty($setObj['sections'])) continue;
+            foreach ($setObj['sections'] as $sec) {
+                if (empty($sec['questions'])) continue;
+                foreach ($sec['questions'] as $q) {
+                    $q_text = isset($q['question_text']) ? trim($q['question_text']) : '';
+                    if (empty($q_text)) continue;
+
+                    $options = isset($q['options']) && is_array($q['options']) ? $q['options'] : [];
+                    $q_type  = !empty($options) ? 'singlechoice' : 'descriptive';
+                    $correct = isset($q['correct_option']) ? $q['correct_option'] : (isset($q['answer_key']) ? $q['answer_key'] : '');
+
+                    $insert_data = [
+                        'subject_id'    => !empty($subject_id) ? $subject_id : null,
+                        'class_id'      => !empty($class_id) ? $class_id : null,
+                        'question_type' => $q_type,
+                        'question'      => $q_text,
+                        'opt_a'         => isset($options['A']) ? $options['A'] : null,
+                        'opt_b'         => isset($options['B']) ? $options['B'] : null,
+                        'opt_c'         => isset($options['C']) ? $options['C'] : null,
+                        'opt_d'         => isset($options['D']) ? $options['D'] : null,
+                        'opt_e'         => isset($options['E']) ? $options['E'] : null,
+                        'correct'       => !empty($options) ? ('opt_' . strtolower(substr(trim($correct), 0, 1))) : $correct,
+                        'level'         => 'medium',
+                        'explanation'   => isset($q['explanation']) ? $q['explanation'] : (isset($q['marking_rubric']) ? $q['marking_rubric'] : null),
+                        'staff_id'      => $staff_id,
+                        'created_at'    => date('Y-m-d H:i:s')
+                    ];
+
+                    $this->question_model->add($insert_data);
+                }
+            }
+            break; // Save primary Set A questions to avoid duplicates
+        }
     }
 
     /**

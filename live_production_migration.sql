@@ -97,9 +97,16 @@ FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `url` = 'admin/aiexamsyllabus')
 LIMIT 1;
 
--- Submenu 4: AI Engine Configuration
+-- Submenu 4: Question & Answer Bank
 INSERT INTO `sidebar_sub_menus` (`sidebar_menu_id`, `menu`, `key`, `lang_key`, `url`, `level`, `access_permissions`, `permission_group_id`, `activate_controller`, `activate_methods`, `addon_permission`, `is_active`, `created_at`, `updated_at`)
-SELECT 43, 'AI Engine Configuration', 'ai_engine_setting', 'ai_engine_setting', 'admin/aisetting', 4, '(\'exam_group\', \'can_view\') || (\'online_examination\', \'can_view\') || (\'cbse_exam\', \'can_view\')', NULL, 'aisetting', 'index', '', 1, NOW(), NOW()
+SELECT 43, 'Question Bank', 'question_bank', 'question_bank', 'admin/question', 4, '(\'question_bank\', \'can_view\') || (\'exam_group\', \'can_view\') || (\'online_examination\', \'can_view\')', NULL, 'question', 'index', '', 1, NOW(), NOW()
+FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `sidebar_menu_id` = 43 AND `url` = 'admin/question')
+LIMIT 1;
+
+-- Submenu 5: AI Engine Configuration
+INSERT INTO `sidebar_sub_menus` (`sidebar_menu_id`, `menu`, `key`, `lang_key`, `url`, `level`, `access_permissions`, `permission_group_id`, `activate_controller`, `activate_methods`, `addon_permission`, `is_active`, `created_at`, `updated_at`)
+SELECT 43, 'AI Engine Configuration', 'ai_engine_setting', 'ai_engine_setting', 'admin/aisetting', 5, '(\'exam_group\', \'can_view\') || (\'online_examination\', \'can_view\') || (\'cbse_exam\', \'can_view\')', NULL, 'aisetting', 'index', '', 1, NOW(), NOW()
 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `url` = 'admin/aisetting')
 LIMIT 1;
