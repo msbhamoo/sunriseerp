@@ -648,9 +648,17 @@ EOT;
     {
         $url = "https://openrouter.ai/api/v1/chat/completions";
 
-        // Models to try: primary model plus 1 reliable high-speed fallback
-        $primary = ($model === 'ox-alpha' || empty($model)) ? '01-ai/ox-alpha' : $model;
-        $models = [$primary, 'meta-llama/llama-3.3-70b-instruct:free'];
+        // Models to try: official stealth/ox-alpha (Free 1M context released Aug 21, 2026), followed by reliable free frontier fallbacks
+        $primary = ($model === 'ox-alpha' || empty($model)) ? 'stealth/ox-alpha' : $model;
+        $models = [
+            $primary,
+            'stealth/ox-alpha',
+            'deepseek/deepseek-r1:free',
+            'google/gemini-2.0-flash-exp:free',
+            'meta-llama/llama-3.3-70b-instruct'
+        ];
+        // Ensure unique model list preserving order
+        $models = array_values(array_unique($models));
 
         $last_error = 'Unknown error';
 
@@ -929,7 +937,7 @@ Generate exactly {$count} unique high-quality exam questions for:
 
 Requirements:
 {$type_instructions}
-- Use proper standard terminology. If math/science formulas are needed, write in clean LaTeX or Unicode.
+- Formula & Math Support: If math, physics, or chemistry equations are needed, write them in standard clean LaTeX notation (e.g. `$x^2 + 5x + 6 = 0$`, `$\\frac{a}{b}$`, `$\\sqrt{x}$`, `$H_2SO_4$`) so it seamlessly renders and opens in the LMS CKEditor & WIRIS Math/Chemistry Formula Editor.
 - Return ONLY a valid JSON object matching this schema:
 {
   \"questions\": [
