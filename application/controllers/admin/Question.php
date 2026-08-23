@@ -691,8 +691,13 @@ class Question extends Admin_Controller
                         $correct_val = (strpos($c_str, 'true') !== false || $c_str === 'a') ? 'true' : 'false';
                     } elseif ($q_type === 'multichoice') {
                         $correct_val = is_array($correct) ? json_encode($correct) : json_encode([$correct]);
+                    } elseif ($q_type === 'descriptive') {
+                        // Store detailed model answer / explanation / marking rubric in correct column
+                        $expl = isset($q['explanation']) ? trim($q['explanation']) : '';
+                        $ans  = isset($q['answer']) ? trim($q['answer']) : '';
+                        $correct_val = !empty($expl) ? $expl : (!empty($ans) ? $ans : (!empty($correct) ? $correct : ''));
                     } else {
-                        $correct_val = '';
+                        $correct_val = !empty($correct) ? $correct : '';
                     }
 
                     $insert_data = [

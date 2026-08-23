@@ -653,6 +653,28 @@ function openQuestionViewDrawer(id) {
                             ${q.correct === 'false' ? '<span class="label label-success pull-right"><i class="fa fa-check"></i> Correct</span>' : ''}
                         </div>
                     `;
+                } else if (q.question_type === 'descriptive') {
+                    const descAnswer = q.correct || q.explanation || '';
+                    if (descAnswer && descAnswer.trim() !== '') {
+                        optHtml = `
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px; margin-bottom: 15px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                    <span class="label label-success" style="background: #10b981; font-size: 11px; padding: 3px 8px; border-radius: 4px;">
+                                        <i class="fa fa-check-circle"></i> Model Answer & Solution
+                                    </span>
+                                </div>
+                                <div style="font-size: 14px; color: #166534; line-height: 1.6; font-weight: 500;">
+                                    ${descAnswer}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        optHtml = `
+                            <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 10px; padding: 14px; color: #92400e; font-size: 13px;">
+                                <i class="fa fa-info-circle"></i> Descriptive question: Subjective answer / rubric will be graded manually or via AI Vision evaluator.
+                            </div>
+                        `;
+                    }
                 }
 
                 viewBody.html(`
