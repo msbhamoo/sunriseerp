@@ -886,4 +886,108 @@ EOT;
             'chapters'   => $chapters_list
         ];
     }
+
+    /**
+     * Generate custom batch of standalone questions for Question Bank
+     */
+    public function generate_questions_batch($params)
+    {
+        $class_name    = isset($params['class_name']) ? $params['class_name'] : 'Class 10';
+        $subject_name  = isset($params['subject_name']) ? $params['subject_name'] : 'Science';
+        $topic         = !empty($params['topic']) ? $params['topic'] : 'Complete Syllabus';
+        $question_type = isset($params['question_type']) ? $params['question_type'] : 'singlechoice';
+        $level         = isset($params['level']) ? $params['level'] : 'medium';
+        $count         = isset($params['count']) ? intval($params['count']) : 5;
+        if ($count < 1) $count = 1;
+        if ($count > 30) $count = 30;
+
+        $api_engine    = isset($params['api_engine']) ? $params['api_engine'] : 'gemini';
+        $custom_api_key= isset($params['api_key']) ? trim($params['api_key']) : '';
+
+        $active_gemini_key     = !empty($custom_api_key) ? $custom_api_key : $this->gemini_api_key;
+        $active_groq_key       = !empty($custom_api_key) ? $custom_api_key : $this->groq_api_key;
+        $active_openrouter_key = !empty($custom_api_key) ? $custom_api_key : $this->openrouter_api_key;
+
+        $type_instructions = '';
+        if ($question_type === 'singlechoice') {
+            $type_instructions = 'Each question must have "options" (object with keys "A", "B", "C", "D"), "correct_option" ("A", "B", "C", or "D"), and "explanation".';
+        } elseif ($question_type === 'multichoice') {
+            $type_instructions = 'Each question must have "options" (object with keys "A", "B", "C", "D"), "correct_option" (e.g. "A, C"), and "explanation".';
+        } elseif ($question_type === 'true_false') {
+            $type_instructions = 'Each question must have "options" ({"A": "True", "B": "False"}), "correct_option" ("A" or "B"), and "explanation".';
+        } else {
+            $type_instructions = 'Each question is descriptive. Include "marking_rubric" or "explanation" and detailed model answer in "explanation".';
+        }
+
+        $prompt = "You are a senior academic question author for Indian CBSE school curriculum.
+Generate exactly {$count} unique high-quality exam questions for:
+- Class/Grade: {$class_name}
+- Subject: {$subject_name}
+- Chapter/Topic: {$topic}
+- Question Type: {$question_type}
+- Difficulty Level: {$level}
+
+Requirements:
+{$type_instructions}
+- Use proper standard terminology. If math/science formulas are needed, write in clean LaTeX or Unicode.
+- Return ONLY a valid JSON object matching this schema:
+{
+  \"questions\": [
+    {
+      \"question_text\": \"Question statement here...\",
+      \"question_type\": \"{$question_type}\",
+      \"level\": \"{$level}\",
+      \"options\": {
+        \"A\": \"...\",
+        \"B\": \"...\",
+        \"C\": \"...\",
+        \"D\": \"...\"
+      },
+      \"correct_option\": \"A\",
+      \"explanation\": \"Detailed rationale / marking scheme / step-by-step solution\"
+    }
+  ]
+}";
+
+        $response = null;
+        if (($api_engine === 'openrouter' || $api_engine === 'openrouter_ox') && !empty($active_openrouter_key)) {
+            $response = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
+            if (isset($response['error']) && !empty($active_gemini_key)) {
+                $fallback = $this->call_gemini($prompt, $active_gemini_key);
+                if (!isset($fallback['error'])) $response = $fallback;
+            }
+        } elseif ($api_engine === 'groq' && !empty($active_groq_key)) {
+            $response = $this->call_groq($prompt, $active_groq_key);
+            if (isset($response['error']) && !empty($active_gemini_key)) {
+                $fallback = $this->call_gemini($prompt, $active_gemini_key);
+                if (!isset($fallback['error'])) $response = $fallback;
+            }
+        } elseif (!empty($active_gemini_key)) {
+            $response = $this->call_gemini($prompt, $active_gemini_key);
+            if (isset($response['error']) && !empty($active_openrouter_key)) {
+                $fallback = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
+                if (!isset($fallback['error'])) $response = $fallback;
+            }
+        } elseif (!empty($active_openrouter_key)) {
+            $response = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
+        } elseif (!empty($active_groq_key)) {
+            $response = $this->call_groq($prompt, $active_groq_key);
+        } else {
+            return ['status' => 'error', 'message' => 'No AI API Key available. Please configure your API key in AI Engine Configuration.'];
+        }
+
+        if (!$response || isset($response['error'])) {
+            return ['status' => 'error', 'message' => isset($response['error']) ? $response['error'] : 'Failed to generate questions.'];
+        }
+
+        $parsed = $this->extract_json($response['raw_text']);
+        if (!is_array($parsed) || empty($parsed['questions'])) {
+            return ['status' => 'error', 'message' => 'Invalid question JSON structure returned by AI model.'];
+        }
+
+        return [
+            'status'    => 'success',
+            'questions' => $parsed['questions']
+        ];
+    }
 }

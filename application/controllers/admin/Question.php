@@ -598,4 +598,97 @@ class Question extends Admin_Controller
 
     }
 
+    /**
+     * AJAX Endpoint: Generate Questions using AI directly from Question Bank
+     */
+    public function ai_generate_questions_ajax()
+    {
+        if (!$this->rbac->hasPrivilege('question_bank', 'can_add')) {
+            echo json_encode(['status' => 'error', 'message' => 'Access Denied']);
+            return;
+        }
+
+        $this->load->library('Ai_exam_generator');
+
+        $class_id      = $this->input->post('class_id');
+        $subject_id    = $this->input->post('subject_id');
+        $class_name    = trim($this->input->post('class_name'));
+        $subject_name  = trim($this->input->post('subject_name'));
+        $topic         = trim($this->input->post('topic'));
+        $question_type = trim($this->input->post('question_type'));
+        $level         = trim($this->input->post('level'));
+        $count         = intval($this->input->post('count'));
+        $api_engine    = trim($this->input->post('api_engine'));
+
+        if (empty($class_name) || empty($subject_name)) {
+            echo json_encode(['status' => 'error', 'message' => 'Class and Subject are required.']);
+            return;
+        }
+
+        $params = [
+            'class_name'    => $class_name,
+            'subject_name'  => $subject_name,
+            'topic'         => !empty($topic) ? $topic : 'Complete Syllabus',
+            'question_type' => !empty($question_type) ? $question_type : 'singlechoice',
+            'level'         => !empty($level) ? $level : 'medium',
+            'count'         => ($count > 0) ? $count : 5,
+            'api_engine'    => !empty($api_engine) ? $api_engine : 'gemini'
+        ];
+
+        try {
+            $result = $this->ai_exam_generator->generate_questions_batch($params);
+
+            // If questions generated, auto-insert into DB
+            if ($result['status'] === 'success' && !empty($result['questions'])) {
+                // Ensure MySQL connection is active
+                if (isset($this->db->conn_id) && $this->db->conn_id instanceof mysqli) {
+                    if (!@$this->db->conn_id->ping()) {
+                        $this->db->reconnect();
+                        if (!$this->db->conn_id) { $this->db->initialize(); }
+                    }
+                }
+
+                $staff_id = $this->customlib->getStaffID();
+                $saved_count = 0;
+
+                foreach ($result['questions'] as $q) {
+                    $q_text = isset($q['question_text']) ? trim($q['question_text']) : '';
+                    if (empty($q_text)) continue;
+
+                    $options = isset($q['options']) && is_array($q['options']) ? $q['options'] : [];
+                    $q_type  = isset($q['question_type']) ? $q['question_type'] : $question_type;
+                    $correct = isset($q['correct_option']) ? $q['correct_option'] : 'A';
+
+                    $insert_data = [
+                        'subject_id'    => !empty($subject_id) ? $subject_id : null,
+                        'class_id'      => !empty($class_id) ? $class_id : null,
+                        'question_type' => $q_type,
+                        'question'      => $q_text,
+                        'opt_a'         => isset($options['A']) ? $options['A'] : null,
+                        'opt_b'         => isset($options['B']) ? $options['B'] : null,
+                        'opt_c'         => isset($options['C']) ? $options['C'] : null,
+                        'opt_d'         => isset($options['D']) ? $options['D'] : null,
+                        'opt_e'         => isset($options['E']) ? $options['E'] : null,
+                        'correct'       => !empty($options) ? ('opt_' . strtolower(substr(trim($correct), 0, 1))) : $correct,
+                        'level'         => isset($q['level']) ? $q['level'] : $level,
+                        'explanation'   => isset($q['explanation']) ? $q['explanation'] : null,
+                        'staff_id'      => $staff_id,
+                        'created_at'    => date('Y-m-d H:i:s')
+                    ];
+
+                    if ($this->question_model->add($insert_data)) {
+                        $saved_count++;
+                    }
+                }
+
+                $result['saved_count'] = $saved_count;
+                $result['message'] = "Successfully generated & added {$saved_count} questions to Question Bank!";
+            }
+
+            echo json_encode($result);
+        } catch (\Throwable $e) {
+            echo json_encode(['status' => 'error', 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+
 }

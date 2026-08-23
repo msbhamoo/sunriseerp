@@ -14,6 +14,7 @@
                         <h3 class="box-title titlefix"><?php echo $this->lang->line('select_criteria'); ?></h3>
                         <div class="box-tools box-tools-sm">
                             <?php if ($this->rbac->hasPrivilege('question_bank', 'can_add')) {?>
+                                <button type="button" class="btn btn-primary" onclick="openAiQuestionModal()" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border: none; font-weight: 700; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.35);"><i class="fa fa-bolt"></i> AI Question Generator</button>
                                 <button class="btn btn-primary question-btn" data-recordid="0" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add_question'); ?></button>
                             <?php }?>
                             <?php if ($this->rbac->hasPrivilege('import_question', 'can_view')) {?>
@@ -726,6 +727,204 @@ $('#myimgModal').on('shown.bs.modal', function (event) {
   }
             }
         });
+</script>
+
+<!-- Modal: AI Question Generator Direct Creator -->
+<div class="modal fade" id="modalAiQuestionGen" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #ffffff; padding: 16px 20px;">
+                <button type="button" class="close" data-dismiss="modal" style="color: #ffffff; opacity: 0.8;">&times;</button>
+                <h4 class="modal-title" style="font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa fa-bolt" style="color: #fbbf24;"></i> AI Instant Question Creator
+                </h4>
+            </div>
+            <div class="modal-body" style="padding: 20px 24px; background: #f8fafc;">
+                <form id="formAiQuestionGen">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label style="font-weight: 600; font-size: 13px;">1. Class <small class="text-danger">*</small></label>
+                                <select id="ai_gen_class" class="form-control" onchange="onAiClassChange()" required>
+                                    <option value="">-- Choose Class --</option>
+                                    <?php if (!empty($classlist)) {
+                                        foreach ($classlist as $cls) { ?>
+                                            <option value="<?php echo $cls['id']; ?>" data-name="<?php echo htmlspecialchars($cls['class']); ?>"><?php echo $cls['class']; ?></option>
+                                    <?php } } ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label style="font-weight: 600; font-size: 13px;">2. Subject <small class="text-danger">*</small></label>
+                                <select id="ai_gen_subject" class="form-control" required>
+                                    <option value="">-- Choose Class First --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="font-weight: 600; font-size: 13px;">3. Chapter / Topic Scope</label>
+                        <input type="text" id="ai_gen_topic" class="form-control" placeholder="e.g. Chemical Reactions, Linear Equations, Complete Syllabus...">
+                        <small class="text-muted">Specify exact chapter name or leave blank for complete subject syllabus.</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label style="font-weight: 600; font-size: 13px;">4. Question Type</label>
+                                <select id="ai_gen_type" class="form-control">
+                                    <option value="singlechoice">Multiple Choice (Single Choice - 1M)</option>
+                                    <option value="multichoice">Multiple Choice (Multiple Correct)</option>
+                                    <option value="true_false">True / False</option>
+                                    <option value="descriptive">Descriptive / Subjective (2M - 5M)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label style="font-weight: 600; font-size: 13px;">5. Difficulty Level</label>
+                                <select id="ai_gen_level" class="form-control">
+                                    <option value="easy">Easy (Knowledge / Recall)</option>
+                                    <option value="medium" selected>Medium (Standard Board Exam)</option>
+                                    <option value="hard">Hard (Application / HOTS)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label style="font-weight: 600; font-size: 13px;">6. Number of Questions</label>
+                                <input type="number" id="ai_gen_count" class="form-control" value="5" min="1" max="25" required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label style="font-weight: 600; font-size: 13px;">7. AI Model Engine</label>
+                                <select id="ai_gen_engine" class="form-control">
+                                    <option value="gemini">Google Gemini 2.0 Flash (Recommended)</option>
+                                    <option value="openrouter_ox">OpenRouter (01-ai/ox-alpha)</option>
+                                    <option value="groq">Groq Cloud (LLaMA-3.3 70B)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="aiGenStatusAlert" style="display: none; margin-top: 10px;" class="alert"></div>
+                </form>
+            </div>
+            <div class="modal-footer" style="background: #ffffff; border-top: 1px solid #e2e8f0; padding: 14px 20px;">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" id="btnRunAiQuestionGen" class="btn btn-primary" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border: none; font-weight: 700; padding: 8px 18px;" onclick="runAiQuestionGeneration()">
+                    <i class="fa fa-bolt"></i> Generate & Add to Question Bank
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+function openAiQuestionModal() {
+    $('#aiGenStatusAlert').hide();
+    $('#modalAiQuestionGen').modal('show');
+}
+
+function onAiClassChange() {
+    const classId = $('#ai_gen_class').val();
+    const subSelect = $('#ai_gen_subject');
+    
+    subSelect.html('<option value="">-- Loading Mapped Subjects... --</option>').prop('disabled', true);
+
+    if (!classId) {
+        subSelect.html('<option value="">-- Choose Class First --</option>').prop('disabled', false);
+        return;
+    }
+
+    $.ajax({
+        url: '<?php echo base_url(); ?>admin/aiexamgenerator/get_subjects_by_class_ajax',
+        type: 'POST',
+        dataType: 'json',
+        data: { class_id: classId },
+        success: function(res) {
+            subSelect.prop('disabled', false).html('<option value="">-- Choose Subject --</option>');
+            if (res.status === 'success' && res.subjects && res.subjects.length > 0) {
+                res.subjects.forEach(function(sub) {
+                    subSelect.append(`<option value="${sub.id}" data-name="${sub.name}">${sub.name}${sub.code ? ' (' + sub.code + ')' : ''}</option>`);
+                });
+            } else {
+                subSelect.append('<option value="">No subjects mapped</option>');
+            }
+        },
+        error: function() {
+            subSelect.prop('disabled', false).html('<option value="">-- Choose Subject --</option>');
+        }
+    });
+}
+
+function runAiQuestionGeneration() {
+    const classId = $('#ai_gen_class').val();
+    const className = $('#ai_gen_class option:selected').data('name');
+    const subjectId = $('#ai_gen_subject').val();
+    const subjectName = $('#ai_gen_subject option:selected').data('name');
+    const topic = $('#ai_gen_topic').val();
+    const qType = $('#ai_gen_type').val();
+    const level = $('#ai_gen_level').val();
+    const count = $('#ai_gen_count').val();
+    const engine = $('#ai_gen_engine').val();
+
+    if (!classId || !subjectId) {
+        alert('Please select both Class and Subject.');
+        return;
+    }
+
+    const btn = $('#btnRunAiQuestionGen');
+    const alertBox = $('#aiGenStatusAlert');
+
+    btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Generating with AI...');
+    alertBox.removeClass('alert-danger alert-success').addClass('alert-info').text('AI model is generating questions and validating answer keys...').show();
+
+    $.ajax({
+        url: '<?php echo base_url(); ?>admin/question/ai_generate_questions_ajax',
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            class_id: classId,
+            class_name: className,
+            subject_id: subjectId,
+            subject_name: subjectName,
+            topic: topic,
+            question_type: qType,
+            level: level,
+            count: count,
+            api_engine: engine
+        },
+        success: function(res) {
+            btn.prop('disabled', false).html('<i class="fa fa-bolt"></i> Generate & Add to Question Bank');
+            if (res.status === 'success') {
+                alertBox.removeClass('alert-info alert-danger').addClass('alert-success').html(`<strong><i class="fa fa-check-circle"></i> Success:</strong> ${res.message || 'Questions added successfully!'}`);
+                
+                setTimeout(function() {
+                    $('#modalAiQuestionGen').modal('hide');
+                    // Refresh question datatable if initialized
+                    if ($('#questionsearchform').length) {
+                        $('#questionsearchform').trigger('submit');
+                    } else {
+                        location.reload();
+                    }
+                }, 1200);
+            } else {
+                alertBox.removeClass('alert-info alert-success').addClass('alert-danger').text(res.message || 'Failed to generate questions.');
+            }
+        },
+        error: function(xhr, status, err) {
+            btn.prop('disabled', false).html('<i class="fa fa-bolt"></i> Generate & Add to Question Bank');
+            alertBox.removeClass('alert-info alert-success').addClass('alert-danger').text('Server communication error. Please try again.');
+        }
+    });
+}
 </script>
 
 <script type="text/javascript">
