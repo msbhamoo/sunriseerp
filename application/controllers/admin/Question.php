@@ -614,15 +614,15 @@ class Question extends Admin_Controller
 
         $this->load->library('Ai_exam_generator');
 
-        $class_id      = $this->input->post('class_id');
-        $subject_id    = $this->input->post('subject_id');
-        $class_name    = trim($this->input->post('class_name'));
-        $subject_name  = trim($this->input->post('subject_name'));
-        $topic         = trim($this->input->post('topic'));
-        $question_type = trim($this->input->post('question_type'));
-        $level         = trim($this->input->post('level'));
-        $count         = intval($this->input->post('count'));
-        $api_engine    = trim($this->input->post('api_engine'));
+        $class_id       = $this->input->post('class_id');
+        $subject_id     = $this->input->post('subject_id');
+        $class_name     = trim($this->input->post('class_name'));
+        $subject_name   = trim($this->input->post('subject_name'));
+        $topic          = trim($this->input->post('topic'));
+        $question_types = $this->input->post('question_types');
+        $levels         = $this->input->post('levels');
+        $count          = intval($this->input->post('count'));
+        $api_engine     = trim($this->input->post('api_engine'));
 
         if (empty($class_name) || empty($subject_name)) {
             echo json_encode(['status' => 'error', 'message' => 'Class and Subject are required.']);
@@ -630,13 +630,13 @@ class Question extends Admin_Controller
         }
 
         $params = [
-            'class_name'    => $class_name,
-            'subject_name'  => $subject_name,
-            'topic'         => !empty($topic) ? $topic : 'Complete Syllabus',
-            'question_type' => !empty($question_type) ? $question_type : 'singlechoice',
-            'level'         => !empty($level) ? $level : 'medium',
-            'count'         => ($count > 0) ? $count : 5,
-            'api_engine'    => !empty($api_engine) ? $api_engine : 'gemini'
+            'class_name'     => $class_name,
+            'subject_name'   => $subject_name,
+            'topic'          => !empty($topic) ? $topic : 'Complete Syllabus',
+            'question_types' => !empty($question_types) ? $question_types : ['singlechoice'],
+            'levels'         => !empty($levels) ? $levels : ['medium'],
+            'count'          => ($count > 0) ? $count : 5,
+            'api_engine'     => !empty($api_engine) ? $api_engine : 'gemini'
         ];
 
         try {

@@ -644,66 +644,54 @@ EOT;
     /**
      * Call OpenRouter API (Supports 01-ai/ox-alpha, DeepSeek-R1, and Free Tier Models)
      */
-    private function call_openrouter($prompt, $api_key, $model = 'ox-alpha')
+    private function call_openrouter($prompt, $api_key, $model = 'stealth/ox-alpha')
     {
         $url = "https://openrouter.ai/api/v1/chat/completions";
+        $m = 'stealth/ox-alpha';
 
-        // Models to try: official stealth/ox-alpha free tier, then 1 fast fallback
-        $primary = ($model === 'ox-alpha' || empty($model)) ? 'stealth/ox-alpha' : $model;
-        $models = [
-            $primary,
-            'deepseek/deepseek-r1:free'
+        $payload = [
+            'model' => $m,
+            'messages' => [
+                ['role' => 'system', 'content' => 'You are an expert CBSE examination question author. Output only raw valid JSON matching the requested schema.'],
+                ['role' => 'user', 'content' => $prompt]
+            ],
+            'response_format' => ['type' => 'json_object'],
+            'temperature' => 0.3
         ];
-        $models = array_values(array_unique($models));
 
-        $last_error = 'Unknown error';
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $api_key,
+            'HTTP-Referer: http://localhost/lms',
+            'X-Title: LMS AI Exam Studio'
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
-        foreach ($models as $m) {
-            $payload = [
-                'model' => $m,
-                'messages' => [
-                    ['role' => 'system', 'content' => 'You are an expert CBSE examination question author. Output only raw valid JSON matching the requested schema.'],
-                    ['role' => 'user', 'content' => $prompt]
-                ],
-                'response_format' => ['type' => 'json_object'],
-                'temperature' => 0.3
-            ];
+        $result = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($ch);
+        curl_close($ch);
 
-            $ch = curl_init($url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $api_key,
-                'HTTP-Referer: http://localhost/lms',
-                'X-Title: LMS AI Exam Studio'
-            ]);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 18); // Fast 18s timeout per model so total request is under 30s
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 6);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-            $result = curl_exec($ch);
-            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curl_error = curl_error($ch);
-            curl_close($ch);
-
-            if ($curl_error) {
-                $last_error = 'cURL Error: ' . $curl_error;
-                continue;
-            }
-
-            $res_json = json_decode($result, true);
-            if ($http_code === 200 && isset($res_json['choices'][0]['message']['content'])) {
-                return ['raw_text' => $res_json['choices'][0]['message']['content']];
-            }
-
-            if (isset($res_json['error']['message'])) {
-                $last_error = "OpenRouter ({$m}): " . $res_json['error']['message'];
-            }
+        if ($curl_error) {
+            return ['error' => 'OpenRouter cURL Error: ' . $curl_error];
         }
 
-        return ['error' => 'OpenRouter API Error: ' . $last_error];
+        $res_json = json_decode($result, true);
+        if ($http_code === 200 && isset($res_json['choices'][0]['message']['content'])) {
+            return ['raw_text' => $res_json['choices'][0]['message']['content']];
+        }
+
+        if (isset($res_json['error']['message'])) {
+            return ['error' => "OpenRouter ({$m}): " . $res_json['error']['message']];
+        }
+
+        return ['error' => 'OpenRouter API Error: HTTP ' . $http_code];
     }
 
     /**
@@ -897,12 +885,14 @@ EOT;
      */
     public function generate_questions_batch($params)
     {
-        $class_name    = isset($params['class_name']) ? $params['class_name'] : 'Class 10';
-        $subject_name  = isset($params['subject_name']) ? $params['subject_name'] : 'Science';
-        $topic         = !empty($params['topic']) ? $params['topic'] : 'Complete Syllabus';
-        $question_type = isset($params['question_type']) ? $params['question_type'] : 'singlechoice';
-        $level         = isset($params['level']) ? $params['level'] : 'medium';
-        $count         = isset($params['count']) ? intval($params['count']) : 5;
+        $class_name     = isset($params['class_name']) ? $params['class_name'] : 'Class 10';
+        $subject_name   = isset($params['subject_name']) ? $params['subject_name'] : 'Science';
+        $topic          = !empty($params['topic']) ? $params['topic'] : 'Complete Syllabus';
+        
+        $q_types        = isset($params['question_types']) && is_array($params['question_types']) ? $params['question_types'] : (isset($params['question_type']) ? [$params['question_type']] : ['singlechoice']);
+        $levels         = isset($params['levels']) && is_array($params['levels']) ? $params['levels'] : (isset($params['level']) ? [$params['level']] : ['medium']);
+        
+        $count          = isset($params['count']) ? intval($params['count']) : 5;
         if ($count < 1) $count = 1;
         if ($count > 30) $count = 30;
 
@@ -913,35 +903,29 @@ EOT;
         $active_groq_key       = !empty($custom_api_key) ? $custom_api_key : $this->groq_api_key;
         $active_openrouter_key = !empty($custom_api_key) ? $custom_api_key : $this->openrouter_api_key;
 
-        $type_instructions = '';
-        if ($question_type === 'singlechoice') {
-            $type_instructions = 'Each question must have "options" (object with keys "A", "B", "C", "D"), "correct_option" ("A", "B", "C", or "D"), and "explanation".';
-        } elseif ($question_type === 'multichoice') {
-            $type_instructions = 'Each question must have "options" (object with keys "A", "B", "C", "D"), "correct_option" (e.g. "A, C"), and "explanation".';
-        } elseif ($question_type === 'true_false') {
-            $type_instructions = 'Each question must have "options" ({"A": "True", "B": "False"}), "correct_option" ("A" or "B"), and "explanation".';
-        } else {
-            $type_instructions = 'Each question is descriptive. Include "marking_rubric" or "explanation" and detailed model answer in "explanation".';
-        }
+        $types_str = implode(', ', $q_types);
+        $levels_str = implode(', ', $levels);
 
         $prompt = "You are a senior academic question author for Indian CBSE school curriculum.
-Generate exactly {$count} unique high-quality exam questions for:
+Generate exactly {$count} unique high-quality exam questions evenly distributed across:
 - Class/Grade: {$class_name}
 - Subject: {$subject_name}
-- Chapter/Topic: {$topic}
-- Question Type: {$question_type}
-- Difficulty Level: {$level}
+- Chapters / Syllabus Scope: {$topic}
+- Allowed Question Types: {$types_str} (use any from: singlechoice, multichoice, true_false, descriptive)
+- Allowed Difficulty Levels: {$levels_str} (use any from: easy, medium, hard)
 
 Requirements:
-{$type_instructions}
+- For 'singlechoice' and 'multichoice': provide \"options\" object (keys \"A\", \"B\", \"C\", \"D\"), \"correct_option\" (e.g. \"A\"), and \"explanation\".
+- For 'true_false': provide \"options\" ({\"A\": \"True\", \"B\": \"False\"}), \"correct_option\" (\"A\" or \"B\"), and \"explanation\".
+- For 'descriptive': provide comprehensive question with marking scheme and model answer in \"explanation\".
 - Formula & Math Support: If math, physics, or chemistry equations are needed, write them in standard clean LaTeX notation (e.g. `$x^2 + 5x + 6 = 0$`, `$\\frac{a}{b}$`, `$\\sqrt{x}$`, `$H_2SO_4$`) so it seamlessly renders and opens in the LMS CKEditor & WIRIS Math/Chemistry Formula Editor.
 - Return ONLY a valid JSON object matching this schema:
 {
   \"questions\": [
     {
       \"question_text\": \"Question statement here...\",
-      \"question_type\": \"{$question_type}\",
-      \"level\": \"{$level}\",
+      \"question_type\": \"singlechoice\",
+      \"level\": \"medium\",
       \"options\": {
         \"A\": \"...\",
         \"B\": \"...\",

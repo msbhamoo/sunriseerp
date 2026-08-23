@@ -1109,113 +1109,144 @@ $('#myimgModal').on('shown.bs.modal', function (event) {
         });
 </script>
 
-<!-- Modal: AI Question Generator Direct Creator -->
-<div class="modal fade" id="modalAiQuestionGen" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-md" role="document">
-        <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
-            <div class="modal-header" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #ffffff; padding: 16px 20px;">
-                <button type="button" class="close" data-dismiss="modal" style="color: #ffffff; opacity: 0.8;">&times;</button>
-                <h4 class="modal-title" style="font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px;">
-                    <i class="fa fa-bolt" style="color: #fbbf24;"></i> AI Instant Question Creator
-                </h4>
-            </div>
-            <div class="modal-body" style="padding: 20px 24px; background: #f8fafc;">
-                <form id="formAiQuestionGen">
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label style="font-weight: 600; font-size: 13px;">1. Class <small class="text-danger">*</small></label>
-                                <select id="ai_gen_class" class="form-control" onchange="onAiClassChange()" required>
-                                    <option value="">-- Choose Class --</option>
-                                    <?php if (!empty($classlist)) {
-                                        foreach ($classlist as $cls) { ?>
-                                            <option value="<?php echo $cls['id']; ?>" data-name="<?php echo htmlspecialchars($cls['class']); ?>"><?php echo $cls['class']; ?></option>
-                                    <?php } } ?>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label style="font-weight: 600; font-size: 13px;">2. Subject <small class="text-danger">*</small></label>
-                                <select id="ai_gen_subject" class="form-control" onchange="onAiSubjectChange()" required>
-                                    <option value="">-- Choose Class First --</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
+<!-- Slide-in Right Side Drawer: AI Instant Question Generator -->
+<div id="drawerAiQuestionOverlay" class="modern-drawer-overlay" onclick="closeAiQuestionDrawer()"></div>
+<div id="drawerAiQuestionPanel" class="modern-drawer-panel" style="width: 640px !important;">
+    <div class="modern-drawer-header" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: #ffffff;">
+        <h4 class="modern-drawer-title" style="color: #ffffff;">
+            <i class="fa fa-bolt" style="color: #fbbf24;"></i> AI Question Generator Studio
+        </h4>
+        <button type="button" class="modern-drawer-close" style="color: #cbd5e1;" onclick="closeAiQuestionDrawer()">&times;</button>
+    </div>
+    <div class="modern-drawer-body" style="padding: 20px 24px;">
+        <form id="aiQuestionGenForm">
+            <div class="row">
+                <div class="col-sm-6">
                     <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <label style="font-weight: 600; font-size: 13px; margin: 0;">3. Chapter / Syllabus Scope</label>
-                            <span id="aiChapterLoadingStatus" style="font-size: 11px; color: #6366f1; display: none;"><i class="fa fa-spinner fa-spin"></i> Loading syllabus...</span>
-                        </div>
-                        <select id="ai_gen_topic_select" class="form-control" onchange="onTopicSelectChange()">
-                            <option value="Complete Syllabus">-- Complete Subject Syllabus (All Chapters) --</option>
+                        <label style="font-weight: 700; font-size: 13px; color: #1e293b;">1. Class <small class="text-danger">*</small></label>
+                        <select id="ai_gen_class" class="form-control" onchange="onAiClassChange()" required>
+                            <option value="">-- Select Class --</option>
+                            <?php if (!empty($classlist)) {
+                                foreach ($classlist as $cls) { ?>
+                                    <option value="<?php echo $cls['id']; ?>" data-name="<?php echo htmlspecialchars($cls['class']); ?>"><?php echo $cls['class']; ?></option>
+                            <?php } } ?>
                         </select>
-                        <input type="text" id="ai_gen_topic_custom" class="form-control" style="display: none; margin-top: 8px;" placeholder="Type custom topic name here...">
-                        <small class="text-muted" style="margin-top: 4px; display: block;">Select a specific NCERT chapter from the curriculum or choose "Type Custom Topic".</small>
                     </div>
-
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label style="font-weight: 600; font-size: 13px;">4. Question Type</label>
-                                <select id="ai_gen_type" class="form-control">
-                                    <option value="singlechoice">Multiple Choice (Single Choice - 1M)</option>
-                                    <option value="multichoice">Multiple Choice (Multiple Correct)</option>
-                                    <option value="true_false">True / False</option>
-                                    <option value="descriptive">Descriptive / Subjective (2M - 5M)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label style="font-weight: 600; font-size: 13px;">5. Difficulty Level</label>
-                                <select id="ai_gen_level" class="form-control">
-                                    <option value="easy">Easy (Knowledge / Recall)</option>
-                                    <option value="medium" selected>Medium (Standard Board Exam)</option>
-                                    <option value="hard">Hard (Application / HOTS)</option>
-                                </select>
-                            </div>
-                        </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px; color: #1e293b;">2. Subject <small class="text-danger">*</small></label>
+                        <select id="ai_gen_subject" class="form-control" onchange="onAiSubjectChange()" required>
+                            <option value="">-- Choose Class First --</option>
+                        </select>
                     </div>
-
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label style="font-weight: 600; font-size: 13px;">6. Number of Questions</label>
-                                <input type="number" id="ai_gen_count" class="form-control" value="5" min="1" max="25" required>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label style="font-weight: 600; font-size: 13px;">7. AI Model Engine</label>
-                                <select id="ai_gen_engine" class="form-control">
-                                    <option value="gemini">Google Gemini 2.0 Flash (Recommended)</option>
-                                    <option value="openrouter_ox">OpenRouter (01-ai/ox-alpha)</option>
-                                    <option value="groq">Groq Cloud (LLaMA-3.3 70B)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="aiGenStatusAlert" style="display: none; margin-top: 10px;" class="alert"></div>
-                </form>
+                </div>
             </div>
-            <div class="modal-footer" style="background: #ffffff; border-top: 1px solid #e2e8f0; padding: 14px 20px;">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <button type="button" id="btnRunAiQuestionGen" class="btn btn-primary" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border: none; font-weight: 700; padding: 8px 18px;" onclick="runAiQuestionGeneration()">
-                    <i class="fa fa-bolt"></i> Generate & Add to Question Bank
-                </button>
+
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="font-weight: 700; font-size: 13px; margin: 0; color: #1e293b;">
+                        3. Chapter / Syllabus Scope <small class="text-muted">(Multi-select or All)</small>
+                    </label>
+                    <span id="aiChapterLoadingStatus" style="font-size: 11px; color: #6366f1; display: none;"><i class="fa fa-spinner fa-spin"></i> Loading chapters...</span>
+                </div>
+                <div style="margin-bottom: 6px; display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-default btn-xs" onclick="toggleAllChapters(true)" style="border-radius: 4px; font-weight: 600;">Select All</button>
+                    <button type="button" class="btn btn-default btn-xs" onclick="toggleAllChapters(false)" style="border-radius: 4px; font-weight: 600;">Clear All</button>
+                </div>
+                <div id="ai_chapter_checklist_container" style="max-height: 150px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; background: #f8fafc;">
+                    <label style="font-weight: 500; font-size: 12px; display: block; margin-bottom: 4px; color: #64748b;">
+                        <input type="checkbox" id="chk_all_chapters" value="Complete Syllabus" checked onchange="onAllChaptersCheckboxChange()"> <strong>All Chapters (Complete Subject Syllabus)</strong>
+                    </label>
+                    <div id="ai_chapter_dynamic_items"></div>
+                </div>
+                <input type="text" id="ai_gen_topic_custom" class="form-control" style="margin-top: 8px;" placeholder="Optional: Type custom topic or specific learning unit...">
             </div>
-        </div>
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px; margin-bottom: 6px; display: block; color: #1e293b;">
+                            4. Question Types <small class="text-muted">(Select Multiple)</small>
+                        </label>
+                        <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; background: #f8fafc;">
+                            <label style="font-weight: 500; font-size: 12px; display: block; margin-bottom: 4px; color: #334155;">
+                                <input type="checkbox" name="ai_gen_type[]" value="singlechoice" checked> Multiple Choice (Single - 1M)
+                            </label>
+                            <label style="font-weight: 500; font-size: 12px; display: block; margin-bottom: 4px; color: #334155;">
+                                <input type="checkbox" name="ai_gen_type[]" value="multichoice"> Multiple Choice (Multiple Correct)
+                            </label>
+                            <label style="font-weight: 500; font-size: 12px; display: block; margin-bottom: 4px; color: #334155;">
+                                <input type="checkbox" name="ai_gen_type[]" value="true_false"> True / False
+                            </label>
+                            <label style="font-weight: 500; font-size: 12px; display: block; margin-bottom: 0; color: #334155;">
+                                <input type="checkbox" name="ai_gen_type[]" value="descriptive"> Descriptive / Subjective (2M - 5M)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px; margin-bottom: 6px; display: block; color: #1e293b;">
+                            5. Difficulty Levels <small class="text-muted">(Select Multiple)</small>
+                        </label>
+                        <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; background: #f8fafc;">
+                            <label style="font-weight: 500; font-size: 12px; display: block; margin-bottom: 4px; color: #16a34a;">
+                                <input type="checkbox" name="ai_gen_level[]" value="easy"> 🟢 Easy (Knowledge / Recall)
+                            </label>
+                            <label style="font-weight: 500; font-size: 12px; display: block; margin-bottom: 4px; color: #d97706;">
+                                <input type="checkbox" name="ai_gen_level[]" value="medium" checked> 🟡 Medium (Standard Board Exam)
+                            </label>
+                            <label style="font-weight: 500; font-size: 12px; display: block; margin-bottom: 0; color: #dc2626;">
+                                <input type="checkbox" name="ai_gen_level[]" value="hard"> 🔴 Hard (Application / HOTS)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label style="font-weight: 600; font-size: 13px;">6. Number of Questions</label>
+                        <input type="number" id="ai_gen_count" class="form-control" value="5" min="1" max="25" required>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label style="font-weight: 600; font-size: 13px;">7. AI Model Engine</label>
+                        <select id="ai_gen_engine" class="form-control">
+                            <option value="openrouter_ox" selected>OpenRouter (stealth/ox-alpha Free 1M)</option>
+                            <option value="gemini">Google Gemini 2.0 Flash</option>
+                            <option value="groq">Groq Cloud (LLaMA-3.3 70B)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="aiGenStatusAlert" style="display: none; margin-top: 10px;" class="alert"></div>
+        </form>
+    </div>
+    <div class="modern-drawer-footer">
+        <button type="button" class="btn btn-default btn-sm" onclick="closeAiQuestionDrawer()">Cancel</button>
+        <button type="button" id="btnRunAiQuestionGen" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border: none; font-weight: 700; padding: 8px 18px;" onclick="runAiQuestionGeneration()">
+            <i class="fa fa-bolt"></i> Generate & Add to Question Bank
+        </button>
     </div>
 </div>
 
 <script type="text/javascript">
 function openAiQuestionModal() {
     $('#aiGenStatusAlert').hide();
-    $('#modalAiQuestionGen').modal('show');
+    $('#drawerAiQuestionOverlay').addClass('is-active');
+    $('#drawerAiQuestionPanel').addClass('is-open');
+    $('body').css('overflow', 'hidden');
+}
+
+function closeAiQuestionDrawer() {
+    $('#drawerAiQuestionPanel').removeClass('is-open');
+    $('#drawerAiQuestionOverlay').removeClass('is-active');
+    $('body').css('overflow', '');
 }
 
 function onAiClassChange() {
@@ -1253,11 +1284,11 @@ function onAiClassChange() {
 function onAiSubjectChange() {
     const className = $('#ai_gen_class option:selected').data('name') || '';
     const subjectName = $('#ai_gen_subject option:selected').data('name') || '';
-    const topicSelect = $('#ai_gen_topic_select');
+    const dynContainer = $('#ai_chapter_dynamic_items');
     const loadingStatus = $('#aiChapterLoadingStatus');
 
-    topicSelect.html('<option value="Complete Syllabus">-- Complete Subject Syllabus (All Chapters) --</option>');
-    $('#ai_gen_topic_custom').hide().val('');
+    dynContainer.empty();
+    $('#chk_all_chapters').prop('checked', true);
 
     if (!className || !subjectName) {
         return;
@@ -1278,30 +1309,35 @@ function onAiSubjectChange() {
         success: function(res) {
             loadingStatus.hide();
             if (res.status === 'success' && res.chapters && res.chapters.length > 0) {
-                topicSelect.empty();
-                topicSelect.append('<option value="Complete Syllabus">-- Complete Subject Syllabus (All ' + res.chapters.length + ' Chapters) --</option>');
                 res.chapters.forEach(function(ch, idx) {
-                    topicSelect.append(`<option value="${ch}">Chapter ${idx + 1}: ${ch}</option>`);
+                    dynContainer.append(`
+                        <label style="font-weight: 400; font-size: 12px; display: block; margin-bottom: 3px; color: #1e293b;">
+                            <input type="checkbox" class="ai-chapter-item" value="${ch}" onchange="onSingleChapterChange()"> Chapter ${idx + 1}: ${ch}
+                        </label>
+                    `);
                 });
-                topicSelect.append('<option value="__custom__">✍️ Type Custom Topic...</option>');
-            } else {
-                topicSelect.append('<option value="__custom__">✍️ Type Custom Topic...</option>');
             }
         },
         error: function() {
             loadingStatus.hide();
-            topicSelect.append('<option value="__custom__">✍️ Type Custom Topic...</option>');
         }
     });
 }
 
-function onTopicSelectChange() {
-    const val = $('#ai_gen_topic_select').val();
-    if (val === '__custom__') {
-        $('#ai_gen_topic_custom').show().focus();
-    } else {
-        $('#ai_gen_topic_custom').hide();
-    }
+function toggleAllChapters(check) {
+    $('#chk_all_chapters').prop('checked', check);
+    $('.ai-chapter-item').prop('checked', check);
+}
+
+function onAllChaptersCheckboxChange() {
+    const checked = $('#chk_all_chapters').is(':checked');
+    $('.ai-chapter-item').prop('checked', checked);
+}
+
+function onSingleChapterChange() {
+    const total = $('.ai-chapter-item').length;
+    const checked = $('.ai-chapter-item:checked').length;
+    $('#chk_all_chapters').prop('checked', total > 0 && total === checked);
 }
 
 function runAiQuestionGeneration() {
@@ -1309,14 +1345,43 @@ function runAiQuestionGeneration() {
     const className = $('#ai_gen_class option:selected').data('name');
     const subjectId = $('#ai_gen_subject').val();
     const subjectName = $('#ai_gen_subject option:selected').data('name');
-    
-    let topic = $('#ai_gen_topic_select').val();
-    if (topic === '__custom__') {
-        topic = $('#ai_gen_topic_custom').val().trim() || 'Complete Syllabus';
+
+    // Collect selected chapters
+    let selectedChapters = [];
+    if ($('#chk_all_chapters').is(':checked')) {
+        selectedChapters.push('Complete Syllabus');
+    } else {
+        $('.ai-chapter-item:checked').each(function() {
+            selectedChapters.push($(this).val());
+        });
     }
 
-    const qType = $('#ai_gen_type').val();
-    const level = $('#ai_gen_level').val();
+    const customTopic = $('#ai_gen_topic_custom').val().trim();
+    if (customTopic) {
+        selectedChapters.push(customTopic);
+    }
+    if (selectedChapters.length === 0) {
+        selectedChapters.push('Complete Syllabus');
+    }
+
+    // Collect selected question types
+    let selectedTypes = [];
+    $('input[name="ai_gen_type[]"]:checked').each(function() {
+        selectedTypes.push($(this).val());
+    });
+    if (selectedTypes.length === 0) {
+        selectedTypes.push('singlechoice');
+    }
+
+    // Collect selected difficulty levels
+    let selectedLevels = [];
+    $('input[name="ai_gen_level[]"]:checked').each(function() {
+        selectedLevels.push($(this).val());
+    });
+    if (selectedLevels.length === 0) {
+        selectedLevels.push('medium');
+    }
+
     const count = $('#ai_gen_count').val();
     const engine = $('#ai_gen_engine').val();
 
@@ -1329,7 +1394,7 @@ function runAiQuestionGeneration() {
     const alertBox = $('#aiGenStatusAlert');
 
     btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Generating with AI...');
-    alertBox.removeClass('alert-danger alert-success').addClass('alert-info').text('AI model is generating questions and validating answer keys...').show();
+    alertBox.removeClass('alert-danger alert-success').addClass('alert-info').text('AI model is generating questions across your selected types, levels & chapters...').show();
 
     $.ajax({
         url: '<?php echo base_url(); ?>admin/question/ai_generate_questions_ajax',
@@ -1340,9 +1405,9 @@ function runAiQuestionGeneration() {
             class_name: className,
             subject_id: subjectId,
             subject_name: subjectName,
-            topic: topic,
-            question_type: qType,
-            level: level,
+            topic: selectedChapters.join(', '),
+            question_types: selectedTypes,
+            levels: selectedLevels,
             count: count,
             api_engine: engine
         },
@@ -1352,8 +1417,7 @@ function runAiQuestionGeneration() {
                 alertBox.removeClass('alert-info alert-danger').addClass('alert-success').html(`<strong><i class="fa fa-check-circle"></i> Success:</strong> ${res.message || 'Questions added successfully!'}`);
                 
                 setTimeout(function() {
-                    $('#modalAiQuestionGen').modal('hide');
-                    // Refresh question datatable if initialized
+                    closeAiQuestionDrawer();
                     if ($('#questionsearchform').length) {
                         $('#questionsearchform').trigger('submit');
                     } else {
