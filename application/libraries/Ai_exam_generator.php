@@ -616,11 +616,11 @@ EOT;
     {
         $url = "https://openrouter.ai/api/v1/chat/completions";
         
-        // Models list: Primary stealth/ox-alpha, then reliable free fallback
+        // Models list: Primary stealth/ox-alpha, then official active free models
         $models = [
             'stealth/ox-alpha',
-            'cognitivecomputations/dolphin-mistral-24b:free',
-            'meta-llama/llama-3.2-3b-instruct:free'
+            'nvidia/nemotron-3-ultra-550b-a55b:free',
+            'poolside/laguna-s-2.1:free'
         ];
 
         $site_url = defined('base_url') ? base_url() : 'https://sunriseschool.in';
