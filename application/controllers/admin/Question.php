@@ -652,37 +652,59 @@ class Question extends Admin_Controller
                 $saved_count = 0;
 
                 foreach ($result['questions'] as $q) {
-                    $q_text = isset($q['question_text']) ? trim($q['question_text']) : '';
+                    $q_text = '';
+                    if (isset($q['question_text'])) {
+                        $q_text = trim($q['question_text']);
+                    } elseif (isset($q['question'])) {
+                        $q_text = trim($q['question']);
+                    } elseif (isset($q['text'])) {
+                        $q_text = trim($q['text']);
+                    } elseif (isset($q['title'])) {
+                        $q_text = trim($q['title']);
+                    }
+
                     if (empty($q_text)) continue;
 
                     $options = isset($q['options']) && is_array($q['options']) ? $q['options'] : [];
+                    $opt_a   = isset($options['A']) ? $options['A'] : (isset($q['opt_a']) ? $q['opt_a'] : null);
+                    $opt_b   = isset($options['B']) ? $options['B'] : (isset($q['opt_b']) ? $q['opt_b'] : null);
+                    $opt_c   = isset($options['C']) ? $options['C'] : (isset($q['opt_c']) ? $q['opt_c'] : null);
+                    $opt_d   = isset($options['D']) ? $options['D'] : (isset($q['opt_d']) ? $q['opt_d'] : null);
+                    $opt_e   = isset($options['E']) ? $options['E'] : (isset($q['opt_e']) ? $q['opt_e'] : null);
+
                     $q_type  = isset($q['question_type']) ? $q['question_type'] : $question_type;
-                    $correct = isset($q['correct_option']) ? $q['correct_option'] : 'A';
+                    $correct = isset($q['correct_option']) ? $q['correct_option'] : (isset($q['correct']) ? $q['correct'] : (isset($q['answer']) ? $q['answer'] : 'A'));
 
                     $insert_data = [
                         'subject_id'    => !empty($subject_id) ? $subject_id : null,
                         'class_id'      => !empty($class_id) ? $class_id : null,
                         'question_type' => $q_type,
                         'question'      => $q_text,
-                        'opt_a'         => isset($options['A']) ? $options['A'] : null,
-                        'opt_b'         => isset($options['B']) ? $options['B'] : null,
-                        'opt_c'         => isset($options['C']) ? $options['C'] : null,
-                        'opt_d'         => isset($options['D']) ? $options['D'] : null,
-                        'opt_e'         => isset($options['E']) ? $options['E'] : null,
-                        'correct'       => !empty($options) ? ('opt_' . strtolower(substr(trim($correct), 0, 1))) : $correct,
+                        'opt_a'         => $opt_a,
+                        'opt_b'         => $opt_b,
+                        'opt_c'         => $opt_c,
+                        'opt_d'         => $opt_d,
+                        'opt_e'         => $opt_e,
+                        'correct'       => (!empty($opt_a) || !empty($opt_b)) ? ('opt_' . strtolower(substr(trim($correct), 0, 1))) : $correct,
                         'level'         => isset($q['level']) ? $q['level'] : $level,
-                        'explanation'   => isset($q['explanation']) ? $q['explanation'] : null,
+                        'explanation'   => isset($q['explanation']) ? $q['explanation'] : (isset($q['solution']) ? $q['solution'] : null),
                         'staff_id'      => $staff_id,
                         'created_at'    => date('Y-m-d H:i:s')
                     ];
 
-                    if ($this->question_model->add($insert_data)) {
+                    if ($this->question_model->add($insert_data) || $this->db->insert('questions', $insert_data)) {
                         $saved_count++;
                     }
                 }
 
                 $result['saved_count'] = $saved_count;
-                $result['message'] = "Successfully generated & added {$saved_count} questions to Question Bank!";
+                if ($saved_count > 0) {
+                    $result['status'] = 'success';
+                    $result['message'] = "Successfully generated & added {$saved_count} questions to Question Bank!";
+                } else {
+                    $result['status'] = 'error';
+                    $result['message'] = "Questions were received but could not be saved to database.";
+                }
             }
 
             echo json_encode($result);

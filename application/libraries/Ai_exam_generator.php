@@ -980,14 +980,42 @@ Requirements:
             return ['status' => 'error', 'message' => isset($response['error']) ? $response['error'] : 'Failed to generate questions.'];
         }
 
-        $parsed = $this->extract_json($response['raw_text']);
-        if (!is_array($parsed) || empty($parsed['questions'])) {
-            return ['status' => 'error', 'message' => 'Invalid question JSON structure returned by AI model.'];
+        $raw = isset($response['raw_text']) ? $response['raw_text'] : '';
+        $parsed = $this->extract_json($raw);
+
+        $q_list = [];
+        if (is_array($parsed)) {
+            if (isset($parsed['questions']) && is_array($parsed['questions'])) {
+                $q_list = $parsed['questions'];
+            } elseif (isset($parsed['items']) && is_array($parsed['items'])) {
+                $q_list = $parsed['items'];
+            } elseif (isset($parsed['data']) && is_array($parsed['data'])) {
+                $q_list = $parsed['data'];
+            } elseif (isset($parsed[0]) && is_array($parsed[0])) {
+                $q_list = $parsed;
+            }
+        }
+
+        // If bracket array extraction needed
+        if (empty($q_list)) {
+            $start_arr = strpos($raw, '[');
+            $end_arr   = strrpos($raw, ']');
+            if ($start_arr !== false && $end_arr !== false) {
+                $arr_str = substr($raw, $start_arr, $end_arr - $start_arr + 1);
+                $arr_data = json_decode($arr_str, true);
+                if (is_array($arr_data) && !empty($arr_data)) {
+                    $q_list = $arr_data;
+                }
+            }
+        }
+
+        if (empty($q_list)) {
+            return ['status' => 'error', 'message' => 'AI returned non-standard JSON format: ' . substr($raw, 0, 180)];
         }
 
         return [
             'status'    => 'success',
-            'questions' => $parsed['questions']
+            'questions' => $q_list
         ];
     }
 }
