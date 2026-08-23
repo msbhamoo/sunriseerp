@@ -656,8 +656,11 @@ EOT;
                 ['role' => 'user', 'content' => $prompt]
             ],
             'response_format' => ['type' => 'json_object'],
-            'temperature' => 0.3
+            'temperature' => 0.3,
+            'max_tokens' => 3000
         ];
+
+        $site_url = defined('base_url') ? base_url() : 'https://sunriseschool.in';
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -666,11 +669,11 @@ EOT;
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
             'Authorization: Bearer ' . $api_key,
-            'HTTP-Referer: http://localhost/lms',
-            'X-Title: LMS AI Exam Studio'
+            'HTTP-Referer: ' . $site_url,
+            'X-Title: Sunrise ERP AI Studio'
         ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 20); // 20s max so fallback can execute before NGINX times out
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 6);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         $result = curl_exec($ch);
