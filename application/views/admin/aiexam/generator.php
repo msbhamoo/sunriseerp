@@ -781,6 +781,23 @@ foreach ($recent_papers as $rp) {
                 <small class="text-muted" style="font-size: 11px;">Powered by keys configured in <a href="<?php echo base_url(); ?>admin/aisetting" target="_blank" style="color: #6366f1;">AI Settings</a>.</small>
             </div>
 
+            <!-- Live Generation Progress Card (with Percentage & Multi-Step Milestones) -->
+            <div id="aiPaperProgressContainer" style="display: none; margin-top: 15px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span id="aiPaperStepText" style="font-size: 13px; font-weight: 700; color: #4338ca;">
+                        <i class="fa fa-spinner fa-spin text-primary"></i> Initializing AI Engine...
+                    </span>
+                    <span id="aiPaperPercentBadge" style="font-size: 13px; font-weight: 800; color: #6366f1; background: #e0e7ff; padding: 2px 8px; border-radius: 9999px;">0%</span>
+                </div>
+                <div class="progress" style="height: 10px; border-radius: 6px; background-color: #f1f5f9; margin-bottom: 8px; overflow: hidden;">
+                    <div id="aiPaperProgressBar" class="progress-bar progress-bar-striped active" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%); transition: width 0.3s ease;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #64748b;">
+                    <span id="aiPaperDetailText">Analyzing syllabus & blueprint...</span>
+                    <span id="aiPaperTimeElapsed"><i class="fa fa-clock-o"></i> 0s</span>
+                </div>
+            </div>
+
             <!-- Hidden Defaults -->
             <input type="hidden" id="gen_api_key" value="">
     </div>
@@ -1249,6 +1266,52 @@ function startGeneration() {
     };
 
     $('#btnGeneratePaper').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Generating Question Paper...');
+    
+    // Show and reset percentage progress bar
+    const progBox = $('#aiPaperProgressContainer');
+    const progBar = $('#aiPaperProgressBar');
+    const progBadge = $('#aiPaperPercentBadge');
+    const progStep = $('#aiPaperStepText');
+    const progDetail = $('#aiPaperDetailText');
+    const progTimer = $('#aiPaperTimeElapsed');
+
+    progBox.slideDown(200);
+    progBar.css('width', '5%');
+    progBadge.text('5%');
+    progStep.html('<i class="fa fa-spinner fa-spin text-primary"></i> Initializing AI Engine...');
+    progDetail.text('Validating CBSE curriculum blueprint...');
+
+    let currentPercent = 5;
+    let secondsElapsed = 0;
+
+    const timerInterval = setInterval(function() {
+        secondsElapsed++;
+        progTimer.html(`<i class="fa fa-clock-o"></i> ${secondsElapsed}s`);
+
+        if (currentPercent < 95) {
+            // Gradual incremental progression based on elapsed time
+            if (currentPercent < 25) {
+                currentPercent += 4;
+                progStep.html('<i class="fa fa-spinner fa-spin text-primary"></i> Structuring Question Sections...');
+                progDetail.text('Designing Section A (MCQs / Objectives)...');
+            } else if (currentPercent < 55) {
+                currentPercent += 3;
+                progStep.html('<i class="fa fa-spinner fa-spin text-primary"></i> Generating Short & Long Answer Problems...');
+                progDetail.text('Authoring HOTS and Case Study scenarios...');
+            } else if (currentPercent < 80) {
+                currentPercent += 2;
+                progStep.html('<i class="fa fa-spinner fa-spin text-primary"></i> Validating LaTeX & WIRIS Formulas...');
+                progDetail.text('Checking mathematical syntax and chemistry equations...');
+            } else if (currentPercent < 95) {
+                currentPercent += 1;
+                progStep.html('<i class="fa fa-spinner fa-spin text-primary"></i> Building Marking Scheme & Answer Keys...');
+                progDetail.text('Compiling final CBSE examination paper...');
+            }
+
+            progBar.css('width', currentPercent + '%');
+            progBadge.text(currentPercent + '%');
+        }
+    }, 400);
 
     $.ajax({
         url: '<?php echo base_url(); ?>admin/aiexamgenerator/generate_paper_ajax',
@@ -1270,45 +1333,56 @@ function startGeneration() {
             api_key: ''
         },
         success: function(res) {
-            $('#btnGeneratePaper').prop('disabled', false).html('<i class="fa fa-bolt"></i> Generate & Save Paper');
+            clearInterval(timerInterval);
+            progBar.css('width', '100%').removeClass('active');
+            progBadge.text('100%').css('background', '#dcfce7').css('color', '#16a34a');
+            progStep.html('<i class="fa fa-check-circle text-success"></i> Paper Generated Successfully!');
+            progDetail.text('Opening Examination Studio Preview...');
 
-            if (res.status === 'success' && res.data) {
-                closeGeneratorDrawer();
-                currentPaperData = res.data;
-                activeSetName = 'Set A';
-                renderPaper(currentPaperData, activeSetName);
-                $('#modalPaperTitle').text(currentPaperData.paper_title || 'CBSE Examination Paper');
-                $('#modalViewPaper').modal('show');
+            setTimeout(function() {
+                $('#btnGeneratePaper').prop('disabled', false).html('<i class="fa fa-bolt"></i> Generate & Save Paper');
+                progBox.slideUp(150);
 
-                // If a new paper row was saved, prepend to table dynamically (no disruptive reload)
-                if (res.saved_paper_id) {
-                    const newId = res.saved_paper_id;
-                    const pTitle = currentPaperData.paper_title || `${className} ${subjectName} Examination`;
-                    const newRowHtml = `
-                        <tr id="row_paper_${newId}" style="background: #f0fdf4;">
-                            <td class="font-weight-600">${newId}</td>
-                            <td>
-                                <strong style="color: #0f172a;">${pTitle}</strong>
-                                <br><small class="text-muted"><i class="fa fa-book"></i> ${chapter}</small>
-                            </td>
-                            <td><span class="badge" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;">${className}</span></td>
-                            <td><span class="badge" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;">${subjectName}</span></td>
-                            <td><strong>${totalMarks} M</strong></td>
-                            <td class="text-muted" style="font-size: 11px;"><i class="fa fa-clock-o"></i> Just now</td>
-                            <td class="text-right white-space-nowrap">
-                                <button type="button" class="btn btn-default btn-xs" onclick="openViewPaperModal(${newId})" title="View Question Paper" style="border-radius: 4px; padding: 3px 8px; color: #4f46e5;"><i class="fa fa-eye"></i></button>
-                                <button type="button" class="btn btn-default btn-xs" onclick="openViewPaperModal(${newId}, true)" title="View with Answer Key & Marking Scheme" style="border-radius: 4px; padding: 3px 8px; color: #16a34a;"><i class="fa fa-key"></i></button>
-                                <button type="button" class="btn btn-default btn-xs" onclick="deleteSavedPaperRow(${newId})" title="Delete Paper" style="border-radius: 4px; padding: 3px 8px; color: #ef4444;"><i class="fa fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    `;
-                    $('#tblGeneratedPapers tbody').prepend(newRowHtml);
+                if (res.status === 'success' && res.data) {
+                    closeGeneratorDrawer();
+                    currentPaperData = res.data;
+                    activeSetName = 'Set A';
+                    renderPaper(currentPaperData, activeSetName);
+                    $('#modalPaperTitle').text(currentPaperData.paper_title || 'CBSE Examination Paper');
+                    $('#modalViewPaper').modal('show');
+
+                    // If a new paper row was saved, prepend to table dynamically (no disruptive reload)
+                    if (res.saved_paper_id) {
+                        const newId = res.saved_paper_id;
+                        const pTitle = currentPaperData.paper_title || `${className} ${subjectName} Examination`;
+                        const newRowHtml = `
+                            <tr id="row_paper_${newId}" style="background: #f0fdf4;">
+                                <td class="font-weight-600">${newId}</td>
+                                <td>
+                                    <strong style="color: #0f172a;">${pTitle}</strong>
+                                    <br><small class="text-muted"><i class="fa fa-book"></i> ${chapter}</small>
+                                </td>
+                                <td><span class="badge" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;">${className}</span></td>
+                                <td><span class="badge" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;">${subjectName}</span></td>
+                                <td><strong>${totalMarks} M</strong></td>
+                                <td class="text-muted" style="font-size: 11px;"><i class="fa fa-clock-o"></i> Just now</td>
+                                <td class="text-right white-space-nowrap">
+                                    <button type="button" class="btn btn-default btn-xs" onclick="openViewPaperModal(${newId})" title="View Question Paper" style="border-radius: 4px; padding: 3px 8px; color: #4f46e5;"><i class="fa fa-eye"></i></button>
+                                    <button type="button" class="btn btn-default btn-xs" onclick="openViewPaperModal(${newId}, true)" title="View with Answer Key & Marking Scheme" style="border-radius: 4px; padding: 3px 8px; color: #16a34a;"><i class="fa fa-key"></i></button>
+                                    <button type="button" class="btn btn-default btn-xs" onclick="deleteSavedPaperRow(${newId})" title="Delete Paper" style="border-radius: 4px; padding: 3px 8px; color: #ef4444;"><i class="fa fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                        $('#tblGeneratedPapers tbody').prepend(newRowHtml);
+                    }
+                } else {
+                    alert('Generation Error: ' + (res.message || 'Unknown error occurred.'));
                 }
-            } else {
-                alert('Generation Error: ' + (res.message || 'Unknown error occurred.'));
-            }
+            }, 600);
         },
         error: function(xhr, status, err) {
+            clearInterval(timerInterval);
+            progBox.slideUp(150);
             $('#btnGeneratePaper').prop('disabled', false).html('<i class="fa fa-bolt"></i> Generate & Save Paper');
             let errMsg = err;
             if (xhr.responseJSON && xhr.responseJSON.message) {

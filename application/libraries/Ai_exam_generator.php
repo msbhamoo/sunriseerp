@@ -49,10 +49,21 @@ class Ai_exam_generator
         // Provider execution with automatic robust fallback
         $response = null;
         if (($api_engine === 'openrouter' || $api_engine === 'openrouter_ox') && !empty($active_openrouter_key)) {
-            $response = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
-            if (isset($response['error']) && !empty($active_gemini_key)) {
-                $fallback = $this->call_gemini($prompt, $active_gemini_key);
-                if (!isset($fallback['error'])) $response = $fallback;
+            $response = $this->call_openrouter($prompt, $active_openrouter_key, 'stealth/ox-alpha');
+            // If OpenRouter times out or errors on live, immediately fallback to Gemini or Groq
+            if (isset($response['error'])) {
+                if (!empty($active_gemini_key)) {
+                    $fallback = $this->call_gemini($prompt, $active_gemini_key);
+                    if (!isset($fallback['error'])) {
+                        $response = $fallback;
+                    }
+                }
+                if (isset($response['error']) && !empty($active_groq_key)) {
+                    $fallback_groq = $this->call_groq($prompt, $active_groq_key);
+                    if (!isset($fallback_groq['error'])) {
+                        $response = $fallback_groq;
+                    }
+                }
             }
         } elseif ($api_engine === 'groq' && !empty($active_groq_key)) {
             $response = $this->call_groq($prompt, $active_groq_key);
@@ -62,21 +73,21 @@ class Ai_exam_generator
             }
         } elseif ($api_engine === 'gemini' && !empty($active_gemini_key)) {
             $response = $this->call_gemini($prompt, $active_gemini_key);
-            if (isset($response['error']) && !empty($active_openrouter_key)) {
-                $fallback = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
+            if (isset($response['error']) && !empty($active_groq_key)) {
+                $fallback = $this->call_groq($prompt, $active_groq_key);
                 if (!isset($fallback['error'])) $response = $fallback;
             }
         } elseif ($api_engine === 'openai' && !empty($active_openai_key)) {
             $response = $this->call_openai($prompt, $active_openai_key);
         } else {
-            if (!empty($active_openrouter_key)) {
-                $response = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
-            }
-            if ((!$response || isset($response['error'])) && !empty($active_gemini_key)) {
+            if (!empty($active_gemini_key)) {
                 $response = $this->call_gemini($prompt, $active_gemini_key);
             }
             if ((!$response || isset($response['error'])) && !empty($active_groq_key)) {
                 $response = $this->call_groq($prompt, $active_groq_key);
+            }
+            if ((!$response || isset($response['error'])) && !empty($active_openrouter_key)) {
+                $response = $this->call_openrouter($prompt, $active_openrouter_key, 'stealth/ox-alpha');
             }
         }
 
@@ -482,57 +493,14 @@ EOT;
         return $val ? 'true' : 'false';
     }
 
-    /**
-     * Call Google Gemini REST API with dynamic model discovery via ListModels API
-     */
     private function call_gemini($prompt, $api_key)
     {
-        $available_models = [];
-        $list_url = "https://generativelanguage.googleapis.com/v1beta/models?key=" . urlencode($api_key);
-        
-        $ch = curl_init($list_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        $list_res = curl_exec($ch);
-        curl_close($ch);
-
-        if ($list_res) {
-            $list_json = json_decode($list_res, true);
-            if (isset($list_json['models']) && is_array($list_json['models'])) {
-                foreach ($list_json['models'] as $m) {
-                    $methods = isset($m['supportedGenerationMethods']) ? $m['supportedGenerationMethods'] : [];
-                    if (in_array('generateContent', $methods) && !empty($m['name'])) {
-                        $name = str_replace('models/', '', $m['name']);
-                        $available_models[] = $name;
-                    }
-                }
-            }
-        }
-
-        $priority_order = [
-            'gemini-2.5-flash',
+        // Try proven high-performance Gemini production models directly
+        $models_to_test = [
             'gemini-2.0-flash',
-            'gemini-2.0-flash-exp',
-            'gemini-1.5-flash-8b',
             'gemini-1.5-flash',
-            'gemini-1.5-pro',
-            'gemini-pro'
+            'gemini-2.5-flash'
         ];
-
-        $models_to_test = [];
-        foreach ($priority_order as $p) {
-            if (in_array($p, $available_models)) {
-                $models_to_test[] = $p;
-            }
-        }
-        foreach ($available_models as $am) {
-            if (!in_array($am, $models_to_test)) {
-                $models_to_test[] = $am;
-            }
-        }
-        // Test only the top 2 models to stay well within NGINX 30-60s proxy timeouts
-        $models_to_test = array_slice($models_to_test, 0, 2);
 
         $last_error = 'Unknown error';
 
@@ -642,59 +610,70 @@ EOT;
     }
 
     /**
-     * Call OpenRouter API (Supports 01-ai/ox-alpha, DeepSeek-R1, and Free Tier Models)
+     * Call OpenRouter API (Primary: stealth/ox-alpha, Free Fallback: z-ai/glm-5.2:free)
      */
     private function call_openrouter($prompt, $api_key, $model = 'stealth/ox-alpha')
     {
         $url = "https://openrouter.ai/api/v1/chat/completions";
-        $m = 'stealth/ox-alpha';
-
-        $payload = [
-            'model' => $m,
-            'messages' => [
-                ['role' => 'system', 'content' => 'You are an expert CBSE examination question author. Output only raw valid JSON matching the requested schema.'],
-                ['role' => 'user', 'content' => $prompt]
-            ],
-            'response_format' => ['type' => 'json_object'],
-            'temperature' => 0.3,
-            'max_tokens' => 3000
+        
+        // Models list: Primary stealth/ox-alpha, then free fallback z-ai/glm-5.2:free
+        $models = [
+            'stealth/ox-alpha',
+            'z-ai/glm-5.2:free'
         ];
 
         $site_url = defined('base_url') ? base_url() : 'https://sunriseschool.in';
+        $last_error = 'Unknown error';
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $api_key,
-            'HTTP-Referer: ' . $site_url,
-            'X-Title: Sunrise ERP AI Studio'
-        ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 20); // 20s max so fallback can execute before NGINX times out
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 6);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        foreach ($models as $m) {
+            $payload = [
+                'model' => $m,
+                'messages' => [
+                    ['role' => 'system', 'content' => 'You are an expert CBSE examination question author. Output only raw valid JSON matching the requested schema.'],
+                    ['role' => 'user', 'content' => $prompt]
+                ],
+                'response_format' => ['type' => 'json_object'],
+                'temperature' => 0.3,
+                'max_tokens' => 3000
+            ];
 
-        $result = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curl_error = curl_error($ch);
-        curl_close($ch);
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $api_key,
+                'HTTP-Referer: ' . $site_url,
+                'X-Title: Sunrise ERP AI Studio'
+            ]);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 15); // Fast 15s per model
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
-        if ($curl_error) {
-            return ['error' => 'OpenRouter cURL Error: ' . $curl_error];
+            $result = curl_exec($ch);
+            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curl_error = curl_error($ch);
+            curl_close($ch);
+
+            if ($curl_error) {
+                $last_error = 'cURL Error: ' . $curl_error;
+                continue;
+            }
+
+            $res_json = json_decode($result, true);
+            if ($http_code === 200 && isset($res_json['choices'][0]['message']['content'])) {
+                return ['raw_text' => $res_json['choices'][0]['message']['content']];
+            }
+
+            if (isset($res_json['error']['message'])) {
+                $last_error = "OpenRouter ({$m}): " . $res_json['error']['message'];
+            } else {
+                $last_error = "HTTP $http_code from OpenRouter ({$m})";
+            }
         }
 
-        $res_json = json_decode($result, true);
-        if ($http_code === 200 && isset($res_json['choices'][0]['message']['content'])) {
-            return ['raw_text' => $res_json['choices'][0]['message']['content']];
-        }
-
-        if (isset($res_json['error']['message'])) {
-            return ['error' => "OpenRouter ({$m}): " . $res_json['error']['message']];
-        }
-
-        return ['error' => 'OpenRouter API Error: HTTP ' . $http_code];
+        return ['error' => $last_error];
     }
 
     /**

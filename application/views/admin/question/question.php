@@ -1224,6 +1224,22 @@ $('#myimgModal').on('shown.bs.modal', function (event) {
                 </div>
             </div>
 
+            <div id="aiGenProgressBox" style="display: none; margin-top: 15px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span id="aiGenStepTitle" style="font-size: 13px; font-weight: 700; color: #4338ca;">
+                        <i class="fa fa-spinner fa-spin text-primary"></i> Connecting to AI Engine...
+                    </span>
+                    <span id="aiGenPercentTag" style="font-size: 12px; font-weight: 800; color: #6366f1; background: #e0e7ff; padding: 2px 8px; border-radius: 9999px;">0%</span>
+                </div>
+                <div class="progress" style="height: 8px; border-radius: 4px; background-color: #f1f5f9; margin-bottom: 6px; overflow: hidden;">
+                    <div id="aiGenProgressBar" class="progress-bar progress-bar-striped active" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%); transition: width 0.3s ease;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #64748b;">
+                    <span id="aiGenStepDetail">Generating questions with answer keys...</span>
+                    <span id="aiGenTimerDisplay"><i class="fa fa-clock-o"></i> 0s</span>
+                </div>
+            </div>
+
             <div id="aiGenStatusAlert" style="display: none; margin-top: 10px;" class="alert"></div>
         </form>
     </div>
@@ -1392,9 +1408,52 @@ function runAiQuestionGeneration() {
 
     const btn = $('#btnRunAiQuestionGen');
     const alertBox = $('#aiGenStatusAlert');
+    const progBox = $('#aiGenProgressBox');
+    const progBar = $('#aiGenProgressBar');
+    const progBadge = $('#aiGenPercentTag');
+    const progStep = $('#aiGenStepTitle');
+    const progDetail = $('#aiGenStepDetail');
+    const progTimer = $('#aiGenTimerDisplay');
 
     btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Generating with AI...');
-    alertBox.removeClass('alert-danger alert-success').addClass('alert-info').text('AI model is generating questions across your selected types, levels & chapters...').show();
+    alertBox.hide();
+    
+    progBox.slideDown(200);
+    progBar.css('width', '5%');
+    progBadge.text('5%');
+    progStep.html('<i class="fa fa-spinner fa-spin text-primary"></i> Initializing AI Engine...');
+    progDetail.text('Validating question types & chapter scope...');
+
+    let currentPercent = 5;
+    let secondsElapsed = 0;
+
+    const timerInterval = setInterval(function() {
+        secondsElapsed++;
+        progTimer.html(`<i class="fa fa-clock-o"></i> ${secondsElapsed}s`);
+
+        if (currentPercent < 95) {
+            if (currentPercent < 30) {
+                currentPercent += 5;
+                progStep.html('<i class="fa fa-spinner fa-spin text-primary"></i> Generating Questions...');
+                progDetail.text('Authoring questions and multiple options...');
+            } else if (currentPercent < 65) {
+                currentPercent += 4;
+                progStep.html('<i class="fa fa-spinner fa-spin text-primary"></i> Formatting LaTeX & Equations...');
+                progDetail.text('Aligning formulas for LMS & WIRIS editor...');
+            } else if (currentPercent < 85) {
+                currentPercent += 3;
+                progStep.html('<i class="fa fa-spinner fa-spin text-primary"></i> Validating Answer Keys...');
+                progDetail.text('Confirming correct options & explanations...');
+            } else if (currentPercent < 95) {
+                currentPercent += 1;
+                progStep.html('<i class="fa fa-spinner fa-spin text-primary"></i> Saving to Question Bank...');
+                progDetail.text('Writing records into database...');
+            }
+
+            progBar.css('width', currentPercent + '%');
+            progBadge.text(currentPercent + '%');
+        }
+    }, 350);
 
     $.ajax({
         url: '<?php echo base_url(); ?>admin/question/ai_generate_questions_ajax',
@@ -1412,11 +1471,19 @@ function runAiQuestionGeneration() {
             api_engine: engine
         },
         success: function(res) {
+            clearInterval(timerInterval);
+            progBar.css('width', '100%').removeClass('active');
+            progBadge.text('100%').css('background', '#dcfce7').css('color', '#16a34a');
+            progStep.html('<i class="fa fa-check-circle text-success"></i> Questions Added Successfully!');
+            progDetail.text('Updating question table...');
+
             btn.prop('disabled', false).html('<i class="fa fa-bolt"></i> Generate & Add to Question Bank');
+
             if (res.status === 'success') {
-                alertBox.removeClass('alert-info alert-danger').addClass('alert-success').html(`<strong><i class="fa fa-check-circle"></i> Success:</strong> ${res.message || 'Questions added successfully!'}`);
+                alertBox.removeClass('alert-info alert-danger').addClass('alert-success').html(`<strong><i class="fa fa-check-circle"></i> Success:</strong> ${res.message || 'Questions added successfully!'}`).show();
                 
                 setTimeout(function() {
+                    progBox.slideUp(150);
                     closeAiQuestionDrawer();
                     if ($('#questionsearchform').length) {
                         $('#questionsearchform').trigger('submit');
@@ -1425,12 +1492,15 @@ function runAiQuestionGeneration() {
                     }
                 }, 1200);
             } else {
-                alertBox.removeClass('alert-info alert-success').addClass('alert-danger').text(res.message || 'Failed to generate questions.');
+                progBox.slideUp(150);
+                alertBox.removeClass('alert-info alert-success').addClass('alert-danger').text(res.message || 'Failed to generate questions.').show();
             }
         },
         error: function(xhr, status, err) {
+            clearInterval(timerInterval);
+            progBox.slideUp(150);
             btn.prop('disabled', false).html('<i class="fa fa-bolt"></i> Generate & Add to Question Bank');
-            alertBox.removeClass('alert-info alert-success').addClass('alert-danger').text('Server communication error. Please try again.');
+            alertBox.removeClass('alert-info alert-success').addClass('alert-danger').text('Server communication error. Please try again.').show();
         }
     });
 }
