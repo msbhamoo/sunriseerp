@@ -674,7 +674,7 @@ EOT;
             }
         }
 
-        return ['error' => $last_error];
+        return ['error' => 'OpenRouter failed: ' . $last_error];
     }
 
     /**
