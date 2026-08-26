@@ -207,9 +207,34 @@
     .setall-pill.att-absent input:checked + span { background: #dc2626; border-color: #dc2626; }
     .setall-pill.att-half_day input:checked + span { background: #2563eb; border-color: #2563eb; }
     .setall-pill.att-holiday input:checked + span { background: #7c3aed; border-color: #7c3aed; }
-    .setall-cmp-wrap { justify-content: center; }
-    .setall-cmp-item { font-size: 10.5px; color: #6b7684; white-space: nowrap; }
-    .setall-cmp-item .btn-xs { padding: 1px 5px; font-size: 10px; margin-left: 1px; }
+    /* ===== Quick Stats Summary Bar ===== */
+    .att-stats-bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:12px; }
+    .att-stat-chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; background:#fff; border:1px solid #cbd5e1; color:#475569; }
+    .att-stat-chip .stat-count { display:inline-block; padding:1px 6px; border-radius:10px; font-size:11px; color:#fff; font-weight:700; }
+    .chip-present .stat-count { background:#16a34a; }
+    .chip-late .stat-count { background:#f59e0b; }
+    .chip-absent .stat-count { background:#dc2626; }
+    .chip-half_day .stat-count { background:#2563eb; }
+    .chip-holiday .stat-count { background:#7c3aed; }
+    .chip-unplanned_leave .stat-count { background:#db2777; }
+    .chip-qr .stat-count { background:#0891b2; }
+    .chip-manual .stat-count { background:#64748b; }
+
+    /* ===== Live Search & Filter Controls ===== */
+    .att-filter-bar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .att-search-input { min-width:220px; max-width:320px; border-radius:20px; padding:6px 14px; border:1px solid #cbd5e1; font-size:12.5px; }
+    .att-filter-btn-group .btn { border-radius:15px; font-size:11.5px; padding:3px 10px; margin-right:4px; font-weight:500; }
+
+    /* ===== Total Working Duration Badges ===== */
+    .duration-badge { display:inline-block; font-size:11px; font-weight:600; padding:2px 7px; border-radius:10px; margin-top:3px; }
+    .dur-green { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
+    .dur-amber { background:#fef3c7; color:#b45309; border:1px solid #fde68a; }
+    .dur-gray { background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; }
+
+    /* ===== Quick Time Helper Icons ===== */
+    .time-btn-wrap { display:flex; align-items:center; gap:2px; margin-top:3px; }
+    .time-btn-wrap .btn-t-action { padding:1px 5px; font-size:10px; color:#64748b; background:#f8fafc; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer; }
+    .time-btn-wrap .btn-t-action:hover { background:#e2e8f0; color:#1e293b; }
 
 </style>
 
@@ -308,12 +333,37 @@
                                             <button type="submit" name="search" value="saveattendence" id="saveattendence" class="btn btn-primary checkbox-toggle"><i class="fa fa-save"></i> <?php echo $this->lang->line('save_attendance'); ?></button>
                                         <?php } ?>
                                     </div>
+
+                                    <!-- Quick Stats Live Summary Bar -->
+                                    <div class="att-stats-bar" id="live-att-stats">
+                                        <span class="att-stat-chip chip-present"><i class="fa fa-check-circle text-success"></i> Present <span class="stat-count" id="cnt-present">0</span></span>
+                                        <span class="att-stat-chip chip-late"><i class="fa fa-clock-o text-warning"></i> Late <span class="stat-count" id="cnt-late">0</span></span>
+                                        <span class="att-stat-chip chip-absent"><i class="fa fa-times-circle text-danger"></i> Absent <span class="stat-count" id="cnt-absent">0</span></span>
+                                        <span class="att-stat-chip chip-half_day"><i class="fa fa-adjust text-info"></i> Half Day <span class="stat-count" id="cnt-half_day">0</span></span>
+                                        <span class="att-stat-chip chip-holiday"><i class="fa fa-tree" style="color:#7c3aed;"></i> Holiday <span class="stat-count" id="cnt-holiday">0</span></span>
+                                        <span class="att-stat-chip chip-qr"><i class="fa fa-qrcode text-info"></i> QR / Biometric <span class="stat-count" id="cnt-qr">0</span></span>
+                                        <span class="att-stat-chip chip-manual"><i class="fa fa-edit text-muted"></i> Manual <span class="stat-count" id="cnt-manual">0</span></span>
+                                    </div>
+
+                                    <!-- Live Search & Filter Bar -->
+                                    <div class="att-filter-bar">
+                                        <input type="text" id="att-table-search" class="form-control att-search-input" placeholder="🔍 Quick search staff name, ID...">
+                                        <div class="att-filter-btn-group">
+                                            <button type="button" class="btn btn-xs btn-default att-filter-btn active" data-filter="all">All (<span class="cnt-total"><?php echo count($resultlist); ?></span>)</button>
+                                            <button type="button" class="btn btn-xs btn-default att-filter-btn" data-filter="present">Present</button>
+                                            <button type="button" class="btn btn-xs btn-default att-filter-btn" data-filter="late">Late</button>
+                                            <button type="button" class="btn btn-xs btn-default att-filter-btn" data-filter="absent">Absent</button>
+                                            <button type="button" class="btn btn-xs btn-default att-filter-btn" data-filter="half_day">Half Day</button>
+                                            <button type="button" class="btn btn-xs btn-default att-filter-btn" data-filter="missing-out"><i class="fa fa-exclamation-triangle text-warning"></i> Missing Exit Time</button>
+                                        </div>
+                                    </div>
+
                                     <input type="hidden" name="is_first_time_attendance" value="<?php echo $is_first_time_attendance;?>">
                                     <input type="hidden" name="user_id" value="<?php echo $user_type_id; ?>">
                                     <input type="hidden" name="section_id" value="">
                                     <input type="hidden" name="date" value="<?php echo $date; ?>">
                                     <div class="table-responsive staffatt-scroll">
-                                        <table class="table table-hover table-striped example staffatt-table">
+                                        <table class="table table-hover table-striped example staffatt-table" id="staff-attendance-table">
                                             <thead>
                                                 <tr>
                                                     <th>#</th>
@@ -514,10 +564,19 @@
                                                         }  ?>
 
                                                     <td class="relative">
-                                                        <input <?php echo $disable_input_attr;?> type="text" value="<?php if($value["in_time"]!="00:00:00"){ echo $value["in_time"]; }else{ echo "";} ?>"  name="in_time_<?php echo $value["staff_id"] ?>" id="in_time_<?php echo $value["staff_id"] ?>" class="form-control datetime in_time time in_time_<?php echo $value['role_id']; ?>">
+                                                        <input <?php echo $disable_input_attr;?> type="text" value="<?php if($value["in_time"]!="00:00:00"){ echo $value["in_time"]; }else{ echo "";} ?>"  name="in_time_<?php echo $value["staff_id"] ?>" id="in_time_<?php echo $value["staff_id"] ?>" class="form-control datetime in_time time in_time_<?php echo $value['role_id']; ?>" data-staff_id="<?php echo $value['staff_id']; ?>" data-role_id="<?php echo $value['role_id']; ?>">
+                                                        <div class="time-btn-wrap">
+                                                            <button type="button" class="btn-t-action fill-sched-in" title="Fill Role Default In-Time" data-target="in_time_<?php echo $value['staff_id']; ?>" data-role="<?php echo $value['role_id']; ?>"><i class="fa fa-clock-o"></i></button>
+                                                            <button type="button" class="btn-t-action clear-single-time" title="Clear Time" data-target="in_time_<?php echo $value['staff_id']; ?>"><i class="fa fa-times"></i></button>
+                                                        </div>
                                                     </td>                                                        
                                                     <td class="relative">
-                                                        <input  <?php echo $disable_input_attr;?>  type="text" value="<?php if($value["out_time"]!="00:00:00"){ echo $value["out_time"]; }else{ echo "";} ?>"  name="out_time_<?php echo $value["staff_id"] ?>"  id="out_time_<?php echo $value["staff_id"] ?>" class="form-control datetime out_time time out_time_<?php echo $value['role_id']; ?>">
+                                                        <input  <?php echo $disable_input_attr;?>  type="text" value="<?php if($value["out_time"]!="00:00:00"){ echo $value["out_time"]; }else{ echo "";} ?>"  name="out_time_<?php echo $value["staff_id"] ?>"  id="out_time_<?php echo $value["staff_id"] ?>" class="form-control datetime out_time time out_time_<?php echo $value['role_id']; ?>" data-staff_id="<?php echo $value['staff_id']; ?>" data-role_id="<?php echo $value['role_id']; ?>">
+                                                        <div class="time-btn-wrap">
+                                                            <button type="button" class="btn-t-action fill-sched-out" title="Fill Role Default Out-Time" data-target="out_time_<?php echo $value['staff_id']; ?>" data-role="<?php echo $value['role_id']; ?>"><i class="fa fa-clock-o"></i></button>
+                                                            <button type="button" class="btn-t-action clear-single-time" title="Clear Time" data-target="out_time_<?php echo $value['staff_id']; ?>"><i class="fa fa-times"></i></button>
+                                                            <span class="staff-work-dur duration-badge dur-gray" id="dur_<?php echo $value['staff_id']; ?>" style="display:none;"></span>
+                                                        </div>
                                                     </td>  
                                                         <?php if ($value["date"] == 'xxx') { ?>
                                                             <td class="text-right"><input type="text"  class="form-control"  name="remark<?php echo $value["staff_id"] ?>"></td>
@@ -790,17 +849,25 @@ function getatten(atten_type){
         var role_id = $("input[name='staff_role[]']").map(function(){return $(this).val();}).get();
         let nm = (attendance_setting);     
         for(var i=0;i<role_id.length;i++){
-        var returnValue = false;
-        $.each(nm, function(key, value) {
-            if (value.staff_attendence_type_id == atten_type  &&  value.role_id==role_id[i]) {                
-                returnValue = [tConvert(value.entry_time_from), tConvert(value.entry_time_to)];
-                $('.in_time_'+role_id[i]).val(returnValue[0]);
-                $('.out_time_'+role_id[i]).val(returnValue[1]);                
-            }else{
-                            
-            }
-        }); 
-    }
+            $.each(nm, function(key, value) {
+                if (value.staff_attendence_type_id == atten_type && value.role_id == role_id[i]) {                
+                    var defaultIn = tConvert(value.entry_time_from);
+                    var defaultOut = tConvert(value.entry_time_to);
+                    
+                    // Only populate if field is currently empty so existing QR/manual time is preserved
+                    $('.in_time_' + role_id[i]).each(function() {
+                        if ($(this).val() === '' || $(this).val() === '00:00:00') {
+                            $(this).val(defaultIn);
+                        }
+                    });
+                    $('.out_time_' + role_id[i]).each(function() {
+                        if ($(this).val() === '' || $(this).val() === '00:00:00') {
+                            $(this).val(defaultOut);
+                        }
+                    });
+                }
+            }); 
+        }
     }
 }
 
@@ -841,6 +908,191 @@ $(document).ready(function() {
         $('.' + targetClass).prop('checked', state).each(function() {
             syncCmpPill($(this));
         });
+    });
+});
+
+// ===== Live Stats Counters, Working Duration, Search & Filter =====
+$(document).ready(function() {
+    // 1. Calculate and update live stats counters
+    function updateLiveStats() {
+        var counts = {
+            present: 0,
+            late: 0,
+            absent: 0,
+            half_day: 0,
+            holiday: 0,
+            qr: 0,
+            manual: 0
+        };
+
+        $('.staffatt-table tbody tr').each(function() {
+            var $tr = $(this);
+            var $checked = $tr.find('.att-cell input[type="radio"]:checked');
+            if ($checked.length) {
+                var cls = $checked.attr('class') || '';
+                if (cls.indexOf('att-present') !== -1) counts.present++;
+                else if (cls.indexOf('att-late') !== -1) counts.late++;
+                else if (cls.indexOf('att-absent') !== -1) counts.absent++;
+                else if (cls.indexOf('att-half_day') !== -1) counts.half_day++;
+                else if (cls.indexOf('att-holiday') !== -1) counts.holiday++;
+            }
+
+            var srcText = $tr.find('td:nth-child(6), td:nth-child(7)').text().toLowerCase();
+            if (srcText.indexOf('qr') !== -1 || srcText.indexOf('biometric') !== -1) {
+                counts.qr++;
+            } else if (srcText.indexOf('manual') !== -1) {
+                counts.manual++;
+            }
+        });
+
+        $('#cnt-present').text(counts.present);
+        $('#cnt-late').text(counts.late);
+        $('#cnt-absent').text(counts.absent);
+        $('#cnt-half_day').text(counts.half_day);
+        $('#cnt-holiday').text(counts.holiday);
+        $('#cnt-qr').text(counts.qr);
+        $('#cnt-manual').text(counts.manual);
+    }
+
+    // 2. Working Duration Calculation per row
+    function parseTimeString(tStr) {
+        if (!tStr || tStr === '00:00:00') return null;
+        var m = tStr.match(/(\d+):(\d+)(?::(\d+))?\s*(AM|PM)?/i);
+        if (!m) return null;
+        var h = parseInt(m[1], 10);
+        var min = parseInt(m[2], 10);
+        var period = m[4] ? m[4].toUpperCase() : null;
+        if (period === 'PM' && h < 12) h += 12;
+        if (period === 'AM' && h === 12) h = 0;
+        return (h * 60) + min;
+    }
+
+    function calculateDurations() {
+        $('.staffatt-table tbody tr').each(function() {
+            var $tr = $(this);
+            var inVal = $tr.find('.in_time').val();
+            var outVal = $tr.find('.out_time').val();
+            var $badge = $tr.find('.staff-work-dur');
+
+            var inMins = parseTimeString(inVal);
+            var outMins = parseTimeString(outVal);
+
+            if (inMins !== null && outMins !== null && outMins > inMins) {
+                var diff = outMins - inMins;
+                var hours = Math.floor(diff / 60);
+                var mins = diff % 60;
+                var durText = (hours > 0 ? hours + 'h ' : '') + mins + 'm';
+
+                $badge.removeClass('dur-green dur-amber dur-gray').show();
+                if (diff >= 480) { // >= 8 hours
+                    $badge.addClass('dur-green').html('<i class="fa fa-check"></i> ' + durText);
+                } else if (diff >= 240) { // >= 4 hours
+                    $badge.addClass('dur-amber').html('<i class="fa fa-clock-o"></i> ' + durText);
+                } else {
+                    $badge.addClass('dur-gray').html(durText);
+                }
+            } else {
+                $badge.hide();
+            }
+        });
+    }
+
+    // 3. Live Search & Status Filters
+    function applyTableFilter() {
+        var query = ($('#att-table-search').val() || '').toLowerCase().trim();
+        var activeFilter = $('.att-filter-btn.active').data('filter') || 'all';
+
+        $('.staffatt-table tbody tr').each(function() {
+            var $tr = $(this);
+            var rowText = $tr.text().toLowerCase();
+            var matchesSearch = !query || rowText.indexOf(query) !== -1;
+
+            var matchesFilter = true;
+            if (activeFilter === 'present') {
+                matchesFilter = $tr.find('input.att-present:checked').length > 0;
+            } else if (activeFilter === 'late') {
+                matchesFilter = $tr.find('input.att-late:checked').length > 0;
+            } else if (activeFilter === 'absent') {
+                matchesFilter = $tr.find('input.att-absent:checked').length > 0;
+            } else if (activeFilter === 'half_day') {
+                matchesFilter = $tr.find('input.att-half_day:checked').length > 0;
+            } else if (activeFilter === 'missing-out') {
+                var inV = $tr.find('.in_time').val();
+                var outV = $tr.find('.out_time').val();
+                matchesFilter = inV && inV !== '' && inV !== '00:00:00' && (!outV || outV === '' || outV === '00:00:00');
+            }
+
+            if (matchesSearch && matchesFilter) {
+                $tr.show();
+            } else {
+                $tr.hide();
+            }
+        });
+    }
+
+    $('#att-table-search').on('keyup input', applyTableFilter);
+
+    $('.att-filter-btn').on('click', function() {
+        $('.att-filter-btn').removeClass('active btn-primary').addClass('btn-default');
+        $(this).removeClass('btn-default').addClass('active btn-primary');
+        applyTableFilter();
+    });
+
+    // 4. Time Helper Buttons (Fill Role Default Schedule & Clear)
+    $(document).on('click', '.fill-sched-in', function() {
+        var targetId = $(this).data('target');
+        var roleId = $(this).data('role');
+        var defaultIn = '';
+        if (attendance_setting) {
+            $.each(attendance_setting, function(k, v) {
+                if (v.role_id == roleId && v.staff_attendence_type_id == 1) {
+                    defaultIn = tConvert(v.entry_time_from);
+                }
+            });
+        }
+        if (defaultIn) {
+            $('#' + targetId).val(defaultIn).trigger('change');
+            calculateDurations();
+        }
+    });
+
+    $(document).on('click', '.fill-sched-out', function() {
+        var targetId = $(this).data('target');
+        var roleId = $(this).data('role');
+        var defaultOut = '';
+        if (attendance_setting) {
+            $.each(attendance_setting, function(k, v) {
+                if (v.role_id == roleId && v.staff_attendence_type_id == 1) {
+                    defaultOut = tConvert(v.entry_time_to);
+                }
+            });
+        }
+        if (defaultOut) {
+            $('#' + targetId).val(defaultOut).trigger('change');
+            calculateDurations();
+        }
+    });
+
+    $(document).on('click', '.clear-single-time', function() {
+        var targetId = $(this).data('target');
+        $('#' + targetId).val('').trigger('change');
+        calculateDurations();
+    });
+
+    // Initial triggers
+    updateLiveStats();
+    calculateDurations();
+
+    $(document).on('change', '.att-cell input[type="radio"], .in_time, .out_time', function() {
+        updateLiveStats();
+        calculateDurations();
+    });
+
+    $(document).on('click', '.default_radio', function() {
+        setTimeout(function() {
+            updateLiveStats();
+            calculateDurations();
+        }, 100);
     });
 });
 

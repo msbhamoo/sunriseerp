@@ -813,4 +813,54 @@ class Staffattendancemodel extends MY_Model {
         return array_keys($dates);
     }
 
+    /**
+     * Recent attendance history (last 7 recorded days) for a given staff member.
+     */
+    public function getStaffRecentAttendance($staff_id, $limit = 7)
+    {
+        $this->db->select('staff_attendance.*, staff_attendance_type.type as att_type, staff_attendance_type.long_lang_name');
+        $this->db->from('staff_attendance');
+        $this->db->join('staff_attendance_type', 'staff_attendance_type.id = staff_attendance.staff_attendance_type_id', 'left');
+        $this->db->where('staff_attendance.staff_id', $staff_id);
+        $this->db->order_by('staff_attendance.date', 'DESC');
+        $this->db->limit($limit);
+        $rows = $this->db->get()->result_array();
+
+        $result = array();
+        foreach ($rows as $row) {
+            $in_formatted = (!empty($row['in_time']) && $row['in_time'] !== '00:00:00') ? date('h:i A', strtotime($row['in_time'])) : '--';
+            $out_formatted = (!empty($row['out_time']) && $row['out_time'] !== '00:00:00') ? date('h:i A', strtotime($row['out_time'])) : '--';
+            
+            $duration = '--';
+            if ($in_formatted !== '--' && $out_formatted !== '--') {
+                $secs = strtotime("1970-01-01 " . $row['out_time'] . " UTC") - strtotime("1970-01-01 " . $row['in_time'] . " UTC");
+                if ($secs > 0) {
+                    $h = intdiv($secs, 3600);
+                    $m = intdiv($secs % 3600, 60);
+                    $duration = ($h > 0 ? $h . 'h ' : '') . $m . 'm';
+                }
+            }
+
+            $source = 'Manual';
+            if (!empty($row['qrcode_attendance'])) {
+                $source = 'QR Code';
+            } elseif (!empty($row['biometric_attendence'])) {
+                $source = 'Biometric';
+            }
+
+            $result[] = array(
+                'date'         => date('d M Y', strtotime($row['date'])),
+                'day'          => date('D', strtotime($row['date'])),
+                'in_time'      => $in_formatted,
+                'out_time'     => $out_formatted,
+                'duration'     => $duration,
+                'status'       => !empty($row['att_type']) ? $row['att_type'] : 'Present',
+                'status_lang'  => !empty($row['long_lang_name']) ? $row['long_lang_name'] : 'present',
+                'source'       => $source,
+                'remark'       => $row['remark']
+            );
+        }
+        return $result;
+    }
+
 }

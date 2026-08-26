@@ -56,6 +56,56 @@
                         <?php } ?>
                     </div>
                 </div>
+
+                <!-- Recent Attendance History (Last 7 Days) -->
+                <?php if (!empty($recent_attendance)) { ?>
+                <div class="box box-solid" style="border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);margin-top:16px;">
+                    <div class="box-header with-border" style="background:#f8f9fa;border-radius:8px 8px 0 0;padding:10px 15px;">
+                        <h4 class="box-title" style="font-size:14px;font-weight:600;color:#333;margin:0;">
+                            <i class="fa fa-history text-primary"></i> My Recent Attendance (Last 7 Days)
+                        </h4>
+                    </div>
+                    <div class="box-body" style="padding:0;">
+                        <div class="table-responsive">
+                            <table class="table table-hover" style="margin-bottom:0;font-size:12.5px;">
+                                <thead>
+                                    <tr style="background:#f1f4f8;color:#555;">
+                                        <th style="padding:8px 12px;">Date</th>
+                                        <th style="padding:8px 8px;">In</th>
+                                        <th style="padding:8px 8px;">Out</th>
+                                        <th style="padding:8px 8px;">Hours</th>
+                                        <th style="padding:8px 12px;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($recent_attendance as $rec) { 
+                                        $badge = 'label-success';
+                                        $st = strtolower($rec['status']);
+                                        if (strpos($st, 'late') !== false) $badge = 'label-warning';
+                                        elseif (strpos($st, 'half') !== false) $badge = 'label-info';
+                                        elseif (strpos($st, 'absent') !== false) $badge = 'label-danger';
+                                    ?>
+                                        <tr>
+                                            <td style="padding:8px 12px;font-weight:500;">
+                                                <?php echo $rec['date']; ?> <small class="text-muted">(<?php echo $rec['day']; ?>)</small>
+                                            </td>
+                                            <td style="padding:8px 8px;color:#28a745;font-weight:600;"><?php echo $rec['in_time']; ?></td>
+                                            <td style="padding:8px 8px;color:#dc3545;font-weight:600;"><?php echo $rec['out_time']; ?></td>
+                                            <td style="padding:8px 8px;color:#495057;"><span class="badge" style="background:#e9ecef;color:#333;font-weight:600;"><?php echo $rec['duration']; ?></span></td>
+                                            <td style="padding:8px 12px;">
+                                                <span class="label <?php echo $badge; ?>" style="font-size:10.5px;padding:3px 7px;border-radius:10px;">
+                                                    <?php echo $rec['status']; ?>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <?php } ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <?php } ?>
+
             </div>
         </div>
     </section>
@@ -222,12 +272,44 @@
         });
     }
 
-    function hideAllPanels() {
-        earlyBox.style.display = 'none';
-        chooseBox.style.display = 'none';
+    function playScanChime(isSuccess) {
+        try {
+            var AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+                var ctx = new AudioCtx();
+                var osc = ctx.createOscillator();
+                var gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                if (isSuccess !== false) {
+                    // Sweet double-tone success chime (880Hz -> 1320Hz)
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.35);
+                } else {
+                    // Warning/error tone
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(320, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.3);
+                }
+            }
+        } catch (e) { }
+
+        // Trigger mobile haptic feedback if supported
+        if (navigator.vibrate) {
+            navigator.vibrate(isSuccess !== false ? [80, 40, 80] : [200]);
+        }
     }
 
     function showAttendanceModal(res) {
+        playScanChime(true);
         var s = res.status;
         var inTime = res.in_time || '--';
         var outTime = res.out_time || '--';

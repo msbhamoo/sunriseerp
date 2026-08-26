@@ -475,8 +475,9 @@ class Staffattendance extends Admin_Controller
 
         $this->session->set_userdata('top_menu', 'HR');
         $this->session->set_userdata('sub_menu', 'admin/staffattendance/scan');
-        $data['title']       = 'Mark My Attendance';
-        $data['setting']     = $setting;
+        $data['title']             = 'Mark My Attendance';
+        $data['setting']           = $setting;
+        $data['recent_attendance'] = $this->staffattendancemodel->getStaffRecentAttendance($admin['id'], 7);
         $this->load->view('layout/header', $data);
         $this->load->view('admin/staffattendance/scan', $data);
         $this->load->view('layout/footer', $data);
