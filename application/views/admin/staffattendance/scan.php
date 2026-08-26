@@ -200,23 +200,64 @@
             showStatus('Camera not supported on this browser. Please use a modern mobile browser over HTTPS.', 'alert-danger');
             return;
         }
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } })
+
+        // Clean any old stream
+        stopCamera();
+
+        var constraints = {
+            video: {
+                facingMode: { ideal: 'environment' }
+            },
+            audio: false
+        };
+
+        navigator.mediaDevices.getUserMedia(constraints)
             .then(function (s) {
                 stream = s;
                 video.srcObject = s;
-                video.setAttribute('playsinline', true);
-                video.play();
-                scanning = true;
-                requestAnimationFrame(tick);
+                video.setAttribute('playsinline', 'true');
+                video.setAttribute('webkit-playsinline', 'true');
+                video.muted = true;
+
+                // Wait until video metadata and dimensions are ready
+                video.onloadedmetadata = function() {
+                    video.play().then(function() {
+                        scanning = true;
+                        requestAnimationFrame(tick);
+                    }).catch(function(e) {
+                        scanning = true;
+                        requestAnimationFrame(tick);
+                    });
+                };
             })
             .catch(function (err) {
-                showStatus('Unable to access camera: ' + (err.message || 'Permission denied'), 'alert-danger');
+                // Fallback for browsers that reject facingMode constraints
+                navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                    .then(function(s) {
+                        stream = s;
+                        video.srcObject = s;
+                        video.setAttribute('playsinline', 'true');
+                        video.setAttribute('webkit-playsinline', 'true');
+                        video.muted = true;
+                        video.onloadedmetadata = function() {
+                            video.play().then(function() {
+                                scanning = true;
+                                requestAnimationFrame(tick);
+                            }).catch(function(e) {
+                                scanning = true;
+                                requestAnimationFrame(tick);
+                            });
+                        };
+                    })
+                    .catch(function(fallbackErr) {
+                        showStatus('Unable to access camera: ' + (fallbackErr.message || err.message || 'Permission denied'), 'alert-danger');
+                    });
             });
     }
 
     function tick() {
         if (!scanning) { return; }
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        if (video.readyState >= video.HAVE_CURRENT_DATA && video.videoWidth > 0 && video.videoHeight > 0) {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
