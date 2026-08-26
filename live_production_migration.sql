@@ -115,3 +115,30 @@ FROM `sidebar_menus` sm
 WHERE (sm.`activate_menu` = 'aiexam' OR sm.`lang_key` = 'ai_exam_studio')
   AND NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `url` = 'admin/aisetting')
 LIMIT 1;
+
+-- 7. QR Attendance Settings Table & Dynamic Columns Migration
+CREATE TABLE IF NOT EXISTS `staff_qr_attendance_setting` (
+    `id` INT(11) NOT NULL AUTO_INCREMENT,
+    `is_enabled` TINYINT(1) NOT NULL DEFAULT 0,
+    `qr_mode` ENUM('daily', 'static', 'dynamic') NOT NULL DEFAULT 'daily',
+    `static_token` VARCHAR(64) DEFAULT NULL,
+    `daily_token` VARCHAR(64) DEFAULT NULL,
+    `daily_token_date` DATE DEFAULT NULL,
+    `rescan_cooldown_minutes` INT(11) NOT NULL DEFAULT 5,
+    `earliest_out_source` ENUM('schedule', 'manual') NOT NULL DEFAULT 'schedule',
+    `manual_earliest_out_time` TIME DEFAULT NULL,
+    `ip_allowlist` TEXT DEFAULT NULL,
+    `gps_enabled` TINYINT(1) NOT NULL DEFAULT 0,
+    `gps_lat` DECIMAL(10, 7) DEFAULT NULL,
+    `gps_lng` DECIMAL(10, 7) DEFAULT NULL,
+    `gps_radius_m` INT(11) NOT NULL DEFAULT 200,
+    `dynamic_interval_seconds` INT(11) NOT NULL DEFAULT 30,
+    `dynamic_secret` VARCHAR(64) DEFAULT NULL,
+    `created_at` DATETIME DEFAULT NULL,
+    `updated_at` DATETIME DEFAULT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE `staff_qr_attendance_setting` 
+ADD COLUMN IF NOT EXISTS `dynamic_interval_seconds` INT(11) NOT NULL DEFAULT 30 AFTER `gps_radius_m`,
+ADD COLUMN IF NOT EXISTS `dynamic_secret` VARCHAR(64) DEFAULT NULL AFTER `dynamic_interval_seconds`;

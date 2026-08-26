@@ -25,6 +25,7 @@ class Ai_exam_generator
      */
     public function generate_paper($params)
     {
+        @set_time_limit(180); // Allow enough execution time for comprehensive AI paper generation
         $class_name            = isset($params['class_name']) ? $params['class_name'] : 'Class 10';
         $subject_name          = isset($params['subject_name']) ? $params['subject_name'] : 'Science';
         $chapter               = isset($params['chapter']) ? $params['chapter'] : 'Complete Syllabus';
@@ -497,9 +498,10 @@ EOT;
     {
         // Try proven high-performance Gemini production models directly
         $models_to_test = [
+            'gemini-3.6-flash',
+            'gemini-2.5-flash',
             'gemini-2.0-flash',
-            'gemini-1.5-flash',
-            'gemini-2.5-flash'
+            'gemini-1.5-flash'
         ];
 
         $last_error = 'Unknown error';
@@ -616,12 +618,10 @@ EOT;
     {
         $url = "https://openrouter.ai/api/v1/chat/completions";
         
-        // Models list: Primary stealth/ox-alpha (Unlimited Free), then official active free models
+        // Models list: Primary stealth/ox-alpha, with openrouter/free router fallback
         $models = [
             'stealth/ox-alpha',
-            'google/gemma-4-26b-a4b-it:free',
-            'nvidia/nemotron-nano-12b-v2-vl:free',
-            'nvidia/nemotron-3-ultra-550b-a55b:free'
+            'openrouter/free'
         ];
 
         $site_url = defined('base_url') ? base_url() : 'https://sunriseschool.in';
@@ -631,12 +631,12 @@ EOT;
             $payload = [
                 'model' => $m,
                 'messages' => [
-                    ['role' => 'system', 'content' => 'You are an expert CBSE examination question author. Output only raw valid JSON matching the requested schema.'],
+                    ['role' => 'system', 'content' => 'You are an expert CBSE examination question author. You MUST output ONLY raw valid JSON adhering exactly to the requested schema without any introductory text, conversational remarks, thinking traces, or markdown explanations.'],
                     ['role' => 'user', 'content' => $prompt]
                 ],
                 'response_format' => ['type' => 'json_object'],
-                'temperature' => 0.3,
-                'max_tokens' => 3000
+                'temperature' => 0.2,
+                'max_tokens' => 6000
             ];
 
             $ch = curl_init($url);
@@ -649,8 +649,8 @@ EOT;
                 'HTTP-Referer: ' . $site_url,
                 'X-Title: Sunrise ERP AI Studio'
             ]);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 45); // Generous 45s so ox-alpha completes full JSON generation
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 120); // 120s allows complex reasoning models like ox-alpha to complete full generation
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
             $result = curl_exec($ch);
@@ -733,34 +733,113 @@ EOT;
      */
     private function extract_json($raw_text)
     {
-        $text = trim($raw_text);
-        $text = preg_replace('/^```(?:json)?\s*/i', '', $text);
-        $text = preg_replace('/\s*```$/', '', $text);
-        $text = trim($text);
-
-        $data = json_decode($text, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
-            // Normalize sections if single set returned directly
-            if (!isset($data['sets']) && isset($data['sections'])) {
-                $data['sets'] = ['Set A' => ['sections' => $data['sections']]];
-            }
-            return $data;
+        if (empty($raw_text)) {
+            return null;
         }
 
-        $start = strpos($text, '{');
-        $end   = strrpos($text, '}');
-        if ($start !== false && $end !== false) {
-            $json_str = substr($text, $start, $end - $start + 1);
-            $data = json_decode($json_str, true);
+        $text = trim($raw_text);
+
+        // 1. Remove reasoning / thought traces if output by reasoning models (<think>...</think> or similar)
+        $text = preg_replace('/<think>.*?<\/think>/is', '', $text);
+
+        // 2. Remove Markdown code block wrappers (```json ... ``` or ``` ...)
+        if (preg_match('/```(?:json)?\s*([\s\S]*?)\s*```/i', $text, $matches)) {
+            $text = trim($matches[1]);
+        } else {
+            $text = preg_replace('/^```(?:json)?\s*/i', '', $text);
+            $text = preg_replace('/\s*```$/', '', $text);
+        }
+        $text = trim($text);
+
+        // Direct parse attempt
+        $data = json_decode($text, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+            return $this->normalize_parsed_paper($data);
+        }
+
+        // 3. Fix duplicate leading / trailing curly braces like '{\n{\n "paper_title"...'
+        $cleaned_text = preg_replace('/^(\s*\{)+\s*\{/i', '{', $text);
+        $cleaned_text = preg_replace('/\}(\s*\})+$/i', '}', $cleaned_text);
+        $data = json_decode($cleaned_text, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+            return $this->normalize_parsed_paper($data);
+        }
+
+        // 4. Extract between first '{' and last '}' with balanced brace scanner
+        $first_brace = strpos($text, '{');
+        $last_brace  = strrpos($text, '}');
+        if ($first_brace !== false && $last_brace !== false && $last_brace > $first_brace) {
+            $candidate = substr($text, $first_brace, $last_brace - $first_brace + 1);
+            $data = json_decode($candidate, true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
-                if (!isset($data['sets']) && isset($data['sections'])) {
-                    $data['sets'] = ['Set A' => ['sections' => $data['sections']]];
+                return $this->normalize_parsed_paper($data);
+            }
+
+            // Strip redundant leading/trailing braces inside candidate
+            $candidate_cleaned = preg_replace('/^(\s*\{)+\s*\{/i', '{', $candidate);
+            $candidate_cleaned = preg_replace('/\}(\s*\})+$/i', '}', $candidate_cleaned);
+            $data = json_decode($candidate_cleaned, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+                return $this->normalize_parsed_paper($data);
+            }
+        }
+
+        // 5. Try progressive JSON recovery (finding the first valid balanced JSON object)
+        $len = strlen($text);
+        for ($i = 0; $i < $len; $i++) {
+            if ($text[$i] === '{') {
+                $brace_count = 0;
+                $in_string = false;
+                $escape = false;
+                for ($j = $i; $j < $len; $j++) {
+                    $c = $text[$j];
+                    if ($escape) {
+                        $escape = false;
+                        continue;
+                    }
+                    if ($c === '\\') {
+                        $escape = true;
+                        continue;
+                    }
+                    if ($c === '"') {
+                        $in_string = !$in_string;
+                        continue;
+                    }
+                    if (!$in_string) {
+                        if ($c === '{') $brace_count++;
+                        elseif ($c === '}') {
+                            $brace_count--;
+                            if ($brace_count === 0) {
+                                $slice = substr($text, $i, $j - $i + 1);
+                                $data = json_decode($slice, true);
+                                if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+                                    return $this->normalize_parsed_paper($data);
+                                }
+                                break;
+                            }
+                        }
+                    }
                 }
-                return $data;
             }
         }
 
         return null;
+    }
+
+    /**
+     * Helper to normalize parsed paper structure into standard format
+     */
+    private function normalize_parsed_paper($data)
+    {
+        if (!is_array($data)) {
+            return null;
+        }
+
+        if (!isset($data['sets']) && isset($data['sections'])) {
+            $data['sets'] = ['Set A' => ['sections' => $data['sections']]];
+        }
+
+        return $data;
     }
 
     /**

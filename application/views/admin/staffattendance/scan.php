@@ -186,19 +186,21 @@
 
     function stopCamera() {
         scanning = false;
-        if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+        if (stream) {
+            stream.getTracks().forEach(function (t) { t.stop(); });
+            stream = null;
+        }
     }
 
     function startCamera() {
-        earlyBox.style.display = 'none';
-        chooseBox.style.display = 'none';
+        hideAllPanels();
         rescanBtn.style.display = 'none';
         statusEl.style.display = 'none';
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             showStatus('Camera not supported on this browser. Please use a modern mobile browser over HTTPS.', 'alert-danger');
             return;
         }
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } })
             .then(function (s) {
                 stream = s;
                 video.srcObject = s;
@@ -207,8 +209,8 @@
                 scanning = true;
                 requestAnimationFrame(tick);
             })
-            .catch(function () {
-                showStatus('Unable to access the camera. Please allow camera permission.', 'alert-danger');
+            .catch(function (err) {
+                showStatus('Unable to access camera: ' + (err.message || 'Permission denied'), 'alert-danger');
             });
     }
 
@@ -219,12 +221,14 @@
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            var code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
-            if (code && code.data) {
-                scanning = false;
-                stopCamera();
-                onDecoded(code.data);
-                return;
+            if (typeof jsQR !== 'undefined') {
+                var code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+                if (code && code.data && code.data.trim() !== '') {
+                    scanning = false;
+                    try { video.pause(); } catch(e){}
+                    onDecoded(code.data.trim());
+                    return;
+                }
             }
         }
         requestAnimationFrame(tick);
@@ -232,7 +236,7 @@
 
     function onDecoded(token) {
         lastToken = token;
-        showStatus('<i class="fa fa-spinner fa-spin"></i> Reading QR...', 'alert-info');
+        showStatus('<i class="fa fa-spinner fa-spin"></i> QR scanned! Submitting attendance...', 'alert-info');
         if (GPS_NEEDED) {
             if (!navigator.geolocation) {
                 showStatus('Location is required but not supported by this browser.', 'alert-danger');
@@ -241,11 +245,11 @@
             }
             navigator.geolocation.getCurrentPosition(
                 function (pos) { curLat = pos.coords.latitude; curLng = pos.coords.longitude; submit({}); },
-                function () {
-                    showStatus('Please enable location access and scan again.', 'alert-danger');
+                function (err) {
+                    showStatus('Location permission denied or unavailable. Please allow location access and scan again.', 'alert-danger');
                     rescanBtn.style.display = 'inline-block';
                 },
-                { enableHighAccuracy: true, timeout: 10000 }
+                { enableHighAccuracy: true, timeout: 7000 }
             );
         } else {
             curLat = null; curLng = null;
@@ -263,11 +267,25 @@
         if (extra.confirm_early) { data.confirm_early = 1; }
 
         $.ajax({
-            url: MARK_URL, type: 'POST', data: data, dataType: 'json'
+            url: MARK_URL,
+            type: 'POST',
+            data: data,
+            dataType: 'json'
         }).done(function (res) {
-            handleResult(res);
-        }).fail(function () {
-            showStatus('Network error. Please try again.', 'alert-danger');
+            if (typeof res === 'object' && res !== null) {
+                handleResult(res);
+            } else {
+                showStatus('Unexpected response format from server. Please try again.', 'alert-danger');
+                rescanBtn.style.display = 'inline-block';
+            }
+        }).fail(function (xhr, textStatus, errorThrown) {
+            var msg = 'Network or server error (' + xhr.status + ').';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+            } else if (xhr.responseText && xhr.responseText.length < 150) {
+                msg = xhr.responseText;
+            }
+            showStatus('<i class="fa fa-exclamation-circle"></i> ' + msg + ' Please scan again.', 'alert-danger');
             rescanBtn.style.display = 'inline-block';
         });
     }
