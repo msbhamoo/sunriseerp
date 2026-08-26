@@ -431,8 +431,22 @@
             $('#modal-done-btn').show();
         }
 
+        if (statusEl) {
+            statusEl.style.display = 'none';
+        }
+
         $('#scanResultModal').modal('show');
     }
+
+    // When modal is dismissed, ensure status is hidden and rescan button is available
+    $('#scanResultModal').on('hidden.bs.modal', function () {
+        if (statusEl) {
+            statusEl.style.display = 'none';
+        }
+        if (rescanBtn) {
+            rescanBtn.style.display = 'inline-block';
+        }
+    });
 
     function hideAllPanels() {
         if (earlyBox) earlyBox.style.display = 'none';
@@ -474,7 +488,7 @@
         var reason = $('#modal-breakout-reason').val() || $('#breakout-reason').val() || '';
         $('#scanResultModal').modal('hide');
         chooseBox.style.display = 'none';
-        showStatus('<i class="fa fa-spinner fa-spin"></i> Processing ' + actionName.replace('_', ' ') + '...', 'alert-info');
+        showStatus('<i class="fa fa-spinner fa-spin"></i> Recording attendance...', 'alert-info');
         submit({ action: actionName, reason: reason });
     }
 
