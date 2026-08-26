@@ -93,55 +93,54 @@ class Onlineexam extends Admin_Controller
                 }
 
                 if ($this->rbac->hasPrivilege('online_assign_view_student', 'can_view') && $set_enable) {
-
-                    $assign = "<a href=" . base_url() . 'admin/onlineexam/assign/' . $subject_value->id . " data-toggle='tooltip' class='btn btn-primary btn-xs' title='" . $this->lang->line('assign_view_student') . "'  ><i class='fa fa-tag'></i></a>";
+                    $assign = "<a href='" . base_url() . "admin/onlineexam/assign/" . $subject_value->id . "' data-toggle='tooltip' class='btn btn-default btn-xs' title='" . $this->lang->line('assign_view_student') . "' style='border: 1px solid #cbd5e1; color: #0284c7; background: #f0f9ff; border-radius: 6px; padding: 4px 8px; margin-right: 2px;'><i class='fa fa-tag'></i></a>";
                 }
                 if ($this->rbac->hasPrivilege('add_questions_in_exam', 'can_view')) {
-                    $addquestion_btn = " <button type='button' class='btn btn-primary btn-xs' data-recordid=" . $subject_value->id . " data-is_quiz=" . $subject_value->is_quiz . " data-toggle='modal' data-target='#myQuestionModal' title='" . $this->lang->line('add_question') . "' ><i class='fa fa-question-circle'></i></button>";
+                    $addquestion_btn = "<button type='button' class='btn btn-default btn-xs add-question-drawer-btn' data-recordid='" . $subject_value->id . "' data-is_quiz='" . $subject_value->is_quiz . "' data-toggle='modal' data-target='#myQuestionModal' title='" . $this->lang->line('add_question') . "' style='border: 1px solid #c7d2fe; color: #6366f1; background: #eef2ff; border-radius: 6px; padding: 4px 8px; margin-right: 2px;'><i class='fa fa-plus-circle'></i></button>";
                 }
 
                 if ($this->rbac->hasPrivilege('add_questions_in_exam', 'can_view')) {
-                    $download_btn = " <button type='button' data-toggle='tooltip' class='btn btn-primary btn-xs download_exam' data-recordid=" . $subject_value->id . "  title=" . $this->lang->line('print') . " data-loading-text='<i class=" . '" fa fa-spinner fa-spin"' . "  ></i>'><i class='fa fa fa-print'></i></button>";
+                    $download_btn = "<button type='button' data-toggle='tooltip' class='btn btn-default btn-xs download_exam' data-recordid='" . $subject_value->id . "' title='" . $this->lang->line('print') . "' data-loading-text='<i class=" . '"fa fa-spinner fa-spin"' . "></i>' style='border: 1px solid #cbd5e1; color: #475569; background: #f8fafc; border-radius: 6px; padding: 4px 8px; margin-right: 2px;'><i class='fa fa-print'></i></button>";
                 }else{
                     $download_btn = "";
                 }
 
                 if ($this->rbac->hasPrivilege('online_examination', 'can_edit')) {
-                    $editbtn = " <button type='button' data-toggle='tooltip' class='btn btn-primary btn-xs question-btn-edit' data-recordid=" . $subject_value->id . "  title='" . $this->lang->line('edit_exam') . "'  ><i class='fa fa fa-pencil'></i></button>";
+                    $editbtn = "<button type='button' data-toggle='tooltip' class='btn btn-default btn-xs question-btn-edit' data-recordid='" . $subject_value->id . "' title='" . $this->lang->line('edit_exam') . "' style='border: 1px solid #fed7aa; color: #ea580c; background: #fff7ed; border-radius: 6px; padding: 4px 8px; margin-right: 2px;'><i class='fa fa-pencil'></i></button>";
                 }else{
                     $editbtn = "";
                 }
 
                 if ($this->rbac->hasPrivilege('online_examination', 'can_delete')) {
-                    $deletebtn = " <a href=" . base_url() . 'admin/onlineexam/delete/' . $subject_value->id . " class='btn btn-primary btn-xs' data-toggle='tooltip'  title=" . $this->lang->line('delete') . " '  onclick='return confirm(" . '"' . $this->lang->line('delete_confirm') . '"' . "  )' ><i class='fa fa fa-remove'></i></a>";
+                    $deletebtn = "<a href='" . base_url() . "admin/onlineexam/delete/" . $subject_value->id . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('delete') . "' onclick='return confirm(" . '"' . $this->lang->line('delete_confirm') . '"' . ")' style='border: 1px solid #fecaca; color: #dc2626; background: #fef2f2; border-radius: 6px; padding: 4px 8px;'><i class='fa fa-trash'></i></a>";
                 }
 
                 if ($this->rbac->hasPrivilege('add_questions_in_exam', 'can_view')) {
 
-                    $question_list = "<button class='btn btn-primary btn-xs exam_ques_list' data-toggle='tooltip' data-recordid=" . $subject_value->id . "    data-loading-text='<i class=" . '" fa fa-spinner fa-spin"' . "  ></i>' title='" . $this->lang->line('exam_questions_list') . "' ><i class='fa fa-file-text-o'></i></button>" . " ";
+                    $question_list = "<button class='btn btn-default btn-xs exam_ques_list' data-toggle='tooltip' data-recordid='" . $subject_value->id . "' data-loading-text='<i class=" . '"fa fa-spinner fa-spin"' . "></i>' title='" . $this->lang->line('exam_questions_list') . "' style='border: 1px solid #bbf7d0; color: #16a34a; background: #f0fdf4; border-radius: 6px; padding: 4px 8px; margin-right: 2px;'><i class='fa fa-list'></i></button>" . " ";
 
-                    $question_list .= "<a href=" . base_url() . 'admin/onlineexam/evalution/' . $subject_value->id . " class='btn btn-primary btn-xs' data-toggle='tooltip' title='" . $this->lang->line('exam_evaluation') . "'>  <i class='fa fa-newspaper-o'></i></a>" . " ";
+                    $question_list .= "<a href='" . base_url() . "admin/onlineexam/evalution/" . $subject_value->id . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('exam_evaluation') . "' style='border: 1px solid #e9d5ff; color: #9333ea; background: #faf5ff; border-radius: 6px; padding: 4px 8px; margin-right: 2px;'><i class='fa fa-check-circle'></i></a>" . " ";
 
                     if ($subject_value->publish_result || ($subject_value->auto_publish_date != "0000-00-00" && $subject_value->auto_publish_date != "" && $subject_value->auto_publish_date != null && (strtotime($subject_value->auto_publish_date) <= strtotime(date('Y-m-d H:i:s'))))) {
 
-                        $question_list .= "<button class='btn btn-primary btn-xs generate_rank' data-exam-title=" . $subject_value->exam . " data-recordid=" . $subject_value->id . " data-toggle='tooltip' title='" . $this->lang->line('generate_rank') . "' > <i class='fa fa-list-alt'></i></button> ";
+                        $question_list .= "<button class='btn btn-default btn-xs generate_rank' data-exam-title='" . htmlspecialchars($subject_value->exam, ENT_QUOTES) . "' data-recordid='" . $subject_value->id . "' data-toggle='tooltip' title='" . $this->lang->line('generate_rank') . "' style='border: 1px solid #fde68a; color: #d97706; background: #fffbeb; border-radius: 6px; padding: 4px 8px; margin-right: 2px;'><i class='fa fa-trophy'></i></button> ";
                     }
 
                 }
 
                 $row = array();
 
-                $row[]     = $title . $description;
-                $row[]     = $is_quiz;
-                $row[]     = $descriptive_ques;
-                $row[]     = $subject_value->attempt;
-                $row[]     = $this->customlib->dateyyyymmddToDateTimeformat($subject_value->exam_from, false);
-                $row[]     = $this->customlib->dateyyyymmddToDateTimeformat($subject_value->exam_to, false);
-                $row[]     = $subject_value->duration;
-                $row[]     = $is_active;
-                $row[]     = $publish_result;
-                $row[]     = $subject_value->description;
-                $row[]     = "<div class='d-flex gap-0-5 text-right float-right'>".$download_btn . " " . $assign . " " . $addquestion_btn . " " . $editbtn . " " . $question_list . " " . $deletebtn."</div>";
+                $row[]     = "<div style='font-weight: 700; color: #1e293b; font-size: 13.5px;'>" . $title . "</div>" . $description;
+                $row[]     = $subject_value->is_quiz ? "<span class='badge bg-green' style='background:#10b981; font-weight:600; padding: 3px 8px; border-radius: 4px;'><i class='fa fa-check'></i> " . $this->lang->line('yes') . "</span>" : "<span class='badge bg-gray' style='background:#94a3b8; font-weight:500; padding: 3px 8px; border-radius: 4px;'>" . $this->lang->line('no') . "</span>";
+                $row[]     = "<span class='badge bg-light-blue' style='background: #e0e7ff; color: #4338ca; font-weight: 700; border-radius: 4px; padding: 3px 8px;'>" . $subject_value->total_ques . "</span>" . ($subject_value->total_descriptive_ques > 0 ? " <small style='color: #64748b; font-size: 11px;'>(" . $this->lang->line('descriptive') . ': ' . $subject_value->total_descriptive_ques . ")</small>" : "");
+                $row[]     = "<span style='font-weight:600; color:#475569;'>" . $subject_value->attempt . "</span>";
+                $row[]     = "<span style='font-size: 12px; color:#334155;'><i class='fa fa-calendar text-muted' style='margin-right: 3px;'></i>" . $this->customlib->dateyyyymmddToDateTimeformat($subject_value->exam_from, false) . "</span>";
+                $row[]     = "<span style='font-size: 12px; color:#334155;'><i class='fa fa-calendar text-muted' style='margin-right: 3px;'></i>" . $this->customlib->dateyyyymmddToDateTimeformat($subject_value->exam_to, false) . "</span>";
+                $row[]     = "<span class='badge' style='background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:600;'><i class='fa fa-clock-o text-muted'></i> " . $subject_value->duration . "</span>";
+                $row[]     = ($subject_value->is_active == 1) ? "<span class='badge bg-green' style='background:#10b981; font-weight:600; padding: 3px 8px; border-radius: 4px;'><i class='fa fa-check'></i> " . $this->lang->line('yes') . "</span>" : "<span class='badge bg-red' style='background:#ef4444; font-weight:500; padding: 3px 8px; border-radius: 4px;'>" . $this->lang->line('no') . "</span>";
+                $row[]     = ($subject_value->publish_result == 1) ? "<span class='badge bg-green' style='background:#10b981; font-weight:600; padding: 3px 8px; border-radius: 4px;'><i class='fa fa-check'></i> " . $this->lang->line('yes') . "</span>" : "<span class='badge bg-gray' style='background:#94a3b8; font-weight:500; padding: 3px 8px; border-radius: 4px;'>" . $this->lang->line('no') . "</span>";
+                $row[]     = "<span style='color:#64748b; font-size:12px;'>" . (mb_strlen(strip_tags($subject_value->description)) > 40 ? mb_substr(strip_tags($subject_value->description), 0, 40) . '...' : strip_tags($subject_value->description)) . "</span>";
+                $row[]     = "<div style='display: flex; gap: 3px; justify-content: flex-end; align-items: center; white-space: nowrap;'>".$download_btn . " " . $assign . " " . $addquestion_btn . " " . $editbtn . " " . $question_list . " " . $deletebtn."</div>";
                 $dt_data[] = $row;
             }
         }
@@ -200,60 +199,74 @@ class Onlineexam extends Admin_Controller
                     $is_active = "<i class='fa fa-exclamation-circle'></i><span style='display:none'>" . $this->lang->line('no') . "</span>";
                 }
                 if ($subject_value->publish_result == 1) {
+                    $description = "<div class='fee_detail_popover' style='display: none'><p class='text text-danger'><b>" . $this->lang->line('no_description') . "</b></div></p>";
+                } else {
+                    $description = "<div class='fee_detail_popover' style='display: none'><p class='text text-danger'><b>" . $subject_value->description . "</b></div></p>";
+                }
+                if ($subject_value->is_quiz) {
+                    $is_quiz = "<i class='fa fa-check-square-o'></i><span style='display:none'>" . $this->lang->line('yes') . "</span>";
+                } else {
+                    $is_quiz = "<i class='fa fa-exclamation-circle'></i><span style='display:none'>" . $this->lang->line('no') . "</span>";
+                }
+                $descriptive_ques = $subject_value->total_ques . "<br /><span>(" . $this->lang->line('descriptive') . ':' . $subject_value->total_descriptive_ques . ")</span>";
+                if ($subject_value->is_active == 1) {
+                    $is_active = "<i class='fa fa-check-square-o'></i><span style='display:none'>" . $this->lang->line('yes') . "</span>";
+                } else {
+                    $is_active = "<i class='fa fa-exclamation-circle'></i><span style='display:none'>" . $this->lang->line('no') . "</span>";
+                }
+                if ($subject_value->publish_result == 1) {
                     $publish_result = "<i class='fa fa-check-square-o'></i><span style='display:none'>" . $this->lang->line('yes') . "</span>";
                 } else {
                     $publish_result = "<i class='fa fa-exclamation-circle'></i><span style='display:none'>" . $this->lang->line('no') . "</span>";
                 }
                 if ($this->rbac->hasPrivilege('online_assign_view_student', 'can_view') && $set_enable) {
-
-                    $assign = "<a href=" . base_url() . 'admin/onlineexam/assign/' . $subject_value->id . " data-toggle='tooltip' class='btn btn-primary btn-xs' title=" . $this->lang->line('assign_view') . "  ><i class='fa fa-tag'></i></a>";
+                    $assign = "<a href='" . base_url() . "admin/onlineexam/assign/" . $subject_value->id . "' data-toggle='tooltip' class='btn btn-default btn-xs' title='" . $this->lang->line('assign_view_student') . "' style='border: 1px solid #cbd5e1; color: #0284c7; background: #f0f9ff; border-radius: 6px; padding: 4px 8px; margin-right: 2px;'><i class='fa fa-tag'></i></a>";
                 }
                 if ($this->rbac->hasPrivilege('add_questions_in_exam', 'can_view')) {
-                    $addquestion_btn = " <button type='button' class='btn btn-primary btn-xs' data-recordid=" . $subject_value->id . " data-is_quiz=" . $subject_value->is_quiz . " data-toggle='modal' data-target='#myQuestionModal' title='" . $this->lang->line('add_question') . "' ><i class='fa fa-question-circle'></i></button>";
+                    $addquestion_btn = "<button type='button' class='btn btn-default btn-xs' data-recordid='" . $subject_value->id . "' data-is_quiz='" . $subject_value->is_quiz . "' data-toggle='modal' data-target='#myQuestionModal' title='" . $this->lang->line('add_question') . "' style='border: 1px solid #c7d2fe; color: #6366f1; background: #eef2ff; border-radius: 6px; padding: 4px 8px; margin-right: 2px;'><i class='fa fa-plus-circle'></i></button>";
                 }
                 if ($this->rbac->hasPrivilege('add_questions_in_exam', 'can_view')) {
-                    $download_btn = " <button type='button' data-toggle='tooltip' class='btn btn-primary btn-xs download_exam' data-recordid=" . $subject_value->id . "  title=" . $this->lang->line('print') . " data-loading-text='<i class=" . '" fa fa-spinner fa-spin"' . "  ></i>'><i class='fa fa fa-print'></i></button>";
+                    $download_btn = "<button type='button' data-toggle='tooltip' class='btn btn-default btn-xs download_exam' data-recordid='" . $subject_value->id . "' title='" . $this->lang->line('print') . "' data-loading-text='<i class=" . '"fa fa-spinner fa-spin"' . "></i>' style='border: 1px solid #cbd5e1; color: #475569; background: #f8fafc; border-radius: 6px; padding: 4px 8px; margin-right: 2px;'><i class='fa fa-print'></i></button>";
                 }else{
                     $download_btn = "";
                 }
                 if ($this->rbac->hasPrivilege('online_examination', 'can_edit')) {
-                    $editbtn = " <button type='button' data-toggle='tooltip' class='btn btn-primary btn-xs question-btn-edit' data-recordid=" . $subject_value->id . "  title='" . $this->lang->line('edit_exam') . "'  ><i class='fa fa fa-pencil'></i></button>";
+                    $editbtn = "<button type='button' data-toggle='tooltip' class='btn btn-default btn-xs question-btn-edit' data-recordid='" . $subject_value->id . "' title='" . $this->lang->line('edit_exam') . "' style='border: 1px solid #fed7aa; color: #ea580c; background: #fff7ed; border-radius: 6px; padding: 4px 8px; margin-right: 2px;'><i class='fa fa-pencil'></i></button>";
                 }else{
                     $editbtn = "";
                 }
                 if ($this->rbac->hasPrivilege('online_examination', 'can_delete')) {
-                    $deletebtn = " <a href=" . base_url() . 'admin/onlineexam/delete/' . $subject_value->id . " class='btn btn-primary btn-xs' data-toggle='tooltip'  title=" . $this->lang->line('delete') . " '  onclick='return confirm(" . '"' . $this->lang->line('delete_confirm') . '"' . "  )' ><i class='fa fa fa-remove'></i></a>";
+                    $deletebtn = "<a href='" . base_url() . "admin/onlineexam/delete/" . $subject_value->id . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('delete') . "' onclick='return confirm(" . '"' . $this->lang->line('delete_confirm') . '"' . ")' style='border: 1px solid #fecaca; color: #dc2626; background: #fef2f2; border-radius: 6px; padding: 4px 8px;'><i class='fa fa-trash'></i></a>";
                 }else{
                     $deletebtn = "";
                 }
 
                 if ($this->rbac->hasPrivilege('add_questions_in_exam', 'can_view')) {
 
-                    $question_list = "<button type='button'class='btn btn-primary btn-xs exam_ques_list' data-toggle='tooltip' data-recordid=" . $subject_value->id . "    data-loading-text='<i class=" . '" fa fa-spinner fa-spin"' . "  ></i>' title='" . $this->lang->line('exam_questions_list') . "' ><i class='fa fa-file-text-o'></i></button>" . " ";
+                    $question_list = "<button class='btn btn-default btn-xs exam_ques_list' data-toggle='tooltip' data-recordid='" . $subject_value->id . "' data-loading-text='<i class=" . '"fa fa-spinner fa-spin"' . "></i>' title='" . $this->lang->line('exam_questions_list') . "' style='border: 1px solid #bbf7d0; color: #16a34a; background: #f0fdf4; border-radius: 6px; padding: 4px 8px; margin-right: 2px;'><i class='fa fa-list'></i></button>" . " ";
 
-                    $question_list .= "<a href=" . base_url() . 'admin/onlineexam/evalution/' . $subject_value->id . " class='btn btn-primary btn-xs' data-toggle='tooltip' title='" . $this->lang->line('exam_evaluation') . "'>  <i class='fa fa-newspaper-o'></i></a>" . " ";
+                    $question_list .= "<a href='" . base_url() . "admin/onlineexam/evalution/" . $subject_value->id . "' class='btn btn-default btn-xs' data-toggle='tooltip' title='" . $this->lang->line('exam_evaluation') . "' style='border: 1px solid #e9d5ff; color: #9333ea; background: #faf5ff; border-radius: 6px; padding: 4px 8px; margin-right: 2px;'><i class='fa fa-check-circle'></i></a>" . " ";
 
                     if ($subject_value->publish_result || ($subject_value->auto_publish_date != "0000-00-00" && $subject_value->auto_publish_date != "" && $subject_value->auto_publish_date != null && (strtotime($subject_value->auto_publish_date) <= strtotime(date('Y-m-d H:i:s'))))) {
 
-                        $question_list .= "<button type='button' class='btn btn-primary btn-xs generate_rank' data-exam-title=" . $subject_value->exam . " data-recordid=" . $subject_value->id . " data-toggle='tooltip' title='" . $this->lang->line('generate_rank') . "' ><i class='fa fa-list-alt'></i></button> ";
+                        $question_list .= "<button class='btn btn-default btn-xs generate_rank' data-exam-title='" . htmlspecialchars($subject_value->exam, ENT_QUOTES) . "' data-recordid='" . $subject_value->id . "' data-toggle='tooltip' title='" . $this->lang->line('generate_rank') . "' style='border: 1px solid #fde68a; color: #d97706; background: #fffbeb; border-radius: 6px; padding: 4px 8px; margin-right: 2px;'><i class='fa fa-trophy'></i></button> ";
                     }
 
                 }
-                $deleteexambtn = "<input type='checkbox' name='exam[]'' value=" . $subject_value->id . ">";
 
                 $row       = array();
-                $row[]     = $deleteexambtn;
-                $row[]     = $title . $description;
-                $row[]     = $is_quiz;
-                $row[]     = $descriptive_ques;
-                $row[]     = $subject_value->attempt;
-                $row[]     = $this->customlib->dateyyyymmddToDateTimeformat($subject_value->exam_from, false);
-                $row[]     = $this->customlib->dateyyyymmddToDateTimeformat($subject_value->exam_to, false);
-                $row[]     = $subject_value->duration;
-                $row[]     = $is_active;
-                $row[]     = $publish_result;
-                $row[]     = $subject_value->description;
-                $row[]     = "<div class='d-flex gap-0-5 text-right float-right'>".$download_btn . " " . $assign . " " . $addquestion_btn . " " . $editbtn . " " . $question_list . " " . $deletebtn."</div>";
+                $row[]     = "<input type='checkbox' class='checkbox' name='exam[]' value='" . $subject_value->id . "'>";
+                $row[]     = "<div style='font-weight: 700; color: #1e293b; font-size: 13.5px;'>" . $title . "</div>" . $description;
+                $row[]     = $subject_value->is_quiz ? "<span class='badge bg-green' style='background:#10b981; font-weight:600; padding: 3px 8px; border-radius: 4px;'><i class='fa fa-check'></i> " . $this->lang->line('yes') . "</span>" : "<span class='badge bg-gray' style='background:#94a3b8; font-weight:500; padding: 3px 8px; border-radius: 4px;'>" . $this->lang->line('no') . "</span>";
+                $row[]     = "<span class='badge bg-light-blue' style='background: #e0e7ff; color: #4338ca; font-weight: 700; border-radius: 4px; padding: 3px 8px;'>" . $subject_value->total_ques . "</span>" . ($subject_value->total_descriptive_ques > 0 ? " <small style='color: #64748b; font-size: 11px;'>(" . $this->lang->line('descriptive') . ': ' . $subject_value->total_descriptive_ques . ")</small>" : "");
+                $row[]     = "<span style='font-weight:600; color:#475569;'>" . $subject_value->attempt . "</span>";
+                $row[]     = "<span style='font-size: 12px; color:#334155;'><i class='fa fa-calendar text-muted' style='margin-right: 3px;'></i>" . $this->customlib->dateyyyymmddToDateTimeformat($subject_value->exam_from, false) . "</span>";
+                $row[]     = "<span style='font-size: 12px; color:#334155;'><i class='fa fa-calendar text-muted' style='margin-right: 3px;'></i>" . $this->customlib->dateyyyymmddToDateTimeformat($subject_value->exam_to, false) . "</span>";
+                $row[]     = "<span class='badge' style='background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:600;'><i class='fa fa-clock-o text-muted'></i> " . $subject_value->duration . "</span>";
+                $row[]     = ($subject_value->is_active == 1) ? "<span class='badge bg-green' style='background:#10b981; font-weight:600; padding: 3px 8px; border-radius: 4px;'><i class='fa fa-check'></i> " . $this->lang->line('yes') . "</span>" : "<span class='badge bg-red' style='background:#ef4444; font-weight:500; padding: 3px 8px; border-radius: 4px;'>" . $this->lang->line('no') . "</span>";
+                $row[]     = ($subject_value->publish_result == 1) ? "<span class='badge bg-green' style='background:#10b981; font-weight:600; padding: 3px 8px; border-radius: 4px;'><i class='fa fa-check'></i> " . $this->lang->line('yes') . "</span>" : "<span class='badge bg-gray' style='background:#94a3b8; font-weight:500; padding: 3px 8px; border-radius: 4px;'>" . $this->lang->line('no') . "</span>";
+                $row[]     = "<span style='color:#64748b; font-size:12px;'>" . (mb_strlen(strip_tags($subject_value->description)) > 40 ? mb_substr(strip_tags($subject_value->description), 0, 40) . '...' : strip_tags($subject_value->description)) . "</span>";
+                $row[]     = "<div style='display: flex; gap: 3px; justify-content: flex-end; align-items: center; white-space: nowrap;'>".$download_btn . " " . $assign . " " . $addquestion_btn . " " . $editbtn . " " . $question_list . " " . $deletebtn."</div>";
                 $dt_data[] = $row;
             }
         }

@@ -13,7 +13,11 @@ class Staffattendancemodel extends MY_Model {
             $tz = $this->customlib->getTimeZone();
             if (!empty($tz)) {
                 date_default_timezone_set($tz);
+            } else {
+                date_default_timezone_set('Asia/Kolkata');
             }
+        } else {
+            date_default_timezone_set('Asia/Kolkata');
         }
     }
     
@@ -498,6 +502,98 @@ class Staffattendancemodel extends MY_Model {
     }
 
     /**
+     * Direct QR Check-Out for staff who missed/forgot morning QR check-in.
+     */
+    public function qrDirectOut($staff_id, $role_id, $opts = array())
+    {
+        $date   = date('Y-m-d');
+        $now    = date('H:i:s');
+        $source = isset($opts['source']) ? $opts['source'] : 'qr';
+        $has_source_col = $this->db->field_exists('attendance_source', 'staff_attendance');
+
+        $this->db->where('staff_id', $staff_id)->where('date', $date);
+        $row = $this->db->get('staff_attendance')->row();
+
+        // If already completed out_time, return already_complete
+        if (!empty($row) && !IsNullOrEmptyString($row->out_time) && $row->out_time !== '00:00:00') {
+            $type_name = $this->getAttendanceTypeName($row->staff_attendance_type_id);
+            $in_formatted = (!empty($row->in_time) && $row->in_time !== '00:00:00') ? date('h:i A', strtotime($row->in_time)) : '--';
+            $out_formatted = date('h:i A', strtotime($row->out_time));
+            return array(
+                'status'          => 'already_complete',
+                'message'         => 'Your attendance for today is already complete.',
+                'in_time'         => $in_formatted,
+                'out_time'        => $out_formatted,
+                'attendance_type' => $type_name,
+                'date'            => date('d M Y', strtotime($date))
+            );
+        }
+
+        // Get matching attendance type for role or fallback to Present
+        $default_type_id = 1; // Present
+        $range = $this->staffAttendaceSetting_model->getAttendanceTypeByRole($role_id, $now);
+        if ($range && !empty($range->staff_attendence_type_id)) {
+            $default_type_id = $range->staff_attendence_type_id;
+        }
+
+        $reason = isset($opts['reason']) ? trim($opts['reason']) : '';
+        $remark = 'Direct Check-Out (QR)' . ($reason !== '' ? ': ' . $reason : '');
+
+        if (empty($row)) {
+            $data = array(
+                'staff_id'                 => $staff_id,
+                'date'                     => $date,
+                'in_time'                  => null,
+                'out_time'                 => $now,
+                'staff_attendance_type_id' => $default_type_id,
+                'remark'                   => $remark,
+                'is_active'                => 1,
+                'created_at'               => date('Y-m-d H:i:s'),
+                'updated_at'               => date('Y-m-d H:i:s'),
+            );
+            if ($has_source_col) {
+                $data['attendance_source'] = $source;
+            }
+            if ($this->db->field_exists('qrcode_attendance', 'staff_attendance')) {
+                $data['qrcode_attendance'] = 1;
+            }
+            $this->db->insert('staff_attendance', $data);
+            $type_id = $default_type_id;
+            $in_formatted = '--';
+        } else {
+            $update = array(
+                'out_time'   => $now,
+                'updated_at' => date('Y-m-d H:i:s')
+            );
+            if (empty($row->staff_attendance_type_id)) {
+                $update['staff_attendance_type_id'] = $default_type_id;
+                $type_id = $default_type_id;
+            } else {
+                $type_id = $row->staff_attendance_type_id;
+            }
+            if ($this->db->field_exists('qrcode_attendance', 'staff_attendance')) {
+                $update['qrcode_attendance'] = 1;
+            }
+            $existing_remark = IsNullOrEmptyString($row->remark) ? '' : $row->remark . ' | ';
+            $update['remark'] = $existing_remark . $remark;
+
+            $this->db->where('id', $row->id)->update('staff_attendance', $update);
+            $in_formatted = (!empty($row->in_time) && $row->in_time !== '00:00:00') ? date('h:i A', strtotime($row->in_time)) : '--';
+        }
+
+        $type_name = $this->getAttendanceTypeName($type_id);
+        return array(
+            'status'          => 'marked_out',
+            'message'         => 'Check-out recorded successfully! Have a good day.',
+            'in_time'         => $in_formatted,
+            'out_time'        => date('h:i A', strtotime($now)),
+            'attendance_type' => $type_name,
+            'date'            => date('d M Y', strtotime($date)),
+            'time'            => date('h:i A', strtotime($now))
+        );
+    }
+
+    /**
      * Current QR state for a staff today, used by the scan page to decide which
      * action buttons to show.
      * Returns one of: not_in, on_break, complete, in  (+ context fields).
@@ -508,12 +604,26 @@ class Staffattendancemodel extends MY_Model {
         $this->db->where('staff_id', $staff_id)->where('date', $date);
         $att = $this->db->get('staff_attendance')->row();
 
-        if (empty($att) || IsNullOrEmptyString($att->in_time) || $att->in_time === '00:00:00') {
+        if (empty($att)) {
             return array('state' => 'not_in');
         }
 
         $type_name = $this->getAttendanceTypeName($att->staff_attendance_type_id);
         $in_formatted = (!empty($att->in_time) && $att->in_time !== '00:00:00') ? date('h:i A', strtotime($att->in_time)) : '--';
+
+        if (!IsNullOrEmptyString($att->out_time) && $att->out_time !== '00:00:00') {
+            return array(
+                'state'           => 'complete',
+                'in'              => $in_formatted,
+                'out'             => date('h:i A', strtotime($att->out_time)),
+                'attendance_type' => $type_name,
+                'date'            => date('d M Y', strtotime($date))
+            );
+        }
+
+        if (empty($att->in_time) || $att->in_time === '00:00:00') {
+            return array('state' => 'not_in');
+        }
 
         // Open break? (out_time set, in_time null)
         if ($this->db->table_exists('staff_attendance_break')) {
@@ -530,16 +640,6 @@ class Staffattendancemodel extends MY_Model {
                     'date'            => date('d M Y', strtotime($date))
                 );
             }
-        }
-
-        if (!IsNullOrEmptyString($att->out_time) && $att->out_time !== '00:00:00') {
-            return array(
-                'state'           => 'complete',
-                'in'              => $in_formatted,
-                'out'             => date('h:i A', strtotime($att->out_time)),
-                'attendance_type' => $type_name,
-                'date'            => date('d M Y', strtotime($date))
-            );
         }
 
         return array(

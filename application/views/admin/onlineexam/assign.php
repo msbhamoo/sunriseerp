@@ -1,20 +1,49 @@
-<div class="content-wrapper">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+.onlineexam-assign-wrapper {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.modern-assign-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+.modern-assign-header {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.modern-assign-header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+}
+</style>
+
+<div class="content-wrapper onlineexam-assign-wrapper">
     <!-- Main content -->
-    <section class="content">
+    <section class="content" style="padding-top: 15px;">
         <div class="row">
             <div class="col-md-12">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title"><i class="fa fa-search"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
+                <div class="modern-assign-card">
+                    <div class="modern-assign-header">
+                        <h3><i class="fa fa-filter text-primary" style="margin-right: 6px;"></i> <?php echo $this->lang->line('select_criteria'); ?></h3>
                     </div>
-                    <div class="box-body">
+                    <div class="box-body" style="padding: 18px;">
                         <form role="form" action="<?php echo site_url('admin/onlineexam/assign/' . $id) ?>" method="post" class="row">
                             <?php echo $this->customlib->getCSRF(); ?>
                             <input type="hidden" name="onlineexam_id" value="<?php echo $onlineexam->id; ?>">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                    <label><?php echo $this->lang->line('class'); ?></label>  <small class="req"> *</small>
-                                    <select autofocus="" id="class_id" name="class_id" class="form-control" >
+                                    <label style="font-size: 12px; font-weight: 600; color: #475569;"><?php echo $this->lang->line('class'); ?></label>  <small class="req"> *</small>
+                                    <select autofocus="" id="class_id" name="class_id" class="form-control" style="border-radius: 6px;">
                                         <option value=""><?php echo $this->lang->line('select'); ?></option>
                                         <?php
 foreach ($classlist as $class) {
@@ -33,8 +62,8 @@ if (set_value('class_id') == $class['id']) {
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="exampleInputEmail1"><?php echo $this->lang->line('section'); ?></label>
-                                        <select  id="section_id" name="section_id" class="form-control" >
+                                        <label for="exampleInputEmail1" style="font-size: 12px; font-weight: 600; color: #475569;"><?php echo $this->lang->line('section'); ?></label>
+                                        <select  id="section_id" name="section_id" class="form-control" style="border-radius: 6px;">
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
                                         </select>
                                         <span class="text-danger"><?php echo form_error('section_id'); ?></span>
@@ -42,7 +71,7 @@ if (set_value('class_id') == $class['id']) {
                                 </div>
                             <div class="form-group">
                                 <div class="col-md-12">
-                                    <button type="submit" name="search" value="search_filter" class="btn btn-primary pull-right btn-sm checkbox-toggle"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                                    <button type="submit" name="search" value="search_filter" class="btn btn-primary pull-right btn-sm" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border: none; font-weight: 700; border-radius: 6px; padding: 6px 16px;"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
                                 </div>
                             </div>
                         </form>
@@ -52,12 +81,9 @@ if (set_value('class_id') == $class['id']) {
                     <?php
 if (isset($resultlist)) {
     ?>
-                      <div class="box-header ptbnull"></div>
-                        <div class="">
-                            <div class="box-header with-border">
-                                <h3 class="box-title"><i class="fa fa-users"></i> <?php echo $this->lang->line('assign_online_exam'); ?></h3>
-                                <div class="box-tools pull-right">
-                                </div>
+                        <div class="modern-assign-card" style="margin: 0 18px 18px 18px;">
+                            <div class="modern-assign-header">
+                                <h3><i class="fa fa-users text-primary" style="margin-right: 6px;"></i> <?php echo $this->lang->line('assign_online_exam'); ?></h3>
                             </div>
                             <div class="box-body">
                                 <div class="row">

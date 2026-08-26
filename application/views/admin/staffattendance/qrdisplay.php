@@ -55,8 +55,8 @@
         setTimeout(function () { window.location.reload(); }, 3600 * 1000);
     })();
 
-    // Dynamic mode: poll the live QR image endpoint and swap the code on each
-    // rotation, with a small countdown so staff know it is live.
+    // Dynamic mode: precisely synchronized timer to fetch new QR token
+    // on every window change and update countdown smoothly.
     (function () {
         var isDynamic = <?php echo ($setting['qr_mode'] === 'dynamic') ? 'true' : 'false'; ?>;
         if (!isDynamic) { return; }
@@ -64,25 +64,47 @@
         var interval = <?php echo max(5, (int) $setting['dynamic_interval_seconds']); ?>;
         var img = document.getElementById('qr-img');
         var cd  = document.getElementById('qr-countdown');
-        var remaining = interval;
+        var isFetching = false;
 
-        function refresh() {
-            fetch(IMG_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(function (r) { return r.json(); })
-                .then(function (res) {
-                    if (res && res.img) { img.src = res.img; }
-                    if (res && res.interval) { interval = res.interval; }
-                    remaining = interval;
-                })
-                .catch(function () { /* keep showing last code on transient error */ });
+        function fetchQr() {
+            if (isFetching) return;
+            isFetching = true;
+            fetch(IMG_URL, { 
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                cache: 'no-store'
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (res && res.img) { 
+                    img.src = res.img; 
+                }
+                if (res && res.interval) { 
+                    interval = parseInt(res.interval, 10); 
+                }
+                isFetching = false;
+            })
+            .catch(function () { 
+                isFetching = false; 
+            });
         }
-        // Rotate on the interval.
-        setInterval(refresh, interval * 1000);
-        // Countdown tick.
-        setInterval(function () {
-            remaining -= 1;
-            if (remaining < 0) { remaining = interval; }
-            if (cd) { cd.textContent = 'New code in ' + remaining + 's'; }
-        }, 1000);
+
+        // Periodic tick every 1 second: calculate exact remaining seconds in current window
+        function updateTimer() {
+            var nowSec = Math.floor(Date.now() / 1000);
+            var remaining = interval - (nowSec % interval);
+            
+            if (remaining === interval || remaining <= 1) {
+                fetchQr();
+            }
+
+            if (cd) {
+                cd.innerHTML = '<i class="fa fa-refresh ' + (remaining <= 3 ? 'fa-spin text-primary' : '') + '"></i> New dynamic code in <strong style="font-size:16px; color:#007bff;">' + remaining + 's</strong>';
+            }
+        }
+
+        // Initial fetch and start interval
+        fetchQr();
+        updateTimer();
+        setInterval(updateTimer, 1000);
     })();
 </script>

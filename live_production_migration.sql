@@ -75,38 +75,43 @@ SET `menu` = 'AI Exam Studio',
     `is_active` = 1
 WHERE `id` = 43 OR `lang_key` = 'ai_exam_studio';
 
--- 6. Create All 4 Sub-Menus
+-- 6. Create All Sub-Menus (Dynamically resolves parent AI Exam Studio ID to satisfy foreign key constraint)
 -- Submenu 1: AI Paper Generator
 INSERT INTO `sidebar_sub_menus` (`sidebar_menu_id`, `menu`, `key`, `lang_key`, `url`, `level`, `access_permissions`, `permission_group_id`, `activate_controller`, `activate_methods`, `addon_permission`, `is_active`, `created_at`, `updated_at`)
-SELECT 43, 'AI Paper Generator', 'ai_paper_generator', 'ai_paper_generator', 'admin/aiexamgenerator', 1, '(\'exam_group\', \'can_view\') || (\'online_examination\', \'can_view\') || (\'cbse_exam\', \'can_view\')', NULL, 'aiexamgenerator', 'index', '', 1, NOW(), NOW()
-FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `url` = 'admin/aiexamgenerator')
+SELECT sm.id, 'AI Paper Generator', 'ai_paper_generator', 'ai_paper_generator', 'admin/aiexamgenerator', 1, '(\'exam_group\', \'can_view\') || (\'online_examination\', \'can_view\') || (\'cbse_exam\', \'can_view\')', NULL, 'aiexamgenerator', 'index', '', 1, NOW(), NOW()
+FROM `sidebar_menus` sm
+WHERE (sm.`activate_menu` = 'aiexam' OR sm.`lang_key` = 'ai_exam_studio')
+  AND NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `url` = 'admin/aiexamgenerator')
 LIMIT 1;
 
 -- Submenu 2: AI Answer Sheet Evaluator
 INSERT INTO `sidebar_sub_menus` (`sidebar_menu_id`, `menu`, `key`, `lang_key`, `url`, `level`, `access_permissions`, `permission_group_id`, `activate_controller`, `activate_methods`, `addon_permission`, `is_active`, `created_at`, `updated_at`)
-SELECT 43, 'AI Answer Sheet Evaluator', 'ai_answer_evaluator', 'ai_answer_evaluator', 'admin/aiexamevaluator', 2, '(\'exam_group\', \'can_view\') || (\'online_examination\', \'can_view\') || (\'cbse_exam\', \'can_view\')', NULL, 'aiexamevaluator', 'index', '', 1, NOW(), NOW()
-FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `url` = 'admin/aiexamevaluator')
+SELECT sm.id, 'AI Answer Sheet Evaluator', 'ai_answer_evaluator', 'ai_answer_evaluator', 'admin/aiexamevaluator', 2, '(\'exam_group\', \'can_view\') || (\'online_examination\', \'can_view\') || (\'cbse_exam\', \'can_view\')', NULL, 'aiexamevaluator', 'index', '', 1, NOW(), NOW()
+FROM `sidebar_menus` sm
+WHERE (sm.`activate_menu` = 'aiexam' OR sm.`lang_key` = 'ai_exam_studio')
+  AND NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `url` = 'admin/aiexamevaluator')
 LIMIT 1;
 
 -- Submenu 3: Curriculum & Syllabus Catalog
 INSERT INTO `sidebar_sub_menus` (`sidebar_menu_id`, `menu`, `key`, `lang_key`, `url`, `level`, `access_permissions`, `permission_group_id`, `activate_controller`, `activate_methods`, `addon_permission`, `is_active`, `created_at`, `updated_at`)
-SELECT 43, 'Curriculum & Syllabus Catalog', 'ai_curriculum_catalog', 'ai_curriculum_catalog', 'admin/aiexamsyllabus', 3, '(\'exam_group\', \'can_view\') || (\'online_examination\', \'can_view\') || (\'cbse_exam\', \'can_view\')', NULL, 'aiexamsyllabus', 'index', '', 1, NOW(), NOW()
-FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `url` = 'admin/aiexamsyllabus')
+SELECT sm.id, 'Curriculum & Syllabus Catalog', 'ai_curriculum_catalog', 'ai_curriculum_catalog', 'admin/aiexamsyllabus', 3, '(\'exam_group\', \'can_view\') || (\'online_examination\', \'can_view\') || (\'cbse_exam\', \'can_view\')', NULL, 'aiexamsyllabus', 'index', '', 1, NOW(), NOW()
+FROM `sidebar_menus` sm
+WHERE (sm.`activate_menu` = 'aiexam' OR sm.`lang_key` = 'ai_exam_studio')
+  AND NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `url` = 'admin/aiexamsyllabus')
 LIMIT 1;
 
 -- Submenu 4: Question & Answer Bank
 INSERT INTO `sidebar_sub_menus` (`sidebar_menu_id`, `menu`, `key`, `lang_key`, `url`, `level`, `access_permissions`, `permission_group_id`, `activate_controller`, `activate_methods`, `addon_permission`, `is_active`, `created_at`, `updated_at`)
-SELECT 43, 'Question Bank', 'question_bank', 'question_bank', 'admin/question', 4, '(\'question_bank\', \'can_view\') || (\'exam_group\', \'can_view\') || (\'online_examination\', \'can_view\')', NULL, 'question', 'index', '', 1, NOW(), NOW()
-FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `sidebar_menu_id` = 43 AND `url` = 'admin/question')
+SELECT sm.id, 'Question Bank', 'question_bank', 'question_bank', 'admin/question', 4, '(\'question_bank\', \'can_view\') || (\'exam_group\', \'can_view\') || (\'online_examination\', \'can_view\')', NULL, 'question', 'index', '', 1, NOW(), NOW()
+FROM `sidebar_menus` sm
+WHERE (sm.`activate_menu` = 'aiexam' OR sm.`lang_key` = 'ai_exam_studio')
+  AND NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` ssm WHERE ssm.`sidebar_menu_id` = sm.id AND ssm.`url` = 'admin/question')
 LIMIT 1;
 
 -- Submenu 5: AI Engine Configuration
 INSERT INTO `sidebar_sub_menus` (`sidebar_menu_id`, `menu`, `key`, `lang_key`, `url`, `level`, `access_permissions`, `permission_group_id`, `activate_controller`, `activate_methods`, `addon_permission`, `is_active`, `created_at`, `updated_at`)
-SELECT 43, 'AI Engine Configuration', 'ai_engine_setting', 'ai_engine_setting', 'admin/aisetting', 5, '(\'exam_group\', \'can_view\') || (\'online_examination\', \'can_view\') || (\'cbse_exam\', \'can_view\')', NULL, 'aisetting', 'index', '', 1, NOW(), NOW()
-FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `url` = 'admin/aisetting')
+SELECT sm.id, 'AI Engine Configuration', 'ai_engine_setting', 'ai_engine_setting', 'admin/aisetting', 5, '(\'exam_group\', \'can_view\') || (\'online_examination\', \'can_view\') || (\'cbse_exam\', \'can_view\')', NULL, 'aisetting', 'index', '', 1, NOW(), NOW()
+FROM `sidebar_menus` sm
+WHERE (sm.`activate_menu` = 'aiexam' OR sm.`lang_key` = 'ai_exam_studio')
+  AND NOT EXISTS (SELECT 1 FROM `sidebar_sub_menus` WHERE `url` = 'admin/aisetting')
 LIMIT 1;

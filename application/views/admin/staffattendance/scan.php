@@ -32,17 +32,21 @@
                             <button class="btn btn-default" id="btn-cancel-early">No, stay marked in</button>
                         </div>
 
-                        <!-- Action choices when already checked in (step out / leave / step in) -->
+                        <!-- Action choices when already checked in or when no morning check-in exists -->
                         <div id="choose-box" style="display:none;margin-top:15px;text-align:left;">
                             <div class="alert alert-info" id="choose-msg"></div>
                             <div id="breakout-reason-wrap" style="display:none;margin-bottom:10px;">
-                                <label>Reason for stepping out (optional)</label>
-                                <input type="text" id="breakout-reason" class="form-control" placeholder="e.g. bank, medical, personal work">
+                                <label>Reason (optional)</label>
+                                <input type="text" id="breakout-reason" class="form-control" placeholder="e.g. bank, medical, departure">
                             </div>
-                            <button class="btn btn-warning" id="btn-break-out" style="display:none;"><i class="fa fa-sign-out"></i> Step Out (will return)</button>
-                            <button class="btn btn-success" id="btn-break-in" style="display:none;"><i class="fa fa-sign-in"></i> Step In (returned)</button>
-                            <button class="btn btn-danger" id="btn-final-out" style="display:none;"><i class="fa fa-power-off"></i> Mark Out (end of day)</button>
-                            <button class="btn btn-default" id="btn-choose-cancel"><i class="fa fa-times"></i> Cancel</button>
+                            <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                                <button class="btn btn-success" id="btn-mark-in" style="display:none;"><i class="fa fa-sign-in"></i> Check In</button>
+                                <button class="btn btn-danger" id="btn-direct-out" style="display:none;"><i class="fa fa-sign-out"></i> Direct Check Out</button>
+                                <button class="btn btn-warning" id="btn-break-out" style="display:none;"><i class="fa fa-sign-out"></i> Step Out (will return)</button>
+                                <button class="btn btn-success" id="btn-break-in" style="display:none;"><i class="fa fa-sign-in"></i> Step In (returned)</button>
+                                <button class="btn btn-danger" id="btn-final-out" style="display:none;"><i class="fa fa-power-off"></i> Mark Out (end of day)</button>
+                                <button class="btn btn-default" id="btn-choose-cancel"><i class="fa fa-times"></i> Cancel</button>
+                            </div>
                         </div>
 
                         <div style="margin-top:15px;">
@@ -296,7 +300,9 @@
             statusEl.style.display = 'none';
             var acts = res.actions || [];
             chooseMsg.innerHTML = res.message;
-            document.getElementById('breakout-reason-wrap').style.display = (acts.indexOf('break_out') !== -1) ? 'block' : 'none';
+            document.getElementById('breakout-reason-wrap').style.display = (acts.indexOf('break_out') !== -1 || acts.indexOf('direct_out') !== -1) ? 'block' : 'none';
+            document.getElementById('btn-mark-in').style.display   = (acts.indexOf('mark_in') !== -1) ? 'inline-block' : 'none';
+            document.getElementById('btn-direct-out').style.display = (acts.indexOf('direct_out') !== -1) ? 'inline-block' : 'none';
             document.getElementById('btn-break-out').style.display = (acts.indexOf('break_out') !== -1) ? 'inline-block' : 'none';
             document.getElementById('btn-break-in').style.display  = (acts.indexOf('break_in')  !== -1) ? 'inline-block' : 'none';
             document.getElementById('btn-final-out').style.display = (acts.indexOf('final_out') !== -1) ? 'inline-block' : 'none';
@@ -319,6 +325,19 @@
         earlyBox.style.display = 'none';
         showStatus('<i class="fa fa-info-circle"></i> No changes made. You are still marked in.', 'alert-info');
         rescanBtn.style.display = 'inline-block';
+    });
+
+    document.getElementById('btn-mark-in').addEventListener('click', function () {
+        chooseBox.style.display = 'none';
+        showStatus('<i class="fa fa-spinner fa-spin"></i> Recording check-in...', 'alert-info');
+        submit({ action: 'mark_in' });
+    });
+
+    document.getElementById('btn-direct-out').addEventListener('click', function () {
+        var reason = document.getElementById('breakout-reason').value;
+        chooseBox.style.display = 'none';
+        showStatus('<i class="fa fa-spinner fa-spin"></i> Recording check-out...', 'alert-info');
+        submit({ action: 'direct_out', reason: reason });
     });
 
     document.getElementById('btn-break-out').addEventListener('click', function () {

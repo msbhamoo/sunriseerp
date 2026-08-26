@@ -532,6 +532,18 @@ class Staffattendance extends Admin_Controller
             }
         }
 
+        // Ensure school timezone is always active
+        if (isset($this->customlib) && method_exists($this->customlib, 'getTimeZone')) {
+            $tz = $this->customlib->getTimeZone();
+            if (!empty($tz)) {
+                date_default_timezone_set($tz);
+            } else {
+                date_default_timezone_set('Asia/Kolkata');
+            }
+        } else {
+            date_default_timezone_set('Asia/Kolkata');
+        }
+
         $role   = json_decode($this->customlib->getStaffRole());
         $opts   = array(
             'cooldown_minutes'         => $setting['rescan_cooldown_minutes'],
@@ -542,9 +554,7 @@ class Staffattendance extends Admin_Controller
             'source'                   => 'qr',
         );
 
-        // Mid-day outing actions (step out / step in) and the explicit
-        // end-of-day check-out are driven by an "action" the scan page sends
-        // after showing the teacher their options.
+        // Actions driven by user interaction
         $action = $this->input->post('action');
         if ($action === 'break_out') {
             json_output(200, $this->staffattendancemodel->qrBreakOut($admin['id'], $this->input->post('reason')));
@@ -558,13 +568,35 @@ class Staffattendance extends Admin_Controller
             json_output(200, $this->staffattendancemodel->qrMark($admin['id'], $role->id, $opts));
             return;
         }
-
-        // No explicit action: mark in on the first scan; otherwise return the
-        // available choices so the teacher can pick step-out vs leave-for-day.
-        $state = $this->staffattendancemodel->getQrState($admin['id']);
-        if ($state['state'] === 'not_in') {
+        if ($action === 'direct_out') {
+            json_output(200, $this->staffattendancemodel->qrDirectOut($admin['id'], $role->id, $opts));
+            return;
+        }
+        if ($action === 'mark_in') {
             json_output(200, $this->staffattendancemodel->qrMark($admin['id'], $role->id, $opts));
             return;
+        }
+
+        // Evaluate QR state
+        $state = $this->staffattendancemodel->getQrState($admin['id']);
+        if ($state['state'] === 'not_in') {
+            // Check current time. If it is afternoon / past 11:30 AM, offer choice (Check In vs Direct Check Out)
+            $now_time = date('H:i:s');
+            if ($now_time >= '11:30:00') {
+                json_output(200, array(
+                    'status'          => 'choose',
+                    'actions'         => array('mark_in', 'direct_out'),
+                    'message'         => 'You do not have a morning check-in for today. What would you like to record at ' . date('h:i A', strtotime($now_time)) . '?',
+                    'in_time'         => '--',
+                    'out_time'        => 'Not Checked Out Yet',
+                    'attendance_type' => 'Pending',
+                    'date'            => date('d M Y')
+                ));
+                return;
+            } else {
+                json_output(200, $this->staffattendancemodel->qrMark($admin['id'], $role->id, $opts));
+                return;
+            }
         }
         if ($state['state'] === 'on_break') {
             json_output(200, array(

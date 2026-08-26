@@ -811,8 +811,6 @@ let disable_enable=(type,staff_id)=>{
         $("#in_time_"+staff_id).attr("disabled",true);
         $("#out_time_"+staff_id).attr("disabled",true);
     }else{
-        $("#in_time_"+staff_id).val("");
-        $("#out_time_"+staff_id).val("");
         $("#in_time_"+staff_id).attr("disabled",false);
         $("#out_time_"+staff_id).attr("disabled",false);
     }
