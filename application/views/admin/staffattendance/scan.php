@@ -434,6 +434,11 @@
         $('#scanResultModal').modal('show');
     }
 
+    function hideAllPanels() {
+        if (earlyBox) earlyBox.style.display = 'none';
+        if (chooseBox) chooseBox.style.display = 'none';
+    }
+
     function handleResult(res) {
         var s = res.status;
         hideAllPanels();
