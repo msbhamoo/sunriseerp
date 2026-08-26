@@ -125,7 +125,32 @@
             <div class="modal-body" style="padding:22px 25px;">
                 <p id="modal-message-text" class="text-center text-muted" style="font-size:14px; margin-bottom:18px; font-weight:500;"></p>
                 
-                <div style="background:#f8f9fa; border-radius:10px; padding:16px; border:1px solid #e9ecef;">
+                <!-- Action Buttons container inside modal for direct/afternoon choices -->
+                <div id="modal-choice-box" style="display:none; margin-bottom:18px;">
+                    <div id="modal-breakout-reason-wrap" style="display:none; margin-bottom:12px;">
+                        <label style="font-size:12px; color:#555;">Reason (optional):</label>
+                        <input type="text" id="modal-breakout-reason" class="form-control input-sm" placeholder="e.g. personal, medical, departure">
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <button type="button" class="btn btn-success btn-block" id="modal-btn-mark-in" style="display:none; padding:10px; font-size:15px; font-weight:600; border-radius:8px;">
+                            <i class="fa fa-sign-in"></i> Check In Now
+                        </button>
+                        <button type="button" class="btn btn-danger btn-block" id="modal-btn-direct-out" style="display:none; padding:10px; font-size:15px; font-weight:600; border-radius:8px;">
+                            <i class="fa fa-sign-out"></i> Direct Check Out
+                        </button>
+                        <button type="button" class="btn btn-warning btn-block" id="modal-btn-break-out" style="display:none; padding:10px; font-size:15px; font-weight:600; border-radius:8px;">
+                            <i class="fa fa-sign-out"></i> Step Out (will return)
+                        </button>
+                        <button type="button" class="btn btn-success btn-block" id="modal-btn-break-in" style="display:none; padding:10px; font-size:15px; font-weight:600; border-radius:8px;">
+                            <i class="fa fa-sign-in"></i> Step In (returned)
+                        </button>
+                        <button type="button" class="btn btn-danger btn-block" id="modal-btn-final-out" style="display:none; padding:10px; font-size:15px; font-weight:600; border-radius:8px;">
+                            <i class="fa fa-power-off"></i> Mark Out (End of day)
+                        </button>
+                    </div>
+                </div>
+
+                <div id="modal-details-card" style="background:#f8f9fa; border-radius:10px; padding:16px; border:1px solid #e9ecef;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px dashed #dee2e6; padding-bottom:8px;">
                         <span style="color:#6c757d; font-size:13px; font-weight:600;"><i class="fa fa-calendar" style="width:16px; text-align:center;"></i> Date:</span>
                         <span id="modal-date" style="font-weight:600; color:#333; font-size:13px;">-</span>
@@ -148,7 +173,7 @@
                 </div>
             </div>
             <div class="modal-footer" style="text-align:center; background:#f8f9fa; border-top:1px solid #e9ecef; padding:14px 20px;">
-                <button type="button" class="btn btn-primary btn-block btn-lg" data-dismiss="modal" style="border-radius:8px; font-weight:600; font-size:15px; padding:10px 16px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">OK / Done</button>
+                <button type="button" class="btn btn-primary btn-block btn-lg" id="modal-done-btn" data-dismiss="modal" style="border-radius:8px; font-weight:600; font-size:15px; padding:10px 16px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">OK / Done</button>
             </div>
         </div>
     </div>
@@ -373,6 +398,10 @@
             title = 'Welcome Back';
             headerBg = '#27ae60';
             iconHtml = '<i class="fa fa-level-up"></i>';
+        } else if (s === 'choose') {
+            title = 'Choose Action';
+            headerBg = '#3c8dbc';
+            iconHtml = '<i class="fa fa-question-circle"></i>';
         }
 
         $('#modal-header-bg').css('background-color', headerBg);
@@ -384,30 +413,37 @@
         $('#modal-out-time').text(outTime);
         $('#modal-att-status').text(attType).attr('class', 'label ' + badgeClass);
 
+        if (s === 'choose') {
+            var acts = res.actions || [];
+            $('#modal-details-card').hide();
+            $('#modal-done-btn').hide();
+            $('#modal-choice-box').show();
+
+            $('#modal-breakout-reason-wrap').toggle(acts.indexOf('break_out') !== -1 || acts.indexOf('direct_out') !== -1);
+            $('#modal-btn-mark-in').toggle(acts.indexOf('mark_in') !== -1);
+            $('#modal-btn-direct-out').toggle(acts.indexOf('direct_out') !== -1);
+            $('#modal-btn-break-out').toggle(acts.indexOf('break_out') !== -1);
+            $('#modal-btn-break-in').toggle(acts.indexOf('break_in') !== -1);
+            $('#modal-btn-final-out').toggle(acts.indexOf('final_out') !== -1);
+        } else {
+            $('#modal-choice-box').hide();
+            $('#modal-details-card').show();
+            $('#modal-done-btn').show();
+        }
+
         $('#scanResultModal').modal('show');
     }
 
     function handleResult(res) {
         var s = res.status;
         hideAllPanels();
-        if (s === 'marked_in' || s === 'marked_out' || s === 'break_out' || s === 'break_in' || s === 'already_complete' || s === 'cooldown') {
+        if (s === 'marked_in' || s === 'marked_out' || s === 'break_out' || s === 'break_in' || s === 'already_complete' || s === 'cooldown' || s === 'choose') {
             showAttendanceModal(res);
             rescanBtn.style.display = 'inline-block';
         } else if (s === 'confirm_early') {
             statusEl.style.display = 'none';
             earlyMsg.innerHTML = res.message;
             earlyBox.style.display = 'block';
-        } else if (s === 'choose') {
-            statusEl.style.display = 'none';
-            var acts = res.actions || [];
-            chooseMsg.innerHTML = res.message;
-            document.getElementById('breakout-reason-wrap').style.display = (acts.indexOf('break_out') !== -1 || acts.indexOf('direct_out') !== -1) ? 'block' : 'none';
-            document.getElementById('btn-mark-in').style.display   = (acts.indexOf('mark_in') !== -1) ? 'inline-block' : 'none';
-            document.getElementById('btn-direct-out').style.display = (acts.indexOf('direct_out') !== -1) ? 'inline-block' : 'none';
-            document.getElementById('btn-break-out').style.display = (acts.indexOf('break_out') !== -1) ? 'inline-block' : 'none';
-            document.getElementById('btn-break-in').style.display  = (acts.indexOf('break_in')  !== -1) ? 'inline-block' : 'none';
-            document.getElementById('btn-final-out').style.display = (acts.indexOf('final_out') !== -1) ? 'inline-block' : 'none';
-            chooseBox.style.display = 'block';
         } else {
             // no_schedule or error
             showStatus('<i class="fa fa-exclamation-triangle"></i> ' + res.message, 'alert-danger');
@@ -428,31 +464,20 @@
         rescanBtn.style.display = 'inline-block';
     });
 
-    document.getElementById('btn-mark-in').addEventListener('click', function () {
+    // Handle clicks from both inline and modal action buttons
+    function triggerAction(actionName) {
+        var reason = $('#modal-breakout-reason').val() || $('#breakout-reason').val() || '';
+        $('#scanResultModal').modal('hide');
         chooseBox.style.display = 'none';
-        showStatus('<i class="fa fa-spinner fa-spin"></i> Recording check-in...', 'alert-info');
-        submit({ action: 'mark_in' });
-    });
+        showStatus('<i class="fa fa-spinner fa-spin"></i> Processing ' + actionName.replace('_', ' ') + '...', 'alert-info');
+        submit({ action: actionName, reason: reason });
+    }
 
-    document.getElementById('btn-direct-out').addEventListener('click', function () {
-        var reason = document.getElementById('breakout-reason').value;
-        chooseBox.style.display = 'none';
-        showStatus('<i class="fa fa-spinner fa-spin"></i> Recording check-out...', 'alert-info');
-        submit({ action: 'direct_out', reason: reason });
-    });
-
-    document.getElementById('btn-break-out').addEventListener('click', function () {
-        var reason = document.getElementById('breakout-reason').value;
-        chooseBox.style.display = 'none';
-        showStatus('<i class="fa fa-spinner fa-spin"></i> Recording your step out...', 'alert-info');
-        submit({ action: 'break_out', reason: reason });
-    });
-
-    document.getElementById('btn-break-in').addEventListener('click', function () {
-        chooseBox.style.display = 'none';
-        showStatus('<i class="fa fa-spinner fa-spin"></i> Recording your return...', 'alert-info');
-        submit({ action: 'break_in' });
-    });
+    $('#modal-btn-mark-in, #btn-mark-in').on('click', function () { triggerAction('mark_in'); });
+    $('#modal-btn-direct-out, #btn-direct-out').on('click', function () { triggerAction('direct_out'); });
+    $('#modal-btn-break-out, #btn-break-out').on('click', function () { triggerAction('break_out'); });
+    $('#modal-btn-break-in, #btn-break-in').on('click', function () { triggerAction('break_in'); });
+    $('#modal-btn-final-out, #btn-final-out').on('click', function () { triggerAction('final_out'); });
 
     document.getElementById('btn-final-out').addEventListener('click', function () {
         chooseBox.style.display = 'none';
