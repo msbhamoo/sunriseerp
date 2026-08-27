@@ -32,6 +32,37 @@
                                     <span class="text-danger"><?php echo form_error('exam_id'); ?></span>
                                 </div>
                             </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label><?php echo $this->lang->line('class'); ?></label>
+                                    <select id="class_id" name="class_id" class="form-control">
+                                        <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                        <?php
+                                        if (isset($classlist) && !empty($classlist)) {
+                                            foreach ($classlist as $class) {
+                                        ?>
+                                                <option value="<?php echo $class['id'] ?>" <?php
+                                                                                            if (set_value('class_id', isset($class_id) ? $class_id : '') == $class['id']) {
+                                                                                                echo "selected=selected";
+                                                                                            }
+                                                                                            ?>><?php echo $class['class'] ?></option>
+                                        <?php
+                                            }
+                                        }
+                                        ?>
+                                    </select>
+                                    <span class="text-danger"><?php echo form_error('class_id'); ?></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label><?php echo $this->lang->line('section'); ?></label>
+                                    <select id="section_id" name="section_id" class="form-control">
+                                        <option value=""><?php echo $this->lang->line('select'); ?></option>
+                                    </select>
+                                    <span class="text-danger"><?php echo form_error('section_id'); ?></span>
+                                </div>
+                            </div>
                             <div class="col-sm-12">
                                 <div class="form-group">
                                     <button type="submit" name="search" value="search_filter" class="btn btn-primary pull-right btn-sm checkbox-toggle"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
@@ -51,9 +82,20 @@
                                 <button type="button" class="btn btn-primary btn-xs" title="<?php echo $this->lang->line('download_excel'); ?>" onclick="fnExcelReport()"><i class="fa fa-file-excel-o" aria-hidden="true"></i></button>
                             </div>
                             <div class="table-responsive box-body" id="div_print">
-
-
-                                <h4 id="print_title"><?php echo $exam->name; ?></h4>
+                                <h4 id="print_title">
+                                    <?php echo $exam->name; ?>
+                                    <?php 
+                                    if (!empty($students)) {
+                                        $first_student = reset($students);
+                                        if (!empty($class_id) && !empty($first_student['class'])) {
+                                            echo " - " . $this->lang->line('class') . ": " . $first_student['class'];
+                                            if (!empty($section_id) && !empty($first_student['section'])) {
+                                                echo " (" . $this->lang->line('section') . ": " . $first_student['section'] . ")";
+                                            }
+                                        }
+                                    }
+                                    ?>
+                                </h4>
 
                                 <table class="table table-bordered table-b vertical-middle" id="headerTable">
                                     <thead>
@@ -253,6 +295,52 @@ function getGrade($grade_array, $Percentage)
 ?>
 
 <script type="text/javascript">
+    $(document).ready(function () {
+        var class_id = $('#class_id').val();
+        var section_id = '<?php echo set_value('section_id', isset($section_id) ? $section_id : ''); ?>';
+        getSectionByClass(class_id, section_id);
+
+        $(document).on('change', '#class_id', function (e) {
+            $('#section_id').html("");
+            var class_id = $(this).val();
+            getSectionByClass(class_id, 0);
+        });
+    });
+
+    function getSectionByClass(class_id, section_id) {
+        if (class_id != "") {
+            $('#section_id').html("");
+            var base_url = '<?php echo base_url() ?>';
+            var div_data = '<option value=""><?php echo $this->lang->line('select'); ?></option>';
+
+            $.ajax({
+                type: "GET",
+                url: base_url + "sections/getByClass",
+                data: {'class_id': class_id},
+                dataType: "json",
+                beforeSend: function () {
+                    $('#section_id').addClass('dropdownloading');
+                },
+                success: function (data) {
+                    $.each(data, function (i, obj)
+                    {
+                        var sel = "";
+                        if (section_id == obj.section_id || section_id == obj.id) {
+                            sel = "selected";
+                        }
+                        div_data += "<option value=" + obj.section_id + " " + sel + ">" + obj.section + "</option>";
+                    });
+                    $('#section_id').append(div_data);
+                },
+                complete: function () {
+                    $('#section_id').removeClass('dropdownloading');
+                }
+            });
+        } else {
+            $('#section_id').html('<option value=""><?php echo $this->lang->line('select'); ?></option>');
+        }
+    }
+
     function printDiv(tagid) {
         let hashid = "#" + tagid;
         var tagname = $(hashid).prop("tagName").toLowerCase();
@@ -289,7 +377,4 @@ function getGrade($grade_array, $Percentage)
 
 
     }
-
-
-    
 </script>

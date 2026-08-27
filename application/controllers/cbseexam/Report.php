@@ -35,12 +35,23 @@ class Report extends MY_Addon_CBSEController
         $this->session->set_userdata('sub_menu', 'reports/cbse_report');
         $this->session->set_userdata('subsub_menu', 'cbse_exam/examsubject');
 
-        $data['exams'] = $this->cbseexam_exam_model->getexamlist();
+        $data['exams']     = $this->cbseexam_exam_model->getexamlist();
+        $class             = $this->class_model->get();
+        $data['classlist'] = $class;
+
         $this->form_validation->set_rules('exam_id', $this->lang->line('exam'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|xss_clean');
+        $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|xss_clean');
 
         if ($this->form_validation->run() == true) {
             $exam_id          = $this->input->post('exam_id');
-            $subjects         = $this->cbseexam_exam_model->getexamsubjects($exam_id);
+            $class_id         = $this->input->post('class_id');
+            $section_id       = $this->input->post('section_id');
+
+            $data['class_id']   = $class_id;
+            $data['section_id'] = $section_id;
+
+            $subjects         = $this->cbseexam_exam_model->getexamsubjects($exam_id, $class_id);
             $exam             = $this->cbseexam_exam_model->getExamWithGrade($exam_id);
             $exam_assessments = $this->cbseexam_assessment_model->getWithAssessmentTypeByAssessmentID($exam->cbse_exam_assessment_id);
             $subject_assessments = $this->cbseexam_assessment_model->getSubjectAssessmentsByExam($subjects);           
@@ -52,7 +63,7 @@ class Report extends MY_Addon_CBSEController
 
             $students = [];
 
-            $cbse_exam_result = $this->cbseexam_exam_model->getExamResultByExamId($exam_id);
+            $cbse_exam_result = $this->cbseexam_exam_model->getExamResultByExamId($exam_id, $class_id, $section_id);
 
 
             if (!empty($cbse_exam_result)) {
