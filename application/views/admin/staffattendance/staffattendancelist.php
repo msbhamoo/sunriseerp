@@ -573,7 +573,6 @@
                                                     <td class="relative">
                                                         <input  <?php echo $disable_input_attr;?>  type="text" value="<?php if($value["out_time"]!="00:00:00"){ echo $value["out_time"]; }else{ echo "";} ?>"  name="out_time_<?php echo $value["staff_id"] ?>"  id="out_time_<?php echo $value["staff_id"] ?>" class="form-control datetime out_time time out_time_<?php echo $value['role_id']; ?>" data-staff_id="<?php echo $value['staff_id']; ?>" data-role_id="<?php echo $value['role_id']; ?>">
                                                         <div class="time-btn-wrap">
-                                                            <button type="button" class="btn-t-action fill-sched-out" title="Fill Role Default Out-Time" data-target="out_time_<?php echo $value['staff_id']; ?>" data-role="<?php echo $value['role_id']; ?>"><i class="fa fa-clock-o"></i></button>
                                                             <button type="button" class="btn-t-action clear-single-time" title="Clear Time" data-target="out_time_<?php echo $value['staff_id']; ?>"><i class="fa fa-times"></i></button>
                                                             <span class="staff-work-dur duration-badge dur-gray" id="dur_<?php echo $value['staff_id']; ?>" style="display:none;"></span>
                                                         </div>
@@ -852,17 +851,13 @@ function getatten(atten_type){
             $.each(nm, function(key, value) {
                 if (value.staff_attendence_type_id == atten_type && value.role_id == role_id[i]) {                
                     var defaultIn = tConvert(value.entry_time_from);
-                    var defaultOut = tConvert(value.entry_time_to);
                     
-                    // Only populate if field is currently empty so existing QR/manual time is preserved
+                    // Only populate IN-TIME if field is currently empty.
+                    // DO NOT populate value.entry_time_to into OUT-TIME because entry_time_to 
+                    // is the morning entry-window cutoff (e.g. 8:05 AM), NOT the exit time!
                     $('.in_time_' + role_id[i]).each(function() {
                         if ($(this).val() === '' || $(this).val() === '00:00:00') {
                             $(this).val(defaultIn);
-                        }
-                    });
-                    $('.out_time_' + role_id[i]).each(function() {
-                        if ($(this).val() === '' || $(this).val() === '00:00:00') {
-                            $(this).val(defaultOut);
                         }
                     });
                 }
@@ -1052,23 +1047,6 @@ $(document).ready(function() {
         }
         if (defaultIn) {
             $('#' + targetId).val(defaultIn).trigger('change');
-            calculateDurations();
-        }
-    });
-
-    $(document).on('click', '.fill-sched-out', function() {
-        var targetId = $(this).data('target');
-        var roleId = $(this).data('role');
-        var defaultOut = '';
-        if (attendance_setting) {
-            $.each(attendance_setting, function(k, v) {
-                if (v.role_id == roleId && v.staff_attendence_type_id == 1) {
-                    defaultOut = tConvert(v.entry_time_to);
-                }
-            });
-        }
-        if (defaultOut) {
-            $('#' + targetId).val(defaultOut).trigger('change');
             calculateDurations();
         }
     });

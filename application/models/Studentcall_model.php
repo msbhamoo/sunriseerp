@@ -228,7 +228,7 @@ class Studentcall_model extends MY_Model
 
     public function get_calls($class_id = null, $section_id = null, $date_from = null, $date_to = null, $purpose_id = null, $status = null, $follow_up_date_from = null, $follow_up_date_to = null, $assigned_to = null)
     {
-        $this->db->select('student_calls.*, students.firstname, students.lastname, students.admission_no, students.father_name, students.father_phone, students.mother_phone, students.guardian_phone, students.mobileno, students.admission_type, students.shrestha, students.rte, students.is_staff_kid, students.staff_id, student_staff.name as student_staff_name, classes.class, sections.section, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname, pickup_point.name as pickup_point_name, (SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id DESC LIMIT 1) as next_follow_up_date, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending") as pending_count, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id) as total_followups, (SELECT CONCAT(staff.name, " ", staff.surname) FROM student_call_followups JOIN staff ON staff.id = student_call_followups.assigned_to WHERE student_call_id = student_calls.id AND student_call_followups.status = "Pending" ORDER BY student_call_followups.id DESC LIMIT 1) as assigned_to_name');
+        $this->db->select('student_calls.*, students.firstname, students.lastname, students.admission_no, students.father_name, students.father_phone, students.mother_phone, students.guardian_phone, students.mobileno, students.admission_type, students.shrestha, students.rte, students.is_staff_kid, students.staff_id, student_staff.name as student_staff_name, classes.class, sections.section, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname, pickup_point.name as pickup_point_name, (SELECT id FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id DESC LIMIT 1) as pending_followup_id, (SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id DESC LIMIT 1) as next_follow_up_date, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending") as pending_count, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id) as total_followups, (SELECT assigned_to FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id DESC LIMIT 1) as pending_assigned_to_id, (SELECT CONCAT(staff.name, " ", staff.surname) FROM student_call_followups JOIN staff ON staff.id = student_call_followups.assigned_to WHERE student_call_id = student_calls.id AND student_call_followups.status = "Pending" ORDER BY student_call_followups.id DESC LIMIT 1) as assigned_to_name');
         $this->db->from('student_calls');
         $this->db->join('student_session', 'student_session.id = student_calls.student_session_id');
         $this->db->join('students', 'students.id = student_calls.student_id');
@@ -749,4 +749,85 @@ class Studentcall_model extends MY_Model
         self::$fee_info_cache[$student_session_id] = $res;
         return $res;
     }
+
+    public function get_due_reminders_for_staff($staff_id, $limit = 100)
+    {
+        $today_end = date('Y-m-d 23:59:59');
+
+        $this->db->select('
+            f.id as followup_id,
+            f.student_call_id,
+            f.due_date,
+            f.priority,
+            f.remarks as previous_remarks,
+            f.created_at as followup_created_at,
+            sc.student_id,
+            sc.student_session_id,
+            sc.contact_person,
+            sc.call_type,
+            sc.phone_number,
+            sc.call_status,
+            sc.notes as initial_notes,
+            s.firstname,
+            s.middlename,
+            s.lastname,
+            s.admission_no,
+            s.roll_no,
+            s.father_name,
+            s.father_phone,
+            s.mother_name,
+            s.mother_phone,
+            s.guardian_name,
+            s.guardian_phone,
+            s.mobileno,
+            s.image,
+            c.class,
+            sec.section,
+            p.purpose as purpose_name,
+            st.name as assigned_staff_name,
+            st.surname as assigned_staff_surname
+        ');
+        $this->db->from('student_call_followups f');
+        $this->db->join('student_calls sc', 'sc.id = f.student_call_id');
+        $this->db->join('students s', 's.id = sc.student_id');
+        $this->db->join('student_session ss', 'ss.id = sc.student_session_id', 'left');
+        $this->db->join('classes c', 'c.id = ss.class_id', 'left');
+        $this->db->join('sections sec', 'sec.id = ss.section_id', 'left');
+        $this->db->join('student_call_purpose p', 'p.id = sc.call_purpose_id', 'left');
+        $this->db->join('staff st', 'st.id = f.assigned_to', 'left');
+
+        $this->db->where('f.status', 'Pending');
+        $this->db->where('s.is_active', 'yes');
+        $this->db->where('f.due_date <=', $today_end);
+
+        // Check if user has permission to manage calls or restrict to staff
+        if (!empty($staff_id)) {
+            $is_admin = false;
+            $roles = $this->customlib->getStaffRole();
+            if (!empty($roles)) {
+                $role_name = json_decode($roles)->name ?? '';
+                if ($role_name == 'Super Admin' || $role_name == 'Admin' || $role_name == 'Principal') {
+                    $is_admin = true;
+                }
+            }
+            if (!$is_admin && $this->rbac->hasPrivilege('student_call_log', 'can_view')) {
+                // If user is a regular staff member, show their assigned calls + calls they created + unassigned calls
+                $this->db->group_start();
+                $this->db->where('f.assigned_to', (int)$staff_id);
+                $this->db->or_where('f.assigned_to IS NULL', null, false);
+                $this->db->or_where('f.assigned_to', 0);
+                $this->db->or_where('f.created_by', (int)$staff_id);
+                $this->db->group_end();
+            }
+        }
+
+        // Order by date/time ascending, high priority first
+        $this->db->order_by("CASE WHEN f.priority = 'High' THEN 1 WHEN f.priority = 'Medium' THEN 2 ELSE 3 END", "ASC", FALSE);
+        $this->db->order_by('f.due_date', 'ASC');
+        $this->db->limit($limit);
+
+        $query = $this->db->get();
+        return $query ? $query->result_array() : [];
+    }
 }
+

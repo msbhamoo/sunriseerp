@@ -1087,3 +1087,9 @@ if (isset($_POST['date_from']) && $_POST['date_from'] != '' && isset($_POST['dat
     }
 //===============update chat notification================//
 </script>
+
+<?php
+if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) {
+    $this->load->view('admin/studentcall/studentcall_reminder_widget');
+}
+?>

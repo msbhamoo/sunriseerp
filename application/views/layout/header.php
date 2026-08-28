@@ -785,6 +785,16 @@ if ($this->module_lib->hasActive('calendar_to_do_list')) {
 }
 ?>
                                     <?php
+if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) {
+    ?>
+                                            <li class="hidden-xs" data-placement="bottom" data-toggle="tooltip" title="Call Reminders">
+                                                <a href="javascript:void(0)" onclick="if(window.StudentCallReminder){ StudentCallReminder.openModal(); }" class="sc-header-call-icon" style="position:relative;">
+                                                    <i class="fa fa-phone" style="font-size: 18px; color: #10b981;"></i>
+                                                    <span class="sc-nav-call-badge" id="sc_nav_call_count" style="display:none; position:absolute; top:-2px; right:-4px; background:#ef4444; color:#fff; font-size:10px; font-weight:bold; padding:1px 5px; border-radius:10px; line-height:1.2;">0</span>
+                                                </a>
+                                            </li>
+                                    <?php } ?>
+                                    <?php
 if ($this->module_lib->hasActive('calendar_to_do_list')) {
     if ($this->rbac->hasPrivilege('calendar_to_do_list', 'can_view')) {
         ?>

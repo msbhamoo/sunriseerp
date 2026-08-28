@@ -98,7 +98,14 @@
             ?>
                 <li class="time-label">
                     <span class="<?php echo $status_color; ?>">
-                        Due: <?php echo date($this->customlib->getSchoolDateFormat(), strtotime($fw['due_date'])); ?>
+                        Due: <?php 
+                            $fw_timestamp = strtotime($fw['due_date']);
+                            if (date('H:i:s', $fw_timestamp) !== '00:00:00') {
+                                echo date($this->customlib->getSchoolDateFormat(), $fw_timestamp) . ' ' . date('h:i A', $fw_timestamp);
+                            } else {
+                                echo date($this->customlib->getSchoolDateFormat(), $fw_timestamp);
+                            }
+                        ?>
                     </span>
                 </li>
                 <li>
@@ -143,10 +150,10 @@
 </div>
 
 <div class="row" id="edit_fw_form" style="display:none;">
-    <hr>
     <div class="col-md-12">
-        <h4>Complete / Update Follow Up</h4>
-        <form id="updateFwForm" method="post">
+        <hr style="margin: 10px 0 15px 0;">
+        <h4 style="margin-top:0;"><i class="fa fa-pencil-square-o text-primary"></i> Complete / Update Follow Up</h4>
+        <form id="update_fw_form_id" action="<?php echo site_url('admin/studentcall/update_followup') ?>" method="post">
             <input type="hidden" name="followup_id" id="fw_edit_id">
             <div class="row">
                 <div class="col-md-3">
@@ -160,7 +167,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label>Outcome (If Completed)</label>
                         <select name="call_status" class="form-control">
@@ -174,10 +181,21 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-3">
                     <div class="form-group">
-                        <label>Next Follow-up Date (Optional)</label>
+                        <label>Next Follow-up Date</label>
                         <input type="text" name="next_follow_up_date" id="next_fw_date" class="form-control date" placeholder="Creates new task">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Time (Optional)</label>
+                        <input type="time" name="next_follow_up_time" id="next_fw_time" class="form-control" placeholder="e.g. 04:30 PM">
+                        <div style="margin-top: 4px; display: flex; gap: 4px; flex-wrap: wrap;">
+                            <span class="btn btn-default btn-xs fw-time-chip" onclick="$('#next_fw_time').val('10:00');" style="font-size:10px; padding:1px 5px; border-radius:10px;">10:00 AM</span>
+                            <span class="btn btn-default btn-xs fw-time-chip" onclick="$('#next_fw_time').val('14:00');" style="font-size:10px; padding:1px 5px; border-radius:10px;">02:00 PM</span>
+                            <span class="btn btn-default btn-xs fw-time-chip" onclick="$('#next_fw_time').val('17:00');" style="font-size:10px; padding:1px 5px; border-radius:10px;">05:00 PM</span>
+                        </div>
                     </div>
                 </div>
             </div>

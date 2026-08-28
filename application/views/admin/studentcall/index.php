@@ -2089,3 +2089,416 @@
         </div>
     </div>
 </div>
+
+<!-- QUICK ASSIGN TO MODAL -->
+<div class="modal fade" id="quickAssignModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content" style="border-radius:10px; overflow:hidden;">
+            <form id="quickAssignForm">
+                <?php echo $this->customlib->getCSRF(); ?>
+                <input type="hidden" name="call_id" id="quick_assign_call_id">
+                <input type="hidden" name="followup_id" id="quick_assign_followup_id">
+                <div class="modal-header" style="background:#0284c7; color:#fff; padding:12px 16px;">
+                    <button type="button" class="close" data-dismiss="modal" style="color:#fff;">&times;</button>
+                    <h4 class="modal-title" style="font-size:15px; font-weight:700;"><i class="fa fa-user"></i> Change Assigned Staff</h4>
+                </div>
+                <div class="modal-body" style="padding:16px;">
+                    <div class="form-group">
+                        <label>Select Staff Member</label>
+                        <select name="assigned_to" id="quick_assign_staff_id" class="form-control" style="width:100%;" required>
+                            <option value="">-- Unassigned --</option>
+                            <?php foreach ($staff_list as $st) { ?>
+                                <option value="<?php echo $st['id']; ?>"><?php echo $st['name'] . ' ' . $st['surname'] . ' (' . $st['employee_id'] . ')'; ?></option>
+                            <?php } ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding:10px 16px;">
+                    <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-save"></i> Save Assignee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR DRAWER CSS & BACKDROP -->
+<style>
+.sc-drawer-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(2px);
+    z-index: 1050;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+.sc-drawer-backdrop.active {
+    display: block;
+    opacity: 1;
+}
+.sc-drawer {
+    position: fixed;
+    top: 0;
+    right: -520px;
+    width: 460px;
+    max-width: 95vw;
+    height: 100vh;
+    background: #ffffff;
+    z-index: 1060;
+    box-shadow: -10px 0 35px rgba(0, 0, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    border-left: 1px solid #e2e8f0;
+}
+.sc-drawer.open {
+    right: 0;
+}
+.sc-drawer-header {
+    padding: 18px 24px;
+    background: #ffffff;
+    border-bottom: 1px solid #eef2f6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.sc-drawer-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #0f172a;
+}
+.sc-drawer-title i {
+    color: #10b981;
+    font-size: 19px;
+}
+.sc-drawer-close {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    color: #64748b;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    transition: all 0.15s ease;
+}
+.sc-drawer-close:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+.sc-drawer-body {
+    flex: 1;
+    overflow-y: visible;
+    padding: 24px;
+}
+.sc-drawer-footer {
+    padding: 16px 24px;
+    background: #ffffff;
+    border-top: 1px solid #eef2f6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.sc-drawer .form-group {
+    margin-bottom: 18px;
+}
+.sc-drawer label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 6px;
+    display: block;
+}
+.sc-drawer .form-control {
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    height: 42px;
+    font-size: 14px;
+    color: #1e293b;
+    padding: 8px 14px;
+    box-shadow: none;
+    transition: all 0.15s ease;
+    background-color: #ffffff;
+}
+.sc-drawer .form-control:focus {
+    border-color: #0f172a;
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+}
+.sc-drawer textarea.form-control {
+    height: auto;
+    resize: vertical;
+}
+.sc-drawer .time-chip-btn {
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.sc-drawer .time-chip-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+.sc-drawer .btn-drawer-cancel {
+    border-radius: 8px;
+    padding: 9px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #334155;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+}
+.sc-drawer .btn-drawer-cancel:hover {
+    background: #f8fafc;
+}
+.sc-drawer .btn-drawer-save {
+    border-radius: 8px;
+    padding: 9px 24px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #ffffff;
+    background: #114b5f;
+    border: 1px solid #114b5f;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.sc-drawer .btn-drawer-save:hover {
+    background: #0d3b4b;
+    border-color: #0d3b4b;
+    color: #ffffff;
+}
+</style>
+
+<div class="sc-drawer-backdrop" id="sc_drawer_backdrop" onclick="closeAllDrawers()"></div>
+
+<!-- QUICK STATUS SIDEBAR DRAWER -->
+<div class="sc-drawer" id="quickStatusDrawer">
+    <div class="sc-drawer-header">
+        <h4 class="sc-drawer-title"><i class="fa fa-check-circle" style="color:#114b5f;"></i> Update Follow-up Status</h4>
+        <button type="button" class="sc-drawer-close" onclick="closeAllDrawers()">&times;</button>
+    </div>
+    <form id="quickStatusForm" style="display:flex; flex-direction:column; height:calc(100vh - 65px); margin:0;">
+        <?php echo $this->customlib->getCSRF(); ?>
+        <input type="hidden" name="call_id" id="quick_status_call_id">
+        <input type="hidden" name="followup_id" id="quick_status_followup_id">
+        
+        <div class="sc-drawer-body">
+            <div class="form-group">
+                <label>Status <small class="text-danger">*</small></label>
+                <select name="status" id="quick_status_val" class="form-control">
+                    <option value="Pending">Pending</option>
+                    <option value="Completed" selected>Completed / Resolved</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="form-group" id="quick_status_outcome_box">
+                <label>Call Outcome</label>
+                <select name="call_status" class="form-control">
+                    <option value="Connected">Connected</option>
+                    <option value="Not Answered">Not Answered</option>
+                    <option value="Busy">Busy</option>
+                    <option value="Switched Off">Switched Off</option>
+                    <option value="Callback Requested">Callback Requested</option>
+                    <option value="Wrong Number">Wrong Number</option>
+                </select>
+            </div>
+            <div class="row">
+                <div class="col-xs-6" style="padding-right:8px;">
+                    <div class="form-group" style="margin-bottom:6px;">
+                        <label>Next Follow-up</label>
+                        <input type="text" name="next_date" id="quick_status_next_date" class="form-control date" placeholder="YYYY-MM-DD">
+                    </div>
+                </div>
+                <div class="col-xs-6" style="padding-left:8px;">
+                    <div class="form-group" style="margin-bottom:6px;">
+                        <label>Time (Optional)</label>
+                        <input type="time" name="next_time" id="quick_status_next_time" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div style="margin-bottom:18px; display:flex; justify-content:flex-end; gap:6px;">
+                <span class="time-chip-btn" onclick="$('#quick_status_next_time').val('10:00');">10:00 AM</span>
+                <span class="time-chip-btn" onclick="$('#quick_status_next_time').val('14:00');">02:00 PM</span>
+                <span class="time-chip-btn" onclick="$('#quick_status_next_time').val('17:00');">05:00 PM</span>
+            </div>
+            <div class="form-group">
+                <label>Quick Notes / Remarks</label>
+                <textarea name="remarks" id="quick_status_remarks" class="form-control" rows="3" placeholder="Add remarks or outcome details..."></textarea>
+            </div>
+        </div>
+        <div class="sc-drawer-footer">
+            <button type="button" class="btn btn-drawer-cancel" onclick="closeAllDrawers()">Cancel</button>
+            <button type="submit" class="btn btn-drawer-save"><i class="fa fa-check"></i> Save Status</button>
+        </div>
+    </form>
+</div>
+
+<!-- QUICK ASSIGN SIDEBAR DRAWER -->
+<div class="sc-drawer" id="quickAssignDrawer">
+    <div class="sc-drawer-header">
+        <h4 class="sc-drawer-title"><i class="fa fa-user-circle" style="color:#114b5f;"></i> Reassign Staff Member</h4>
+        <button type="button" class="sc-drawer-close" onclick="closeAllDrawers()">&times;</button>
+    </div>
+    <form id="quickAssignForm" style="display:flex; flex-direction:column; height:calc(100vh - 65px); margin:0;">
+        <?php echo $this->customlib->getCSRF(); ?>
+        <input type="hidden" name="call_id" id="quick_assign_call_id">
+        <input type="hidden" name="followup_id" id="quick_assign_followup_id">
+        
+        <div class="sc-drawer-body">
+            <div class="form-group">
+                <label>Select Staff Member <small class="text-danger">*</small></label>
+                <select name="assigned_to" id="quick_assign_staff_id" class="form-control" style="width:100%;">
+                    <option value="">-- Unassigned --</option>
+                    <?php 
+                    if (!empty($staff_list)) {
+                        foreach ($staff_list as $st) { ?>
+                            <option value="<?php echo $st['id']; ?>"><?php echo htmlspecialchars($st['name'] . ' ' . $st['surname'] . ' (' . $st['employee_id'] . ')'); ?></option>
+                        <?php }
+                    }
+                    ?>
+                </select>
+            </div>
+        </div>
+        <div class="sc-drawer-footer">
+            <button type="button" class="btn btn-drawer-cancel" onclick="closeAllDrawers()">Cancel</button>
+            <button type="submit" class="btn btn-drawer-save"><i class="fa fa-check"></i> Save Assignee</button>
+        </div>
+    </form>
+</div>
+
+<style>
+.datepicker.datepicker-dropdown {
+    z-index: 100000 !important;
+}
+</style>
+
+<script>
+function closeAllDrawers() {
+    $('.sc-drawer').removeClass('open');
+    $('#sc_drawer_backdrop').removeClass('active');
+}
+
+$(document).ready(function() {
+    // Populate quick_assign_staff_id from #assigned_to filter options to guarantee identical full list
+    if ($('#assigned_to option').length > 1) {
+        var optsHtml = '<option value="">-- Unassigned --</option>';
+        $('#assigned_to option').each(function() {
+            var val = $(this).val();
+            var text = $(this).text();
+            if (val !== '') {
+                optsHtml += '<option value="' + val + '">' + text + '</option>';
+            }
+        });
+        $('#quick_assign_staff_id').html(optsHtml);
+    }
+
+    // Initialize datepicker on the drawer next_date field using the standard LMS date_format
+    if ($.fn.datepicker) {
+        var jsDateFormat = (typeof date_format !== 'undefined') ? date_format : '<?php echo strtr($this->customlib->getSchoolDateFormat(), ["d" => "dd", "m" => "mm", "Y" => "yyyy", "M" => "M"]); ?>';
+        $('#quick_status_next_date').datepicker({
+            format: jsDateFormat,
+            autoclose: true,
+            todayHighlight: true
+        });
+    }
+
+    // Quick Assignee Click Handler
+    $(document).on('click', '.quick-change-assignee-btn', function(e) {
+        e.stopPropagation();
+        var callId = $(this).data('call-id');
+        var followupId = $(this).data('followup-id');
+        var assignedId = $(this).data('assigned-id');
+
+        $('#quick_assign_call_id').val(callId);
+        $('#quick_assign_followup_id').val(followupId);
+        $('#quick_assign_staff_id').val(assignedId ? String(assignedId) : '');
+        
+        $('#sc_drawer_backdrop').addClass('active');
+        $('#quickAssignDrawer').addClass('open');
+    });
+
+    $('#quickAssignForm').on('submit', function(e) {
+        e.preventDefault();
+        var $btn = $(this).find('button[type="submit"]');
+        $btn.button('loading');
+
+        $.ajax({
+            url: '<?php echo site_url("admin/studentcall/quick_update_assignee_ajax") ?>',
+            type: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(res) {
+                $btn.button('reset');
+                if (res.status === 'success') {
+                    closeAllDrawers();
+                    if (typeof successMsg === 'function') successMsg(res.message);
+                    if (typeof fetchCallLogsAjax === 'function') fetchCallLogsAjax();
+                } else {
+                    if (typeof errorMsg === 'function') errorMsg(res.message);
+                }
+            }
+        });
+    });
+
+    // Quick Status Click Handler
+    $(document).on('click', '.quick-change-status-btn', function(e) {
+        e.stopPropagation();
+        var callId = $(this).data('call-id');
+        var followupId = $(this).data('followup-id');
+
+        $('#quick_status_call_id').val(callId);
+        $('#quick_status_followup_id').val(followupId);
+        $('#quick_status_next_date').val('');
+        $('#quick_status_next_time').val('');
+        $('#quick_status_remarks').val('');
+        
+        $('#sc_drawer_backdrop').addClass('active');
+        $('#quickStatusDrawer').addClass('open');
+    });
+
+    $('#quickStatusForm').on('submit', function(e) {
+        e.preventDefault();
+        var $btn = $(this).find('button[type="submit"]');
+        $btn.button('loading');
+
+        $.ajax({
+            url: '<?php echo site_url("admin/studentcall/quick_update_followup_status_ajax") ?>',
+            type: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(res) {
+                $btn.button('reset');
+                if (res.status === 'success') {
+                    closeAllDrawers();
+                    if (typeof successMsg === 'function') successMsg(res.message);
+                    if (typeof fetchCallLogsAjax === 'function') fetchCallLogsAjax();
+                } else {
+                    if (typeof errorMsg === 'function') errorMsg(res.message);
+                }
+            }
+        });
+    });
+});
+</script>
+
+
