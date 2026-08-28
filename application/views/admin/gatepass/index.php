@@ -3,13 +3,56 @@ $total_passes = count($gate_passes);
 $pending_count = 0;
 $approved_count = 0;
 $completed_count = 0;
-foreach ($gate_passes as $gp) {
-    if (isset($gp['status'])) {
-        if ($gp['status'] == 'Pending') { $pending_count++; }
-        elseif ($gp['status'] == 'Approved') { $approved_count++; }
-        elseif ($gp['status'] == 'Completed') { $completed_count++; }
+$overdue_count = 0;
+
+$now_timestamp = time();
+
+foreach ($gate_passes as &$gp_item) {
+    $is_overdue = false;
+    $overdue_text = '';
+
+    if (isset($gp_item['status'])) {
+        if ($gp_item['status'] == 'Pending') { 
+            $pending_count++; 
+        } elseif ($gp_item['status'] == 'Approved') { 
+            $approved_count++; 
+
+            // Check if partial pass is overdue
+            $is_partial = (isset($gp_item['pass_type']) && $gp_item['pass_type'] !== '')
+                ? ($gp_item['pass_type'] !== 'Full Day')
+                : (!empty($gp_item['in_time']) && $gp_item['in_time'] != '00:00:00');
+
+            if ($is_partial && empty($gp_item['actual_in_time'])) {
+                if (!empty($gp_item['date']) && !empty($gp_item['in_time'])) {
+                    $exp_datetime_str = $gp_item['date'] . ' ' . $gp_item['in_time'];
+                    $exp_timestamp = strtotime($exp_datetime_str);
+                    if ($exp_timestamp && $now_timestamp > $exp_timestamp) {
+                        $is_overdue = true;
+                        $overdue_count++;
+                        $diff_seconds = $now_timestamp - $exp_timestamp;
+                        $diff_hours = floor($diff_seconds / 3600);
+                        $diff_days = floor($diff_seconds / 86400);
+
+                        if ($diff_days >= 1) {
+                            $overdue_text = $diff_days . 'd ' . ($diff_hours % 24) . 'h late';
+                        } elseif ($diff_hours >= 1) {
+                            $overdue_text = $diff_hours . 'h late';
+                        } else {
+                            $diff_mins = max(1, floor($diff_seconds / 60));
+                            $overdue_text = $diff_mins . 'm late';
+                        }
+                    }
+                }
+            }
+        } elseif ($gp_item['status'] == 'Completed') { 
+            $completed_count++; 
+        }
     }
+    
+    $gp_item['is_overdue'] = $is_overdue;
+    $gp_item['overdue_text'] = $overdue_text;
 }
+unset($gp_item);
 ?>
 
 <div class="content-wrapper">
@@ -20,7 +63,7 @@ foreach ($gate_passes as $gp) {
     <section class="content">
         <!-- Modern KPI Stat Grid -->
         <div class="modern-stat-grid">
-            <div class="modern-stat-card">
+            <div class="modern-stat-card gp-stat-clickable" onclick="filterGatePasses('all')">
                 <div class="modern-stat-info">
                     <div class="stat-label">Total Passes</div>
                     <div class="stat-value"><?php echo $total_passes; ?></div>
@@ -30,17 +73,7 @@ foreach ($gate_passes as $gp) {
                 </div>
             </div>
             
-            <div class="modern-stat-card">
-                <div class="modern-stat-info">
-                    <div class="stat-label">Pending Approval</div>
-                    <div class="stat-value text-warning" style="color: #d97706;"><?php echo $pending_count; ?></div>
-                </div>
-                <div class="modern-stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
-                    <i class="fa fa-hourglass-half"></i>
-                </div>
-            </div>
-            
-            <div class="modern-stat-card">
+            <div class="modern-stat-card gp-stat-clickable" onclick="filterGatePasses('approved')">
                 <div class="modern-stat-info">
                     <div class="stat-label">Approved Passes</div>
                     <div class="stat-value text-success" style="color: #059669;"><?php echo $approved_count; ?></div>
@@ -49,8 +82,18 @@ foreach ($gate_passes as $gp) {
                     <i class="fa fa-check-circle"></i>
                 </div>
             </div>
+
+            <div class="modern-stat-card gp-stat-clickable <?php echo ($overdue_count > 0) ? 'gp-card-overdue-alert' : ''; ?>" onclick="filterGatePasses('overdue')">
+                <div class="modern-stat-info">
+                    <div class="stat-label" style="color: #dc2626; font-weight: 700;">Overdue Return</div>
+                    <div class="stat-value" style="color: #dc2626;"><?php echo $overdue_count; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
+                    <i class="fa fa-exclamation-triangle"></i>
+                </div>
+            </div>
             
-            <div class="modern-stat-card">
+            <div class="modern-stat-card gp-stat-clickable" onclick="filterGatePasses('completed')">
                 <div class="modern-stat-info">
                     <div class="stat-label">Completed / Returned</div>
                     <div class="stat-value" style="color: #0284c7;"><?php echo $completed_count; ?></div>
@@ -59,15 +102,36 @@ foreach ($gate_passes as $gp) {
                     <i class="fa fa-flag-checkered"></i>
                 </div>
             </div>
+
+            <div class="modern-stat-card gp-stat-clickable" onclick="filterGatePasses('pending')">
+                <div class="modern-stat-info">
+                    <div class="stat-label">Pending Approval</div>
+                    <div class="stat-value text-warning" style="color: #d97706;"><?php echo $pending_count; ?></div>
+                </div>
+                <div class="modern-stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
+                    <i class="fa fa-hourglass-half"></i>
+                </div>
+            </div>
         </div>
 
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-primary" id="route">
-                    <div class="box-header ptbnull">
-                        <h3 class="box-title titlefix"><i class="fa fa-list text-muted" style="margin-right: 6px;"></i> <?php echo $this->lang->line('gate_pass_list'); ?></h3>
+                    <div class="box-header ptbnull" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px 16px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <h3 class="box-title titlefix" style="margin: 0;"><i class="fa fa-list text-muted" style="margin-right: 6px;"></i> <?php echo $this->lang->line('gate_pass_list'); ?></h3>
+                            
+                            <!-- Quick Filter Pills -->
+                            <div class="gp-filter-pill-group">
+                                <button type="button" class="gp-filter-pill active" data-filter="all" onclick="filterGatePasses('all')">All (<?php echo $total_passes; ?>)</button>
+                                <button type="button" class="gp-filter-pill" data-filter="approved" onclick="filterGatePasses('approved')">Approved (<?php echo $approved_count; ?>)</button>
+                                <button type="button" class="gp-filter-pill pill-overdue <?php echo ($overdue_count > 0) ? 'has-overdue' : ''; ?>" data-filter="overdue" onclick="filterGatePasses('overdue')">⚠️ Overdue (<?php echo $overdue_count; ?>)</button>
+                                <button type="button" class="gp-filter-pill" data-filter="completed" onclick="filterGatePasses('completed')">Completed (<?php echo $completed_count; ?>)</button>
+                            </div>
+                        </div>
+
                         <?php if ($this->rbac->hasPrivilege('front_office_gate_pass', 'can_add')) { ?>
-                            <div class="box-tools pull-right">
+                            <div class="box-tools">
                                 <button type="button" id="btn-open-gatepass-drawer" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add_gate_pass'); ?></button>
                             </div>
                         <?php } ?>
@@ -75,13 +139,12 @@ foreach ($gate_passes as $gp) {
                     <div class="box-body">
                         <div class="mailbox-messages table-responsive">
                             <div class="download_label"><?php echo $this->lang->line('gate_pass_list'); ?></div>
-                            <table class="table table-striped table-bordered table-hover example">
+                            <table class="table table-striped table-bordered table-hover example" id="frontoffice_gatepass_table">
                                 <thead>
                                     <tr>
                                         <th><?php echo $this->lang->line('gate_pass_no'); ?></th>
-                                        <th><?php echo $this->lang->line('user_type'); ?></th>
-                                        <th><?php echo $this->lang->line('user'); ?></th>
-                                        <th>Father Name</th>
+                                        <th>Person Details</th>
+                                        <th>Contact</th>
                                         <th><?php echo $this->lang->line('date'); ?></th>
                                         <th>Duration</th>
                                         <th><?php echo $this->lang->line('out_time'); ?></th>
@@ -96,21 +159,86 @@ foreach ($gate_passes as $gp) {
                                     <?php
                                     if (!empty($gate_passes)) {
                                         foreach ($gate_passes as $gatepass) {
+                                            $row_class = '';
+                                            $filter_types = 'all';
+                                            if ($gatepass['status'] == 'Approved') {
+                                                $filter_types .= ' approved';
+                                                if ($gatepass['is_overdue']) {
+                                                    $filter_types .= ' overdue';
+                                                    $row_class = 'gp-row-overdue';
+                                                }
+                                            } elseif ($gatepass['status'] == 'Pending') {
+                                                $filter_types .= ' pending';
+                                            } elseif ($gatepass['status'] == 'Completed') {
+                                                $filter_types .= ' completed';
+                                            }
+
+                                            $u_info = $gatepass['user_info'] ?? [];
+                                            $user_name = !empty($u_info['name']) ? $u_info['name'] : $gatepass['user_details'];
+                                            $user_adm = $u_info['admission_no'] ?? '';
+                                            $user_class = $u_info['class_name'] ?? '';
+                                            
+                                            // Avatar
+                                            if ($gatepass['user_type'] == 'staff') {
+                                                $user_img = !empty($u_info['image']) ? base_url('uploads/staff_images/' . $u_info['image']) : base_url('uploads/staff_images/default_male.jpg');
+                                            } else {
+                                                $user_img = !empty($u_info['image']) ? base_url($u_info['image']) : base_url('uploads/student_images/no_image.png');
+                                            }
+
+                                            // Phone contact
+                                            $phone_contact = !empty($u_info['father_phone']) ? $u_info['father_phone'] : (!empty($u_info['guardian_phone']) ? $u_info['guardian_phone'] : (!empty($u_info['mobileno']) ? $u_info['mobileno'] : ''));
+
+                                            $is_partial = (isset($gatepass['pass_type']) && $gatepass['pass_type'] !== '')
+                                                ? ($gatepass['pass_type'] !== 'Full Day')
+                                                : (!empty($gatepass['in_time']) && $gatepass['in_time'] != '00:00:00');
                                             ?>
-                                            <tr>
-                                                <td class="mailbox-name"><code style="background: #f1f5f9; color: #4f46e5; padding: 2px 6px; border-radius: 4px; font-weight: 600;"><?php echo html_escape($gatepass['gate_pass_no']); ?></code></td>
-                                                <td class="mailbox-name"><span class="badge" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1;"><?php echo ucfirst($gatepass['user_type']); ?></span></td>
-                                                <td class="mailbox-name"><strong style="color: #0f172a;"><?php echo html_escape($gatepass['user_details']); ?></strong></td>
-                                                <td class="mailbox-name"><?php echo isset($gatepass['father_name']) ? html_escape($gatepass['father_name']) : '-'; ?></td>
+                                            <tr class="<?php echo $row_class; ?>" data-filter-type="<?php echo $filter_types; ?>">
+                                                <td class="mailbox-name">
+                                                    <code style="background: #f1f5f9; color: #4f46e5; padding: 2px 6px; border-radius: 4px; font-weight: 600;"><?php echo html_escape($gatepass['gate_pass_no']); ?></code>
+                                                    <div style="margin-top: 3px;">
+                                                        <span class="badge" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; font-size: 10px;"><?php echo ucfirst($gatepass['user_type']); ?></span>
+                                                    </div>
+                                                </td>
+                                                <td class="mailbox-name">
+                                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                                        <img src="<?php echo $user_img; ?>" alt="Photo" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.06); flex-shrink: 0;" onerror="this.src='<?php echo ($gatepass['user_type'] == 'staff') ? base_url('uploads/staff_images/default_male.jpg') : base_url('uploads/student_images/no_image.png'); ?>'">
+                                                        <div>
+                                                            <div style="font-weight: 700; color: #0f172a; font-size: 13.5px; line-height: 1.2;">
+                                                                <?php echo html_escape($user_name); ?>
+                                                            </div>
+                                                            <div style="margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                                                <?php if (!empty($user_adm)) { ?>
+                                                                    <code style="background: #eef2ff; color: #4338ca; padding: 1px 5px; border-radius: 4px; font-weight: 600; font-size: 11px;"><?php echo html_escape($user_adm); ?></code>
+                                                                <?php } ?>
+                                                                <?php if (!empty($user_class)) { ?>
+                                                                    <span style="font-size: 11px; color: #64748b; font-weight: 600;"><?php echo html_escape($user_class); ?></span>
+                                                                <?php } ?>
+                                                            </div>
+                                                            <?php if ($gatepass['is_overdue']) { ?>
+                                                                <span class="label label-danger gp-overdue-tag" title="User has not returned by expected time"><i class="fa fa-clock-o"></i> OVERDUE (<?php echo $gatepass['overdue_text']; ?>)</span>
+                                                            <?php } ?>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="mailbox-name white-space-nowrap">
+                                                    <?php if (!empty($phone_contact)) { ?>
+                                                        <div style="display: inline-flex; align-items: center; gap: 4px;">
+                                                            <a href="tel:<?php echo html_escape($phone_contact); ?>" class="btn btn-default btn-xs" data-toggle="tooltip" title="Call: <?php echo html_escape($phone_contact); ?>" style="color: #0284c7; border-radius: 4px;">
+                                                                <i class="fa fa-phone"></i> <?php echo html_escape($phone_contact); ?>
+                                                            </a>
+                                                            <a href="https://wa.me/91<?php echo preg_replace('/[^0-9]/', '', $phone_contact); ?>" target="_blank" class="btn btn-xs" data-toggle="tooltip" title="WhatsApp" style="background: #25d366; color: #fff; border-radius: 4px; padding: 2px 6px;">
+                                                                <i class="fa fa-whatsapp"></i>
+                                                            </a>
+                                                        </div>
+                                                    <?php } else { ?>
+                                                        <span class="text-muted">-</span>
+                                                    <?php } ?>
+                                                </td>
                                                 <td class="mailbox-name white-space-nowrap">
                                                     <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($gatepass['date'])); ?>
                                                 </td>
                                                 <td class="mailbox-name">
                                                     <?php 
-                                                    $is_partial = (isset($gatepass['pass_type']) && $gatepass['pass_type'] !== '')
-                                                        ? ($gatepass['pass_type'] !== 'Full Day')
-                                                        : (!empty($gatepass['in_time']) && $gatepass['in_time'] != '00:00:00');
-
                                                     if ($is_partial) {
                                                         echo '<span class="badge" style="background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;">Partial Time</span>';
                                                     } else {
@@ -119,12 +247,28 @@ foreach ($gate_passes as $gp) {
                                                     ?>
                                                 </td>
                                                 <td class="mailbox-name"><?php echo html_escape($gatepass['out_time']); ?></td>
-                                                <td class="mailbox-name"><?php echo (!empty($gatepass['in_time']) && $gatepass['in_time'] != '00:00:00') ? html_escape($gatepass['in_time']) : '-'; ?></td>
+                                                <td class="mailbox-name">
+                                                    <?php 
+                                                    if (!empty($gatepass['in_time']) && $gatepass['in_time'] != '00:00:00') {
+                                                        if ($gatepass['is_overdue']) {
+                                                            echo '<span style="color: #dc2626; font-weight: 700;"><i class="fa fa-exclamation-circle"></i> ' . html_escape($gatepass['in_time']) . '</span>';
+                                                        } else {
+                                                            echo html_escape($gatepass['in_time']);
+                                                        }
+                                                    } else {
+                                                        echo '-';
+                                                    }
+                                                    ?>
+                                                </td>
                                                 <td class="mailbox-name white-space-nowrap">
                                                     <?php if (!empty($gatepass['actual_in_time']) && $gatepass['actual_in_time'] != '00:00:00') { ?>
                                                         <span style="font-weight: 600; color: #059669;"><?php echo html_escape($gatepass['actual_in_time']); ?></span>
                                                     <?php } elseif ($is_partial && $gatepass['status'] != 'Rejected') { ?>
-                                                        <span class="text-muted" style="font-style: italic; font-size: 11px; margin-right: 6px;">Not Returned</span>
+                                                        <?php if ($gatepass['is_overdue']) { ?>
+                                                            <span class="text-danger" style="font-weight: 700; font-size: 11px; margin-right: 6px;"><i class="fa fa-warning"></i> Not Returned (Overdue)</span>
+                                                        <?php } else { ?>
+                                                            <span class="text-muted" style="font-style: italic; font-size: 11px; margin-right: 6px;">Not Returned</span>
+                                                        <?php } ?>
                                                         <?php if ($this->rbac->hasPrivilege('front_office_gate_pass', 'can_edit')) { ?>
                                                             <button type="button" class="btn btn-xs btn-quick-mark-in" onclick="quickMarkInTime('<?php echo $gatepass['id']; ?>', '<?php echo html_escape($gatepass['gate_pass_no']); ?>')" data-toggle="tooltip" title="Mark In-Time & Complete" style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #10b981; color: #fff; border: none; padding: 0; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(16,185,129,0.4);">
                                                                 <i class="fa fa-plus" style="font-size: 11px; font-weight: bold;"></i>
@@ -140,7 +284,11 @@ foreach ($gate_passes as $gp) {
                                                     if ($gatepass['status'] == 'Pending') {
                                                         echo "<span class='label label-warning'>Pending</span>";
                                                     } elseif ($gatepass['status'] == 'Approved') {
-                                                        echo "<span class='label label-success'>Approved</span>";
+                                                        if ($gatepass['is_overdue']) {
+                                                            echo "<span class='label label-danger' style='animation: pulseWarning 1.5s infinite;'><i class='fa fa-exclamation-triangle'></i> OVERDUE</span>";
+                                                        } else {
+                                                            echo "<span class='label label-success'>Approved</span>";
+                                                        }
                                                     } elseif ($gatepass['status'] == 'Rejected') {
                                                         echo "<span class='label label-danger'>Rejected</span>";
                                                     } elseif ($gatepass['status'] == 'Completed') {
@@ -266,8 +414,8 @@ foreach ($gate_passes as $gp) {
                 </div>
             </div>
             <div class="form-group">
-                <label><?php echo $this->lang->line('reason'); ?></label>
-                <textarea name="reason" class="form-control" id="reason" rows="3" placeholder="State purpose for leaving campus..."></textarea>
+                <label><?php echo $this->lang->line('reason'); ?> <small class="req"> *</small></label>
+                <textarea name="reason" class="form-control" id="reason" rows="3" placeholder="State purpose for leaving campus..." required></textarea>
             </div>
         </div>
         <div class="modern-drawer-footer" style="display: flex; justify-content: flex-end; gap: 8px;">
@@ -346,7 +494,252 @@ foreach ($gate_passes as $gp) {
         </div>
     </div>
 </div>
+
+<!-- Select2 CSS/JS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <style>
+/* Modern Compact KPI Stats Styles */
+.modern-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.modern-stat-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gp-stat-clickable {
+    cursor: pointer;
+}
+
+.gp-stat-clickable:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px -1px rgba(0, 0, 0, 0.08);
+    border-color: #cbd5e1;
+}
+
+.gp-card-overdue-alert {
+    border: 1.5px solid #fca5a5 !important;
+    background: #fef2f2 !important;
+}
+
+.pulse-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    margin-left: 4px;
+    animation: pulseDot 1.5s infinite;
+}
+
+@keyframes pulseDot {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+@keyframes pulseWarning {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+/* Quick Filter Pills */
+.gp-filter-pill-group {
+    display: inline-flex;
+    align-items: center;
+    background: #f1f5f9;
+    padding: 2px;
+    border-radius: 16px;
+    gap: 3px;
+}
+
+.gp-filter-pill {
+    background: transparent;
+    border: none;
+    padding: 3px 10px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #475569;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none !important;
+}
+
+.gp-filter-pill:hover {
+    color: #0f172a;
+    background: #e2e8f0;
+}
+
+.gp-filter-pill.active {
+    background: #ffffff;
+    color: #0284c7;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+.gp-filter-pill.pill-overdue.has-overdue {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.gp-filter-pill.pill-overdue.active {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+}
+
+/* Row Overdue Highlight */
+.gp-row-overdue {
+    background-color: #fff1f2 !important;
+    border-left: 4px solid #ef4444 !important;
+}
+
+.gp-row-overdue:hover {
+    background-color: #ffe4e6 !important;
+}
+
+.gp-overdue-tag {
+    display: block;
+    margin-top: 3px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    border-radius: 4px;
+    padding: 1px 5px;
+    width: fit-content;
+}
+
+.stat-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 2px;
+    text-transform: capitalize;
+    letter-spacing: 0.2px;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.1;
+}
+
+.modern-stat-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+}
+
+/* Modern Drawer Styles */
+.modern-drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(2px);
+    z-index: 1040;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
+}
+
+.modern-drawer-overlay.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modern-drawer-panel {
+    position: fixed;
+    top: 0;
+    right: -520px;
+    width: 500px;
+    max-width: 90vw;
+    height: 100%;
+    background: #ffffff;
+    z-index: 1050;
+    box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1), -8px 0 10px -6px rgba(0, 0, 0, 0.1);
+    transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.modern-drawer-panel.is-open {
+    right: 0;
+}
+
+.modern-drawer-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fafafa;
+}
+
+.modern-drawer-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.modern-drawer-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    transition: color 0.2s;
+}
+
+.modern-drawer-close:hover {
+    color: #0f172a;
+}
+
+.modern-drawer-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.modern-drawer-footer {
+    padding: 14px 20px;
+    border-top: 1px solid #f1f5f9;
+    background: #fafafa;
+}
+
+/* Select2 in Drawer */
+.select2-container--open {
+    z-index: 99999999 !important;
+}
+
+.select2-dropdown {
+    z-index: 99999999 !important;
+}
+
 .bootstrap-timepicker-widget.dropdown-menu,
 .bootstrap-timepicker-widget {
     z-index: 100000 !important;
@@ -382,26 +775,48 @@ foreach ($gate_passes as $gp) {
     top: 50% !important;
     transform: translateY(-50%) !important;
 }
+
 /* Keep table horizontally scrollable while allowing space for dropdown menus */
 .table-responsive {
     overflow-x: auto !important;
     overflow-y: visible !important;
-    padding-bottom: 70px;
-    margin-bottom: -70px;
+    padding-bottom: 60px;
+    margin-bottom: -60px;
 }
 </style>
 
 <script>
     var lastClickedSubmitBtn = null;
 
+    function filterGatePasses(type) {
+        $('.gp-filter-pill').removeClass('active');
+        $('.gp-filter-pill[data-filter="' + type + '"]').addClass('active');
+
+        var table = $('#frontoffice_gatepass_table');
+        if (type === 'all') {
+            table.find('tbody tr').show();
+        } else {
+            table.find('tbody tr').each(function() {
+                var rowFilters = $(this).attr('data-filter-type') || '';
+                if (rowFilters.indexOf(type) !== -1) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+    }
+
     $(document).ready(function () {
         $('#user_id').select2({
+            dropdownParent: $('#gatepass-drawer-panel'),
             width: '100%',
             placeholder: 'Search name / roll no / ID',
             allowClear: true,
+            minimumInputLength: 1,
             ajax: {
-                url: '<?php echo base_url(); ?>admin/gatepass/search_user',
-                type: 'get',
+                url: '<?php echo site_url('admin/gatepass/search_user'); ?>',
+                type: 'post',
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
@@ -415,15 +830,17 @@ foreach ($gate_passes as $gp) {
                         results: data
                     };
                 },
-                cache: false
+                cache: true
             }
         });
 
         $('#btn-open-gatepass-drawer').on('click', function() {
             $('#formadd').trigger("reset");
             $('#user_id').val(null).trigger('change');
+            toggleOutTime();
             openGatepassDrawer();
         });
+
         $('#btn-close-gatepass-drawer, #btn-cancel-gatepass-drawer, #gatepass-drawer-overlay').on('click', function() {
             closeGatepassDrawer();
         });
@@ -470,13 +887,16 @@ foreach ($gate_passes as $gp) {
                         });
                     } else {
                         successMsg(res.message);
+                        closeGatepassDrawer();
                         if (isSaveAndPrint && res.id) {
                             printGatePass(res.id);
                             setTimeout(function() {
                                 window.location.reload(true);
                             }, 1000);
                         } else {
-                            window.location.reload(true);
+                            setTimeout(function() {
+                                window.location.reload(true);
+                            }, 500);
                         }
                     }
                 },
@@ -487,16 +907,22 @@ foreach ($gate_passes as $gp) {
                 }
             });
         }));
-        
+
         $('#statusform').on('submit', (function (e) {
             e.preventDefault();
+            var $this = $(this).find("button[type=submit]");
+            $this.button('loading');
             $.ajax({
                 url: $(this).attr('action'),
                 type: "POST",
                 data: $(this).serialize(),
                 dataType: 'json',
                 success: function (res) {
-                    if (res.status == "success") {
+                    $this.button('reset');
+                    if (res.status == "fail") {
+                        errorMsg(res.message);
+                    } else {
+                        $('#statusModal').modal('hide');
                         successMsg(res.message);
                         window.location.reload(true);
                     }

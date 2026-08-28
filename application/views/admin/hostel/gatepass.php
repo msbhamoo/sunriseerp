@@ -91,7 +91,7 @@ unset($gp_item);
 
             <div class="modern-stat-card gp-stat-clickable <?php echo ($overdue_count > 0) ? 'gp-card-overdue-alert' : ''; ?>" onclick="filterGatePasses('overdue')">
                 <div class="modern-stat-info">
-                    <div class="stat-label" style="color: #dc2626; font-weight: 700;">Overdue Return <?php echo ($overdue_count > 0) ? '<span class="pulse-dot"></span>' : ''; ?></div>
+                    <div class="stat-label" style="color: #dc2626; font-weight: 700;">Overdue Return</div>
                     <div class="stat-value" style="color: #dc2626;"><?php echo $overdue_count; ?></div>
                 </div>
                 <div class="modern-stat-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
@@ -153,9 +153,7 @@ unset($gp_item);
                             <table class="table table-striped table-bordered table-hover example" id="hostel_gatepass_table">
                                 <thead>
                                     <tr>
-                                        <th>Student Name</th>
-                                        <th>Admission No</th>
-                                        <th>Class</th>
+                                        <th>Student Details</th>
                                         <th>Contact / Parent</th>
                                         <th>Going To</th>
                                         <th>Pass Type</th>
@@ -189,17 +187,27 @@ unset($gp_item);
                                             }
 
                                             $phone_contact = !empty($gp['father_phone']) ? $gp['father_phone'] : (!empty($gp['guardian_phone']) ? $gp['guardian_phone'] : (!empty($gp['mobileno']) ? $gp['mobileno'] : ''));
+                                            
+                                            // Student photo path
+                                            $student_img = !empty($gp['image']) ? base_url($gp['image']) : base_url('uploads/student_images/no_image.png');
                                             ?>
                                             <tr class="<?php echo $row_class; ?>" data-filter-type="<?php echo $filter_types; ?>">
                                                 <td class="mailbox-name">
-                                                    <strong style="color: #0f172a;"><?php echo html_escape($gp['firstname'] . ' ' . $gp['lastname']); ?></strong>
-                                                    <?php if ($gp['is_overdue']) { ?>
-                                                        <span class="label label-danger gp-overdue-tag" title="Student has not returned by expected time"><i class="fa fa-clock-o"></i> OVERDUE (<?php echo $gp['overdue_text']; ?>)</span>
-                                                    <?php } ?>
-                                                </td>
-                                                <td class="mailbox-name"><code style="background: #f1f5f9; color: #4f46e5; padding: 2px 6px; border-radius: 4px; font-weight: 600;"><?php echo html_escape($gp['admission_no']); ?></code></td>
-                                                <td class="mailbox-name">
-                                                    <?php echo !empty($gp['class_name']) ? html_escape($gp['class_name'] . ' (' . $gp['section_name'] . ')') : '-'; ?>
+                                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                                        <img src="<?php echo $student_img; ?>" alt="Student Photo" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.06); flex-shrink: 0;" onerror="this.src='<?php echo base_url('uploads/student_images/no_image.png'); ?>'">
+                                                        <div>
+                                                            <div style="font-weight: 700; color: #0f172a; font-size: 13.5px; line-height: 1.2;">
+                                                                <?php echo html_escape($gp['firstname'] . ' ' . $gp['lastname']); ?>
+                                                            </div>
+                                                            <div style="margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                                                <code style="background: #eef2ff; color: #4338ca; padding: 1px 5px; border-radius: 4px; font-weight: 600; font-size: 11px;"><?php echo html_escape($gp['admission_no']); ?></code>
+                                                                <span style="font-size: 11px; color: #64748b; font-weight: 600;"><?php echo !empty($gp['class_name']) ? html_escape($gp['class_name'] . ' (' . $gp['section_name'] . ')') : '-'; ?></span>
+                                                            </div>
+                                                            <?php if ($gp['is_overdue']) { ?>
+                                                                <span class="label label-danger gp-overdue-tag" title="Student has not returned by expected time"><i class="fa fa-clock-o"></i> OVERDUE (<?php echo $gp['overdue_text']; ?>)</span>
+                                                            <?php } ?>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                                 <td class="mailbox-name white-space-nowrap">
                                                     <?php if (!empty($phone_contact)) { ?>
@@ -495,25 +503,84 @@ unset($gp_item);
     100% { opacity: 1; }
 }
 
+/* Modern Compact KPI Stats Styles */
+.modern-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.modern-stat-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gp-stat-clickable {
+    cursor: pointer;
+}
+
+.gp-stat-clickable:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px -1px rgba(0, 0, 0, 0.08);
+    border-color: #cbd5e1;
+}
+
+.gp-card-overdue-alert {
+    border: 1.5px solid #fca5a5 !important;
+    background: #fef2f2 !important;
+}
+
+.pulse-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    margin-left: 4px;
+    animation: pulseDot 1.5s infinite;
+}
+
+@keyframes pulseDot {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+@keyframes pulseWarning {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
 /* Quick Filter Pills */
 .gp-filter-pill-group {
     display: inline-flex;
+    align-items: center;
     background: #f1f5f9;
-    padding: 3px;
-    border-radius: 20px;
-    gap: 4px;
+    padding: 2px;
+    border-radius: 16px;
+    gap: 3px;
 }
 
 .gp-filter-pill {
     background: transparent;
     border: none;
-    padding: 4px 12px;
-    font-size: 12px;
+    padding: 3px 10px;
+    font-size: 11.5px;
     font-weight: 600;
     color: #475569;
-    border-radius: 16px;
+    border-radius: 14px;
     cursor: pointer;
     transition: all 0.2s ease;
+    outline: none !important;
 }
 
 .gp-filter-pill:hover {
@@ -524,7 +591,7 @@ unset($gp_item);
 .gp-filter-pill.active {
     background: #ffffff;
     color: #0284c7;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 
 .gp-filter-pill.pill-overdue.has-overdue {
@@ -549,38 +616,39 @@ unset($gp_item);
 
 .gp-overdue-tag {
     display: block;
-    margin-top: 4px;
-    font-size: 10px;
+    margin-top: 3px;
+    font-size: 9.5px;
     font-weight: 700;
     letter-spacing: 0.3px;
     border-radius: 4px;
-    padding: 2px 6px;
+    padding: 1px 5px;
     width: fit-content;
 }
 
 .stat-label {
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 11.5px;
+    font-weight: 600;
     color: #64748b;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     text-transform: capitalize;
+    letter-spacing: 0.2px;
 }
 
 .stat-value {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
     color: #0f172a;
-    line-height: 1;
+    line-height: 1.1;
 }
 
 .modern-stat-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 15px;
 }
 
 /* Modern Drawer Styles */

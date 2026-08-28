@@ -48,6 +48,7 @@ class Gatepass extends Admin_Controller
         $this->form_validation->set_rules('user_id', 'User', 'required');
         $this->form_validation->set_rules('date', 'Date', 'required');
         $this->form_validation->set_rules('out_time', 'Out Time', 'required');
+        $this->form_validation->set_rules('reason', 'Reason', 'required');
         $pass_type = $this->input->post('pass_type');
 
         if ($this->form_validation->run() == FALSE) {
@@ -56,7 +57,8 @@ class Gatepass extends Admin_Controller
                 'user_id'   => form_error('user_id'),
                 'date'      => form_error('date'),
                 'out_time'  => form_error('out_time'),
-                'in_time'   => form_error('in_time')
+                'in_time'   => form_error('in_time'),
+                'reason'    => form_error('reason')
             );
             echo json_encode(array('status' => 'fail', 'error' => $msg, 'message' => ''));
         } else {
@@ -98,53 +100,59 @@ class Gatepass extends Admin_Controller
 
     public function search_user()
     {
-        $user_type = $this->input->get('user_type');
-        $keyword = $this->input->get('keyword');
+        $user_type = $this->input->post('user_type') ? $this->input->post('user_type') : $this->input->get('user_type');
+        $keyword = $this->input->post('keyword') ? $this->input->post('keyword') : $this->input->get('keyword');
 
         $result = array();
         if ($user_type == 'student') {
-            $current_session = $this->setting_model->getCurrentSession();
             $this->db->select('students.id, students.firstname, students.lastname, students.admission_no, students.father_name, classes.class, sections.section');
-            $this->db->join('student_session', 'student_session.student_id = students.id');
-            $this->db->join('classes', 'classes.id = student_session.class_id');
-            $this->db->join('sections', 'sections.id = student_session.section_id');
-            $this->db->where('student_session.session_id', $current_session);
+            $this->db->from('students');
+            $this->db->join('student_session', 'student_session.student_id = students.id', 'left');
+            $this->db->join('classes', 'classes.id = student_session.class_id', 'left');
+            $this->db->join('sections', 'sections.id = student_session.section_id', 'left');
             $this->db->where('students.is_active', 'yes');
-            if(!empty($keyword)){
+            if (!empty($keyword)) {
                 $this->db->group_start();
                 $this->db->like('students.firstname', $keyword);
                 $this->db->or_like('students.lastname', $keyword);
                 $this->db->or_like('students.admission_no', $keyword);
+                $this->db->or_like("CONCAT(students.firstname, ' ', students.lastname)", $keyword);
                 $this->db->group_end();
             }
+            $this->db->group_by('students.id');
             $this->db->limit(20);
-            $query = $this->db->get('students');
+            $query = $this->db->get();
             $students = $query->result_array();
             foreach ($students as $student) {
+                $class_str = !empty($student['class']) ? ' - ' . $student['class'] . ' (' . $student['section'] . ')' : '';
                 $result[] = array(
                     'id' => $student['id'],
-                    'text' => $student['firstname'] . ' ' . $student['lastname'] . ' (' . $student['admission_no'] . ')' . ($student['father_name'] ? ' - Father: ' . $student['father_name'] : '') . ' - ' . $student['class'] . ' (' . $student['section'] . ')'
+                    'text' => $student['firstname'] . ' ' . $student['lastname'] . ' (' . $student['admission_no'] . ')' . ($student['father_name'] ? ' - Father: ' . $student['father_name'] : '') . $class_str
                 );
             }
         } elseif ($user_type == 'staff') {
             $this->db->select('staff.id, staff.name, staff.surname, staff.employee_id, roles.name as role_name');
-            $this->db->join('staff_roles', 'staff_roles.staff_id = staff.id');
-            $this->db->join('roles', 'staff_roles.role_id = roles.id');
+            $this->db->from('staff');
+            $this->db->join('staff_roles', 'staff_roles.staff_id = staff.id', 'left');
+            $this->db->join('roles', 'staff_roles.role_id = roles.id', 'left');
             $this->db->where('staff.is_active', 1);
-            if(!empty($keyword)){
+            if (!empty($keyword)) {
                 $this->db->group_start();
                 $this->db->like('staff.name', $keyword);
                 $this->db->or_like('staff.surname', $keyword);
                 $this->db->or_like('staff.employee_id', $keyword);
+                $this->db->or_like("CONCAT(staff.name, ' ', staff.surname)", $keyword);
                 $this->db->group_end();
             }
+            $this->db->group_by('staff.id');
             $this->db->limit(20);
-            $query = $this->db->get('staff');
+            $query = $this->db->get();
             $staffs = $query->result_array();
             foreach ($staffs as $st) {
+                $role_str = !empty($st['role_name']) ? ' - ' . $st['role_name'] : '';
                 $result[] = array(
                     'id' => $st['id'],
-                    'text' => $st['name'] . ' ' . $st['surname'] . ' (' . $st['employee_id'] . ') - ' . $st['role_name']
+                    'text' => $st['name'] . ' ' . $st['surname'] . ' (' . $st['employee_id'] . ')' . $role_str
                 );
             }
         }

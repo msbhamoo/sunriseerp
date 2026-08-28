@@ -12,7 +12,7 @@ class Hostelgatepass_model extends MY_Model
 
     public function get($id = null)
     {
-        $this->db->select('hostel_gate_pass.*, students.firstname, students.lastname, students.admission_no, students.father_name, students.father_phone, students.guardian_name, students.guardian_phone, students.mobileno, students.mother_name, students.mother_phone, classes.class as class_name, sections.section as section_name');
+        $this->db->select('hostel_gate_pass.*, students.firstname, students.lastname, students.admission_no, students.image, students.father_name, students.father_phone, students.guardian_name, students.guardian_phone, students.mobileno, students.mother_name, students.mother_phone, classes.class as class_name, sections.section as section_name');
         $this->db->from('hostel_gate_pass');
         $this->db->join('student_session', 'student_session.id = hostel_gate_pass.student_session_id');
         $this->db->join('students', 'students.id = student_session.student_id');
