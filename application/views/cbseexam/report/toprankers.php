@@ -281,6 +281,17 @@
                     $class_toppers = $rankers_report['class_toppers'];
                     $subject_toppers = $rankers_report['subject_toppers'];
                     $exam_detail = $rankers_report['exam'];
+
+                    // Dynamic Topper Scope Title & Badge
+                    $topper_scope_label = "School Topper";
+                    $topper_badge_label = "1st Rank (School Topper)";
+                    if (!empty($section_id)) {
+                        $topper_scope_label = "Section Topper";
+                        $topper_badge_label = "1st Rank (Section Topper)";
+                    } elseif (!empty($class_id)) {
+                        $topper_scope_label = "Class Topper";
+                        $topper_badge_label = "1st Rank (Class Topper)";
+                    }
                 ?>
                     <!-- Top 3 Podium Cards -->
                     <?php if (count($school_toppers) >= 3) { ?>
@@ -300,7 +311,7 @@
                                 <div class="podium-name" style="font-size: 17px; color: #854d0e;"><?php echo $school_toppers[0]['student_name']; ?></div>
                                 <div class="podium-class"><?php echo $school_toppers[0]['class_name']; ?> | Roll: <?php echo $school_toppers[0]['roll_no']; ?></div>
                                 <div class="podium-score" style="font-size: 28px; color: #854d0e;"><?php echo $school_toppers[0]['overall_percent']; ?>%</div>
-                                <span class="badge badge-warning" style="margin-top: 4px; font-weight: 800;">1st Rank (School Topper)</span>
+                                <span class="badge badge-warning" style="margin-top: 4px; font-weight: 800;"><?php echo $topper_badge_label; ?></span>
                             </div>
 
                             <!-- 3rd Rank -->
@@ -318,7 +329,7 @@
                     <div class="report-card">
                         <div class="report-card-header">
                             <div class="report-card-title">
-                                <i class="fa fa-trophy"></i> <?php echo $exam_detail['name']; ?> - Merit List & Top Rankers
+                                <i class="fa fa-trophy"></i> <?php echo $exam_detail['name']; ?> - <?php echo (!empty($section_id) ? "Section Merit List" : (!empty($class_id) ? "Class Merit List" : "School Merit List")); ?> & Top Rankers
                             </div>
                             <div class="report-header-actions">
                                 <button type="button" class="report-btn report-btn-print" onclick="printDiv('div_print_leaderboard')"><i class="fa fa-print"></i> <?php echo $this->lang->line('print'); ?></button>

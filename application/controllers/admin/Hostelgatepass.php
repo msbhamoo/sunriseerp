@@ -80,6 +80,7 @@ class Hostelgatepass extends Admin_Controller
         $this->form_validation->set_rules('going_to', 'Going To', 'required');
         $this->form_validation->set_rules('out_date', 'Out Date', 'required');
         $this->form_validation->set_rules('out_time', 'Out Time', 'required');
+        $this->form_validation->set_rules('reason', 'Reason / Note', 'required');
 
         if ($this->form_validation->run() == FALSE) {
             $msg = array(
@@ -87,21 +88,31 @@ class Hostelgatepass extends Admin_Controller
                 'student_session_id' => form_error('student_session_id'),
                 'going_to' => form_error('going_to'),
                 'out_date' => form_error('out_date'),
-                'out_time' => form_error('out_time')
+                'out_time' => form_error('out_time'),
+                'reason' => form_error('reason')
             );
             $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
         } else {
+            $pass_type = $this->input->post('pass_type');
+            $out_date_parsed = $this->customlib->dateFormatToYYYYMMDD($this->input->post('out_date'));
             $expected_in = $this->input->post('expected_in_time');
             $expected_in_date = $this->input->post('expected_in_date');
             
+            // For Day Pass, expected return date MUST be the same day (out_date)
+            if ($pass_type == 'Day Pass') {
+                $final_expected_in_date = $out_date_parsed;
+            } else {
+                $final_expected_in_date = empty($expected_in_date) ? NULL : $this->customlib->dateFormatToYYYYMMDD($expected_in_date);
+            }
+            
             $data = array(
                 'student_session_id' => $this->input->post('student_session_id'),
-                'pass_type' => $this->input->post('pass_type'),
+                'pass_type' => $pass_type,
                 'going_to' => $this->input->post('going_to'),
                 'reason' => $this->input->post('reason'),
-                'out_date' => $this->customlib->dateFormatToYYYYMMDD($this->input->post('out_date')),
+                'out_date' => $out_date_parsed,
                 'out_time' => $this->input->post('out_time'),
-                'expected_in_date' => empty($expected_in_date) ? NULL : $this->customlib->dateFormatToYYYYMMDD($expected_in_date),
+                'expected_in_date' => $final_expected_in_date,
                 'expected_in_time' => empty($expected_in) ? NULL : $expected_in,
                 'status' => 'Out'
             );
