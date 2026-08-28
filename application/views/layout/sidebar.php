@@ -173,6 +173,14 @@ foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
                         }
                     }
 
+                    if ($side_list_value->lang_key == 'human_resource') {
+                        if ($this->rbac->hasPrivilege('staff', 'can_add')) {
+                            ?>
+                            <li class="<?php echo (activate_submenu('staff', array('create')) || set_Submenu('admin/staff/create') || set_Submenu('HR/staff/create')); ?>"><a href="<?php echo site_url('admin/staff/create'); ?>"><i class="icon-circle-small"></i><?php echo $this->lang->line('add_staff'); ?></a></li>
+                            <?php
+                        }
+                    }
+
                     if ($side_list_value->lang_key == 'fees_collection') {
                         if ($this->rbac->hasPrivilege('fee_discount_approval', 'can_view')) {
                             ?>

@@ -2222,5 +2222,727 @@ $my_subjects[]=$value;
         return $this->db->trans_status();
     }
 
+    /**
+     * Get complete marks submission and update status breakdown per class, section & subject.
+     * Returns:
+     * - summary statistics (classes count, fully updated count, pending count, overall %)
+     * - class_sections list with detailed subject progress and pending counts.
+     */
+    public function get_exam_marks_status($exam_id, $class_id = null, $section_id = null)
+    {
+        $exam = $this->get_exambyId($exam_id);
+        if (!$exam) {
+            return false;
+        }
+
+        // 1. Fetch assigned classes & sections for this exam
+        $this->db->select('cbse_exam_class_sections.class_section_id, classes.id as class_id, classes.class as class_name, sections.id as section_id, sections.section as section_name');
+        $this->db->from('cbse_exam_class_sections');
+        $this->db->join('class_sections', 'class_sections.id = cbse_exam_class_sections.class_section_id');
+        $this->db->join('classes', 'classes.id = class_sections.class_id');
+        $this->db->join('sections', 'sections.id = class_sections.section_id');
+        $this->db->where('cbse_exam_class_sections.cbse_exam_id', $exam_id);
+        if (!empty($class_id)) {
+            $this->db->where('classes.id', $class_id);
+        }
+        if (!empty($section_id)) {
+            $this->db->where('sections.id', $section_id);
+        }
+        $this->db->order_by('classes.id', 'ASC');
+        $this->db->order_by('sections.id', 'ASC');
+        $class_sections = $this->db->get()->result_array();
+
+        if (empty($class_sections)) {
+            return [
+                'exam' => $exam,
+                'summary' => [
+                    'total_classes' => 0,
+                    'fully_updated' => 0,
+                    'partially_updated' => 0,
+                    'not_started' => 0,
+                    'total_students' => 0,
+                    'total_expected_entries' => 0,
+                    'total_entered_entries' => 0,
+                    'overall_completion_percent' => 0
+                ],
+                'class_sections' => []
+            ];
+        }
+
+        // 2. Fetch all students assigned to this exam
+        $all_exam_students = $this->get_examstudents($exam_id);
+        $students_by_class_section = [];
+        foreach ($all_exam_students as $st) {
+            $cs_key = $st['class_id'] . '_' . $st['section_id'];
+            $students_by_class_section[$cs_key][] = $st;
+        }
+
+        // 3. Fetch all timetable entries and their assessment types for this exam
+        $sql_tt = "SELECT t.id as timetable_id, t.subject_id, s.name as subject_name, s.code as subject_code,
+                          GROUP_CONCAT(DISTINCT tc.class_id) as class_ids
+                   FROM cbse_exam_timetable t
+                   JOIN subjects s ON s.id = t.subject_id
+                   LEFT JOIN cbse_exam_timetable_classes tc ON tc.cbse_exam_timetable_id = t.id
+                   WHERE t.cbse_exam_id = " . $this->db->escape($exam_id) . "
+                   GROUP BY t.id
+                   ORDER BY s.name ASC";
+        $raw_timetables = $this->db->query($sql_tt)->result_array();
+
+        // Fetch assessment types per timetable
+        $sql_tat = "SELECT tat.cbse_exam_timetable_id, tat.cbse_exam_assessment_type_id, at.name as assessment_name, at.code as assessment_code
+                    FROM cbse_exam_timetable_assessment_types tat
+                    JOIN cbse_exam_assessment_types at ON at.id = tat.cbse_exam_assessment_type_id
+                    JOIN cbse_exam_timetable t ON t.id = tat.cbse_exam_timetable_id
+                    WHERE t.cbse_exam_id = " . $this->db->escape($exam_id);
+        $raw_tats = $this->db->query($sql_tat)->result_array();
+        $tat_by_timetable = [];
+        foreach ($raw_tats as $tat) {
+            $tat_by_timetable[$tat['cbse_exam_timetable_id']][] = $tat;
+        }
+
+        // 4. Fetch all existing entered marks for this exam: [exam_student_id][timetable_id][assessment_type_id] = 1
+        $sql_marks = "SELECT m.cbse_exam_student_id, m.cbse_exam_timetable_id, m.cbse_exam_assessment_type_id, m.marks, m.is_absent
+                      FROM cbse_student_subject_marks m
+                      JOIN cbse_exam_timetable t ON t.id = m.cbse_exam_timetable_id
+                      WHERE t.cbse_exam_id = " . $this->db->escape($exam_id);
+        $raw_marks = $this->db->query($sql_marks)->result_array();
+        $marks_map = [];
+        foreach ($raw_marks as $m) {
+            $s_id = $m['cbse_exam_student_id'];
+            $tt_id = $m['cbse_exam_timetable_id'];
+            $at_id = $m['cbse_exam_assessment_type_id'];
+            $marks_map[$s_id][$tt_id][$at_id] = true;
+        }
+
+        // 5. Fetch Subject Teachers & Class Teachers across all classes and sections
+        // A. Subject Timetable assigned staff
+        $sql_subj_staff = "SELECT DISTINCT st.class_id, st.section_id, sgs.subject_id, staff.id as staff_id, staff.name, staff.surname, staff.employee_id
+                           FROM subject_timetable st
+                           JOIN subject_group_subjects sgs ON sgs.id = st.subject_group_subject_id
+                           JOIN staff ON staff.id = st.staff_id
+                           WHERE staff.is_active = 1";
+        $raw_subj_teachers = $this->db->query($sql_subj_staff)->result_array();
+        $subject_teachers_map = [];
+        foreach ($raw_subj_teachers as $st_row) {
+            $key = $st_row['class_id'] . '_' . $st_row['section_id'] . '_' . $st_row['subject_id'];
+            $full_name = trim($st_row['name'] . ' ' . $st_row['surname']);
+            if (!empty($st_row['employee_id'])) {
+                $full_name .= ' (' . $st_row['employee_id'] . ')';
+            }
+            if (!isset($subject_teachers_map[$key])) {
+                $subject_teachers_map[$key] = [];
+            }
+            if (!in_array($full_name, $subject_teachers_map[$key])) {
+                $subject_teachers_map[$key][] = $full_name;
+            }
+        }
+
+        // B. Class Teachers
+        $sql_ct = "SELECT ct.class_id, ct.section_id, staff.id as staff_id, staff.name, staff.surname, staff.employee_id
+                   FROM class_teacher ct
+                   JOIN staff ON staff.id = ct.staff_id
+                   WHERE staff.is_active = 1";
+        $raw_cts = $this->db->query($sql_ct)->result_array();
+        $class_teachers_map = [];
+        foreach ($raw_cts as $ct_row) {
+            $key = $ct_row['class_id'] . '_' . $ct_row['section_id'];
+            $full_name = trim($ct_row['name'] . ' ' . $ct_row['surname']);
+            if (!empty($ct_row['employee_id'])) {
+                $full_name .= ' (' . $ct_row['employee_id'] . ')';
+            }
+            if (!isset($class_teachers_map[$key])) {
+                $class_teachers_map[$key] = [];
+            }
+            if (!in_array($full_name, $class_teachers_map[$key])) {
+                $class_teachers_map[$key][] = $full_name;
+            }
+        }
+
+        // 6. Build Class-Section status tree
+        $grand_expected = 0;
+        $grand_entered = 0;
+        $total_students_count = 0;
+        $fully_updated_classes = 0;
+        $partially_updated_classes = 0;
+        $not_started_classes = 0;
+
+        $processed_class_sections = [];
+
+        foreach ($class_sections as $cs) {
+            $cid = $cs['class_id'];
+            $sec_id = $cs['section_id'];
+            $cs_key = $cid . '_' . $sec_id;
+
+            $class_teachers = isset($class_teachers_map[$cs_key]) ? implode(', ', $class_teachers_map[$cs_key]) : '';
+
+            $students = isset($students_by_class_section[$cs_key]) ? $students_by_class_section[$cs_key] : [];
+            $stu_count = count($students);
+            $total_students_count += $stu_count;
+
+            // Match timetable subjects assigned to this class
+            $class_subjects = [];
+            $cs_expected_total = 0;
+            $cs_entered_total = 0;
+            $cs_pending_subjects_count = 0;
+            $cs_completed_subjects_count = 0;
+
+            foreach ($raw_timetables as $tt) {
+                $assigned_classes = !empty($tt['class_ids']) ? explode(',', $tt['class_ids']) : [];
+                
+                // If timetable has class mappings, check if this class is mapped; if no mappings exist, subject applies to all classes in exam
+                if (!empty($assigned_classes) && !in_array($cid, $assigned_classes)) {
+                    continue;
+                }
+
+                $tt_id = $tt['timetable_id'];
+                $sub_id = $tt['subject_id'];
+                $assessments = isset($tat_by_timetable[$tt_id]) ? $tat_by_timetable[$tt_id] : [];
+                $assess_count = count($assessments);
+
+                // Teacher assigned for this subject in this class & section
+                $st_key = $cid . '_' . $sec_id . '_' . $sub_id;
+                $subject_teacher = isset($subject_teachers_map[$st_key]) ? implode(', ', $subject_teachers_map[$st_key]) : '';
+
+                $expected_entries = $stu_count * $assess_count;
+                $entered_entries = 0;
+
+                if ($stu_count > 0 && $assess_count > 0) {
+                    foreach ($students as $stu) {
+                        $sid = $stu['exam_student_id'];
+                        foreach ($assessments as $assess) {
+                            $at_id = $assess['cbse_exam_assessment_type_id'];
+                            if (isset($marks_map[$sid][$tt_id][$at_id])) {
+                                $entered_entries++;
+                            }
+                        }
+                    }
+                }
+
+                $sub_percent = ($expected_entries > 0) ? round(($entered_entries / $expected_entries) * 100, 1) : 0;
+                
+                // Determine subject status
+                if ($expected_entries == 0) {
+                    $sub_status = 'no_students';
+                } elseif ($entered_entries >= $expected_entries) {
+                    $sub_status = 'completed';
+                    $cs_completed_subjects_count++;
+                } elseif ($entered_entries > 0) {
+                    $sub_status = 'partial';
+                    $cs_pending_subjects_count++;
+                } else {
+                    $sub_status = 'not_started';
+                    $cs_pending_subjects_count++;
+                }
+
+                $class_subjects[] = [
+                    'timetable_id' => $tt_id,
+                    'subject_id' => $tt['subject_id'],
+                    'subject_name' => $tt['subject_name'],
+                    'subject_code' => $tt['subject_code'],
+                    'subject_teacher' => $subject_teacher,
+                    'assessments' => $assessments,
+                    'assessments_count' => $assess_count,
+                    'students_count' => $stu_count,
+                    'expected_entries' => $expected_entries,
+                    'entered_entries' => $entered_entries,
+                    'missing_entries' => max(0, $expected_entries - $entered_entries),
+                    'completion_percent' => $sub_percent,
+                    'status' => $sub_status
+                ];
+
+                $cs_expected_total += $expected_entries;
+                $cs_entered_total += $entered_entries;
+            }
+
+            $cs_percent = ($cs_expected_total > 0) ? round(($cs_entered_total / $cs_expected_total) * 100, 1) : 0;
+            
+            // Determine class overall status
+            if ($cs_expected_total == 0) {
+                $cs_status = 'no_subjects';
+            } elseif ($cs_entered_total >= $cs_expected_total && $cs_pending_subjects_count == 0) {
+                $cs_status = 'completed';
+                $fully_updated_classes++;
+            } elseif ($cs_entered_total > 0) {
+                $cs_status = 'partial';
+                $partially_updated_classes++;
+            } else {
+                $cs_status = 'not_started';
+                $not_started_classes++;
+            }
+
+            $grand_expected += $cs_expected_total;
+            $grand_entered += $cs_entered_total;
+
+            $processed_class_sections[] = [
+                'class_id' => $cid,
+                'class_name' => $cs['class_name'],
+                'section_id' => $sec_id,
+                'section_name' => $cs['section_name'],
+                'class_section_name' => $cs['class_name'] . ' (' . $cs['section_name'] . ')',
+                'class_teacher' => $class_teachers,
+                'students_count' => $stu_count,
+                'total_subjects' => count($class_subjects),
+                'completed_subjects_count' => $cs_completed_subjects_count,
+                'pending_subjects_count' => $cs_pending_subjects_count,
+                'expected_entries' => $cs_expected_total,
+                'entered_entries' => $cs_entered_total,
+                'missing_entries' => max(0, $cs_expected_total - $cs_entered_total),
+                'completion_percent' => $cs_percent,
+                'status' => $cs_status,
+                'subjects' => $class_subjects
+            ];
+        }
+
+        $overall_completion_percent = ($grand_expected > 0) ? round(($grand_entered / $grand_expected) * 100, 1) : 0;
+
+        return [
+            'exam' => $exam,
+            'summary' => [
+                'total_classes' => count($class_sections),
+                'fully_updated' => $fully_updated_classes,
+                'partially_updated' => $partially_updated_classes,
+                'not_started' => $not_started_classes,
+                'total_students' => $total_students_count,
+                'total_expected_entries' => $grand_expected,
+                'total_entered_entries' => $grand_entered,
+                'overall_completion_percent' => $overall_completion_percent
+            ],
+            'class_sections' => $processed_class_sections
+        ];
+    }
+
+    /**
+     * 1. Teacher-Wise Marks Submission Compliance Report
+     */
+    public function get_exam_teacher_compliance($exam_id, $filter_staff_id = null)
+    {
+        $status_data = $this->get_exam_marks_status($exam_id);
+        if (!$status_data) {
+            return false;
+        }
+
+        $exam = $status_data['exam'];
+        $class_sections = $status_data['class_sections'];
+
+        // Get all active staff who have subject or class timetable assignments
+        $this->db->select('staff.id, staff.employee_id, staff.name, staff.surname, staff.contact_no, staff.email');
+        $this->db->from('staff');
+        $this->db->where('staff.is_active', 1);
+        if (!empty($filter_staff_id)) {
+            $this->db->where('staff.id', $filter_staff_id);
+        }
+        $this->db->order_by('staff.name', 'ASC');
+        $all_staff = $this->db->get()->result_array();
+
+        // Build teacher-to-classes-subjects assignment map from subject_timetable
+        $sql_assign = "SELECT DISTINCT st.staff_id, st.class_id, st.section_id, sgs.subject_id
+                       FROM subject_timetable st
+                       JOIN subject_group_subjects sgs ON sgs.id = st.subject_group_subject_id
+                       WHERE st.staff_id > 0";
+        $raw_assign = $this->db->query($sql_assign)->result_array();
+        $staff_sub_map = [];
+        foreach ($raw_assign as $as_row) {
+            $staff_sub_map[$as_row['staff_id']][$as_row['class_id'] . '_' . $as_row['section_id']][] = $as_row['subject_id'];
+        }
+
+        $teacher_list = [];
+        $total_teachers = 0;
+        $completed_teachers = 0;
+        $pending_teachers = 0;
+        $grand_expected = 0;
+        $grand_entered = 0;
+
+        foreach ($all_staff as $stf) {
+            $staff_id = $stf['id'];
+            if (!isset($staff_sub_map[$staff_id])) {
+                continue; // Teacher has no assigned subjects
+            }
+
+            $teacher_assigned_subjects = [];
+            $teacher_expected = 0;
+            $teacher_entered = 0;
+            $pending_subject_count = 0;
+            $completed_subject_count = 0;
+
+            foreach ($class_sections as $cs) {
+                $cs_key = $cs['class_id'] . '_' . $cs['section_id'];
+                if (!isset($staff_sub_map[$staff_id][$cs_key])) {
+                    continue;
+                }
+
+                $assigned_sids = $staff_sub_map[$staff_id][$cs_key];
+                foreach ($cs['subjects'] as $sub) {
+                    if (in_array($sub['subject_id'], $assigned_sids)) {
+                        $teacher_assigned_subjects[] = [
+                            'class_name' => $cs['class_section_name'],
+                            'timetable_id' => $sub['timetable_id'],
+                            'subject_id' => $sub['subject_id'],
+                            'subject_name' => $sub['subject_name'],
+                            'subject_code' => $sub['subject_code'],
+                            'students_count' => $sub['students_count'],
+                            'expected_entries' => $sub['expected_entries'],
+                            'entered_entries' => $sub['entered_entries'],
+                            'missing_entries' => $sub['missing_entries'],
+                            'completion_percent' => $sub['completion_percent'],
+                            'status' => $sub['status']
+                        ];
+
+                        $teacher_expected += $sub['expected_entries'];
+                        $teacher_entered += $sub['entered_entries'];
+
+                        if ($sub['status'] == 'completed') {
+                            $completed_subject_count++;
+                        } else {
+                            $pending_subject_count++;
+                        }
+                    }
+                }
+            }
+
+            if (empty($teacher_assigned_subjects)) {
+                continue; // Not involved in this exam's classes
+            }
+
+            $total_teachers++;
+            $grand_expected += $teacher_expected;
+            $grand_entered += $teacher_entered;
+
+            $pct = ($teacher_expected > 0) ? round(($teacher_entered / $teacher_expected) * 100, 1) : 0;
+            $is_completed = ($teacher_expected > 0 && $teacher_entered >= $teacher_expected && $pending_subject_count == 0);
+
+            if ($is_completed) {
+                $completed_teachers++;
+                $teacher_status = 'completed';
+            } elseif ($teacher_entered > 0) {
+                $pending_teachers++;
+                $teacher_status = 'partial';
+            } else {
+                $pending_teachers++;
+                $teacher_status = 'not_started';
+            }
+
+            $teacher_list[] = [
+                'staff_id' => $staff_id,
+                'staff_name' => trim($stf['name'] . ' ' . $stf['surname']),
+                'employee_id' => $stf['employee_id'],
+                'contact_no' => $stf['contact_no'],
+                'email' => $stf['email'],
+                'total_assigned_classes' => count($teacher_assigned_subjects),
+                'completed_subjects_count' => $completed_subject_count,
+                'pending_subjects_count' => $pending_subject_count,
+                'expected_entries' => $teacher_expected,
+                'entered_entries' => $teacher_entered,
+                'missing_entries' => max(0, $teacher_expected - $teacher_entered),
+                'completion_percent' => $pct,
+                'status' => $teacher_status,
+                'assigned_subjects' => $teacher_assigned_subjects
+            ];
+        }
+
+        $overall_pct = ($grand_expected > 0) ? round(($grand_entered / $grand_expected) * 100, 1) : 0;
+
+        return [
+            'exam' => $exam,
+            'summary' => [
+                'total_teachers' => $total_teachers,
+                'completed_teachers' => $completed_teachers,
+                'pending_teachers' => $pending_teachers,
+                'grand_expected' => $grand_expected,
+                'grand_entered' => $grand_entered,
+                'overall_compliance_percent' => $overall_pct
+            ],
+            'teachers' => $teacher_list
+        ];
+    }
+
+    /**
+     * 2. Pass/Fail & Grade Distribution Analytics Report
+     */
+    public function get_exam_grade_distribution($exam_id, $class_id = null, $section_id = null)
+    {
+        $class_ids = !empty($class_id) ? [$class_id] : [];
+        $section_ids = !empty($section_id) ? [$section_id] : [];
+
+        $reportcard = $this->get_cbse_reportcard_data($exam_id, $class_ids, $section_ids);
+        if (!$reportcard || empty($reportcard['exam'])) {
+            return false;
+        }
+
+        $exam = $reportcard['exam'];
+        $grades = $reportcard['grades'];
+        $students_report = $reportcard['report'];
+
+        // Group students by Class-Section
+        $class_section_dist = [];
+        $total_students = count($students_report);
+        $total_passed = 0;
+        $total_failed = 0;
+        $total_distinctions = 0; // >= 75%
+        $sum_percent = 0;
+
+        $overall_grade_counts = [];
+        foreach ($grades as $g) {
+            $overall_grade_counts[$g['name']] = 0;
+        }
+
+        // Subject level distribution aggregators
+        $subject_stats = [];
+
+        foreach ($students_report as $row) {
+            $std = $row['student'];
+            $cid = $std['class_id'];
+            $sec_id = $std['section_id'];
+            $cs_key = $cid . '_' . $sec_id;
+            $cs_name = $std['class_name'] . ' (' . $std['section_name'] . ')';
+
+            if (!isset($class_section_dist[$cs_key])) {
+                $class_section_dist[$cs_key] = [
+                    'class_name' => $cs_name,
+                    'total_students' => 0,
+                    'passed' => 0,
+                    'failed' => 0,
+                    'distinctions' => 0,
+                    'highest_percent' => 0,
+                    'lowest_percent' => 100,
+                    'sum_percent' => 0,
+                    'grade_counts' => array_fill_keys(array_column($grades, 'name'), 0)
+                ];
+            }
+
+            $pct = $row['overall_percent'];
+            $grade = $row['overall_grade'];
+            $is_pass = ($row['result'] == 'PASS');
+
+            $class_section_dist[$cs_key]['total_students']++;
+            $class_section_dist[$cs_key]['sum_percent'] += $pct;
+            if ($pct > $class_section_dist[$cs_key]['highest_percent']) {
+                $class_section_dist[$cs_key]['highest_percent'] = $pct;
+            }
+            if ($pct < $class_section_dist[$cs_key]['lowest_percent']) {
+                $class_section_dist[$cs_key]['lowest_percent'] = $pct;
+            }
+
+            if ($is_pass) {
+                $class_section_dist[$cs_key]['passed']++;
+                $total_passed++;
+            } else {
+                $class_section_dist[$cs_key]['failed']++;
+                $total_failed++;
+            }
+
+            if ($pct >= 75) {
+                $class_section_dist[$cs_key]['distinctions']++;
+                $total_distinctions++;
+            }
+
+            if (isset($class_section_dist[$cs_key]['grade_counts'][$grade])) {
+                $class_section_dist[$cs_key]['grade_counts'][$grade]++;
+            }
+            if (isset($overall_grade_counts[$grade])) {
+                $overall_grade_counts[$grade]++;
+            }
+
+            $sum_percent += $pct;
+
+            // Track Subject Level
+            if (!empty($row['subjects'])) {
+                foreach ($row['subjects'] as $sub) {
+                    $sub_name = $sub['subject_name'];
+                    if (!isset($subject_stats[$sub_name])) {
+                        $subject_stats[$sub_name] = [
+                            'subject_name' => $sub_name,
+                            'subject_code' => $sub['subject_code'],
+                            'appeared' => 0,
+                            'passed' => 0,
+                            'failed' => 0,
+                            'sum_pct' => 0,
+                            'highest_marks' => 0,
+                            'max_marks' => $sub['max']
+                        ];
+                    }
+                    if (!$sub['absent'] && $sub['obtained'] !== null) {
+                        $subject_stats[$sub_name]['appeared']++;
+                        $sub_pct = $sub['percent'];
+                        $subject_stats[$sub_name]['sum_pct'] += $sub_pct;
+                        if ($sub['obtained'] > $subject_stats[$sub_name]['highest_marks']) {
+                            $subject_stats[$sub_name]['highest_marks'] = $sub['obtained'];
+                        }
+                        if ($sub_pct >= 33) {
+                            $subject_stats[$sub_name]['passed']++;
+                        } else {
+                            $subject_stats[$sub_name]['failed']++;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Finalize Class-Section calculations
+        foreach ($class_section_dist as &$cs_item) {
+            $cnt = $cs_item['total_students'];
+            $cs_item['average_percent'] = ($cnt > 0) ? round($cs_item['sum_percent'] / $cnt, 1) : 0;
+            $cs_item['pass_percent'] = ($cnt > 0) ? round(($cs_item['passed'] / $cnt) * 100, 1) : 0;
+            if ($cs_item['lowest_percent'] == 100 && $cnt == 0) {
+                $cs_item['lowest_percent'] = 0;
+            }
+        }
+        unset($cs_item);
+
+        // Finalize Subject calculations
+        foreach ($subject_stats as &$sub_item) {
+            $cnt = $sub_item['appeared'];
+            $sub_item['avg_percent'] = ($cnt > 0) ? round($sub_item['sum_pct'] / $cnt, 1) : 0;
+            $sub_item['pass_percent'] = ($cnt > 0) ? round(($sub_item['passed'] / $cnt) * 100, 1) : 0;
+        }
+        unset($sub_item);
+
+        $overall_pass_pct = ($total_students > 0) ? round(($total_passed / $total_students) * 100, 1) : 0;
+        $overall_avg_pct = ($total_students > 0) ? round($sum_percent / $total_students, 1) : 0;
+
+        return [
+            'exam' => $exam,
+            'grades' => $grades,
+            'summary' => [
+                'total_students' => $total_students,
+                'total_passed' => $total_passed,
+                'total_failed' => $total_failed,
+                'total_distinctions' => $total_distinctions,
+                'overall_pass_percent' => $overall_pass_pct,
+                'overall_average_percent' => $overall_avg_pct,
+                'overall_grade_counts' => $overall_grade_counts
+            ],
+            'classes' => array_values($class_section_dist),
+            'subjects' => array_values($subject_stats)
+        ];
+    }
+
+    /**
+     * 3. Top Rankers & Meritorious Students Leaderboard Report
+     */
+    public function get_exam_top_rankers($exam_id, $class_id = null, $section_id = null, $limit = 10)
+    {
+        $class_ids = !empty($class_id) ? [$class_id] : [];
+        $section_ids = !empty($section_id) ? [$section_id] : [];
+
+        $reportcard = $this->get_cbse_reportcard_data($exam_id, $class_ids, $section_ids);
+        if (!$reportcard || empty($reportcard['exam'])) {
+            return false;
+        }
+
+        $exam = $reportcard['exam'];
+        $students_report = $reportcard['report'];
+
+        // Sort students by overall percentage DESC
+        usort($students_report, function($a, $b) {
+            if ($a['overall_percent'] == $b['overall_percent']) {
+                return $b['grand_obtained'] <=> $a['grand_obtained'];
+            }
+            return $b['overall_percent'] <=> $a['overall_percent'];
+        });
+
+        // School-wide Top Rankers
+        $school_toppers = [];
+        $rank = 0; $prev_pct = null; $seen = 0;
+        foreach ($students_report as $std_row) {
+            if ($std_row['grand_max'] == 0 || $std_row['grand_obtained'] == 0) {
+                continue;
+            }
+            $seen++;
+            $pct = $std_row['overall_percent'];
+            if ($prev_pct === null || $pct < $prev_pct) {
+                $rank = $seen;
+                $prev_pct = $pct;
+            }
+
+            if ($seen <= $limit) {
+                $school_toppers[] = [
+                    'rank' => $rank,
+                    'student_id' => $std_row['student']['student_id'],
+                    'student_name' => trim($std_row['student']['firstname'] . ' ' . $std_row['student']['lastname']),
+                    'admission_no' => $std_row['student']['admission_no'],
+                    'roll_no' => $std_row['student']['roll_no'],
+                    'father_name' => $std_row['student']['father_name'],
+                    'class_name' => $std_row['student']['class_name'] . ' (' . $std_row['student']['section_name'] . ')',
+                    'grand_obtained' => $std_row['grand_obtained'],
+                    'grand_max' => $std_row['grand_max'],
+                    'overall_percent' => round($pct, 2),
+                    'overall_grade' => $std_row['overall_grade'],
+                    'result' => $std_row['result']
+                ];
+            }
+        }
+
+        // Class-Wise Top 3
+        $class_toppers_map = [];
+        foreach ($students_report as $std_row) {
+            $cid = $std_row['student']['class_id'];
+            $sec_id = $std_row['student']['section_id'];
+            $cs_key = $cid . '_' . $sec_id;
+            $cs_name = $std_row['student']['class_name'] . ' (' . $std_row['student']['section_name'] . ')';
+
+            if (!isset($class_toppers_map[$cs_key])) {
+                $class_toppers_map[$cs_key] = [
+                    'class_name' => $cs_name,
+                    'students' => []
+                ];
+            }
+
+            if (count($class_toppers_map[$cs_key]['students']) < 3 && $std_row['grand_max'] > 0) {
+                $class_toppers_map[$cs_key]['students'][] = [
+                    'rank' => count($class_toppers_map[$cs_key]['students']) + 1,
+                    'student_name' => trim($std_row['student']['firstname'] . ' ' . $std_row['student']['lastname']),
+                    'admission_no' => $std_row['student']['admission_no'],
+                    'roll_no' => $std_row['student']['roll_no'],
+                    'grand_obtained' => $std_row['grand_obtained'],
+                    'grand_max' => $std_row['grand_max'],
+                    'overall_percent' => round($std_row['overall_percent'], 2),
+                    'overall_grade' => $std_row['overall_grade']
+                ];
+            }
+        }
+
+        // Subject-Wise Highest Scorers
+        $subject_toppers = [];
+        foreach ($students_report as $std_row) {
+            if (!empty($std_row['subjects'])) {
+                foreach ($std_row['subjects'] as $sub) {
+                    if (!$sub['absent'] && $sub['obtained'] !== null) {
+                        $sname = $sub['subject_name'];
+                        $obt = (float)$sub['obtained'];
+                        if (!isset($subject_toppers[$sname]) || $obt > $subject_toppers[$sname]['obtained']) {
+                            $subject_toppers[$sname] = [
+                                'subject_name' => $sname,
+                                'subject_code' => $sub['subject_code'],
+                                'obtained' => $obt,
+                                'max_marks' => $sub['max'],
+                                'percent' => round($sub['percent'], 1),
+                                'student_name' => trim($std_row['student']['firstname'] . ' ' . $std_row['student']['lastname']),
+                                'class_name' => $std_row['student']['class_name'] . ' (' . $std_row['student']['section_name'] . ')'
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
+        $top_percent = !empty($school_toppers) ? $school_toppers[0]['overall_percent'] : 0;
+        $top_student = !empty($school_toppers) ? $school_toppers[0]['student_name'] : 'N/A';
+
+        return [
+            'exam' => $exam,
+            'summary' => [
+                'top_percent' => $top_percent,
+                'top_student' => $top_student,
+                'total_ranked_students' => count($students_report),
+                'toppers_count' => count($school_toppers)
+            ],
+            'school_toppers' => $school_toppers,
+            'class_toppers' => array_values($class_toppers_map),
+            'subject_toppers' => array_values($subject_toppers)
+        ];
+    }
+
 }
+
+
 

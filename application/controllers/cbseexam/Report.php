@@ -25,6 +25,147 @@ class Report extends MY_Addon_CBSEController
         $this->load->view('layout/footer');
     }
 
+    public function marksstatus()
+    {
+        if (!$this->rbac->hasPrivilege('subject_marks_report', 'can_view')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'cbse_exam');
+        $this->session->set_userdata('sub_menu', 'reports/cbse_report');
+        $this->session->set_userdata('subsub_menu', 'cbse_exam/marksstatus');
+
+        $data['exams']     = $this->cbseexam_exam_model->getexamlist();
+        $class             = $this->class_model->get();
+        $data['classlist'] = $class;
+
+        $this->form_validation->set_rules('exam_id', $this->lang->line('exam'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|xss_clean');
+        $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|xss_clean');
+
+        if ($this->form_validation->run() == true) {
+            $exam_id          = $this->input->post('exam_id');
+            $class_id         = $this->input->post('class_id');
+            $section_id       = $this->input->post('section_id');
+
+            $data['exam_id']    = $exam_id;
+            $data['class_id']   = $class_id;
+            $data['section_id'] = $section_id;
+
+            $status_report = $this->cbseexam_exam_model->get_exam_marks_status($exam_id, $class_id, $section_id);
+            $data['status_report'] = $status_report;
+        }
+
+        $this->load->view('layout/header');
+        $this->load->view('cbseexam/report/marksstatus', $data);
+        $this->load->view('layout/footer');
+    }
+
+    public function teachercompliance()
+    {
+        if (!$this->rbac->hasPrivilege('subject_marks_report', 'can_view')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'cbse_exam');
+        $this->session->set_userdata('sub_menu', 'reports/cbse_report');
+        $this->session->set_userdata('subsub_menu', 'cbse_exam/teachercompliance');
+
+        $data['exams']     = $this->cbseexam_exam_model->getexamlist();
+        $this->db->select('id, name, surname, employee_id')->from('staff')->where('is_active', 1)->order_by('name', 'ASC');
+        $data['stafflist'] = $this->db->get()->result_array();
+
+        $this->form_validation->set_rules('exam_id', $this->lang->line('exam'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('staff_id', $this->lang->line('staff'), 'trim|xss_clean');
+
+        if ($this->form_validation->run() == true) {
+            $exam_id  = $this->input->post('exam_id');
+            $staff_id = $this->input->post('staff_id');
+
+            $data['exam_id']  = $exam_id;
+            $data['staff_id'] = $staff_id;
+
+            $compliance_report = $this->cbseexam_exam_model->get_exam_teacher_compliance($exam_id, $staff_id);
+            $data['compliance_report'] = $compliance_report;
+        }
+
+        $this->load->view('layout/header');
+        $this->load->view('cbseexam/report/teachercompliance', $data);
+        $this->load->view('layout/footer');
+    }
+
+    public function gradedistribution()
+    {
+        if (!$this->rbac->hasPrivilege('subject_marks_report', 'can_view')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'cbse_exam');
+        $this->session->set_userdata('sub_menu', 'reports/cbse_report');
+        $this->session->set_userdata('subsub_menu', 'cbse_exam/gradedistribution');
+
+        $data['exams']     = $this->cbseexam_exam_model->getexamlist();
+        $class             = $this->class_model->get();
+        $data['classlist'] = $class;
+
+        $this->form_validation->set_rules('exam_id', $this->lang->line('exam'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|xss_clean');
+        $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|xss_clean');
+
+        if ($this->form_validation->run() == true) {
+            $exam_id    = $this->input->post('exam_id');
+            $class_id   = $this->input->post('class_id');
+            $section_id = $this->input->post('section_id');
+
+            $data['exam_id']    = $exam_id;
+            $data['class_id']   = $class_id;
+            $data['section_id'] = $section_id;
+
+            $dist_report = $this->cbseexam_exam_model->get_exam_grade_distribution($exam_id, $class_id, $section_id);
+            $data['dist_report'] = $dist_report;
+        }
+
+        $this->load->view('layout/header');
+        $this->load->view('cbseexam/report/gradedistribution', $data);
+        $this->load->view('layout/footer');
+    }
+
+    public function toprankers()
+    {
+        if (!$this->rbac->hasPrivilege('subject_marks_report', 'can_view')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'cbse_exam');
+        $this->session->set_userdata('sub_menu', 'reports/cbse_report');
+        $this->session->set_userdata('subsub_menu', 'cbse_exam/toprankers');
+
+        $data['exams']     = $this->cbseexam_exam_model->getexamlist();
+        $class             = $this->class_model->get();
+        $data['classlist'] = $class;
+
+        $this->form_validation->set_rules('exam_id', $this->lang->line('exam'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|xss_clean');
+        $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|xss_clean');
+
+        if ($this->form_validation->run() == true) {
+            $exam_id    = $this->input->post('exam_id');
+            $class_id   = $this->input->post('class_id');
+            $section_id = $this->input->post('section_id');
+
+            $data['exam_id']    = $exam_id;
+            $data['class_id']   = $class_id;
+            $data['section_id'] = $section_id;
+
+            $rankers_report = $this->cbseexam_exam_model->get_exam_top_rankers($exam_id, $class_id, $section_id);
+            $data['rankers_report'] = $rankers_report;
+        }
+
+        $this->load->view('layout/header');
+        $this->load->view('cbseexam/report/toprankers', $data);
+        $this->load->view('layout/footer');
+    }
+
     public function examsubject()
     {
         if (!$this->rbac->hasPrivilege('subject_marks_report', 'can_view')) {

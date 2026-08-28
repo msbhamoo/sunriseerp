@@ -48,6 +48,30 @@ class Staff extends Admin_Controller
         $data["role"]       = $staffRole;
         $data["role_id"]    = "";
         $search_text        = $this->input->post('search_text');
+
+        // Form dependencies for the Add Staff Right Drawer
+        $roles                       = $this->role_model->get();
+        $data["roles"]               = $roles;
+        $genderList                  = $this->customlib->getGender();
+        $data['genderList']          = $genderList;
+        $payscaleList                = $this->staff_model->getPayroll();
+        $leavetypeList               = $this->staff_model->getLeaveType();
+        $data["leavetypeList"]       = $leavetypeList;
+        $data["payscaleList"]        = $payscaleList;
+        $designation                 = $this->staff_model->getStaffDesignation();
+        $data["designation"]         = $designation;
+        $department                  = $this->staff_model->getDepartment();
+        $data["department"]          = $department;
+        $this->load->model('qualification_model');
+        $this->load->model('workexperience_model');
+        $data["qualification_list"]  = $this->qualification_model->get();
+        $data["workexperience_list"] = $this->workexperience_model->get();
+        $data["marital_status"]      = $this->marital_status;
+        $data["contract_type"]       = $this->contract_type;
+        $data['sch_setting']         = $this->sch_setting_detail;
+        $data['staffid_auto_insert'] = $this->sch_setting_detail->staffid_auto_insert;
+        $data['staff_custom_fields'] = $this->customfield_model->getByBelong('staff');
+
         if (isset($search)) {
             if ($search == 'search_filter') {
                 $this->form_validation->set_rules('role', $this->lang->line('role'), 'trim|required|xss_clean');
@@ -441,7 +465,7 @@ class Staff extends Admin_Controller
     public function create()
     {
         $this->session->set_userdata('top_menu', 'HR');
-        $this->session->set_userdata('sub_menu', 'admin/staff');
+        $this->session->set_userdata('sub_menu', 'admin/staff/create');
         $roles                       = $this->role_model->get();
         $data["roles"]               = $roles;
         $genderList                  = $this->customlib->getGender();

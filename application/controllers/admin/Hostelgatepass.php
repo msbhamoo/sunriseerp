@@ -106,8 +106,8 @@ class Hostelgatepass extends Admin_Controller
                 'status' => 'Out'
             );
 
-            $this->hostelgatepass_model->add($data);
-            $array = array('status' => 'success', 'error' => '', 'message' => 'Gate pass created successfully.');
+            $insert_id = $this->hostelgatepass_model->add($data);
+            $array = array('status' => 'success', 'error' => '', 'message' => 'Gate pass created successfully.', 'insert_id' => $insert_id);
         }
 
         echo json_encode($array);
@@ -120,6 +120,10 @@ class Hostelgatepass extends Admin_Controller
         }
 
         $this->hostelgatepass_model->mark_returned($id);
+        if ($this->input->is_ajax_request()) {
+            echo json_encode(array('status' => 'success', 'message' => 'Gate pass marked as returned.'));
+            return;
+        }
         $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">Gate pass marked as returned.</div>');
         redirect('admin/hostelgatepass');
     }
