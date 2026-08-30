@@ -63,46 +63,48 @@
                             <table class="table table-striped table-bordered table-hover example">
                                 <thead>
                                     <tr>
-                                        <th>Bus Number</th>
-                                        <th>Driver</th>
-                                        <th>Attendant</th>
-                                        <th class="text-center">Total Present (Month)</th>
-                                        <th class="text-center">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if (empty($summary)) { ?>
-                                        <tr>
-                                            <td colspan="5" class="text-center">No vehicles found.</td>
-                                        </tr>
-                                    <?php } else {
-                                        foreach ($summary as $row) { 
-                                            // Format stats for Morning
-                                            $morning_present_str = 'Morning: ' . $row['morning_present_month'];
-                                            if ($row['morning_custom_month'] > 0) {
-                                                $morning_present_str .= ' (+' . $row['morning_custom_month'] . ' Custom)';
-                                            }
-                                            
-                                            // Format stats for Evening
-                                            $evening_present_str = 'Evening: ' . $row['evening_present_month'];
-                                            if ($row['evening_custom_month'] > 0) {
-                                                $evening_present_str .= ' (+' . $row['evening_custom_month'] . ' Custom)';
-                                            }
-                                    ?>
-                                        <tr>
-                                            <td><?php echo $row['vehicle_no']; ?></td>
-                                            <td><?php echo $row['driver_name'] ? $row['driver_name'] : '-'; ?></td>
-                                            <td><?php echo $row['attendant_name'] ? $row['attendant_name'] : '-'; ?></td>
-                                            <td class="text-center">
-                                                <div><strong>Total: <?php echo $row['total_present_month']; ?></strong></div>
-                                                <small class="text-muted"><?php echo $morning_present_str; ?></small><br>
-                                                <small class="text-muted"><?php echo $evening_present_str; ?></small>
-                                            </td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-default btn-xs view_detail" data-vehicle_id="<?php echo $row['vehicle_id']; ?>" data-month="<?php echo $month; ?>" data-year="<?php echo $year; ?>" title="View Detail"><i class="fa fa-reorder"></i> View</button>
-                                            </td>
-                                        </tr>
-                                    <?php } } ?>
+                                         <th>Route</th>
+                                         <th>Bus Number</th>
+                                         <th>Driver</th>
+                                         <th>Attendant</th>
+                                         <th class="text-center">Total Present (Month)</th>
+                                         <th class="text-center">Action</th>
+                                     </tr>
+                                 </thead>
+                                 <tbody>
+                                     <?php if (empty($summary)) { ?>
+                                         <tr>
+                                             <td colspan="6" class="text-center">No routes found.</td>
+                                         </tr>
+                                     <?php } else {
+                                         foreach ($summary as $row) { 
+                                             // Format stats for Morning
+                                             $morning_present_str = 'Morning: ' . $row['morning_present_month'];
+                                             if ($row['morning_custom_month'] > 0) {
+                                                 $morning_present_str .= ' (+' . $row['morning_custom_month'] . ' Custom)';
+                                             }
+                                             
+                                             // Format stats for Evening
+                                             $evening_present_str = 'Evening: ' . $row['evening_present_month'];
+                                             if ($row['evening_custom_month'] > 0) {
+                                                 $evening_present_str .= ' (+' . $row['evening_custom_month'] . ' Custom)';
+                                             }
+                                     ?>
+                                         <tr>
+                                             <td><strong class="text-primary"><i class="fa fa-road"></i> <?php echo $row['route_title']; ?></strong></td>
+                                             <td><strong><?php echo $row['vehicle_no']; ?></strong></td>
+                                             <td><?php echo $row['driver_name'] ? $row['driver_name'] : '-'; ?></td>
+                                             <td><?php echo $row['attendant_name'] ? $row['attendant_name'] : '-'; ?></td>
+                                             <td class="text-center">
+                                                 <div><strong>Total: <?php echo $row['total_present_month']; ?></strong></div>
+                                                 <small class="text-muted"><?php echo $morning_present_str; ?></small><br>
+                                                 <small class="text-muted"><?php echo $evening_present_str; ?></small>
+                                             </td>
+                                             <td class="text-center">
+                                                 <button type="button" class="btn btn-default btn-xs view_detail" data-vehicle_id="<?php echo $row['vehicle_id']; ?>" data-route_id="<?php echo $row['route_id']; ?>" data-month="<?php echo $month; ?>" data-year="<?php echo $year; ?>" title="View Detail"><i class="fa fa-reorder"></i> View</button>
+                                             </td>
+                                         </tr>
+                                     <?php } } ?>
                                 </tbody>
                             </table>
                         </div>
@@ -133,6 +135,7 @@
     $(document).ready(function () {
         $('.view_detail').click(function(){
             var vehicle_id = $(this).data('vehicle_id');
+            var route_id = $(this).data('route_id');
             var month = $(this).data('month');
             var year = $(this).data('year');
             
@@ -144,6 +147,7 @@
                 type: 'POST',
                 data: {
                     vehicle_id: vehicle_id,
+                    route_id: route_id,
                     month: month,
                     year: year
                 },

@@ -339,6 +339,53 @@
     align-items: center;
     gap: 5px;
 }
+
+/* Person Details Cell Matching System Style */
+.person-details-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 180px;
+    text-align: left;
+}
+.person-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid #e2e8f0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    flex-shrink: 0;
+    background: #f8fafc;
+}
+.person-name-title {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 13px;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+.person-sub-row {
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.person-adm-badge {
+    background: #eef2ff;
+    color: #4338ca;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 11px;
+    font-family: inherit;
+}
+.person-class-text {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+}
 </style>
 
 <div class="content-wrapper" style="padding: 15px 20px;">
@@ -561,9 +608,7 @@
                                     <table class="table table-bordered report-modern-table vertical-middle" id="headerTable">
                                         <thead>
                                             <tr>
-                                                <th rowspan="2" class="white-space-nowrap" style="min-width: 140px;"><?php echo $this->lang->line('student'); ?></th>
-                                                <th rowspan="2" class="white-space-nowrap" style="min-width: 100px;"><?php echo $this->lang->line('admission_no'); ?></th>
-                                                <th rowspan="2" class="white-space-nowrap" style="min-width: 130px;"><?php echo $this->lang->line('father_name'); ?></th>
+                                                <th rowspan="2" class="white-space-nowrap" style="min-width: 220px; text-align: left; padding-left: 14px;"><?php echo $this->lang->line('person_details') ? $this->lang->line('person_details') : 'PERSON DETAILS'; ?></th>
                                                 <?php
                                                 foreach ($subjects as $subject_key => $subject_value) {
                                                 ?>
@@ -603,11 +648,28 @@
                                                     $total_marks = 0;
                                                     $total_max_marks = 0;
                                                     $exam_percentage = 0;
+
+                                                    $student_full_name = trim($student_value['firstname'] . " " . $student_value['middlename'] . " " . $student_value['lastname']);
+                                                    $student_img_src = !empty($student_value['image']) ? base_url($student_value['image']) : base_url('uploads/student_images/no_image.png');
+                                                    $class_section_str = (!empty($student_value['class'])) ? $student_value['class'] . (!empty($student_value['section']) ? ' (' . $student_value['section'] . ')' : '') : '';
                                             ?>
                                                     <tr class="report-student-row">
-                                                        <td class="report-student-name"><?php echo $student_value['firstname'] . " " . $student_value['middlename'] . " " . $student_value['lastname']; ?></td>
-                                                        <td><span style="font-weight: 600; color: #475569;"><?php echo $student_value['admission_no']; ?></span></td>
-                                                        <td><?php echo $student_value['father_name']; ?></td>
+                                                        <td>
+                                                            <div class="person-details-cell">
+                                                                <img class="person-avatar" src="<?php echo $student_img_src; ?>" alt="Photo" onerror="this.src='<?php echo base_url('uploads/student_images/no_image.png'); ?>';">
+                                                                <div>
+                                                                    <div class="person-name-title" title="<?php echo html_escape($student_full_name); ?>">
+                                                                        <?php echo html_escape($student_full_name); ?>
+                                                                    </div>
+                                                                    <div class="person-sub-row">
+                                                                        <span class="person-adm-badge"><?php echo html_escape($student_value['admission_no']); ?></span>
+                                                                        <?php if (!empty($class_section_str)) { ?>
+                                                                            <span class="person-class-text"><?php echo html_escape($class_section_str); ?></span>
+                                                                        <?php } ?>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
                                                         <?php
                                                         foreach ($subjects as $subject_key => $subject_value) {
                                                             foreach ($exam_assessments as $exam_assessment_key => $exam_assessment_value) {
@@ -653,7 +715,7 @@
                                         </tbody>
                                         <tfoot>
                                             <tr style="font-weight: 700; background: #f8fafc; color: #1e293b;">
-                                                <td colspan="3" class="text-right" style="font-weight: 800; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                <td class="text-right" style="font-weight: 800; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px;">
                                                     <i class="fa fa-calculator text-muted"></i> Class Average:
                                                 </td>
                                                 <?php

@@ -31,12 +31,12 @@ class Transportattendance_model extends MY_Model
         return $this->db->get()->result_array();
     }
 
-    public function get_bus_students($vehicle_id, $session_id = null)
+    public function get_bus_students($vehicle_id, $session_id = null, $route_id = null)
     {
         if ($session_id == null) {
             $session_id = $this->current_session;
         }
-        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.image, students.admission_no, classes.class, sections.section, transport_route.route_title, pickup_point.name as pickup_point_name');
+        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.image, students.admission_no, classes.class, sections.section, transport_route.id as route_id, transport_route.route_title, pickup_point.name as pickup_point_name, vehicle_routes.id as vehroute_id');
         $this->db->from('student_session');
         $this->db->join('students', 'students.id = student_session.student_id');
         $this->db->join('classes', 'classes.id = student_session.class_id');
@@ -46,6 +46,9 @@ class Transportattendance_model extends MY_Model
         $this->db->join('route_pickup_point', 'route_pickup_point.id = student_session.route_pickup_point_id', 'left');
         $this->db->join('pickup_point', 'pickup_point.id = route_pickup_point.pickup_point_id', 'left');
         $this->db->where('vehicle_routes.vehicle_id', $vehicle_id);
+        if (!empty($route_id)) {
+            $this->db->where('vehicle_routes.route_id', $route_id);
+        }
         $this->db->where('student_session.session_id', $session_id);
         $this->db->where('students.is_active', 'yes');
         $this->db->order_by('transport_route.route_title', 'ASC');
@@ -135,17 +138,47 @@ class Transportattendance_model extends MY_Model
         
         $sql = "
             SELECT 
+                vr.id as vehroute_id,
+                vr.route_id,
+                tr.route_title,
                 v.id as vehicle_id,
                 v.vehicle_no,
                 v.driver_name,
                 v.attendant_name,
-                (SELECT count(ss.id) FROM student_session ss JOIN vehicle_routes vr ON vr.id = ss.vehroute_id JOIN students s ON s.id = ss.student_id WHERE vr.vehicle_id = v.id AND ss.session_id = ? AND s.is_active = 'yes') as total_assigned,
-                (SELECT count(ta.id) FROM transport_attendance ta WHERE ta.vehicle_id = v.id AND ta.date = ? AND ta.attendance_type = 'Morning' AND ta.status = 'Present') as morning_present,
-                (SELECT count(ta.id) FROM transport_attendance ta WHERE ta.vehicle_id = v.id AND ta.date = ? AND ta.attendance_type = 'Morning' AND ta.status = 'Switched Bus') as morning_custom,
-                (SELECT count(ta.id) FROM transport_attendance ta WHERE ta.vehicle_id = v.id AND ta.date = ? AND ta.attendance_type = 'Evening' AND ta.status = 'Present') as evening_present,
-                (SELECT count(ta.id) FROM transport_attendance ta WHERE ta.vehicle_id = v.id AND ta.date = ? AND ta.attendance_type = 'Evening' AND ta.status = 'Switched Bus') as evening_custom
-            FROM vehicles v
-            ORDER BY v.vehicle_no ASC
+                (
+                    SELECT count(ss.id) 
+                    FROM student_session ss 
+                    JOIN students s ON s.id = ss.student_id 
+                    WHERE ss.vehroute_id = vr.id AND ss.session_id = ? AND s.is_active = 'yes'
+                ) as total_assigned,
+                (
+                    SELECT count(ta.id) 
+                    FROM transport_attendance ta 
+                    JOIN student_session ss2 ON ss2.id = ta.student_session_id
+                    WHERE ta.vehicle_id = v.id AND ss2.vehroute_id = vr.id AND ta.date = ? AND ta.attendance_type = 'Morning' AND ta.status = 'Present'
+                ) as morning_present,
+                (
+                    SELECT count(ta.id) 
+                    FROM transport_attendance ta 
+                    JOIN student_session ss2 ON ss2.id = ta.student_session_id
+                    WHERE ta.vehicle_id = v.id AND ss2.vehroute_id = vr.id AND ta.date = ? AND ta.attendance_type = 'Morning' AND ta.status = 'Switched Bus'
+                ) as morning_custom,
+                (
+                    SELECT count(ta.id) 
+                    FROM transport_attendance ta 
+                    JOIN student_session ss2 ON ss2.id = ta.student_session_id
+                    WHERE ta.vehicle_id = v.id AND ss2.vehroute_id = vr.id AND ta.date = ? AND ta.attendance_type = 'Evening' AND ta.status = 'Present'
+                ) as evening_present,
+                (
+                    SELECT count(ta.id) 
+                    FROM transport_attendance ta 
+                    JOIN student_session ss2 ON ss2.id = ta.student_session_id
+                    WHERE ta.vehicle_id = v.id AND ss2.vehroute_id = vr.id AND ta.date = ? AND ta.attendance_type = 'Evening' AND ta.status = 'Switched Bus'
+                ) as evening_custom
+            FROM vehicle_routes vr
+            JOIN transport_route tr ON tr.id = vr.route_id
+            JOIN vehicles v ON v.id = vr.vehicle_id
+            ORDER BY tr.route_title ASC, v.vehicle_no ASC
         ";
         
         $query = $this->db->query($sql, array($session_id, $date, $date, $date, $date));
@@ -158,62 +191,122 @@ class Transportattendance_model extends MY_Model
         
         $sql = "
             SELECT 
+                vr.id as vehroute_id,
+                vr.route_id,
+                tr.route_title,
                 v.id as vehicle_id,
                 v.vehicle_no,
                 v.driver_name,
                 v.attendant_name,
-                (SELECT count(ta.id) FROM transport_attendance ta WHERE ta.vehicle_id = v.id AND MONTH(ta.date) = ? AND YEAR(ta.date) = ? AND ta.attendance_type = 'Morning' AND ta.status = 'Present') as morning_present_month,
-                (SELECT count(ta.id) FROM transport_attendance ta WHERE ta.vehicle_id = v.id AND MONTH(ta.date) = ? AND YEAR(ta.date) = ? AND ta.attendance_type = 'Morning' AND ta.status = 'Switched Bus') as morning_custom_month,
-                (SELECT count(ta.id) FROM transport_attendance ta WHERE ta.vehicle_id = v.id AND MONTH(ta.date) = ? AND YEAR(ta.date) = ? AND ta.attendance_type = 'Evening' AND ta.status = 'Present') as evening_present_month,
-                (SELECT count(ta.id) FROM transport_attendance ta WHERE ta.vehicle_id = v.id AND MONTH(ta.date) = ? AND YEAR(ta.date) = ? AND ta.attendance_type = 'Evening' AND ta.status = 'Switched Bus') as evening_custom_month,
-                (SELECT count(ta.id) FROM transport_attendance ta WHERE ta.vehicle_id = v.id AND MONTH(ta.date) = ? AND YEAR(ta.date) = ? AND ta.status IN ('Present', 'Switched Bus')) as total_present_month
-            FROM vehicles v
-            ORDER BY v.vehicle_no ASC
+                (
+                    SELECT count(ss.id) 
+                    FROM student_session ss 
+                    JOIN students s ON s.id = ss.student_id 
+                    WHERE ss.vehroute_id = vr.id AND ss.session_id = ? AND s.is_active = 'yes'
+                ) as total_assigned,
+                (
+                    SELECT count(ta.id) 
+                    FROM transport_attendance ta 
+                    JOIN student_session ss2 ON ss2.id = ta.student_session_id
+                    WHERE ta.vehicle_id = v.id AND ss2.vehroute_id = vr.id AND MONTH(ta.date) = ? AND YEAR(ta.date) = ? AND ta.attendance_type = 'Morning' AND ta.status = 'Present'
+                ) as morning_present_month,
+                (
+                    SELECT count(ta.id) 
+                    FROM transport_attendance ta 
+                    JOIN student_session ss2 ON ss2.id = ta.student_session_id
+                    WHERE ta.vehicle_id = v.id AND ss2.vehroute_id = vr.id AND MONTH(ta.date) = ? AND YEAR(ta.date) = ? AND ta.attendance_type = 'Morning' AND ta.status = 'Switched Bus'
+                ) as morning_custom_month,
+                (
+                    SELECT count(ta.id) 
+                    FROM transport_attendance ta 
+                    JOIN student_session ss2 ON ss2.id = ta.student_session_id
+                    WHERE ta.vehicle_id = v.id AND ss2.vehroute_id = vr.id AND MONTH(ta.date) = ? AND YEAR(ta.date) = ? AND ta.attendance_type = 'Evening' AND ta.status = 'Present'
+                ) as evening_present_month,
+                (
+                    SELECT count(ta.id) 
+                    FROM transport_attendance ta 
+                    JOIN student_session ss2 ON ss2.id = ta.student_session_id
+                    WHERE ta.vehicle_id = v.id AND ss2.vehroute_id = vr.id AND MONTH(ta.date) = ? AND YEAR(ta.date) = ? AND ta.attendance_type = 'Evening' AND ta.status = 'Switched Bus'
+                ) as evening_custom_month,
+                (
+                    SELECT count(ta.id) 
+                    FROM transport_attendance ta 
+                    JOIN student_session ss2 ON ss2.id = ta.student_session_id
+                    WHERE ta.vehicle_id = v.id AND ss2.vehroute_id = vr.id AND MONTH(ta.date) = ? AND YEAR(ta.date) = ? AND ta.status IN ('Present', 'Switched Bus')
+                ) as total_present_month
+            FROM vehicle_routes vr
+            JOIN transport_route tr ON tr.id = vr.route_id
+            JOIN vehicles v ON v.id = vr.vehicle_id
+            ORDER BY tr.route_title ASC, v.vehicle_no ASC
         ";
         
-        $query = $this->db->query($sql, array($month, $year, $month, $year, $month, $year, $month, $year, $month, $year));
+        $query = $this->db->query($sql, array($session_id, $month, $year, $month, $year, $month, $year, $month, $year, $month, $year));
         return $query->result_array();
     }
     
-    public function get_attendance_detail($vehicle_id, $date)
+    public function get_attendance_detail($vehicle_id, $date, $route_id = null)
     {
         $session_id = $this->current_session;
+        
+        $where_route = "";
+        $params = array($vehicle_id, $date);
+        if (!empty($route_id)) {
+            $where_route = " AND vr.route_id = ? ";
+            $params[] = $route_id;
+        }
         
         $sql = "
             SELECT 
                 s.firstname, s.lastname, s.admission_no, 
                 c.class, sec.section,
+                tr.route_title, pp.name as pickup_point_name,
                 ta.attendance_type, ta.status, ta.remark
             FROM transport_attendance ta
             JOIN student_session ss ON ss.id = ta.student_session_id
             JOIN students s ON s.id = ss.student_id
             JOIN classes c ON c.id = ss.class_id
             JOIN sections sec ON sec.id = ss.section_id
-            WHERE ta.vehicle_id = ? AND ta.date = ? AND ta.status IN ('Present', 'Switched Bus')
-            ORDER BY s.firstname ASC
+            LEFT JOIN vehicle_routes vr ON vr.id = ss.vehroute_id
+            LEFT JOIN transport_route tr ON tr.id = vr.route_id
+            LEFT JOIN route_pickup_point rpp ON rpp.id = ss.route_pickup_point_id
+            LEFT JOIN pickup_point pp ON pp.id = rpp.pickup_point_id
+            WHERE ta.vehicle_id = ? AND ta.date = ? {$where_route} AND ta.status IN ('Present', 'Switched Bus')
+            ORDER BY tr.route_title ASC, s.firstname ASC
         ";
         
-        $query = $this->db->query($sql, array($vehicle_id, $date));
+        $query = $this->db->query($sql, $params);
         return $query->result_array();
     }
     
-    public function get_monthly_attendance_detail($vehicle_id, $month, $year)
+    public function get_monthly_attendance_detail($vehicle_id, $month, $year, $route_id = null)
     {
+        $where_route = "";
+        $params = array($vehicle_id, $month, $year);
+        if (!empty($route_id)) {
+            $where_route = " AND vr.route_id = ? ";
+            $params[] = $route_id;
+        }
+        
         $sql = "
             SELECT 
                 ta.date, ta.attendance_type, ta.status, ta.remark,
                 s.firstname, s.lastname, s.admission_no, 
-                c.class, sec.section
+                c.class, sec.section,
+                tr.route_title, pp.name as pickup_point_name
             FROM transport_attendance ta
             JOIN student_session ss ON ss.id = ta.student_session_id
             JOIN students s ON s.id = ss.student_id
             JOIN classes c ON c.id = ss.class_id
             JOIN sections sec ON sec.id = ss.section_id
-            WHERE ta.vehicle_id = ? AND MONTH(ta.date) = ? AND YEAR(ta.date) = ? AND ta.status IN ('Present', 'Switched Bus')
-            ORDER BY ta.date ASC, ta.attendance_type DESC, s.firstname ASC
+            LEFT JOIN vehicle_routes vr ON vr.id = ss.vehroute_id
+            LEFT JOIN transport_route tr ON tr.id = vr.route_id
+            LEFT JOIN route_pickup_point rpp ON rpp.id = ss.route_pickup_point_id
+            LEFT JOIN pickup_point pp ON pp.id = rpp.pickup_point_id
+            WHERE ta.vehicle_id = ? AND MONTH(ta.date) = ? AND YEAR(ta.date) = ? {$where_route} AND ta.status IN ('Present', 'Switched Bus')
+            ORDER BY ta.date ASC, ta.attendance_type DESC, tr.route_title ASC, s.firstname ASC
         ";
         
-        $query = $this->db->query($sql, array($vehicle_id, $month, $year));
+        $query = $this->db->query($sql, $params);
         return $query->result_array();
     }
 }

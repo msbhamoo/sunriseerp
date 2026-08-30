@@ -88,22 +88,22 @@
                         <div class="box-body">
                             <?php echo $this->customlib->getCSRF(); ?>
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="date"><?php echo $this->lang->line('date'); ?></label> <small class="req"> *</small>
                                         <input type="text" id="date" name="date" class="form-control date" value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat())); ?>" autocomplete="off" />
                                         <span class="text-danger"><?php echo form_error('date'); ?></span>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
-                                        <label>Vehicle/Bus</label> <small class="req"> *</small>
-                                        <select class="form-control" name="vehicle_id">
-                                            <option value="">Select</option>
+                                        <label>Vehicle / Bus</label> <small class="req"> *</small>
+                                        <select class="form-control select2" name="vehicle_id" id="vehicle_id" style="width:100%;">
+                                            <option value="">Select Bus</option>
                                             <?php 
                                             $auto_select_single = (isset($vehiclelist) && count($vehiclelist) == 1);
                                             foreach ($vehiclelist as $vehicle) { 
-                                                $selected = set_select('vehicle_id', $vehicle['id']);
+                                                $selected = set_select('vehicle_id', $vehicle['id'], (isset($vehicle_id) && $vehicle_id == $vehicle['id']));
                                                 if (empty($selected) && $auto_select_single && !isset($_POST['vehicle_id'])) {
                                                     $selected = 'selected="selected"';
                                                 }
@@ -114,13 +114,36 @@
                                         <span class="text-danger"><?php echo form_error('vehicle_id'); ?></span>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Route (Optional Filter)</label>
+                                        <select class="form-control select2" name="route_id" id="route_id" style="width:100%;">
+                                            <option value="">All Routes (Entire Bus)</option>
+                                            <?php 
+                                            if (isset($vehicle_routes) && !empty($vehicle_routes)) {
+                                                $seen_routes = array();
+                                                foreach ($vehicle_routes as $vr) {
+                                                    // Extract route_id or fallback
+                                                    $curr_r_id = isset($vr['route_id']) ? $vr['route_id'] : $vr['vehroute_id'];
+                                                    if (!isset($seen_routes[$curr_r_id])) {
+                                                        $seen_routes[$curr_r_id] = true;
+                                                        $r_selected = (isset($route_id) && $route_id == $curr_r_id) ? 'selected="selected"' : '';
+                                                        echo '<option value="' . $curr_r_id . '" ' . $r_selected . '>' . $vr['route_title'] . '</option>';
+                                                    }
+                                                }
+                                            }
+                                            ?>
+                                        </select>
+                                        <span class="text-danger"><?php echo form_error('route_id'); ?></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>Attendance Type</label> <small class="req"> *</small>
-                                        <select class="form-control" name="attendance_type">
-                                            <option value="">Select</option>
-                                            <option value="morning" <?php echo set_select('attendance_type', 'morning'); ?>>Morning</option>
-                                            <option value="evening" <?php echo set_select('attendance_type', 'evening'); ?>>Evening</option>
+                                        <select class="form-control select2" name="attendance_type" style="width:100%;">
+                                            <option value="">Select Shift</option>
+                                            <option value="morning" <?php echo set_select('attendance_type', 'morning', (isset($attendance_type) && $attendance_type == 'morning')); ?>>Morning</option>
+                                            <option value="evening" <?php echo set_select('attendance_type', 'evening', (isset($attendance_type) && $attendance_type == 'evening')); ?>>Evening</option>
                                         </select>
                                         <span class="text-danger"><?php echo form_error('attendance_type'); ?></span>
                                     </div>
@@ -128,7 +151,7 @@
                             </div>
                         </div>
                         <div class="box-footer">
-                            <button type="submit" name="search" value="search" class="btn btn-primary pull-right btn-sm">Search</button>
+                            <button type="submit" name="search" value="search" class="btn btn-primary pull-right btn-sm"><i class="fa fa-search"></i> Search Students</button>
                         </div>
                     </form>
                 </div>
@@ -252,8 +275,15 @@
                                                                 <img src="<?php echo $img_src; ?>" class="img-circle" style="width:34px; height:34px; object-fit:cover; border:1px solid #ccc;" onerror="this.src='<?php echo base_url('uploads/student_images/no_image.png'); ?>';">
                                                                 <div>
                                                                     <strong style="font-size:13px; color:#2c3e50;"><?php echo $student['firstname'] . ' ' . $student['lastname']; ?></strong>
-                                                                    <?php if (!empty($student['pickup_point_name'])) { ?>
-                                                                        <div style="font-size:11px; color:#555; margin-top:1px;"><i class="fa fa-map-marker text-danger"></i> Stop: <strong><?php echo $student['pickup_point_name']; ?></strong></div>
+                                                                    <?php if (!empty($student['route_title']) || !empty($student['pickup_point_name'])) { ?>
+                                                                        <div style="font-size:11px; color:#555; margin-top:1px;">
+                                                                            <?php if (!empty($student['route_title'])) { ?>
+                                                                                <span class="text-primary" style="margin-right:6px;"><i class="fa fa-road"></i> <strong><?php echo $student['route_title']; ?></strong></span>
+                                                                            <?php } ?>
+                                                                            <?php if (!empty($student['pickup_point_name'])) { ?>
+                                                                                <span><i class="fa fa-map-marker text-danger"></i> Stop: <strong><?php echo $student['pickup_point_name']; ?></strong></span>
+                                                                            <?php } ?>
+                                                                        </div>
                                                                     <?php } ?>
                                                                     <?php if (!empty($student['has_gatepass'])) { ?>
                                                                         <span class="label label-warning" style="margin-top:2px; font-size:10px; display:inline-block;"><i class="fa fa-ticket"></i> Gatepass Issued Today</span>
@@ -428,7 +458,31 @@ function removeCustomRider(student_session_id, btn) {
 }
 
 $(document).ready(function() {
+    $('.select2').select2();
     updateCounters();
+
+    $('#vehicle_id').on('change', function() {
+        var vehicle_id = $(this).val();
+        var route_select = $('#route_id');
+        route_select.html('<option value="">All Routes (Entire Bus)</option>');
+        
+        if (vehicle_id) {
+            $.ajax({
+                url: '<?php echo site_url("admin/transportattendance/get_vehicle_routes"); ?>',
+                type: 'POST',
+                data: { vehicle_id: vehicle_id },
+                dataType: 'json',
+                success: function(routes) {
+                    if (routes && routes.length > 0) {
+                        $.each(routes, function(idx, r) {
+                            route_select.append('<option value="' + r.route_id + '">' + r.route_title + '</option>');
+                        });
+                    }
+                    route_select.trigger('change');
+                }
+            });
+        }
+    });
 
     $(document).on('click', '.btn-touch-status', function(e) {
         e.preventDefault();

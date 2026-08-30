@@ -40,44 +40,46 @@
                             <table class="table table-striped table-bordered table-hover example">
                                 <thead>
                                     <tr>
-                                        <th>Bus Number</th>
-                                        <th>Driver</th>
-                                        <th>Attendant</th>
-                                        <th class="text-center">Morning Shift (Present/Total)</th>
-                                        <th class="text-center">Evening Shift (Present/Total)</th>
-                                        <th class="text-center">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if (empty($summary)) { ?>
-                                        <tr>
-                                            <td colspan="6" class="text-center">No vehicles found.</td>
-                                        </tr>
-                                    <?php } else {
-                                        foreach ($summary as $row) { 
-                                            // Format stats for Morning
-                                            $morning_present_str = $row['morning_present'] . ' / ' . $row['total_assigned'];
-                                            if ($row['morning_custom'] > 0) {
-                                                $morning_present_str .= ' <span class="label label-info" title="Custom Riders">+' . $row['morning_custom'] . '</span>';
-                                            }
-                                            
-                                            // Format stats for Evening
-                                            $evening_present_str = $row['evening_present'] . ' / ' . $row['total_assigned'];
-                                            if ($row['evening_custom'] > 0) {
-                                                $evening_present_str .= ' <span class="label label-info" title="Custom Riders">+' . $row['evening_custom'] . '</span>';
-                                            }
-                                    ?>
-                                        <tr>
-                                            <td><?php echo $row['vehicle_no']; ?></td>
-                                            <td><?php echo $row['driver_name'] ? $row['driver_name'] : '-'; ?></td>
-                                            <td><?php echo $row['attendant_name'] ? $row['attendant_name'] : '-'; ?></td>
-                                            <td class="text-center"><?php echo $morning_present_str; ?></td>
-                                            <td class="text-center"><?php echo $evening_present_str; ?></td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-default btn-xs view_detail" data-vehicle_id="<?php echo $row['vehicle_id']; ?>" data-date="<?php echo $date; ?>" title="View Detail"><i class="fa fa-reorder"></i> View</button>
-                                            </td>
-                                        </tr>
-                                    <?php } } ?>
+                                         <th>Route</th>
+                                         <th>Bus Number</th>
+                                         <th>Driver</th>
+                                         <th>Attendant</th>
+                                         <th class="text-center">Morning Shift (Present/Total)</th>
+                                         <th class="text-center">Evening Shift (Present/Total)</th>
+                                         <th class="text-center">Action</th>
+                                     </tr>
+                                 </thead>
+                                 <tbody>
+                                     <?php if (empty($summary)) { ?>
+                                         <tr>
+                                             <td colspan="7" class="text-center">No routes found.</td>
+                                         </tr>
+                                     <?php } else {
+                                         foreach ($summary as $row) { 
+                                             // Format stats for Morning
+                                             $morning_present_str = $row['morning_present'] . ' / ' . $row['total_assigned'];
+                                             if ($row['morning_custom'] > 0) {
+                                                 $morning_present_str .= ' <span class="label label-info" title="Custom Riders">+' . $row['morning_custom'] . '</span>';
+                                             }
+                                             
+                                             // Format stats for Evening
+                                             $evening_present_str = $row['evening_present'] . ' / ' . $row['total_assigned'];
+                                             if ($row['evening_custom'] > 0) {
+                                                 $evening_present_str .= ' <span class="label label-info" title="Custom Riders">+' . $row['evening_custom'] . '</span>';
+                                             }
+                                     ?>
+                                         <tr>
+                                             <td><strong class="text-primary"><i class="fa fa-road"></i> <?php echo $row['route_title']; ?></strong></td>
+                                             <td><strong><?php echo $row['vehicle_no']; ?></strong></td>
+                                             <td><?php echo $row['driver_name'] ? $row['driver_name'] : '-'; ?></td>
+                                             <td><?php echo $row['attendant_name'] ? $row['attendant_name'] : '-'; ?></td>
+                                             <td class="text-center"><?php echo $morning_present_str; ?></td>
+                                             <td class="text-center"><?php echo $evening_present_str; ?></td>
+                                             <td class="text-center">
+                                                 <button type="button" class="btn btn-default btn-xs view_detail" data-vehicle_id="<?php echo $row['vehicle_id']; ?>" data-route_id="<?php echo $row['route_id']; ?>" data-date="<?php echo $date; ?>" title="View Detail"><i class="fa fa-reorder"></i> View</button>
+                                             </td>
+                                         </tr>
+                                     <?php } } ?>
                                 </tbody>
                             </table>
                         </div>
@@ -113,6 +115,7 @@
         
         $('.view_detail').click(function(){
             var vehicle_id = $(this).data('vehicle_id');
+            var route_id = $(this).data('route_id');
             var date = $(this).data('date');
             
             $('#detail_content').html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i></div>');
@@ -123,6 +126,7 @@
                 type: 'POST',
                 data: {
                     vehicle_id: vehicle_id,
+                    route_id: route_id,
                     date: date
                 },
                 dataType: 'json',

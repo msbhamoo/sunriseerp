@@ -128,6 +128,7 @@ class Transportattendance extends Admin_Controller
         } else {
             $date = $this->customlib->dateFormatToYYYYMMDD($this->input->post('date'));
             $vehicle_id = $this->input->post('vehicle_id');
+            $route_id = $this->input->post('route_id');
             $attendance_type = $this->input->post('attendance_type');
             
             if (!$this->isSuperAdmin()) {
@@ -139,9 +140,13 @@ class Transportattendance extends Admin_Controller
 
             $data['date'] = $date;
             $data['vehicle_id'] = $vehicle_id;
+            $data['route_id'] = $route_id;
             $data['attendance_type'] = $attendance_type;
             
-            $students = $this->transportattendance_model->get_bus_students($vehicle_id);
+            // Get available routes for this vehicle for the dropdown
+            $data['vehicle_routes'] = $this->vehicle_model->getVehicleRoutes($vehicle_id);
+            
+            $students = $this->transportattendance_model->get_bus_students($vehicle_id, null, $route_id);
             $saved_attendance = $this->transportattendance_model->get_attendance($vehicle_id, $date, $attendance_type);
             $custom_riders = $this->transportattendance_model->get_custom_riders($vehicle_id, $date, $attendance_type);
             
@@ -151,7 +156,7 @@ class Transportattendance extends Admin_Controller
             $opposite_presence = $this->transportattendance_model->check_transport_presence($date, $opposite_shift);
             $data['opposite_shift'] = ucfirst($opposite_shift);
 
-            // Merge custom riders into the main list so they can be managed
+            // Merge custom riders into the main list so they can be managed (if route filter is empty or matches)
             if (!empty($custom_riders)) {
                 $students = array_merge($students, $custom_riders);
             }
@@ -189,6 +194,36 @@ class Transportattendance extends Admin_Controller
             $this->load->view('admin/transport/attendance', $data);
             $this->load->view('layout/footer', $data);
         }
+    }
+
+    public function get_vehicle_routes()
+    {
+        $vehicle_id = $this->input->post('vehicle_id');
+        if (empty($vehicle_id)) {
+            echo json_encode(array());
+            return;
+        }
+
+        $routes_raw = $this->vehicle_model->getVehicleRoutes($vehicle_id);
+        $routes = array();
+        $seen = array();
+        if (!empty($routes_raw)) {
+            foreach ($routes_raw as $r) {
+                // Get unique routes
+                $this->db->select('route_id')->from('vehicle_routes')->where('id', $r['vehroute_id']);
+                $vr = $this->db->get()->row_array();
+                $r_id = !empty($vr['route_id']) ? $vr['route_id'] : $r['vehroute_id'];
+                
+                if (!isset($seen[$r_id])) {
+                    $seen[$r_id] = true;
+                    $routes[] = array(
+                        'route_id' => $r_id,
+                        'route_title' => $r['route_title']
+                    );
+                }
+            }
+        }
+        echo json_encode($routes);
     }
 
     public function save()
@@ -460,6 +495,7 @@ class Transportattendance extends Admin_Controller
         }
 
         $vehicle_id = $this->input->post('vehicle_id');
+        $route_id = $this->input->post('route_id');
         $date_str = $this->input->post('date');
         $date = $this->customlib->dateFormatToYYYYMMDD($date_str);
 
@@ -472,27 +508,38 @@ class Transportattendance extends Admin_Controller
             }
         }
         
-        $details = $this->transportattendance_model->get_attendance_detail($vehicle_id, $date);
+        $details = $this->transportattendance_model->get_attendance_detail($vehicle_id, $date, $route_id);
         
         $html = '<table class="table table-striped table-bordered table-hover">';
-        $html .= '<thead><tr><th>Student</th><th>Class (Section)</th><th>Shift</th><th>Status</th><th>Remark</th></tr></thead><tbody>';
+        $html .= '<thead><tr><th>Student</th><th>Class (Section)</th><th>Route & Stop</th><th>Shift</th><th>Status</th><th>Remark</th></tr></thead><tbody>';
         
         if (!empty($details)) {
             foreach ($details as $row) {
                 $status_label = $row['status'] == 'Switched Bus' ? '<span class="label label-info">Custom Rider</span>' : '<span class="label label-success">Present</span>';
                 $name = $row['firstname'] . ' ' . $row['lastname'] . ' (' . $row['admission_no'] . ')';
                 $class_sec = $row['class'] . ' (' . $row['section'] . ')';
+                $route_stop = '';
+                if (!empty($row['route_title'])) {
+                    $route_stop .= '<span class="text-primary"><i class="fa fa-road"></i> ' . $row['route_title'] . '</span>';
+                }
+                if (!empty($row['pickup_point_name'])) {
+                    $route_stop .= (!empty($route_stop) ? '<br>' : '') . '<small class="text-muted"><i class="fa fa-map-marker text-danger"></i> ' . $row['pickup_point_name'] . '</small>';
+                }
+                if (empty($route_stop)) {
+                    $route_stop = '-';
+                }
                 
                 $html .= '<tr>';
                 $html .= '<td>' . $name . '</td>';
                 $html .= '<td>' . $class_sec . '</td>';
+                $html .= '<td>' . $route_stop . '</td>';
                 $html .= '<td>' . $row['attendance_type'] . '</td>';
                 $html .= '<td>' . $status_label . '</td>';
                 $html .= '<td>' . $row['remark'] . '</td>';
                 $html .= '</tr>';
             }
         } else {
-            $html .= '<tr><td colspan="5" class="text-center text-danger">No attendance marked for this date.</td></tr>';
+            $html .= '<tr><td colspan="6" class="text-center text-danger">No attendance marked for this date.</td></tr>';
         }
         $html .= '</tbody></table>';
         
@@ -507,6 +554,7 @@ class Transportattendance extends Admin_Controller
         }
 
         $vehicle_id = $this->input->post('vehicle_id');
+        $route_id = $this->input->post('route_id');
         $month = $this->input->post('month');
         $year = $this->input->post('year');
 
@@ -519,10 +567,10 @@ class Transportattendance extends Admin_Controller
             }
         }
         
-        $details = $this->transportattendance_model->get_monthly_attendance_detail($vehicle_id, $month, $year);
+        $details = $this->transportattendance_model->get_monthly_attendance_detail($vehicle_id, $month, $year, $route_id);
         
         $html = '<table class="table table-striped table-bordered table-hover">';
-        $html .= '<thead><tr><th>Date</th><th>Student</th><th>Class (Section)</th><th>Shift</th><th>Status</th><th>Remark</th></tr></thead><tbody>';
+        $html .= '<thead><tr><th>Date</th><th>Student</th><th>Class (Section)</th><th>Route & Stop</th><th>Shift</th><th>Status</th><th>Remark</th></tr></thead><tbody>';
         
         if (!empty($details)) {
             foreach ($details as $row) {
@@ -530,18 +578,29 @@ class Transportattendance extends Admin_Controller
                 $name = $row['firstname'] . ' ' . $row['lastname'] . ' (' . $row['admission_no'] . ')';
                 $class_sec = $row['class'] . ' (' . $row['section'] . ')';
                 $formatted_date = date($this->customlib->getSchoolDateFormat(), strtotime($row['date']));
+                $route_stop = '';
+                if (!empty($row['route_title'])) {
+                    $route_stop .= '<span class="text-primary"><i class="fa fa-road"></i> ' . $row['route_title'] . '</span>';
+                }
+                if (!empty($row['pickup_point_name'])) {
+                    $route_stop .= (!empty($route_stop) ? '<br>' : '') . '<small class="text-muted"><i class="fa fa-map-marker text-danger"></i> ' . $row['pickup_point_name'] . '</small>';
+                }
+                if (empty($route_stop)) {
+                    $route_stop = '-';
+                }
                 
                 $html .= '<tr>';
                 $html .= '<td>' . $formatted_date . '</td>';
                 $html .= '<td>' . $name . '</td>';
                 $html .= '<td>' . $class_sec . '</td>';
+                $html .= '<td>' . $route_stop . '</td>';
                 $html .= '<td>' . $row['attendance_type'] . '</td>';
                 $html .= '<td>' . $status_label . '</td>';
                 $html .= '<td>' . $row['remark'] . '</td>';
                 $html .= '</tr>';
             }
         } else {
-            $html .= '<tr><td colspan="6" class="text-center text-danger">No attendance marked for this month.</td></tr>';
+            $html .= '<tr><td colspan="7" class="text-center text-danger">No attendance marked for this month.</td></tr>';
         }
         $html .= '</tbody></table>';
         
