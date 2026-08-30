@@ -50,6 +50,7 @@ class Aisetting extends Admin_Controller
             'ai_groq_api_key'        => trim($this->input->post('ai_groq_api_key')),
             'ai_openai_api_key'      => trim($this->input->post('ai_openai_api_key')),
             'ai_openrouter_api_key'  => trim($this->input->post('ai_openrouter_api_key')),
+            'ai_nvidia_api_key'      => trim($this->input->post('ai_nvidia_api_key')),
             'ai_default_model'       => trim($this->input->post('ai_default_model'))
         ];
 

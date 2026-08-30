@@ -164,7 +164,28 @@
                                 </small>
                             </div>
 
-                            <!-- 4. OpenAI API Key -->
+                            <!-- 4. NVIDIA NIM API Key -->
+                            <div class="ai-key-box">
+                                <div class="ai-key-box-title">
+                                    <i class="fa fa-microchip" style="color: #76b900; font-size: 16px;"></i> NVIDIA NIM API Key
+                                    <span class="badge bg-green" style="font-size: 10px; margin-left: 6px; background-color: #76b900 !important;">Nemotron-3.5-Lightning-30B</span>
+                                </div>
+                                <div class="ai-key-box-desc">
+                                    Powers high-precision reasoning via <strong>nvidia/nemotron-3.5-lightning-30b-a3b</strong> on the NVIDIA NIM cloud platform.
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon" style="background: #ffffff; border-color: #cbd5e1;"><i class="fa fa-key text-muted"></i></span>
+                                    <input type="password" class="form-control" id="ai_nvidia_api_key" name="ai_nvidia_api_key" value="<?php echo isset($result->ai_nvidia_api_key) ? htmlspecialchars($result->ai_nvidia_api_key) : ''; ?>" placeholder="nvapi-..." style="border-color: #cbd5e1; font-family: monospace;">
+                                    <span class="input-group-btn">
+                                        <button type="button" class="btn btn-default" onclick="togglePass('ai_nvidia_api_key', this)" style="border-color: #cbd5e1;"><i class="fa fa-eye"></i></button>
+                                    </span>
+                                </div>
+                                <small style="display: block; margin-top: 6px; font-size: 11px; color: #64748b;">
+                                    Get your API key from <a href="https://build.nvidia.com" target="_blank" style="color: #76b900; font-weight: 600;">build.nvidia.com <i class="fa fa-external-link"></i></a>
+                                </small>
+                            </div>
+
+                            <!-- 5. OpenAI API Key -->
                             <div class="ai-key-box">
                                 <div class="ai-key-box-title">
                                     <i class="fa fa-codepen" style="color: #10b981; font-size: 16px;"></i> OpenAI API Key (Optional)
@@ -181,7 +202,7 @@
                                 </div>
                             </div>
 
-                            <!-- 5. Default AI Model -->
+                            <!-- 6. Default AI Model -->
                             <div class="ai-key-box">
                                 <div class="ai-key-box-title">
                                     <i class="fa fa-sliders" style="color: #6366f1; font-size: 16px;"></i> Default Institution AI Engine
@@ -190,9 +211,10 @@
                                     Select the default AI provider that loads automatically across exam creation workflows.
                                 </div>
                                 <select class="form-control" id="ai_default_model" name="ai_default_model" style="border-color: #cbd5e1; max-width: 450px;">
-                                    <option value="gemini" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'gemini') ? 'selected' : ''; ?>>Google Gemini (Auto Free / Pro Tier - Recommended)</option>
-                                    <option value="openrouter_ox" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'openrouter_ox') ? 'selected' : ''; ?>>OpenRouter ox-alpha (Fable 5 Free Tier / High Reasoning)</option>
-                                    <option value="groq" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'groq') ? 'selected' : ''; ?>>Groq LLaMA-3.3 70B (High Speed Generation)</option>
+                                    <option value="nvidia" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'nvidia') ? 'selected' : ''; ?>>🟢 NVIDIA NIM: Nemotron 3.5 Lightning 30B (Default)</option>
+                                    <option value="openrouter_ox" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'openrouter_ox') ? 'selected' : ''; ?>>🌟 OpenRouter: ox-alpha (Fable 5 Free Tier / Frontier Reasoning)</option>
+                                    <option value="gemini" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'gemini') ? 'selected' : ''; ?>>⚡ Google Gemini 2.0 Flash (Fast & Precise)</option>
+                                    <option value="groq" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'groq') ? 'selected' : ''; ?>>🚀 Groq Cloud: LLaMA-3.3 70B (High Speed)</option>
                                     <option value="openai" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'openai') ? 'selected' : ''; ?>>OpenAI GPT-4o</option>
                                 </select>
                             </div>

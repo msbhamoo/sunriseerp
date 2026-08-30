@@ -763,12 +763,15 @@ foreach ($recent_papers as $rp) {
 
             <!-- 8. AI Generation Engine -->
             <div class="form-group">
-                <label><i class="fa fa-microchip text-primary"></i> AI Generation Engine</label>
+                <label><i class="fa fa-microchip" style="color: #76b900;"></i> AI Generation Engine</label>
                 <select id="gen_engine" class="form-control input-sm" style="font-weight: 600;">
+                    <option value="nvidia" <?php echo (empty($sch_setting->ai_default_model) || $sch_setting->ai_default_model == 'nvidia') ? 'selected' : ''; ?>>
+                        🟢 NVIDIA NIM: Nemotron 3.5 Lightning 30B (Default High Reasoning)
+                    </option>
                     <option value="openrouter_ox" <?php echo (!empty($sch_setting->ai_default_model) && $sch_setting->ai_default_model == 'openrouter_ox') ? 'selected' : ''; ?>>
                         🌟 OpenRouter: 01-ai / ox-alpha (Fable 5 Free Tier / Frontier Reasoning)
                     </option>
-                    <option value="gemini" <?php echo (!empty($sch_setting->ai_default_model) && $sch_setting->ai_default_model == 'gemini') ? 'selected' : (!empty($sch_setting->ai_default_model) ? '' : 'selected'); ?>>
+                    <option value="gemini" <?php echo (!empty($sch_setting->ai_default_model) && $sch_setting->ai_default_model == 'gemini') ? 'selected' : ''; ?>>
                         ⚡ Google Gemini 2.0 Flash (Fast & Precise)
                     </option>
                     <option value="groq" <?php echo (!empty($sch_setting->ai_default_model) && $sch_setting->ai_default_model == 'groq') ? 'selected' : ''; ?>>

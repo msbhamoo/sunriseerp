@@ -17,6 +17,7 @@ class Ai_exam_generator
         $this->gemini_api_key     = !empty($sch_setting->ai_gemini_api_key) ? $sch_setting->ai_gemini_api_key : (defined('GEMINI_API_KEY') ? GEMINI_API_KEY : '');
         $this->groq_api_key       = !empty($sch_setting->ai_groq_api_key) ? $sch_setting->ai_groq_api_key : (defined('GROQ_API_KEY') ? GROQ_API_KEY : '');
         $this->openrouter_api_key = !empty($sch_setting->ai_openrouter_api_key) ? $sch_setting->ai_openrouter_api_key : (defined('OPENROUTER_API_KEY') ? OPENROUTER_API_KEY : '');
+        $this->nvidia_api_key     = !empty($sch_setting->ai_nvidia_api_key) ? $sch_setting->ai_nvidia_api_key : (defined('NVIDIA_API_KEY') ? NVIDIA_API_KEY : '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');
         $this->openai_api_key     = !empty($sch_setting->ai_openai_api_key) ? $sch_setting->ai_openai_api_key : (defined('OPENAI_API_KEY') ? OPENAI_API_KEY : '');
     }
 
@@ -42,6 +43,7 @@ class Ai_exam_generator
         $active_gemini_key     = !empty($custom_api_key) ? $custom_api_key : $this->gemini_api_key;
         $active_groq_key       = !empty($custom_api_key) ? $custom_api_key : $this->groq_api_key;
         $active_openrouter_key = !empty($custom_api_key) ? $custom_api_key : $this->openrouter_api_key;
+        $active_nvidia_key     = !empty($custom_api_key) ? $custom_api_key : $this->nvidia_api_key;
         $active_openai_key     = !empty($custom_api_key) ? $custom_api_key : $this->openai_api_key;
 
         // Build CBSE Exam Prompt
@@ -49,7 +51,23 @@ class Ai_exam_generator
 
         // Provider execution with automatic robust fallback
         $response = null;
-        if (($api_engine === 'openrouter' || $api_engine === 'openrouter_ox') && !empty($active_openrouter_key)) {
+        if (($api_engine === 'nvidia' || $api_engine === 'nvidia_nim') && !empty($active_nvidia_key)) {
+            $response = $this->call_nvidia_nim($prompt, $active_nvidia_key, 'nvidia/nemotron-3.5-lightning-30b-a3b');
+            if (isset($response['error'])) {
+                if (!empty($active_openrouter_key)) {
+                    $fallback = $this->call_openrouter($prompt, $active_openrouter_key, 'stealth/ox-alpha');
+                    if (!isset($fallback['error'])) {
+                        $response = $fallback;
+                    }
+                }
+                if (isset($response['error']) && !empty($active_gemini_key)) {
+                    $fallback = $this->call_gemini($prompt, $active_gemini_key);
+                    if (!isset($fallback['error'])) {
+                        $response = $fallback;
+                    }
+                }
+            }
+        } elseif (($api_engine === 'openrouter' || $api_engine === 'openrouter_ox') && !empty($active_openrouter_key)) {
             $response = $this->call_openrouter($prompt, $active_openrouter_key, 'stealth/ox-alpha');
             // If OpenRouter times out or errors on live, immediately fallback to Gemini or Groq
             if (isset($response['error'])) {
@@ -57,12 +75,6 @@ class Ai_exam_generator
                     $fallback = $this->call_gemini($prompt, $active_gemini_key);
                     if (!isset($fallback['error'])) {
                         $response = $fallback;
-                    }
-                }
-                if (isset($response['error']) && !empty($active_groq_key)) {
-                    $fallback_groq = $this->call_groq($prompt, $active_groq_key);
-                    if (!isset($fallback_groq['error'])) {
-                        $response = $fallback_groq;
                     }
                 }
             }
@@ -679,6 +691,58 @@ EOT;
     }
 
     /**
+     * Call NVIDIA NIM API (nvidia/nemotron-3.5-lightning-30b-a3b)
+     */
+    private function call_nvidia_nim($prompt, $api_key, $model = 'nvidia/nemotron-3.5-lightning-30b-a3b')
+    {
+        $url = "https://integrate.api.nvidia.com/v1/chat/completions";
+
+        $payload = [
+            'model' => $model,
+            'messages' => [
+                ['role' => 'system', 'content' => 'You are an expert CBSE examination author. Output valid JSON adhering strictly to the requested schema.'],
+                ['role' => 'user', 'content' => $prompt]
+            ],
+            'temperature' => 0.2,
+            'max_tokens' => 8192,
+            'stream' => false
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $api_key,
+            'Accept: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 90);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+        $result = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($ch);
+        curl_close($ch);
+
+        if ($curl_error) {
+            return ['error' => 'NVIDIA NIM cURL Error: ' . $curl_error];
+        }
+
+        $res_json = json_decode($result, true);
+        if ($http_code === 200 && isset($res_json['choices'][0]['message']['content'])) {
+            return ['raw_text' => $res_json['choices'][0]['message']['content']];
+        }
+
+        if (isset($res_json['error']['message'])) {
+            return ['error' => 'NVIDIA NIM Error: ' . $res_json['error']['message']];
+        }
+
+        return ['error' => 'HTTP ' . $http_code . ' from NVIDIA NIM API'];
+    }
+
+    /**
      * Call OpenAI API (GPT-4o)
      */
     private function call_openai($prompt, $api_key)
@@ -850,6 +914,7 @@ EOT;
         $active_gemini_key     = !empty($custom_api_key) ? $custom_api_key : $this->gemini_api_key;
         $active_groq_key       = !empty($custom_api_key) ? $custom_api_key : $this->groq_api_key;
         $active_openrouter_key = !empty($custom_api_key) ? $custom_api_key : $this->openrouter_api_key;
+        $active_nvidia_key     = !empty($custom_api_key) ? $custom_api_key : $this->nvidia_api_key;
         $active_openai_key     = !empty($custom_api_key) ? $custom_api_key : $this->openai_api_key;
 
         $prompt = <<<EOT
@@ -871,11 +936,30 @@ Output MUST be a single valid JSON object strictly matching this schema with NO 
 EOT;
 
         $response   = null;
-        $model_used = 'Google Gemini (gemini-2.0-flash)';
+        $model_used = 'NVIDIA NIM (nemotron-3.5-lightning-30b-a3b)';
 
-        if (($api_engine === 'openrouter' || $api_engine === 'openrouter_ox') && !empty($active_openrouter_key)) {
+        if (($api_engine === 'nvidia' || $api_engine === 'nvidia_nim') && !empty($active_nvidia_key)) {
+            $response   = $this->call_nvidia_nim($prompt, $active_nvidia_key);
+            $model_used = 'NVIDIA NIM (nemotron-3.5-lightning-30b-a3b)';
+            if (isset($response['error'])) {
+                if (!empty($active_openrouter_key)) {
+                    $fallback = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
+                    if (!isset($fallback['error'])) {
+                        $response = $fallback;
+                        $model_used = 'OpenRouter (stealth/ox-alpha)';
+                    }
+                }
+                if (isset($response['error']) && !empty($active_gemini_key)) {
+                    $fallback = $this->call_gemini($prompt, $active_gemini_key);
+                    if (!isset($fallback['error'])) {
+                        $response = $fallback;
+                        $model_used = 'Google Gemini (gemini-2.0-flash)';
+                    }
+                }
+            }
+        } elseif (($api_engine === 'openrouter' || $api_engine === 'openrouter_ox') && !empty($active_openrouter_key)) {
             $response   = $this->call_openrouter($prompt, $active_openrouter_key, 'ox-alpha');
-            $model_used = 'OpenRouter (nvidia/nemotron-nano-12b-v2-vl:free)';
+            $model_used = 'OpenRouter (stealth/ox-alpha)';
             if (isset($response['error'])) {
                 if (!empty($active_gemini_key)) {
                     $fallback = $this->call_gemini($prompt, $active_gemini_key);
@@ -988,6 +1072,7 @@ EOT;
         $active_gemini_key     = !empty($custom_api_key) ? $custom_api_key : $this->gemini_api_key;
         $active_groq_key       = !empty($custom_api_key) ? $custom_api_key : $this->groq_api_key;
         $active_openrouter_key = !empty($custom_api_key) ? $custom_api_key : $this->openrouter_api_key;
+        $active_nvidia_key     = !empty($custom_api_key) ? $custom_api_key : $this->nvidia_api_key;
 
         $types_str = implode(', ', $q_types);
         $levels_str = implode(', ', $levels);
@@ -1025,7 +1110,23 @@ Requirements:
 }";
 
         $response = null;
-        if (($api_engine === 'openrouter' || $api_engine === 'openrouter_ox') && !empty($active_openrouter_key)) {
+        if (($api_engine === 'nvidia' || $api_engine === 'nvidia_nim') && !empty($active_nvidia_key)) {
+            $response = $this->call_nvidia_nim($prompt, $active_nvidia_key);
+            if (isset($response['error'])) {
+                if (!empty($active_openrouter_key)) {
+                    $fallback = $this->call_openrouter($prompt, $active_openrouter_key, 'stealth/ox-alpha');
+                    if (!isset($fallback['error'])) {
+                        $response = $fallback;
+                    }
+                }
+                if (isset($response['error']) && !empty($active_gemini_key)) {
+                    $fallback = $this->call_gemini($prompt, $active_gemini_key);
+                    if (!isset($fallback['error'])) {
+                        $response = $fallback;
+                    }
+                }
+            }
+        } elseif (($api_engine === 'openrouter' || $api_engine === 'openrouter_ox') && !empty($active_openrouter_key)) {
             $response = $this->call_openrouter($prompt, $active_openrouter_key, 'stealth/ox-alpha');
             // If OpenRouter times out or errors on live, immediately fallback to Gemini or Groq
             if (isset($response['error'])) {

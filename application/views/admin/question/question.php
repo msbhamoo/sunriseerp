@@ -1238,9 +1238,10 @@ $('#myimgModal').on('shown.bs.modal', function (event) {
                     <div class="form-group">
                         <label style="font-weight: 600; font-size: 13px;">7. AI Model Engine</label>
                         <select id="ai_gen_engine" class="form-control">
-                            <option value="openrouter_ox" selected>OpenRouter (stealth/ox-alpha Free 1M)</option>
-                            <option value="gemini">Google Gemini 2.0 Flash</option>
-                            <option value="groq">Groq Cloud (LLaMA-3.3 70B)</option>
+                            <option value="nvidia" selected>🟢 NVIDIA NIM: Nemotron 3.5 Lightning (Default)</option>
+                            <option value="openrouter_ox">🌟 OpenRouter (stealth/ox-alpha Free 1M)</option>
+                            <option value="gemini">⚡ Google Gemini 2.0 Flash</option>
+                            <option value="groq">🚀 Groq Cloud (LLaMA-3.3 70B)</option>
                         </select>
                     </div>
                 </div>
