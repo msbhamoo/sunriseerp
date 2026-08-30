@@ -700,11 +700,14 @@ EOT;
         $payload = [
             'model' => $model,
             'messages' => [
-                ['role' => 'system', 'content' => 'You are an expert CBSE examination author. Output valid JSON adhering strictly to the requested schema.'],
+                ['role' => 'system', 'content' => 'You are an expert CBSE examination author. Output valid raw JSON adhering strictly to the requested schema with no commentary.'],
                 ['role' => 'user', 'content' => $prompt]
             ],
             'temperature' => 0.2,
-            'max_tokens' => 8192,
+            'max_tokens' => 4096,
+            'chat_template_kwargs' => [
+                'enable_thinking' => false
+            ],
             'stream' => false
         ];
 
@@ -717,8 +720,8 @@ EOT;
             'Authorization: Bearer ' . $api_key,
             'Accept: application/json'
         ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 90);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 28); // 28s prevents Nginx 504 gateway timeout (Nginx fastcgi_read_timeout is typically 30s-60s)
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         $result = curl_exec($ch);
