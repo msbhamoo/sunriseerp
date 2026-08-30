@@ -54,14 +54,23 @@ class Ai_exam_generator
         if (($api_engine === 'nvidia' || $api_engine === 'nvidia_nim') && !empty($active_nvidia_key)) {
             $response = $this->call_nvidia_nim($prompt, $active_nvidia_key, 'nvidia/nemotron-3.5-lightning-30b-a3b');
             if (isset($response['error'])) {
-                if (!empty($active_openrouter_key)) {
-                    $fallback = $this->call_openrouter($prompt, $active_openrouter_key, 'stealth/ox-alpha');
+                // Immediate ultra-fast failover to Gemini (1.5s)
+                if (!empty($active_gemini_key)) {
+                    $fallback = $this->call_gemini($prompt, $active_gemini_key);
                     if (!isset($fallback['error'])) {
                         $response = $fallback;
                     }
                 }
-                if (isset($response['error']) && !empty($active_gemini_key)) {
-                    $fallback = $this->call_gemini($prompt, $active_gemini_key);
+                // If Gemini not available, try Groq (0.8s)
+                if (isset($response['error']) && !empty($active_groq_key)) {
+                    $fallback = $this->call_groq($prompt, $active_groq_key);
+                    if (!isset($fallback['error'])) {
+                        $response = $fallback;
+                    }
+                }
+                // Finally try OpenRouter
+                if (isset($response['error']) && !empty($active_openrouter_key)) {
+                    $fallback = $this->call_openrouter($prompt, $active_openrouter_key, 'stealth/ox-alpha');
                     if (!isset($fallback['error'])) {
                         $response = $fallback;
                     }
@@ -720,8 +729,8 @@ EOT;
             'Authorization: Bearer ' . $api_key,
             'Accept: application/json'
         ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 28); // 28s prevents Nginx 504 gateway timeout (Nginx fastcgi_read_timeout is typically 30s-60s)
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 18); // 18s fast timeout so failover triggers before Nginx 30s gateway timeout
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         $result = curl_exec($ch);
