@@ -71,10 +71,15 @@
 </style>
 
 <div class="content-wrapper">
-    <section class="content-header">
-        <h1>
+    <section class="content-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h1 style="margin:0;">
             <i class="fa fa-bus"></i> <?php echo $this->lang->line('transport'); ?>
         </h1>
+        <div>
+            <a href="<?php echo site_url('admin/transportattendance/mobile'); ?>" class="btn btn-sm btn-primary" style="font-weight:600; border-radius:6px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">
+                <i class="fa fa-mobile-phone fa-lg"></i> Open Mobile Quick Mode
+            </a>
+        </div>
     </section>
     
     <section class="content">
@@ -461,9 +466,16 @@ $(document).ready(function() {
     $('.select2').select2();
     updateCounters();
 
-    $('#vehicle_id').on('change', function() {
+    var initial_route_id = '<?php echo isset($route_id) ? $route_id : ""; ?>';
+    
+    $('#vehicle_id').on('change', function(e, triggeredByLoad) {
         var vehicle_id = $(this).val();
         var route_select = $('#route_id');
+        
+        if (triggeredByLoad) {
+            return;
+        }
+        
         route_select.html('<option value="">All Routes (Entire Bus)</option>');
         
         if (vehicle_id) {
@@ -475,12 +487,15 @@ $(document).ready(function() {
                 success: function(routes) {
                     if (routes && routes.length > 0) {
                         $.each(routes, function(idx, r) {
-                            route_select.append('<option value="' + r.route_id + '">' + r.route_title + '</option>');
+                            var sel = (initial_route_id && initial_route_id == r.route_id) ? ' selected="selected"' : '';
+                            route_select.append('<option value="' + r.route_id + '"' + sel + '>' + r.route_title + '</option>');
                         });
                     }
-                    route_select.trigger('change');
+                    route_select.trigger('change.select2');
                 }
             });
+        } else {
+            route_select.trigger('change.select2');
         }
     });
 

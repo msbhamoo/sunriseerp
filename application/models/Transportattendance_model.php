@@ -36,7 +36,7 @@ class Transportattendance_model extends MY_Model
         if ($session_id == null) {
             $session_id = $this->current_session;
         }
-        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.image, students.admission_no, classes.class, sections.section, transport_route.id as route_id, transport_route.route_title, pickup_point.name as pickup_point_name, vehicle_routes.id as vehroute_id');
+        $this->db->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.image, students.admission_no, classes.class, sections.section, transport_route.id as route_id, transport_route.route_title, pickup_point.name as pickup_point_name, route_pickup_point.order_number, vehicle_routes.id as vehroute_id');
         $this->db->from('student_session');
         $this->db->join('students', 'students.id = student_session.student_id');
         $this->db->join('classes', 'classes.id = student_session.class_id');
@@ -52,6 +52,7 @@ class Transportattendance_model extends MY_Model
         $this->db->where('student_session.session_id', $session_id);
         $this->db->where('students.is_active', 'yes');
         $this->db->order_by('transport_route.route_title', 'ASC');
+        $this->db->order_by('route_pickup_point.order_number', 'ASC');
         $this->db->order_by('students.firstname', 'ASC');
         return $this->db->get()->result_array();
     }

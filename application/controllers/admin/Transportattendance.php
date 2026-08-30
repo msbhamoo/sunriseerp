@@ -196,6 +196,107 @@ class Transportattendance extends Admin_Controller
         }
     }
 
+    public function mobile()
+    {
+        if (!$this->rbac->hasPrivilege('transport_attendance', 'can_view')) {
+            access_denied();
+        }
+        
+        $data['title'] = 'Driver Quick Mode - Bus Attendance';
+        
+        if ($this->isSuperAdmin()) {
+            $data['vehiclelist'] = $this->vehicle_model->get();
+        } else {
+            $data['vehiclelist'] = $this->getStaffAssignedVehicles();
+        }
+        
+        $date_input = $this->input->get_post('date');
+        $date = !empty($date_input) ? $this->customlib->dateFormatToYYYYMMDD($date_input) : date('Y-m-d');
+        $vehicle_id = $this->input->get_post('vehicle_id');
+        $route_id = $this->input->get_post('route_id');
+        $attendance_type = $this->input->get_post('attendance_type');
+        
+        // Auto default attendance type based on current time (Morning before 12 PM, Evening after 12 PM)
+        if (empty($attendance_type)) {
+            $current_hour = (int)date('H');
+            $attendance_type = ($current_hour < 12) ? 'morning' : 'evening';
+        }
+        
+        // Auto select single vehicle if only 1 assigned
+        if (empty($vehicle_id) && !empty($data['vehiclelist']) && count($data['vehiclelist']) == 1) {
+            $vehicle_id = $data['vehiclelist'][0]['id'];
+        }
+
+        $data['date'] = $date;
+        $data['vehicle_id'] = $vehicle_id;
+        $data['route_id'] = $route_id;
+        $data['attendance_type'] = $attendance_type;
+        $data['vehicle_routes'] = !empty($vehicle_id) ? $this->vehicle_model->getVehicleRoutes($vehicle_id) : array();
+        
+        if (!empty($vehicle_id)) {
+            if (!$this->isSuperAdmin()) {
+                $allowed_ids = array_column($data['vehiclelist'], 'id');
+                if (!in_array($vehicle_id, $allowed_ids)) {
+                    access_denied();
+                }
+            }
+
+            $students = $this->transportattendance_model->get_bus_students($vehicle_id, null, $route_id);
+            $saved_attendance = $this->transportattendance_model->get_attendance($vehicle_id, $date, $attendance_type);
+            $custom_riders = $this->transportattendance_model->get_custom_riders($vehicle_id, $date, $attendance_type);
+            
+            $opposite_shift = (strtolower($attendance_type) == 'evening') ? 'morning' : 'evening';
+            $opposite_attendance = $this->transportattendance_model->get_attendance($vehicle_id, $date, $opposite_shift);
+            $opposite_presence = $this->transportattendance_model->check_transport_presence($date, $opposite_shift);
+            $data['opposite_shift'] = ucfirst($opposite_shift);
+
+            if (!empty($custom_riders)) {
+                $students = array_merge($students, $custom_riders);
+            }
+            
+            $gatepasses = $this->gatepass_model->check_student_gatepass($date);
+            
+            // Group students by Stop Name (Pickup Point)
+            $grouped_by_stop = array();
+            foreach ($students as $key => $student) {
+                if (isset($saved_attendance[$student['student_session_id']])) {
+                    $student['attendance_status'] = $saved_attendance[$student['student_session_id']]['status'];
+                    $student['remark'] = $saved_attendance[$student['student_session_id']]['remark'];
+                } else {
+                    $student['attendance_status'] = 'Present';
+                    $student['remark'] = '';
+                }
+                
+                if (isset($opposite_attendance[$student['student_session_id']])) {
+                    $student['opposite_shift_status'] = $opposite_attendance[$student['student_session_id']]['status'];
+                } elseif (isset($opposite_presence[$student['student_session_id']])) {
+                    $student['opposite_shift_status'] = 'Present (Bus #' . $opposite_presence[$student['student_session_id']] . ')';
+                } else {
+                    $student['opposite_shift_status'] = 'Not Marked';
+                }
+
+                $student['has_gatepass'] = in_array($student['student_id'], $gatepasses) ? true : false;
+                if ($student['has_gatepass'] && !isset($saved_attendance[$student['student_session_id']])) {
+                    $student['attendance_status'] = 'Gatepass';
+                }
+                
+                $stop_key = !empty($student['pickup_point_name']) ? $student['pickup_point_name'] : 'Other / Direct Stop';
+                if (!isset($grouped_by_stop[$stop_key])) {
+                    $grouped_by_stop[$stop_key] = array();
+                }
+                $grouped_by_stop[$stop_key][] = $student;
+            }
+            
+            $data['grouped_students'] = $grouped_by_stop;
+            $data['students_count'] = count($students);
+        } else {
+            $data['grouped_students'] = array();
+            $data['students_count'] = 0;
+        }
+        
+        $this->load->view('admin/transport/mobile_attendance', $data);
+    }
+
     public function get_vehicle_routes()
     {
         $vehicle_id = $this->input->post('vehicle_id');
@@ -209,11 +310,7 @@ class Transportattendance extends Admin_Controller
         $seen = array();
         if (!empty($routes_raw)) {
             foreach ($routes_raw as $r) {
-                // Get unique routes
-                $this->db->select('route_id')->from('vehicle_routes')->where('id', $r['vehroute_id']);
-                $vr = $this->db->get()->row_array();
-                $r_id = !empty($vr['route_id']) ? $vr['route_id'] : $r['vehroute_id'];
-                
+                $r_id = $r['route_id'];
                 if (!isset($seen[$r_id])) {
                     $seen[$r_id] = true;
                     $routes[] = array(
