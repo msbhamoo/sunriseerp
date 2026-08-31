@@ -249,6 +249,8 @@
                         <button type="button" class="btn btn-default att-tab-btn" data-tab="monthly"><i class="fa fa-table"></i> Monthly Sheet</button>
                     </div>
                     <div class="att-qractions">
+                        <button type="button" id="btn-quick-sync-biometric" class="btn btn-sm btn-info" title="Sync punches from e-TimeOffice Biometric Machine"><i class="fa fa-fingerprint"></i> Sync Biometric</button>
+                        <a href="<?php echo site_url('admin/staffattendance/biometricsettings'); ?>" class="btn btn-sm btn-default" title="Biometric Settings & Mapping"><i class="fa fa-sliders"></i></a>
                         <a href="<?php echo site_url('admin/staffattendance/scan'); ?>" class="btn btn-sm btn-success"><i class="fa fa-qrcode"></i> Mark My Attendance</a>
                         <a href="<?php echo site_url('admin/staffattendance/qrdisplay'); ?>" target="_blank" class="btn btn-sm btn-default"><i class="fa fa-desktop"></i> Display QR</a>
                         <a href="<?php echo site_url('admin/staffattendance/qrsettings'); ?>" class="btn btn-sm btn-default" title="QR Settings"><i class="fa fa-cog"></i></a>
@@ -1071,6 +1073,30 @@ $(document).ready(function() {
             updateLiveStats();
             calculateDurations();
         }, 100);
+    });
+
+    // Quick Biometric Sync from Staff Attendance list
+    $('#btn-quick-sync-biometric').on('click', function() {
+        var $btn = $(this);
+        var originalHtml = $btn.html();
+        var selectedDate = $('#date_field').val() || '';
+
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Syncing Biometric...');
+
+        $.post("<?php echo site_url('admin/staffattendance/sync_biometric_ajax'); ?>", {
+            date: selectedDate
+        }, function(res) {
+            $btn.prop('disabled', false).html(originalHtml);
+            if (res.status === 'success') {
+                alert(res.message);
+                location.reload();
+            } else {
+                alert(res.message || 'Biometric synchronization failed.');
+            }
+        }, 'json').fail(function() {
+            $btn.prop('disabled', false).html(originalHtml);
+            alert('Failed to contact server for biometric synchronization.');
+        });
     });
 });
 

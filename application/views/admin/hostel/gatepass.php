@@ -11,6 +11,8 @@ $now_timestamp = time();
 foreach ($gate_passes as &$gp_item) {
     $is_overdue = false;
     $overdue_text = '';
+    $is_returned_late = false;
+    $returned_late_text = '';
 
     if (isset($gp_item['status'])) {
         if ($gp_item['status'] == 'Out') { 
@@ -44,11 +46,38 @@ foreach ($gate_passes as &$gp_item) {
             }
         } elseif ($gp_item['status'] == 'Returned') { 
             $returned_count++; 
+
+            // Check if returned after due date/time
+            if (!empty($gp_item['expected_in_date']) && !empty($gp_item['actual_in_date'])) {
+                $exp_datetime_str = $gp_item['expected_in_date'] . ' ' . (!empty($gp_item['expected_in_time']) ? $gp_item['expected_in_time'] : '23:59:59');
+                $act_datetime_str = $gp_item['actual_in_date'] . ' ' . (!empty($gp_item['actual_in_time']) ? $gp_item['actual_in_time'] : '00:00:00');
+                
+                $exp_ts = strtotime($exp_datetime_str);
+                $act_ts = strtotime($act_datetime_str);
+                
+                if ($exp_ts && $act_ts && $act_ts > $exp_ts) {
+                    $is_returned_late = true;
+                    $diff_seconds = $act_ts - $exp_ts;
+                    $diff_hours = floor($diff_seconds / 3600);
+                    $diff_days = floor($diff_seconds / 86400);
+
+                    if ($diff_days >= 1) {
+                        $returned_late_text = $diff_days . 'd ' . ($diff_hours % 24) . 'h late';
+                    } elseif ($diff_hours >= 1) {
+                        $returned_late_text = $diff_hours . 'h late';
+                    } else {
+                        $diff_mins = max(1, floor($diff_seconds / 60));
+                        $returned_late_text = $diff_mins . 'm late';
+                    }
+                }
+            }
         }
     }
     
     $gp_item['is_overdue'] = $is_overdue;
     $gp_item['overdue_text'] = $overdue_text;
+    $gp_item['is_returned_late'] = $is_returned_late;
+    $gp_item['returned_late_text'] = $returned_late_text;
 
     if (isset($gp_item['pass_type'])) {
         if ($gp_item['pass_type'] == 'Holiday Pass') {
@@ -205,6 +234,8 @@ unset($gp_item);
                                                             </div>
                                                             <?php if ($gp['is_overdue']) { ?>
                                                                 <span class="label label-danger gp-overdue-tag" title="Student has not returned by expected time"><i class="fa fa-clock-o"></i> OVERDUE (<?php echo $gp['overdue_text']; ?>)</span>
+                                                            <?php } elseif (!empty($gp['is_returned_late'])) { ?>
+                                                                <span class="label" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;" title="Student returned after expected due date/time"><i class="fa fa-clock-o"></i> Returned Late (+<?php echo $gp['returned_late_text']; ?>)</span>
                                                             <?php } ?>
                                                         </div>
                                                     </div>
@@ -259,18 +290,27 @@ unset($gp_item);
                                                 </td>
                                                 <td class="mailbox-name white-space-nowrap">
                                                     <?php if ($gp['status'] == 'Returned') { ?>
-                                                        <span style="font-weight: 600; color: #059669;">
-                                                            <?php 
-                                                            $act_str = '';
-                                                            if (!empty($gp['actual_in_date'])) {
-                                                                $act_str .= date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($gp['actual_in_date'])) . ' ';
-                                                            }
-                                                            if (!empty($gp['actual_in_time'])) {
-                                                                $act_str .= date("h:i A", strtotime($gp['actual_in_time']));
-                                                            }
-                                                            echo !empty($act_str) ? $act_str : 'Returned';
-                                                            ?>
-                                                        </span>
+                                                        <div>
+                                                            <span style="font-weight: 600; color: #059669;">
+                                                                <?php 
+                                                                $act_str = '';
+                                                                if (!empty($gp['actual_in_date'])) {
+                                                                    $act_str .= date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($gp['actual_in_date'])) . ' ';
+                                                                }
+                                                                if (!empty($gp['actual_in_time'])) {
+                                                                    $act_str .= date("h:i A", strtotime($gp['actual_in_time']));
+                                                                }
+                                                                echo !empty($act_str) ? $act_str : 'Returned';
+                                                                ?>
+                                                            </span>
+                                                            <?php if (!empty($gp['is_returned_late'])) { ?>
+                                                                <div style="margin-top: 2px;">
+                                                                    <span class="badge" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-size: 10px; font-weight: 700;">
+                                                                        <i class="fa fa-exclamation-triangle text-warning"></i> +<?php echo $gp['returned_late_text']; ?> late
+                                                                    </span>
+                                                                </div>
+                                                            <?php } ?>
+                                                        </div>
                                                     <?php } else { ?>
                                                         <?php if ($gp['is_overdue']) { ?>
                                                             <span class="text-danger" style="font-weight: 700; font-size: 11px; margin-right: 6px;"><i class="fa fa-warning"></i> Not Returned (Overdue)</span>

@@ -54,9 +54,10 @@ class Vehicle extends Admin_Controller
         $assigned_vehicles = array();
         foreach ($all_vehicles as $v) {
             $driver_name = strtolower(trim((string)$v['driver_name']));
-            $attendant_name = strtolower(trim((string)$v['attendant_name']));
             $driver_phone = preg_replace('/[^0-9]/', '', (string)$v['driver_contact']);
-            $attendant_phone = preg_replace('/[^0-9]/', '', (string)$v['attendant_contact']);
+            
+            $attendant_names_arr = array_filter(array_map('trim', explode(',', (string)$v['attendant_name'])));
+            $attendant_phones_arr = array_filter(array_map('trim', explode(',', (string)$v['attendant_contact'])));
 
             $match = false;
             
@@ -70,20 +71,33 @@ class Vehicle extends Admin_Controller
                 }
             }
 
-            if (!empty($attendant_name) && strlen($attendant_name) > 1) {
-                if ($attendant_name == $staff_fullname || 
-                    $attendant_name == $staff_name || 
-                    (!empty($staff_emp_id) && $attendant_name == $staff_emp_id) ||
-                    (!empty($staff_name) && strlen($staff_name) > 2 && strpos($attendant_name, $staff_name) !== false) || 
-                    (!empty($staff_fullname) && strlen($staff_fullname) > 2 && strpos($staff_fullname, $attendant_name) !== false)) {
-                    $match = true;
+            if (!$match && !empty($attendant_names_arr)) {
+                foreach ($attendant_names_arr as $single_att_name) {
+                    $att_clean = strtolower(trim($single_att_name));
+                    if (!empty($att_clean) && strlen($att_clean) > 1) {
+                        if ($att_clean == $staff_fullname || 
+                            $att_clean == $staff_name || 
+                            (!empty($staff_emp_id) && $att_clean == $staff_emp_id) ||
+                            (!empty($staff_name) && strlen($staff_name) > 2 && strpos($att_clean, $staff_name) !== false) || 
+                            (!empty($staff_fullname) && strlen($staff_fullname) > 2 && strpos($staff_fullname, $att_clean) !== false)) {
+                            $match = true;
+                            break;
+                        }
+                    }
                 }
             }
             
-            if (!empty($staff_phone) && strlen($staff_phone) >= 7) {
-                if ((!empty($driver_phone) && (strpos($driver_phone, $staff_phone) !== false || strpos($staff_phone, $driver_phone) !== false)) || 
-                    (!empty($attendant_phone) && (strpos($attendant_phone, $staff_phone) !== false || strpos($staff_phone, $attendant_phone) !== false))) {
+            if (!$match && !empty($staff_phone) && strlen($staff_phone) >= 7) {
+                if (!empty($driver_phone) && (strpos($driver_phone, $staff_phone) !== false || strpos($staff_phone, $driver_phone) !== false)) {
                     $match = true;
+                } elseif (!empty($attendant_phones_arr)) {
+                    foreach ($attendant_phones_arr as $single_att_phone) {
+                        $phone_clean = preg_replace('/[^0-9]/', '', $single_att_phone);
+                        if (!empty($phone_clean) && (strpos($phone_clean, $staff_phone) !== false || strpos($staff_phone, $phone_clean) !== false)) {
+                            $match = true;
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -124,6 +138,9 @@ class Vehicle extends Admin_Controller
         $data['listVehicle'] = $listVehicle;
         $data['vehroutelist'] = $this->vehroute_model->get();
         
+        $this->load->model('route_model');
+        $data['routelist'] = $this->route_model->get();
+
         $this->load->model('staff_model');
         $data['stafflist'] = $this->staff_model->get();
         
@@ -138,11 +155,25 @@ class Vehicle extends Admin_Controller
         return $this->saasvalidation->validateCanUploadFile($str, $params_array);
     }
 
+    private function ensureAttendantRouteColumn()
+    {
+        if (!$this->db->field_exists('attendant_route', 'vehicles')) {
+            $this->load->dbforge();
+            $this->dbforge->add_column('vehicles', array(
+                'attendant_route' => array(
+                    'type' => 'TEXT',
+                    'null' => TRUE
+                )
+            ));
+        }
+    }
+
     public function add()
     {
         if (!$this->rbac->hasPrivilege('vehicle', 'can_add')) {
             access_denied();
         }
+        $this->ensureAttendantRouteColumn();
         $this->form_validation->set_rules('vehicle_no', $this->lang->line('vehicle_number'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('vehicle_photo', $this->lang->line('vehicle_photo'), 'callback_handle_upload');
 
@@ -171,6 +202,31 @@ class Vehicle extends Admin_Controller
                     $this->saasvalidation->deleteResouceQuota('storage', $total_documents_failed_size);
                 }         
             
+            // Attendant Details (Handle multiple or single)
+            $att_names_input = $this->input->post('attendant_name');
+            $att_contacts_input = $this->input->post('attendant_contact');
+            $att_routes_input = $this->input->post('attendant_route');
+            $clean_names = array();
+            $clean_contacts = array();
+            $clean_routes = array();
+            if (is_array($att_names_input)) {
+                foreach ($att_names_input as $idx => $att_n) {
+                    $att_n = trim((string)$att_n);
+                    if (!empty($att_n)) {
+                        $clean_names[] = $att_n;
+                        $clean_contacts[] = isset($att_contacts_input[$idx]) ? trim((string)$att_contacts_input[$idx]) : '';
+                        $clean_routes[] = isset($att_routes_input[$idx]) ? trim((string)$att_routes_input[$idx]) : '';
+                    }
+                }
+                $attendant_name_val = implode(', ', $clean_names);
+                $attendant_contact_val = implode(', ', $clean_contacts);
+                $attendant_route_val = implode(', ', $clean_routes);
+            } else {
+                $attendant_name_val = trim((string)$att_names_input);
+                $attendant_contact_val = trim((string)$att_contacts_input);
+                $attendant_route_val = trim((string)$att_routes_input);
+            }
+
             $data = array(
                 'vehicle_no'           => $this->input->post('vehicle_no'),
                 'vehicle_model'        => $this->input->post('vehicle_model'),
@@ -205,8 +261,9 @@ class Vehicle extends Admin_Controller
                 'license_category' => $this->input->post('license_category'),
                 'license_expiry' => ($this->input->post('license_expiry')) ? date('Y-m-d', strtotime($this->input->post('license_expiry'))) : null,
                 'background_verification' => $this->input->post('background_verification'),
-                'attendant_name' => $this->input->post('attendant_name'),
-                'attendant_contact' => $this->input->post('attendant_contact'),
+                'attendant_name' => $attendant_name_val,
+                'attendant_contact' => $attendant_contact_val,
+                'attendant_route' => $attendant_route_val,
                 
                 // Safety & Compliance
                 'has_gps' => $this->input->post('has_gps') ? $this->input->post('has_gps') : 'No',
@@ -253,14 +310,33 @@ class Vehicle extends Admin_Controller
                         $this->SystemNotification_model->notifyUser($driver_id, 'Vehicle Assigned', "You have been assigned as driver for vehicle: " . $data['vehicle_no'], 'admin/vehicle');
                     }
                 }
+
+                // Notify Attendant(s)
+                if (!empty($clean_names)) {
+                    $this->load->model('staff_model');
+                    foreach ($clean_names as $single_att_name) {
+                        $attendant_id = $this->staff_model->getStaffByName($single_att_name);
+                        if ($attendant_id) {
+                            $this->SystemNotification_model->notifyUser($attendant_id, 'Vehicle Assigned', "You have been assigned as attendant for vehicle: " . $data['vehicle_no'], 'admin/vehicle');
+                        }
+                    }
+                } elseif (!empty($attendant_name_val)) {
+                    $this->load->model('staff_model');
+                    $attendant_id = $this->staff_model->getStaffByName($attendant_name_val);
+                    if ($attendant_id) {
+                        $this->SystemNotification_model->notifyUser($attendant_id, 'Vehicle Assigned', "You have been assigned as attendant for vehicle: " . $data['vehicle_no'], 'admin/vehicle');
+                    }
+                }
             }
 
             $msg   = $this->lang->line('success_message');
             $array = array('status' => 'success', 'error' => '', 'message' => $msg);
 
-        } catch (Exception $e) {
-                // Print the exception message for debugging or logging purposes
-                $array = array('status' => 'fail', 'error' => $e->getMessage(), 'message' => '');
+        } catch (\Exception $e) {
+            $msg = array(
+                'vehicle_photo' => $e->getMessage(),
+            );
+            $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
         }  
         }
         echo json_encode($array);
@@ -278,7 +354,22 @@ class Vehicle extends Admin_Controller
             }
         }
         $data['editvehicle'] = $this->vehicle_model->get($vehicleid);
+        $vehicleroutes_raw = $this->vehicle_model->getVehicleRoutes($vehicleid);
+        $data['vehicleroutes'] = $vehicleroutes_raw;
         
+        $assigned_routes = array();
+        if (!empty($vehicleroutes_raw)) {
+            foreach ($vehicleroutes_raw as $vr) {
+                if (!empty($vr['route_title'])) {
+                    $assigned_routes[$vr['route_title']] = $vr['route_title'];
+                }
+            }
+        }
+        $data['assigned_routes'] = array_values($assigned_routes);
+        
+        $this->load->model('route_model');
+        $data['routelist'] = $this->route_model->get();
+
         $this->load->model('staff_model');
         $data['stafflist'] = $this->staff_model->get();
 
@@ -291,6 +382,7 @@ class Vehicle extends Admin_Controller
         if (!$this->rbac->hasPrivilege('vehicle', 'can_edit')) {
             access_denied();
         }
+        $this->ensureAttendantRouteColumn();
         
         $this->form_validation->set_rules('vehicle_no', $this->lang->line('vehicle_number'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('vehicle_photo', $this->lang->line('vehicle_photo'), 'callback_handle_upload');
@@ -312,6 +404,31 @@ class Vehicle extends Admin_Controller
         try {
             $prev_file_size = 0;
             $total_image_upload_size = 0;       
+
+            // Attendant Details (Handle multiple or single)
+            $att_names_input = $this->input->post('attendant_name');
+            $att_contacts_input = $this->input->post('attendant_contact');
+            $att_routes_input = $this->input->post('attendant_route');
+            $clean_names = array();
+            $clean_contacts = array();
+            $clean_routes = array();
+            if (is_array($att_names_input)) {
+                foreach ($att_names_input as $idx => $att_n) {
+                    $att_n = trim((string)$att_n);
+                    if (!empty($att_n)) {
+                        $clean_names[] = $att_n;
+                        $clean_contacts[] = isset($att_contacts_input[$idx]) ? trim((string)$att_contacts_input[$idx]) : '';
+                        $clean_routes[] = isset($att_routes_input[$idx]) ? trim((string)$att_routes_input[$idx]) : '';
+                    }
+                }
+                $attendant_name_val = implode(', ', $clean_names);
+                $attendant_contact_val = implode(', ', $clean_contacts);
+                $attendant_route_val = implode(', ', $clean_routes);
+            } else {
+                $attendant_name_val = trim((string)$att_names_input);
+                $attendant_contact_val = trim((string)$att_contacts_input);
+                $attendant_route_val = trim((string)$att_routes_input);
+            }
 
             $data = array(
                 'id'                   => $this->input->post('id'),
@@ -347,8 +464,9 @@ class Vehicle extends Admin_Controller
                 'license_category' => $this->input->post('license_category'),
                 'license_expiry' => ($this->input->post('license_expiry')) ? date('Y-m-d', strtotime($this->input->post('license_expiry'))) : null,
                 'background_verification' => $this->input->post('background_verification'),
-                'attendant_name' => $this->input->post('attendant_name'),
-                'attendant_contact' => $this->input->post('attendant_contact'),
+                'attendant_name' => $attendant_name_val,
+                'attendant_contact' => $attendant_contact_val,
+                'attendant_route' => $attendant_route_val,
                 
                 // Safety & Compliance
                 'has_gps' => $this->input->post('has_gps') ? $this->input->post('has_gps') : 'No',

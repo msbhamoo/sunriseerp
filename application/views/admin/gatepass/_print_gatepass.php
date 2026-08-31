@@ -204,6 +204,18 @@ $scan_type = $sch_setting->scan_code_type;
                             <td class="meta-label">Name & Details</td>
                             <td>: <?php echo $gatepass['user_details']; ?></td>
                         </tr>
+                        <?php if (!empty($gatepass['user_info']['vehicle_no']) || !empty($gatepass['user_info']['route_title'])) { ?>
+                        <tr>
+                            <td class="meta-label">Bus / Route</td>
+                            <td>: <?php 
+                                $trans_details = array();
+                                if (!empty($gatepass['user_info']['vehicle_no'])) $trans_details[] = 'Bus: ' . $gatepass['user_info']['vehicle_no'];
+                                if (!empty($gatepass['user_info']['route_title'])) $trans_details[] = 'Route: ' . $gatepass['user_info']['route_title'];
+                                if (!empty($gatepass['user_info']['pickup_point_name'])) $trans_details[] = 'Stop: ' . $gatepass['user_info']['pickup_point_name'];
+                                echo implode(' | ', $trans_details);
+                            ?></td>
+                        </tr>
+                        <?php } ?>
                         <tr>
                             <td class="meta-label">Out Time</td>
                             <td>: <?php echo $gatepass['out_time']; ?></td>

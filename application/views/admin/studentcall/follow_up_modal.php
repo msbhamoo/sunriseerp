@@ -153,7 +153,7 @@
     <div class="col-md-12">
         <hr style="margin: 10px 0 15px 0;">
         <h4 style="margin-top:0;"><i class="fa fa-pencil-square-o text-primary"></i> Complete / Update Follow Up</h4>
-        <form id="update_fw_form_id" action="<?php echo site_url('admin/studentcall/update_followup') ?>" method="post">
+        <form id="updateFwForm" action="<?php echo site_url('admin/studentcall/edit_follow_up_task') ?>" method="post">
             <input type="hidden" name="followup_id" id="fw_edit_id">
             <div class="row">
                 <div class="col-md-3">

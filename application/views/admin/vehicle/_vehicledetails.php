@@ -213,12 +213,31 @@ foreach ($dates_to_check as $date_field => $info) {
                         </div>
                     </div>
                     <div class="col-sm-4">
-                        <span class="detail-label">Attendant/Helper Name & Contact</span>
+                        <span class="detail-label">Attendants / Helpers & Routes</span>
                         <div class="detail-value">
-                            <?php echo !empty($editvehicle->attendant_name) ? $editvehicle->attendant_name : '-'; ?>
-                            <?php if(!empty($editvehicle->attendant_contact)) { ?>
-                                <br><a href="tel:<?php echo $editvehicle->attendant_contact; ?>"><i class="fa fa-phone"></i> <?php echo $editvehicle->attendant_contact; ?></a>
-                            <?php } ?>
+                            <?php 
+                            if (!empty($editvehicle->attendant_name)) {
+                                $att_names_v = array_filter(array_map('trim', explode(',', $editvehicle->attendant_name)));
+                                $att_contacts_v = array_map('trim', explode(',', $editvehicle->attendant_contact ?? ''));
+                                $att_routes_v = array_map('trim', explode(',', $editvehicle->attendant_route ?? ''));
+                                foreach ($att_names_v as $v_idx => $single_v_name) {
+                                    $single_v_contact = isset($att_contacts_v[$v_idx]) ? $att_contacts_v[$v_idx] : '';
+                                    $single_v_route = isset($att_routes_v[$v_idx]) ? $att_routes_v[$v_idx] : '';
+                            ?>
+                                <div style="margin-bottom:6px; background:#f8fafc; border:1px solid #e2e8f0; padding:4px 8px; border-radius:4px;">
+                                    <div><strong><i class="fa fa-user text-primary"></i> <?php echo $single_v_name; ?></strong></div>
+                                    <div style="font-size:11.5px; margin-top:2px;">
+                                        <?php if(!empty($single_v_contact)) { ?>
+                                            <a href="tel:<?php echo $single_v_contact; ?>" style="color:#0284c7;"><i class="fa fa-phone text-success"></i> <?php echo $single_v_contact; ?></a>
+                                        <?php } ?>
+                                        <?php if(!empty($single_v_route)) { ?>
+                                            &nbsp;&bull;&nbsp;<span class="badge" style="background:#eff6ff; color:#1d4ed8; font-size:10.5px;"><i class="fa fa-road"></i> <?php echo $single_v_route; ?></span>
+                                        <?php } else { ?>
+                                            &nbsp;&bull;&nbsp;<span class="text-muted" style="font-size:10.5px;">All Routes</span>
+                                        <?php } ?>
+                                    </div>
+                                </div>
+                            <?php } } else { echo '-'; } ?>
                         </div>
                     </div>
                 </div>

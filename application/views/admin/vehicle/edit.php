@@ -223,7 +223,7 @@
             <!-- Tab 4: Driver Details -->
             <div role="tabpanel" class="tab-pane" id="edit_driver">
                 <div class="row">
-                    <div class="col-sm-4">
+                    <div class="col-sm-6">
                         <div class="form-group">
                             <label><?php echo $this->lang->line('driver_name'); ?></label>
                             <select name="driver_name" class="form-control custom-input" onchange="populateContact(this, 'driver_contact_edit')">
@@ -238,32 +238,79 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-sm-4">
+                    <div class="col-sm-6">
                         <div class="form-group">
                             <label><?php echo $this->lang->line('driver_contact'); ?></label>
                             <input name="driver_contact" id="driver_contact_edit" type="text" class="form-control custom-input" value="<?php echo set_value('driver_contact',$editvehicle->driver_contact); ?>" />
                         </div>
                     </div>
-                    <div class="col-sm-4">
-                        <div class="form-group">
-                            <label>Attendant/Helper Name</label>
-                            <select name="attendant_name" class="form-control custom-input" onchange="populateContact(this, 'attendant_contact_edit')">
-                                <option value="">Select</option>
-                                <?php if(isset($stafflist)) { foreach($stafflist as $staff) { 
-                                    $staff_name = trim($staff['name'] . ' ' . $staff['surname']);
-                                    $attendant_val = isset($editvehicle->attendant_name) ? $editvehicle->attendant_name : '';
+                </div>
+
+                <!-- Multiple Attendants Section -->
+                <?php
+                $saved_att_names = !empty($editvehicle->attendant_name) ? array_map('trim', explode(',', $editvehicle->attendant_name)) : array('');
+                $saved_att_contacts = !empty($editvehicle->attendant_contact) ? array_map('trim', explode(',', $editvehicle->attendant_contact)) : array('');
+                $saved_att_routes = !empty($editvehicle->attendant_route) ? array_map('trim', explode(',', $editvehicle->attendant_route)) : array('');
+                $bus_assigned_routes = isset($assigned_routes) ? $assigned_routes : array();
+                ?>
+                <script>
+                    window.editVehicleAssignedRoutes = <?php echo json_encode(array_values($bus_assigned_routes)); ?>;
+                </script>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:12px; margin-bottom:15px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                <label style="font-weight:700; color:#1e293b; margin:0;"><i class="fa fa-users text-primary"></i> Attendants / Helpers (Multiple Allowed)</label>
+                                <button type="button" class="btn btn-xs btn-primary" onclick="addAttendantRow('edit_attendants_container')" style="font-weight:600; border-radius:4px;">
+                                    <i class="fa fa-plus"></i> Add Attendant
+                                </button>
+                            </div>
+                            <div id="edit_attendants_container">
+                                <?php foreach ($saved_att_names as $a_idx => $curr_att_name) { 
+                                    $curr_att_contact = isset($saved_att_contacts[$a_idx]) ? $saved_att_contacts[$a_idx] : '';
+                                    $curr_att_route = isset($saved_att_routes[$a_idx]) ? $saved_att_routes[$a_idx] : '';
                                 ?>
-                                    <option value="<?php echo $staff_name; ?>" data-contact="<?php echo $staff['contact_no']; ?>" <?php echo ($staff_name == $attendant_val) ? 'selected' : ''; ?>>
-                                        <?php echo $staff_name; ?> (<?php echo $staff['employee_id']; ?>)
-                                    </option>
-                                <?php } } ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-sm-4">
-                        <div class="form-group">
-                            <label>Attendant Contact</label>
-                            <input name="attendant_contact" id="attendant_contact_edit" type="text" class="form-control custom-input" value="<?php echo set_value('attendant_contact', isset($editvehicle->attendant_contact) ? $editvehicle->attendant_contact : ''); ?>" />
+                                    <div class="row attendant-row" style="margin-bottom:8px;">
+                                        <div class="col-sm-4">
+                                            <label style="font-size:11px; color:#64748b;">Attendant Name</label>
+                                            <select name="attendant_name[]" class="form-control custom-input attendant-select" onchange="populateAttendantRowContact(this)">
+                                                <option value="">Select</option>
+                                                <?php if(isset($stafflist)) { foreach($stafflist as $staff) { 
+                                                    $staff_name = trim($staff['name'] . ' ' . $staff['surname']);
+                                                ?>
+                                                    <option value="<?php echo $staff_name; ?>" data-contact="<?php echo $staff['contact_no']; ?>" <?php echo ($staff_name == $curr_att_name) ? 'selected' : ''; ?>>
+                                                        <?php echo $staff_name; ?> (<?php echo $staff['employee_id']; ?>)
+                                                    </option>
+                                                <?php } } ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-sm-3">
+                                            <label style="font-size:11px; color:#64748b;">Attendant Contact</label>
+                                            <input name="attendant_contact[]" type="text" class="form-control custom-input attendant-contact-input" value="<?php echo htmlspecialchars($curr_att_contact); ?>" placeholder="Contact number..." />
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <label style="font-size:11px; color:#64748b;">Assigned Route (Optional)</label>
+                                            <select name="attendant_route[]" class="form-control custom-input attendant-route-select">
+                                                <?php if(!empty($bus_assigned_routes)) { ?>
+                                                    <option value="">All Routes of this Bus</option>
+                                                    <?php foreach($bus_assigned_routes as $r_title) { ?>
+                                                        <option value="<?php echo htmlspecialchars($r_title); ?>" <?php echo ($r_title == $curr_att_route) ? 'selected' : ''; ?>>
+                                                            <?php echo htmlspecialchars($r_title); ?>
+                                                        </option>
+                                                    <?php } ?>
+                                                <?php } else { ?>
+                                                    <option value="">All Routes (No route assigned yet)</option>
+                                                <?php } ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-sm-1 text-right" style="padding-top:23px;">
+                                            <button type="button" class="btn btn-default btn-sm text-danger" onclick="removeAttendantRow(this)" title="Remove" style="border:none; background:transparent;">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                <?php } ?>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -200,8 +200,8 @@ unset($gp_item);
                                                     </div>
                                                 </td>
                                                 <td class="mailbox-name">
-                                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                                        <img src="<?php echo $user_img; ?>" alt="Photo" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.06); flex-shrink: 0;" onerror="this.src='<?php echo ($gatepass['user_type'] == 'staff') ? base_url('uploads/staff_images/default_male.jpg') : base_url('uploads/student_images/no_image.png'); ?>'">
+                                                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                                                        <img src="<?php echo $user_img; ?>" alt="Photo" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.06); flex-shrink: 0; margin-top: 2px;" onerror="this.src='<?php echo ($gatepass['user_type'] == 'staff') ? base_url('uploads/staff_images/default_male.jpg') : base_url('uploads/student_images/no_image.png'); ?>'">
                                                         <div>
                                                             <div style="font-weight: 700; color: #0f172a; font-size: 13.5px; line-height: 1.2;">
                                                                 <?php echo html_escape($user_name); ?>
@@ -214,8 +214,24 @@ unset($gp_item);
                                                                     <span style="font-size: 11px; color: #64748b; font-weight: 600;"><?php echo html_escape($user_class); ?></span>
                                                                 <?php } ?>
                                                             </div>
+                                                            <?php if (!empty($u_info['vehicle_no']) || !empty($u_info['route_title'])) { ?>
+                                                                <div style="margin-top: 4px; display: inline-flex; align-items: center; gap: 4px; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 4px; font-size: 11px; color: #166534; line-height: 1.4; white-space: nowrap; max-width: none;">
+                                                                    <i class="fa fa-bus text-success" style="font-size: 10.5px; flex-shrink: 0;"></i>
+                                                                    <?php if (!empty($u_info['vehicle_no'])) { ?>
+                                                                        <strong style="color: #14532d; white-space: nowrap;"><?php echo html_escape($u_info['vehicle_no']); ?></strong>
+                                                                    <?php } ?>
+                                                                    <?php if (!empty($u_info['route_title'])) { ?>
+                                                                        <span style="white-space: nowrap;">• <?php echo html_escape($u_info['route_title']); ?></span>
+                                                                    <?php } ?>
+                                                                    <?php if (!empty($u_info['pickup_point_name'])) { ?>
+                                                                        <span style="color: #15803d; font-size: 10.5px; white-space: nowrap;">(<?php echo html_escape($u_info['pickup_point_name']); ?>)</span>
+                                                                    <?php } ?>
+                                                                </div>
+                                                            <?php } ?>
                                                             <?php if ($gatepass['is_overdue']) { ?>
-                                                                <span class="label label-danger gp-overdue-tag" title="User has not returned by expected time"><i class="fa fa-clock-o"></i> OVERDUE (<?php echo $gatepass['overdue_text']; ?>)</span>
+                                                                <div style="margin-top: 3px;">
+                                                                    <span class="label label-danger gp-overdue-tag" title="User has not returned by expected time"><i class="fa fa-clock-o"></i> OVERDUE (<?php echo $gatepass['overdue_text']; ?>)</span>
+                                                                </div>
                                                             <?php } ?>
                                                         </div>
                                                     </div>

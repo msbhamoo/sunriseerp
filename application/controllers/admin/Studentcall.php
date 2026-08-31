@@ -581,6 +581,11 @@ class Studentcall extends Admin_Controller
         echo json_encode($array);
     }
 
+    public function update_followup()
+    {
+        $this->edit_follow_up_task();
+    }
+
     private function add_notification($staff_id, $message)
     {
         $staff = $this->staff_model->get($staff_id);

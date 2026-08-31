@@ -21,6 +21,8 @@ class Staffattendance extends Admin_Controller
         $this->load->model("payroll_model"); 
         $this->load->model("staffAttendaceSetting_model");
         $this->load->model("staffQrSetting_model");
+        $this->load->model("StaffBiometricSetting_model");
+        $this->load->library("biometric_lib");
     }
 
     public function index_old(){
@@ -665,4 +667,270 @@ class Staffattendance extends Admin_Controller
         return $r * 2 * atan2(sqrt($a), sqrt(1 - $a));
     }
 
+    // =================================================================
+    //  BIOMETRIC (E-TIMEOFFICE) INTEGRATION
+    // =================================================================
+
+    /**
+     * Biometric Settings & Staff Mapping Diagnostic Dashboard.
+     */
+    public function biometricsettings()
+    {
+        if (!($this->rbac->hasPrivilege('staff_attendance', 'can_view'))) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'HR');
+        $this->session->set_userdata('sub_menu', 'admin/staffattendance/biometricsettings');
+
+        if ($this->input->post('save_biometric_setting')) {
+            if (!($this->rbac->hasPrivilege('staff_attendance', 'can_edit'))) {
+                access_denied();
+            }
+
+            $save = array(
+                'is_enabled'        => $this->input->post('is_enabled') ? 1 : 0,
+                'auto_sync_enabled' => $this->input->post('auto_sync_enabled') ? 1 : 0,
+                'api_url'           => trim($this->input->post('api_url')),
+                'corporate_id'      => trim($this->input->post('corporate_id')),
+                'username'          => trim($this->input->post('username')),
+            );
+            $new_pass = trim($this->input->post('password'));
+            if ($new_pass !== '') {
+                $save['password'] = $new_pass;
+            }
+
+            $this->StaffBiometricSetting_model->save($save);
+            $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">' . $this->lang->line('success_message') . '</div>');
+            redirect('admin/staffattendance/biometricsettings');
+        }
+
+        $data['title']       = 'Staff Biometric Settings & Mapping';
+        $data['setting']     = $this->StaffBiometricSetting_model->get();
+        $data['staff_list']  = $this->StaffBiometricSetting_model->getStaffBiometricMappingList();
+        $data['logs']        = $this->StaffBiometricSetting_model->getLogs(50);
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/staffattendance/biometricsettings', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    /**
+     * AJAX: Test connection to e-TimeOffice.
+     */
+    public function test_biometric_connection_ajax()
+    {
+        if (!($this->rbac->hasPrivilege('staff_attendance', 'can_view'))) {
+            json_output(403, array('status' => 'error', 'message' => 'Access Denied'));
+            return;
+        }
+        $this->load->helper('json_output');
+
+        $corporate_id = trim($this->input->post('corporate_id'));
+        $username     = trim($this->input->post('username'));
+        $password     = trim($this->input->post('password'));
+        $api_url      = trim($this->input->post('api_url'));
+
+        $setting = $this->StaffBiometricSetting_model->get();
+        if ($corporate_id !== '') { $setting['corporate_id'] = $corporate_id; }
+        if ($username !== '') { $setting['username'] = $username; }
+        if ($password !== '') { $setting['password'] = $password; }
+        if ($api_url !== '') { $setting['api_url'] = $api_url; }
+
+        $res = $this->biometric_lib->testConnection($setting);
+        if ($res['success']) {
+            json_output(200, array('status' => 'success', 'message' => $res['message']));
+        } else {
+            json_output(200, array('status' => 'error', 'message' => $res['message']));
+        }
+    }
+
+    /**
+     * AJAX: Sync Biometric Attendance for a selected date or custom range.
+     */
+    public function sync_biometric_ajax()
+    {
+        if (!($this->rbac->hasPrivilege('staff_attendance', 'can_add') || $this->rbac->hasPrivilege('staff_attendance', 'can_edit'))) {
+            json_output(403, array('status' => 'error', 'message' => 'Access Denied'));
+            return;
+        }
+        $this->load->helper('json_output');
+
+        $raw_date = $this->input->post('date');
+        $raw_from = $this->input->post('from_date');
+        $raw_to   = $this->input->post('to_date');
+
+        if (!empty($raw_from) && !empty($raw_to)) {
+            $fromDate = date('Y-m-d', $this->customlib->datetostrtotime($raw_from));
+            $toDate   = date('Y-m-d', $this->customlib->datetostrtotime($raw_to));
+            $mode     = 'range';
+        } elseif (!empty($raw_date)) {
+            $fromDate = date('Y-m-d', $this->customlib->datetostrtotime($raw_date));
+            $toDate   = $fromDate;
+            $mode     = 'ajax';
+        } else {
+            $fromDate = date('Y-m-d');
+            $toDate   = $fromDate;
+            $mode     = 'ajax';
+        }
+
+        $res = $this->biometric_lib->syncAttendance($fromDate, $toDate, $mode);
+        json_output(200, $res);
+    }
+
+    /**
+     * AJAX: Inline update of custom biometric machine ID for a staff member.
+     */
+    public function save_staff_biometric_id_ajax()
+    {
+        if (!($this->rbac->hasPrivilege('staff_attendance', 'can_edit'))) {
+            json_output(403, array('status' => 'error', 'message' => 'Access Denied'));
+            return;
+        }
+        $this->load->helper('json_output');
+
+        $staff_id         = (int) $this->input->post('staff_id');
+        $biometric_emp_id = trim($this->input->post('biometric_emp_id'));
+
+        if (empty($staff_id)) {
+            json_output(400, array('status' => 'error', 'message' => 'Invalid staff ID'));
+            return;
+        }
+
+        $this->StaffBiometricSetting_model->updateStaffBiometricId($staff_id, $biometric_emp_id);
+        json_output(200, array('status' => 'success', 'message' => 'Biometric ID updated successfully'));
+    }
+
+    /**
+     * CRON: Automated sync endpoint (e.g. called periodically via Windows Task Scheduler or cURL).
+     * URL: http://localhost/lms/admin/staffattendance/sync_biometric_cron?token=7b91d2e854f9a3c10b78e2d45c61a
+     */
+    public function sync_biometric_cron()
+    {
+        $token = $this->input->get_post('token');
+        $setting = $this->StaffBiometricSetting_model->get();
+
+        if (empty($setting['cron_token']) || $token !== $setting['cron_token']) {
+            show_error('Invalid or missing security token.', 403);
+            return;
+        }
+
+        $today = date('Y-m-d');
+        $res = $this->biometric_lib->syncAttendance($today, $today, 'cron');
+
+        header('Content-Type: application/json');
+        echo json_encode($res);
+    }
+
+    /**
+     * Download Excel/CSV formatted export of active staff for e-TimeOffice / Biometric software bulk import.
+     * Format matches exactly:
+     * Empcode, Enroll No, Name, Father, Address, CountryCode, Mobile, Email, CompID, DeptID, DesgID, CatID, ActiveStatus(Active/De Active), Shift, Auto Shift(A/B/C), WO1, WO2, Sat Off, Sat Half Day, Status(T/F), DOJ, ENT(1/2), CountryCode1, Mobile1, DOB, DOR
+     */
+    public function export_biometric_template()
+    {
+        if (!($this->rbac->hasPrivilege('staff_attendance', 'can_view'))) {
+            access_denied();
+        }
+
+        $staffList = $this->StaffBiometricSetting_model->getStaffExportListForBiometric();
+
+        $filename = 'etimeoffice_staff_import_' . date('Ymd_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . $filename);
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+
+        // Header matching exact e-TimeOffice bulk upload specification
+        fputcsv($output, array(
+            'Empcode',
+            'Enroll No',
+            'Name',
+            'Father',
+            'Address',
+            'CountryCode',
+            'Mobile',
+            'Email',
+            'CompID',
+            'DeptID',
+            'DesgID',
+            'CatID',
+            'ActiveStatus(Active/De Active)',
+            'Shift',
+            'Auto Shift(A/B/C)',
+            'WO1',
+            'WO2',
+            'Sat Off',
+            'Sat Half Day',
+            'Status(T/F)',
+            'DOJ',
+            'ENT(1/2)',
+            'CountryCode1',
+            'Mobile1',
+            'DOB',
+            'DOR'
+        ));
+
+        foreach ($staffList as $st) {
+            $emp_code = !empty($st['biometric_emp_id']) ? trim($st['biometric_emp_id']) : trim((string)$st['employee_id']);
+            if (empty($emp_code)) {
+                $emp_code = sprintf('%04d', $st['id']);
+            }
+
+            // Enroll No: padded to 8 digits if numeric or matched
+            $enroll_no = is_numeric($emp_code) ? sprintf('%08d', (int)$emp_code) : $emp_code;
+
+            $full_name = trim($st['name'] . ' ' . $st['surname']);
+            $father    = trim((string)$st['father_name']);
+            $address   = trim((string)(!empty($st['local_address']) ? $st['local_address'] : $st['permanent_address']));
+            $mobile    = trim((string)$st['contact_no']);
+            $email     = trim((string)$st['email']);
+            $dept_id   = !empty($st['dept_id']) ? (int)$st['dept_id'] : 1;
+            $desg_id   = !empty($st['desg_id']) ? (int)$st['desg_id'] : 1;
+            $cat_id    = !empty($st['role_id']) ? (int)$st['role_id'] : 1;
+
+            $doj = !empty($st['date_of_joining']) && $st['date_of_joining'] !== '0000-00-00' ? date('d/m/Y', strtotime($st['date_of_joining'])) : '';
+            $dob = !empty($st['dob']) && $st['dob'] !== '0000-00-00' ? date('d/m/Y', strtotime($st['dob'])) : '';
+            $dor = !empty($st['date_of_leaving']) && $st['date_of_leaving'] !== '0000-00-00' ? date('d/m/Y', strtotime($st['date_of_leaving'])) : '';
+
+            $row = array(
+                $emp_code,                       // Empcode
+                $enroll_no,                      // Enroll No
+                $full_name,                      // Name
+                $father,                         // Father
+                $address,                        // Address
+                '',                              // CountryCode
+                $mobile,                         // Mobile
+                $email,                          // Email
+                '1',                             // CompID
+                $dept_id,                        // DeptID
+                $desg_id,                        // DesgID
+                $cat_id,                         // CatID
+                'Active',                        // ActiveStatus(Active/De Active)
+                '',                              // Shift
+                'G',                             // Auto Shift(A/B/C)
+                '',                              // WO1
+                '',                              // WO2
+                '',                              // Sat Off
+                '',                              // Sat Half Day
+                'T',                             // Status(T/F)
+                $doj,                            // DOJ
+                '1',                             // ENT(1/2)
+                '',                              // CountryCode1
+                '',                              // Mobile1
+                $dob,                            // DOB
+                $dor                             // DOR
+            );
+
+            fputcsv($output, $row);
+        }
+
+        fclose($output);
+        exit;
+    }
+
 }
+

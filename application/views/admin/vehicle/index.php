@@ -96,12 +96,12 @@
     }
     .vehicle-card {
         flex: 1 1 calc(20% - 15px);
-        min-width: 140px;
+        min-width: 175px;
         border: 1px solid #f1f5f9;
-        border-radius: 6px;
+        border-radius: 8px;
         transition: all 0.2s ease;
         text-align: center;
-        padding: 24px 10px;
+        padding: 20px 10px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -110,22 +110,22 @@
     }
     .vehicle-card.status-active { background-color: #f0fdf4; border-color: #dcfce7; }
     .vehicle-card.status-active .vehicle-icon { color: #16a34a; }
-    .vehicle-card.status-active .vehicle-title { color: #16a34a; font-weight: 600; font-size:14px; margin-top:12px;}
+    .vehicle-card.status-active .vehicle-title { color: #16a34a; font-weight: 600; font-size:14px; margin-top:10px;}
     .vehicle-card.status-active .vehicle-subtitle { color: #15803d; font-size: 12px; text-transform: uppercase; margin-top:4px;}
     
     .vehicle-card.status-maintenance { background-color: #fffbeb; border-color: #fef3c7; }
     .vehicle-card.status-maintenance .vehicle-icon { color: #d97706; }
-    .vehicle-card.status-maintenance .vehicle-title { color: #d97706; font-weight: 600; font-size:14px; margin-top:12px;}
+    .vehicle-card.status-maintenance .vehicle-title { color: #d97706; font-weight: 600; font-size:14px; margin-top:10px;}
     .vehicle-card.status-maintenance .vehicle-subtitle { color: #b45309; font-size: 12px; text-transform: uppercase; margin-top:4px;}
 
     .vehicle-card.status-inactive { background-color: #fef2f2; border-color: #fee2e2; }
     .vehicle-card.status-inactive .vehicle-icon { color: #dc2626; }
-    .vehicle-card.status-inactive .vehicle-title { color: #dc2626; font-weight: 600; font-size:14px; margin-top:12px;}
+    .vehicle-card.status-inactive .vehicle-title { color: #dc2626; font-weight: 600; font-size:14px; margin-top:10px;}
     .vehicle-card.status-inactive .vehicle-subtitle { color: #b91c1c; font-size: 12px; text-transform: uppercase; margin-top:4px;}
 
     .vehicle-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        box-shadow: 0 6px 12px -2px rgba(0,0,0,0.08);
     }
     .vehicle-icon {
         font-size: 32px;
@@ -148,17 +148,29 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(255,255,255,0.9);
+        background: rgba(255,255,255,0.96);
+        backdrop-filter: blur(4px);
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         gap: 8px;
+        padding: 10px;
         opacity: 0;
         transition: opacity 0.2s ease;
-        border-radius: 6px;
+        border-radius: 8px;
+        z-index: 15;
     }
     .vehicle-card:hover .action-overlay {
         opacity: 1;
+    }
+    .action-row-group {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        max-width: 100%;
     }
     .btn-icon {
         background: #fff;
@@ -171,13 +183,16 @@
         justify-content: center;
         color: #64748b;
         transition: all 0.2s;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
     .btn-icon:hover {
-        background: #f1f5f9;
+        background: #f8fafc;
         color: #0f172a;
         border-color: #cbd5e1;
+        transform: scale(1.06);
     }
-    .btn-icon.edit:hover { color: #3b82f6; }
+    .btn-icon.edit:hover { color: #3b82f6; border-color: #93c5fd; background: #eff6ff; }
+    .btn-icon.delete:hover { color: #ef4444; border-color: #fca5a5; background: #fef2f2; }
     .btn-icon.delete:hover { color: #ef4444; border-color:#fca5a5; background:#fef2f2;}
     .badge-soft {
         padding: 4px 10px;
@@ -303,33 +318,44 @@
                                                     <i class="fa fa-users"></i> Seats: <?php echo $occupied; ?> / <?php echo $capacity ?: 0; ?>
                                                 </span>
                                             </div>
-                                            <div class="action-overlay">
-                                                <?php if(!empty($data['driver_contact'])) { ?>
-                                                    <a href="tel:<?php echo $data['driver_contact']; ?>" class="btn-icon" style="color:#10b981;" data-toggle="tooltip" title="Call Driver">
-                                                        <i class="fa fa-phone"></i>
-                                                    </a>
-                                                <?php } ?>
-                                                <?php if(!empty($data['attendant_contact'])) { ?>
-                                                    <a href="tel:<?php echo $data['attendant_contact']; ?>" class="btn-icon" style="color:#3b82f6;" data-toggle="tooltip" title="Call Attendant">
-                                                        <i class="fa fa-phone"></i>
-                                                    </a>
-                                                <?php } ?>
-                                                <button class="btn-icon viewstudents" data-id="<?php echo $data['id'] ?>" data-toggle="tooltip" title="View Students">
-                                                    <i class="fa fa-users"></i>
-                                                </button>
-                                                <button class="btn-icon vehicledetails" data-id="<?php echo $data['id'] ?>" data-toggle="tooltip" title="<?php echo $this->lang->line('view'); ?>">
-                                                    <i class="fa fa-eye"></i>
-                                                </button>
-                                                <?php if ($this->rbac->hasPrivilege('vehicle', 'can_edit')) { ?>
-                                                    <button class="btn-icon edit editvehicle" data-id="<?php echo $data['id'] ?>" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>">
-                                                        <i class="fa fa-pencil"></i>
-                                                    </button>
-                                                <?php }if ($this->rbac->hasPrivilege('vehicle', 'can_delete')) { ?>
-                                                    <a href="<?php echo base_url(); ?>admin/vehicle/delete/<?php echo $data['id'] ?>" class="btn-icon delete" data-toggle="tooltip" title="<?php echo $this->lang->line('delete'); ?>" onclick="return confirm('<?php echo $this->lang->line('delete_confirm') ?>');">
-                                                        <i class="fa fa-trash"></i>
-                                                    </a>
-                                                <?php } ?>
-                                            </div>
+                                             <div class="action-overlay">
+                                                 <div class="action-row-group">
+                                                     <?php if(!empty($data['driver_contact'])) { ?>
+                                                         <a href="tel:<?php echo $data['driver_contact']; ?>" class="btn-icon" style="color:#059669; background:#ecfdf5; border-color:#a7f3d0;" data-toggle="tooltip" title="Call Driver: <?php echo htmlspecialchars($data['driver_name'] ?? ''); ?> (<?php echo $data['driver_contact']; ?>)">
+                                                             <i class="fa fa-phone"></i>
+                                                         </a>
+                                                     <?php } ?>
+                                                     <?php if(!empty($data['attendant_contact'])) { 
+                                                         $att_contacts = array_filter(array_map('trim', explode(',', $data['attendant_contact'])));
+                                                         $att_names = array_map('trim', explode(',', $data['attendant_name'] ?? ''));
+                                                         $att_routes = array_map('trim', explode(',', $data['attendant_route'] ?? ''));
+                                                         foreach ($att_contacts as $c_idx => $single_att_contact) {
+                                                             $c_name = isset($att_names[$c_idx]) && !empty($att_names[$c_idx]) ? $att_names[$c_idx] : 'Attendant';
+                                                             $c_route = isset($att_routes[$c_idx]) && !empty($att_routes[$c_idx]) ? ' [' . $att_routes[$c_idx] . ']' : '';
+                                                     ?>
+                                                         <a href="tel:<?php echo $single_att_contact; ?>" class="btn-icon" style="color:#2563eb; background:#eff6ff; border-color:#bfdbfe;" data-toggle="tooltip" title="Call <?php echo htmlspecialchars($c_name . $c_route); ?> (<?php echo $single_att_contact; ?>)">
+                                                             <i class="fa fa-phone"></i>
+                                                         </a>
+                                                     <?php } } ?>
+                                                 </div>
+                                                 <div class="action-row-group">
+                                                     <button class="btn-icon viewstudents" data-id="<?php echo $data['id'] ?>" data-toggle="tooltip" title="View Students">
+                                                         <i class="fa fa-users"></i>
+                                                     </button>
+                                                     <button class="btn-icon vehicledetails" data-id="<?php echo $data['id'] ?>" data-toggle="tooltip" title="<?php echo $this->lang->line('view'); ?>">
+                                                         <i class="fa fa-eye"></i>
+                                                     </button>
+                                                     <?php if ($this->rbac->hasPrivilege('vehicle', 'can_edit')) { ?>
+                                                         <button class="btn-icon edit editvehicle" data-id="<?php echo $data['id'] ?>" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>">
+                                                             <i class="fa fa-pencil"></i>
+                                                         </button>
+                                                     <?php } if ($this->rbac->hasPrivilege('vehicle', 'can_delete')) { ?>
+                                                         <a href="<?php echo base_url(); ?>admin/vehicle/delete/<?php echo $data['id'] ?>" class="btn-icon delete" data-toggle="tooltip" title="<?php echo $this->lang->line('delete'); ?>" onclick="return confirm('<?php echo $this->lang->line('delete_confirm') ?>');">
+                                                             <i class="fa fa-trash"></i>
+                                                         </a>
+                                                     <?php } ?>
+                                                 </div>
+                                             </div>
                                         </div>
                                     <?php } ?>
                                 </div>
@@ -664,7 +690,7 @@
                         <!-- Tab 4: Driver Details -->
                         <div role="tabpanel" class="tab-pane" id="driver">
                             <div class="row">
-                                <div class="col-sm-4">
+                                <div class="col-sm-6">
                                     <div class="form-group">
                                         <label><?php echo $this->lang->line('driver_name'); ?></label>
                                         <select name="driver_name" class="form-control custom-input" onchange="populateContact(this, 'driver_contact_add')">
@@ -677,32 +703,63 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-sm-4">
+                                <div class="col-sm-6">
                                     <div class="form-group">
                                         <label><?php echo $this->lang->line('driver_contact'); ?></label>
                                         <input name="driver_contact" id="driver_contact_add" type="text" class="form-control custom-input" />
                                     </div>
                                 </div>
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        <label>Attendant/Helper Name</label>
-                                        <select name="attendant_name" class="form-control custom-input" onchange="populateContact(this, 'attendant_contact_add')">
-                                            <option value="">Select</option>
-                                            <?php if(isset($stafflist)) { foreach($stafflist as $staff) { ?>
-                                                <option value="<?php echo trim($staff['name'] . ' ' . $staff['surname']); ?>" data-contact="<?php echo $staff['contact_no']; ?>">
-                                                    <?php echo trim($staff['name'] . ' ' . $staff['surname']); ?> (<?php echo $staff['employee_id']; ?>)
-                                                </option>
-                                            <?php } } ?>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        <label>Attendant Contact</label>
-                                        <input name="attendant_contact" id="attendant_contact_add" type="text" class="form-control custom-input" />
+                            </div>
+
+                            <!-- Multiple Attendants Section -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:12px; margin-bottom:15px;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                            <label style="font-weight:700; color:#1e293b; margin:0;"><i class="fa fa-users text-primary"></i> Attendants / Helpers (Multiple Allowed)</label>
+                                            <button type="button" class="btn btn-xs btn-primary" onclick="addAttendantRow('add_attendants_container')" style="font-weight:600; border-radius:4px;">
+                                                <i class="fa fa-plus"></i> Add Attendant
+                                            </button>
+                                        </div>
+                                        <div id="add_attendants_container">
+                                            <div class="row attendant-row" style="margin-bottom:8px;">
+                                                <div class="col-sm-4">
+                                                    <label style="font-size:11px; color:#64748b;">Attendant Name</label>
+                                                    <select name="attendant_name[]" class="form-control custom-input attendant-select" onchange="populateAttendantRowContact(this)">
+                                                        <option value="">Select</option>
+                                                        <?php if(isset($stafflist)) { foreach($stafflist as $staff) { ?>
+                                                            <option value="<?php echo trim($staff['name'] . ' ' . $staff['surname']); ?>" data-contact="<?php echo $staff['contact_no']; ?>">
+                                                                <?php echo trim($staff['name'] . ' ' . $staff['surname']); ?> (<?php echo $staff['employee_id']; ?>)
+                                                            </option>
+                                                        <?php } } ?>
+                                                    </select>
+                                                </div>
+                                                <div class="col-sm-3">
+                                                    <label style="font-size:11px; color:#64748b;">Attendant Contact</label>
+                                                    <input name="attendant_contact[]" type="text" class="form-control custom-input attendant-contact-input" placeholder="Contact number..." />
+                                                </div>
+                                                <div class="col-sm-4">
+                                                    <label style="font-size:11px; color:#64748b;">Assigned Route (Optional)</label>
+                                                    <select name="attendant_route[]" class="form-control custom-input attendant-route-select">
+                                                        <option value="">All Routes (Entire Bus)</option>
+                                                        <?php if(isset($routelist)) { foreach($routelist as $route_item) { ?>
+                                                            <option value="<?php echo htmlspecialchars($route_item['route_title']); ?>">
+                                                                <?php echo htmlspecialchars($route_item['route_title']); ?>
+                                                            </option>
+                                                        <?php } } ?>
+                                                    </select>
+                                                </div>
+                                                <div class="col-sm-1 text-right" style="padding-top:23px;">
+                                                    <button type="button" class="btn btn-default btn-sm text-danger" onclick="removeAttendantRow(this)" title="Remove" style="border:none; background:transparent;">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
@@ -1009,6 +1066,87 @@ function populateContact(selectObj, targetId) {
         }
     } else {
         document.getElementById(targetId).value = '';
+    }
+}
+
+function populateAttendantRowContact(selectObj) {
+    var $row = $(selectObj).closest('.attendant-row');
+    if(selectObj.selectedIndex > 0) {
+        var selectedOption = selectObj.options[selectObj.selectedIndex];
+        var contact = selectedOption.getAttribute('data-contact');
+        $row.find('.attendant-contact-input').val(contact || '');
+    } else {
+        $row.find('.attendant-contact-input').val('');
+    }
+}
+
+function addAttendantRow(containerId) {
+    var $container = $('#' + containerId);
+    var optionsHtml = '<option value="">Select Attendant</option>';
+    <?php if(isset($stafflist)) { foreach($stafflist as $staff) { 
+        $s_name = addslashes(trim($staff['name'] . ' ' . $staff['surname']));
+        $s_emp = addslashes($staff['employee_id']);
+        $s_phone = addslashes($staff['contact_no']);
+    ?>
+        optionsHtml += '<option value="<?php echo $s_name; ?>" data-contact="<?php echo $s_phone; ?>"><?php echo $s_name; ?> (<?php echo $s_emp; ?>)</option>';
+    <?php } } ?>
+
+    var routeOptionsHtml = '';
+    if (containerId === 'edit_attendants_container' && typeof window.editVehicleAssignedRoutes !== 'undefined') {
+        if (window.editVehicleAssignedRoutes && window.editVehicleAssignedRoutes.length > 0) {
+            routeOptionsHtml += '<option value="">All Routes of this Bus</option>';
+            for (var r_i = 0; r_i < window.editVehicleAssignedRoutes.length; r_i++) {
+                var rTitle = window.editVehicleAssignedRoutes[r_i];
+                routeOptionsHtml += '<option value="' + rTitle.replace(/"/g, '&quot;') + '">' + rTitle + '</option>';
+            }
+        } else {
+            routeOptionsHtml += '<option value="">All Routes (No route assigned yet)</option>';
+        }
+    } else {
+        routeOptionsHtml += '<option value="">All Routes (Entire Bus)</option>';
+        <?php if(isset($routelist)) { foreach($routelist as $route_item) { 
+            $r_title = addslashes($route_item['route_title']);
+        ?>
+            routeOptionsHtml += '<option value="<?php echo $r_title; ?>"><?php echo $r_title; ?></option>';
+        <?php } } ?>
+    }
+
+    var rowHtml = '<div class="row attendant-row" style="margin-bottom:8px;">' +
+        '<div class="col-sm-4">' +
+            '<label style="font-size:11px; color:#64748b;">Attendant Name</label>' +
+            '<select name="attendant_name[]" class="form-control custom-input attendant-select" onchange="populateAttendantRowContact(this)">' +
+                optionsHtml +
+            '</select>' +
+        '</div>' +
+        '<div class="col-sm-3">' +
+            '<label style="font-size:11px; color:#64748b;">Attendant Contact</label>' +
+            '<input name="attendant_contact[]" type="text" class="form-control custom-input attendant-contact-input" placeholder="Contact number..." />' +
+        '</div>' +
+        '<div class="col-sm-4">' +
+            '<label style="font-size:11px; color:#64748b;">Assigned Route (Optional)</label>' +
+            '<select name="attendant_route[]" class="form-control custom-input attendant-route-select">' +
+                routeOptionsHtml +
+            '</select>' +
+        '</div>' +
+        '<div class="col-sm-1 text-right" style="padding-top:23px;">' +
+            '<button type="button" class="btn btn-default btn-sm text-danger" onclick="removeAttendantRow(this)" title="Remove" style="border:none; background:transparent;">' +
+                '<i class="fa fa-trash"></i>' +
+            '</button>' +
+        '</div>' +
+    '</div>';
+
+    $container.append(rowHtml);
+}
+
+function removeAttendantRow(btn) {
+    var $container = $(btn).closest('#add_attendants_container, #edit_attendants_container');
+    if ($container.find('.attendant-row').length > 1) {
+        $(btn).closest('.attendant-row').remove();
+    } else {
+        var $row = $(btn).closest('.attendant-row');
+        $row.find('.attendant-select').val('');
+        $row.find('.attendant-contact-input').val('');
+        $row.find('.attendant-route-select').val('');
     }
 }
 </script>

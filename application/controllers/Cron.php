@@ -181,10 +181,15 @@ class Cron extends MY_Controller
                                         if ($driver_id) $this->SystemNotification_model->notifyUser($driver_id, 'Vehicle Expiration Alert', $message, 'admin/vehicle');
                                     }
 
-                                    // Notify Attendant
+                                    // Notify Attendant(s)
                                     if (!empty($v['attendant_name'])) {
-                                        $attendant_id = $this->staff_model->getStaffByName($v['attendant_name']);
-                                        if ($attendant_id) $this->SystemNotification_model->notifyUser($attendant_id, 'Vehicle Expiration Alert', $message, 'admin/vehicle');
+                                        $att_list = array_filter(array_map('trim', explode(',', $v['attendant_name'])));
+                                        foreach ($att_list as $single_att_name) {
+                                            $attendant_id = $this->staff_model->getStaffByName($single_att_name);
+                                            if ($attendant_id) {
+                                                $this->SystemNotification_model->notifyUser($attendant_id, 'Vehicle Expiration Alert', $message, 'admin/vehicle');
+                                            }
+                                        }
                                     }
                                 }
                             }

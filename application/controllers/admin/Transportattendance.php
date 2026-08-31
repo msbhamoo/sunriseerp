@@ -51,9 +51,10 @@ class Transportattendance extends Admin_Controller
         $assigned_vehicles = array();
         foreach ($all_vehicles as $v) {
             $driver_name = strtolower(trim((string)$v['driver_name']));
-            $attendant_name = strtolower(trim((string)$v['attendant_name']));
             $driver_phone = preg_replace('/[^0-9]/', '', (string)$v['driver_contact']);
-            $attendant_phone = preg_replace('/[^0-9]/', '', (string)$v['attendant_contact']);
+            
+            $attendant_names_arr = array_filter(array_map('trim', explode(',', (string)$v['attendant_name'])));
+            $attendant_phones_arr = array_filter(array_map('trim', explode(',', (string)$v['attendant_contact'])));
 
             $match = false;
             
@@ -67,20 +68,33 @@ class Transportattendance extends Admin_Controller
                 }
             }
 
-            if (!empty($attendant_name) && strlen($attendant_name) > 1) {
-                if ($attendant_name == $staff_fullname || 
-                    $attendant_name == $staff_name || 
-                    (!empty($staff_emp_id) && $attendant_name == $staff_emp_id) ||
-                    (!empty($staff_name) && strlen($staff_name) > 2 && strpos($attendant_name, $staff_name) !== false) || 
-                    (!empty($staff_fullname) && strlen($staff_fullname) > 2 && strpos($staff_fullname, $attendant_name) !== false)) {
-                    $match = true;
+            if (!$match && !empty($attendant_names_arr)) {
+                foreach ($attendant_names_arr as $single_att_name) {
+                    $att_clean = strtolower(trim($single_att_name));
+                    if (!empty($att_clean) && strlen($att_clean) > 1) {
+                        if ($att_clean == $staff_fullname || 
+                            $att_clean == $staff_name || 
+                            (!empty($staff_emp_id) && $att_clean == $staff_emp_id) ||
+                            (!empty($staff_name) && strlen($staff_name) > 2 && strpos($att_clean, $staff_name) !== false) || 
+                            (!empty($staff_fullname) && strlen($staff_fullname) > 2 && strpos($staff_fullname, $att_clean) !== false)) {
+                            $match = true;
+                            break;
+                        }
+                    }
                 }
             }
             
-            if (!empty($staff_phone) && strlen($staff_phone) >= 7) {
-                if ((!empty($driver_phone) && (strpos($driver_phone, $staff_phone) !== false || strpos($staff_phone, $driver_phone) !== false)) || 
-                    (!empty($attendant_phone) && (strpos($attendant_phone, $staff_phone) !== false || strpos($staff_phone, $attendant_phone) !== false))) {
+            if (!$match && !empty($staff_phone) && strlen($staff_phone) >= 7) {
+                if (!empty($driver_phone) && (strpos($driver_phone, $staff_phone) !== false || strpos($staff_phone, $driver_phone) !== false)) {
                     $match = true;
+                } elseif (!empty($attendant_phones_arr)) {
+                    foreach ($attendant_phones_arr as $single_att_phone) {
+                        $phone_clean = preg_replace('/[^0-9]/', '', $single_att_phone);
+                        if (!empty($phone_clean) && (strpos($phone_clean, $staff_phone) !== false || strpos($staff_phone, $phone_clean) !== false)) {
+                            $match = true;
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -111,6 +125,10 @@ class Transportattendance extends Admin_Controller
         
         $data['title'] = 'Bus Attendance';
         
+        $this->load->model('route_model');
+        $this->load->model('vehroute_model');
+        $data['all_routes'] = $this->route_model->get();
+
         if ($this->isSuperAdmin()) {
             $data['vehiclelist'] = $this->vehicle_model->get();
         } else {
@@ -118,7 +136,6 @@ class Transportattendance extends Admin_Controller
         }
         
         $this->form_validation->set_rules('date', $this->lang->line('date'), 'trim|required|xss_clean');
-        $this->form_validation->set_rules('vehicle_id', 'Vehicle', 'trim|required|xss_clean');
         $this->form_validation->set_rules('attendance_type', 'Attendance Type', 'trim|required|xss_clean');
 
         if ($this->form_validation->run() == false) {
@@ -130,6 +147,19 @@ class Transportattendance extends Admin_Controller
             $vehicle_id = $this->input->post('vehicle_id');
             $route_id = $this->input->post('route_id');
             $attendance_type = $this->input->post('attendance_type');
+            
+            // If route selected but vehicle not chosen, resolve vehicle from route
+            if (empty($vehicle_id) && !empty($route_id)) {
+                $mapped_vehicles = $this->vehroute_model->getVechileByRoute($route_id);
+                if (!empty($mapped_vehicles)) {
+                    $vehicle_id = $mapped_vehicles[0]->id;
+                }
+            }
+
+            if (empty($vehicle_id)) {
+                $this->session->set_flashdata('msg', '<div class="alert alert-danger">Please select a Vehicle or Route.</div>');
+                redirect('admin/transportattendance/index');
+            }
             
             if (!$this->isSuperAdmin()) {
                 $allowed_ids = array_column($data['vehiclelist'], 'id');
@@ -187,7 +217,14 @@ class Transportattendance extends Admin_Controller
                     $students[$key]['attendance_status'] = 'Gatepass'; // Default status if not yet saved
                 }
             }
-            
+
+            // Default sorting: Alphabetical by student name
+            usort($students, function($a, $b) {
+                $nameA = trim($a['firstname'] . ' ' . $a['lastname']);
+                $nameB = trim($b['firstname'] . ' ' . $b['lastname']);
+                return strcasecmp($nameA, $nameB);
+            });
+
             $data['resultlist'] = $students;
             
             $this->load->view('layout/header', $data);
@@ -222,6 +259,15 @@ class Transportattendance extends Admin_Controller
             $attendance_type = ($current_hour < 12) ? 'morning' : 'evening';
         }
         
+        // If route selected but vehicle not chosen, resolve vehicle from route
+        if (empty($vehicle_id) && !empty($route_id)) {
+            $this->load->model('vehroute_model');
+            $mapped_vehicles = $this->vehroute_model->getVechileByRoute($route_id);
+            if (!empty($mapped_vehicles)) {
+                $vehicle_id = $mapped_vehicles[0]->id;
+            }
+        }
+
         // Auto select single vehicle if only 1 assigned
         if (empty($vehicle_id) && !empty($data['vehiclelist']) && count($data['vehiclelist']) == 1) {
             $vehicle_id = $data['vehiclelist'][0]['id'];
@@ -702,5 +748,13 @@ class Transportattendance extends Admin_Controller
         $html .= '</tbody></table>';
         
         echo json_encode(['status' => 1, 'html' => $html]);
+    }
+
+    public function get_route_vehicles()
+    {
+        $route_id = $this->input->post('route_id');
+        $this->load->model('vehroute_model');
+        $vehicles = $this->vehroute_model->getVechileByRoute($route_id);
+        echo json_encode($vehicles);
     }
 }

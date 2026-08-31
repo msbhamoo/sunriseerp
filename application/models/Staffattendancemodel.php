@@ -70,6 +70,76 @@ class Staffattendancemodel extends MY_Model {
         }    
     }
 
+    public function saveBiometricAttendanceBatch($attendances)
+    {
+        $this->db->trans_start();
+        $this->db->trans_strict(false);
+        $savedCount = 0;
+
+        if (!empty($attendances)) {
+            foreach ($attendances as $row) {
+                $this->db->where('staff_id', $row['staff_id']);
+                $this->db->where('date', $row['date']);
+                $query = $this->db->get('staff_attendance');
+
+                if ($query->num_rows() > 0) {
+                    $existing = $query->row();
+                    $update = array(
+                        'biometric_attendence'  => 1,
+                        'attendance_source'     => 'biometric',
+                        'updated_at'            => date('Y-m-d H:i:s'),
+                    );
+
+                    // Update in_time if biometric in_time provided
+                    if (!empty($row['in_time'])) {
+                        $update['in_time'] = $row['in_time'];
+                    }
+                    // Update out_time if biometric out_time provided
+                    if (!empty($row['out_time'])) {
+                        $update['out_time'] = $row['out_time'];
+                    }
+                    // Update attendance type if empty or present/late
+                    if (!empty($row['staff_attendance_type_id'])) {
+                        $update['staff_attendance_type_id'] = $row['staff_attendance_type_id'];
+                    }
+                    if (!empty($row['biometric_device_data'])) {
+                        $update['biometric_device_data'] = $row['biometric_device_data'];
+                    }
+                    if (!empty($row['remark'])) {
+                        $existingRemark = IsNullOrEmptyString($existing->remark) ? '' : $existing->remark . ' | ';
+                        $update['remark'] = $existingRemark . $row['remark'];
+                    }
+
+                    $this->db->where('id', $existing->id);
+                    $this->db->update('staff_attendance', $update);
+                    $savedCount++;
+                } else {
+                    if (!isset($row['is_active'])) {
+                        $row['is_active'] = 1;
+                    }
+                    if (empty($row['created_at'])) {
+                        $row['created_at'] = date('Y-m-d H:i:s');
+                    }
+                    if (!isset($row['remark']) || $row['remark'] === null) {
+                        $row['remark'] = '';
+                    }
+                    $this->db->insert('staff_attendance', $row);
+                    $savedCount++;
+                }
+            }
+        }
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() === false) {
+            $this->db->trans_rollback();
+            return 0;
+        } else {
+            $this->db->trans_commit();
+            return $savedCount;
+        }
+    }
+
     public function get($id = null) {
         $this->db->select()->join("staff", "staff.id = staff_attendance.staff_id")->from('staff_attendance');
         $this->db->where("staff.is_active", 1);
