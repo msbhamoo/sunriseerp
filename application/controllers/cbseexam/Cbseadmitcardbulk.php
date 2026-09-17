@@ -220,6 +220,7 @@ class Cbseadmitcardbulk extends Admin_Controller
         $data['admitcard'] = $this->cbseexam_admitcard_model->get($admitcard_template);
         $data['sch_setting'] = $this->sch_setting_detail;
         $data['show_timetable'] = $show_timetable;
+        $data['session_name'] = $this->setting_model->getCurrentSessionName();
 
         $pdf_html = "";
         
@@ -237,7 +238,16 @@ class Cbseadmitcardbulk extends Admin_Controller
         }
 
         $this->load->library('m_pdf');
-        $mpdf = $this->m_pdf->load(['mode' => 'utf-8', 'format' => 'A4']);
+        $mpdf = $this->m_pdf->load([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'margin_top' => 4,
+            'margin_bottom' => 4,
+            'margin_left' => 6,
+            'margin_right' => 6,
+            'margin_header' => 0,
+            'margin_footer' => 0
+        ]);
 
         if (!empty($data['admitcard']->background_img)) {
             $mpdf->SetDefaultBodyCSS('background', "url('" . base_url("uploads/cbseexam/admitcard/" . $data['admitcard']->background_img) . "')");
@@ -247,9 +257,16 @@ class Cbseadmitcardbulk extends Admin_Controller
         $mpdf->SetDisplayMode('fullpage');
         $mpdf->autoScriptToLang = true;
         $mpdf->baseScript = 1;
-        $mpdf->autoLangToFont = true;
+        @ini_set('pcre.backtrack_limit', '50000000');
+        @ini_set('pcre.recursion_limit', '50000000');
+        @ini_set('memory_limit', '512M');
 
-        $mpdf->WriteHTML($pdf_html);
+        $chunks = explode('<!-- MPDF_PAGE_CHUNK -->', $pdf_html);
+        foreach ($chunks as $chunk) {
+            if (!empty(trim($chunk))) {
+                $mpdf->WriteHTML($chunk);
+            }
+        }
         $mpdf->Output('Admit_Cards_' . time() . '.pdf', 'D'); // Download
     }
 
@@ -304,6 +321,8 @@ class Cbseadmitcardbulk extends Admin_Controller
         $this->db->from('cbse_exam_students');
         $this->db->join('student_session', 'student_session.id = cbse_exam_students.student_session_id');
         $this->db->join('students', 'students.id = student_session.student_id');
+        $this->db->join('classes', 'classes.id = student_session.class_id', 'left');
+        $this->db->join('sections', 'sections.id = student_session.section_id', 'left');
         $this->db->where('cbse_exam_students.cbse_exam_id', $exam_id);
         $this->db->where('cbse_exam_students.roll_no IS NOT NULL');
         
@@ -313,6 +332,10 @@ class Cbseadmitcardbulk extends Admin_Controller
         if (!empty($section_id)) {
             $this->db->where('student_session.section_id', $section_id);
         }
+        $this->db->order_by('classes.class', 'asc');
+        $this->db->order_by('sections.section', 'asc');
+        $this->db->order_by('students.firstname', 'asc');
+        $this->db->order_by('students.lastname', 'asc');
 
         $students = $this->db->get()->result();
         
@@ -329,6 +352,7 @@ class Cbseadmitcardbulk extends Admin_Controller
         $data['admitcard'] = $this->cbseexam_admitcard_model->get($admitcard_template);
         $data['sch_setting'] = $this->sch_setting_detail;
         $data['show_timetable'] = $show_timetable;
+        $data['session_name'] = $this->setting_model->getCurrentSessionName();
 
         $pdf_html = "";
         
@@ -346,7 +370,16 @@ class Cbseadmitcardbulk extends Admin_Controller
         }
 
         $this->load->library('m_pdf');
-        $mpdf = $this->m_pdf->load(['mode' => 'utf-8', 'format' => 'A4']);
+        $mpdf = $this->m_pdf->load([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'margin_top' => 4,
+            'margin_bottom' => 4,
+            'margin_left' => 6,
+            'margin_right' => 6,
+            'margin_header' => 0,
+            'margin_footer' => 0
+        ]);
 
         if (!empty($data['admitcard']->background_img)) {
             $mpdf->SetDefaultBodyCSS('background', "url('" . base_url("uploads/cbseexam/admitcard/" . $data['admitcard']->background_img) . "')");
@@ -356,9 +389,16 @@ class Cbseadmitcardbulk extends Admin_Controller
         $mpdf->SetDisplayMode('fullpage');
         $mpdf->autoScriptToLang = true;
         $mpdf->baseScript = 1;
-        $mpdf->autoLangToFont = true;
+        @ini_set('pcre.backtrack_limit', '50000000');
+        @ini_set('pcre.recursion_limit', '50000000');
+        @ini_set('memory_limit', '512M');
 
-        $mpdf->WriteHTML($pdf_html);
+        $chunks = explode('<!-- MPDF_PAGE_CHUNK -->', $pdf_html);
+        foreach ($chunks as $chunk) {
+            if (!empty(trim($chunk))) {
+                $mpdf->WriteHTML($chunk);
+            }
+        }
         $mpdf->Output('Admit_Cards_All_' . time() . '.pdf', 'D'); // Download
     }
     public function view_admitcard_html()
@@ -386,6 +426,7 @@ class Cbseadmitcardbulk extends Admin_Controller
         $data['admitcard'] = $this->cbseexam_admitcard_model->get($admitcard_template);
         $data['sch_setting'] = $this->sch_setting_detail;
         $data['show_timetable'] = $show_timetable;
+        $data['session_name'] = $this->setting_model->getCurrentSessionName();
 
         $pdf_html = "";
         
@@ -394,7 +435,7 @@ class Cbseadmitcardbulk extends Admin_Controller
         $data['student_details'] = $this->cbseexam_admitcard_model->get_cbse_exam_students($student_ids, $exam_id);
         
         if (!empty($data['student_details'])) {
-            $pdf_html .= $this->load->view('cbseexam/cbseadmitcard/_printadmitcard_pdf', $data, true);
+            $pdf_html .= $this->load->view('cbseexam/cbseadmitcard/_printadmitcard', $data, true);
         }
 
         if (empty($pdf_html)) {

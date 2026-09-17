@@ -684,11 +684,10 @@
                                                                         } else {
                                                                             echo "<span style='font-weight: 600; color: #0f172a;'>" . $assessment_array['marks'] . "</span>";
                                                                         }
-                                                                        if ($assessment_array['marks'] == "N/A") {
-                                                                            $assessment_array['marks'] = 0;
-                                                                        }
-                                                                        $total_max_marks += $assessment_array['maximum_marks'];
-                                                                        $total_marks += $assessment_array['marks'];
+                                                                        $mark_val = ($assessment_array['marks'] === "N/A" || $assessment_array['is_absent']) ? 0 : (float)$assessment_array['marks'];
+                                                                        $max_mark_val = !empty($assessment_array['maximum_marks']) ? (float)$assessment_array['maximum_marks'] : 0;
+                                                                        $total_max_marks += $max_mark_val;
+                                                                        $total_marks += $mark_val;
                                                                     } else {
                                                                         echo "<span style='color: #94a3b8;'>-</span>";
                                                                     }

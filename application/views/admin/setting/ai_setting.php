@@ -143,14 +143,14 @@
                                 </small>
                             </div>
 
-                            <!-- 3. OpenRouter API Key (Supports ox-alpha, DeepSeek, Claude, LLaMA) -->
+                            <!-- 3. OpenRouter API Key (Supports stealth/union-alpha, ox-alpha, DeepSeek, Claude, LLaMA) -->
                             <div class="ai-key-box">
                                 <div class="ai-key-box-title">
                                     <i class="fa fa-cubes" style="color: #ec4899; font-size: 16px;"></i> OpenRouter API Key
-                                    <span class="badge bg-green" style="font-size: 10px; margin-left: 6px;">New (ox-alpha Free Promo & 100+ Models)</span>
+                                    <span class="badge bg-green" style="font-size: 10px; margin-left: 6px;">stealth/union-alpha & 100+ Models</span>
                                 </div>
                                 <div class="ai-key-box-desc">
-                                    Enables frontier reasoning models including <strong>01-ai / ox-alpha (Fable 5 Tier)</strong>, DeepSeek-R1, and unified multi-provider access.
+                                    Enables frontier reasoning and multimodal vision models including <strong>stealth/union-alpha (Fable 5 Tier)</strong>, stealth/ox-alpha, DeepSeek, and multi-provider failover.
                                 </div>
                                 <div class="input-group">
                                     <span class="input-group-addon" style="background: #ffffff; border-color: #cbd5e1;"><i class="fa fa-key text-muted"></i></span>
@@ -208,14 +208,10 @@
                                     <i class="fa fa-sliders" style="color: #6366f1; font-size: 16px;"></i> Default Institution AI Engine
                                 </div>
                                 <div class="ai-key-box-desc">
-                                    Select the default AI provider that loads automatically across exam creation workflows.
+                                    Primary AI provider that loads automatically across exam creation workflows.
                                 </div>
                                 <select class="form-control" id="ai_default_model" name="ai_default_model" style="border-color: #cbd5e1; max-width: 450px;">
-                                    <option value="nvidia" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'nvidia') ? 'selected' : ''; ?>>🟢 NVIDIA NIM: Nemotron 3.5 Lightning 30B (Default)</option>
-                                    <option value="openrouter_ox" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'openrouter_ox') ? 'selected' : ''; ?>>🌟 OpenRouter: ox-alpha (Fable 5 Free Tier / Frontier Reasoning)</option>
-                                    <option value="gemini" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'gemini') ? 'selected' : ''; ?>>⚡ Google Gemini 2.0 Flash (Fast & Precise)</option>
-                                    <option value="groq" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'groq') ? 'selected' : ''; ?>>🚀 Groq Cloud: LLaMA-3.3 70B (High Speed)</option>
-                                    <option value="openai" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'openai') ? 'selected' : ''; ?>>OpenAI GPT-4o</option>
+                                    <option value="openrouter" selected>🌟 OpenRouter: stealth/union-alpha (Frontier Reasoning & Vision)</option>
                                 </select>
                             </div>
 

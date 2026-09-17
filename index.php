@@ -54,7 +54,9 @@
  * NOTE: If you change these, also change the error_reporting() code below
  */
  
-	define('ENVIRONMENT', 'development');
+	define('ENVIRONMENT', 'production');
+	@ini_set('pcre.backtrack_limit', '50000000');
+	@ini_set('pcre.recursion_limit', '50000000');
 	
 	
 	if( ! ini_get('date.timezone') )

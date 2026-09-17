@@ -73,7 +73,7 @@ class Gatepass_model extends MY_Model
     private function get_user_details($user_type, $user_id)
     {
         if ($user_type == 'student') {
-            $this->db->select('students.id, students.firstname, students.lastname, students.admission_no, students.image, students.father_name, students.father_phone, students.guardian_name, students.guardian_phone, students.mobileno, classes.class, sections.section, transport_route.route_title, vehicles.vehicle_no, pickup_point.name as pickup_point_name');
+            $this->db->select('students.id, students.firstname, students.lastname, students.admission_no, students.image, students.father_name, students.father_phone, students.guardian_name, students.guardian_phone, students.mobileno, classes.class, sections.section, transport_route.route_title, vehicles.vehicle_no, vehicles.driver_name, vehicles.driver_contact, pickup_point.name as pickup_point_name');
             $this->db->from('students');
             $this->db->join('student_session', 'student_session.student_id = students.id', 'left');
             $this->db->join('classes', 'classes.id = student_session.class_id', 'left');
@@ -95,6 +95,8 @@ class Gatepass_model extends MY_Model
                 $student['vehicle_no'] = !empty($student['vehicle_no']) ? $student['vehicle_no'] : '';
                 $student['route_title'] = !empty($student['route_title']) ? $student['route_title'] : '';
                 $student['pickup_point_name'] = !empty($student['pickup_point_name']) ? $student['pickup_point_name'] : '';
+                $student['driver_name'] = !empty($student['driver_name']) ? $student['driver_name'] : '';
+                $student['driver_contact'] = !empty($student['driver_contact']) ? $student['driver_contact'] : '';
                 return $student;
             }
         } elseif ($user_type == 'staff') {

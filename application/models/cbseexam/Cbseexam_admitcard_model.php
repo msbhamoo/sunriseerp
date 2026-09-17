@@ -223,7 +223,11 @@ class Cbseexam_admitcard_model extends MY_model
         ->join('cbse_seating_rooms', 'cbse_seating_rooms.id = cbse_seating_room_assignments.room_id', 'left')
         ->where("students.id in  ($students)")
         ->where('cbse_exam_students.cbse_exam_id', $cbse_exam_id)
-        ->group_by('cbse_exam_students.id');
+        ->group_by('cbse_exam_students.id')
+        ->order_by('classes.class', 'asc')
+        ->order_by('sections.section', 'asc')
+        ->order_by('students.firstname', 'asc')
+        ->order_by('students.lastname', 'asc');
         $query = $this->db->get();
         return $query->result();
     }
@@ -241,7 +245,10 @@ class Cbseexam_admitcard_model extends MY_model
         }
         
         $this->db->where('cbse_exam_timetable.cbse_exam_id', $cbse_exam_id)
-        ->where('cbse_exams.session_id', $this->current_session);
+        ->where('cbse_exams.session_id', $this->current_session)
+        ->order_by('cbse_exam_timetable.date', 'asc')
+        ->order_by('cbse_exam_timetable.time_from', 'asc')
+        ->order_by('subjects.name', 'asc');
         $query = $this->db->get();
         return $query->result();
     }

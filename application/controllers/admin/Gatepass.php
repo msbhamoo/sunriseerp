@@ -26,6 +26,7 @@ class Gatepass extends Admin_Controller
 
         $data['title'] = 'Gate Pass';
         $data['gate_passes'] = $this->gatepass_model->get();
+        $data['sch_setting'] = $this->setting_model->getSetting();
 
         $this->load->view('layout/header', $data);
         $this->load->view('admin/gatepass/index', $data);

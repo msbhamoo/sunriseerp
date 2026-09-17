@@ -549,10 +549,10 @@ class Cbseexam_exam_model extends MY_Model
         INNER JOIN classes on student_session.class_id = classes.id 
         INNER JOIN sections on sections.id = student_session.section_id 
         INNER JOIN cbse_exam_timetable on cbse_exam_timetable.cbse_exam_id=cbse_exams.id 
-        INNER JOIN cbse_exam_timetable_classes on cbse_exam_timetable_classes.cbse_exam_timetable_id=cbse_exam_timetable.id and cbse_exam_timetable_classes.class_id=classes.id
+        LEFT JOIN cbse_exam_timetable_classes on cbse_exam_timetable_classes.cbse_exam_timetable_id=cbse_exam_timetable.id and cbse_exam_timetable_classes.class_id=classes.id
         INNER JOIN cbse_exam_assessment_types on cbse_exam_assessment_types.cbse_exam_assessment_id=cbse_exams.cbse_exam_assessment_id 
         INNER JOIN cbse_terms on cbse_terms.id=cbse_exams.cbse_term_id 
-        left join cbse_student_subject_marks on cbse_student_subject_marks.cbse_exam_timetable_id =cbse_exam_timetable.id and cbse_student_subject_marks.cbse_exam_student_id= cbse_exam_students.id and cbse_student_subject_marks.cbse_exam_assessment_type_id=cbse_exam_assessment_types.id 
+        LEFT JOIN cbse_student_subject_marks on (cbse_student_subject_marks.cbse_exam_timetable_id =cbse_exam_timetable.id OR cbse_student_subject_marks.cbse_exam_timetable_id IN (SELECT tt_sub.id FROM cbse_exam_timetable tt_sub WHERE tt_sub.cbse_exam_id = cbse_exams.id AND tt_sub.subject_id = cbse_exam_timetable.subject_id)) and cbse_student_subject_marks.cbse_exam_student_id= cbse_exam_students.id and cbse_student_subject_marks.cbse_exam_assessment_type_id=cbse_exam_assessment_types.id 
         INNER JOIN subjects on subjects.id=cbse_exam_timetable.subject_id 
         left join cbse_student_exam_ranks on cbse_student_exam_ranks.student_session_id = student_session.id and cbse_student_exam_ranks.cbse_exam_id=" . $cbse_exam_id . " 
         WHERE cbse_exams.`id` = " . $this->db->escape($cbse_exam_id) . " and students.is_active = 'yes' and cbse_exams.session_id=" . $this->current_session . $class_section_condition . " order by cbse_student_exam_ranks.rank asc";

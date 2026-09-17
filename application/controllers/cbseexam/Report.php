@@ -250,6 +250,20 @@ class Report extends MY_Addon_CBSEController
                             ];
 
                             $students[$student_value->student_session_id]['subjects'][$student_value->subject_id]['exam_assessments'][$student_value->cbse_exam_assessment_type_id] = $new_assesment;
+                        } else {
+                            $curr_marks = $students[$student_value->student_session_id]['subjects'][$student_value->subject_id]['exam_assessments'][$student_value->cbse_exam_assessment_type_id]['marks'];
+                            if ((is_null($curr_marks) || $curr_marks === '' || $curr_marks === 'N/A') && (!is_null($student_value->marks) || !empty($student_value->is_absent))) {
+                                $students[$student_value->student_session_id]['subjects'][$student_value->subject_id]['exam_assessments'][$student_value->cbse_exam_assessment_type_id] = [
+                                    'cbse_exam_assessment_type_name' => $student_value->cbse_exam_assessment_type_name,
+                                    'cbse_exam_assessment_type_id'   => $student_value->cbse_exam_assessment_type_id,
+                                    'cbse_exam_assessment_type_code' => $student_value->cbse_exam_assessment_type_code,
+                                    'maximum_marks'                  => $student_value->maximum_marks,
+                                    'cbse_student_subject_marks_id'  => $student_value->cbse_student_subject_marks_id,
+                                    'marks'                          => $student_value->marks,
+                                    'note'                           => $student_value->note,
+                                    'is_absent'                      => $student_value->is_absent,
+                                ];
+                            }
                         }
                     } else {
 

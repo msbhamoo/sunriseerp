@@ -13,6 +13,40 @@ class Aiexamgenerator extends Admin_Controller
         $this->load->library('Ai_exam_generator');
         $this->load->model(['class_model', 'subject_model', 'question_model']);
         $this->sch_setting_detail = $this->setting_model->getSetting();
+        $this->ensure_db_schema();
+    }
+
+    /**
+     * Ensure database schema tables and columns exist across environments
+     */
+    private function ensure_db_schema()
+    {
+        try {
+            $this->db->query("CREATE TABLE IF NOT EXISTS `cbse_ai_generated_papers` (
+              `id` int(11) NOT NULL AUTO_INCREMENT,
+              `paper_title` varchar(255) NOT NULL,
+              `class_id` int(11) DEFAULT NULL,
+              `class_name` varchar(100) NOT NULL,
+              `subject_id` int(11) DEFAULT NULL,
+              `subject_name` varchar(100) NOT NULL,
+              `chapter` varchar(255) DEFAULT NULL,
+              `total_marks` int(11) NOT NULL DEFAULT 80,
+              `difficulty` varchar(100) NOT NULL DEFAULT 'Medium',
+              `language` varchar(50) NOT NULL DEFAULT 'English',
+              `paper_json` longtext NOT NULL,
+              `created_by` int(11) NOT NULL,
+              `created_at` datetime NOT NULL,
+              `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`),
+              KEY `idx_class_subject` (`class_id`,`subject_id`),
+              KEY `idx_created_by` (`created_by`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+            $check = $this->db->query("SHOW COLUMNS FROM `sch_settings` LIKE 'ai_openrouter_api_key'");
+            if ($check && $check->num_rows() == 0) {
+                $this->db->query("ALTER TABLE `sch_settings` ADD COLUMN `ai_openrouter_api_key` TEXT NULL");
+            }
+        } catch (\Throwable $e) {}
     }
 
     /**
@@ -50,84 +84,93 @@ class Aiexamgenerator extends Admin_Controller
             return;
         }
 
-        $class_id     = $this->input->post('class_id');
-        $subject_id   = $this->input->post('subject_id');
-        $class_name   = $this->input->post('class_name');
-        $subject_name = $this->input->post('subject_name');
-        $chapter      = $this->input->post('chapter');
-        $total_marks  = $this->input->post('total_marks');
-        $difficulty   = $this->input->post('difficulty');
-        $language     = $this->input->post('language');
-        $api_engine   = $this->input->post('api_engine');
-        $api_key      = $this->input->post('api_key');
+        try {
+            $class_id     = $this->input->post('class_id');
+            $subject_id   = $this->input->post('subject_id');
+            $class_name   = $this->input->post('class_name');
+            $subject_name = $this->input->post('subject_name');
+            $chapter      = $this->input->post('chapter');
+            $total_marks  = $this->input->post('total_marks');
+            $difficulty   = $this->input->post('difficulty');
+            $language     = $this->input->post('language');
+            $api_engine   = $this->input->post('api_engine');
+            $api_key      = $this->input->post('api_key');
 
-        if (empty($class_name) || empty($subject_name)) {
-            echo json_encode(['status' => 'error', 'message' => 'Class and Subject are required.']);
-            return;
-        }
-
-        $blooms_taxonomy       = $this->input->post('blooms_taxonomy');
-        $generate_multi_sets   = $this->input->post('generate_multi_sets');
-        $question_distribution = $this->input->post('question_distribution');
-
-        $current_session = $this->setting_model->getCurrentSessionName();
-
-        $params = [
-            'class_name'            => $class_name,
-            'subject_name'          => $subject_name,
-            'chapter'               => !empty($chapter) ? $chapter : 'Complete Syllabus',
-            'total_marks'           => !empty($total_marks) ? $total_marks : 80,
-            'difficulty'            => !empty($difficulty) ? $difficulty : 'Medium',
-            'language'              => !empty($language) ? $language : 'English',
-            'academic_session'      => !empty($current_session) ? $current_session : date('Y') . '-' . (date('y') + 1),
-            'blooms_taxonomy'       => is_array($blooms_taxonomy) ? $blooms_taxonomy : null,
-            'generate_multi_sets'   => $generate_multi_sets,
-            'question_distribution' => is_array($question_distribution) ? $question_distribution : null,
-            'api_engine'            => !empty($api_engine) ? $api_engine : 'gemini',
-            'api_key'               => !empty($api_key) ? trim($api_key) : ''
-        ];
-
-        $result = $this->ai_exam_generator->generate_paper($params);
-
-        // If generated successfully, automatically save into cbse_ai_generated_papers table
-        if ($result['status'] === 'success' && !empty($result['data'])) {
-            // Ensure DB connection is active after external AI API call
-            if (isset($this->db->conn_id) && $this->db->conn_id instanceof mysqli) {
-                if (!@$this->db->conn_id->ping()) {
-                    $this->db->reconnect();
-                }
-            } else {
-                $this->db->reconnect();
+            if (empty($class_name) || empty($subject_name)) {
+                echo json_encode(['status' => 'error', 'message' => 'Class and Subject are required.']);
+                return;
             }
 
-            $paper_data = $result['data'];
-            $paper_title = isset($paper_data['paper_title']) ? $paper_data['paper_title'] : "Exam {$class_name} {$subject_name}";
-            
-            $history_data = [
-                'paper_title'  => $paper_title,
-                'class_id'     => !empty($class_id) ? $class_id : null,
-                'class_name'   => $class_name,
-                'subject_id'   => !empty($subject_id) ? $subject_id : null,
-                'subject_name' => $subject_name,
-                'chapter'      => !empty($chapter) ? $chapter : 'Complete Syllabus',
-                'total_marks'  => !empty($total_marks) ? intval($total_marks) : 80,
-                'difficulty'   => !empty($difficulty) ? $difficulty : 'Medium',
-                'language'     => !empty($language) ? $language : 'English',
-                'paper_json'   => json_encode($paper_data, JSON_UNESCAPED_UNICODE),
-                'created_by'   => $this->customlib->getStaffID(),
-                'created_at'   => date('Y-m-d H:i:s')
+            $blooms_taxonomy       = $this->input->post('blooms_taxonomy');
+            $generate_multi_sets   = $this->input->post('generate_multi_sets');
+            $question_distribution = $this->input->post('question_distribution');
+
+            $current_session = $this->setting_model->getCurrentSessionName();
+
+            $params = [
+                'class_name'            => $class_name,
+                'subject_name'          => $subject_name,
+                'chapter'               => !empty($chapter) ? $chapter : 'Complete Syllabus',
+                'total_marks'           => !empty($total_marks) ? $total_marks : 80,
+                'difficulty'            => !empty($difficulty) ? $difficulty : 'Medium',
+                'language'              => !empty($language) ? $language : 'English',
+                'academic_session'      => !empty($current_session) ? $current_session : date('Y') . '-' . (date('y') + 1),
+                'blooms_taxonomy'       => is_array($blooms_taxonomy) ? $blooms_taxonomy : null,
+                'generate_multi_sets'   => $generate_multi_sets,
+                'question_distribution' => is_array($question_distribution) ? $question_distribution : null,
+                'api_engine'            => !empty($api_engine) ? $api_engine : 'openrouter',
+                'api_key'               => !empty($api_key) ? trim($api_key) : ''
             ];
 
-            $this->db->insert('cbse_ai_generated_papers', $history_data);
-            $result['saved_paper_id'] = $this->db->insert_id();
+            $result = $this->ai_exam_generator->generate_paper($params);
 
-            // Auto-populate generated questions into LMS Question & Answer Bank (admin/question)
-            try {
-                $this->auto_save_paper_questions_to_bank($class_id, $subject_id, $paper_data);
-            } catch (\Throwable $qe) {}
+            // If generated successfully, automatically save into cbse_ai_generated_papers table
+            if ($result['status'] === 'success' && !empty($result['data'])) {
+                // Ensure DB connection is active after external AI API call
+                if (isset($this->db->conn_id) && $this->db->conn_id instanceof mysqli) {
+                    if (!@$this->db->conn_id->ping()) {
+                        $this->db->reconnect();
+                    }
+                } else {
+                    $this->db->reconnect();
+                }
+
+                $paper_data = $result['data'];
+                $paper_title = isset($paper_data['paper_title']) ? $paper_data['paper_title'] : "Exam {$class_name} {$subject_name}";
+                
+                $history_data = [
+                    'paper_title'  => $paper_title,
+                    'class_id'     => !empty($class_id) ? $class_id : null,
+                    'class_name'   => $class_name,
+                    'subject_id'   => !empty($subject_id) ? $subject_id : null,
+                    'subject_name' => $subject_name,
+                    'chapter'      => !empty($chapter) ? $chapter : 'Complete Syllabus',
+                    'total_marks'  => !empty($total_marks) ? intval($total_marks) : 80,
+                    'difficulty'   => !empty($difficulty) ? $difficulty : 'Medium',
+                    'language'     => !empty($language) ? $language : 'English',
+                    'paper_json'   => json_encode($paper_data, JSON_UNESCAPED_UNICODE),
+                    'created_by'   => $this->customlib->getStaffID(),
+                    'created_at'   => date('Y-m-d H:i:s')
+                ];
+
+                try {
+                    $this->db->insert('cbse_ai_generated_papers', $history_data);
+                    $result['saved_paper_id'] = $this->db->insert_id();
+                } catch (\Throwable $dbe) {}
+
+                // Auto-populate generated questions into LMS Question & Answer Bank (admin/question)
+                try {
+                    $this->auto_save_paper_questions_to_bank($class_id, $subject_id, $paper_data);
+                } catch (\Throwable $qe) {}
+            }
+
+            echo json_encode($result);
+        } catch (\Throwable $e) {
+            echo json_encode([
+                'status'  => 'error',
+                'message' => 'Server Error: ' . $e->getMessage()
+            ]);
         }
-
-        echo json_encode($result);
     }
 
     /**

@@ -566,6 +566,8 @@ class Cbseadmitcard extends Admin_Controller
             $data['exam_subjects']   = $this->cbseexam_admitcard_model->get_cbse_exam_timetable($post_exam_id);
             $data['student_details'] = $this->cbseexam_admitcard_model->get_cbse_exam_students($students_array, $post_exam_id);
             $data['sch_setting']     = $this->sch_setting_detail;
+            $data['session_name']    = $this->setting_model->getCurrentSessionName();
+            $data['show_timetable']  = 1;
             $student_admit_cards     = $this->load->view('cbseexam/cbseadmitcard/_printadmitcard', $data, true);
             $array                   = array('status' => '1', 'error' => '', 'page' => $student_admit_cards);
             echo json_encode($array);

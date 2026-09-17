@@ -1,424 +1,506 @@
-<?php
-$theme_color = '#2eab66';
-$theme_settings = $this->customlib->getCurrentThemeSetting();
-if (isset($theme_settings->theme_color) && !empty($theme_settings->theme_color)) {
-    $theme_color = $theme_settings->theme_color;
-} else {
-    $legacy_theme = $this->customlib->getCurrentTheme();
-    $theme_map = [
-        'default' => '#424242', 'red' => '#f44336', 'blue' => '#1e3a8a',
-        'gray' => '#607d8b', 'material' => '#3f51b5', 'darkgray' => '#343a40'
-    ];
-    if (isset($theme_map[$legacy_theme])) {
-        $theme_color = $theme_map[$legacy_theme];
-    }
-}
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <style>
-    :root {
-        --primary-color: <?php echo $theme_color; ?>;
-        --border-color: #e5e7eb;
-        --text-main: #1f2937;
-        --text-muted: #6b7280;
-    }
-
     * {
+        box-sizing: border-box;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
+        font-family: Arial, Helvetica, sans-serif;
     }
 
-    /* Print Base */
     html, body {
         margin: 0;
         padding: 0;
         background: #fff;
-        font-family: 'Inter', sans-serif;
-        color: var(--text-main);
-    }
-    .print-receipt-wrapper {
-        width: 100%;
-        max-width: 800px;
-        margin: 0 auto;
-        padding-bottom: 5px;
-    }
-
-    /* Removed @page as MPDF handles page sizing via PHP */
-    
-    .print-receipt-wrapper {
-        height: 130mm; /* Adjusted to fit within MPDF default margins (printable area is ~267mm) */
-        page-break-inside: avoid;
-        margin: 0;
-        padding: 0;
-    }
-    
-    .receipt-copy {
-        height: 125mm; /* Scaled down slightly to fit exactly 2 per page */
-        margin: 2mm auto;
-        border: 2px solid var(--primary-color);
-        border-radius: 8px;
-        position: relative;
-        overflow: hidden;
-        page-break-inside: avoid;
-    }
-
-    /* Watermark */
-    .watermark-bg {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 40%;
-        opacity: 0.08;
-        pointer-events: none;
-        z-index: 0;
-    }
-
-    .receipt-inner {
-        position: relative;
-        z-index: 1;
-        padding: 20px;
-    }
-
-    /* Header Top Row */
-    .header-top {
-        display: flex;
-        justify-content: space-between;
-        font-size: 11px;
-        color: var(--text-muted);
-        margin-bottom: 10px;
-    }
-
-    /* Main Header */
-    .receipt-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 15px;
-    }
-    .logo-container {
-        width: 80px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .logo-container img {
-        max-width: 100%;
-        max-height: 55px;
-        object-fit: contain;
-    }
-    
-    .school-info {
-        flex-grow: 1;
-        text-align: center;
-        padding: 0 15px;
-    }
-    .school-name {
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--text-main);
-        margin: 0 0 5px 0;
-    }
-    .school-address {
-        font-size: 12px;
-        color: var(--text-muted);
-        margin: 0 0 5px 0;
-        border-bottom: 1px solid var(--text-main);
-        padding-bottom: 8px;
-        display: inline-block;
-        width: 90%;
-    }
-    .school-contact {
-        font-size: 11px;
-        margin: 0;
-        color: var(--text-main);
-        margin-top: 5px;
-    }
-    .session-info {
-        font-weight: 700;
-        font-size: 12px;
-        margin-top: 5px;
-        color: var(--text-main);
-    }
-    .cert-label {
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--text-main);
-        margin-top: 5px;
-    }
-
-    .cert-title {
-        text-align: center;
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--text-main);
-        margin: 20px 0 30px 0;
-    }
-
-    /* Meta Info Grid */
-    .meta-table {
-        width: 100%;
-        border-top: 1px solid var(--border-color);
-        padding-top: 5px;
-        margin-bottom: 5px;
-        font-size: 11px;
-    }
-    .meta-table td {
-        padding: 2px 0;
-        vertical-align: top;
-    }
-    .meta-label {
-        width: 100px;
-        font-weight: bold;
-        color: var(--text-main);
-        white-space: nowrap;
-    }
-    .meta-value {
-        font-weight: normal;
-    }
-
-    .student-photo-cell {
-        width: 80px;
-        text-align: right;
-    }
-    .student-photo {
-        width: 60px;
-        height: 60px;
-        border: 1px solid var(--border-color);
-    }
-
-    /* Table */
-    .receipt-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 10px;
-    }
-    .receipt-table th, .receipt-table td {
-        border: 1px solid var(--border-color);
-        padding: 3px 5px; /* Compact padding */
-        font-size: 10px;  /* Compact font size */
-        text-align: left;
-    }
-    .receipt-table th {
-        background-color: #f3f4f6;
-        font-weight: bold;
-        text-transform: uppercase;
-        font-size: 10px;
         color: #000;
     }
 
-    .instructions {
-        font-size: 9px; /* Reduced from 10px */
-        color: var(--text-muted);
-        margin-bottom: 10px;
+    .admit-card-wrapper {
+        width: 100%;
+        page-break-inside: avoid;
+        margin: 0 auto;
+        padding: 0;
     }
 
-    .signatures {
+    .admit-card-box {
         width: 100%;
-        margin-top: 15px; /* Reduced from 25px */
-        font-size: 10px;
+        border: 1px solid #777;
+        padding: 4px 10px 4px 10px;
+        position: relative;
+        overflow: hidden;
+        page-break-inside: avoid;
+        box-sizing: border-box;
     }
-    .signatures td {
+
+    .cut-line-wrapper {
+        width: 100%;
+        text-align: center;
+        margin: 2mm 0;
+        padding: 0;
+        line-height: 1;
+    }
+
+    .cut-line-text {
+        font-size: 8px;
+        color: #555;
+        letter-spacing: 0.5px;
+        font-weight: bold;
+    }
+
+    .badge-pill {
+        background-color: #525b62;
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 10px;
+        padding: 1.5px 22px;
+        border-radius: 3px;
+        display: inline-block;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .meta-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9.5px;
+        line-height: 1.3;
+    }
+    .meta-label {
+        font-weight: bold;
+        color: #000;
+        white-space: nowrap;
+        padding: 1px 0;
+    }
+    .meta-val {
+        color: #000;
+        font-weight: normal;
+        padding: 1px 0;
+    }
+
+    .photo-box {
+        width: 72px;
+        height: 84px;
+        border: 1px solid #888;
+        text-align: center;
+        overflow: hidden;
+        display: inline-block;
+    }
+
+    .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10.5px;
+        margin-top: 2px;
+    }
+    .schedule-table th {
+        background-color: #525b62;
+        color: #ffffff;
+        border: 1px solid #888;
+        padding: 2px 4px;
         text-align: center;
         font-weight: bold;
-        vertical-align: bottom;
+        font-size: 10px;
+    }
+    .schedule-table td {
+        border: 1px solid #888;
+        padding: 2px 4px;
+        text-align: center;
+        font-size: 10.5px;
+        font-weight: bold;
+    }
+
+    @media print {
+        .pagebreak {
+            page-break-after: always;
+        }
     }
 </style>
 </head>
 <body>
 
 <?php 
-$exam_incharge_sig = $this->customlib->getSignatureMapping('sign_exam_incharge');
-$class_teacher_sig = $this->customlib->getSignatureMapping('sign_class_teacher');
-$principal_sig = $this->customlib->getSignatureMapping('sign_principal');
+$CI =& get_instance();
+
+if (!function_exists('resolve_admit_image_src')) {
+    function resolve_admit_image_src($candidates, $fallback_url = '') {
+        foreach ($candidates as $candidate) {
+            if (empty($candidate)) continue;
+            
+            // Check direct file path
+            if (file_exists($candidate) && is_file($candidate)) {
+                $ext = strtolower(pathinfo($candidate, PATHINFO_EXTENSION));
+                $mime = ($ext == 'png') ? 'image/png' : (($ext == 'svg') ? 'image/svg+xml' : 'image/jpeg');
+                $data = @file_get_contents($candidate);
+                if ($data !== false && strlen($data) > 0) {
+                    return 'data:' . $mime . ';base64,' . base64_encode($data);
+                }
+            }
+
+            // Check relative to FCPATH
+            $fcpath_cand = FCPATH . ltrim($candidate, '/\\');
+            if (file_exists($fcpath_cand) && is_file($fcpath_cand)) {
+                $ext = strtolower(pathinfo($fcpath_cand, PATHINFO_EXTENSION));
+                $mime = ($ext == 'png') ? 'image/png' : (($ext == 'svg') ? 'image/svg+xml' : 'image/jpeg');
+                $data = @file_get_contents($fcpath_cand);
+                if ($data !== false && strlen($data) > 0) {
+                    return 'data:' . $mime . ';base64,' . base64_encode($data);
+                }
+            }
+        }
+        return $fallback_url;
+    }
+}
 
 // Pre-fetch all subject-to-class mappings to avoid DB queries in loops
-$CI =& get_instance();
 $CI->db->select('cbse_exam_timetable_id, class_id');
 $mappings = $CI->db->get('cbse_exam_timetable_classes')->result_array();
 $subject_class_map = [];
 foreach ($mappings as $map) {
     $subject_class_map[$map['cbse_exam_timetable_id']][] = $map['class_id'];
 }
-?>
 
-<?php 
+// 1. Resolve School Logo from schsettings/logo
+$logo_candidates = [];
+if (!empty($sch_setting->image)) {
+    $logo_candidates[] = FCPATH . 'uploads/school_content/logo/' . $sch_setting->image;
+    $logo_candidates[] = 'uploads/school_content/logo/' . $sch_setting->image;
+}
+if (!empty($sch_setting->app_logo)) {
+    $logo_candidates[] = FCPATH . 'uploads/school_content/logo/app_logo/' . $sch_setting->app_logo;
+    $logo_candidates[] = FCPATH . 'uploads/school_content/logo/' . $sch_setting->app_logo;
+    $logo_candidates[] = 'uploads/school_content/logo/app_logo/' . $sch_setting->app_logo;
+    $logo_candidates[] = 'uploads/school_content/logo/' . $sch_setting->app_logo;
+}
+if (!empty($admitcard->left_logo)) {
+    $logo_candidates[] = FCPATH . 'uploads/cbseexam/admitcard/' . $admitcard->left_logo;
+    $logo_candidates[] = 'uploads/cbseexam/admitcard/' . $admitcard->left_logo;
+}
+$logo_candidates[] = FCPATH . 'backend/images/sunrise_logo.jpg';
+$logo_candidates[] = 'backend/images/sunrise_logo.jpg';
+$logo_candidates[] = FCPATH . 'backend/images/s_logo.png';
+
+$school_logo_src = resolve_admit_image_src(
+    $logo_candidates,
+    !empty($sch_setting->image) ? base_url('uploads/school_content/logo/' . $sch_setting->image) : base_url('backend/images/sunrise_logo.jpg')
+);
+
+// 2. Resolve Principal Signature from schsettings/signature
+$principal_sig_mapping = $CI->customlib->getSignatureMapping('sign_principal');
+
+$sig_candidates = [];
+if (!empty($sch_setting->sign_principal)) {
+    $sig_candidates[] = FCPATH . 'uploads/school_content/signatures/' . $sch_setting->sign_principal;
+    $sig_candidates[] = 'uploads/school_content/signatures/' . $sch_setting->sign_principal;
+}
+if (!empty($principal_sig_mapping['image_file'])) {
+    $sig_candidates[] = FCPATH . 'uploads/school_content/signatures/' . $principal_sig_mapping['image_file'];
+    $sig_candidates[] = 'uploads/school_content/signatures/' . $principal_sig_mapping['image_file'];
+}
+if (!empty($admitcard->sign)) {
+    $sig_candidates[] = FCPATH . 'uploads/cbseexam/admitcard/' . $admitcard->sign;
+    $sig_candidates[] = 'uploads/cbseexam/admitcard/' . $admitcard->sign;
+}
+$sig_candidates[] = FCPATH . 'backend/images/principal_sign_green.jpg';
+$sig_candidates[] = 'backend/images/principal_sign_green.jpg';
+$sig_candidates[] = FCPATH . 'backend/images/marksheet/sign-principal.png';
+$sig_candidates[] = FCPATH . 'uploads/transfer_certificate/signature_of_principle.jpg';
+
+$principal_sign_src = resolve_admit_image_src(
+    $sig_candidates,
+    !empty($principal_sig_mapping['image_url']) ? $principal_sig_mapping['image_url'] : base_url('backend/images/principal_sign_green.jpg')
+);
+
+// Default placeholder for missing photo
+$photo_placeholder_src = resolve_admit_image_src(
+    [FCPATH . 'backend/images/admit_img_1_Im7.png', 'backend/images/admit_img_1_Im7.png'],
+    base_url('backend/images/admit_img_1_Im7.png')
+);
+
+$school_name_display = 'Sunrise International Public School';
+if (!empty($admitcard->school_name) && $admitcard->school_name != 'Mount Carmel School') {
+    $school_name_display = $admitcard->school_name;
+} elseif (!empty($admitcard->heading)) {
+    $school_name_display = $admitcard->heading;
+} elseif (!empty($sch_setting->name) && strpos($sch_setting->name, 'Learn2care') === false) {
+    $school_name_display = $sch_setting->name;
+}
+
+$school_address_display = 'Sikar Salasar road, Nechhwa, Sikar, 332026 Ph 9828512821';
+if (!empty($sch_setting->address) && strpos($sch_setting->address, 'Salasar') !== false) {
+    $school_address_display = 'Sikar Salasar road, Nechhwa, Sikar, 332026 Ph ' . (!empty($sch_setting->phone) ? $sch_setting->phone : '9828512821');
+}
+
+$print_session = !empty($session_name) ? $session_name : '2024-25';
+
+// Determine max timetable rows across students to decide whether 3 or 2 admit cards fit per page
+$max_sub_count = 0;
+foreach ($student_details as $st) {
+    $c = 0;
+    if (!empty($exam_subjects)) {
+        foreach ($exam_subjects as $subject) {
+            if (isset($subject_class_map[$subject->timetable_id]) && !empty($subject_class_map[$subject->timetable_id])) {
+                if (!in_array($st->class_id, $subject_class_map[$subject->timetable_id])) {
+                    continue;
+                }
+            }
+            $c++;
+        }
+    }
+    if ($c > $max_sub_count) {
+        $max_sub_count = $c;
+    }
+}
+$max_rows = ceil($max_sub_count / 2);
+// If timetable has 4 or fewer rows (i.e. up to 8 subjects in 2 columns), 3 cards fit on 1 page; otherwise 2 cards
+$cards_per_page = ($max_rows <= 4) ? 3 : 2;
+
 $print_count = 0;
 $total_students = count($student_details);
+
 foreach ($student_details as $student) { 
     $print_count++;
+
+    // Filter subjects for student's class
+    $student_subjects = [];
+    if (!empty($exam_subjects)) {
+        foreach ($exam_subjects as $subject) {
+            if (isset($subject_class_map[$subject->timetable_id]) && !empty($subject_class_map[$subject->timetable_id])) {
+                if (!in_array($student->class_id, $subject_class_map[$subject->timetable_id])) {
+                    continue;
+                }
+            }
+            $student_subjects[] = $subject;
+        }
+    }
+
+    // Sort subjects in chronological order by date and time
+    if (!empty($student_subjects)) {
+        usort($student_subjects, function($a, $b) {
+            $t1 = strtotime($a->date . ' ' . (!empty($a->time_from) ? $a->time_from : '00:00:00'));
+            $t2 = strtotime($b->date . ' ' . (!empty($b->time_from) ? $b->time_from : '00:00:00'));
+            if ($t1 == $t2) {
+                return strcmp($a->name, $b->name);
+            }
+            return ($t1 < $t2) ? -1 : 1;
+        });
+    }
+
+    $half = ceil(count($student_subjects) / 2);
+    if ($half == 0) { $half = 1; }
+
+    $roll_display = !empty($student->roll_no) ? $student->roll_no : (!empty($student->admit_roll_no) ? $student->admit_roll_no : (!empty($student->profile_roll_no) ? $student->profile_roll_no : ''));
+
+    $class_display = $student->class;
+    if (preg_match('/^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII|\d+)$/i', trim($class_display))) {
+        $class_display .= 'th';
+    }
+
+    $faculty_display = !empty($student->faculty) ? $student->faculty : 'Senior';
+
+    // Student Photo resolution
+    $student_photo_src = '';
+    if (!empty($student->image)) {
+        $student_photo_src = resolve_admit_image_src(
+            [FCPATH . $student->image, $student->image],
+            base_url($student->image)
+        );
+    } elseif (!empty($student->admission_no) && $student->admission_no == '2263') {
+        $student_photo_src = resolve_admit_image_src(
+            [FCPATH . 'backend/images/admit_img_3_Im11.jpg'],
+            base_url('backend/images/admit_img_3_Im11.jpg')
+        );
+    }
+    if (empty($student_photo_src)) {
+        $student_photo_src = $photo_placeholder_src;
+    }
 ?>
-    <div class="print-receipt-wrapper">
-        <div class="receipt-copy">
-            <!-- Watermark -->
-            <?php if (!empty($admitcard->background_img)) { ?>
-                <img class="watermark-bg" src="<?php echo base_url("uploads/cbseexam/admitcard/" . $admitcard->background_img); ?>" alt="">
-            <?php } ?>
+    <div class="admit-card-wrapper">
+        <div class="admit-card-box">
+            <!-- Header Table -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 2px;">
+                <tr>
+                    <td width="70" valign="top" align="left">
+                        <img src="<?php echo $school_logo_src; ?>" style="height: 46px; max-width: 70px;">
+                    </td>
+                    <td valign="top" align="center">
+                        <div style="color: #a81c1c; font-size: 15px; font-weight: bold; font-family: Arial, sans-serif; letter-spacing: 0.2px;">
+                            <?php echo $school_name_display; ?>
+                        </div>
+                        <div style="font-size: 9.5px; font-weight: bold; color: #000; margin-top: 2px;">
+                            <?php echo $school_address_display; ?>
+                        </div>
+                        <div style="color: #a81c1c; font-size: 12px; font-weight: bold; text-decoration: underline; margin-top: 2px;">
+                            Permission Letter cum Admission Card
+                        </div>
+                    </td>
+                    <td width="70" valign="top"></td>
+                </tr>
+            </table>
 
-            <div class="receipt-inner">
-                <!-- Header Top Row -->
-                <table width="100%" style="font-size: 11px; color: #6b7280; margin-bottom: 10px;">
-                    <tr>
-                        <td width="33%" align="left">Reg No: <?php echo $sch_setting->dise_code; ?></td>
-                        <td width="33%" align="center">Affiliation No.: <?php echo $sch_setting->dise_code; ?></td>
-                        <td width="33%" align="right">U Dise Code: <?php echo $sch_setting->dise_code; ?></td>
-                    </tr>
-                </table>
+            <!-- Session Row -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 1px; margin-bottom: 2px;">
+                <tr>
+                    <td style="font-size: 9.5px; font-weight: bold; color: #000;">
+                        Session :- <?php echo $print_session; ?>
+                    </td>
+                </tr>
+            </table>
 
-                <!-- Main Header -->
-                <table width="100%" style="margin-bottom: 15px;">
-                    <tr>
-                        <td width="25%" align="left" valign="middle">
-                            <?php if (!empty($admitcard->left_logo)) { ?>
-                                <img src="<?php echo base_url('uploads/cbseexam/admitcard/' . $admitcard->left_logo); ?>" style="max-height:55px; max-width:100%;">
-                            <?php } elseif (!empty($sch_setting->image)) { ?>
-                                <img src="<?php echo base_url('uploads/school_content/logo/' . $sch_setting->image); ?>" style="max-height:55px; max-width:100%;" alt="School Logo">
-                            <?php } ?>
-                        </td>
-                        <td width="50%" align="center" valign="middle">
-                            <h1 style="font-size: 20px; font-weight: 700; color: <?php echo $theme_color; ?>; margin: 0 0 5px 0;"><?php echo $sch_setting->name; ?></h1>
-                            <div style="font-size: 12px; color: #6b7280; margin: 0 0 5px 0; border-bottom: 1px solid #1f2937; padding-bottom: 8px; display: inline-block; width: 90%;"><?php echo $sch_setting->address; ?></div>
-                            <p style="font-size: 11px; margin: 5px 0 0 0; color: #1f2937;">Email: <?php echo $sch_setting->email; ?> &nbsp; Mobile No: <?php echo $sch_setting->phone; ?> &nbsp; Website: <?php echo $sch_setting->base_url; ?></p>
-                            <div style="font-weight: 700; font-size: 12px; margin-top: 5px; color: #1f2937;">Admit Card - <?php echo $exam->name; ?></div>
-                        </td>
-                        <td width="25%" align="right" valign="middle">
-                            <!-- Empty spacer to ensure perfect centering -->
-                        </td>
-                    </tr>
-                </table>
+            <div style="border-top: 1px solid #888; margin: 0 0 4px 0;"></div>
 
-                <!-- Student Meta Data -->
-                <table class="meta-table">
-                    <tr>
-                        <td class="meta-label">Student Name</td>
-                        <td class="meta-value">: <?php echo $student->firstname . ' ' . $student->lastname; ?></td>
-                        
-                        <td class="meta-label" style="padding-left:15px;">Roll No</td>
-                        <td class="meta-value">: <?php echo $student->roll_no; ?></td>
-                        
-                        <td rowspan="4" class="student-photo-cell">
-                            <?php if (!empty($student->image)) { ?>
-                                <img src="<?php echo base_url($student->image); ?>" class="student-photo">
-                            <?php } else { ?>
-                                <div class="student-photo" style="display:inline-block; line-height:60px; text-align:center; color:#ccc;">Photo</div>
-                            <?php } ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">Class</td>
-                        <td class="meta-value">: <?php echo $student->class . ' (' . $student->section . ')'; ?></td>
-                        
-                        <td class="meta-label" style="padding-left:15px;">Mother's Name</td>
-                        <td class="meta-value">: <?php echo $student->mother_name; ?></td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">DOB</td>
-                        <td class="meta-value">: <?php echo date($this->customlib->getSchoolDateFormat(), strtotime($student->dob)); ?></td>
-                        
-                        <td class="meta-label" style="padding-left:15px;">Adm No</td>
-                        <td class="meta-value">: <?php echo $student->admission_no; ?></td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">Father's Name</td>
-                        <td class="meta-value">: <?php echo $student->father_name; ?></td>
-                        
-                        <td class="meta-label" style="padding-left:15px;">Center</td>
-                        <td class="meta-value">: <?php echo $admitcard->exam_center; ?></td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">Allocated Room</td>
-                        <td class="meta-value">: <?php echo !empty($student->allocated_room) ? $student->allocated_room : 'Not Allocated'; ?></td>
-                        
-                        <td class="meta-label" style="padding-left:15px;">Seat No</td>
-                        <td class="meta-value">: <?php echo !empty($student->allocated_seat) ? $student->allocated_seat : 'Not Allocated'; ?></td>
-                    </tr>
-                </table>
-
-                <!-- Timetable -->
-                <?php if ($show_timetable && !empty($exam_subjects)) { ?>
-                    <table class="receipt-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Subject</th>
-                                <th>Room No</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($exam_subjects as $subject) { 
-                                if (isset($subject_class_map[$subject->timetable_id]) && !empty($subject_class_map[$subject->timetable_id])) {
-                                    if (!in_array($student->class_id, $subject_class_map[$subject->timetable_id])) {
-                                        continue;
-                                    }
-                                }
-                            ?>
-                                <tr>
-                                    <td><?php echo date($this->customlib->getSchoolDateFormat(), strtotime($subject->date)); ?></td>
-                                    <td><?php 
-                                        $end_time = date('H:i:s', strtotime($subject->time_from . ' + ' . $subject->duration . ' minutes'));
-                                        echo $subject->time_from . ' - ' . $end_time; 
-                                    ?></td>
-                                    <td><?php echo $subject->name . ' (' . $subject->code . ')'; ?></td>
-                                    <td><?php echo $subject->room_no; ?></td>
-                                </tr>
-                            <?php } ?>
-                        </tbody>
-                    </table>
-                <?php } ?>
-
-                <!-- Instructions -->
-                <div class="instructions">
-                    <strong>Note:</strong> <?php echo strip_tags($admitcard->content_footer); ?>
-                </div>
-
-                <!-- Signatures -->
-                <table class="signatures">
-                    <tr>
-                        <td style="text-align:left; width:33%;">
-                            <?php if (!empty($exam_incharge_sig['image_url'])) { ?>
-                                <img src="<?php echo $exam_incharge_sig['image_url']; ?>" style="max-height: 25px;"><br>
-                            <?php } else { ?>
-                                <div style="height: 25px;"></div>
-                            <?php } ?>
-                            <?php if (!empty($exam_incharge_sig['staff_name'])) { echo '<strong>'.$exam_incharge_sig['staff_name'].'</strong><br>'; } ?>
-                            Exam Incharge's Sign
-                        </td>
-                        <td style="text-align:center; width:33%;">
-                            <?php if (!empty($class_teacher_sig['image_url'])) { ?>
-                                <img src="<?php echo $class_teacher_sig['image_url']; ?>" style="max-height: 25px;"><br>
-                            <?php } else { ?>
-                                <div style="height: 25px;"></div>
-                            <?php } ?>
-                            <?php if (!empty($class_teacher_sig['staff_name'])) { echo '<strong>'.$class_teacher_sig['staff_name'].'</strong><br>'; } ?>
-                            Class Teacher
-                        </td>
-                        <td style="text-align:right; width:33%;">
-                            <?php if (!empty($principal_sig['image_url'])) { ?>
-                                <img src="<?php echo $principal_sig['image_url']; ?>" style="max-height: 25px;"><br>
-                            <?php } else { ?>
-                                <div style="height: 25px;"></div>
-                            <?php } ?>
-                            <?php if (!empty($principal_sig['staff_name'])) { echo '<strong>'.$principal_sig['staff_name'].'</strong><br>'; } ?>
-                            Principal's Sign
-                        </td>
-                    </tr>
-                </table>
-
+            <!-- Exam Badge -->
+            <div style="text-align: center; margin-bottom: 3px;">
+                <span class="badge-pill"><?php echo !empty($exam->name) ? $exam->name : 'TERM 1'; ?></span>
             </div>
-        </div>
 
+            <!-- Student Meta & Photo Grid -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                    <!-- Left Meta Column -->
+                    <td width="42%" valign="top">
+                        <table class="meta-table">
+                            <tr>
+                                <td class="meta-label" width="45%">Roll No.</td>
+                                <td class="meta-val">: <?php echo $roll_display; ?></td>
+                            </tr>
+                            <tr>
+                                <td class="meta-label">Student's Name</td>
+                                <td class="meta-val" style="font-weight: bold;">: <?php echo strtoupper(trim($student->firstname . ' ' . $student->lastname)); ?></td>
+                            </tr>
+                            <tr>
+                                <td class="meta-label">Father's Name(Mr.)</td>
+                                <td class="meta-val">: <?php echo strtoupper($student->father_name); ?></td>
+                            </tr>
+                            <tr>
+                                <td class="meta-label">Mother's Name(Mrs.)</td>
+                                <td class="meta-val">: <?php echo strtoupper($student->mother_name); ?></td>
+                            </tr>
+                            <tr>
+                                <td class="meta-label">DOB</td>
+                                <td class="meta-val">: <?php echo !empty($student->dob) ? date('d/m/Y', strtotime($student->dob)) : ''; ?></td>
+                            </tr>
+                        </table>
+                    </td>
+
+                    <!-- Right Meta Column -->
+                    <td width="38%" valign="top">
+                        <table class="meta-table">
+                            <tr>
+                                <td class="meta-label" width="35%">SR No.</td>
+                                <td class="meta-val">: <?php echo $student->admission_no; ?></td>
+                            </tr>
+                            <tr>
+                                <td class="meta-label">Class</td>
+                                <td class="meta-val">: <?php echo $class_display; ?></td>
+                            </tr>
+                            <tr>
+                                <td class="meta-label">Faculty</td>
+                                <td class="meta-val">: <?php echo $faculty_display; ?></td>
+                            </tr>
+                            <tr>
+                                <td class="meta-label">Section</td>
+                                <td class="meta-val">: <?php echo $student->section; ?></td>
+                            </tr>
+                        </table>
+                    </td>
+
+                    <!-- Photo Column -->
+                    <td width="20%" valign="top" align="right">
+                        <div class="photo-box">
+                            <img src="<?php echo $student_photo_src; ?>" style="width: 72px; height: 84px; object-fit: cover;">
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Exam Schedule Badge -->
+            <div style="text-align: center; margin: 3px 0 2px 0;">
+                <span class="badge-pill" style="font-size: 9px; padding: 1px 18px;">Exam Schedule</span>
+            </div>
+
+            <!-- Exam Schedule Table (2 columns split) -->
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th width="26%">Subjects</th>
+                        <th width="24%">Exam Date & Time</th>
+                        <th width="26%">Subjects</th>
+                        <th width="24%">Exam Date & Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($student_subjects)) { 
+                        for ($i = 0; $i < $half; $i++) { 
+                            $left_sub = isset($student_subjects[$i]) ? $student_subjects[$i] : null;
+                            $right_sub = isset($student_subjects[$i + $half]) ? $student_subjects[$i + $half] : null;
+                    ?>
+                        <tr>
+                            <td><?php echo $left_sub ? strtoupper($left_sub->name) : ''; ?></td>
+                            <td><?php 
+                                if ($left_sub) {
+                                    $left_dt = date('d/m/Y', strtotime($left_sub->date));
+                                    if (!empty($left_sub->time_from)) {
+                                        $left_dt .= ' ' . $left_sub->time_from;
+                                    }
+                                    echo $left_dt;
+                                }
+                            ?></td>
+                            <td><?php echo $right_sub ? strtoupper($right_sub->name) : ''; ?></td>
+                            <td><?php 
+                                if ($right_sub) {
+                                    $right_dt = date('d/m/Y', strtotime($right_sub->date));
+                                    if (!empty($right_sub->time_from)) {
+                                        $right_dt .= ' ' . $right_sub->time_from;
+                                    }
+                                    echo $right_dt;
+                                }
+                            ?></td>
+                        </tr>
+                    <?php 
+                        } 
+                    } else { ?>
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    <?php } ?>
+                </tbody>
+            </table>
+
+            <!-- Note & Signatures -->
+            <div style="font-size: 8.5px; margin-top: 3px;">
+                <strong>Note :-</strong> <?php echo !empty($admitcard->content_footer) ? strip_tags($admitcard->content_footer) : ''; ?>
+            </div>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 3px;">
+                <tr>
+                    <td width="50%" valign="bottom" align="left">
+                        <img src="<?php echo $principal_sign_src; ?>" style="height: 22px; max-width: 90px; display: block;">
+                        <div style="font-size: 8px; font-style: italic; color: #000; margin-top: 1px;">Principal Signature</div>
+                    </td>
+                    <td width="50%" valign="bottom" align="right">
+                        <div style="font-size: 8px; font-style: italic; color: #000;">Exam Controller (Signature)</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
     </div>
+
 <?php 
-    if ($print_count % 2 == 0 && $print_count < $total_students) {
+    if ($print_count % $cards_per_page == 0 && $print_count < $total_students) {
         echo '<pagebreak />';
+        echo '<!-- MPDF_PAGE_CHUNK -->';
     } else if ($print_count < $total_students) {
-        echo '<div style="border-bottom: 1px dashed #999; margin: 1vh 0;"></div>';
+?>
+        <div class="cut-line-wrapper">
+            <div class="cut-line-text">&#9986; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Cut From Here - - - - - - - - - - - - - - - - - - - - - - - - - - - - - &#9986;</div>
+        </div>
+<?php
     }
 } 
 ?>

@@ -171,6 +171,7 @@
 		<div class="form-horizontal pr-0-5 pr-rtl-0">
 
 			<?php
+			$currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 			$has_common_fee = false;
 			$has_transport_fee = false;
 			if (isset($feearray) && !empty($feearray)) {
