@@ -299,9 +299,22 @@
         <h1>
             <i class="fa fa-bus text-warning"></i> Bus Attendance
         </h1>
-        <a href="<?php echo site_url('admin/transportattendance'); ?>" class="btn-desktop-return">
-            <i class="fa fa-desktop"></i> Full View
-        </a>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <button type="button" id="mobile_sound_toggle" class="btn btn-default" style="background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); color:#fff; padding:5px 9px; border-radius:6px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px;" title="Toggle Sound & Vibration Feedback">
+                <i class="fa fa-volume-up text-success" id="mob_sound_icon"></i> <span id="mob_sound_text">Sound</span>
+            </button>
+            <?php 
+                $desktop_query_params = array();
+                if (!empty($vehicle_id)) $desktop_query_params['vehicle_id'] = $vehicle_id;
+                if (!empty($date)) $desktop_query_params['date'] = date('Y-m-d', strtotime($date));
+                if (!empty($attendance_type)) $desktop_query_params['attendance_type'] = $attendance_type;
+                if (!empty($route_id)) $desktop_query_params['route_id'] = $route_id;
+                $desktop_url = site_url('admin/transportattendance') . (!empty($desktop_query_params) ? '?' . http_build_query($desktop_query_params) : '');
+            ?>
+            <a href="<?php echo $desktop_url; ?>" class="btn-desktop-return">
+                <i class="fa fa-desktop"></i> Full View
+            </a>
+        </div>
     </header>
 
     <!-- Filter Control Card -->
@@ -485,6 +498,87 @@
     <script src="<?php echo base_url(); ?>backend/toast-alert/toastr.js"></script>
 
     <script type="text/javascript">
+        // ==========================================
+        // Web Audio & Haptic Feedback Engine
+        // ==========================================
+        var audioCtx = null;
+        var soundEnabled = (localStorage.getItem('transport_attendance_sound') !== 'false');
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    audioCtx = new AudioContextClass();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playAttendanceFeedback(type) {
+            if (!soundEnabled) return;
+
+            try {
+                // Haptic Vibration for Mobile Devices
+                if (window.navigator && window.navigator.vibrate) {
+                    if (type === 'Present') window.navigator.vibrate(30);
+                    else if (type === 'Absent') window.navigator.vibrate([40, 30, 40]);
+                    else window.navigator.vibrate(20);
+                }
+
+                initAudioContext();
+                if (!audioCtx) return;
+
+                var now = audioCtx.currentTime;
+                var osc = audioCtx.createOscillator();
+                var gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'Present') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1046.5, now);
+                    osc.frequency.exponentialRampToValueAtTime(1318.5, now + 0.08);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+                    osc.start(now);
+                    osc.stop(now + 0.14);
+                } else if (type === 'Absent') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(329.63, now);
+                    osc.frequency.exponentialRampToValueAtTime(261.63, now + 0.12);
+                    gain.gain.setValueAtTime(0.14, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                    osc.start(now);
+                    osc.stop(now + 0.18);
+                } else {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(659.25, now);
+                    gain.gain.setValueAtTime(0.09, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                }
+            } catch (err) {}
+        }
+
+        function updateMobileSoundUI() {
+            var $icon = $('#mob_sound_icon');
+            var $text = $('#mob_sound_text');
+            var $btn = $('#mobile_sound_toggle');
+
+            if (soundEnabled) {
+                $icon.removeClass('fa-volume-off text-muted').addClass('fa-volume-up text-success');
+                $text.text('Sound: ON');
+                $btn.css({ 'background': 'rgba(22, 163, 74, 0.3)', 'border-color': '#86efac' });
+            } else {
+                $icon.removeClass('fa-volume-up text-success').addClass('fa-volume-off text-muted');
+                $text.text('Sound: OFF');
+                $btn.css({ 'background': 'rgba(255,255,255,0.12)', 'border-color': 'rgba(255,255,255,0.25)' });
+            }
+        }
+
         function setShift(shift) {
             $('#hidden_attendance_type').val(shift);
             $('#mobile_filter_form').submit();
@@ -509,6 +603,18 @@
 
         $(document).ready(function() {
             updateMobileCounters();
+            updateMobileSoundUI();
+
+            // Mobile Sound Toggle Click
+            $('#mobile_sound_toggle').on('click', function(e) {
+                e.preventDefault();
+                soundEnabled = !soundEnabled;
+                localStorage.setItem('transport_attendance_sound', soundEnabled ? 'true' : 'false');
+                updateMobileSoundUI();
+                if (soundEnabled) {
+                    playAttendanceFeedback('Present');
+                }
+            });
 
             // Handle Large Button Tap
             $(document).on('click', '.btn-mark', function(e) {
@@ -526,6 +632,7 @@
                 else if (val === 'Hostel') $(this).addClass('active-hostel');
                 else if (val === 'Gatepass') $(this).addClass('active-gatepass');
 
+                playAttendanceFeedback(val);
                 updateMobileCounters();
             });
 

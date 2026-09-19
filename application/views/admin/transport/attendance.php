@@ -423,7 +423,15 @@
             <i class="fa fa-bus text-primary" style="margin-right:6px;"></i> <?php echo $this->lang->line('transport'); ?> Attendance
         </h1>
         <div>
-            <a href="<?php echo site_url('admin/transportattendance/mobile'); ?>" class="btn btn-sm btn-default" style="font-weight:600; border-radius:6px; border-color:#cbd5e1; box-shadow:0 1px 2px rgba(0,0,0,0.05); color:#334155;">
+            <?php 
+                $mobile_query_params = array();
+                if (!empty($vehicle_id)) $mobile_query_params['vehicle_id'] = $vehicle_id;
+                if (!empty($date)) $mobile_query_params['date'] = date('Y-m-d', strtotime($date));
+                if (!empty($attendance_type)) $mobile_query_params['attendance_type'] = $attendance_type;
+                if (!empty($route_id)) $mobile_query_params['route_id'] = $route_id;
+                $mobile_url = site_url('admin/transportattendance/mobile') . (!empty($mobile_query_params) ? '?' . http_build_query($mobile_query_params) : '');
+            ?>
+            <a href="<?php echo $mobile_url; ?>" class="btn btn-sm btn-default" style="font-weight:600; border-radius:6px; border-color:#cbd5e1; box-shadow:0 1px 2px rgba(0,0,0,0.05); color:#334155;">
                 <i class="fa fa-mobile-phone fa-lg text-primary"></i> Mobile Quick Mode
             </a>
         </div>
@@ -600,19 +608,26 @@
                                             <span class="filter-chip" data-filter="Other">Gatepass/Hostel <span class="badge-count chip-count-other">0</span></span>
                                         </div>
 
-                                        <!-- Right: Quick Sort Dropdown -->
-                                        <div style="display:flex; align-items:center; gap:6px;">
-                                            <span style="font-size:11px; font-weight:700; color:#64748b;"><i class="fa fa-sort"></i> Sort:</span>
-                                            <select id="quick_sort_select" class="form-control input-sm" style="width:170px; font-size:11px; height:30px; padding:3px 8px; border-radius:5px; border-color:#cbd5e1; font-weight:600;">
-                                                <option value="name_asc" selected>Student Name (A &rarr; Z)</option>
-                                                <option value="name_desc">Student Name (Z &rarr; A)</option>
-                                                <option value="adm_asc">Adm No (Low - High)</option>
-                                                <option value="adm_desc">Adm No (High - Low)</option>
-                                                <option value="stop_asc">Bus Stop (A &rarr; Z)</option>
-                                                <option value="class_asc">Class (A &rarr; Z)</option>
-                                                <option value="status_present">Status (Present first)</option>
-                                                <option value="status_absent">Status (Absent first)</option>
-                                            </select>
+                                        <!-- Right: Quick Sort & Sound Toggle -->
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <!-- Audio & Haptic Feedback Toggle -->
+                                            <button type="button" id="btn_sound_toggle" class="btn btn-default input-sm sound-feedback-toggle" style="height:30px; padding:3px 9px; font-size:11px; font-weight:700; border-radius:5px; border-color:#cbd5e1; display:inline-flex; align-items:center; gap:4px; color:#475569; background:#ffffff;" title="Toggle Sound & Haptic Feedback on Tapping Status">
+                                                <i class="fa fa-volume-up text-success" id="sound_icon" style="font-size:13px;"></i> <span id="sound_toggle_text">Sound: ON</span>
+                                            </button>
+
+                                            <div style="display:flex; align-items:center; gap:4px;">
+                                                <span style="font-size:11px; font-weight:700; color:#64748b;"><i class="fa fa-sort"></i> Sort:</span>
+                                                <select id="quick_sort_select" class="form-control input-sm" style="width:160px; font-size:11px; height:30px; padding:3px 8px; border-radius:5px; border-color:#cbd5e1; font-weight:600;">
+                                                    <option value="name_asc" selected>Student Name (A &rarr; Z)</option>
+                                                    <option value="name_desc">Student Name (Z &rarr; A)</option>
+                                                    <option value="adm_asc">Adm No (Low - High)</option>
+                                                    <option value="adm_desc">Adm No (High - Low)</option>
+                                                    <option value="stop_asc">Bus Stop (A &rarr; Z)</option>
+                                                    <option value="class_asc">Class (A &rarr; Z)</option>
+                                                    <option value="status_present">Status (Present first)</option>
+                                                    <option value="status_absent">Status (Absent first)</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -910,6 +925,107 @@ var currentSortKey = 'name';
 var currentSortOrder = 'asc';
 var currentFilter = 'all';
 
+// ==========================================
+// Web Audio & Haptic Feedback Engine
+// ==========================================
+var audioCtx = null;
+var soundEnabled = (localStorage.getItem('transport_attendance_sound') !== 'false');
+
+function initAudioContext() {
+    if (!audioCtx) {
+        var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+        }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}
+
+function playAttendanceFeedback(type) {
+    if (!soundEnabled) return;
+
+    try {
+        // 1. Tactile Haptic Vibration on Mobile / Tablets
+        if (window.navigator && window.navigator.vibrate) {
+            if (type === 'Present') {
+                window.navigator.vibrate(30);
+            } else if (type === 'Absent') {
+                window.navigator.vibrate([40, 30, 40]);
+            } else {
+                window.navigator.vibrate(20);
+            }
+        }
+
+        // 2. Synthesized Audio Chimes (Web Audio API)
+        initAudioContext();
+        if (!audioCtx) return;
+
+        var now = audioCtx.currentTime;
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'Present') {
+            // High crisp positive chime (C6 -> E6 harmonic)
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1046.5, now); // C6
+            osc.frequency.exponentialRampToValueAtTime(1318.5, now + 0.08); // E6
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+            osc.start(now);
+            osc.stop(now + 0.14);
+        } else if (type === 'Absent') {
+            // Low soft warning tone (E4 -> C4)
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(329.63, now); // E4
+            osc.frequency.exponentialRampToValueAtTime(261.63, now + 0.12); // C4
+            gain.gain.setValueAtTime(0.14, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+            osc.start(now);
+            osc.stop(now + 0.18);
+        } else if (type === 'bulk') {
+            // Rapid double chime for Mark All action
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, now);
+            osc.frequency.exponentialRampToValueAtTime(1760, now + 0.15);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        } else {
+            // Soft subtle pop for Switched Bus / Gatepass / Hostel
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(659.25, now); // E5
+            gain.gain.setValueAtTime(0.09, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        }
+    } catch (err) {
+        console.warn('Audio feedback error:', err);
+    }
+}
+
+function updateSoundToggleUI() {
+    var $btn = $('#btn_sound_toggle');
+    var $icon = $('#sound_icon');
+    var $text = $('#sound_toggle_text');
+
+    if (soundEnabled) {
+        $icon.removeClass('fa-volume-off text-muted').addClass('fa-volume-up text-success');
+        $text.text('Sound: ON');
+        $btn.css({ 'background': '#ffffff', 'color': '#15803d', 'border-color': '#86efac' });
+    } else {
+        $icon.removeClass('fa-volume-up text-success').addClass('fa-volume-off text-muted');
+        $text.text('Sound: OFF');
+        $btn.css({ 'background': '#f8fafc', 'color': '#94a3b8', 'border-color': '#cbd5e1' });
+    }
+}
+
 function updateCounters() {
     var total = $('.student-row').length;
     var present = 0;
@@ -961,6 +1077,7 @@ function markAllStatus(status) {
             $(this).find('[data-value="Absent"]').addClass('btn-absent-active');
         }
     });
+    playAttendanceFeedback('bulk');
     updateCounters();
     applyFilterAndSearch();
 }
@@ -1108,6 +1225,18 @@ function removeCustomRider(student_session_id, btn) {
 $(document).ready(function() {
     $('.select2').select2();
     updateCounters();
+    updateSoundToggleUI();
+
+    // Sound Toggle Button Click
+    $('#btn_sound_toggle').on('click', function(e) {
+        e.preventDefault();
+        soundEnabled = !soundEnabled;
+        localStorage.setItem('transport_attendance_sound', soundEnabled ? 'true' : 'false');
+        updateSoundToggleUI();
+        if (soundEnabled) {
+            playAttendanceFeedback('Present');
+        }
+    });
 
     // Column Header Sorting
     $('.sortable-th').on('click', function() {
@@ -1153,7 +1282,7 @@ $(document).ready(function() {
         $(this).hide();
     });
 
-    // Status Toggle Button Click
+    // Status Toggle Button Click with Audio & Haptic Feedback
     $(document).on('click', '.btn-touch-status', function(e) {
         e.preventDefault();
         var val = $(this).data('value');
@@ -1172,6 +1301,9 @@ $(document).ready(function() {
         else if (val === 'Hostel') $(this).addClass('btn-hostel-active');
         else if (val === 'Gatepass') $(this).addClass('btn-gatepass-active');
         
+        // Play Audio & Haptic Feedback
+        playAttendanceFeedback(val);
+
         updateCounters();
         if (currentFilter !== 'all') {
             applyFilterAndSearch();
