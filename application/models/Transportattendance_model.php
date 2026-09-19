@@ -14,7 +14,7 @@ class Transportattendance_model extends MY_Model
 
     public function search_student_for_transport($search)
     {
-        $this->db->select('students.id, student_session.id as student_session_id, students.firstname, students.lastname, students.admission_no, classes.class, sections.section, classes.id as class_id');
+        $this->db->select('students.id, student_session.id as student_session_id, students.firstname, students.lastname, students.image, students.admission_no, classes.class, sections.section, classes.id as class_id');
         $this->db->from('students');
         $this->db->join('student_session', 'student_session.student_id = students.id');
         $this->db->join('classes', 'classes.id = student_session.class_id');
@@ -88,6 +88,24 @@ class Transportattendance_model extends MY_Model
         $this->db->where('transport_attendance.attendance_type', $attendance_type);
         $this->db->where('transport_attendance.status', 'Switched Bus');
         return $this->db->get()->result_array();
+    }
+
+    public function get_switched_out_students_map($current_vehicle_id, $date, $attendance_type)
+    {
+        $this->db->select('ta.student_session_id, ta.vehicle_id as new_vehicle_id, ta.remark, ta.date, v.vehicle_no as new_vehicle_no, v.driver_name, v.driver_contact');
+        $this->db->from('transport_attendance ta');
+        $this->db->join('vehicles v', 'v.id = ta.vehicle_id', 'left');
+        $this->db->where('ta.date', $date);
+        $this->db->where('ta.attendance_type', $attendance_type);
+        $this->db->where('ta.status', 'Switched Bus');
+        $this->db->where('ta.vehicle_id !=', $current_vehicle_id);
+        $result = $this->db->get()->result_array();
+
+        $switched_out = array();
+        foreach ($result as $row) {
+            $switched_out[$row['student_session_id']] = $row;
+        }
+        return $switched_out;
     }
 
     public function save_attendance($data)

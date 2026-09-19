@@ -180,9 +180,10 @@
         .student-avatar {
             width: 44px;
             height: 44px;
-            border-radius: 50%;
+            border-radius: 50% !important;
             object-fit: cover;
             border: 2px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             flex-shrink: 0;
         }
         .student-name {
@@ -247,6 +248,12 @@
             color: #ffffff !important;
             border-color: #d97706 !important;
             box-shadow: 0 2px 6px rgba(217, 119, 6, 0.4) !important;
+        }
+        .btn-mark.active-switched {
+            background: #2563eb !important;
+            color: #ffffff !important;
+            border-color: #2563eb !important;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4) !important;
         }
 
         /* Sticky Bottom Save Tray */
@@ -416,13 +423,25 @@
                         ?>
                             <div class="student-item student-card-row" data-search="<?php echo strtolower($student['firstname'].' '.$student['lastname'].' '.$student['admission_no'].' '.$stop_name); ?>">
                                 <div class="student-meta">
-                                    <img src="<?php echo $img_src; ?>" class="student-avatar" onerror="this.src='<?php echo base_url('uploads/student_images/no_image.png'); ?>';">
+                                    <div style="width:42px; height:42px; min-width:42px; max-width:42px; min-height:42px; max-height:42px; border-radius:50%; overflow:hidden; border:2px solid #e2e8f0; box-shadow:0 1px 3px rgba(0,0,0,0.08); flex-shrink:0; display:flex; align-items:center; justify-content:center; background:#f8fafc;">
+                                        <img src="<?php echo $img_src; ?>" style="width:100% !important; height:100% !important; max-width:100% !important; max-height:100% !important; object-fit:cover !important; display:block;" onerror="this.src='<?php echo base_url('uploads/student_images/no_image.png'); ?>';">
+                                    </div>
                                     <div style="flex:1;">
                                         <div class="student-name"><?php echo $student['firstname'] . ' ' . $student['lastname']; ?></div>
                                         <div class="student-sub">
                                             <strong>Adm: <?php echo $student['admission_no']; ?></strong> &bull; Class: <?php echo $student['class'].' ('.$student['section'].')'; ?>
                                             <?php if (!empty($student['has_gatepass'])) { ?>
                                                 <span class="label label-warning" style="font-size:9px;"><i class="fa fa-ticket"></i> Gatepass</span>
+                                            <?php } ?>
+                                            <?php if (!empty($student['switched_out_info'])) { ?>
+                                                <div style="margin-top:2px;">
+                                                    <span class="label" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; font-size:9px; font-weight:700;">
+                                                        <i class="fa fa-exchange text-warning"></i> Switched to Bus #<?php echo $student['switched_out_info']['new_vehicle_no']; ?>
+                                                    </span>
+                                                </div>
+                                            <?php } ?>
+                                            <?php if (isset($student['status']) && $student['status'] == 'Switched Bus') { ?>
+                                                <span class="label label-info" style="font-size:9px; font-weight:700;"><i class="fa fa-user-plus"></i> Custom Rider</span>
                                             <?php } ?>
                                         </div>
                                     </div>
@@ -438,11 +457,11 @@
                                     <button type="button" class="btn-mark <?php echo ($st_status == 'Absent') ? 'active-absent' : ''; ?>" data-val="Absent">
                                         <i class="fa fa-times"></i> Absent
                                     </button>
+                                    <button type="button" class="btn-mark <?php echo ($st_status == 'Switched Bus') ? 'active-switched' : ''; ?>" data-val="Switched Bus">
+                                        <i class="fa fa-exchange"></i> Switched
+                                    </button>
                                     <button type="button" class="btn-mark <?php echo ($st_status == 'Hostel') ? 'active-hostel' : ''; ?>" data-val="Hostel">
                                         <i class="fa fa-building"></i> Hostel
-                                    </button>
-                                    <button type="button" class="btn-mark <?php echo ($st_status == 'Gatepass') ? 'active-gatepass' : ''; ?>" data-val="Gatepass">
-                                        <i class="fa fa-ticket"></i> Gatepass
                                     </button>
                                 </div>
                             </div>
@@ -477,7 +496,7 @@
 
             $('.mobile-status-val').each(function() {
                 var v = $(this).val();
-                if (v === 'Present' || v === 'Switched Bus') present++;
+                if (v === 'Present') present++;
                 else if (v === 'Absent') absent++;
                 else other++;
             });
@@ -499,10 +518,11 @@
                 var sessionId = row.data('session-id');
 
                 $('#mobile_status_' + sessionId).val(val);
-                row.find('.btn-mark').removeClass('active-present active-absent active-hostel active-gatepass');
+                row.find('.btn-mark').removeClass('active-present active-absent active-switched active-hostel active-gatepass');
 
                 if (val === 'Present') $(this).addClass('active-present');
                 else if (val === 'Absent') $(this).addClass('active-absent');
+                else if (val === 'Switched Bus') $(this).addClass('active-switched');
                 else if (val === 'Hostel') $(this).addClass('active-hostel');
                 else if (val === 'Gatepass') $(this).addClass('active-gatepass');
 

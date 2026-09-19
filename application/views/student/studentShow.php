@@ -3,13 +3,71 @@ $status          = 'documents';
 $admin_session   = $this->session->userdata('admin');
 $currency_symbol = $admin_session['currency_symbol'];
 $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_session['theme']['theme_color'] : '#4f46e5';
-// Generate a slightly darker/lighter version for gradients if needed, or just use the primary theme color.
-// For simplicity, we use $theme_color for primary accents and a fallback blue for secondary gradient stop.
+
+// Pre-compute Financial KPIs
+$kpi_total_fees = 0;
+$kpi_paid_fees = 0;
+$kpi_discount_fees = 0;
+$kpi_fine_fees = 0;
+$kpi_unpaid_invoices_count = 0;
+
+if (!empty($student_due_fee)) {
+    foreach ($student_due_fee as $f_grp) {
+        if (!empty($f_grp->fees)) {
+            foreach ($f_grp->fees as $f_item) {
+                $item_paid = 0;
+                $item_discount = 0;
+                $item_fine = 0;
+                if (!empty($f_item->amount_detail)) {
+                    $deposits = json_decode($f_item->amount_detail);
+                    if (!empty($deposits)) {
+                        foreach ($deposits as $dep) {
+                            $item_paid += (float)$dep->amount;
+                            $item_discount += (float)$dep->amount_discount;
+                            $item_fine += (float)$dep->amount_fine;
+                        }
+                    }
+                }
+                $kpi_total_fees += (float)$f_item->amount;
+                $kpi_paid_fees += $item_paid;
+                $kpi_discount_fees += $item_discount;
+                $kpi_fine_fees += $item_fine;
+                $item_bal = (float)$f_item->amount - ($item_paid + $item_discount);
+                if ($item_bal > 0) {
+                    $kpi_unpaid_invoices_count++;
+                }
+            }
+        }
+    }
+}
+$kpi_balance_fees = max(0, $kpi_total_fees - ($kpi_paid_fees + $kpi_discount_fees));
+
+// Pre-compute Attendance KPIs
+$att_present = (!empty($countAttendance[1])) ? (int)$countAttendance[1] : 0;
+$att_late    = (!empty($countAttendance[3])) ? (int)$countAttendance[3] : 0;
+$att_absent  = (!empty($countAttendance[4])) ? (int)$countAttendance[4] : 0;
+$att_halfday = (!empty($countAttendance[6])) ? (int)$countAttendance[6] : 0;
+$att_holiday = (!empty($countAttendance[5])) ? (int)$countAttendance[5] : 0;
+$att_working_days = $att_present + $att_late + $att_absent + $att_halfday;
+$att_effective_present = $att_present + $att_late + ($att_halfday * 0.5);
+$att_percentage = ($att_working_days > 0) ? round(($att_effective_present / $att_working_days) * 100, 1) : 0;
+
+// Counts for Tab Badges
+$docs_count = !empty($student_doc) ? count($student_doc) : 0;
+$timeline_count = !empty($timeline_list) ? count($timeline_list) : 0;
+$behaviour_count = !empty($assignstudent) ? count($assignstudent) : 0;
+$absentee_count = !empty($absentee_followups) ? count($absentee_followups) : 0;
+$ptm_count = !empty($ptm_history) ? count($ptm_history) : 0;
+
+$CI =& get_instance();
+$CI->load->model('studentcall_model');
+$stu_calls = $CI->studentcall_model->get_calls_by_student($student['id'], $student['student_session_id']);
+$call_logs_count = !empty($stu_calls) ? count($stu_calls) : 0;
 ?>
 
 <style type="text/css">
 /* ============================================================
-   STUDENT PROFILE 3.0 — Modern Clean Dashboard
+   STUDENT PROFILE 3.5 — Modern Clean Dashboard
    ============================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -130,6 +188,77 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
     justify-content: flex-end;
     flex-shrink: 0;
     margin-left: auto;
+}
+
+/* Master Live KPI Summary Cards in Top Banner */
+.sp3-kpi-banner-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px solid #f1f5f9;
+}
+.sp3-kpi-banner-tile {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.15s ease;
+}
+.sp3-kpi-banner-tile:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+.sp3-kpi-icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+}
+.sp3-kpi-content {
+    flex: 1;
+    min-width: 0;
+}
+.sp3-kpi-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+.sp3-kpi-val {
+    font-size: 14.5px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+}
+.sp3-kpi-sub {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+    margin-top: 3px;
+}
+.sp3-kpi-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+.sp3-kpi-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
 }
 
 /* Quick specs row directly inside the banner */
@@ -390,7 +519,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
     line-height: 1.25;
 }
 
-/* ---------- Profile Tab Clean Tables ---------- */
+/* ---------- Profile Tab Clean Tables & Grids ---------- */
 .sp2-profile-table {
     width: 100%;
     margin-bottom: 0;
@@ -420,7 +549,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
     word-break: break-word;
 }
 .sp2-profile-table td a { color: <?php echo $theme_color; ?>; }
-}
+
 .sp2-pill-blue   { background: #e0e7ff; color: <?php echo $theme_color; ?>; }
 .sp2-pill-green  { background: #dcf2e6; color: #3b9b65; }
 .sp2-pill-red    { background: #fff0f3; color: #d8456a; }
@@ -467,85 +596,333 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
 .sp2-sibling-name a:hover { color: <?php echo $theme_color; ?>; }
 .sp2-sibling-meta { font-size: 11px; color: #888; margin-top: 2px; }
 
-/* ---------- Parent/Guardian Cards ---------- */
-.sp2-parent-list {
+/* ---------- Modern Section Card ---------- */
+.sp3-section-card {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    padding: 20px 22px;
+    margin-bottom: 20px;
+    transition: all 0.2s ease;
+}
+.sp3-section-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+.sp3-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.sp3-section-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sp3-section-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #e0f2fe;
+    color: #0284c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+.sp3-section-icon-teal { background: #ccfbf1; color: #0d9488; }
+.sp3-section-icon-amber { background: #fef3c7; color: #d97706; }
+.sp3-section-icon-purple { background: #f3e8ff; color: #9333ea; }
+.sp3-section-icon-green { background: #dcfce7; color: #16a34a; }
+.sp3-section-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin: 0;
+}
+
+/* Modern Data Grid */
+.sp3-data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+}
+.sp3-data-tile {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: all 0.15s ease;
+    min-height: 58px;
+}
+.sp3-data-tile:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+}
+.sp3-data-tile-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.sp3-data-tile-label i {
+    font-size: 11px;
+    color: #94a3b8;
+}
+.sp3-data-tile-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    word-break: break-word;
+    line-height: 1.35;
+}
+
+/* Parent Modern Cards */
+.sp3-parent-list {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
-.sp2-parent-item {
-    display: flex;
-    gap: 14px;
-    align-items: center;
-    padding: 12px 14px;
-    border: 1px solid #f1f5f9;
+.sp3-parent-card {
     background: #f8fafc;
-    border-radius: 10px;
-    transition: all 0.15s ease;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    transition: all 0.2s ease;
 }
-.sp2-parent-item:hover {
+.sp3-parent-card:hover {
     background: #ffffff;
     border-color: #cbd5e1;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
 }
-.sp2-parent-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 10px;
+.sp3-parent-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
     object-fit: cover;
-    border: 1px solid #e2e8f0;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
     background: #ffffff;
     flex-shrink: 0;
 }
-.sp2-parent-details {
+.sp3-parent-body {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    min-width: 0;
 }
-.sp2-parent-title {
-    font-size: 11px;
+.sp3-parent-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.sp3-parent-name {
+    font-size: 14.5px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+}
+.sp3-parent-role-badge {
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10.5px;
     font-weight: 700;
-    color: #114B5F;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
-.sp2-parent-meta {
+.badge-father { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.badge-mother { background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; }
+.badge-guardian { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+.sp3-parent-meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 12px;
+    color: #475569;
+    margin-bottom: 8px;
+}
+.sp3-parent-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+}
+.sp3-parent-meta-item i {
+    color: #64748b;
+}
+
+.sp3-parent-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+}
+.sp3-chip-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-decoration: none !important;
+    transition: all 0.15s ease;
+}
+.sp3-chip-call {
+    background: #ffffff;
+    color: #1e293b;
+    border: 1px solid #cbd5e1;
+}
+.sp3-chip-call:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #94a3b8;
+}
+.sp3-chip-wa {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+.sp3-chip-wa:hover {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* Address Modern Cards */
+.sp3-address-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+    transition: all 0.15s ease;
+}
+.sp3-address-card:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+}
+.sp3-address-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #f0fdf4;
+    color: #16a34a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.sp3-address-icon-alt {
+    background: #eff6ff;
+    color: #2563eb;
+}
+.sp3-address-content {
+    flex: 1;
+}
+.sp3-address-type {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+.sp3-address-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.4;
+}
+
+/* Facilities Modern Cards (Transport & Hostel) */
+.sp3-facility-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    transition: all 0.15s ease;
+}
+.sp3-facility-item:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+}
+.sp3-facility-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.sp3-facility-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 8px;
 }
-.sp2-parent-row {
+.sp3-facility-cell {
     display: flex;
     flex-direction: column;
 }
-.sp2-parent-label {
-    color: #64748b;
-    font-weight: 600;
+.sp3-facility-cell-label {
     font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.4px;
     margin-bottom: 2px;
 }
-.sp2-parent-val {
-    color: #0f172a;
-    font-weight: 700;
+.sp3-facility-cell-val {
     font-size: 12.5px;
-    word-break: break-word;
+    font-weight: 700;
+    color: #0f172a;
 }
 
-/* ---------- Enhanced Tab Navigation (Single-Line Scrollable Bar) ---------- */
+/* ---------- Enhanced Sticky Tab Navigation (Single-Line Scrollable Bar) ---------- */
 .sp2-tabs-wrapper {
     background: #ffffff;
     border-radius: 12px;
     padding: 6px 8px;
     margin-bottom: 18px;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 transparent;
+    position: sticky;
+    top: 0;
+    z-index: 99;
 }
 .sp2-tabs-wrapper::-webkit-scrollbar {
     height: 4px;
@@ -576,7 +953,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
 .sp2-tabs-nav > li > a {
     border: 1px solid transparent !important;
     border-radius: 8px !important;
-    padding: 8px 14px !important;
+    padding: 8px 13px !important;
     font-size: 12.5px !important;
     font-weight: 600 !important;
     color: #475569 !important;
@@ -586,7 +963,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 7px !important;
+    gap: 6px !important;
     text-decoration: none !important;
     text-align: center !important;
     white-space: nowrap !important;
@@ -612,6 +989,44 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
     color: #ffffff !important;
     border-color: #114B5F !important;
     box-shadow: 0 2px 6px rgba(17, 75, 95, 0.25) !important;
+}
+.sp2-tabs-nav > li.active > a i {
+    color: #ffffff !important;
+}
+
+/* Dynamic Tab Count Badges */
+.sp3-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    background: #e2e8f0;
+    color: #475569;
+    line-height: 1.2;
+    margin-left: 2px;
+}
+.sp2-tabs-nav > li.active > a .sp3-tab-badge {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+}
+.sp3-badge-danger { background: #fee2e2; color: #dc2626; }
+.sp3-badge-success { background: #dcfce7; color: #16a34a; }
+.sp3-badge-amber { background: #fef3c7; color: #d97706; }
+.sp3-badge-teal { background: #ccfbf1; color: #0f766e; }
+
+.sp3-btn-wa {
+    background: #10b981 !important;
+    border-color: #10b981 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25) !important;
+}
+.sp3-btn-wa:hover {
+    background: #059669 !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
 }
 .sp2-tabs-nav > li.active > a i {
     color: #ffffff !important;
@@ -1568,6 +1983,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                 <!-- Right Aligned Action CTAs -->
                 <div class="sp3-top-actions">
                     <?php if ($student["is_active"] == "yes") { ?>
+                        <button type="button" class="sp3-btn sp3-btn-wa" onclick="openWhatsAppModal()" data-toggle="tooltip" title="Send WhatsApp Message"><i class="fa fa-whatsapp"></i> WhatsApp</button>
                         <?php if ($this->module_lib->hasActive('fees_collection')) { ?>
                         <a href="<?php echo site_url('studentfee/addfee/' . $student['student_session_id']) ?>" class="sp3-btn sp3-btn-primary" data-toggle="tooltip" title="<?php echo $this->lang->line('collect_fees'); ?>"><i class="fa fa-money"></i> <?php echo $this->lang->line('collect_fees'); ?></a>
                         <?php } ?>
@@ -1580,8 +1996,10 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                         <button class="sp3-btn dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="padding: 8px 12px;" data-toggle="tooltip" title="More Actions">
                             <i class="fa fa-ellipsis-v"></i>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-right sp2-dropdown-menu" style="right: 0; left: auto; padding: 6px 0; min-width: 190px;">
+                        <ul class="dropdown-menu dropdown-menu-right sp2-dropdown-menu" style="right: 0; left: auto; padding: 6px 0; min-width: 210px;">
                             <?php if ($student["is_active"] == "yes") { ?>
+                                <li><a style="cursor:pointer;" onclick="openWhatsAppModal()"><i class="fa fa-whatsapp" style="width: 18px; color: #16a34a;"></i> Send WhatsApp Notice</a></li>
+
                                 <?php if ($this->rbac->hasPrivilege('student', 'can_edit')) { ?>
                                 <li><a href="<?php echo base_url() . 'student/edit/' . $student['id'] ?>"><i class="fa fa-pencil" style="width: 18px; color: #64748b;"></i> <?php echo $this->lang->line('edit'); ?></a></li>
                                 <?php } ?>
@@ -1590,7 +2008,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                 <li><a href="#" class="schedule_modal"><i class="fa fa-key" style="width: 18px; color: #64748b;"></i> <?php echo $this->lang->line('login_details'); ?></a></li>
                                 <?php } ?>
 
-                                <li><a style="cursor:pointer;" class="print_student_details" data-student_id="<?php echo $student['id'] ?>" data-student_name="<?php echo $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?>" data-admission_no="<?php echo $student['admission_no']; ?>" data-action="download" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>" autocomplete="off"><i class="fa fa-print" style="width: 18px; color: #64748b;"></i> <?php echo $this->lang->line('print'); ?></a></li>
+                                <li><a style="cursor:pointer;" class="print_student_details" data-student_id="<?php echo $student['id'] ?>" data-student_name="<?php echo $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?>" data-admission_no="<?php echo $student['admission_no']; ?>" data-action="download" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>" autocomplete="off"><i class="fa fa-print" style="width: 18px; color: #64748b;"></i> Print Bio-Data</a></li>
 
                                 <li role="separator" class="divider" style="margin: 4px 0;"></li>
 
@@ -1603,23 +2021,87 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                 <?php } ?>
                             <?php } else { ?>
                                 <li><a style="cursor:pointer;" onclick="enable('<?php echo $student['id'] ?>')"><i class="fa fa-thumbs-o-up" style="width: 18px; color: #16a34a;"></i> <?php echo $this->lang->line('enable'); ?></a></li>
-                                <li><a style="cursor:pointer;" class="print_student_details" data-student_id="<?php echo $student['id'] ?>" data-student_name="<?php echo $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?>" data-admission_no="<?php echo $student['admission_no']; ?>" data-action="download" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>" autocomplete="off"><i class="fa fa-print" style="width: 18px; color: #64748b;"></i> <?php echo $this->lang->line('print'); ?></a></li>
+                                <li><a style="cursor:pointer;" class="print_student_details" data-student_id="<?php echo $student['id'] ?>" data-student_name="<?php echo $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?>" data-admission_no="<?php echo $student['admission_no']; ?>" data-action="download" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>" autocomplete="off"><i class="fa fa-print" style="width: 18px; color: #64748b;"></i> Print Bio-Data</a></li>
                             <?php } ?>
                         </ul>
                     </div>
                 </div>
             </div>
 
+            <!-- Live KPI Banner Metric Cards -->
+            <div class="sp3-kpi-banner-grid">
+                <!-- KPI 1: Attendance Performance -->
+                <div class="sp3-kpi-banner-tile">
+                    <div class="sp3-kpi-icon-wrap" style="background:#e0f2fe; color:#0369a1;">
+                        <i class="fa fa-calendar-check-o"></i>
+                    </div>
+                    <div class="sp3-kpi-content">
+                        <div class="sp3-kpi-label"><?php echo $this->lang->line('attendance'); ?> Rate</div>
+                        <div class="sp3-kpi-val" style="color: <?php echo ($att_percentage >= 75) ? '#16a34a' : (($att_percentage >= 50) ? '#d97706' : '#e11d48'); ?>;">
+                            <?php echo $att_percentage; ?>%
+                        </div>
+                        <div class="sp3-kpi-progress-bar">
+                            <div class="sp3-kpi-progress-fill" style="width: <?php echo min(100, $att_percentage); ?>%; background: <?php echo ($att_percentage >= 75) ? '#16a34a' : (($att_percentage >= 50) ? '#d97706' : '#e11d48'); ?>;"></div>
+                        </div>
+                        <div class="sp3-kpi-sub"><?php echo $att_present; ?> / <?php echo $att_working_days; ?> Days Present</div>
+                    </div>
+                </div>
+
+                <!-- KPI 2: Fees Balance Due -->
+                <div class="sp3-kpi-banner-tile">
+                    <div class="sp3-kpi-icon-wrap" style="background: <?php echo ($kpi_balance_fees > 0) ? '#fff1f2' : '#ecfdf5'; ?>; color: <?php echo ($kpi_balance_fees > 0) ? '#e11d48' : '#059669'; ?>;">
+                        <i class="fa <?php echo ($kpi_balance_fees > 0) ? 'fa-exclamation-circle' : 'fa-check-circle'; ?>"></i>
+                    </div>
+                    <div class="sp3-kpi-content">
+                        <div class="sp3-kpi-label">Fee Balance Due</div>
+                        <div class="sp3-kpi-val" style="color: <?php echo ($kpi_balance_fees > 0) ? '#e11d48' : '#059669'; ?>;">
+                            <?php echo $currency_symbol . number_format($kpi_balance_fees, 2); ?>
+                        </div>
+                        <div class="sp3-kpi-sub">
+                            <?php if ($kpi_balance_fees > 0) { ?>
+                                <span style="color:#e11d48; font-weight:700;"><?php echo $kpi_unpaid_invoices_count; ?> unpaid fee(s)</span>
+                            <?php } else { ?>
+                                <span style="color:#059669; font-weight:700;"><i class="fa fa-check"></i> All Cleared</span>
+                            <?php } ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 3: Academic / Class Section -->
+                <div class="sp3-kpi-banner-tile">
+                    <div class="sp3-kpi-icon-wrap" style="background:#f5f3ff; color:#7c3aed;">
+                        <i class="fa fa-graduation-cap"></i>
+                    </div>
+                    <div class="sp3-kpi-content">
+                        <div class="sp3-kpi-label">Academic Profile</div>
+                        <div class="sp3-kpi-val" style="font-size: 13.5px; color:#1e1b4b;">
+                            <?php echo $student['class'] . ' &bull; ' . $student['section']; ?>
+                        </div>
+                        <div class="sp3-kpi-sub">Session: <strong><?php echo $session; ?></strong></div>
+                    </div>
+                </div>
+
+                <!-- KPI 4: Behaviour Points / Performance -->
+                <?php
+                if ($this->module_lib->hasModule('behaviour_records') && $this->rbac->hasPrivilege('behaviour_records_assign_incident', 'can_view')) {
+                ?>
+                <div class="sp3-kpi-banner-tile">
+                    <div class="sp3-kpi-icon-wrap" style="background: <?php echo ($student['total_points'] >= 0) ? '#ecfdf5' : '#fff1f2'; ?>; color: <?php echo ($student['total_points'] >= 0) ? '#059669' : '#e11d48'; ?>;">
+                        <i class="fa fa-star-o"></i>
+                    </div>
+                    <div class="sp3-kpi-content">
+                        <div class="sp3-kpi-label"><?php echo $this->lang->line('behaviour_score'); ?></div>
+                        <div class="sp3-kpi-val" style="color: <?php echo ($student['total_points'] >= 0) ? '#059669' : '#e11d48'; ?>;">
+                            <?php echo ($student['total_points'] > 0 ? '+' : '') . $student['total_points']; ?> Pts
+                        </div>
+                        <div class="sp3-kpi-sub"><?php echo $behaviour_count; ?> Incident(s) Recorded</div>
+                    </div>
+                </div>
+                <?php } ?>
+            </div>
+
             <!-- Inline Quick Details Specs Bar -->
             <div class="sp3-quick-specs">
-                <div class="sp3-spec-card">
-                    <div class="sp3-spec-card-label"><?php echo $this->lang->line('class'); ?></div>
-                    <div class="sp3-spec-card-value"><span class="sp2-pill sp2-pill-blue"><?php echo $student['class'] . ' (' . $session . ')'; ?></span></div>
-                </div>
-                <div class="sp3-spec-card">
-                    <div class="sp3-spec-card-label"><?php echo $this->lang->line('section'); ?></div>
-                    <div class="sp3-spec-card-value"><span class="sp2-pill sp2-pill-teal"><?php echo $student['section']; ?></span></div>
-                </div>
                 <div class="sp3-spec-card">
                     <div class="sp3-spec-card-label"><?php echo $this->lang->line('gender'); ?></div>
                     <div class="sp3-spec-card-value">
@@ -1636,20 +2118,6 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                     <div class="sp3-spec-card-value"><?php if($student['rte']){ echo $this->lang->line(strtolower($student['rte'])); } else { echo '-'; } ?></div>
                 </div>
                 <?php } ?>
-                <?php
-                if ($this->module_lib->hasModule('behaviour_records')) {
-                    if ($this->rbac->hasPrivilege('behaviour_records_assign_incident', 'can_view')) {
-                ?>
-                <div class="sp3-spec-card">
-                    <div class="sp3-spec-card-label"><?php echo $this->lang->line('behaviour_score'); ?></div>
-                    <div class="sp3-spec-card-value">
-                        <span class="sp2-pill <?php echo ($student['total_points'] >= 0) ? 'sp2-pill-teal' : 'sp2-pill-amber'; ?>"><?php echo $student['total_points']; ?></span>
-                    </div>
-                </div>
-                <?php
-                    }
-                }
-                ?>
                 <?php if ($sch_setting->student_barcode == 1) { 
                     $barcode_file = "uploads/student_id_card/barcodes/" . $student['id'] . ".png";
                     $qrcode_file = "uploads/student_id_card/qrcode/" . $student['id'] . ".png";
@@ -1694,7 +2162,7 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
         <div class="row">
             <!-- Full Width Content Column with Tab Bar on Top -->
             <div class="col-xs-12">
-                <!-- ===== SP2 TAB NAVIGATION WRAPPER ===== -->
+                <!-- ===== SP2 TAB NAVIGATION WRAPPER WITH DYNAMIC BADGES ===== -->
                 <div class="sp2-tabs-wrapper">
                     <ul class="sp2-tabs-nav nav nav-tabs">
                         <li class="active"><a href="#activity" data-toggle="tab"><i class="fa fa-user"></i> <?php echo $this->lang->line('profile'); ?></a></li>
@@ -1703,7 +2171,16 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                         if ($this->module_lib->hasActive('fees_collection')) {
                             if ($this->rbac->hasPrivilege('collect_fees', 'can_view')) {
                         ?>
-                                <li class=""><a href="#fee" data-toggle="tab" aria-expanded="true"><i class="fa fa-money"></i> <?php echo $this->lang->line('fees'); ?></a></li>
+                                <li class="">
+                                    <a href="#fee" data-toggle="tab" aria-expanded="true">
+                                        <i class="fa fa-money"></i> <?php echo $this->lang->line('fees'); ?>
+                                        <?php if ($kpi_balance_fees > 0) { ?>
+                                            <span class="sp3-tab-badge sp3-badge-danger" title="Unpaid Fees"><?php echo $currency_symbol . number_format($kpi_balance_fees, 0); ?></span>
+                                        <?php } else { ?>
+                                            <span class="sp3-tab-badge sp3-badge-success"><i class="fa fa-check"></i></span>
+                                        <?php } ?>
+                                    </a>
+                                </li>
                         <?php
                             }
                         }
@@ -1726,7 +2203,13 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                         <?php if ($this->module_lib->hasActive('student_attendance')) {
                             if (!$sch_setting->attendence_type) {
                         ?>
-                                <li class=""><a href="#attendance" data-toggle="tab" aria-expanded="true"><i class="fa fa-calendar-check-o"></i> <?php echo $this->lang->line('attendance'); ?></a>
+                                <li class="">
+                                    <a href="#attendance" data-toggle="tab" aria-expanded="true">
+                                        <i class="fa fa-calendar-check-o"></i> <?php echo $this->lang->line('attendance'); ?>
+                                        <span class="sp3-tab-badge <?php echo ($att_percentage >= 75) ? 'sp3-badge-success' : (($att_percentage >= 50) ? 'sp3-badge-warning' : 'sp3-badge-danger'); ?>">
+                                            <?php echo $att_percentage; ?>%
+                                        </span>
+                                    </a>
                                 </li>
                         <?php
                             }
@@ -1734,37 +2217,75 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                         ?>
                         <?php if ($sch_setting->upload_documents) {
                         ?>
-                            <li class=""><a href="#documents" data-toggle="tab" aria-expanded="true"><i class="fa fa-folder-open-o"></i> <?php echo $this->lang->line('documents'); ?></a></li>
+                            <li class="">
+                                <a href="#documents" data-toggle="tab" aria-expanded="true">
+                                    <i class="fa fa-folder-open-o"></i> <?php echo $this->lang->line('documents'); ?>
+                                    <?php if ($docs_count > 0) { ?>
+                                        <span class="sp3-tab-badge sp3-badge-info"><?php echo $docs_count; ?></span>
+                                    <?php } ?>
+                                </a>
+                            </li>
                         <?php
                         } ?>
 
                         <?php if ($this->rbac->hasPrivilege('student_timeline', 'can_view')) { ?>
-
-                            <li class=""><a href="#timelineh" data-toggle="tab" aria-expanded="true"><i class="fa fa-clock-o"></i> <?php echo $this->lang->line('timeline') ?></a></li>
+                            <li class="">
+                                <a href="#timelineh" data-toggle="tab" aria-expanded="true">
+                                    <i class="fa fa-clock-o"></i> <?php echo $this->lang->line('timeline') ?>
+                                    <?php if ($timeline_count > 0) { ?>
+                                        <span class="sp3-tab-badge sp3-badge-neutral"><?php echo $timeline_count; ?></span>
+                                    <?php } ?>
+                                </a>
+                            </li>
                         <?php } ?>
 
                         <!------- Behaviour Report Start-------->
                         <?php
                         if ($this->module_lib->hasModule('behaviour_records')) {
                             if ($this->rbac->hasPrivilege('behaviour_records_assign_incident', 'can_view')) {
-
                         ?>
-                                <li class=""><a href="#incident" data-toggle="tab" aria-expanded="true"><i class="fa fa-smile-o"></i> <?php echo $this->lang->line('student_behaviour'); ?></a></li>
+                                <li class="">
+                                    <a href="#incident" data-toggle="tab" aria-expanded="true">
+                                        <i class="fa fa-smile-o"></i> <?php echo $this->lang->line('student_behaviour'); ?>
+                                        <?php if ($behaviour_count > 0) { ?>
+                                            <span class="sp3-tab-badge <?php echo ($student['total_points'] >= 0) ? 'sp3-badge-teal' : 'sp3-badge-danger'; ?>"><?php echo $student['total_points']; ?> pts</span>
+                                        <?php } ?>
+                                    </a>
+                                </li>
                         <?php
-
                             }
                         }
                         ?>
                         <!------- Behaviour Report End-------->
 
-                        
                         <?php if ($this->rbac->hasPrivilege('student_call_log', 'can_view')) { ?>
-                            <li class=""><a href="#call_log" data-toggle="tab" aria-expanded="true"><i class="fa fa-phone"></i> <?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Call Log'); ?></a></li>
-                            <?php } ?>
-                        <?php if ($this->rbac->hasPrivilege('absentee_followup', 'can_view')) { ?>
-                            <li class=""><a href="#absentee_followup" data-toggle="tab" aria-expanded="true"><i class="fa fa-user-times"></i> <?php echo ($this->lang->line('absentee_followup') ? $this->lang->line('absentee_followup') : 'Absentee Follow Up'); ?></a></li>
+                            <li class="">
+                                <a href="#call_log" data-toggle="tab" aria-expanded="true">
+                                    <i class="fa fa-phone"></i> <?php echo ($this->lang->line('student_call_log') ? $this->lang->line('student_call_log') : 'Call Log'); ?>
+                                    <?php if ($call_logs_count > 0) { ?>
+                                        <span class="sp3-tab-badge sp3-badge-neutral"><?php echo $call_logs_count; ?></span>
+                                    <?php } ?>
+                                </a>
+                            </li>
                         <?php } ?>
-                        <li class=""><a href="#ptm_history_tab" data-toggle="tab" aria-expanded="true"><i class="fa fa-comments-o"></i> PTM History</a></li>
+                        <?php if ($this->rbac->hasPrivilege('absentee_followup', 'can_view')) { ?>
+                            <li class="">
+                                <a href="#absentee_followup" data-toggle="tab" aria-expanded="true">
+                                    <i class="fa fa-user-times"></i> <?php echo ($this->lang->line('absentee_followup') ? $this->lang->line('absentee_followup') : 'Absentee Follow Up'); ?>
+                                    <?php if ($absentee_count > 0) { ?>
+                                        <span class="sp3-tab-badge sp3-badge-warning"><?php echo $absentee_count; ?></span>
+                                    <?php } ?>
+                                </a>
+                            </li>
+                        <?php } ?>
+                        <li class="">
+                            <a href="#ptm_history_tab" data-toggle="tab" aria-expanded="true">
+                                <i class="fa fa-comments-o"></i> PTM History
+                                <?php if ($ptm_count > 0) { ?>
+                                    <span class="sp3-tab-badge sp3-badge-neutral"><?php echo $ptm_count; ?></span>
+                                <?php } ?>
+                            </a>
+                        </li>
                     </ul>
                 </div>
 
@@ -1986,206 +2507,446 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                             </div>
                         </div>                        <div class="tab-pane active" id="activity">
                             <div class="row">
+                                <!-- LEFT COLUMN: Personal, Addresses, Bank & Notes -->
                                 <div class="col-md-6 col-sm-12">
-                                    <!-- Personal Details Card -->
-                                    <div class="sp2-card">
-                                        <div class="sp2-section-title"><i class="fa fa-user"></i> <?php echo $this->lang->line('personal_details'); ?></div>
-                                        <table class="sp2-profile-table">
-                                            <tbody>
-                                                <?php if ($sch_setting->admission_date && !empty($student['admission_date'])) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('admission_date'); ?></td>
-                                                    <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date("Y-m-d", strtotime($student['admission_date'])))); ?></td>
-                                                </tr>
-                                                <?php } ?>
-                                                <?php if (!empty($student['dob']) && $student['dob'] != '0000-00-00') { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('date_of_birth'); ?></td>
-                                                    <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob'])); ?></td>
-                                                </tr>
-                                                <?php } ?>
-                                                <?php if ($sch_setting->category) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('category'); ?></td>
-                                                    <td>
-                                                        <?php
-                                                        $cat_name = '-';
-                                                        foreach ($category_list as $value) {
-                                                            if ($student['category_id'] == $value['id']) {
-                                                                $cat_name = $value['category'];
-                                                            }
+                                    <!-- Personal & Academic Details Card -->
+                                    <div class="sp3-section-card">
+                                        <div class="sp3-section-header">
+                                            <div class="sp3-section-title-wrap">
+                                                <div class="sp3-section-icon"><i class="fa fa-user"></i></div>
+                                                <h3 class="sp3-section-title"><?php echo $this->lang->line('personal_details'); ?></h3>
+                                            </div>
+                                        </div>
+                                        <div class="sp3-data-grid">
+                                            <?php if ($sch_setting->admission_date && !empty($student['admission_date'])) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-calendar-check-o"></i> <?php echo $this->lang->line('admission_date'); ?></div>
+                                                <div class="sp3-data-tile-val"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat(date("Y-m-d", strtotime($student['admission_date'])))); ?></div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if (!empty($student['dob']) && $student['dob'] != '0000-00-00') { 
+                                                $birthDate = new DateTime($student['dob']);
+                                                $today = new DateTime('today');
+                                                $age = $birthDate->diff($today)->y;
+                                            ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-birthday-cake"></i> <?php echo $this->lang->line('date_of_birth'); ?></div>
+                                                <div class="sp3-data-tile-val">
+                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($student['dob'])); ?>
+                                                    <?php if ($age > 0) { ?><span class="sp2-pill sp2-pill-gray" style="font-size:10.5px; margin-left:4px;"><?php echo $age; ?> yrs</span><?php } ?>
+                                                </div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-venus-mars"></i> <?php echo $this->lang->line('gender'); ?></div>
+                                                <div class="sp3-data-tile-val">
+                                                    <?php
+                                                    $g = strtolower((string)$student['gender']);
+                                                    $gpill = ($g == 'female') ? 'sp2-pill-purple' : 'sp2-pill-amber';
+                                                    ?>
+                                                    <span class="sp2-pill <?php echo $gpill; ?>"><?php echo !empty($student['gender']) ? $this->lang->line($g) : '-'; ?></span>
+                                                </div>
+                                            </div>
+
+                                            <?php if ($sch_setting->category) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-tags"></i> <?php echo $this->lang->line('category'); ?></div>
+                                                <div class="sp3-data-tile-val">
+                                                    <?php
+                                                    $cat_name = '-';
+                                                    foreach ($category_list as $value) {
+                                                        if ($student['category_id'] == $value['id']) {
+                                                            $cat_name = $value['category'];
                                                         }
+                                                    }
+                                                    if ($cat_name != '-') {
                                                         echo "<span class='sp2-pill sp2-pill-blue'>{$cat_name}</span>";
-                                                        ?>
-                                                    </td>
-                                                </tr>
-                                                <?php } ?>
-                                                <?php if ($sch_setting->mobile_no && !empty($student['mobileno'])) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('mobile_number'); ?></td>
-                                                    <td><strong><a href="tel:<?php echo $student['mobileno']; ?>"><i class="fa fa-phone" style="margin-right: 4px;"></i><?php echo $student['mobileno']; ?></a></strong></td>
-                                                </tr>
-                                                <?php } ?>
-                                                <?php if ($sch_setting->cast && !empty($student['cast'])) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('caste'); ?></td>
-                                                    <td><?php echo $student['cast']; ?></td>
-                                                </tr>
-                                                <?php } ?>
-                                                <?php if ($sch_setting->religion && !empty($student['religion'])) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('religion'); ?></td>
-                                                    <td><?php echo $student['religion']; ?></td>
-                                                </tr>
-                                                <?php } ?>
-                                                <?php if ($sch_setting->student_email && !empty($student['email'])) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('email'); ?></td>
-                                                    <td><a href="mailto:<?php echo $student['email']; ?>"><?php echo $student['email']; ?></a></td>
-                                                </tr>
-                                                <?php } ?>
-                                                <?php if ($sch_setting->is_blood_group && !empty($student['blood_group'])) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('blood_group'); ?></td>
-                                                    <td><span class="sp2-pill sp2-pill-amber"><?php echo $student['blood_group']; ?></span></td>
-                                                </tr>
-                                                <?php } ?>
-                                                <?php if ($sch_setting->is_student_house && !empty($student['house_name'])) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('house'); ?></td>
-                                                    <td><?php echo $student['house_name']; ?></td>
-                                                </tr>
-                                                <?php } ?>
-                                                <?php if ($sch_setting->student_note && !empty($student['note'])) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('note'); ?></td>
-                                                    <td><?php echo $student['note']; ?></td>
-                                                </tr>
-                                                <?php } ?>
-                                            </tbody>
-                                        </table>
+                                                    } else {
+                                                        echo "-";
+                                                    }
+                                                    ?>
+                                                </div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if ($sch_setting->religion && !empty($student['religion'])) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-universal-access"></i> <?php echo $this->lang->line('religion'); ?></div>
+                                                <div class="sp3-data-tile-val"><?php echo $student['religion']; ?></div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if ($sch_setting->cast && !empty($student['cast'])) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-id-badge"></i> <?php echo $this->lang->line('caste'); ?></div>
+                                                <div class="sp3-data-tile-val"><?php echo $student['cast']; ?></div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if ($sch_setting->is_blood_group && !empty($student['blood_group'])) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-tint" style="color:#ef4444;"></i> <?php echo $this->lang->line('blood_group'); ?></div>
+                                                <div class="sp3-data-tile-val"><span class="sp2-pill sp2-pill-red"><?php echo $student['blood_group']; ?></span></div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if ($sch_setting->is_student_house && !empty($student['house_name'])) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-home"></i> <?php echo $this->lang->line('house'); ?></div>
+                                                <div class="sp3-data-tile-val"><span class="sp2-pill sp2-pill-teal"><?php echo $student['house_name']; ?></span></div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if ($sch_setting->mobile_no && !empty($student['mobileno'])) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-phone"></i> <?php echo $this->lang->line('mobile_number'); ?></div>
+                                                <div class="sp3-data-tile-val" style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                                                    <a href="tel:<?php echo $student['mobileno']; ?>" style="color:#114B5F;"><?php echo $student['mobileno']; ?></a>
+                                                    <a href="https://api.whatsapp.com/send?phone=<?php echo preg_replace('/[^0-9]/', '', $student['mobileno']); ?>" target="_blank" class="sp3-chip-btn sp3-chip-wa" style="padding:2px 6px; font-size:10.5px;" data-toggle="tooltip" title="WhatsApp Student"><i class="fa fa-whatsapp"></i></a>
+                                                </div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if ($sch_setting->student_email && !empty($student['email'])) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-envelope"></i> <?php echo $this->lang->line('email'); ?></div>
+                                                <div class="sp3-data-tile-val"><a href="mailto:<?php echo $student['email']; ?>" style="color:#114B5F; font-size:12px;"><?php echo $student['email']; ?></a></div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if ($sch_setting->rte) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-balance-scale"></i> <?php echo $this->lang->line('rte'); ?></div>
+                                                <div class="sp3-data-tile-val"><?php echo !empty($student['rte']) ? "<span class='sp2-pill sp2-pill-blue'>{$student['rte']}</span>" : '-'; ?></div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if (!empty($student['height']) || !empty($student['weight'])) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-heartbeat"></i> Measurement</div>
+                                                <div class="sp3-data-tile-val">
+                                                    <?php echo !empty($student['height']) ? 'H: ' . $student['height'] . ' cm ' : ''; ?>
+                                                    <?php echo !empty($student['weight']) ? 'W: ' . $student['weight'] . ' kg' : ''; ?>
+                                                </div>
+                                            </div>
+                                            <?php } ?>
+                                        </div>
                                     </div>
 
                                     <!-- Address Card -->
                                     <?php if ($sch_setting->current_address || $sch_setting->permanent_address) { ?>
-                                    <div class="sp2-card">
-                                        <div class="sp2-section-title"><i class="fa fa-map-marker"></i> <?php echo $this->lang->line('address'); ?></div>
-                                        <table class="sp2-profile-table">
-                                            <tbody>
-                                                <?php if ($sch_setting->current_address && !empty($student['current_address'])) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('current_address'); ?></td>
-                                                    <td><?php echo $student['current_address']; ?></td>
-                                                </tr>
-                                                <?php } ?>
-                                                <?php if ($sch_setting->permanent_address && !empty($student['permanent_address'])) { ?>
-                                                <tr>
-                                                    <td><?php echo $this->lang->line('permanent_address'); ?></td>
-                                                    <td><?php echo $student['permanent_address']; ?></td>
-                                                </tr>
-                                                <?php } ?>
-                                            </tbody>
-                                        </table>
+                                    <div class="sp3-section-card">
+                                        <div class="sp3-section-header">
+                                            <div class="sp3-section-title-wrap">
+                                                <div class="sp3-section-icon sp3-section-icon-green"><i class="fa fa-map-marker"></i></div>
+                                                <h3 class="sp3-section-title"><?php echo $this->lang->line('address'); ?></h3>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <?php if ($sch_setting->current_address && !empty($student['current_address'])) { ?>
+                                            <div class="sp3-address-card">
+                                                <div class="sp3-address-icon"><i class="fa fa-home"></i></div>
+                                                <div class="sp3-address-content">
+                                                    <div class="sp3-address-type"><?php echo $this->lang->line('current_address'); ?></div>
+                                                    <div class="sp3-address-text"><?php echo nl2br(htmlspecialchars($student['current_address'])); ?></div>
+                                                </div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if ($sch_setting->permanent_address && !empty($student['permanent_address'])) { ?>
+                                            <div class="sp3-address-card">
+                                                <div class="sp3-address-icon sp3-address-icon-alt"><i class="fa fa-map-pin"></i></div>
+                                                <div class="sp3-address-content">
+                                                    <div class="sp3-address-type"><?php echo $this->lang->line('permanent_address'); ?></div>
+                                                    <div class="sp3-address-text"><?php echo nl2br(htmlspecialchars($student['permanent_address'])); ?></div>
+                                                </div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if (empty($student['current_address']) && empty($student['permanent_address'])) { ?>
+                                                <p class="text-muted" style="font-size: 13px; margin: 0; padding: 6px 0;">No address recorded.</p>
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                    <?php } ?>
+
+                                    <!-- Bank & Identification Card -->
+                                    <?php 
+                                    $has_bank_info = ($sch_setting->bank_account_no && !empty($student['bank_account_no'])) || 
+                                                     ($sch_setting->bank_name && !empty($student['bank_name'])) || 
+                                                     ($sch_setting->ifsc_code && !empty($student['ifsc_code'])) || 
+                                                     ($sch_setting->national_identification_no && !empty($student['adhar_no'])) || 
+                                                     ($sch_setting->local_identification_no && !empty($student['samagra_id']));
+                                    if ($has_bank_info) { ?>
+                                    <div class="sp3-section-card">
+                                        <div class="sp3-section-header">
+                                            <div class="sp3-section-title-wrap">
+                                                <div class="sp3-section-icon sp3-section-icon-amber"><i class="fa fa-credit-card"></i></div>
+                                                <h3 class="sp3-section-title">Banking & Identification</h3>
+                                            </div>
+                                        </div>
+                                        <div class="sp3-data-grid">
+                                            <?php if ($sch_setting->bank_account_no && !empty($student['bank_account_no'])) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-money"></i> <?php echo $this->lang->line('bank_account_number'); ?></div>
+                                                <div class="sp3-data-tile-val"><?php echo $student['bank_account_no']; ?></div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if ($sch_setting->bank_name && !empty($student['bank_name'])) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-university"></i> <?php echo $this->lang->line('bank_name'); ?></div>
+                                                <div class="sp3-data-tile-val"><?php echo $student['bank_name']; ?></div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if ($sch_setting->ifsc_code && !empty($student['ifsc_code'])) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-code"></i> <?php echo $this->lang->line('ifsc_code'); ?></div>
+                                                <div class="sp3-data-tile-val"><?php echo $student['ifsc_code']; ?></div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if ($sch_setting->national_identification_no && !empty($student['adhar_no'])) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-id-card"></i> <?php echo $this->lang->line('national_identification_number'); ?></div>
+                                                <div class="sp3-data-tile-val"><?php echo $student['adhar_no']; ?></div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if ($sch_setting->local_identification_no && !empty($student['samagra_id'])) { ?>
+                                            <div class="sp3-data-tile">
+                                                <div class="sp3-data-tile-label"><i class="fa fa-id-card-o"></i> <?php echo $this->lang->line('local_identification_number'); ?></div>
+                                                <div class="sp3-data-tile-val"><?php echo $student['samagra_id']; ?></div>
+                                            </div>
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                    <?php } ?>
+
+                                    <!-- Previous School Details & Note -->
+                                    <?php if (($sch_setting->previous_school_details && !empty($student['previous_school'])) || ($sch_setting->student_note && !empty($student['note']))) { ?>
+                                    <div class="sp3-section-card">
+                                        <div class="sp3-section-header">
+                                            <div class="sp3-section-title-wrap">
+                                                <div class="sp3-section-icon sp3-section-icon-purple"><i class="fa fa-file-text-o"></i></div>
+                                                <h3 class="sp3-section-title">Previous School & Remarks</h3>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <?php if ($sch_setting->previous_school_details && !empty($student['previous_school'])) { ?>
+                                            <div style="margin-bottom: 14px;">
+                                                <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;"><?php echo $this->lang->line('previous_school_details'); ?></div>
+                                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #1e293b;">
+                                                    <?php echo nl2br(htmlspecialchars($student['previous_school'])); ?>
+                                                </div>
+                                            </div>
+                                            <?php } ?>
+
+                                            <?php if ($sch_setting->student_note && !empty($student['note'])) { ?>
+                                            <div>
+                                                <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;"><?php echo $this->lang->line('note'); ?></div>
+                                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #1e293b;">
+                                                    <?php echo nl2br(htmlspecialchars($student['note'])); ?>
+                                                </div>
+                                            </div>
+                                            <?php } ?>
+                                        </div>
                                     </div>
                                     <?php } ?>
                                 </div>
 
+                                <!-- RIGHT COLUMN: Parents & Guardian, Route, Hostel -->
                                 <div class="col-md-6 col-sm-12">
                                     <!-- Parent / Guardian Details Card -->
-                                    <div class="sp2-card">
-                                        <div class="sp2-section-title"><i class="fa fa-users"></i> <?php echo $this->lang->line('parent_guardian_detail'); ?></div>
-                                        <div class="sp2-parent-list">
+                                    <div class="sp3-section-card">
+                                        <div class="sp3-section-header">
+                                            <div class="sp3-section-title-wrap">
+                                                <div class="sp3-section-icon sp3-section-icon-teal"><i class="fa fa-users"></i></div>
+                                                <h3 class="sp3-section-title"><?php echo $this->lang->line('parent_guardian_detail'); ?></h3>
+                                            </div>
+                                        </div>
+                                        <div class="sp3-parent-list">
+                                            <!-- Father Card -->
                                             <?php if ($sch_setting->father_name || $sch_setting->father_phone || $sch_setting->father_occupation) { ?>
-                                            <div class="sp2-parent-item">
-                                                <img class="sp2-parent-avatar" src="<?php
+                                            <div class="sp3-parent-card">
+                                                <img class="sp3-parent-avatar" src="<?php
                                                     if (!empty($student["father_pic"])) {
                                                         echo $this->media_storage->getImageURL($student["father_pic"]);
                                                     } else {
                                                         echo $this->media_storage->getImageURL("uploads/student_images/no_image.png");
                                                     }
-                                                ?>">
-                                                <div class="sp2-parent-details">
-                                                    <div class="sp2-parent-title"><i class="fa fa-user" style="margin-right: 4px;"></i> <?php echo $this->lang->line('father'); ?></div>
-                                                    <div class="sp2-parent-meta">
-                                                        <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('name'); ?></span><span class="sp2-parent-val"><?php echo !empty($student['father_name']) ? $student['father_name'] : '-'; ?></span></div>
-                                                        <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('phone'); ?></span><span class="sp2-parent-val"><?php echo !empty($student['father_phone']) ? "<a href='tel:{$student['father_phone']}'>{$student['father_phone']}</a>" : '-'; ?></span></div>
-                                                        <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('occupation'); ?></span><span class="sp2-parent-val"><?php echo !empty($student['father_occupation']) ? $student['father_occupation'] : '-'; ?></span></div>
+                                                ?>" alt="Father photo">
+                                                <div class="sp3-parent-body">
+                                                    <div class="sp3-parent-header">
+                                                        <h4 class="sp3-parent-name"><?php echo !empty($student['father_name']) ? $student['father_name'] : '-'; ?></h4>
+                                                        <div>
+                                                            <span class="sp3-parent-role-badge badge-father"><i class="fa fa-user"></i> <?php echo $this->lang->line('father'); ?></span>
+                                                            <?php if (isset($student['guardian_is']) && $student['guardian_is'] == 'father') { ?>
+                                                                <span class="sp3-parent-role-badge badge-guardian" data-toggle="tooltip" title="Father is designated Guardian"><i class="fa fa-shield"></i> Guardian</span>
+                                                            <?php } ?>
+                                                        </div>
                                                     </div>
+                                                    <div class="sp3-parent-meta-row">
+                                                        <?php if (!empty($student['father_occupation'])) { ?>
+                                                        <div class="sp3-parent-meta-item">
+                                                            <i class="fa fa-briefcase"></i> <span><?php echo $student['father_occupation']; ?></span>
+                                                        </div>
+                                                        <?php } ?>
+                                                        <?php if (!empty($student['father_phone'])) { ?>
+                                                        <div class="sp3-parent-meta-item">
+                                                            <i class="fa fa-phone"></i> <strong><a href="tel:<?php echo $student['father_phone']; ?>" style="color:#0f172a;"><?php echo $student['father_phone']; ?></a></strong>
+                                                        </div>
+                                                        <?php } ?>
+                                                    </div>
+                                                    <?php if (!empty($student['father_phone'])) { 
+                                                        $father_wa = preg_replace('/[^0-9]/', '', $student['father_phone']);
+                                                    ?>
+                                                    <div class="sp3-parent-actions">
+                                                        <a href="tel:<?php echo $student['father_phone']; ?>" class="sp3-chip-btn sp3-chip-call"><i class="fa fa-phone"></i> Call</a>
+                                                        <a href="https://api.whatsapp.com/send?phone=<?php echo $father_wa; ?>" target="_blank" class="sp3-chip-btn sp3-chip-wa"><i class="fa fa-whatsapp"></i> WhatsApp</a>
+                                                    </div>
+                                                    <?php } ?>
                                                 </div>
                                             </div>
                                             <?php } ?>
-                                            
+
+                                            <!-- Mother Card -->
                                             <?php if ($sch_setting->mother_name || $sch_setting->mother_phone || $sch_setting->mother_occupation) { ?>
-                                            <div class="sp2-parent-item">
-                                                <img class="sp2-parent-avatar" src="<?php
+                                            <div class="sp3-parent-card">
+                                                <img class="sp3-parent-avatar" src="<?php
                                                     if (!empty($student["mother_pic"])) {
                                                         echo $this->media_storage->getImageURL($student["mother_pic"]);
                                                     } else {
                                                         echo $this->media_storage->getImageURL("uploads/student_images/no_image.png");
                                                     }
-                                                ?>">
-                                                <div class="sp2-parent-details">
-                                                    <div class="sp2-parent-title"><i class="fa fa-female" style="margin-right: 4px;"></i> <?php echo $this->lang->line('mother'); ?></div>
-                                                    <div class="sp2-parent-meta">
-                                                        <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('name'); ?></span><span class="sp2-parent-val"><?php echo !empty($student['mother_name']) ? $student['mother_name'] : '-'; ?></span></div>
-                                                        <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('phone'); ?></span><span class="sp2-parent-val"><?php echo !empty($student['mother_phone']) ? "<a href='tel:{$student['mother_phone']}'>{$student['mother_phone']}</a>" : '-'; ?></span></div>
-                                                        <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('occupation'); ?></span><span class="sp2-parent-val"><?php echo !empty($student['mother_occupation']) ? $student['mother_occupation'] : '-'; ?></span></div>
+                                                ?>" alt="Mother photo">
+                                                <div class="sp3-parent-body">
+                                                    <div class="sp3-parent-header">
+                                                        <h4 class="sp3-parent-name"><?php echo !empty($student['mother_name']) ? $student['mother_name'] : '-'; ?></h4>
+                                                        <div>
+                                                            <span class="sp3-parent-role-badge badge-mother"><i class="fa fa-female"></i> <?php echo $this->lang->line('mother'); ?></span>
+                                                            <?php if (isset($student['guardian_is']) && $student['guardian_is'] == 'mother') { ?>
+                                                                <span class="sp3-parent-role-badge badge-guardian" data-toggle="tooltip" title="Mother is designated Guardian"><i class="fa fa-shield"></i> Guardian</span>
+                                                            <?php } ?>
+                                                        </div>
                                                     </div>
+                                                    <div class="sp3-parent-meta-row">
+                                                        <?php if (!empty($student['mother_occupation'])) { ?>
+                                                        <div class="sp3-parent-meta-item">
+                                                            <i class="fa fa-briefcase"></i> <span><?php echo $student['mother_occupation']; ?></span>
+                                                        </div>
+                                                        <?php } ?>
+                                                        <?php if (!empty($student['mother_phone'])) { ?>
+                                                        <div class="sp3-parent-meta-item">
+                                                            <i class="fa fa-phone"></i> <strong><a href="tel:<?php echo $student['mother_phone']; ?>" style="color:#0f172a;"><?php echo $student['mother_phone']; ?></a></strong>
+                                                        </div>
+                                                        <?php } ?>
+                                                    </div>
+                                                    <?php if (!empty($student['mother_phone'])) { 
+                                                        $mother_wa = preg_replace('/[^0-9]/', '', $student['mother_phone']);
+                                                    ?>
+                                                    <div class="sp3-parent-actions">
+                                                        <a href="tel:<?php echo $student['mother_phone']; ?>" class="sp3-chip-btn sp3-chip-call"><i class="fa fa-phone"></i> Call</a>
+                                                        <a href="https://api.whatsapp.com/send?phone=<?php echo $mother_wa; ?>" target="_blank" class="sp3-chip-btn sp3-chip-wa"><i class="fa fa-whatsapp"></i> WhatsApp</a>
+                                                    </div>
+                                                    <?php } ?>
                                                 </div>
                                             </div>
                                             <?php } ?>
 
-                                            <?php if ($sch_setting->guardian_name && !empty($student['guardian_name'])) { ?>
-                                            <div class="sp2-parent-item">
-                                                <img class="sp2-parent-avatar" src="<?php
+                                            <!-- Guardian Card (If set and distinct or if guardian_is != father/mother) -->
+                                            <?php if ($sch_setting->guardian_name && !empty($student['guardian_name'])) { 
+                                                $guardian_rel = !empty($student['guardian_relation']) ? $student['guardian_relation'] : 'Guardian';
+                                            ?>
+                                            <div class="sp3-parent-card">
+                                                <img class="sp3-parent-avatar" src="<?php
                                                     if (!empty($student["guardian_pic"])) {
                                                         echo $this->media_storage->getImageURL($student["guardian_pic"]);
                                                     } else {
                                                         echo $this->media_storage->getImageURL("uploads/student_images/no_image.png");
                                                     }
-                                                ?>">
-                                                <div class="sp2-parent-details">
-                                                    <div class="sp2-parent-title"><i class="fa fa-shield" style="margin-right: 4px;"></i> <?php echo $this->lang->line('guardian'); ?> (<?php echo !empty($student['guardian_relation']) ? $student['guardian_relation'] : 'Guardian'; ?>)</div>
-                                                    <div class="sp2-parent-meta">
-                                                        <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('name'); ?></span><span class="sp2-parent-val"><?php echo $student['guardian_name']; ?></span></div>
-                                                        <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('phone'); ?></span><span class="sp2-parent-val"><?php echo !empty($student['guardian_phone']) ? "<a href='tel:{$student['guardian_phone']}'>{$student['guardian_phone']}</a>" : '-'; ?></span></div>
-                                                        <div class="sp2-parent-row"><span class="sp2-parent-label"><?php echo $this->lang->line('occupation'); ?></span><span class="sp2-parent-val"><?php echo !empty($student['guardian_occupation']) ? $student['guardian_occupation'] : '-'; ?></span></div>
+                                                ?>" alt="Guardian photo">
+                                                <div class="sp3-parent-body">
+                                                    <div class="sp3-parent-header">
+                                                        <h4 class="sp3-parent-name"><?php echo $student['guardian_name']; ?></h4>
+                                                        <span class="sp3-parent-role-badge badge-guardian"><i class="fa fa-shield"></i> <?php echo $this->lang->line('guardian'); ?> (<?php echo $guardian_rel; ?>)</span>
                                                     </div>
+                                                    <div class="sp3-parent-meta-row">
+                                                        <?php if (!empty($student['guardian_occupation'])) { ?>
+                                                        <div class="sp3-parent-meta-item">
+                                                            <i class="fa fa-briefcase"></i> <span><?php echo $student['guardian_occupation']; ?></span>
+                                                        </div>
+                                                        <?php } ?>
+                                                        <?php if (!empty($student['guardian_phone'])) { ?>
+                                                        <div class="sp3-parent-meta-item">
+                                                            <i class="fa fa-phone"></i> <strong><a href="tel:<?php echo $student['guardian_phone']; ?>" style="color:#0f172a;"><?php echo $student['guardian_phone']; ?></a></strong>
+                                                        </div>
+                                                        <?php } ?>
+                                                        <?php if (!empty($student['guardian_email'])) { ?>
+                                                        <div class="sp3-parent-meta-item">
+                                                            <i class="fa fa-envelope"></i> <a href="mailto:<?php echo $student['guardian_email']; ?>" style="color:#64748b;"><?php echo $student['guardian_email']; ?></a>
+                                                        </div>
+                                                        <?php } ?>
+                                                    </div>
+                                                    <?php if (!empty($student['guardian_address'])) { ?>
+                                                    <div style="font-size: 11.5px; color: #64748b; margin-bottom: 6px;">
+                                                        <i class="fa fa-map-marker" style="margin-right: 4px;"></i> <?php echo $student['guardian_address']; ?>
+                                                    </div>
+                                                    <?php } ?>
+                                                    <?php if (!empty($student['guardian_phone'])) { 
+                                                        $guardian_wa = preg_replace('/[^0-9]/', '', $student['guardian_phone']);
+                                                    ?>
+                                                    <div class="sp3-parent-actions">
+                                                        <a href="tel:<?php echo $student['guardian_phone']; ?>" class="sp3-chip-btn sp3-chip-call"><i class="fa fa-phone"></i> Call</a>
+                                                        <a href="https://api.whatsapp.com/send?phone=<?php echo $guardian_wa; ?>" target="_blank" class="sp3-chip-btn sp3-chip-wa"><i class="fa fa-whatsapp"></i> WhatsApp</a>
+                                                    </div>
+                                                    <?php } ?>
                                                 </div>
                                             </div>
-                                            <?php } ?>                                        </div>
+                                            <?php } ?>
+                                        </div>
                                     </div>
-                                    
+
+                                    <!-- Transport Details Card -->
                                     <?php if ($sch_setting->route_list) {
                                         if ($this->module_lib->hasActive('transport')) {
                                             if ($student['pickup_point_name'] != '') {
                                     ?>
-                                        <div class="sp2-card">
-                                            <div class="sp2-section-title"><i class="fa fa-bus"></i> <?php echo $this->lang->line('route_details'); ?></div>
-                                            <table class="sp2-profile-table">
-                                                <tbody>
-                                                    <tr>
-                                                        <td><?php echo $this->lang->line('pick_up_point'); ?></td>
-                                                        <td><?php echo $student['pickup_point_name']; ?></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td><?php echo $this->lang->line('route'); ?></td>
-                                                        <td><?php echo $student['route_title']; ?></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td><?php echo $this->lang->line('vehicle_number'); ?></td>
-                                                        <td><?php echo $student['vehicle_no']; ?></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td><?php echo $this->lang->line('driver_name'); ?></td>
-                                                        <td><?php echo $student['driver_name']; ?></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td><?php echo $this->lang->line('driver_contact'); ?></td>
-                                                        <td><?php echo $student['driver_contact']; ?></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                        <div class="sp3-section-card">
+                                            <div class="sp3-section-header">
+                                                <div class="sp3-section-title-wrap">
+                                                    <div class="sp3-section-icon"><i class="fa fa-bus"></i></div>
+                                                    <h3 class="sp3-section-title"><?php echo $this->lang->line('route_details'); ?></h3>
+                                                </div>
+                                            </div>
+                                            <div class="sp3-facility-item">
+                                                <div class="sp3-facility-title"><i class="fa fa-map-signs text-primary"></i> <?php echo $student['route_title']; ?></div>
+                                                <div class="sp3-facility-grid">
+                                                    <div class="sp3-facility-cell">
+                                                        <span class="sp3-facility-cell-label"><?php echo $this->lang->line('pick_up_point'); ?></span>
+                                                        <span class="sp3-facility-cell-val"><span class="sp2-pill sp2-pill-blue"><?php echo $student['pickup_point_name']; ?></span></span>
+                                                    </div>
+                                                    <div class="sp3-facility-cell">
+                                                        <span class="sp3-facility-cell-label"><?php echo $this->lang->line('vehicle_number'); ?></span>
+                                                        <span class="sp3-facility-cell-val"><?php echo !empty($student['vehicle_no']) ? $student['vehicle_no'] : '-'; ?></span>
+                                                    </div>
+                                                    <div class="sp3-facility-cell">
+                                                        <span class="sp3-facility-cell-label"><?php echo $this->lang->line('driver_name'); ?></span>
+                                                        <span class="sp3-facility-cell-val"><?php echo !empty($student['driver_name']) ? $student['driver_name'] : '-'; ?></span>
+                                                    </div>
+                                                    <div class="sp3-facility-cell">
+                                                        <span class="sp3-facility-cell-label"><?php echo $this->lang->line('driver_contact'); ?></span>
+                                                        <span class="sp3-facility-cell-val">
+                                                            <?php if (!empty($student['driver_contact'])) { ?>
+                                                                <a href="tel:<?php echo $student['driver_contact']; ?>" style="color:#114B5F;"><i class="fa fa-phone"></i> <?php echo $student['driver_contact']; ?></a>
+                                                            <?php } else { echo '-'; } ?>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     <?php
                                             }
@@ -2193,28 +2954,31 @@ $theme_color     = isset($admin_session['theme']['theme_color']) ? $admin_sessio
                                     }
                                     ?>
 
+                                    <!-- Hostel Details Card -->
                                     <?php if ($sch_setting->hostel_id) {
                                         if ($this->module_lib->hasActive('hostel')) {
                                             if ($student['hostel_room_id'] != 0) {
                                     ?>
-                                        <div class="sp2-card">
-                                            <div class="sp2-section-title"><i class="fa fa-building"></i> <?php echo $this->lang->line('hostel_details'); ?></div>
-                                            <table class="sp2-profile-table">
-                                                <tbody>
-                                                    <tr>
-                                                        <td><?php echo $this->lang->line('hostel'); ?></td>
-                                                        <td><?php echo $student['hostel_name']; ?></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td><?php echo $this->lang->line('room_no'); ?></td>
-                                                        <td><?php echo $student['room_no']; ?></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td><?php echo $this->lang->line('room_type'); ?></td>
-                                                        <td><?php echo $student['room_type']; ?></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                        <div class="sp3-section-card">
+                                            <div class="sp3-section-header">
+                                                <div class="sp3-section-title-wrap">
+                                                    <div class="sp3-section-icon sp3-section-icon-purple"><i class="fa fa-building"></i></div>
+                                                    <h3 class="sp3-section-title"><?php echo $this->lang->line('hostel_details'); ?></h3>
+                                                </div>
+                                            </div>
+                                            <div class="sp3-facility-item">
+                                                <div class="sp3-facility-title"><i class="fa fa-bed text-info"></i> <?php echo $student['hostel_name']; ?></div>
+                                                <div class="sp3-facility-grid">
+                                                    <div class="sp3-facility-cell">
+                                                        <span class="sp3-facility-cell-label"><?php echo $this->lang->line('room_no'); ?></span>
+                                                        <span class="sp3-facility-cell-val"><span class="sp2-pill sp2-pill-teal">Room #<?php echo $student['room_no']; ?></span></span>
+                                                    </div>
+                                                    <div class="sp3-facility-cell">
+                                                        <span class="sp3-facility-cell-label"><?php echo $this->lang->line('room_type'); ?></span>
+                                                        <span class="sp3-facility-cell-val"><?php echo !empty($student['room_type']) ? $student['room_type'] : '-'; ?></span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     <?php
                                             }
@@ -5278,29 +6042,34 @@ function findAssessmentValue($find_subject_id, $find_cbse_exam_assessment_type_i
   /* exported handleAuthClick */
   /* exported handleSignoutClick */
 
-  // Authorization scopes required by the API; multiple scopes can be
+// Authorization scopes required by the API; multiple scopes can be
   // included, separated by spaces.
   //const SCOPES = 'https://www.googleapis.com/auth/drive.metadata.readonly';
   const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
   // TODO(developer): Replace with your client ID and API key from https://console.cloud.google.com/.
-   const CLIENT_ID = '<?php echo $googledrivepickersetting['client_id']; ?>';
-   const API_KEY = '<?php echo $googledrivepickersetting['api_key']; ?>';
+   const CLIENT_ID = '<?php echo isset($googledrivepickersetting['client_id']) ? $googledrivepickersetting['client_id'] : ''; ?>';
+   const API_KEY = '<?php echo isset($googledrivepickersetting['api_key']) ? $googledrivepickersetting['api_key'] : ''; ?>';
    // TODO(developer): Replace with your project number from https://console.cloud.google.com/.
-   const APP_ID = '<?php echo $googledrivepickersetting['project_number']; ?>';
+   const APP_ID = '<?php echo isset($googledrivepickersetting['project_number']) ? $googledrivepickersetting['project_number'] : ''; ?>';
 
   let tokenClient;
   let accessToken = null;
   let pickerInited = false;
   let gisInited = false;
 
-  document.getElementById('authorize_button').style.visibility = 'hidden';
+  var authBtn = document.getElementById('authorize_button');
+  if (authBtn) {
+    authBtn.style.visibility = 'hidden';
+  }
 
   /**
    * Callback after api.js is loaded.
    */
   function gapiLoaded() {
-    gapi.load('client:picker', initializePicker);
+    if (typeof gapi !== 'undefined' && gapi.load) {
+      gapi.load('client:picker', initializePicker);
+    }
   }
 
   /**
@@ -5308,22 +6077,26 @@ function findAssessmentValue($find_subject_id, $find_cbse_exam_assessment_type_i
    * discovery doc to initialize the API.
    */
   async function initializePicker() {
-    await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
-    pickerInited = true;
-    maybeEnableButtons();
+    if (typeof gapi !== 'undefined' && gapi.client) {
+      await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
+      pickerInited = true;
+      maybeEnableButtons();
+    }
   }
 
   /**
    * Callback after Google Identity Services are loaded.
    */
   function gisLoaded() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPES,
-      callback: '', // defined later
-    });
-    gisInited = true;
-    maybeEnableButtons();
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: '', // defined later
+      });
+      gisInited = true;
+      maybeEnableButtons();
+    }
   }
 
   /**
@@ -5331,7 +6104,10 @@ function findAssessmentValue($find_subject_id, $find_cbse_exam_assessment_type_i
    */
   function maybeEnableButtons() {
     if (pickerInited && gisInited) {
-      document.getElementById('authorize_button').style.visibility = 'visible';
+      var authBtn = document.getElementById('authorize_button');
+      if (authBtn) {
+        authBtn.style.visibility = 'visible';
+      }
     }
   }
 
@@ -5341,12 +6117,17 @@ function findAssessmentValue($find_subject_id, $find_cbse_exam_assessment_type_i
   function handleAuthClick() {
     $("#google_drive_model").modal("hide");//added by webfeb
 
+    if (!tokenClient) return;
+
     tokenClient.callback = async (response) => {
       if (response.error !== undefined) {
         throw (response);
       }
       accessToken = response.access_token;
-      document.getElementById('authorize_button').innerText = 'Refresh';
+      var authBtn = document.getElementById('authorize_button');
+      if (authBtn) {
+        authBtn.innerText = 'Refresh';
+      }
       await createPicker();
     };
 
@@ -5367,16 +6148,14 @@ function findAssessmentValue($find_subject_id, $find_cbse_exam_assessment_type_i
     const view = new google.picker.View(google.picker.ViewId.DOCS);
     // view.setMimeTypes('image/png,image/jpeg,image/jpg');
 
-view.setMimeTypes(
-  'image/png,image/jpeg,image/jpg,' +
-  'application/pdf,' +
-  'application/msword,' +
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document,' +
-  'application/vnd.ms-excel,' +
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-);
-
-
+    view.setMimeTypes(
+      'image/png,image/jpeg,image/jpg,' +
+      'application/pdf,' +
+      'application/msword,' +
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document,' +
+      'application/vnd.ms-excel,' +
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
 
     const picker = new google.picker.PickerBuilder()
         .enableFeature(google.picker.Feature.NAV_HIDDEN)
@@ -5412,7 +6191,258 @@ view.setMimeTypes(
             storefile(data);
         //================store image=================
     }
+  }
+
+  function opengoogledrivemodel(){
+      $("#image_first_title").val("");  
+      $("#google_drive_model").modal("show");
+  }
+
+  function storefile(data) {
+      var first_title = $("#image_first_title").val();
+      var student_id = "<?php echo $student['id'] ?>";
+
+      $.ajax({
+          url: base_url + 'student/save_image',
+          type: 'POST',
+          dataType: "JSON",
+          data: {
+              data: data,
+              accessToken: accessToken,
+              first_title: first_title,
+              student_id: student_id
+          },
+          beforeSend: function () {
+              $(".laoder").removeClass("hide");   
+          },
+          success: function (res) {
+              if (res.status == "fail") {
+                  let message = "";
+                  $.each(res.error, function (i, val) {
+                      message += val;
+                  });
+                  errorMsg(message);
+              } else {
+                  successMsg(res.message);
+                  location.reload();
+              }
+          },
+          error: function (xhr, status, error) {
+              errorMsg("Something went wrong. Please try again.");
+          },
+          complete: function () {
+              $(".laoder").addClass("hide");   
+          }
+      });
+  }
+</script>
+
+<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+<script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+
+<!-- ===== WHATSAPP COMMUNICATION HUB MODAL ===== -->
+<div class="modal fade" id="whatsappModal" tabindex="-1" role="dialog" aria-labelledby="whatsappModalLabel">
+    <div class="modal-dialog" role="document" style="max-width: 580px;">
+        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15); overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #128c7e 0%, #25d366 100%); color: #ffffff; padding: 16px 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #ffffff; opacity: 0.9; text-shadow: none; font-size: 24px;">&times;</button>
+                <h4 class="modal-title" id="whatsappModalLabel" style="font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa fa-whatsapp" style="font-size: 22px;"></i> WhatsApp Communication Hub
+                </h4>
+            </div>
+            <div class="modal-body" style="padding: 22px 24px; background: #fafafa;">
+                <div class="form-group">
+                    <label style="font-weight: 700; color: #334155; font-size: 13px; margin-bottom: 6px;">
+                        <i class="fa fa-user-circle" style="color:#128c7e;"></i> Select Recipient
+                    </label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
+                        <?php if (!empty($student['father_phone'])) { ?>
+                        <label class="sp3-wa-recipient-card" style="margin:0; cursor:pointer;">
+                            <input type="radio" name="wa_recipient" value="father" checked style="margin-right: 6px;">
+                            <div>
+                                <strong style="display:block; font-size:12.5px; color:#0f172a;">Father</strong>
+                                <span style="font-size:11px; color:#64748b;"><?php echo $student['father_phone']; ?></span>
+                            </div>
+                        </label>
+                        <?php } ?>
+
+                        <?php if (!empty($student['mother_phone'])) { ?>
+                        <label class="sp3-wa-recipient-card" style="margin:0; cursor:pointer;">
+                            <input type="radio" name="wa_recipient" value="mother" <?php echo empty($student['father_phone']) ? 'checked' : ''; ?> style="margin-right: 6px;">
+                            <div>
+                                <strong style="display:block; font-size:12.5px; color:#0f172a;">Mother</strong>
+                                <span style="font-size:11px; color:#64748b;"><?php echo $student['mother_phone']; ?></span>
+                            </div>
+                        </label>
+                        <?php } ?>
+
+                        <?php if (!empty($student['guardian_phone'])) { ?>
+                        <label class="sp3-wa-recipient-card" style="margin:0; cursor:pointer;">
+                            <input type="radio" name="wa_recipient" value="guardian" <?php echo (empty($student['father_phone']) && empty($student['mother_phone'])) ? 'checked' : ''; ?> style="margin-right: 6px;">
+                            <div>
+                                <strong style="display:block; font-size:12.5px; color:#0f172a;">Guardian</strong>
+                                <span style="font-size:11px; color:#64748b;"><?php echo $student['guardian_phone']; ?></span>
+                            </div>
+                        </label>
+                        <?php } ?>
+
+                        <?php if (!empty($student['mobileno'])) { ?>
+                        <label class="sp3-wa-recipient-card" style="margin:0; cursor:pointer;">
+                            <input type="radio" name="wa_recipient" value="student" <?php echo (empty($student['father_phone']) && empty($student['mother_phone']) && empty($student['guardian_phone'])) ? 'checked' : ''; ?> style="margin-right: 6px;">
+                            <div>
+                                <strong style="display:block; font-size:12.5px; color:#0f172a;">Student</strong>
+                                <span style="font-size:11px; color:#64748b;"><?php echo $student['mobileno']; ?></span>
+                            </div>
+                        </label>
+                        <?php } ?>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 16px;">
+                    <label style="font-weight: 700; color: #334155; font-size: 13px; margin-bottom: 6px;">
+                        <i class="fa fa-file-text-o" style="color:#128c7e;"></i> Choose Pre-filled Template
+                    </label>
+                    <select id="wa_template_picker" class="form-control" style="border-radius: 8px; height: 40px; font-weight: 600; border-color: #cbd5e1;">
+                        <option value="fee">💳 Fee Due Notice (Balance: <?php echo $currency_symbol . number_format($kpi_balance_fees, 2); ?>)</option>
+                        <option value="attendance">📊 Attendance Summary (Rate: <?php echo $att_percentage; ?>%)</option>
+                        <option value="credentials">🔑 Student & Parent Portal Login Credentials</option>
+                        <option value="custom">✏️ Custom Message</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-top: 16px; margin-bottom: 0;">
+                    <label style="font-weight: 700; color: #334155; font-size: 13px; margin-bottom: 6px;">
+                        <i class="fa fa-comment-o" style="color:#128c7e;"></i> Message Preview & Customization
+                    </label>
+                    <textarea id="wa_message_box" rows="7" class="form-control" style="border-radius: 8px; border-color: #cbd5e1; font-family: monospace; font-size: 12.5px; line-height: 1.5; resize: vertical;"></textarea>
+                    <span style="font-size: 11px; color: #64748b; margin-top: 4px; display: block;">You can edit the message text above before sending.</span>
+                </div>
+            </div>
+            <div class="modal-footer" style="background: #f1f5f9; border-top: 1px solid #e2e8f0; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 8px; font-weight: 600;">Cancel</button>
+                <button type="button" class="btn btn-success" id="btn_send_whatsapp" style="background: #25d366; border-color: #22c55e; border-radius: 8px; font-weight: 700; padding: 8px 18px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);">
+                    <i class="fa fa-whatsapp" style="font-size: 16px;"></i> Launch WhatsApp Web / App
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.sp3-wa-recipient-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    transition: all 0.15s ease;
 }
+.sp3-wa-recipient-card:hover {
+    border-color: #25d366;
+    background: #f0fdf4;
+}
+.sp3-wa-recipient-card input[type="radio"]:checked + div strong {
+    color: #15803d;
+}
+</style>
+
+<script type="text/javascript">
+// WhatsApp Data Pre-computations
+var waData = {
+    studentName: "<?php echo addslashes($this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname)); ?>",
+    admissionNo: "<?php echo addslashes($student['admission_no']); ?>",
+    className: "<?php echo addslashes($student['class'] . ' - ' . $student['section']); ?>",
+    feeBalance: "<?php echo $currency_symbol . number_format($kpi_balance_fees, 2); ?>",
+    unpaidCount: "<?php echo $kpi_unpaid_invoices_count; ?>",
+    attPercentage: "<?php echo $att_percentage; ?>%",
+    attPresent: "<?php echo $att_present; ?>",
+    attWorkingDays: "<?php echo $att_working_days; ?>",
+    schoolName: "<?php echo addslashes($sch_setting->name); ?>",
+    loginUrl: "<?php echo base_url('site/userlogin'); ?>",
+    studentUsername: "<?php echo addslashes($student['username']); ?>",
+    studentPassword: "<?php echo addslashes($student['password']); ?>",
+    parentUsername: "<?php echo !empty($guardian_credential['username']) ? addslashes($guardian_credential['username']) : ''; ?>",
+    parentPassword: "<?php echo !empty($guardian_credential['password']) ? addslashes($guardian_credential['password']) : ''; ?>",
+    fatherPhone: "<?php echo !empty($student['father_phone']) ? preg_replace('/[^0-9]/', '', $student['father_phone']) : ''; ?>",
+    motherPhone: "<?php echo !empty($student['mother_phone']) ? preg_replace('/[^0-9]/', '', $student['mother_phone']) : ''; ?>",
+    guardianPhone: "<?php echo !empty($student['guardian_phone']) ? preg_replace('/[^0-9]/', '', $student['guardian_phone']) : ''; ?>",
+    studentPhone: "<?php echo !empty($student['mobileno']) ? preg_replace('/[^0-9]/', '', $student['mobileno']) : ''; ?>"
+};
+
+function openWhatsAppModal() {
+    $('#whatsappModal').modal('show');
+    applyWhatsAppTemplate();
+}
+
+function applyWhatsAppTemplate() {
+    var tpl = $('#wa_template_picker').val();
+    var msg = '';
+
+    if (tpl === 'fee') {
+        msg = "Dear Parent,\n\nThis is a gentle fee reminder from *" + waData.schoolName + "* regarding student *" + waData.studentName + "* (Class: " + waData.className + ", Adm No: " + waData.admissionNo + ").\n\n*Pending Balance:* " + waData.feeBalance + " (" + waData.unpaidCount + " fee item/s pending).\n\nPlease clear the outstanding dues at your earliest convenience.\n\nThank you,\n*" + waData.schoolName + "*";
+    } else if (tpl === 'attendance') {
+        msg = "Dear Parent,\n\nAttendance performance summary for *" + waData.studentName + "* (Class: " + waData.className + ", Adm No: " + waData.admissionNo + "):\n\n*Overall Attendance:* " + waData.attPercentage + "\n*Days Present:* " + waData.attPresent + " / " + waData.attWorkingDays + " working days\n\nRegular school attendance is essential for optimal academic achievement.\n\nRegards,\n*" + waData.schoolName + "*";
+    } else if (tpl === 'credentials') {
+        msg = "Dear Parent / Student,\n\nHere are the portal login details for *" + waData.studentName + "* at *" + waData.schoolName + "*:\n\n*Portal URL:* " + waData.loginUrl + "\n*Student Username:* " + waData.studentUsername + "\n*Student Password:* " + waData.studentPassword;
+        if (waData.parentUsername) {
+            msg += "\n\n*Parent Username:* " + waData.parentUsername + "\n*Parent Password:* " + waData.parentPassword;
+        }
+        msg += "\n\nRegards,\n*" + waData.schoolName + "*";
+    } else {
+        msg = "Dear Parent,\n\nRegarding *" + waData.studentName + "* (Class: " + waData.className + "):\n\n[Write your message here]\n\nRegards,\n*" + waData.schoolName + "*";
+    }
+
+    $('#wa_message_box').val(msg);
+}
+
+function sendWhatsAppDirect() {
+    var recipientType = $('input[name="wa_recipient"]:checked').val();
+    var phone = '';
+
+    if (recipientType === 'father') {
+        phone = waData.fatherPhone;
+    } else if (recipientType === 'mother') {
+        phone = waData.motherPhone;
+    } else if (recipientType === 'guardian') {
+        phone = waData.guardianPhone;
+    } else if (recipientType === 'student') {
+        phone = waData.studentPhone;
+    }
+
+    if (!phone) {
+        alert('Selected recipient does not have a valid mobile phone number registered.');
+        return;
+    }
+
+    // Clean phone number (prefix 91 if 10 digits without country code)
+    if (phone.length === 10) {
+        phone = '91' + phone;
+    }
+
+    var message = $('#wa_message_box').val();
+    var encodedMsg = encodeURIComponent(message);
+    var waUrl = "https://wa.me/" + phone + "?text=" + encodedMsg;
+
+    window.open(waUrl, '_blank');
+}
+
+// Attach event listeners via jQuery
+$(document).ready(function() {
+    $(document).on('click', '.sp3-btn-wa, .open-whatsapp-hub', function(e) {
+        e.preventDefault();
+        openWhatsAppModal();
+    });
+
+    $(document).on('change', '#wa_template_picker', function() {
+        applyWhatsAppTemplate();
+    });
+
+    $(document).on('click', '#btn_send_whatsapp', function(e) {
+        e.preventDefault();
+        sendWhatsAppDirect();
+    });
+});
 
 // Student Profile Call Log - Expandable Timeline Toggle Handler
 $(document).on('click', '.toggle-fw-timeline', function(e) {
@@ -5427,73 +6457,6 @@ $(document).on('click', '.toggle-fw-timeline', function(e) {
     }
 });
 </script>
-  }
-</script>
-<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-<script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
-</body>
-</html>
-<script>
-
-function opengoogledrivemodel(){
-    $("#image_first_title").val("");  
-    $("#google_drive_model").modal("show");
-}
-
-function storefile(data) {
-
-    var first_title = $("#image_first_title").val();
-    var student_id = "<?php echo $student['id'] ?>";
-
-    $.ajax({
-        url: base_url + 'student/save_image',
-        type: 'POST',
-        dataType: "JSON",
-        data: {
-            data: data,
-            accessToken: accessToken,
-            first_title: first_title,
-            student_id: student_id
-        },
-
-       
-        beforeSend: function () {
-            $(".laoder").removeClass("hide");   
-        },
-
-    
-        success: function (res) {
-
-            if (res.status == "fail") {
-
-                let message = "";
-                $.each(res.error, function (i, val) {
-                    message += val;
-                });
-
-                errorMsg(message);
-
-            } else {
-                successMsg(res.message);
-                location.reload();
-            }
-        },
-
- 
-        error: function (xhr, status, error) {
-            errorMsg("Something went wrong. Please try again.");
-        },
-
-       
-        complete: function () {
-            $(".laoder").addClass("hide");   
-        }
-    });
-}
-
-
-</script>
-<!--======================ADD GOOGLE DRIVE============================-->
 
 
 

@@ -179,6 +179,7 @@ class Transportattendance extends Admin_Controller
             $students = $this->transportattendance_model->get_bus_students($vehicle_id, null, $route_id);
             $saved_attendance = $this->transportattendance_model->get_attendance($vehicle_id, $date, $attendance_type);
             $custom_riders = $this->transportattendance_model->get_custom_riders($vehicle_id, $date, $attendance_type);
+            $switched_out = $this->transportattendance_model->get_switched_out_students_map($vehicle_id, $date, $attendance_type);
             
             // Determine opposite shift to display context (Morning vs Evening)
             $opposite_shift = (strtolower($attendance_type) == 'evening') ? 'morning' : 'evening';
@@ -194,12 +195,24 @@ class Transportattendance extends Admin_Controller
             $gatepasses = $this->gatepass_model->check_student_gatepass($date);
             
             foreach ($students as $key => $student) {
+                // Check if this student is switched out to another bus today
+                if (isset($switched_out[$student['student_session_id']])) {
+                    $students[$key]['switched_out_info'] = $switched_out[$student['student_session_id']];
+                } else {
+                    $students[$key]['switched_out_info'] = null;
+                }
+
                 if (isset($saved_attendance[$student['student_session_id']])) {
                     $students[$key]['attendance_status'] = $saved_attendance[$student['student_session_id']]['status'];
                     $students[$key]['remark'] = $saved_attendance[$student['student_session_id']]['remark'];
                 } else {
-                    $students[$key]['attendance_status'] = 'Present';
-                    $students[$key]['remark'] = '';
+                    if (!empty($students[$key]['switched_out_info'])) {
+                        $students[$key]['attendance_status'] = 'Switched Bus';
+                        $students[$key]['remark'] = 'Switched to Bus #' . $students[$key]['switched_out_info']['new_vehicle_no'];
+                    } else {
+                        $students[$key]['attendance_status'] = 'Present';
+                        $students[$key]['remark'] = '';
+                    }
                 }
                 
                 // Opposite shift status check
@@ -290,6 +303,7 @@ class Transportattendance extends Admin_Controller
             $students = $this->transportattendance_model->get_bus_students($vehicle_id, null, $route_id);
             $saved_attendance = $this->transportattendance_model->get_attendance($vehicle_id, $date, $attendance_type);
             $custom_riders = $this->transportattendance_model->get_custom_riders($vehicle_id, $date, $attendance_type);
+            $switched_out = $this->transportattendance_model->get_switched_out_students_map($vehicle_id, $date, $attendance_type);
             
             $opposite_shift = (strtolower($attendance_type) == 'evening') ? 'morning' : 'evening';
             $opposite_attendance = $this->transportattendance_model->get_attendance($vehicle_id, $date, $opposite_shift);
@@ -305,12 +319,24 @@ class Transportattendance extends Admin_Controller
             // Group students by Stop Name (Pickup Point)
             $grouped_by_stop = array();
             foreach ($students as $key => $student) {
+                // Check if switched out to another bus
+                if (isset($switched_out[$student['student_session_id']])) {
+                    $student['switched_out_info'] = $switched_out[$student['student_session_id']];
+                } else {
+                    $student['switched_out_info'] = null;
+                }
+
                 if (isset($saved_attendance[$student['student_session_id']])) {
                     $student['attendance_status'] = $saved_attendance[$student['student_session_id']]['status'];
                     $student['remark'] = $saved_attendance[$student['student_session_id']]['remark'];
                 } else {
-                    $student['attendance_status'] = 'Present';
-                    $student['remark'] = '';
+                    if (!empty($student['switched_out_info'])) {
+                        $student['attendance_status'] = 'Switched Bus';
+                        $student['remark'] = 'Switched to Bus #' . $student['switched_out_info']['new_vehicle_no'];
+                    } else {
+                        $student['attendance_status'] = 'Present';
+                        $student['remark'] = '';
+                    }
                 }
                 
                 if (isset($opposite_attendance[$student['student_session_id']])) {
@@ -465,8 +491,32 @@ class Transportattendance extends Admin_Controller
         }
         $student_id = $this->input->post('student_id');
         $vehicle_id = $this->input->post('vehicle_id');
-        $date = $this->customlib->dateFormatToYYYYMMDD($this->input->post('date'));
+        $from_date_input = $this->input->post('from_date');
+        $to_date_input = $this->input->post('to_date');
+        $date_input = $this->input->post('date');
         $attendance_type = $this->input->post('attendance_type');
+        $remark_input = trim((string)$this->input->post('remark'));
+
+        if (empty($from_date_input) && !empty($date_input)) {
+            $from_date_input = $date_input;
+        }
+        if (empty($to_date_input) && !empty($from_date_input)) {
+            $to_date_input = $from_date_input;
+        }
+
+        $from_date = $this->customlib->dateFormatToYYYYMMDD($from_date_input);
+        $to_date = $this->customlib->dateFormatToYYYYMMDD($to_date_input);
+
+        if (empty($from_date)) {
+            $from_date = date('Y-m-d');
+        }
+        if (empty($to_date)) {
+            $to_date = $from_date;
+        }
+
+        if (strtotime($to_date) < strtotime($from_date)) {
+            $to_date = $from_date;
+        }
 
         if (!$this->isSuperAdmin()) {
             $assigned_vehicles = $this->getStaffAssignedVehicles();
@@ -484,7 +534,7 @@ class Transportattendance extends Admin_Controller
         $student_session = $this->db->get('student_session')->row_array();
         
         if ($student_session) {
-            // Check if already assigned to this bus
+            // Check if already permanently assigned to this bus
             $bus_students = $this->transportattendance_model->get_bus_students($vehicle_id);
             $is_already_in_bus = false;
             foreach ($bus_students as $bs) {
@@ -498,16 +548,57 @@ class Transportattendance extends Admin_Controller
                 echo json_encode(['status' => 0, 'msg' => 'Student is already permanently assigned to this bus.']);
                 return;
             }
-            $insert_data = [[
-                'student_session_id' => $student_session['id'],
-                'vehicle_id' => $vehicle_id,
-                'date' => $date,
-                'attendance_type' => $attendance_type,
-                'status' => 'Switched Bus',
-                'remark' => 'Added Manually'
-            ]];
+
+            // Determine shifts
+            $shifts = array();
+            if (strtolower($attendance_type) == 'both') {
+                $shifts = array('morning', 'evening');
+            } elseif (!empty($attendance_type)) {
+                $shifts = array(strtolower($attendance_type));
+            } else {
+                $shifts = array('morning', 'evening');
+            }
+
+            // Build list of dates
+            $period_dates = array();
+            $start_ts = strtotime($from_date);
+            $end_ts = strtotime($to_date);
+            for ($current_ts = $start_ts; $current_ts <= $end_ts; $current_ts = strtotime('+1 day', $current_ts)) {
+                $period_dates[] = date('Y-m-d', $current_ts);
+            }
+
+            $num_days = count($period_dates);
+            $default_remark = ($num_days > 1) 
+                ? 'Custom Rider (' . date('d M', $start_ts) . ' - ' . date('d M', $end_ts) . ')'
+                : 'Custom Rider (' . date('d M', $start_ts) . ')';
+            
+            if (!empty($remark_input)) {
+                $final_remark = $remark_input . ' [' . $default_remark . ']';
+            } else {
+                $final_remark = $default_remark;
+            }
+
+            $insert_data = array();
+            foreach ($period_dates as $d) {
+                foreach ($shifts as $s) {
+                    $insert_data[] = array(
+                        'student_session_id' => $student_session['id'],
+                        'vehicle_id' => $vehicle_id,
+                        'date' => $d,
+                        'attendance_type' => $s,
+                        'status' => 'Switched Bus',
+                        'remark' => $final_remark
+                    );
+                }
+            }
+
             $this->transportattendance_model->save_attendance($insert_data);
-            echo json_encode(['status' => 1, 'msg' => 'Student successfully added to this bus for today.']);
+            
+            $msg = ($num_days > 1) 
+                ? "Student successfully added as custom rider for {$num_days} days (" . date('d M Y', $start_ts) . " to " . date('d M Y', $end_ts) . ")."
+                : "Student successfully added as custom rider for today.";
+
+            echo json_encode(['status' => 1, 'msg' => $msg]);
         } else {
             echo json_encode(['status' => 0, 'msg' => 'Student session not found.']);
         }

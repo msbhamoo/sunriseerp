@@ -261,6 +261,67 @@
     color: #ffffff !important;
 }
 
+.btn-switched-active {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.35) !important;
+}
+.btn-switched-active:hover {
+    background-color: #1d4ed8 !important;
+    color: #ffffff !important;
+}
+
+/* Student Circular Avatar */
+.student-avatar-img {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    display: inline-block;
+    flex-shrink: 0;
+    aspect-ratio: 1 / 1;
+}
+
+/* Modal Duration Preset Buttons */
+.duration-preset-btn {
+    background: #ffffff !important;
+    color: #475569 !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    padding: 7px 10px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease-in-out !important;
+    text-align: center !important;
+    outline: none !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 1 1 0px !important;
+    min-width: 85px !important;
+}
+.duration-preset-btn:hover {
+    background: #f1f5f9 !important;
+    color: #1e293b !important;
+    border-color: #94a3b8 !important;
+    text-decoration: none !important;
+}
+.duration-preset-btn.active {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35) !important;
+    text-decoration: none !important;
+}
+
 /* Sortable Headers */
 .sortable-th {
     cursor: pointer;
@@ -535,6 +596,7 @@
                                             <span class="filter-chip active" data-filter="all">All <span class="badge-count chip-count-all"><?php echo count($resultlist); ?></span></span>
                                             <span class="filter-chip" data-filter="Present">Present <span class="badge-count chip-count-present">0</span></span>
                                             <span class="filter-chip" data-filter="Absent">Absent <span class="badge-count chip-count-absent">0</span></span>
+                                            <span class="filter-chip" data-filter="Switched">Switched Bus <span class="badge-count chip-count-switched">0</span></span>
                                             <span class="filter-chip" data-filter="Other">Gatepass/Hostel <span class="badge-count chip-count-other">0</span></span>
                                         </div>
 
@@ -602,6 +664,7 @@
                                                     if ($is_custom) {
                                                         $st_val = 'Present';
                                                     }
+                                                    $has_switched_out = !empty($student['switched_out_info']);
                                                     $full_name = trim($student['firstname'] . ' ' . $student['lastname']);
                                                     $stop_title = !empty($student['pickup_point_name']) ? $student['pickup_point_name'] : (!empty($student['route_title']) ? $student['route_title'] : '');
                                                     $class_sec = $student['class'] . ' (' . $student['section'] . ')';
@@ -626,11 +689,13 @@
                                                         </td>
 
                                                         <td style="vertical-align:middle;">
-                                                            <div style="display:flex; align-items:center; gap:9px;">
+                                                            <div style="display:flex; align-items:center; gap:12px;">
                                                                 <?php 
                                                                 $img_src = !empty($student['image']) ? base_url($student['image']) : base_url('uploads/student_images/no_image.png');
                                                                 ?>
-                                                                <img src="<?php echo $img_src; ?>" class="img-circle" style="width:34px; height:34px; object-fit:cover; border:1px solid #cbd5e1; flex-shrink:0;" onerror="this.src='<?php echo base_url('uploads/student_images/no_image.png'); ?>';">
+                                                                <div class="student-avatar-wrapper" style="width:40px; height:40px; min-width:40px; max-width:40px; min-height:40px; max-height:40px; border-radius:50%; overflow:hidden; border:2px solid #e2e8f0; box-shadow:0 1px 3px rgba(0,0,0,0.08); flex-shrink:0; display:flex; align-items:center; justify-content:center; background:#f8fafc;">
+                                                                    <img src="<?php echo $img_src; ?>" style="width:100% !important; height:100% !important; max-width:100% !important; max-height:100% !important; object-fit:cover !important; border-radius:50% !important; display:block;" onerror="this.src='<?php echo base_url('uploads/student_images/no_image.png'); ?>';">
+                                                                </div>
                                                                 <div style="min-width:0; flex-grow:1;">
                                                                     <div style="font-size:13px; font-weight:700; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                                                         <?php echo $full_name; ?>
@@ -648,16 +713,28 @@
                                                                     <?php if (!empty($student['has_gatepass'])) { ?>
                                                                         <span class="label" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a; font-size:10px; margin-top:2px; display:inline-block; padding:1px 5px;"><i class="fa fa-ticket"></i> Gatepass Issued Today</span>
                                                                     <?php } ?>
+                                                                    <?php if ($has_switched_out) { ?>
+                                                                        <div style="margin-top:2px;">
+                                                                            <span class="label" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; font-size:10px; display:inline-block; padding:2px 6px; font-weight:700;">
+                                                                                <i class="fa fa-exchange text-warning"></i> Switched to Bus #<?php echo htmlspecialchars($student['switched_out_info']['new_vehicle_no']); ?>
+                                                                                <?php if (!empty($student['switched_out_info']['remark'])) { ?>
+                                                                                    <span style="font-weight:normal; opacity:0.9;">(<?php echo htmlspecialchars($student['switched_out_info']['remark']); ?>)</span>
+                                                                                <?php } ?>
+                                                                            </span>
+                                                                        </div>
+                                                                    <?php } ?>
                                                                     <?php if ($is_custom) { 
                                                                         if (!empty($student['original_vehicle_no'])) {
-                                                                            $rider_type = 'Custom Rider (' . $student['original_vehicle_no'] . ')';
+                                                                            $rider_type = 'Custom Rider (Orig: ' . $student['original_vehicle_no'] . ')';
                                                                         } elseif (!empty($student['hostel_room_id']) && $student['hostel_room_id'] > 0) {
                                                                             $rider_type = 'Custom Rider (Hosteler)';
                                                                         } else {
-                                                                            $rider_type = 'Custom Rider (Day Scholar)';
+                                                                            $rider_type = 'Custom Rider';
                                                                         }
                                                                     ?>
-                                                                        <span class="label" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:10px; margin-top:2px; display:inline-block; padding:1px 5px;"><?php echo $rider_type; ?></span>
+                                                                        <span class="label" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:10px; margin-top:2px; display:inline-block; padding:1px 5px; font-weight:700;">
+                                                                            <i class="fa fa-user-plus"></i> <?php echo $rider_type; ?>
+                                                                        </span>
                                                                     <?php } ?>
                                                                 </div>
                                                             </div>
@@ -669,22 +746,22 @@
 
                                                         <td style="vertical-align:middle;">
                                                             <?php
-                                                            $opp_title = isset($opposite_shift) ? $opposite_shift : 'Morning';
-                                                            if ($opp_status == 'Present') {
-                                                                echo '<span class="label" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:11px; padding:3px 7px;"><i class="fa fa-check"></i> ' . $opp_title . ': Present</span>';
-                                                            } elseif ($opp_status == 'Absent') {
-                                                                echo '<span class="label" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; font-size:11px; padding:3px 7px;"><i class="fa fa-times"></i> ' . $opp_title . ': Absent</span>';
-                                                            } elseif ($opp_status == 'Switched Bus') {
-                                                                echo '<span class="label" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:11px; padding:3px 7px;"><i class="fa fa-exchange"></i> ' . $opp_title . ': Switched</span>';
-                                                            } elseif ($opp_status == 'Gatepass') {
-                                                                echo '<span class="label" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a; font-size:11px; padding:3px 7px;"><i class="fa fa-ticket"></i> ' . $opp_title . ': Gatepass</span>';
-                                                            } elseif ($opp_status == 'Hostel') {
-                                                                echo '<span class="label" style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe; font-size:11px; padding:3px 7px;"><i class="fa fa-building"></i> ' . $opp_title . ': Hostel</span>';
-                                                            } elseif (strpos($opp_status, 'Present') !== false) {
-                                                                echo '<span class="label" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:11px; padding:3px 7px;"><i class="fa fa-bus"></i> ' . $opp_title . ': ' . $opp_status . '</span>';
-                                                            } else {
-                                                                echo '<span class="label" style="background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; font-size:11px; padding:3px 7px;">' . $opp_title . ': Not Marked</span>';
-                                                            }
+                                                             $opp_title = isset($opposite_shift) ? $opposite_shift : 'Morning';
+                                                             if ($opp_status == 'Present') {
+                                                                 echo '<span class="label" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:11px; padding:3px 7px;"><i class="fa fa-check"></i> ' . $opp_title . ': Present</span>';
+                                                             } elseif ($opp_status == 'Absent') {
+                                                                 echo '<span class="label" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; font-size:11px; padding:3px 7px;"><i class="fa fa-times"></i> ' . $opp_title . ': Absent</span>';
+                                                             } elseif ($opp_status == 'Switched Bus') {
+                                                                 echo '<span class="label" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:11px; padding:3px 7px;"><i class="fa fa-exchange"></i> ' . $opp_title . ': Switched</span>';
+                                                             } elseif ($opp_status == 'Gatepass') {
+                                                                 echo '<span class="label" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a; font-size:11px; padding:3px 7px;"><i class="fa fa-ticket"></i> ' . $opp_title . ': Gatepass</span>';
+                                                             } elseif ($opp_status == 'Hostel') {
+                                                                 echo '<span class="label" style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe; font-size:11px; padding:3px 7px;"><i class="fa fa-building"></i> ' . $opp_title . ': Hostel</span>';
+                                                             } elseif (strpos($opp_status, 'Present') !== false) {
+                                                                 echo '<span class="label" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:11px; padding:3px 7px;"><i class="fa fa-bus"></i> ' . $opp_title . ': ' . $opp_status . '</span>';
+                                                             } else {
+                                                                 echo '<span class="label" style="background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; font-size:11px; padding:3px 7px;">' . $opp_title . ': Not Marked</span>';
+                                                             }
                                                             ?>
                                                         </td>
 
@@ -701,6 +778,9 @@
                                                                     </button>
                                                                     <button type="button" class="btn btn-touch-status <?php echo ($st_val == 'Absent') ? 'btn-absent-active' : ''; ?>" data-value="Absent" title="Absent">
                                                                         <i class="fa fa-times"></i> Absent
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-touch-status <?php echo ($st_val == 'Switched Bus') ? 'btn-switched-active' : ''; ?>" data-value="Switched Bus" title="Switched to another bus">
+                                                                        <i class="fa fa-exchange"></i> Switched
                                                                     </button>
                                                                     <button type="button" class="btn btn-touch-status <?php echo ($st_val == 'Hostel') ? 'btn-hostel-active' : ''; ?>" data-value="Hostel" title="Hostel">
                                                                         Hostel
@@ -748,24 +828,76 @@
     </section>
 </div>
 
-<!-- Custom Rider Modal -->
+<!-- Custom Rider Modal (Enhanced with Multi-Day / Date Range Support) -->
 <div id="customRiderModal" class="modal fade" role="dialog">
-    <div class="modal-dialog">
-        <div class="modal-content" style="border-radius:8px; overflow:hidden;">
-            <div class="modal-header" style="background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:12px 18px;">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content" style="border-radius:10px; overflow:hidden; box-shadow:0 10px 25px rgba(0,0,0,0.15);">
+            <div class="modal-header" style="background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:14px 20px;">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title" style="font-weight:700; font-size:16px; color:#1e293b;"><i class="fa fa-user-plus text-primary"></i> Add Custom Rider</h4>
+                <h4 class="modal-title" style="font-weight:700; font-size:16px; color:#1e293b;">
+                    <i class="fa fa-user-plus text-primary"></i> Add Custom Rider / Temporary Bus Switch
+                </h4>
             </div>
-            <div class="modal-body" style="padding:18px;">
-                <div class="form-group">
-                    <label style="font-size:12px; font-weight:600; color:#475569;">Search Student (Name or Admission No)</label>
-                    <input type="text" id="search_student_text" class="form-control input-sm" placeholder="Type name or adm no..." style="border-radius:4px;">
+            <div class="modal-body" style="padding:20px;">
+                <!-- Step 1: Duration Preset Selection -->
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label style="font-size:12px; font-weight:700; color:#334155; margin-bottom:8px; display:block;">
+                        <i class="fa fa-calendar-check-o text-primary"></i> Transfer Duration:
+                    </label>
+                    <div style="display:flex; gap:8px; width:100%; flex-wrap:wrap;" id="duration_presets_group">
+                        <button type="button" class="duration-preset-btn active" data-days="1">1 Day (Selected)</button>
+                        <button type="button" class="duration-preset-btn" data-days="2">Next 2 Days</button>
+                        <button type="button" class="duration-preset-btn" data-days="3">Next 3 Days</button>
+                        <button type="button" class="duration-preset-btn" data-days="custom">Custom Dates</button>
+                    </div>
                 </div>
-                <div id="search_results" style="max-height: 250px; overflow-y: auto; border:1px solid #e2e8f0; border-radius:6px; display:none;">
+
+                <!-- Step 2: Date Range Pickers -->
+                <div class="row" style="margin-bottom:14px;">
+                    <div class="col-xs-6">
+                        <label style="font-size:11px; font-weight:600; color:#475569;">From Date</label>
+                        <div class="input-group">
+                            <input type="text" id="custom_from_date" class="form-control input-sm date" value="<?php echo isset($date) ? date($this->customlib->getSchoolDateFormat(), strtotime($date)) : date($this->customlib->getSchoolDateFormat()); ?>" style="border-radius:4px 0 0 4px; font-size:12px;">
+                            <span class="input-group-addon" style="padding:4px 8px; font-size:11px;"><i class="fa fa-calendar"></i></span>
+                        </div>
+                    </div>
+                    <div class="col-xs-6">
+                        <label style="font-size:11px; font-weight:600; color:#475569;">To Date</label>
+                        <div class="input-group">
+                            <input type="text" id="custom_to_date" class="form-control input-sm date" value="<?php echo isset($date) ? date($this->customlib->getSchoolDateFormat(), strtotime($date)) : date($this->customlib->getSchoolDateFormat()); ?>" style="border-radius:4px 0 0 4px; font-size:12px;">
+                            <span class="input-group-addon" style="padding:4px 8px; font-size:11px;"><i class="fa fa-calendar"></i></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Shift Selection -->
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label style="font-size:11px; font-weight:600; color:#475569; margin-bottom:4px; display:block;">Applicable Shift</label>
+                    <select id="custom_shift_select" class="form-control input-sm" style="border-radius:4px; font-size:12px; font-weight:600;">
+                        <option value="both" selected>Both Shifts (Morning & Evening)</option>
+                        <option value="morning">Morning Shift Only</option>
+                        <option value="evening">Evening Shift Only</option>
+                    </select>
+                </div>
+
+                <!-- Step 4: Optional Reason Note -->
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label style="font-size:11px; font-weight:600; color:#475569; margin-bottom:4px; display:block;">Reason / Note (Optional)</label>
+                    <input type="text" id="custom_rider_remark" class="form-control input-sm" placeholder="e.g. Staying with relatives / Exam duty transfer" style="border-radius:4px; font-size:12px;">
+                </div>
+
+                <hr style="margin:14px 0; border-color:#e2e8f0;">
+
+                <!-- Step 5: Student Search -->
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label style="font-size:12px; font-weight:700; color:#1e293b;"><i class="fa fa-search text-primary"></i> Search Student (Name or Admission No)</label>
+                    <input type="text" id="search_student_text" class="form-control input-sm" placeholder="Type name or adm no to find student..." style="border-radius:4px; font-size:12px;">
+                </div>
+                <div id="search_results" style="max-height: 220px; overflow-y: auto; border:1px solid #e2e8f0; border-radius:6px; display:none; background:#ffffff;">
                     
                 </div>
             </div>
-            <div class="modal-footer" style="background:#fafbfc; border-top:1px solid #f1f5f9; padding:10px 18px;">
+            <div class="modal-footer" style="background:#fafbfc; border-top:1px solid #f1f5f9; padding:10px 20px;">
                 <button type="button" class="btn btn-default btn-sm" data-dismiss="modal" style="border-radius:4px; font-weight:600;">Close</button>
             </div>
         </div>
@@ -782,26 +914,37 @@ function updateCounters() {
     var total = $('.student-row').length;
     var present = 0;
     var absent = 0;
+    var switched = 0;
     var other = 0;
 
     $('.attendencetype-field').each(function() {
         var val = $(this).val();
-        if (val === 'Present' || val === 'Switched Bus') present++;
+        if (val === 'Present') present++;
         else if (val === 'Absent') absent++;
-        else other++;
+        else if (val === 'Switched Bus') {
+            switched++;
+            // Note: If on the target bus, they are present custom riders
+            var row = $(this).closest('.student-row');
+            if (row.attr('data-custom') === 'yes') {
+                present++;
+            }
+        } else {
+            other++;
+        }
     });
 
     $('#count_total').text(total);
     $('#count_present').text(present);
     $('#count_absent').text(absent);
-    $('#count_other').text(other);
+    $('#count_other').text(other + switched);
 
     $('.chip-count-all').text(total);
     $('.chip-count-present').text(present);
     $('.chip-count-absent').text(absent);
+    $('.chip-count-switched').text(switched);
     $('.chip-count-other').text(other);
 
-    $('#sticky_summary').text(present + ' Present, ' + absent + ' Absent' + (other > 0 ? ', ' + other + ' Other' : ''));
+    $('#sticky_summary').text(present + ' Present, ' + absent + ' Absent' + (switched > 0 ? ', ' + switched + ' Switched' : '') + (other > 0 ? ', ' + other + ' Other' : ''));
 }
 
 function markAllStatus(status) {
@@ -811,7 +954,7 @@ function markAllStatus(status) {
         $('#attendencetype_' + sessionId).val(status);
         row.attr('data-status', status);
         
-        $(this).find('.btn-touch-status').removeClass('btn-present-active btn-absent-active btn-hostel-active btn-gatepass-active');
+        $(this).find('.btn-touch-status').removeClass('btn-present-active btn-absent-active btn-switched-active btn-hostel-active btn-gatepass-active');
         if (status === 'Present') {
             $(this).find('[data-value="Present"]').addClass('btn-present-active');
         } else if (status === 'Absent') {
@@ -903,9 +1046,11 @@ function applyFilterAndSearch() {
         var matchesFilter = true;
 
         if (filter === 'Present') {
-            matchesFilter = (status === 'Present' || status === 'Switched Bus');
+            matchesFilter = (status === 'Present' || ($row.attr('data-custom') === 'yes' && status === 'Switched Bus'));
         } else if (filter === 'Absent') {
             matchesFilter = (status === 'Absent');
+        } else if (filter === 'Switched') {
+            matchesFilter = (status === 'Switched Bus');
         } else if (filter === 'Other') {
             matchesFilter = (status !== 'Present' && status !== 'Absent' && status !== 'Switched Bus');
         }
@@ -1019,16 +1164,63 @@ $(document).ready(function() {
         $('#attendencetype_' + sessionId).val(val);
         row.attr('data-status', val);
         
-        group.find('.btn-touch-status').removeClass('btn-present-active btn-absent-active btn-hostel-active btn-gatepass-active');
+        group.find('.btn-touch-status').removeClass('btn-present-active btn-absent-active btn-switched-active btn-hostel-active btn-gatepass-active');
         
         if (val === 'Present') $(this).addClass('btn-present-active');
         else if (val === 'Absent') $(this).addClass('btn-absent-active');
+        else if (val === 'Switched Bus') $(this).addClass('btn-switched-active');
         else if (val === 'Hostel') $(this).addClass('btn-hostel-active');
         else if (val === 'Gatepass') $(this).addClass('btn-gatepass-active');
         
         updateCounters();
         if (currentFilter !== 'all') {
             applyFilterAndSearch();
+        }
+    });
+
+    // Duration Presets Click in Custom Rider Modal
+    $('.duration-preset-btn').on('click', function() {
+        $('.duration-preset-btn').removeClass('active');
+        $(this).addClass('active');
+
+        var days = $(this).data('days');
+        var baseDateStr = $('#date').val() || $('#custom_from_date').val();
+        
+        if (days === 'custom') {
+            // Keep user dates, focus on To Date
+            $('#custom_to_date').focus();
+            return;
+        }
+
+        var numDays = parseInt(days) || 1;
+        $('#custom_from_date').val(baseDateStr);
+
+        // Calculate To Date
+        try {
+            var parts = baseDateStr.split('/');
+            var fromD;
+            // Handle dd/mm/yyyy or yyyy-mm-dd format
+            if (baseDateStr.indexOf('/') !== -1) {
+                fromD = new Date(parts[2], parts[1] - 1, parts[0]);
+            } else {
+                fromD = new Date(baseDateStr);
+            }
+            if (!isNaN(fromD.getTime())) {
+                var toD = new Date(fromD);
+                toD.setDate(toD.getDate() + (numDays - 1));
+                
+                var dd = String(toD.getDate()).padStart(2, '0');
+                var mm = String(toD.getMonth() + 1).padStart(2, '0');
+                var yyyy = toD.getFullYear();
+                
+                if (baseDateStr.indexOf('/') !== -1) {
+                    $('#custom_to_date').val(dd + '/' + mm + '/' + yyyy);
+                } else {
+                    $('#custom_to_date').val(yyyy + '-' + mm + '-' + dd);
+                }
+            }
+        } catch(e) {
+            console.error('Date parse error', e);
         }
     });
 
@@ -1106,15 +1298,21 @@ $(document).ready(function() {
                     if (data && data.length > 0) {
                         var html = '<ul class="list-group" style="margin-bottom:0;">';
                         $.each(data, function(index, student) {
-                            html += '<li class="list-group-item" style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px;">';
-                            html += '<div><strong>' + student.firstname + ' ' + student.lastname + '</strong> (' + student.admission_no + ') <small class="text-muted">' + student.class + ' (' + student.section + ')</small></div>';
-                            html += '<button type="button" class="btn btn-xs btn-success add_custom_btn" data-studentid="'+student.id+'" style="border-radius:4px; font-weight:600;"><i class="fa fa-plus"></i> Add</button>';
+                            var imgSrc = student.image ? '<?php echo base_url(); ?>' + student.image : '<?php echo base_url("uploads/student_images/no_image.png"); ?>';
+                            html += '<li class="list-group-item" style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px;">';
+                            html += '<div style="display:flex; align-items:center; gap:10px;">';
+                            html += '<div style="width:36px; height:36px; min-width:36px; max-width:36px; min-height:36px; max-height:36px; border-radius:50%; overflow:hidden; border:1.5px solid #cbd5e1; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:#f8fafc;">';
+                            html += '<img src="' + imgSrc + '" style="width:100% !important; height:100% !important; max-width:100% !important; max-height:100% !important; object-fit:cover !important; display:block;" onerror="this.src=\'<?php echo base_url("uploads/student_images/no_image.png"); ?>\';">';
+                            html += '</div>';
+                            html += '<div><strong>' + student.firstname + ' ' + student.lastname + '</strong> (' + student.admission_no + ') <br><small class="text-muted">' + student.class + ' (' + student.section + ')</small></div>';
+                            html += '</div>';
+                            html += '<button type="button" class="btn btn-xs btn-success add_custom_btn" data-studentid="'+student.id+'" style="border-radius:4px; font-weight:700; padding:5px 12px;"><i class="fa fa-plus"></i> Add Rider</button>';
                             html += '</li>';
                         });
                         html += '</ul>';
                         $('#search_results').html(html).show();
                     } else {
-                        $('#search_results').html('<div style="padding:10px 14px; color:#94a3b8; font-size:12px;">No matching students found.</div>').show();
+                        $('#search_results').html('<div style="padding:12px 16px; color:#94a3b8; font-size:12px;">No matching active students found.</div>').show();
                     }
                 }
             });
@@ -1126,13 +1324,18 @@ $(document).ready(function() {
     $(document).on('click', '.add_custom_btn', function() {
         var student_id = $(this).data('studentid');
         var vehicle_id = $('select[name="vehicle_id"]').val();
-        var date = $('#date').val();
-        var attendance_type = $('select[name="attendance_type"]').val();
+        var from_date = $('#custom_from_date').val() || $('#date').val();
+        var to_date = $('#custom_to_date').val() || from_date;
+        var attendance_type = $('#custom_shift_select').val() || $('select[name="attendance_type"]').val();
+        var remark = $('#custom_rider_remark').val();
         
-        if(!vehicle_id || !date || !attendance_type) {
-            errorMsg('Please ensure you have selected a date, vehicle, and attendance shift on the search form.');
+        if(!vehicle_id || !from_date) {
+            errorMsg('Please ensure you have selected a date and vehicle.');
             return;
         }
+        
+        var $btn = $(this);
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Adding...');
         
         $.ajax({
             url: '<?php echo site_url("admin/transportattendance/add_custom_rider") ?>',
@@ -1140,20 +1343,25 @@ $(document).ready(function() {
             data: {
                 student_id: student_id,
                 vehicle_id: vehicle_id,
-                date: date,
-                attendance_type: attendance_type
+                from_date: from_date,
+                to_date: to_date,
+                date: from_date,
+                attendance_type: attendance_type,
+                remark: remark
             },
             dataType: 'json',
             success: function(res) {
                 if (res.status == 1) {
                     successMsg(res.msg);
-                    setTimeout(function(){ location.reload(); }, 800);
+                    setTimeout(function(){ location.reload(); }, 900);
                 } else {
                     errorMsg(res.msg);
+                    $btn.prop('disabled', false).html('<i class="fa fa-plus"></i> Add Rider');
                 }
             },
             error: function(xhr) {
-                errorMsg('An error occurred. Please try again.');
+                errorMsg('An error occurred while adding custom rider. Please try again.');
+                $btn.prop('disabled', false).html('<i class="fa fa-plus"></i> Add Rider');
                 console.error(xhr.responseText);
             }
         });
