@@ -159,9 +159,8 @@ class Staffattendance extends Admin_Controller
         } else {
             $user_type            = $this->input->post('user_id');
             $date                 = $this->input->post('date');
-            $user_list            = $this->staffattendancemodel->get();
-            $data['userlist']     = $user_list;
-            $data['class_id']     = $user_list;
+            $data['userlist']     = [];
+            $data['class_id']     = "";
             $data['user_type_id'] = $user_type_id;
             $data['section_id']   = "";
             $data['date']         = $date;
@@ -176,8 +175,19 @@ class Staffattendance extends Admin_Controller
                 $absent_staff_list=[];
                 $present_staff_list=[];
 
-                // Deploy-safe: only persist uniform status if the column exists (migration run).
-                $has_uniform_col = $this->db->field_exists('uniform_status', 'staff_attendance');
+                // Cache column existence once before loop to avoid repetitive queries per staff
+                $available_compliance_cols = [];
+                $compliance_items = [
+                    'uniform_status'        => 'uniform_status_',
+                    'id_card_status'        => 'id_card_status_',
+                    'lesson_plan_status'    => 'lesson_plan_status_',
+                    'phone_handover_status' => 'phone_handover_status_',
+                ];
+                foreach ($compliance_items as $col_name => $post_prefix) {
+                    if ($this->db->field_exists($col_name, 'staff_attendance')) {
+                        $available_compliance_cols[$col_name] = $post_prefix;
+                    }
+                }
 
                 foreach ($user_type_ary as $key => $value) {
 
@@ -190,16 +200,10 @@ class Staffattendance extends Admin_Controller
                       continue;
                   }
 
-                  $in_time    =   $this->input->post("in_time_" . $value);
-                  $out_time   =   $this->input->post("out_time_" . $value);
-
-                    if((!isset($in_time) || $in_time=="") && (!isset($out_time) || $out_time=="")){
-                        $in_time  = null;
-                        $out_time = null;
-                    }else{
-                        $in_time=date('H:i:s', strtotime($this->input->post("in_time_" . $value)));
-                        $out_time=date('H:i:s', strtotime($this->input->post("out_time_" . $value)));
-                    }
+                  $raw_in   = trim((string)$this->input->post("in_time_" . $value));
+                  $raw_out  = trim((string)$this->input->post("out_time_" . $value));
+                  $in_time  = (!empty($raw_in) && $raw_in !== '--:--' && $raw_in !== '00:00:00') ? date('H:i:s', strtotime($raw_in)) : null;
+                  $out_time = (!empty($raw_out) && $raw_out !== '--:--' && $raw_out !== '00:00:00') ? date('H:i:s', strtotime($raw_out)) : null;
 
                     $absent_config = $this->staff_attendance['absent'];
 
@@ -226,18 +230,9 @@ class Staffattendance extends Admin_Controller
                         'updated_at'               => date('Y-m-d', $this->customlib->datetostrtotime($date)),
                     );
 
-                    $compliance_items = [
-                        'uniform_status'       => 'uniform_status_',
-                        'id_card_status'       => 'id_card_status_',
-                        'lesson_plan_status'   => 'lesson_plan_status_',
-                        'phone_handover_status' => 'phone_handover_status_',
-                    ];
-
-                    foreach ($compliance_items as $col_name => $post_prefix) {
-                        if ($this->db->field_exists($col_name, 'staff_attendance')) {
-                            $val = $this->input->post($post_prefix . $value);
-                            $single_attendance[$col_name] = ($val === 'yes') ? 'yes' : 'no';
-                        }
+                    foreach ($available_compliance_cols as $col_name => $post_prefix) {
+                        $val = $this->input->post($post_prefix . $value);
+                        $single_attendance[$col_name] = ($val === 'yes') ? 'yes' : 'no';
                     }
 
                     $attendance_array[] = $single_attendance;
@@ -271,6 +266,7 @@ class Staffattendance extends Admin_Controller
             }
             $data['is_first_time_attendance']  = $is_first_time_attendance;
             $data['resultlist']  = $resultlist;
+            $data['role_required_hours'] = $this->staffAttendaceSetting_model->getAllRoleRequiredHours();
 
             $this->load->view('layout/header', $data);
             $this->load->view('admin/staffattendance/staffattendancelist', $data);
@@ -364,9 +360,11 @@ class Staffattendance extends Admin_Controller
         $data['holidays']      = count($holiday_dates);
         $data['working_days']  = $days_in_month - count($holiday_dates);
         $data['type_list']     = $this->attendencetype_model->getStaffAttendanceType();
+        $data['role_required_hours'] = $this->staffAttendaceSetting_model->getAllRoleRequiredHours();
 
         $this->load->view('admin/staffattendance/_monthly_sheet', $data);
     }
+
 
     // =================================================================
     //  QR-BASED ATTENDANCE

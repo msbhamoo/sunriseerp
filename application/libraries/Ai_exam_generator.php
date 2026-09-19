@@ -21,7 +21,8 @@ class Ai_exam_generator
      */
     public function generate_paper($params)
     {
-        @set_time_limit(60);
+        @ini_set('max_execution_time', 300);
+        @set_time_limit(300);
         $class_name            = isset($params['class_name']) ? $params['class_name'] : 'Class 10';
         $subject_name          = isset($params['subject_name']) ? $params['subject_name'] : 'Science';
         $chapter               = isset($params['chapter']) ? $params['chapter'] : 'Complete Syllabus';
@@ -450,8 +451,30 @@ EOT;
         $url = "https://openrouter.ai/api/v1/chat/completions";
         $site_url = defined('base_url') ? base_url() : 'https://sunriseschool.in';
 
+        $sch_setting = $this->CI->setting_model->getSetting();
+        $saved_model = !empty($sch_setting->ai_default_model) ? trim($sch_setting->ai_default_model) : '';
+
+        // Map legacy/friendly provider names to valid OpenRouter model identifiers
+        $model_map = [
+            'openrouter'    => 'stealth/union-alpha',
+            'openrouter_ox' => 'stealth/union-alpha',
+            'ox-alpha'      => 'stealth/union-alpha',
+            'gemini'        => 'google/gemini-2.0-flash-001',
+            'llama'         => 'meta-llama/llama-3.3-70b-instruct',
+            'deepseek'      => 'deepseek/deepseek-chat',
+            'openai'        => 'openai/gpt-4o'
+        ];
+
+        if (isset($model_map[$saved_model])) {
+            $model = $model_map[$saved_model];
+        } elseif (!empty($saved_model) && strpos($saved_model, '/') !== false) {
+            $model = $saved_model;
+        } else {
+            $model = 'stealth/union-alpha';
+        }
+
         $payload = [
-            'model' => 'stealth/union-alpha',
+            'model' => $model,
             'messages' => [
                 ['role' => 'system', 'content' => 'You are an expert CBSE examination question author. You MUST output ONLY raw valid JSON adhering exactly to the requested schema without any introductory text, conversational remarks, thinking traces, or markdown explanations.'],
                 ['role' => 'user', 'content' => $prompt]
@@ -471,8 +494,8 @@ EOT;
             'HTTP-Referer: ' . $site_url,
             'X-Title: Sunrise ERP AI Studio'
         ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 25);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 180);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         $result = curl_exec($ch);

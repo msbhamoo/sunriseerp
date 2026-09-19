@@ -25,6 +25,43 @@ class Report extends MY_Addon_CBSEController
         $this->load->view('layout/footer');
     }
 
+    public function rollnumber()
+    {
+        if (!$this->rbac->hasPrivilege('subject_marks_report', 'can_view')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'cbse_exam');
+        $this->session->set_userdata('sub_menu', 'reports/cbse_report');
+        $this->session->set_userdata('subsub_menu', 'cbse_exam/rollnumber');
+
+        $data['exams']       = $this->cbseexam_exam_model->getexamlist();
+        $class               = $this->class_model->get();
+        $data['classlist']   = $class;
+        $data['sch_setting'] = $this->sch_setting_detail;
+
+        $this->form_validation->set_rules('exam_id', $this->lang->line('exam'), 'trim|required|xss_clean');
+        $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|xss_clean');
+        $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|xss_clean');
+
+        if ($this->form_validation->run() == true) {
+            $exam_id          = $this->input->post('exam_id');
+            $class_id         = $this->input->post('class_id');
+            $section_id       = $this->input->post('section_id');
+
+            $data['exam_id']    = $exam_id;
+            $data['class_id']   = $class_id;
+            $data['section_id'] = $section_id;
+
+            $roll_report = $this->cbseexam_exam_model->get_exam_roll_number_report($exam_id, $class_id, $section_id);
+            $data['roll_report'] = $roll_report;
+        }
+
+        $this->load->view('layout/header');
+        $this->load->view('cbseexam/report/rollnumber', $data);
+        $this->load->view('layout/footer');
+    }
+
     public function marksstatus()
     {
         if (!$this->rbac->hasPrivilege('subject_marks_report', 'can_view')) {

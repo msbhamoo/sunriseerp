@@ -12,6 +12,8 @@ $meta = array(
 $monthName = date('F Y', mktime(0, 0, 0, $month, 1, $year));
 $staff = $sheet['staff'];
 $map   = $sheet['map'];
+$map_times = isset($sheet['map_times']) ? $sheet['map_times'] : array();
+$role_req_map = isset($role_required_hours) ? $role_required_hours : array();
 ?>
 <style>
     .ms-tiles { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:14px; }
@@ -33,6 +35,8 @@ $map   = $sheet['map'];
     .ms-legend { display:flex; flex-wrap:wrap; gap:10px; margin:10px 0; font-size:11.5px; color:#6b7684; }
     .ms-legend .li { display:inline-flex; align-items:center; gap:4px; }
     .ms-legend .sw { width:14px; height:14px; border-radius:3px; display:inline-block; }
+    .ms-badge-ok { background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:700; font-size:11px; }
+    .ms-badge-short { background:#fee2e2; color:#b91c1c; padding:2px 6px; border-radius:4px; font-weight:700; font-size:11px; }
 </style>
 
 <div class="ms-tiles">
@@ -48,6 +52,7 @@ $map   = $sheet['map'];
         <span class="li"><span class="sw" style="background:<?php echo $mc[1]; ?>;"></span> <?php echo $this->lang->line($k) ? $this->lang->line($k) : $k; ?></span>
     <?php } ?>
     <span class="li"><span class="sw" style="background:#f3e8ff;border:1px solid #d8b4fe;"></span> Holiday column</span>
+    <span class="li" style="margin-left:auto;"><span class="ms-badge-short">-XXh Shortfall</span> = Under Required Work Hours</span>
 </div>
 
 <?php if (empty($staff)) { ?>
@@ -68,16 +73,20 @@ $map   = $sheet['map'];
                         <?php echo $d; ?><br><span style="font-size:9px;font-weight:400;"><?php echo substr($dow, 0, 2); ?></span>
                     </th>
                 <?php } ?>
-                <th class="ms-tot" title="Present">P</th>
-                <th class="ms-tot" title="Late">L</th>
-                <th class="ms-tot" title="Absent">A</th>
-                <th class="ms-tot" title="Leave/Half/Holiday">Oth</th>
+                <th class="ms-tot" title="Present Days">P</th>
+                <th class="ms-tot" title="Late Days">L</th>
+                <th class="ms-tot" title="Absent Days">A</th>
+                <th class="ms-tot" title="Leave / Half / Holiday">Oth</th>
+                <th class="ms-tot" title="Total Actual Worked Hours (Sum of all In-Out punches)" style="min-width:75px;">Worked</th>
+                <th class="ms-tot" title="Monthly Shortfall based on Role Required Hours" style="min-width:95px;">Shortfall / +/-</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($staff as $s) {
                 $sid = $s['staff_id'];
                 $tot = array('present' => 0, 'late' => 0, 'absent' => 0, 'oth' => 0);
+                $total_worked_secs = 0;
+                $attended_days_count = 0;
             ?>
                 <tr>
                     <td class="ms-name"><?php echo htmlspecialchars($s['name']); ?><br><span style="font-size:10px;color:#9aa6b4;"><?php echo htmlspecialchars($s['employee_id']); ?></span></td>
@@ -86,12 +95,27 @@ $map   = $sheet['map'];
                         $ds = sprintf('%04d-%02d-%02d', $year, $month, $d);
                         $isHol = isset($holiday_dates[$ds]);
                         $type = isset($map[$sid][$ds]) ? $map[$sid][$ds] : null;
-                        if ($type === 'present') { $tot['present']++; }
-                        elseif ($type === 'late') { $tot['late']++; }
+                        if ($type === 'present') { $tot['present']++; $attended_days_count++; }
+                        elseif ($type === 'late') { $tot['late']++; $attended_days_count++; }
                         elseif ($type === 'absent') { $tot['absent']++; }
+                        elseif ($type === 'half_day' || $type === 'half_day_second_shift') { $tot['oth']++; $attended_days_count += 0.5; }
                         elseif ($type !== null) { $tot['oth']++; }
+
+                        // Calculate day duration if punch exists
+                        $day_hover = '';
+                        if (isset($map_times[$sid][$ds])) {
+                            $inS = strtotime("1970-01-01 " . $map_times[$sid][$ds]['in'] . " UTC");
+                            $outS = strtotime("1970-01-01 " . $map_times[$sid][$ds]['out'] . " UTC");
+                            if ($outS > $inS) {
+                                $diff = $outS - $inS;
+                                $total_worked_secs += $diff;
+                                $dh = intdiv($diff, 3600);
+                                $dm = intdiv($diff % 3600, 60);
+                                $day_hover = "In: " . date('h:i A', $inS) . " | Out: " . date('h:i A', $outS) . " (" . $dh . "h " . $dm . "m)";
+                            }
+                        }
                     ?>
-                        <td class="<?php echo $isHol ? 'ms-hol' : ''; ?>">
+                        <td class="<?php echo $isHol ? 'ms-hol' : ''; ?>" title="<?php echo !empty($day_hover) ? $day_hover : ($type ? ucfirst(str_replace('_', ' ', $type)) : ''); ?>">
                             <?php if ($type !== null && isset($meta[$type])) {
                                 echo '<span class="ms-cell" style="background:' . $meta[$type][1] . ';">' . $meta[$type][0] . '</span>';
                             } elseif ($isHol) {
@@ -105,9 +129,49 @@ $map   = $sheet['map'];
                     <td class="ms-tot" style="color:#f59e0b;"><?php echo $tot['late']; ?></td>
                     <td class="ms-tot" style="color:#dc2626;"><?php echo $tot['absent']; ?></td>
                     <td class="ms-tot" style="color:#6b7684;"><?php echo $tot['oth']; ?></td>
+                    
+                    <?php
+                    // Compute Actual Worked vs Required Hours
+                    $wH = intdiv($total_worked_secs, 3600);
+                    $wM = intdiv($total_worked_secs % 3600, 60);
+                    $worked_text = ($wH > 0 ? $wH . 'h ' : '0h ') . ($wM > 0 ? $wM . 'm' : '');
+
+                    // Required per day
+                    $roleId = isset($s['role_id']) ? $s['role_id'] : 0;
+                    $reqDayStr = isset($role_req_map[$roleId]) ? $role_req_map[$roleId] : '08:00:00';
+                    $reqDayParts = explode(':', $reqDayStr);
+                    $reqDaySecs = ((int)$reqDayParts[0] * 3600) + ((isset($reqDayParts[1]) ? (int)$reqDayParts[1] : 0) * 60);
+                    if ($reqDaySecs <= 0) { $reqDaySecs = 8 * 3600; } // default 8 hours
+
+                    // Expected required hours based on present days
+                    $expected_req_secs = (int) ($attended_days_count * $reqDaySecs);
+                    $shortfall_secs = $expected_req_secs - $total_worked_secs;
+                    ?>
+                    <td class="ms-tot" style="font-weight:700; color:#0f172a; font-size:11.5px;"><?php echo $worked_text; ?></td>
+                    <td class="ms-tot" style="font-size:11px;">
+                        <?php if ($total_worked_secs === 0 && $attended_days_count == 0) { ?>
+                            <span style="color:#94a3b8;">-</span>
+                        <?php } elseif ($shortfall_secs > 60) { 
+                            $sH = intdiv($shortfall_secs, 3600);
+                            $sM = intdiv($shortfall_secs % 3600, 60);
+                        ?>
+                            <span class="ms-badge-short" title="Expected: <?php echo intdiv($expected_req_secs, 3600); ?>h <?php echo intdiv($expected_req_secs % 3600, 60); ?>m based on role schedule">
+                                <i class="fa fa-arrow-down"></i> -<?php echo ($sH > 0 ? $sH . 'h ' : '') . $sM . 'm'; ?>
+                            </span>
+                        <?php } else { 
+                            $surplus_secs = abs($shortfall_secs);
+                            $suH = intdiv($surplus_secs, 3600);
+                            $suM = intdiv($surplus_secs % 3600, 60);
+                        ?>
+                            <span class="ms-badge-ok" title="Met or exceeded required role hours">
+                                <i class="fa fa-check"></i> <?php echo ($suH > 0 ? '+' . $suH . 'h ' : 'OK'); ?>
+                            </span>
+                        <?php } ?>
+                    </td>
                 </tr>
             <?php } ?>
         </tbody>
     </table>
 </div>
 <?php } ?>
+

@@ -5,6 +5,8 @@ if (!defined('BASEPATH')) {
 
 class Installmentreport_model extends MY_Model {
 
+    public $current_session;
+
     public function __construct() {
         parent::__construct();
         $this->current_session = $this->setting_model->getCurrentSession();

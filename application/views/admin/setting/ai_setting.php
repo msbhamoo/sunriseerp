@@ -208,10 +208,13 @@
                                     <i class="fa fa-sliders" style="color: #6366f1; font-size: 16px;"></i> Default Institution AI Engine
                                 </div>
                                 <div class="ai-key-box-desc">
-                                    Primary AI provider that loads automatically across exam creation workflows.
+                                    Primary AI model that loads automatically across exam creation workflows.
                                 </div>
-                                <select class="form-control" id="ai_default_model" name="ai_default_model" style="border-color: #cbd5e1; max-width: 450px;">
-                                    <option value="openrouter" selected>🌟 OpenRouter: stealth/union-alpha (Frontier Reasoning & Vision)</option>
+                                <select class="form-control" id="ai_default_model" name="ai_default_model" style="border-color: #cbd5e1; max-width: 500px;">
+                                    <option value="stealth/union-alpha" <?php echo (!isset($result->ai_default_model) || in_array($result->ai_default_model, ['stealth/union-alpha', 'openrouter', 'openrouter_ox', ''])) ? 'selected' : ''; ?>>🌟 OpenRouter: stealth/union-alpha (Recommended Frontier Model)</option>
+                                    <option value="google/gemini-2.0-flash-001" <?php echo (isset($result->ai_default_model) && in_array($result->ai_default_model, ['google/gemini-2.0-flash-001', 'gemini'])) ? 'selected' : ''; ?>>⚡ Google: Gemini 2.0 Flash</option>
+                                    <option value="meta-llama/llama-3.3-70b-instruct" <?php echo (isset($result->ai_default_model) && in_array($result->ai_default_model, ['meta-llama/llama-3.3-70b-instruct', 'llama'])) ? 'selected' : ''; ?>>🦙 Meta: LLaMA 3.3 70B Instruct</option>
+                                    <option value="deepseek/deepseek-chat" <?php echo (isset($result->ai_default_model) && in_array($result->ai_default_model, ['deepseek/deepseek-chat', 'deepseek'])) ? 'selected' : ''; ?>>🧠 DeepSeek: DeepSeek V3</option>
                                 </select>
                             </div>
 

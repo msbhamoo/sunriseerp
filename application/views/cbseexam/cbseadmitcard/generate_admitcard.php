@@ -355,18 +355,9 @@ input:checked + .slider:before {
                                 <?php } ?>
 
                                 <!-- Bulk Generate All Missing (Entire Exam) -->
-                                <form action="<?php echo site_url('cbseexam/cbseadmitcardbulk/generate_missing'); ?>" method="post" class="form-inline" id="generateMissingFormAll">
-                                    <?php echo $this->customlib->getCSRF(); ?>
-                                    <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
-                                    <div class="input-group">
-                                        <input type="number" name="series" class="form-control input-sm" placeholder="Start Series (e.g. 1001)" required style="width: 160px; border-radius: 4px 0 0 4px;">
-                                        <span class="input-group-btn">
-                                            <button type="submit" class="btn btn-success btn-sm" style="border-radius: 0 4px 4px 0;" onclick="return confirm('Are you sure you want to generate admit cards for ALL missing students in this exam?');">
-                                                <i class="fa fa-magic"></i> Auto-Generate All Missing
-                                            </button>
-                                        </span>
-                                    </div>
-                                </form>
+                                <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#generateAllModal" style="border-radius: 4px;">
+                                    <i class="fa fa-magic"></i> Auto-Generate All Missing
+                                </button>
                             </div>
                         </div>
                         <div class="modern-body p-0">
@@ -412,22 +403,11 @@ input:checked + .slider:before {
                                                         <i class="fa fa-eye text-primary"></i> View
                                                     </button>
                                                     
-                                                    <!-- Generate for this section -->
+                                                    <!-- Generate for this section modal trigger -->
                                                     <?php if ($row['missing_count'] > 0) { ?>
-                                                        <form action="<?php echo site_url('cbseexam/cbseadmitcardbulk/generate_missing_by_section'); ?>" method="post" style="display:inline;" onsubmit="return confirm('Generate admit cards for missing students in this section?');">
-                                                            <?php echo $this->customlib->getCSRF(); ?>
-                                                            <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
-                                                            <input type="hidden" name="class_id" value="<?php echo $row['class_id']; ?>">
-                                                            <input type="hidden" name="section_id" value="<?php echo $row['section_id']; ?>">
-                                                            <div class="input-group" style="width:120px;">
-                                                                <input type="number" name="series" class="form-control input-xs" placeholder="Series" required style="height:22px; padding:2px 5px; font-size:12px; border-radius: 4px 0 0 4px;">
-                                                                <span class="input-group-btn">
-                                                                    <button type="submit" class="btn btn-success btn-xs" style="height:22px; padding:2px 5px; border-radius: 0 4px 4px 0;" title="Generate Missing">
-                                                                        <i class="fa fa-magic"></i>
-                                                                    </button>
-                                                                </span>
-                                                            </div>
-                                                        </form>
+                                                        <button type="button" class="btn btn-success btn-xs" style="height:22px; padding:2px 8px;" onclick="openSectionGenerateModal(<?php echo $row['class_id']; ?>, <?php echo $row['section_id']; ?>, '<?php echo htmlspecialchars($row['class'] . ' (' . $row['section'] . ')'); ?>')">
+                                                            <i class="fa fa-magic"></i> Generate
+                                                        </button>
                                                     <?php } else { ?>
                                                         <span class="label label-success" style="padding:4px 6px;"><i class="fa fa-check"></i> Complete</span>
                                                     <?php } ?>
@@ -479,19 +459,10 @@ input:checked + .slider:before {
                         <div class="modern-header" style="display:flex; justify-content:space-between; align-items:center;">
                             <h3 class="modern-title"><i class="fa fa-users"></i> Step 2: Select & Generate</h3>
                             
-                            <!-- Bulk Generate All Missing -->
-                            <form action="<?php echo site_url('cbseexam/cbseadmitcardbulk/generate_missing'); ?>" method="post" class="form-inline" id="generateMissingForm">
-                                <?php echo $this->customlib->getCSRF(); ?>
-                                <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
-                                <div class="input-group">
-                                    <input type="number" name="series" class="form-control input-sm" placeholder="Start Series (e.g. 1001)" required style="width: 160px; border-radius: 4px 0 0 4px;">
-                                    <span class="input-group-btn">
-                                        <button type="button" onclick="confirmGenerateMissing()" class="btn btn-success btn-sm" style="border-radius: 0 4px 4px 0;">
-                                            <i class="fa fa-magic"></i> Auto-Generate All Missing
-                                        </button>
-                                    </span>
-                                </div>
-                            </form>
+                            <!-- Bulk Generate All Missing Modal Trigger -->
+                            <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#generateAllModal">
+                                <i class="fa fa-magic"></i> Auto-Generate All Missing
+                            </button>
                         </div>
                         
                         <div class="modern-body p-0">
@@ -502,16 +473,23 @@ input:checked + .slider:before {
                                 
                                 <!-- Top Action Bar -->
                                 <div class="action-bar-top" id="topActionBar">
-                                    <div style="display:flex; align-items:center; gap: 20px;">
+                                    <div style="display:flex; align-items:center; gap: 16px; flex-wrap: wrap;">
                                         <div style="font-weight:600; color:var(--primary);">
                                             <span id="selectedCount">0</span> Students Selected
                                         </div>
-                                        <div style="display:flex; align-items:center; gap: 8px;">
-                                            <label style="margin:0; font-weight:500; color:var(--text-muted);">Series:</label>
-                                            <input type="number" name="series" class="form-control custom-input" style="width:120px; padding:6px 10px;" placeholder="Optional">
+                                        <div style="display:flex; align-items:center; gap: 6px;">
+                                            <label style="margin:0; font-weight:600; color:var(--text-main); font-size:12.5px;">Roll No Source:</label>
+                                            <select name="roll_type" id="top_bar_roll_type" class="form-control custom-input" style="width:190px; height:34px; padding:4px 8px; font-size:12.5px;" onchange="toggleTopBarSeriesInput(this.value)">
+                                                <option value="class_roll">Use Class Roll No</option>
+                                                <option value="series">Custom Series</option>
+                                            </select>
                                         </div>
-                                        <div style="display:flex; align-items:center; gap: 8px; margin-left: 10px;">
-                                            <span style="font-weight:500; color:var(--text-muted);">Show Timetable</span>
+                                        <div id="top_bar_series_wrapper" style="display:none; align-items:center; gap: 6px;">
+                                            <label style="margin:0; font-weight:500; color:var(--text-muted); font-size:12px;">Start Series:</label>
+                                            <input type="number" name="series" id="top_bar_series_input" class="form-control custom-input" style="width:110px; height:34px; padding:4px 8px;" placeholder="e.g. 1001">
+                                        </div>
+                                        <div style="display:flex; align-items:center; gap: 8px; margin-left: 6px;">
+                                            <span style="font-weight:500; color:var(--text-muted); font-size:12.5px;">Timetable</span>
                                             <label class="switch" style="margin:0;">
                                                 <input type="checkbox" name="show_timetable" value="1" checked>
                                                 <span class="slider"></span>
@@ -519,7 +497,7 @@ input:checked + .slider:before {
                                         </div>
                                     </div>
                                     <div style="display:flex; gap: 10px;">
-                                        <button class="btn btn-default" type="button" id="bulkGenerateBtn" onclick="submitGenerate()" disabled style="border-radius:8px; padding:10px 20px; font-weight:500;">
+                                        <button class="btn btn-default" type="button" id="bulkGenerateBtn" onclick="submitGenerate()" disabled style="border-radius:8px; padding:8px 18px; font-weight:600;">
                                             <i class="fa fa-cogs"></i> Generate / Regenerate
                                         </button>
                                         <button class="btn-premium" type="button" id="bulkDownloadBtn" onclick="submitDownload()" disabled>
@@ -535,6 +513,7 @@ input:checked + .slider:before {
                                                 <th style="width: 40px; text-align:center;">
                                                     <input type="checkbox" id="select_all" class="custom-cb">
                                                 </th>
+                                                <th>Class Roll No</th>
                                                 <th>Admit Card Roll No</th>
                                                 <th>Student Name</th>
                                                 <th>Class (Sec)</th>
@@ -550,6 +529,13 @@ input:checked + .slider:before {
                                                 <tr class="student-row">
                                                     <td style="text-align:center;">
                                                         <input type="checkbox" class="custom-cb student-cb" name="cbse_exam_student_id[]" value="<?php echo $student['cbse_exam_student_id']; ?>">
+                                                    </td>
+                                                    <td>
+                                                        <?php if(!empty($student['roll_no'])) { ?>
+                                                            <span class="badge-soft badge-blue" style="font-family:monospace; font-size:12.5px; font-weight:700;"><?php echo $student['roll_no']; ?></span>
+                                                        <?php } else { ?>
+                                                            <span class="text-muted" style="font-size:11.5px;">-</span>
+                                                        <?php } ?>
                                                     </td>
                                                     <td>
                                                         <?php if($has_roll) { ?>
@@ -701,7 +687,40 @@ input:checked + .slider:before {
         }
     }
 
+    function toggleTopBarSeriesInput(val) {
+        if(val === 'series') {
+            $('#top_bar_series_wrapper').css('display', 'inline-flex');
+            $('#top_bar_series_input').prop('required', true);
+        } else {
+            $('#top_bar_series_wrapper').hide();
+            $('#top_bar_series_input').prop('required', false);
+        }
+    }
+
+    function toggleModalSeriesInput(selectElem, wrapperId, inputId) {
+        if($(selectElem).val() === 'series') {
+            $('#' + wrapperId).show();
+            $('#' + inputId).prop('required', true);
+        } else {
+            $('#' + wrapperId).hide();
+            $('#' + inputId).prop('required', false);
+        }
+    }
+
+    function openSectionGenerateModal(classId, sectionId, classSectionName) {
+        $('#section_modal_class_id').val(classId);
+        $('#section_modal_section_id').val(sectionId);
+        $('#section_modal_target_name').text(classSectionName);
+        $('#sectionGenerateModal').modal('show');
+    }
+
     function submitGenerate() {
+        var rollType = $('#top_bar_roll_type').val();
+        if(rollType === 'series' && $('#top_bar_series_input').val() === '') {
+            alert('Please enter a starting Series number.');
+            $('#top_bar_series_input').focus();
+            return;
+        }
         $('#generateCard').attr('action', '<?php echo base_url('cbseexam/cbseadmitcardbulk/generate_admitcards') ?>');
         $('#generateCard').submit();
     }
@@ -709,16 +728,6 @@ input:checked + .slider:before {
     function submitDownload() {
         $('#generateCard').attr('action', '<?php echo base_url('cbseexam/cbseadmitcardbulk/save_and_download') ?>');
         $('#generateCard').submit();
-    }
-
-    function confirmGenerateMissing() {
-        if($('#generateMissingForm input[name="series"]').val() === '') {
-            alert('Please enter a starting series number.');
-            return;
-        }
-        if(confirm('This will assign roll numbers to ALL students in this exam who do not have one yet. Proceed?')) {
-            $('#generateMissingForm').submit();
-        }
     }
 
     function downloadIndividual(cbse_exam_student_id) {
@@ -752,3 +761,85 @@ input:checked + .slider:before {
         });
     }
 </script>
+
+<!-- Modal: Generate All Missing for entire Exam -->
+<div class="modal fade" id="generateAllModal" tabindex="-1" role="dialog" aria-labelledby="generateAllModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="border-radius:12px; overflow:hidden;">
+            <div class="modal-header" style="background:#114B5F; color:#ffffff; padding:16px 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color:#ffffff; opacity:0.8;"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="generateAllModalLabel" style="font-weight:700;"><i class="fa fa-magic"></i> Auto-Generate Roll Numbers (All Missing)</h4>
+            </div>
+            <form action="<?php echo site_url('cbseexam/cbseadmitcardbulk/generate_missing'); ?>" method="post">
+                <?php echo $this->customlib->getCSRF(); ?>
+                <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
+                
+                <div class="modal-body" style="padding:24px;">
+                    <div class="form-group">
+                        <label style="font-weight:700; color:#1e293b; margin-bottom:8px;">Choose Roll Number Source:</label>
+                        <select name="roll_type" class="form-control" style="border-radius:8px; height:40px;" onchange="toggleModalSeriesInput(this, 'all_modal_series_box', 'all_modal_series_input')">
+                            <option value="class_roll">Use Class Roll No (Copy from Student Profile)</option>
+                            <option value="series">Generate New Custom Series Number</option>
+                        </select>
+                        <span class="help-block" style="font-size:12px; color:#64748b; margin-top:6px;">
+                            <strong>Class Roll No:</strong> Copies each student's current classroom roll number.<br>
+                            <strong>Custom Series:</strong> Generates sequential numbers starting from your input (e.g. 100001).
+                        </span>
+                    </div>
+
+                    <div class="form-group" id="all_modal_series_box" style="display:none; margin-top:14px;">
+                        <label style="font-weight:700; color:#1e293b; margin-bottom:6px;">Starting Series Number: <small class="text-danger">*</small></label>
+                        <input type="number" name="series" id="all_modal_series_input" class="form-control" placeholder="e.g. 100001" style="border-radius:8px; height:40px;">
+                    </div>
+                </div>
+                <div class="modal-footer" style="background:#f8fafc; border-top:1px solid #e2e8f0; padding:14px 20px;">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius:6px;">Cancel</button>
+                    <button type="submit" class="btn btn-success" style="border-radius:6px; font-weight:600;"><i class="fa fa-check"></i> Generate Roll Numbers</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Generate for Section -->
+<div class="modal fade" id="sectionGenerateModal" tabindex="-1" role="dialog" aria-labelledby="sectionGenerateModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="border-radius:12px; overflow:hidden;">
+            <div class="modal-header" style="background:#114B5F; color:#ffffff; padding:16px 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color:#ffffff; opacity:0.8;"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="sectionGenerateModalLabel" style="font-weight:700;">
+                    <i class="fa fa-magic"></i> Generate Roll Numbers - <span id="section_modal_target_name"></span>
+                </h4>
+            </div>
+            <form action="<?php echo site_url('cbseexam/cbseadmitcardbulk/generate_missing_by_section'); ?>" method="post">
+                <?php echo $this->customlib->getCSRF(); ?>
+                <input type="hidden" name="exam_id" value="<?php echo $exam_id; ?>">
+                <input type="hidden" name="class_id" id="section_modal_class_id" value="">
+                <input type="hidden" name="section_id" id="section_modal_section_id" value="">
+                
+                <div class="modal-body" style="padding:24px;">
+                    <div class="form-group">
+                        <label style="font-weight:700; color:#1e293b; margin-bottom:8px;">Choose Roll Number Source:</label>
+                        <select name="roll_type" class="form-control" style="border-radius:8px; height:40px;" onchange="toggleModalSeriesInput(this, 'sec_modal_series_box', 'sec_modal_series_input')">
+                            <option value="class_roll">Use Class Roll No (Copy from Student Profile)</option>
+                            <option value="series">Generate New Custom Series Number</option>
+                        </select>
+                        <span class="help-block" style="font-size:12px; color:#64748b; margin-top:6px;">
+                            <strong>Class Roll No:</strong> Copies each student's current classroom roll number.<br>
+                            <strong>Custom Series:</strong> Generates sequential numbers starting from your input.
+                        </span>
+                    </div>
+
+                    <div class="form-group" id="sec_modal_series_box" style="display:none; margin-top:14px;">
+                        <label style="font-weight:700; color:#1e293b; margin-bottom:6px;">Starting Series Number: <small class="text-danger">*</small></label>
+                        <input type="number" name="series" id="sec_modal_series_input" class="form-control" placeholder="e.g. 101" style="border-radius:8px; height:40px;">
+                    </div>
+                </div>
+                <div class="modal-footer" style="background:#f8fafc; border-top:1px solid #e2e8f0; padding:14px 20px;">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius:6px;">Cancel</button>
+                    <button type="submit" class="btn btn-success" style="border-radius:6px; font-weight:600;"><i class="fa fa-check"></i> Generate Section Roll Numbers</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

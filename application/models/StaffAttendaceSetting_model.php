@@ -47,11 +47,24 @@ class StaffAttendaceSetting_model extends CI_Model
         $q = $this->db->query($sql);
 
         if ($q->num_rows() == 0) {
-
             return false;
         } else {
             $return_result = $q->row();
             return $return_result;
         }
     }
+
+    public function getAllRoleRequiredHours()
+    {
+        $sql = "SELECT role_id, total_institute_hour FROM staff_attendence_schedules WHERE total_institute_hour IS NOT NULL AND total_institute_hour != '' GROUP BY role_id";
+        $query = $this->db->query($sql);
+        $result = $query->result_array();
+        $map = array();
+        foreach ($result as $row) {
+            $map[$row['role_id']] = $row['total_institute_hour'];
+        }
+        return $map;
+    }
 }
+
+

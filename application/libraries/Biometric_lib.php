@@ -214,8 +214,8 @@ class Biometric_lib
                 $punchDate = $fromDate;
             }
 
-            $inTime  = (!empty($punch['INTime']) && $punch['INTime'] !== '--:--') ? date('H:i:s', strtotime($punch['INTime'])) : null;
-            $outTime = (!empty($punch['OUTTime']) && $punch['OUTTime'] !== '--:--') ? date('H:i:s', strtotime($punch['OUTTime'])) : null;
+            $inTime  = $this->normalizePunchTime(isset($punch['INTime']) ? $punch['INTime'] : null, false);
+            $outTime = $this->normalizePunchTime(isset($punch['OUTTime']) ? $punch['OUTTime'] : null, true, $inTime);
 
             // Determine staff attendance type
             $attendanceTypeId = $this->resolveAttendanceType($staff['id'], $staff['role_id'], $inTime, $punch);
@@ -368,4 +368,46 @@ class Biometric_lib
 
         return 1; // Default Present
     }
+
+    /**
+     * Normalize punch time from raw strings (e.g., "04:30", "04:30 PM", "16:30:00")
+     * into standard MySQL "H:i:s" 24-hour format.
+     * Prevents afternoon exit times without AM/PM from being interpreted as AM.
+     */
+    public function normalizePunchTime($timeStr, $isExit = false, $inTime = null)
+    {
+        if (empty($timeStr) || $timeStr === '--:--' || $timeStr === '00:00' || $timeStr === '00:00:00') {
+            return null;
+        }
+
+        $timeStr = trim($timeStr);
+
+        // If time already contains AM or PM, standard strtotime handles it accurately
+        if (stripos($timeStr, 'AM') !== false || stripos($timeStr, 'PM') !== false) {
+            $ts = strtotime($timeStr);
+            return $ts ? date('H:i:s', $ts) : null;
+        }
+
+        // Match HH:MM or HH:MM:SS
+        if (preg_match('/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/', $timeStr, $matches)) {
+            $h = (int)$matches[1];
+            $m = (int)$matches[2];
+            $s = isset($matches[3]) ? (int)$matches[3] : 0;
+
+            // If it's an exit time and hour is between 1 and 11 (e.g., 01:30 to 11:30), in school context it's almost always PM (13:00 to 23:00)
+            if ($isExit && $h >= 1 && $h <= 11) {
+                // If in_time exists and is later than or equal to this hour in morning, definitely PM
+                $h += 12;
+            } elseif (!$isExit && $h >= 1 && $h <= 6) {
+                // Afternoon entry (e.g. 1:00 PM to 6:00 PM)
+                $h += 12;
+            }
+
+            return sprintf('%02d:%02d:%02d', $h, $m, $s);
+        }
+
+        $ts = strtotime($timeStr);
+        return $ts ? date('H:i:s', $ts) : null;
+    }
 }
+

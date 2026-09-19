@@ -34,8 +34,19 @@ class Staffattendancemodel extends MY_Model {
                 $query = $this->db->get('staff_attendance');
                 
                 if ($query->num_rows() > 0) {
+                    $existing = $query->row();
+                    $isLeaveLike = in_array((int)$attendance_value['staff_attendance_type_id'], [3, 5]);
+
+                    // Preserve existing in_time/out_time from biometric or QR if manual form posted empty
+                    if ($attendance_value['in_time'] === null && !empty($existing->in_time) && $existing->in_time !== '00:00:00' && !$isLeaveLike) {
+                        $attendance_value['in_time'] = $existing->in_time;
+                    }
+                    if ($attendance_value['out_time'] === null && !empty($existing->out_time) && $existing->out_time !== '00:00:00' && !$isLeaveLike) {
+                        $attendance_value['out_time'] = $existing->out_time;
+                    }
+
                     // Record exists, update it
-                    $this->db->where('id', $query->row()->id);
+                    $this->db->where('id', $existing->id);
                     $this->db->update('staff_attendance', $attendance_value);
                 } else {
                     // Record does not exist, insert a new one.
@@ -821,7 +832,7 @@ class Staffattendancemodel extends MY_Model {
         }
 
         $sql = "SELECT staff.id AS staff_id, staff.name, staff.surname, staff.employee_id,
-                       roles.name AS role_name, sa.date, sat.long_lang_name
+                       roles.id AS role_id, roles.name AS role_name, sa.date, sa.in_time, sa.out_time, sat.long_lang_name
                 FROM staff
                 LEFT JOIN staff_roles ON staff_roles.staff_id = staff.id
                 LEFT JOIN roles ON roles.id = staff_roles.role_id
@@ -834,6 +845,7 @@ class Staffattendancemodel extends MY_Model {
         $staff = array();
         $seen  = array();
         $map   = array();
+        $map_times = array();
         foreach ($rows as $r) {
             if (!isset($seen[$r->staff_id])) {
                 $seen[$r->staff_id] = true;
@@ -841,16 +853,27 @@ class Staffattendancemodel extends MY_Model {
                     'staff_id'    => $r->staff_id,
                     'name'        => trim($r->name . ' ' . $r->surname),
                     'employee_id' => $r->employee_id,
+                    'role_id'     => $r->role_id,
                     'role_name'   => $r->role_name,
                 );
                 $map[$r->staff_id] = array();
+                $map_times[$r->staff_id] = array();
             }
-            if (!empty($r->date) && !empty($r->long_lang_name)) {
-                $map[$r->staff_id][$r->date] = $r->long_lang_name;
+            if (!empty($r->date)) {
+                if (!empty($r->long_lang_name)) {
+                    $map[$r->staff_id][$r->date] = $r->long_lang_name;
+                }
+                if (!empty($r->in_time) && !empty($r->out_time) && $r->in_time !== '00:00:00' && $r->out_time !== '00:00:00') {
+                    $map_times[$r->staff_id][$r->date] = array(
+                        'in'  => $r->in_time,
+                        'out' => $r->out_time
+                    );
+                }
             }
         }
-        return array('staff' => $staff, 'map' => $map);
+        return array('staff' => $staff, 'map' => $map, 'map_times' => $map_times);
     }
+
 
     /**
      * Distinct calendar-holiday dates (Y-m-d) within a month, taken from the

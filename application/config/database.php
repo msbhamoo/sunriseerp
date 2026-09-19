@@ -7,10 +7,10 @@ $is_localhost = isset($_SERVER['HTTP_HOST']) && ($_SERVER['HTTP_HOST'] === 'loca
 if ($is_localhost) {
     $db['default'] = array(
         'dsn'          => '',
-        'hostname' => '127.0.0.1:3307',
+        'hostname' => '127.0.0.1:3306',
         'username' => 'root',
         'password' => '',
-        'database' => 'schoolsms',
+        'database' => 'erp',
         'dbdriver'     => 'mysqli',
         'dbprefix'     => '',
         'pconnect'     => false,

@@ -154,6 +154,22 @@ class Ptm extends Admin_Controller
         }
     }
 
+    public function get_ptm_detail($id)
+    {
+        if (!$this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_view')) {
+            echo json_encode(['status' => 0, 'message' => 'Access Denied']);
+            return;
+        }
+        $ptm = $this->ptm_model->get($id);
+        if (!empty($ptm)) {
+            $ptm['ptm_date_formatted'] = $this->customlib->dateformat($ptm['ptm_date']);
+            $ptm['targets'] = $this->ptm_model->get_targets($id);
+            echo json_encode(['status' => 1, 'data' => $ptm]);
+        } else {
+            echo json_encode(['status' => 0, 'message' => 'PTM not found']);
+        }
+    }
+
     public function delete($id)
     {
         if (!$this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_delete')) {
@@ -183,23 +199,167 @@ class Ptm extends Admin_Controller
         $data['ptm'] = $this->ptm_model->get($ptm_id);
         $data['targets'] = $this->ptm_model->get_targets($ptm_id);
         
-        // Fetch students based on targets
-        $students = [];
-        if ($data['ptm']['target_type'] == 'whole_school') {
-            $students = $this->student_model->get();
-        } else {
-            foreach ($data['targets'] as $target) {
-                $class_students = $this->student_model->searchByClassSection($target['class_id'], $target['section_id']);
-                $students = array_merge($students, $class_students);
+        $classlist = $this->class_model->get();
+        $data['classlist'] = $classlist;
+        
+        $selected_class_ids = $this->input->get('class_id') ? (array)$this->input->get('class_id') : ($this->input->post('class_id') ? (array)$this->input->post('class_id') : []);
+        $selected_section_ids = $this->input->get('section_id') ? (array)$this->input->get('section_id') : ($this->input->post('section_id') ? (array)$this->input->post('section_id') : []);
+        
+        // Remove empty values
+        $selected_class_ids = array_values(array_filter($selected_class_ids));
+        $selected_section_ids = array_values(array_filter($selected_section_ids));
+
+        $data['selected_class_ids'] = $selected_class_ids;
+        $data['selected_section_ids'] = $selected_section_ids;
+        
+        // Provide sections for selected classes so section dropdown can be prepopulated
+        $sections_list = [];
+        if (!empty($selected_class_ids)) {
+            foreach ($selected_class_ids as $cid) {
+                $secs = $this->section_model->getClassBySection($cid);
+                if (!empty($secs)) {
+                    foreach ($secs as $s) {
+                        $sections_list[$s['section_id']] = $s;
+                    }
+                }
             }
         }
-        $data['students'] = $students;
+        $data['sections_list'] = array_values($sections_list);
+
+        // Fetch students only when class filter is selected
+        $students = [];
+        $data['is_searched'] = !empty($selected_class_ids);
+        if (!empty($selected_class_ids)) {
+            if (!empty($selected_section_ids)) {
+                foreach ($selected_class_ids as $c_id) {
+                    foreach ($selected_section_ids as $s_id) {
+                        $class_students = $this->student_model->searchByClassSection($c_id, $s_id);
+                        if (!empty($class_students)) {
+                            $students = array_merge($students, $class_students);
+                        }
+                    }
+                }
+            } else {
+                foreach ($selected_class_ids as $c_id) {
+                    $class_students = $this->student_model->searchByClassSection($c_id, null);
+                    if (!empty($class_students)) {
+                        $students = array_merge($students, $class_students);
+                    }
+                }
+            }
+        }
+
+        // Deduplicate students by student_session_id
+        $unique_students = [];
+        foreach ($students as $stu) {
+            $sess_id = isset($stu['student_session_id']) ? $stu['student_session_id'] : (isset($stu['id']) ? $stu['id'] : null);
+            if ($sess_id && !isset($unique_students[$sess_id])) {
+                $unique_students[$sess_id] = $stu;
+            }
+        }
+
+        $data['students'] = array_values($unique_students);
         $data['attendances'] = $this->ptm_model->get_student_attendances($ptm_id);
         $data['staffs'] = $this->staff_model->get();
 
         $this->load->view('layout/header', $data);
         $this->load->view('admin/ptm/attendance', $data);
         $this->load->view('layout/footer', $data);
+    }
+
+    public function get_sections_multi()
+    {
+        $class_ids = $this->input->post('class_ids');
+        $sections = array();
+        if (!empty($class_ids) && is_array($class_ids)) {
+            foreach ($class_ids as $class_id) {
+                $data = $this->section_model->getClassBySection($class_id);
+                if (!empty($data)) {
+                    foreach ($data as $sec) {
+                        $sections[$sec['section_id']] = $sec;
+                    }
+                }
+            }
+        }
+        echo json_encode(array_values($sections));
+    }
+
+    public function get_report_data()
+    {
+        if (!$this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_view')) {
+            echo json_encode(['status' => 0, 'message' => 'Access Denied']);
+            return;
+        }
+
+        $report_type = $this->input->post('report_type');
+        $ptm_id = $this->input->post('ptm_id');
+        $class_ids = (array)$this->input->post('class_ids');
+        $section_ids = (array)$this->input->post('section_ids');
+        $staff_id = $this->input->post('staff_id');
+
+        $class_ids = array_values(array_filter($class_ids));
+        $section_ids = array_values(array_filter($section_ids));
+
+        $ptm = $this->ptm_model->get($ptm_id);
+        if (empty($ptm)) {
+            echo json_encode(['status' => 0, 'message' => 'Please select a valid PTM meeting.']);
+            return;
+        }
+
+        $targets = $this->ptm_model->get_targets($ptm_id);
+        $attendances = $this->ptm_model->get_student_attendances($ptm_id);
+
+        $students = [];
+        if (!empty($class_ids)) {
+            if (!empty($section_ids)) {
+                foreach ($class_ids as $c_id) {
+                    foreach ($section_ids as $s_id) {
+                        $class_students = $this->student_model->searchByClassSection($c_id, $s_id);
+                        if (!empty($class_students)) {
+                            $students = array_merge($students, $class_students);
+                        }
+                    }
+                }
+            } else {
+                foreach ($class_ids as $c_id) {
+                    $class_students = $this->student_model->searchByClassSection($c_id, null);
+                    if (!empty($class_students)) {
+                        $students = array_merge($students, $class_students);
+                    }
+                }
+            }
+        } else {
+            if ($ptm['target_type'] == 'whole_school') {
+                $students = $this->student_model->get();
+            } else {
+                foreach ($targets as $target) {
+                    $class_students = $this->student_model->searchByClassSection($target['class_id'], $target['section_id']);
+                    if (!empty($class_students)) {
+                        $students = array_merge($students, $class_students);
+                    }
+                }
+            }
+        }
+
+        // Deduplicate students
+        $unique_students = [];
+        foreach ($students as $stu) {
+            $sess_id = isset($stu['student_session_id']) ? $stu['student_session_id'] : (isset($stu['id']) ? $stu['id'] : null);
+            if ($sess_id && !isset($unique_students[$sess_id])) {
+                $unique_students[$sess_id] = $stu;
+            }
+        }
+        $students = array_values($unique_students);
+
+        $data = [
+            'report_type' => $report_type,
+            'ptm' => $ptm,
+            'students' => $students,
+            'attendances' => $attendances
+        ];
+
+        $html = $this->load->view('admin/ptm/_report_content', $data, true);
+        echo json_encode(['status' => 1, 'html' => $html]);
     }
 
     public function save_attendance()

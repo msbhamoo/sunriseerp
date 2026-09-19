@@ -24,46 +24,113 @@ class Ptmreports extends Admin_Controller
         $data['title'] = 'PTM Report';
         $data['ptm_list'] = $this->ptm_model->get();
         $this->load->model('staff_model');
+        $this->load->model('section_model');
         $data['staff_list'] = $this->staff_model->get();
+        $data['classlist'] = $this->class_model->get();
         
         $current_staff_id = $this->customlib->getStaffID();
         $data['current_staff_id'] = $current_staff_id;
         $data['my_followups'] = $this->ptm_model->get_assigned_followups($current_staff_id);
 
-        $search_type = $this->input->post('search_type');
-        $data['search_type'] = $search_type ? $search_type : 'ptm_report';
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/ptm/report', $data);
+        $this->load->view('layout/footer', $data);
+    }
 
-        if ($search_type == 'followup_report') {
-            $staff_id = $this->input->post('staff_id');
-            $data['selected_staff'] = $staff_id;
-            $data['followup_list'] = $this->ptm_model->get_assigned_followups($staff_id != '' ? $staff_id : null);
-        } else if ($this->input->post('search') || $search_type == 'ptm_report') {
-            $ptm_id = $this->input->post('ptm_id');
-            if ($ptm_id) {
-                $data['selected_ptm'] = $ptm_id;
-                
-                $data['ptm'] = $this->ptm_model->get($ptm_id);
-                $data['targets'] = $this->ptm_model->get_targets($ptm_id);
-                
-                $students = [];
-                if (!empty($data['ptm'])) {
-                    if ($data['ptm']['target_type'] == 'whole_school') {
-                        $students = $this->student_model->get();
-                    } else {
-                        foreach ($data['targets'] as $target) {
-                            $class_students = $this->student_model->searchByClassSection($target['class_id'], $target['section_id']);
+    public function get_sections_multi()
+    {
+        $this->load->model('section_model');
+        $class_ids = $this->input->post('class_ids');
+        $sections = array();
+        if (!empty($class_ids) && is_array($class_ids)) {
+            foreach ($class_ids as $class_id) {
+                $data = $this->section_model->getClassBySection($class_id);
+                if (!empty($data)) {
+                    foreach ($data as $sec) {
+                        $sections[$sec['section_id']] = $sec;
+                    }
+                }
+            }
+        }
+        echo json_encode(array_values($sections));
+    }
+
+    public function get_report_data()
+    {
+        if (!$this->rbac->hasPrivilege('ptm_parent_teacher_meeting', 'can_view')) {
+            echo json_encode(['status' => 0, 'message' => 'Access Denied']);
+            return;
+        }
+
+        $report_type = $this->input->post('report_type');
+        $ptm_id = $this->input->post('ptm_id');
+        $class_ids = (array)$this->input->post('class_ids');
+        $section_ids = (array)$this->input->post('section_ids');
+        $staff_id = $this->input->post('staff_id');
+
+        $class_ids = array_values(array_filter($class_ids));
+        $section_ids = array_values(array_filter($section_ids));
+
+        $ptm = $this->ptm_model->get($ptm_id);
+        if (empty($ptm)) {
+            echo json_encode(['status' => 0, 'message' => 'Please select a valid PTM meeting.']);
+            return;
+        }
+
+        $targets = $this->ptm_model->get_targets($ptm_id);
+        $attendances = $this->ptm_model->get_student_attendances($ptm_id);
+
+        $students = [];
+        if (!empty($class_ids)) {
+            if (!empty($section_ids)) {
+                foreach ($class_ids as $c_id) {
+                    foreach ($section_ids as $s_id) {
+                        $class_students = $this->student_model->searchByClassSection($c_id, $s_id);
+                        if (!empty($class_students)) {
                             $students = array_merge($students, $class_students);
                         }
                     }
                 }
-                $data['students'] = $students;
-                $data['attendances'] = $this->ptm_model->get_student_attendances($ptm_id);
+            } else {
+                foreach ($class_ids as $c_id) {
+                    $class_students = $this->student_model->searchByClassSection($c_id, null);
+                    if (!empty($class_students)) {
+                        $students = array_merge($students, $class_students);
+                    }
+                }
+            }
+        } else {
+            if ($ptm['target_type'] == 'whole_school') {
+                $students = $this->student_model->get();
+            } else {
+                foreach ($targets as $target) {
+                    $class_students = $this->student_model->searchByClassSection($target['class_id'], $target['section_id']);
+                    if (!empty($class_students)) {
+                        $students = array_merge($students, $class_students);
+                    }
+                }
             }
         }
 
-        $this->load->view('layout/header', $data);
-        $this->load->view('admin/ptm/report', $data);
-        $this->load->view('layout/footer', $data);
+        // Deduplicate students
+        $unique_students = [];
+        foreach ($students as $stu) {
+            $sess_id = isset($stu['student_session_id']) ? $stu['student_session_id'] : (isset($stu['id']) ? $stu['id'] : null);
+            if ($sess_id && !isset($unique_students[$sess_id])) {
+                $unique_students[$sess_id] = $stu;
+            }
+        }
+        $students = array_values($unique_students);
+
+        $data = [
+            'report_type' => $report_type,
+            'ptm' => $ptm,
+            'students' => $students,
+            'attendances' => $attendances
+        ];
+
+        $html = $this->load->view('admin/ptm/_report_content', $data, true);
+        echo json_encode(['status' => 1, 'html' => $html]);
     }
 
     public function get_student_profile_data()

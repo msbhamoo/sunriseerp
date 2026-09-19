@@ -2959,6 +2959,155 @@ $my_subjects[]=$value;
         ];
     }
 
+    /**
+     * 4. Exam Roll Number & Admit Card Generation Status Report
+     */
+    public function get_exam_roll_number_report($exam_id, $class_id = null, $section_id = null)
+    {
+        $exam = $this->get_exambyId($exam_id);
+        if (!$exam) {
+            return false;
+        }
+
+        // 1. Fetch class-sections assigned to exam
+        $this->db->select('cbse_exam_class_sections.class_section_id, classes.id as class_id, classes.class as class_name, sections.id as section_id, sections.section as section_name');
+        $this->db->from('cbse_exam_class_sections');
+        $this->db->join('class_sections', 'class_sections.id = cbse_exam_class_sections.class_section_id');
+        $this->db->join('classes', 'classes.id = class_sections.class_id');
+        $this->db->join('sections', 'sections.id = class_sections.section_id');
+        $this->db->where('cbse_exam_class_sections.cbse_exam_id', $exam_id);
+        if (!empty($class_id)) {
+            $this->db->where('classes.id', $class_id);
+        }
+        if (!empty($section_id)) {
+            $this->db->where('sections.id', $section_id);
+        }
+        $this->db->order_by('classes.id', 'ASC');
+        $this->db->order_by('sections.id', 'ASC');
+        $class_sections = $this->db->get()->result_array();
+
+        if (empty($class_sections)) {
+            return [
+                'exam' => $exam,
+                'summary' => [
+                    'total_students' => 0,
+                    'generated_count' => 0,
+                    'missing_count' => 0,
+                    'generation_percent' => 0,
+                    'total_classes' => 0
+                ],
+                'class_sections' => [],
+                'students' => []
+            ];
+        }
+
+        // 2. Class Section summary aggregation
+        $this->db->select('
+            classes.class as class_name, 
+            sections.section as section_name,
+            student_session.class_id,
+            student_session.section_id,
+            COUNT(cbse_exam_students.id) as total_students,
+            SUM(CASE WHEN cbse_exam_students.roll_no IS NOT NULL AND cbse_exam_students.roll_no != "" AND cbse_exam_students.roll_no != "0" THEN 1 ELSE 0 END) as generated_count,
+            SUM(CASE WHEN cbse_exam_students.roll_no IS NULL OR cbse_exam_students.roll_no = "" OR cbse_exam_students.roll_no = "0" THEN 1 ELSE 0 END) as missing_count
+        ');
+        $this->db->from('cbse_exam_students');
+        $this->db->join('student_session', 'student_session.id = cbse_exam_students.student_session_id', 'left');
+        $this->db->join('students', 'students.id = student_session.student_id', 'left');
+        $this->db->join('classes', 'classes.id = student_session.class_id', 'left');
+        $this->db->join('sections', 'sections.id = student_session.section_id', 'left');
+        $this->db->where('cbse_exam_students.cbse_exam_id', $exam_id);
+        $this->db->where('students.is_active', 'yes');
+        if (!empty($class_id)) {
+            $this->db->where('student_session.class_id', $class_id);
+        }
+        if (!empty($section_id)) {
+            $this->db->where('student_session.section_id', $section_id);
+        }
+        $this->db->group_by(array('student_session.class_id', 'student_session.section_id', 'classes.class', 'sections.section'));
+        $this->db->order_by('classes.id', 'asc');
+        $this->db->order_by('sections.id', 'asc');
+        $cs_summary = $this->db->get()->result_array();
+
+        // 3. Fetch detailed student list with seating room & seat if assigned
+        $this->db->select('
+            students.id as student_id,
+            students.firstname,
+            students.middlename,
+            students.lastname,
+            students.admission_no,
+            students.roll_no as profile_roll_no,
+            students.gender,
+            students.father_name,
+            students.mobileno,
+            students.image,
+            classes.id as class_id,
+            classes.class as class_name,
+            sections.id as section_id,
+            sections.section as section_name,
+            cbse_exam_students.id as cbse_exam_student_id,
+            cbse_exam_students.roll_no as exam_roll_no,
+            cbse_seating_rooms.room_number as allocated_room,
+            cbse_seating_student_seats.formatted_seat_number as allocated_seat
+        ');
+        $this->db->from('cbse_exam_students');
+        $this->db->join('student_session', 'student_session.id = cbse_exam_students.student_session_id', 'left');
+        $this->db->join('students', 'students.id = student_session.student_id', 'left');
+        $this->db->join('classes', 'classes.id = student_session.class_id', 'left');
+        $this->db->join('sections', 'sections.id = student_session.section_id', 'left');
+        $this->db->join('cbse_seating_student_seats', 'cbse_seating_student_seats.student_session_id = student_session.id', 'left');
+        $this->db->join('cbse_seating_allocations', 'cbse_seating_allocations.id = cbse_seating_student_seats.allocation_id AND cbse_seating_allocations.cbse_exam_id = ' . (int)$exam_id, 'left');
+        $this->db->join('cbse_seating_room_assignments', 'cbse_seating_room_assignments.id = cbse_seating_student_seats.room_assignment_id', 'left');
+        $this->db->join('cbse_seating_rooms', 'cbse_seating_rooms.id = cbse_seating_room_assignments.room_id', 'left');
+        $this->db->where('cbse_exam_students.cbse_exam_id', $exam_id);
+        $this->db->where('students.is_active', 'yes');
+        if (!empty($class_id)) {
+            $this->db->where('student_session.class_id', $class_id);
+        }
+        if (!empty($section_id)) {
+            $this->db->where('student_session.section_id', $section_id);
+        }
+        $this->db->group_by('cbse_exam_students.id');
+        $this->db->order_by('classes.id', 'asc');
+        $this->db->order_by('sections.id', 'asc');
+        $this->db->order_by('cbse_exam_students.roll_no', 'asc');
+        $this->db->order_by('students.firstname', 'asc');
+        $students = $this->db->get()->result_array();
+
+        // Calculate grand summary stats
+        $total_students = 0;
+        $generated_count = 0;
+        $missing_count = 0;
+
+        foreach ($cs_summary as &$cs) {
+            $tot = (int)$cs['total_students'];
+            $gen = (int)$cs['generated_count'];
+            $mis = (int)$cs['missing_count'];
+            $pct = ($tot > 0) ? round(($gen / $tot) * 100, 1) : 0;
+            $cs['generation_percent'] = $pct;
+
+            $total_students += $tot;
+            $generated_count += $gen;
+            $missing_count += $mis;
+        }
+        unset($cs);
+
+        $overall_pct = ($total_students > 0) ? round(($generated_count / $total_students) * 100, 1) : 0;
+
+        return [
+            'exam' => $exam,
+            'summary' => [
+                'total_students' => $total_students,
+                'generated_count' => $generated_count,
+                'missing_count' => $missing_count,
+                'generation_percent' => $overall_pct,
+                'total_classes' => count($cs_summary)
+            ],
+            'class_sections' => $cs_summary,
+            'students' => $students
+        ];
+    }
+
 }
 
 
