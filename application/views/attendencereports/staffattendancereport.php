@@ -195,15 +195,21 @@
                                                 $row_count = 1;
                                                 $i         = 0;
                                                 foreach ($student_array as $student_key => $student_value) {
-                                                    $total_present = ($monthAttendance[$i][$student_value['id']]['present'] + $monthAttendance[$i][$student_value['id']]['late'] + $monthAttendance[$i][$student_value['id']]['half_day']);
+                                                    $curAtt = isset($monthAttendance[$i][$student_value['id']]) ? $monthAttendance[$i][$student_value['id']] : [];
+                                                    $p_cnt  = isset($curAtt['present']) ? $curAtt['present'] : 0;
+                                                    $l_cnt  = isset($curAtt['late']) ? $curAtt['late'] : 0;
+                                                    $hd_cnt = isset($curAtt['half_day']) ? $curAtt['half_day'] : 0;
+                                                    $sh_cnt = isset($curAtt['half_day_second_shift']) ? $curAtt['half_day_second_shift'] : 0;
+                                                    $a_cnt  = isset($curAtt['absent']) ? $curAtt['absent'] : 0;
+                                                    $ul_cnt = isset($curAtt['unplanned_leave']) ? $curAtt['unplanned_leave'] : 0;
 
-                                                    $total_days = $monthAttendance[$i][$student_value['id']]['present'] + $monthAttendance[$i][$student_value['id']]['late'] + $monthAttendance[$i][$student_value['id']]['absent'] + $monthAttendance[$i][$student_value['id']]['half_day'];
+                                                    $total_present = ($p_cnt + $l_cnt + $hd_cnt + $sh_cnt);
+                                                    $total_days    = ($p_cnt + $l_cnt + $a_cnt + $ul_cnt + $hd_cnt + $sh_cnt);
 
                                                     if ($total_days == 0) {
                                                         $percentage       = -1;
                                                         $print_percentage = "-";
                                                     } else {
-
                                                         $percentage       = ($total_present / $total_days) * 100;
                                                         $print_percentage = round($percentage, 0);
                                                     }
@@ -225,12 +231,13 @@
                                                             
                                                         </td>
                                                         <th><?php echo "<label $label>" . $print_percentage . "</label>"; ?></th>
-                                                        <th><?php echo $monthAttendance[$i][$student_value['id']]['present']; ?></th>
-                                                        <th><?php echo $monthAttendance[$i][$student_value['id']]['late']; ?></th>
-                                                        <th><?php echo $monthAttendance[$i][$student_value['id']]['absent']; ?></th>
-                                                        <th><?php echo $monthAttendance[$i][$student_value['id']]['half_day']; ?></th>
-                                                        <th><?php echo $monthAttendance[$i][$student_value['id']]['holiday']; ?></th>
-                                                        <th><?php echo $monthAttendance[$i][$student_value['id']]['half_day_second_shift']; ?></th>
+                                                        <?php
+                                                        foreach ($attendencetypeslist as $key_type => $value_type) {
+                                                            $att_type_key = str_replace(" ", "_", strtolower($value_type['type']));
+                                                            $cnt = isset($monthAttendance[$i][$student_value['id']][$att_type_key]) ? $monthAttendance[$i][$student_value['id']][$att_type_key] : 0;
+                                                        ?>
+                                                            <th class="text-center"><?php echo $cnt; ?></th>
+                                                        <?php } ?>
                                                         <?php
                                                         foreach ($attendence_array as $at_key => $at_value) {  ?>
                                                             <th class="tdcls text text-center">

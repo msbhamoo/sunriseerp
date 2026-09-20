@@ -231,14 +231,16 @@ class Biometric_lib
                 $remark .= ($remark ? ' | ' : '') . 'Early Out: ' . $punch['Erl_Out'];
             }
 
+            $hasPunch = (!empty($inTime) && $inTime !== '00:00:00') || (!empty($outTime) && $outTime !== '00:00:00');
+
             $processedRows[] = array(
                 'staff_id'                 => $staff['id'],
                 'date'                     => $punchDate,
                 'in_time'                  => $inTime,
                 'out_time'                 => $outTime,
                 'staff_attendance_type_id' => $attendanceTypeId,
-                'biometric_attendence'     => 1,
-                'attendance_source'        => 'biometric',
+                'biometric_attendence'     => $hasPunch ? 1 : 0,
+                'attendance_source'        => $hasPunch ? 'biometric' : 'manual',
                 'remark'                   => $remark,
                 'biometric_device_data'    => json_encode($punch)
             );
@@ -346,7 +348,7 @@ class Biometric_lib
      */
     protected function resolveAttendanceType($staff_id, $role_id, $in_time, $punch)
     {
-        // If in_time exists and role has attendance schedule configured
+        // 1. If in_time exists and role has attendance schedule configured, match the schedule band
         if ($in_time && $role_id) {
             $range = $this->CI->staffAttendaceSetting_model->getAttendanceTypeByRole($role_id, $in_time);
             if ($range && !empty($range->staff_attendence_type_id)) {
@@ -354,19 +356,35 @@ class Biometric_lib
             }
         }
 
-        // Map API status string if schedule not found
+        // 2. If employee has a valid in_time punch, they ARE present in school - NEVER mark as Absent!
+        if (!empty($in_time) && $in_time !== '00:00:00') {
+            $apiStatus = isset($punch['Status']) ? strtoupper(trim($punch['Status'])) : '';
+            if ($apiStatus === 'L' || strpos($apiStatus, 'LT') !== false) {
+                return 2; // Late
+            } elseif ($apiStatus === 'HD' || $apiStatus === 'H/D' || $apiStatus === 'P/2') {
+                return 4; // Half Day
+            }
+
+            // If punch is after 12:00 PM, assign Half Day (2nd shift)
+            $inSec = strtotime($in_time);
+            if ($inSec && (int)date('H', $inSec) >= 12) {
+                return 6; // Half Day Second Shift
+            }
+
+            return 1; // Present
+        }
+
+        // 3. Fallback only when NO in_time exists (missing punch)
         $apiStatus = isset($punch['Status']) ? strtoupper(trim($punch['Status'])) : '';
         if ($apiStatus === 'P' || strpos($apiStatus, 'P') !== false) {
             return 1; // Present
-        } elseif ($apiStatus === 'A') {
-            return 3; // Absent
         } elseif ($apiStatus === 'L' || strpos($apiStatus, 'LT') !== false) {
             return 2; // Late
         } elseif ($apiStatus === 'HD' || $apiStatus === 'H/D' || $apiStatus === 'P/2') {
             return 4; // Half Day
         }
 
-        return 1; // Default Present
+        return 3; // Absent
     }
 
     /**
@@ -394,13 +412,15 @@ class Biometric_lib
             $m = (int)$matches[2];
             $s = isset($matches[3]) ? (int)$matches[3] : 0;
 
-            // If it's an exit time and hour is between 1 and 11 (e.g., 01:30 to 11:30), in school context it's almost always PM (13:00 to 23:00)
-            if ($isExit && $h >= 1 && $h <= 11) {
-                // If in_time exists and is later than or equal to this hour in morning, definitely PM
-                $h += 12;
-            } elseif (!$isExit && $h >= 1 && $h <= 6) {
-                // Afternoon entry (e.g. 1:00 PM to 6:00 PM)
-                $h += 12;
+            // e-TimeOffice already sends 24-hour format (e.g. 06:59 for 6:59 AM, 18:59 for 6:59 PM).
+            // For exit times where machine sends 12-hour without AM/PM (e.g. 01:00 to 07:00 PM for afternoon dispersal):
+            if ($isExit && $h >= 1 && $h <= 7) {
+                if ($inTime) {
+                    $inHour = (int)substr($inTime, 0, 2);
+                    if ($inHour >= 7 && $h < $inHour) {
+                        $h += 12;
+                    }
+                }
             }
 
             return sprintf('%02d:%02d:%02d', $h, $m, $s);

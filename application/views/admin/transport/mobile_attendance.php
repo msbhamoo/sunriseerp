@@ -103,32 +103,93 @@
             box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
         }
 
-        /* Live Stat Chips */
+        /* Live Stat Chips Grid */
         .stat-chips-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
             margin: 0 12px 12px 12px;
+        }
+        @media (min-width: 600px) {
+            .stat-chips-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
         .stat-chip {
             background: #fff;
-            padding: 8px 6px;
-            border-radius: 8px;
-            text-align: center;
+            padding: 10px 12px;
+            border-radius: 10px;
+            text-align: left;
             border: 1px solid #e2e8f0;
             box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
-        .stat-chip-num {
-            font-size: 17px;
-            font-weight: 800;
-            line-height: 1.1;
-        }
+        .stat-chip.chip-total { border-top: 3px solid #3b82f6; }
+        .stat-chip.chip-present { border-top: 3px solid #10b981; }
+        .stat-chip.chip-flow { border-top: 3px solid #6366f1; }
+        .stat-chip.chip-exceptions { border-top: 3px solid #f59e0b; }
+
         .stat-chip-lbl {
             font-size: 10px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
             color: #64748b;
-            margin-top: 2px;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .stat-chip-num {
+            font-size: 18px;
+            font-weight: 800;
+            line-height: 1.15;
+            color: #0f172a;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+        .stat-chip-sub {
+            font-size: 10px;
+            font-weight: 600;
+            color: #64748b;
+            margin-top: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Quick Bulk Actions for Mobile */
+        .mobile-bulk-actions {
+            display: flex;
+            gap: 8px;
+            margin: 0 12px 10px 12px;
+        }
+        .btn-mob-bulk {
+            flex: 1;
+            padding: 7px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            transition: all 0.15s ease;
+        }
+        .btn-mob-bulk-present {
+            background: #10b981;
+            color: #ffffff;
+        }
+        .btn-mob-bulk-absent {
+            background: #ef4444;
+            color: #ffffff;
         }
 
         /* Stop Section Group */
@@ -385,24 +446,96 @@
         </div>
     <?php } else { ?>
 
-        <!-- Live Touch Counters -->
+        <!-- Executive Metric Summary Cards for Mobile -->
+        <?php
+            $is_evening = (strtolower($attendance_type) == 'evening');
+            $m_total = isset($metrics['total_strength']) ? $metrics['total_strength'] : $students_count;
+            $m_reg = isset($metrics['regular_count']) ? $metrics['regular_count'] : $m_total;
+            $m_cust = isset($metrics['custom_count']) ? $metrics['custom_count'] : 0;
+            $m_pres = isset($metrics['present_count']) ? $metrics['present_count'] : 0;
+            $m_abs = isset($metrics['absent_count']) ? $metrics['absent_count'] : 0;
+            $m_morning_pres = isset($metrics['morning_present_count']) ? $metrics['morning_present_count'] : 0;
+            $m_flow_retained = isset($metrics['retained_flow_count']) ? $metrics['retained_flow_count'] : 0;
+            $m_gp = isset($metrics['gatepass_count']) ? $metrics['gatepass_count'] : 0;
+            $m_sw_out = isset($metrics['switched_out_count']) ? $metrics['switched_out_count'] : 0;
+        ?>
         <div class="stat-chips-grid">
-            <div class="stat-chip">
-                <div class="stat-chip-num text-primary" id="mobile_count_total"><?php echo $students_count; ?></div>
-                <div class="stat-chip-lbl">Total</div>
+            <!-- Chip 1: Total Bus Strength -->
+            <div class="stat-chip chip-total">
+                <div class="stat-chip-lbl"><i class="fa fa-users text-primary"></i> Total Strength</div>
+                <div class="stat-chip-num">
+                    <span id="mobile_count_total"><?php echo $m_total; ?></span>
+                    <small style="font-size:11px; color:#64748b; font-weight:600;">Riders</small>
+                </div>
+                <div class="stat-chip-sub" id="mobile_count_regular_sub">
+                    <?php echo $m_reg; ?> Reg + <?php echo $m_cust; ?> Custom
+                </div>
             </div>
-            <div class="stat-chip">
-                <div class="stat-chip-num text-success" id="mobile_count_present">0</div>
-                <div class="stat-chip-lbl">Present</div>
+
+            <!-- Chip 2: Shift Attendance (Present / Absent) -->
+            <div class="stat-chip chip-present">
+                <div class="stat-chip-lbl"><i class="fa fa-check-circle text-success"></i> <?php echo ucfirst($attendance_type); ?> Status</div>
+                <div class="stat-chip-num">
+                    <span id="mobile_count_present" style="color:#059669;"><?php echo $m_pres; ?></span>
+                    <span style="font-size:12px; color:#cbd5e1; font-weight:400;">/</span>
+                    <span id="mobile_count_absent" style="font-size:14px; color:#dc2626;"><?php echo $m_abs; ?> <small style="font-size:9px; color:#ef4444; font-weight:700;">ABS</small></span>
+                </div>
+                <div class="stat-chip-sub">
+                    Live Marked
+                </div>
             </div>
-            <div class="stat-chip">
-                <div class="stat-chip-num text-danger" id="mobile_count_absent">0</div>
-                <div class="stat-chip-lbl">Absent</div>
+
+            <!-- Chip 3: Flow Metric -->
+            <div class="stat-chip chip-flow">
+                <div class="stat-chip-lbl">
+                    <i class="fa fa-exchange" style="color:#6366f1;"></i> 
+                    <?php echo $is_evening ? 'Morning &rarr; Evening' : 'Morning Pickup'; ?>
+                </div>
+                <div class="stat-chip-num">
+                    <span id="mobile_flow_val" style="color:#4f46e5;">
+                        <?php echo $is_evening ? ($m_flow_retained . ' / ' . $m_morning_pres) : ($m_pres . ' / ' . $m_total); ?>
+                    </span>
+                    <small style="font-size:10px; color:#64748b; font-weight:600;">
+                        <?php echo $is_evening ? 'Return' : 'Boarded'; ?>
+                    </small>
+                </div>
+                <div class="stat-chip-sub" id="mobile_flow_sub">
+                    <?php if ($is_evening) { ?>
+                        <?php 
+                            $missing_morning = $m_morning_pres - $m_flow_retained;
+                            if ($missing_morning > 0) {
+                                echo '<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> ' . $missing_morning . ' Missing</span>';
+                            } else {
+                                echo '<span class="text-success"><i class="fa fa-check-circle"></i> All Accounted</span>';
+                            }
+                        ?>
+                    <?php } else { ?>
+                        <span class="text-muted"><i class="fa fa-sun-o"></i> Morning Boarding</span>
+                    <?php } ?>
+                </div>
             </div>
-            <div class="stat-chip">
-                <div class="stat-chip-num text-warning" id="mobile_count_other">0</div>
-                <div class="stat-chip-lbl">Other</div>
+
+            <!-- Chip 4: Exceptions & Gatepass -->
+            <div class="stat-chip chip-exceptions">
+                <div class="stat-chip-lbl"><i class="fa fa-ticket text-warning"></i> Exceptions</div>
+                <div class="stat-chip-num">
+                    <span id="mobile_count_exceptions" style="color:#d97706;"><?php echo ($m_gp + $m_sw_out); ?></span>
+                    <small style="font-size:10px; color:#64748b; font-weight:600;">Flagged</small>
+                </div>
+                <div class="stat-chip-sub" id="mobile_count_exceptions_sub">
+                    <?php echo $m_gp; ?> GP &bull; <?php echo $m_sw_out; ?> Switched
+                </div>
             </div>
+        </div>
+
+        <!-- Quick Bulk Action Buttons -->
+        <div class="mobile-bulk-actions">
+            <button type="button" class="btn-mob-bulk btn-mob-bulk-present" onclick="markAllMobile('Present')">
+                <i class="fa fa-check-circle"></i> Mark All Present
+            </button>
+            <button type="button" class="btn-mob-bulk btn-mob-bulk-absent" onclick="markAllMobile('Absent')">
+                <i class="fa fa-times-circle"></i> Mark All Absent
+            </button>
         </div>
 
         <!-- Sticky Student Quick Search -->
@@ -432,9 +565,19 @@
                         <?php foreach ($stop_students as $student) { 
                             $st_id = $student['student_session_id'];
                             $st_status = $student['attendance_status'];
+                            $is_custom_rider = (isset($student['status']) && $student['status'] == 'Switched Bus');
+                            $has_gp = !empty($student['has_gatepass']);
+                            $is_sw_out = !empty($student['switched_out_info']);
+                            $opp_status_val = isset($student['opposite_shift_status']) ? $student['opposite_shift_status'] : '';
                             $img_src = !empty($student['image']) ? base_url($student['image']) : base_url('uploads/student_images/no_image.png');
                         ?>
-                            <div class="student-item student-card-row" data-search="<?php echo strtolower($student['firstname'].' '.$student['lastname'].' '.$student['admission_no'].' '.$stop_name); ?>">
+                            <div class="student-item student-card-row" 
+                                 data-session-id="<?php echo $st_id; ?>"
+                                 data-search="<?php echo strtolower($student['firstname'].' '.$student['lastname'].' '.$student['admission_no'].' '.$stop_name); ?>"
+                                 data-custom="<?php echo $is_custom_rider ? 'yes' : 'no'; ?>"
+                                 data-has-gatepass="<?php echo $has_gp ? 'yes' : 'no'; ?>"
+                                 data-switched-out="<?php echo $is_sw_out ? 'yes' : 'no'; ?>"
+                                 data-opp-status="<?php echo htmlspecialchars($opp_status_val); ?>">
                                 <div class="student-meta">
                                     <div style="width:42px; height:42px; min-width:42px; max-width:42px; min-height:42px; max-height:42px; border-radius:50%; overflow:hidden; border:2px solid #e2e8f0; box-shadow:0 1px 3px rgba(0,0,0,0.08); flex-shrink:0; display:flex; align-items:center; justify-content:center; background:#f8fafc;">
                                         <img src="<?php echo $img_src; ?>" style="width:100% !important; height:100% !important; max-width:100% !important; max-height:100% !important; object-fit:cover !important; display:block;" onerror="this.src='<?php echo base_url('uploads/student_images/no_image.png'); ?>';">
@@ -443,6 +586,13 @@
                                         <div class="student-name"><?php echo $student['firstname'] . ' ' . $student['lastname']; ?></div>
                                         <div class="student-sub">
                                             <strong>Adm: <?php echo $student['admission_no']; ?></strong> &bull; Class: <?php echo $student['class'].' ('.$student['section'].')'; ?>
+                                            <?php if (!empty($student['opposite_shift_status']) && $student['opposite_shift_status'] != 'Not Marked') { ?>
+                                                <div style="margin-top:2px;">
+                                                    <span style="font-size:10px; color:#475569; background:#f1f5f9; padding:1px 6px; border-radius:4px; border:1px solid #e2e8f0; display:inline-block;">
+                                                        <i class="fa fa-history text-primary"></i> <?php echo $opposite_shift; ?>: <strong><?php echo $student['opposite_shift_status']; ?></strong>
+                                                    </span>
+                                                </div>
+                                            <?php } ?>
                                             <?php if (!empty($student['has_gatepass'])) { ?>
                                                 <span class="label label-warning" style="font-size:9px;"><i class="fa fa-ticket"></i> Gatepass</span>
                                             <?php } ?>
@@ -586,19 +736,89 @@
 
         function updateMobileCounters() {
             var total = $('.student-card-row').length;
-            var present = 0, absent = 0, other = 0;
+            var regularCount = $('.student-card-row[data-custom="no"]').length;
+            var customCount = $('.student-card-row[data-custom="yes"]').length;
 
-            $('.mobile-status-val').each(function() {
-                var v = $(this).val();
-                if (v === 'Present') present++;
-                else if (v === 'Absent') absent++;
-                else other++;
+            var present = 0;
+            var absent = 0;
+            var switchedOutCount = 0;
+            var gatepassCount = 0;
+
+            var morningPresentTotal = 0;
+            var morningRetainedEvening = 0;
+
+            $('.student-card-row').each(function() {
+                var row = $(this);
+                var val = row.find('.mobile-status-val').val();
+                var isCustom = (row.attr('data-custom') === 'yes');
+                var hasGatepass = (row.attr('data-has-gatepass') === 'yes');
+                var isSwitchedOut = (row.attr('data-switched-out') === 'yes');
+                var oppStatus = (row.attr('data-opp-status') || '').toLowerCase();
+
+                var wasMorningPresent = (oppStatus.indexOf('present') !== -1 || oppStatus.indexOf('switched') !== -1);
+                if (wasMorningPresent) {
+                    morningPresentTotal++;
+                }
+
+                if (val === 'Present' || (isCustom && val === 'Switched Bus')) {
+                    present++;
+                    if (wasMorningPresent) {
+                        morningRetainedEvening++;
+                    }
+                } else if (val === 'Absent') {
+                    absent++;
+                } else if (val === 'Switched Bus') {
+                    if (!isCustom) {
+                        switchedOutCount++;
+                    }
+                }
+
+                if (hasGatepass) {
+                    gatepassCount++;
+                }
+                if (isSwitchedOut && !isCustom) {
+                    switchedOutCount++;
+                }
             });
 
             $('#mobile_count_total').text(total);
+            $('#mobile_count_regular_sub').text(regularCount + ' Reg + ' + customCount + ' Custom');
             $('#mobile_count_present').text(present);
-            $('#mobile_count_absent').text(absent);
-            $('#mobile_count_other').text(other);
+            $('#mobile_count_absent').html(absent + ' <small style="font-size:9px; color:#ef4444; font-weight:700;">ABS</small>');
+
+            var isEvening = ('<?php echo strtolower($attendance_type); ?>' === 'evening');
+            if (isEvening) {
+                $('#mobile_flow_val').text(morningRetainedEvening + ' / ' + morningPresentTotal);
+                var missingMorning = morningPresentTotal - morningRetainedEvening;
+                if (missingMorning > 0) {
+                    $('#mobile_flow_sub').html('<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> ' + missingMorning + ' Missing</span>');
+                } else {
+                    $('#mobile_flow_sub').html('<span class="text-success"><i class="fa fa-check-circle"></i> All Accounted</span>');
+                }
+            } else {
+                $('#mobile_flow_val').text(present + ' / ' + total);
+                $('#mobile_flow_sub').html('<span class="text-muted"><i class="fa fa-sun-o"></i> Morning Boarding</span>');
+            }
+
+            $('#mobile_count_exceptions').text(gatepassCount + switchedOutCount);
+            $('#mobile_count_exceptions_sub').text(gatepassCount + ' GP \u2022 ' + switchedOutCount + ' Switched');
+        }
+
+        function markAllMobile(status) {
+            $('.touch-action-row').each(function() {
+                var sessionId = $(this).data('session-id');
+                var row = $(this).closest('.student-card-row');
+                $('#mobile_status_' + sessionId).val(status);
+                
+                $(this).find('.btn-mark').removeClass('active-present active-absent active-switched active-hostel active-gatepass');
+                if (status === 'Present') {
+                    $(this).find('[data-val="Present"]').addClass('active-present');
+                } else if (status === 'Absent') {
+                    $(this).find('[data-val="Absent"]').addClass('active-absent');
+                }
+            });
+            playAttendanceFeedback('bulk');
+            updateMobileCounters();
         }
 
         $(document).ready(function() {

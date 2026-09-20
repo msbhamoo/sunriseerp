@@ -6,7 +6,8 @@ $config['staffattendance'] = array(
     'late' => 2,
     'absent' => 3,
     'holiday' => 5,
-    'half_day_second_shift' => 6
+    'half_day_second_shift' => 6,
+    'unplanned_leave' => 7
 );
 
 $config['contracttype'] = array(

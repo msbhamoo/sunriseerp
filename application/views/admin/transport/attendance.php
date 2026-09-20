@@ -3,86 +3,116 @@
 .trans-stat-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 10px 14px;
-    margin-bottom: 12px;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
 }
 .trans-stat-card:hover {
-    box-shadow: 0 3px 6px rgba(0,0,0,0.07);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
 }
 .trans-stat-card .stat-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 18px;
+    flex-shrink: 0;
 }
-.trans-stat-card.stat-total { border-left: 4px solid #3b82f6; }
+.trans-stat-card.stat-total { border-top: 3px solid #3b82f6; }
 .trans-stat-card.stat-total .stat-icon { background: #eff6ff; color: #2563eb; }
 
-.trans-stat-card.stat-present { border-left: 4px solid #10b981; }
+.trans-stat-card.stat-present { border-top: 3px solid #10b981; }
 .trans-stat-card.stat-present .stat-icon { background: #ecfdf5; color: #059669; }
 
-.trans-stat-card.stat-absent { border-left: 4px solid #ef4444; }
-.trans-stat-card.stat-absent .stat-icon { background: #fef2f2; color: #dc2626; }
+.trans-stat-card.stat-flow { border-top: 3px solid #6366f1; }
+.trans-stat-card.stat-flow .stat-icon { background: #eef2ff; color: #4f46e5; }
 
-.trans-stat-card.stat-other { border-left: 4px solid #f59e0b; }
+.trans-stat-card.stat-other { border-top: 3px solid #f59e0b; }
 .trans-stat-card.stat-other .stat-icon { background: #fffbeb; color: #d97706; }
 
 .trans-stat-val {
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 1.2;
-    color: #1e293b;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.15;
+    color: #0f172a;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
 }
 .trans-stat-lbl {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #64748b;
+    margin: 0 0 3px 0;
+}
+.trans-stat-sub {
     font-size: 11px;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
     color: #64748b;
-    margin: 0;
+    margin: 3px 0 0 0;
+    white-space: nowrap;
+}
+
+/* Shift Flow Insight Banner */
+.shift-flow-banner {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #6366f1;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #334155;
 }
 
 /* Unified Action & Filter Toolbar */
 .trans-toolbar-box {
-    background: #f8fafc;
+    background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 12px 14px;
-    margin-bottom: 15px;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
 .trans-toolbar-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
 }
 .trans-toolbar-row + .trans-toolbar-row {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed #e2e8f0;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
 }
 
 .btn-cta-action {
     font-size: 12px !important;
-    font-weight: 600 !important;
-    padding: 5px 12px !important;
-    border-radius: 5px !important;
+    font-weight: 700 !important;
+    padding: 6px 14px !important;
+    border-radius: 6px !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 5px !important;
+    gap: 6px !important;
     transition: all 0.15s ease-in-out !important;
-    border: 1px solid transparent !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+    border: none !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
 }
 .btn-cta-present {
     background-color: #10b981 !important;
@@ -91,6 +121,7 @@
 .btn-cta-present:hover {
     background-color: #059669 !important;
     color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(16,185,129,0.3) !important;
 }
 
 .btn-cta-absent {
@@ -100,6 +131,7 @@
 .btn-cta-absent:hover {
     background-color: #dc2626 !important;
     color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(239,68,68,0.3) !important;
 }
 
 /* Filter Chips */
@@ -107,41 +139,43 @@
     display: inline-flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 6px;
 }
 .filter-chip {
     font-size: 11px;
-    font-weight: 600;
-    padding: 4px 9px;
-    border-radius: 15px;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
     color: #475569;
     cursor: pointer;
     transition: all 0.15s ease;
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: 4px;
     user-select: none;
 }
 .filter-chip:hover {
     background: #f1f5f9;
-    color: #1e293b;
-    border-color: #94a3b8;
+    color: #0f172a;
+    border-color: #cbd5e1;
 }
 .filter-chip.active {
     background: #2563eb;
     color: #ffffff;
     border-color: #2563eb;
+    box-shadow: 0 2px 5px rgba(37,99,235,0.25);
 }
 .filter-chip .badge-count {
-    background: rgba(0,0,0,0.08);
+    background: rgba(0,0,0,0.07);
     border-radius: 10px;
-    padding: 1px 5px;
+    padding: 1px 6px;
     font-size: 10px;
+    font-weight: 800;
 }
 .filter-chip.active .badge-count {
-    background: rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.28);
     color: #ffffff;
 }
 
@@ -544,40 +578,102 @@
                                 <div class="alert alert-info" style="border-radius:6px;"><i class="fa fa-info-circle"></i> No students found for the selected vehicle and criteria.</div>
                             <?php } else { ?>
 
-                                <!-- Compact Metric Summary Cards -->
+                                <!-- Executive Metric Summary Cards -->
+                                <?php
+                                    $is_evening = (strtolower($attendance_type) == 'evening');
+                                    $m_total = isset($metrics['total_strength']) ? $metrics['total_strength'] : count($resultlist);
+                                    $m_reg = isset($metrics['regular_count']) ? $metrics['regular_count'] : $m_total;
+                                    $m_cust = isset($metrics['custom_count']) ? $metrics['custom_count'] : 0;
+                                    $m_pres = isset($metrics['present_count']) ? $metrics['present_count'] : 0;
+                                    $m_abs = isset($metrics['absent_count']) ? $metrics['absent_count'] : 0;
+                                    $m_morning_pres = isset($metrics['morning_present_count']) ? $metrics['morning_present_count'] : 0;
+                                    $m_flow_retained = isset($metrics['retained_flow_count']) ? $metrics['retained_flow_count'] : 0;
+                                    $m_gp = isset($metrics['gatepass_count']) ? $metrics['gatepass_count'] : 0;
+                                    $m_sw_out = isset($metrics['switched_out_count']) ? $metrics['switched_out_count'] : 0;
+                                ?>
                                 <div class="row" style="margin-bottom:6px;">
+                                    <!-- Card 1: Total Strength -->
                                     <div class="col-xs-6 col-sm-3">
                                         <div class="trans-stat-card stat-total">
                                             <div>
-                                                <div class="trans-stat-val" id="count_total">0</div>
-                                                <p class="trans-stat-lbl">Total Students</p>
+                                                <p class="trans-stat-lbl"><i class="fa fa-users text-primary"></i> Total Bus Strength</p>
+                                                <div class="trans-stat-val">
+                                                    <span id="count_total"><?php echo $m_total; ?></span>
+                                                    <small style="font-size:12px; color:#64748b; font-weight:600;">Riders</small>
+                                                </div>
+                                                <p class="trans-stat-sub" id="count_regular_sub">
+                                                    <?php echo $m_reg; ?> Regular + <?php echo $m_cust; ?> Custom
+                                                </p>
                                             </div>
-                                            <div class="stat-icon"><i class="fa fa-users"></i></div>
+                                            <div class="stat-icon"><i class="fa fa-bus"></i></div>
                                         </div>
                                     </div>
+
+                                    <!-- Card 2: Current Shift Attendance -->
                                     <div class="col-xs-6 col-sm-3">
                                         <div class="trans-stat-card stat-present">
                                             <div>
-                                                <div class="trans-stat-val" id="count_present" style="color:#059669;">0</div>
-                                                <p class="trans-stat-lbl">Present</p>
+                                                <p class="trans-stat-lbl"><i class="fa fa-check-circle text-success"></i> <?php echo ucfirst($attendance_type); ?> Shift Status</p>
+                                                <div class="trans-stat-val">
+                                                    <span id="count_present" style="color:#059669;"><?php echo $m_pres; ?></span>
+                                                    <span style="font-size:14px; color:#cbd5e1; font-weight:400;">/</span>
+                                                    <span id="count_absent" style="font-size:16px; color:#dc2626;"><?php echo $m_abs; ?> <small style="font-size:10px; color:#ef4444; font-weight:700;">ABSENT</small></span>
+                                                </div>
+                                                <p class="trans-stat-sub" id="count_present_sub">
+                                                    Live Marked for Current Trip
+                                                </p>
                                             </div>
                                             <div class="stat-icon"><i class="fa fa-check"></i></div>
                                         </div>
                                     </div>
+
+                                    <!-- Card 3: Cross-Shift Flow Metric -->
                                     <div class="col-xs-6 col-sm-3">
-                                        <div class="trans-stat-card stat-absent">
+                                        <div class="trans-stat-card stat-flow">
                                             <div>
-                                                <div class="trans-stat-val" id="count_absent" style="color:#dc2626;">0</div>
-                                                <p class="trans-stat-lbl">Absent</p>
+                                                <p class="trans-stat-lbl">
+                                                    <i class="fa fa-exchange text-indigo"></i> 
+                                                    <?php echo $is_evening ? 'Morning &rarr; Evening Flow' : 'Morning Pickup Flow'; ?>
+                                                </p>
+                                                <div class="trans-stat-val">
+                                                    <span id="flow_metric_val" style="color:#4f46e5;">
+                                                        <?php echo $is_evening ? ($m_flow_retained . ' / ' . $m_morning_pres) : ($m_pres . ' / ' . $m_total); ?>
+                                                    </span>
+                                                    <small style="font-size:11px; color:#64748b; font-weight:600;">
+                                                        <?php echo $is_evening ? 'Boarded Return' : 'Boarded Pickup'; ?>
+                                                    </small>
+                                                </div>
+                                                <p class="trans-stat-sub" id="flow_metric_sub">
+                                                    <?php if ($is_evening) { ?>
+                                                        <?php 
+                                                            $missing_morning = $m_morning_pres - $m_flow_retained;
+                                                            if ($missing_morning > 0) {
+                                                                echo '<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> ' . $missing_morning . ' Morning Riders Not On Board</span>';
+                                                            } else {
+                                                                echo '<span class="text-success"><i class="fa fa-check-circle"></i> All Morning Riders Accounted</span>';
+                                                            }
+                                                        ?>
+                                                    <?php } else { ?>
+                                                        <span class="text-muted"><i class="fa fa-sun-o"></i> Morning Pickup Boarding</span>
+                                                    <?php } ?>
+                                                </p>
                                             </div>
-                                            <div class="stat-icon"><i class="fa fa-times"></i></div>
+                                            <div class="stat-icon"><i class="fa <?php echo $is_evening ? 'fa-exchange' : 'fa-sun-o'; ?>"></i></div>
                                         </div>
                                     </div>
+
+                                    <!-- Card 4: Exceptions & Switches -->
                                     <div class="col-xs-6 col-sm-3">
                                         <div class="trans-stat-card stat-other">
                                             <div>
-                                                <div class="trans-stat-val" id="count_other" style="color:#d97706;">0</div>
-                                                <p class="trans-stat-lbl">Gatepass / Other</p>
+                                                <p class="trans-stat-lbl"><i class="fa fa-id-card-o text-warning"></i> Gatepass & Exceptions</p>
+                                                <div class="trans-stat-val">
+                                                    <span id="count_exceptions" style="color:#d97706;"><?php echo ($m_gp + $m_sw_out); ?></span>
+                                                    <small style="font-size:11px; color:#64748b; font-weight:600;">Exceptions</small>
+                                                </div>
+                                                <p class="trans-stat-sub" id="count_exceptions_sub">
+                                                    <?php echo $m_gp; ?> Gatepass &bull; <?php echo $m_sw_out; ?> Switched Out
+                                                </p>
                                             </div>
                                             <div class="stat-icon"><i class="fa fa-ticket"></i></div>
                                         </div>
@@ -586,38 +682,27 @@
 
                                 <!-- Unified Action & Filter Toolbar -->
                                 <div class="trans-toolbar-box">
-                                    <!-- Row 1: Actions, Filters & Sorting -->
+                                    <!-- Row 1: Bulk Actions & Sort/Sound Controls -->
                                     <div class="trans-toolbar-row">
                                         <!-- Left: Bulk CTAs -->
-                                        <div style="display:flex; align-items:center; gap:6px;">
+                                        <div style="display:flex; align-items:center; gap:8px;">
                                             <button type="button" class="btn btn-cta-action btn-cta-present" onclick="markAllStatus('Present')" title="Mark all listed students as Present">
-                                                <i class="fa fa-check-square-o"></i> Mark All Present
+                                                <i class="fa fa-check-circle"></i> Mark All Present
                                             </button>
                                             <button type="button" class="btn btn-cta-action btn-cta-absent" onclick="markAllStatus('Absent')" title="Mark all listed students as Absent">
-                                                <i class="fa fa-minus-square-o"></i> Mark All Absent
+                                                <i class="fa fa-times-circle"></i> Mark All Absent
                                             </button>
                                         </div>
 
-                                        <!-- Center: Quick Status Filter Pills -->
-                                        <div class="filter-chip-group">
-                                            <span style="font-size:11px; font-weight:700; color:#64748b; margin-right:3px;">Filter:</span>
-                                            <span class="filter-chip active" data-filter="all">All <span class="badge-count chip-count-all"><?php echo count($resultlist); ?></span></span>
-                                            <span class="filter-chip" data-filter="Present">Present <span class="badge-count chip-count-present">0</span></span>
-                                            <span class="filter-chip" data-filter="Absent">Absent <span class="badge-count chip-count-absent">0</span></span>
-                                            <span class="filter-chip" data-filter="Switched">Switched Bus <span class="badge-count chip-count-switched">0</span></span>
-                                            <span class="filter-chip" data-filter="Other">Gatepass/Hostel <span class="badge-count chip-count-other">0</span></span>
-                                        </div>
-
-                                        <!-- Right: Quick Sort & Sound Toggle -->
-                                        <div style="display:flex; align-items:center; gap:8px;">
-                                            <!-- Audio & Haptic Feedback Toggle -->
-                                            <button type="button" id="btn_sound_toggle" class="btn btn-default input-sm sound-feedback-toggle" style="height:30px; padding:3px 9px; font-size:11px; font-weight:700; border-radius:5px; border-color:#cbd5e1; display:inline-flex; align-items:center; gap:4px; color:#475569; background:#ffffff;" title="Toggle Sound & Haptic Feedback on Tapping Status">
+                                        <!-- Right: Sort & Sound Controls -->
+                                        <div style="display:flex; align-items:center; gap:10px;">
+                                            <button type="button" id="btn_sound_toggle" class="btn btn-default input-sm sound-feedback-toggle" style="height:32px; padding:4px 10px; font-size:11px; font-weight:700; border-radius:6px; border-color:#cbd5e1; display:inline-flex; align-items:center; gap:5px; color:#475569; background:#ffffff;" title="Toggle Sound & Haptic Feedback">
                                                 <i class="fa fa-volume-up text-success" id="sound_icon" style="font-size:13px;"></i> <span id="sound_toggle_text">Sound: ON</span>
                                             </button>
 
-                                            <div style="display:flex; align-items:center; gap:4px;">
+                                            <div style="display:flex; align-items:center; gap:5px;">
                                                 <span style="font-size:11px; font-weight:700; color:#64748b;"><i class="fa fa-sort"></i> Sort:</span>
-                                                <select id="quick_sort_select" class="form-control input-sm" style="width:160px; font-size:11px; height:30px; padding:3px 8px; border-radius:5px; border-color:#cbd5e1; font-weight:600;">
+                                                <select id="quick_sort_select" class="form-control input-sm" style="width:170px; font-size:11px; height:32px; padding:4px 8px; border-radius:6px; border-color:#cbd5e1; font-weight:600;">
                                                     <option value="name_asc" selected>Student Name (A &rarr; Z)</option>
                                                     <option value="name_desc">Student Name (Z &rarr; A)</option>
                                                     <option value="adm_asc">Adm No (Low - High)</option>
@@ -631,15 +716,24 @@
                                         </div>
                                     </div>
 
-                                    <!-- Row 2: Live Search & Counter info -->
-                                    <div class="trans-toolbar-row" style="justify-content:space-between;">
-                                        <div class="search-box-wrap">
+                                    <!-- Row 2: Live Search & Category Filter Pills -->
+                                    <div class="trans-toolbar-row">
+                                        <!-- Search Box -->
+                                        <div class="search-box-wrap" style="flex: 1; max-width: 380px;">
                                             <i class="fa fa-search search-icon"></i>
                                             <input type="text" id="touch_student_search" placeholder="Search student name, adm no, route, or bus stop...">
                                             <i class="fa fa-times-circle clear-icon" id="clear_search_btn" title="Clear search"></i>
                                         </div>
-                                        <div style="font-size:12px; font-weight:600; color:#64748b;">
-                                            <span id="filtered_info">Showing all <?php echo count($resultlist); ?> students (Sorted Alphabetically)</span>
+
+                                        <!-- Filter Pills -->
+                                        <div class="filter-chip-group">
+                                            <span style="font-size:11px; font-weight:700; color:#64748b; margin-right:2px;">Filter:</span>
+                                            <span class="filter-chip active" data-filter="all">All <span class="badge-count chip-count-all"><?php echo $m_total; ?></span></span>
+                                            <span class="filter-chip" data-filter="Present">Present <span class="badge-count chip-count-present"><?php echo $m_pres; ?></span></span>
+                                            <span class="filter-chip" data-filter="Absent">Absent <span class="badge-count chip-count-absent"><?php echo $m_abs; ?></span></span>
+                                            <span class="filter-chip" data-filter="Custom">Custom Riders <span class="badge-count chip-count-custom"><?php echo $m_cust; ?></span></span>
+                                            <span class="filter-chip" data-filter="Gatepass">Gatepass <span class="badge-count chip-count-gatepass"><?php echo $m_gp; ?></span></span>
+                                            <span class="filter-chip" data-filter="Switched">Switched Out <span class="badge-count chip-count-switched"><?php echo $m_sw_out; ?></span></span>
                                         </div>
                                     </div>
                                 </div>
@@ -1028,39 +1122,81 @@ function updateSoundToggleUI() {
 
 function updateCounters() {
     var total = $('.student-row').length;
+    var regularCount = $('.student-row[data-custom="no"]').length;
+    var customCount = $('.student-row[data-custom="yes"]').length;
+
     var present = 0;
     var absent = 0;
-    var switched = 0;
-    var other = 0;
+    var switchedOutCount = 0;
+    var gatepassCount = 0;
 
-    $('.attendencetype-field').each(function() {
-        var val = $(this).val();
-        if (val === 'Present') present++;
-        else if (val === 'Absent') absent++;
-        else if (val === 'Switched Bus') {
-            switched++;
-            // Note: If on the target bus, they are present custom riders
-            var row = $(this).closest('.student-row');
-            if (row.attr('data-custom') === 'yes') {
-                present++;
+    var morningPresentTotal = 0;
+    var morningRetainedEvening = 0;
+
+    $('.student-row').each(function() {
+        var row = $(this);
+        var val = row.find('.attendencetype-field').val();
+        var isCustom = (row.attr('data-custom') === 'yes');
+        var hasGatepass = row.find('.label:contains("Gatepass")').length > 0;
+        var isSwitchedOut = row.find('.label:contains("Switched to Bus")').length > 0;
+        var oppStatus = (row.attr('data-opp-status') || '').toLowerCase();
+
+        var wasMorningPresent = (oppStatus.indexOf('present') !== -1 || oppStatus.indexOf('switched') !== -1);
+        if (wasMorningPresent) {
+            morningPresentTotal++;
+        }
+
+        if (val === 'Present' || (isCustom && val === 'Switched Bus')) {
+            present++;
+            if (wasMorningPresent) {
+                morningRetainedEvening++;
             }
-        } else {
-            other++;
+        } else if (val === 'Absent') {
+            absent++;
+        } else if (val === 'Switched Bus') {
+            if (!isCustom) {
+                switchedOutCount++;
+            }
+        }
+
+        if (hasGatepass) {
+            gatepassCount++;
+        }
+        if (isSwitchedOut && !isCustom) {
+            switchedOutCount++;
         }
     });
 
     $('#count_total').text(total);
+    $('#count_regular_sub').text(regularCount + ' Regular + ' + customCount + ' Custom');
     $('#count_present').text(present);
     $('#count_absent').text(absent);
-    $('#count_other').text(other + switched);
+
+    var isEvening = ('<?php echo strtolower($attendance_type); ?>' === 'evening');
+    if (isEvening) {
+        $('#flow_metric_val').text(morningRetainedEvening + ' / ' + morningPresentTotal);
+        var missingMorning = morningPresentTotal - morningRetainedEvening;
+        if (missingMorning > 0) {
+            $('#flow_metric_sub').html('<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> ' + missingMorning + ' Morning Riders Not On Board</span>');
+        } else {
+            $('#flow_metric_sub').html('<span class="text-success"><i class="fa fa-check-circle"></i> All ' + morningPresentTotal + ' Morning Riders Accounted</span>');
+        }
+    } else {
+        $('#flow_metric_val').text(present + ' / ' + total);
+        $('#flow_metric_sub').html('<span class="text-muted"><i class="fa fa-sun-o"></i> Morning Pickup Boarding</span>');
+    }
+
+    $('#count_exceptions').text(gatepassCount + switchedOutCount);
+    $('#count_exceptions_sub').text(gatepassCount + ' Gatepass \u2022 ' + switchedOutCount + ' Switched Out');
 
     $('.chip-count-all').text(total);
     $('.chip-count-present').text(present);
     $('.chip-count-absent').text(absent);
-    $('.chip-count-switched').text(switched);
-    $('.chip-count-other').text(other);
+    $('.chip-count-custom').text(customCount);
+    $('.chip-count-gatepass').text(gatepassCount);
+    $('.chip-count-switched').text(switchedOutCount);
 
-    $('#sticky_summary').text(present + ' Present, ' + absent + ' Absent' + (switched > 0 ? ', ' + switched + ' Switched' : '') + (other > 0 ? ', ' + other + ' Other' : ''));
+    $('#sticky_summary').text(present + ' Present, ' + absent + ' Absent' + (customCount > 0 ? ', ' + customCount + ' Custom' : '') + (gatepassCount > 0 ? ', ' + gatepassCount + ' Gatepass' : ''));
 }
 
 function markAllStatus(status) {
@@ -1157,19 +1293,22 @@ function applyFilterAndSearch() {
     $('.student-row').each(function() {
         var $row = $(this);
         var status = $row.attr('data-status');
+        var isCustom = ($row.attr('data-custom') === 'yes');
         var text = $row.text().toLowerCase();
 
         var matchesSearch = (query === '' || text.indexOf(query) !== -1);
         var matchesFilter = true;
 
         if (filter === 'Present') {
-            matchesFilter = (status === 'Present' || ($row.attr('data-custom') === 'yes' && status === 'Switched Bus'));
+            matchesFilter = (status === 'Present' || (isCustom && status === 'Switched Bus'));
         } else if (filter === 'Absent') {
             matchesFilter = (status === 'Absent');
+        } else if (filter === 'Custom') {
+            matchesFilter = isCustom;
+        } else if (filter === 'Gatepass') {
+            matchesFilter = ($row.find('.label:contains("Gatepass")').length > 0 || status === 'Gatepass');
         } else if (filter === 'Switched') {
-            matchesFilter = (status === 'Switched Bus');
-        } else if (filter === 'Other') {
-            matchesFilter = (status !== 'Present' && status !== 'Absent' && status !== 'Switched Bus');
+            matchesFilter = ($row.find('.label:contains("Switched to Bus")').length > 0 || (!isCustom && status === 'Switched Bus'));
         }
 
         if (matchesSearch && matchesFilter) {
@@ -1310,50 +1449,93 @@ $(document).ready(function() {
         }
     });
 
+    // Helper to calculate and set custom rider To Date based on duration preset
+    function updateCustomRiderToDate() {
+        var activeBtn = $('.duration-preset-btn.active');
+        var days = activeBtn.data('days');
+        if (days === 'custom') {
+            return;
+        }
+
+        var numDays = parseInt(days) || 1;
+        var baseDateStr = $('#custom_from_date').val() || $('#date').val();
+        if (!baseDateStr) return;
+
+        var fromD = null;
+        if ($('#custom_from_date').data('datepicker')) {
+            fromD = $('#custom_from_date').datepicker('getDate');
+        }
+        
+        if (!fromD || isNaN(fromD.getTime())) {
+            if (typeof moment !== 'undefined') {
+                var m = moment(baseDateStr, [
+                    typeof date_format !== 'undefined' ? date_format.toUpperCase() : 'DD-MM-YYYY',
+                    'DD-MM-YYYY', 'D-M-YYYY', 'DD/MM/YYYY', 'D/M/YYYY', 'DD MMM YYYY', 'D MMM YYYY', 'YYYY-MM-DD'
+                ]);
+                if (m.isValid()) {
+                    fromD = m.toDate();
+                }
+            }
+        }
+
+        if (!fromD || isNaN(fromD.getTime())) {
+            fromD = new Date(baseDateStr);
+        }
+
+        if (fromD && !isNaN(fromD.getTime())) {
+            var toD = new Date(fromD.getTime());
+            toD.setDate(toD.getDate() + (numDays - 1));
+
+            if ($('#custom_to_date').data('datepicker')) {
+                $('#custom_to_date').datepicker('setDate', toD);
+            } else {
+                var dd = String(toD.getDate()).padStart(2, '0');
+                var mm = String(toD.getMonth() + 1).padStart(2, '0');
+                var yyyy = toD.getFullYear();
+                var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                var mon = monthNames[toD.getMonth()];
+
+                if (baseDateStr.indexOf('/') !== -1) {
+                    $('#custom_to_date').val(dd + '/' + mm + '/' + yyyy);
+                } else if (/[a-zA-Z]/.test(baseDateStr)) {
+                    $('#custom_to_date').val(dd + ' ' + mon + ' ' + yyyy);
+                } else {
+                    $('#custom_to_date').val(dd + '-' + mm + '-' + yyyy);
+                }
+            }
+        }
+    }
+
+    // Reset and sync modal dates on show
+    $('#customRiderModal').on('show.bs.modal', function() {
+        var baseDate = $('#date').val();
+        if (baseDate) {
+            $('#custom_from_date').val(baseDate);
+            $('#custom_to_date').val(baseDate);
+        }
+        $('.duration-preset-btn').removeClass('active');
+        $('.duration-preset-btn[data-days="1"]').addClass('active');
+        $('#search_student_text').val('');
+        $('#search_results').hide().html('');
+        $('#custom_rider_remark').val('');
+    });
+
     // Duration Presets Click in Custom Rider Modal
     $('.duration-preset-btn').on('click', function() {
         $('.duration-preset-btn').removeClass('active');
         $(this).addClass('active');
 
         var days = $(this).data('days');
-        var baseDateStr = $('#date').val() || $('#custom_from_date').val();
-        
         if (days === 'custom') {
-            // Keep user dates, focus on To Date
             $('#custom_to_date').focus();
             return;
         }
 
-        var numDays = parseInt(days) || 1;
-        $('#custom_from_date').val(baseDateStr);
+        updateCustomRiderToDate();
+    });
 
-        // Calculate To Date
-        try {
-            var parts = baseDateStr.split('/');
-            var fromD;
-            // Handle dd/mm/yyyy or yyyy-mm-dd format
-            if (baseDateStr.indexOf('/') !== -1) {
-                fromD = new Date(parts[2], parts[1] - 1, parts[0]);
-            } else {
-                fromD = new Date(baseDateStr);
-            }
-            if (!isNaN(fromD.getTime())) {
-                var toD = new Date(fromD);
-                toD.setDate(toD.getDate() + (numDays - 1));
-                
-                var dd = String(toD.getDate()).padStart(2, '0');
-                var mm = String(toD.getMonth() + 1).padStart(2, '0');
-                var yyyy = toD.getFullYear();
-                
-                if (baseDateStr.indexOf('/') !== -1) {
-                    $('#custom_to_date').val(dd + '/' + mm + '/' + yyyy);
-                } else {
-                    $('#custom_to_date').val(yyyy + '-' + mm + '-' + dd);
-                }
-            }
-        } catch(e) {
-            console.error('Date parse error', e);
-        }
+    $('#custom_from_date').on('change changeDate', function() {
+        updateCustomRiderToDate();
     });
 
     // Route & Vehicle 2-way sync

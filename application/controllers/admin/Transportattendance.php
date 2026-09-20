@@ -15,6 +15,34 @@ class Transportattendance extends Admin_Controller
         $this->config->load('app-config');
     }
 
+    private function parseToYYYYMMDD($date_str)
+    {
+        if (empty($date_str)) {
+            return null;
+        }
+        $date_str = trim((string)$date_str);
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date_str)) {
+            return $date_str;
+        }
+        $converted = $this->customlib->dateFormatToYYYYMMDD($date_str);
+        if (!empty($converted) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $converted) && substr($converted, 0, 4) != '0000') {
+            return $converted;
+        }
+        if (preg_match('/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/', $date_str, $matches)) {
+            $d = str_pad($matches[1], 2, '0', STR_PAD_LEFT);
+            $m = str_pad($matches[2], 2, '0', STR_PAD_LEFT);
+            $y = $matches[3];
+            if (checkdate((int)$m, (int)$d, (int)$y)) {
+                return "{$y}-{$m}-{$d}";
+            }
+        }
+        $ts = strtotime($date_str);
+        if ($ts !== false && $ts > 0) {
+            return date('Y-m-d', $ts);
+        }
+        return date('Y-m-d');
+    }
+
     private function isSuperAdmin()
     {
         $getStaffRole = $this->customlib->getStaffRole();
@@ -143,7 +171,7 @@ class Transportattendance extends Admin_Controller
             $this->load->view('admin/transport/attendance', $data);
             $this->load->view('layout/footer', $data);
         } else {
-            $date = $this->customlib->dateFormatToYYYYMMDD($this->input->post('date'));
+            $date = $this->parseToYYYYMMDD($this->input->post('date'));
             $vehicle_id = $this->input->post('vehicle_id');
             $route_id = $this->input->post('route_id');
             $attendance_type = $this->input->post('attendance_type');
@@ -238,6 +266,61 @@ class Transportattendance extends Admin_Controller
                 return strcasecmp($nameA, $nameB);
             });
 
+            // Calculate comprehensive shift and flow metrics
+            $total_strength = count($students);
+            $regular_count = 0;
+            $custom_count = 0;
+            $present_count = 0;
+            $absent_count = 0;
+            $morning_present_count = 0;
+            $gatepass_count = 0;
+            $switched_out_count = 0;
+            $retained_flow_count = 0;
+
+            foreach ($students as $s) {
+                $is_cust = (isset($s['status']) && $s['status'] == 'Switched Bus');
+                if ($is_cust) {
+                    $custom_count++;
+                } else {
+                    $regular_count++;
+                }
+
+                $cur_status = isset($s['attendance_status']) ? $s['attendance_status'] : 'Present';
+                if ($cur_status == 'Present' || ($is_cust && $cur_status == 'Switched Bus')) {
+                    $present_count++;
+                } elseif ($cur_status == 'Absent') {
+                    $absent_count++;
+                }
+
+                $opp_st = isset($s['opposite_shift_status']) ? $s['opposite_shift_status'] : '';
+                $was_morning_present = (strpos(strtolower($opp_st), 'present') !== false || strpos(strtolower($opp_st), 'switched') !== false);
+                if ($was_morning_present) {
+                    $morning_present_count++;
+                    if ($cur_status == 'Present' || ($is_cust && $cur_status == 'Switched Bus')) {
+                        $retained_flow_count++;
+                    }
+                }
+
+                if (!empty($s['has_gatepass'])) {
+                    $gatepass_count++;
+                }
+                if (!empty($s['switched_out_info'])) {
+                    $switched_out_count++;
+                }
+            }
+
+            $data['metrics'] = array(
+                'total_strength' => $total_strength,
+                'regular_count' => $regular_count,
+                'custom_count' => $custom_count,
+                'present_count' => $present_count,
+                'absent_count' => $absent_count,
+                'morning_present_count' => $morning_present_count,
+                'retained_flow_count' => $retained_flow_count,
+                'gatepass_count' => $gatepass_count,
+                'switched_out_count' => $switched_out_count
+            );
+
             $data['resultlist'] = $students;
             
             $this->load->view('layout/header', $data);
@@ -261,7 +344,7 @@ class Transportattendance extends Admin_Controller
         }
         
         $date_input = $this->input->get_post('date');
-        $date = !empty($date_input) ? $this->customlib->dateFormatToYYYYMMDD($date_input) : date('Y-m-d');
+        $date = !empty($date_input) ? $this->parseToYYYYMMDD($date_input) : date('Y-m-d');
         $vehicle_id = $this->input->get_post('vehicle_id');
         $route_id = $this->input->get_post('route_id');
         $attendance_type = $this->input->get_post('attendance_type');
@@ -359,11 +442,77 @@ class Transportattendance extends Admin_Controller
                 $grouped_by_stop[$stop_key][] = $student;
             }
             
+            // Calculate comprehensive shift and flow metrics
+            $total_strength = count($students);
+            $regular_count = 0;
+            $custom_count = 0;
+            $present_count = 0;
+            $absent_count = 0;
+            $morning_present_count = 0;
+            $gatepass_count = 0;
+            $switched_out_count = 0;
+            $retained_flow_count = 0;
+
+            foreach ($students as $s) {
+                $is_cust = (isset($s['status']) && $s['status'] == 'Switched Bus');
+                if ($is_cust) {
+                    $custom_count++;
+                } else {
+                    $regular_count++;
+                }
+
+                $cur_status = isset($s['attendance_status']) ? $s['attendance_status'] : 'Present';
+                if ($cur_status == 'Present' || ($is_cust && $cur_status == 'Switched Bus')) {
+                    $present_count++;
+                } elseif ($cur_status == 'Absent') {
+                    $absent_count++;
+                }
+
+                $opp_st = isset($s['opposite_shift_status']) ? $s['opposite_shift_status'] : '';
+                $was_morning_present = (strpos(strtolower($opp_st), 'present') !== false || strpos(strtolower($opp_st), 'switched') !== false);
+                if ($was_morning_present) {
+                    $morning_present_count++;
+                    if ($cur_status == 'Present' || ($is_cust && $cur_status == 'Switched Bus')) {
+                        $retained_flow_count++;
+                    }
+                }
+
+                if (!empty($s['has_gatepass'])) {
+                    $gatepass_count++;
+                }
+                if (!empty($s['switched_out_info'])) {
+                    $switched_out_count++;
+                }
+            }
+
+            $data['metrics'] = array(
+                'total_strength' => $total_strength,
+                'regular_count' => $regular_count,
+                'custom_count' => $custom_count,
+                'present_count' => $present_count,
+                'absent_count' => $absent_count,
+                'morning_present_count' => $morning_present_count,
+                'retained_flow_count' => $retained_flow_count,
+                'gatepass_count' => $gatepass_count,
+                'switched_out_count' => $switched_out_count
+            );
+
             $data['grouped_students'] = $grouped_by_stop;
             $data['students_count'] = count($students);
         } else {
             $data['grouped_students'] = array();
             $data['students_count'] = 0;
+            $data['metrics'] = array(
+                'total_strength' => 0,
+                'regular_count' => 0,
+                'custom_count' => 0,
+                'present_count' => 0,
+                'absent_count' => 0,
+                'morning_present_count' => 0,
+                'retained_flow_count' => 0,
+                'gatepass_count' => 0,
+                'switched_out_count' => 0
+            );
         }
         
         $this->load->view('admin/transport/mobile_attendance', $data);
@@ -504,8 +653,8 @@ class Transportattendance extends Admin_Controller
             $to_date_input = $from_date_input;
         }
 
-        $from_date = $this->customlib->dateFormatToYYYYMMDD($from_date_input);
-        $to_date = $this->customlib->dateFormatToYYYYMMDD($to_date_input);
+        $from_date = $this->parseToYYYYMMDD($from_date_input);
+        $to_date = $this->parseToYYYYMMDD($to_date_input);
 
         if (empty($from_date)) {
             $from_date = date('Y-m-d');
@@ -559,15 +708,19 @@ class Transportattendance extends Admin_Controller
                 $shifts = array('morning', 'evening');
             }
 
-            // Build list of dates
+            // Build list of dates using DateTime
             $period_dates = array();
-            $start_ts = strtotime($from_date);
-            $end_ts = strtotime($to_date);
-            for ($current_ts = $start_ts; $current_ts <= $end_ts; $current_ts = strtotime('+1 day', $current_ts)) {
-                $period_dates[] = date('Y-m-d', $current_ts);
+            $cur_dt = new DateTime($from_date);
+            $end_dt = new DateTime($to_date);
+            $end_dt->modify('+1 day');
+            $period = new DatePeriod($cur_dt, new DateInterval('P1D'), $end_dt);
+            foreach ($period as $dt) {
+                $period_dates[] = $dt->format('Y-m-d');
             }
 
             $num_days = count($period_dates);
+            $start_ts = strtotime($from_date);
+            $end_ts = strtotime($to_date);
             $default_remark = ($num_days > 1) 
                 ? 'Custom Rider (' . date('d M', $start_ts) . ' - ' . date('d M', $end_ts) . ')'
                 : 'Custom Rider (' . date('d M', $start_ts) . ')';
@@ -613,7 +766,7 @@ class Transportattendance extends Admin_Controller
 
         $student_session_id = $this->input->post('student_session_id');
         $vehicle_id = $this->input->post('vehicle_id');
-        $date = $this->customlib->dateFormatToYYYYMMDD($this->input->post('date'));
+        $date = $this->parseToYYYYMMDD($this->input->post('date'));
         $attendance_type = $this->input->post('attendance_type');
 
         if (!$this->isSuperAdmin()) {
@@ -653,7 +806,7 @@ class Transportattendance extends Admin_Controller
             $date = date($this->customlib->getSchoolDateFormat());
         }
         
-        $search_date = $this->customlib->dateFormatToYYYYMMDD($date);
+        $search_date = $this->parseToYYYYMMDD($date);
         
         $data['date'] = $date;
         $summary = $this->transportattendance_model->get_daily_summary($search_date);
@@ -731,7 +884,7 @@ class Transportattendance extends Admin_Controller
         $vehicle_id = $this->input->post('vehicle_id');
         $route_id = $this->input->post('route_id');
         $date_str = $this->input->post('date');
-        $date = $this->customlib->dateFormatToYYYYMMDD($date_str);
+        $date = $this->parseToYYYYMMDD($date_str);
 
         if (!$this->isSuperAdmin()) {
             $assigned_vehicles = $this->getStaffAssignedVehicles();

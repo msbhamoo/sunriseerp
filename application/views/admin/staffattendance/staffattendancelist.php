@@ -783,10 +783,10 @@
                                 <span class="sa-kpi-chip kpi-shortfall" data-filter="shortfall" title="Filter staff with working hours shortfall">
                                     <i class="fa fa-hourglass-half text-danger"></i> Shortfall <span class="sa-kpi-count" id="cnt-shortfall">0</span>
                                 </span>
-                                <span class="sa-kpi-chip kpi-qr" title="QR or Biometric punches">
+                                <span class="sa-kpi-chip kpi-qr" data-filter="biometric" title="Filter Biometric or QR punches">
                                     <i class="fa fa-qrcode text-info"></i> Biometric/QR <span class="sa-kpi-count" id="cnt-qr">0</span>
                                 </span>
-                                <span class="sa-kpi-chip kpi-manual" title="Manual entries">
+                                <span class="sa-kpi-chip kpi-manual" data-filter="manual" title="Filter Manual entries">
                                     <i class="fa fa-pencil text-muted"></i> Manual <span class="sa-kpi-count" id="cnt-manual">0</span>
                                 </span>
                             </div>
@@ -798,6 +798,19 @@
                                     <input type="text" id="att-table-search" class="sa-search-input" placeholder="Quick search staff name, ID, phone...">
                                 </div>
                                 <div class="sa-actions-right">
+                                    <div class="sa-sort-wrap" style="display:inline-flex; align-items:center; gap:6px;">
+                                        <span style="font-size:11.5px; font-weight:700; color:#64748b;"><i class="fa fa-sort"></i> Sort:</span>
+                                        <select id="att-sort-select" class="form-control input-sm" style="width:160px; height:32px; font-size:12px; font-weight:600; border-radius:8px; border-color:#cbd5e1; background:#ffffff; cursor:pointer;">
+                                            <option value="default">Default (#)</option>
+                                            <option value="name_asc">Name (A → Z)</option>
+                                            <option value="name_desc">Name (Z → A)</option>
+                                            <option value="in_time_asc">Entry Time (Earliest)</option>
+                                            <option value="in_time_desc">Entry Time (Latest)</option>
+                                            <option value="emp_id">Staff ID</option>
+                                            <option value="status">Status</option>
+                                            <option value="shortfall">Shortfall First</option>
+                                        </select>
+                                    </div>
                                     <button type="button" class="sa-btn sa-btn-whatsapp" onclick="openStaffAttendanceShareModal('all')">
                                         <i class="fa fa-whatsapp"></i> WhatsApp Report
                                     </button>
@@ -882,7 +895,9 @@
                                                         }
                                                     }
                                                 } else {
-                                                    if (!empty($sch_setting->biometric)) {
+                                                    if (!empty($value['in_time']) && $value['in_time'] !== '00:00:00') {
+                                                        $selectedTypeKey = "present";
+                                                    } elseif (!empty($sch_setting->biometric)) {
                                                         $selectedTypeKey = "absent";
                                                     } else {
                                                         $selectedTypeKey = "present";
@@ -902,6 +917,7 @@
                                                 <tr data-staff_id="<?php echo $value['staff_id']; ?>" 
                                                     data-role_id="<?php echo $value['role_id']; ?>"
                                                     data-req_hours="<?php echo isset($role_required_hours[$value['role_id']]) ? $role_required_hours[$value['role_id']] : '08:00:00'; ?>"
+                                                    data-source="<?php echo (!empty($value['biometric_attendence']) ? 'biometric' : (!empty($value['qrcode_attendance']) ? 'qr' : 'manual')); ?>"
                                                     data-employee_id="<?php echo html_escape($value['employee_id']); ?>" 
                                                     data-staff_name="<?php echo html_escape($value['name'] . " " . $value['surname']); ?>" 
                                                     data-user_type="<?php echo html_escape($value['user_type']); ?>" 
@@ -1005,14 +1021,15 @@
                                                     <!-- Source -->
                                                     <td>
                                                         <?php
-                                                        if (IsNullOrEmptyString($value['biometric_attendence']) && IsNullOrEmptyString($value['qrcode_attendance'])) {
-                                                            echo '<span class="text-muted" style="font-size:11px;">-</span>';
-                                                        } elseif (($value['biometric_attendence'] == 0) && ($value['qrcode_attendance'] == 0)) {
-                                                            echo '<span style="font-size:11px; color:#64748b;"><i class="fa fa-pencil"></i> Manual</span>';
-                                                        } elseif ($value['biometric_attendence']) {
+                                                        $hasPunchTime = (!empty($value['in_time']) && $value['in_time'] !== '00:00:00') || (!empty($value['out_time']) && $value['out_time'] !== '00:00:00');
+                                                        if (!empty($value['biometric_attendence']) && $hasPunchTime) {
                                                             echo '<span style="font-size:11px; color:#0284c7; font-weight:600;"><i class="fa fa-fingerprint"></i> Bio</span>';
-                                                        } elseif ($value['qrcode_attendance']) {
+                                                        } elseif (!empty($value['qrcode_attendance']) && $hasPunchTime) {
                                                             echo '<span style="font-size:11px; color:#059669; font-weight:600;"><i class="fa fa-qrcode"></i> QR</span>';
+                                                        } elseif (IsNullOrEmptyString($value['biometric_attendence']) && IsNullOrEmptyString($value['qrcode_attendance'])) {
+                                                            echo '<span class="text-muted" style="font-size:11px;">-</span>';
+                                                        } else {
+                                                            echo '<span style="font-size:11px; color:#64748b;"><i class="fa fa-pencil"></i> Manual</span>';
                                                         }
                                                         ?>
                                                     </td>
@@ -1484,6 +1501,14 @@
                 matchesFilter = inV && inV !== '' && inV !== '00:00:00' && (!outV || outV === '' || outV === '00:00:00');
             } else if (activeFilter === 'shortfall') {
                 matchesFilter = ($tr.attr('data-is_shortfall') === '1');
+            } else if (activeFilter === 'biometric') {
+                var src = ($tr.attr('data-source') || '').toLowerCase();
+                var srcText = $tr.find('td:nth-child(7)').text().toLowerCase();
+                matchesFilter = (src === 'biometric' || src === 'qr' || srcText.indexOf('bio') !== -1 || srcText.indexOf('qr') !== -1);
+            } else if (activeFilter === 'manual') {
+                var src = ($tr.attr('data-source') || '').toLowerCase();
+                var srcText = $tr.find('td:nth-child(7)').text().toLowerCase();
+                matchesFilter = (src === 'manual' || srcText.indexOf('manual') !== -1 || srcText.indexOf('-') !== -1);
             }
 
             if (matchesSearch && matchesFilter) {
@@ -1494,7 +1519,75 @@
         });
     }
 
+    // 7b. Table Sorting
+    function applySorting() {
+        var sortBy = $('#att-sort-select').val() || 'default';
+        var $tbody = $('#staff-attendance-table tbody');
+        var $rows = $tbody.find('tr').get();
+
+        $rows.sort(function(a, b) {
+            var $a = $(a), $b = $(b);
+
+            if (sortBy === 'name_asc') {
+                var nameA = ($a.attr('data-staff_name') || '').toLowerCase();
+                var nameB = ($b.attr('data-staff_name') || '').toLowerCase();
+                return nameA.localeCompare(nameB);
+            } else if (sortBy === 'name_desc') {
+                var nameA = ($a.attr('data-staff_name') || '').toLowerCase();
+                var nameB = ($b.attr('data-staff_name') || '').toLowerCase();
+                return nameB.localeCompare(nameA);
+            } else if (sortBy === 'in_time_asc') {
+                var timeA = $a.find('.in_time').val() || '';
+                var timeB = $b.find('.in_time').val() || '';
+                var minA = parseTimeMinutes(timeA);
+                var minB = parseTimeMinutes(timeB);
+                if (minA === null && minB === null) return 0;
+                if (minA === null) return 1;
+                if (minB === null) return -1;
+                return minA - minB;
+            } else if (sortBy === 'in_time_desc') {
+                var timeA = $a.find('.in_time').val() || '';
+                var timeB = $b.find('.in_time').val() || '';
+                var minA = parseTimeMinutes(timeA);
+                var minB = parseTimeMinutes(timeB);
+                if (minA === null && minB === null) return 0;
+                if (minA === null) return 1;
+                if (minB === null) return -1;
+                return minB - minA;
+            } else if (sortBy === 'emp_id') {
+                var idA = ($a.attr('data-employee_id') || '').toLowerCase();
+                var idB = ($b.attr('data-employee_id') || '').toLowerCase();
+                return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
+            } else if (sortBy === 'status') {
+                var statOrder = { 'present': 1, 'late': 2, 'half_day': 3, 'half_day_second_shift': 4, 'absent': 5, 'unplanned_leave': 6, 'holiday': 7, 'unmarked': 8 };
+                var keyA = $a.find('.att-hidden-input').data('type-key') || 'unmarked';
+                var keyB = $b.find('.att-hidden-input').data('type-key') || 'unmarked';
+                var ordA = statOrder[keyA] || 99;
+                var ordB = statOrder[keyB] || 99;
+                return ordA - ordB;
+            } else if (sortBy === 'shortfall') {
+                var sfA = $a.attr('data-is_shortfall') === '1' ? 1 : 0;
+                var sfB = $b.attr('data-is_shortfall') === '1' ? 1 : 0;
+                return sfB - sfA;
+            } else {
+                // Default index (#)
+                var idxA = parseInt($a.find('td:first-child span').text(), 10) || 0;
+                var idxB = parseInt($b.find('td:first-child span').text(), 10) || 0;
+                return idxA - idxB;
+            }
+        });
+
+        $.each($rows, function(idx, row) {
+            $tbody.append(row);
+        });
+    }
+
     $('#att-table-search').on('keyup input', applyFilters);
+
+    $('#att-sort-select').on('change', function() {
+        applySorting();
+        applyFilters();
+    });
 
     $('.sa-kpi-chip').on('click', function() {
         var filter = $(this).data('filter');

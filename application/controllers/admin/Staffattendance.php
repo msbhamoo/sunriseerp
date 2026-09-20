@@ -267,6 +267,7 @@ class Staffattendance extends Admin_Controller
             $data['is_first_time_attendance']  = $is_first_time_attendance;
             $data['resultlist']  = $resultlist;
             $data['role_required_hours'] = $this->staffAttendaceSetting_model->getAllRoleRequiredHours();
+            $data['role_schedules_map']  = $this->staffAttendaceSetting_model->getAllRoleSchedulesMap();
 
             $this->load->view('layout/header', $data);
             $this->load->view('admin/staffattendance/staffattendancelist', $data);

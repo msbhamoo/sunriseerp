@@ -1110,13 +1110,24 @@ class Schsettings extends Admin_Controller
         $new_list_attendance     = array();
 
         foreach ($staff_attendance_data as $key => $value) {
+            $early_half = (isset($value->early_half_time) && !empty($value->early_half_time) && $value->early_half_time !== '00:00:00') ? $value->early_half_time : '';
+            $early_grace = (isset($value->early_grace_time) && !empty($value->early_grace_time) && $value->early_grace_time !== '00:00:00') ? $value->early_grace_time : '';
+
             if (array_key_exists($value->id, $new_list_attendance)) {
                 $new_list_attendance[$value->id]['schedule'][] = $value;
+                if (!empty($early_half)) {
+                    $new_list_attendance[$value->id]['early_half'] = $early_half;
+                }
+                if (!empty($early_grace)) {
+                    $new_list_attendance[$value->id]['early_grace'] = $early_grace;
+                }
             } else {
                 $new_list_attendance[$value->id] = [
                     'role_id' => $value->id,
                     'role' => $value->role_name,
-                    'schedule' => array($value)
+                    'schedule' => array($value),
+                    'early_half' => $early_half,
+                    'early_grace' => $early_grace
                 ];
             }
         }
@@ -1347,6 +1358,8 @@ class Schsettings extends Admin_Controller
                 $entry_time_from = $this->input->post('entry_time_from_' . $row_value);
                 $entry_time_to = $this->input->post('entry_time_to_' . $row_value);
                 $total_institute_hour = $this->input->post('total_institute_hour_' . $row_value);
+                $early_half_time = $this->input->post('early_half_time_' . $row_value);
+                $early_grace_time = $this->input->post('early_grace_time_' . $row_value);
        
                 $insert_array[] = array(
                     'staff_attendence_type_id' => $attendance_type,
@@ -1354,6 +1367,8 @@ class Schsettings extends Admin_Controller
                     'entry_time_from'          => $entry_time_from,
                     'entry_time_to'            => $entry_time_to,
                     'total_institute_hour'     => ($total_institute_hour),
+                    'early_half_time'          => (!empty($early_half_time) && $early_half_time !== '00:00:00') ? $early_half_time : null,
+                    'early_grace_time'         => (!empty($early_grace_time) && $early_grace_time !== '00:00:00') ? $early_grace_time : null,
                     'is_active'                => 1
                 );
             }
