@@ -503,11 +503,41 @@
     }
 
     function fnExcelReportClassMatrix() {
-        var tab_text = "<table border='1px'><tr bgcolor='#f8fafc'>";
         var tab = document.getElementById('class_matrix_table');
-        for (var j = 0; j < tab.rows.length; j++) { tab_text += tab.rows[j].innerHTML + "</tr>"; }
-        tab_text += "</table>";
-        var sa = window.open('data:application/vnd.ms-excel,' + encodeURIComponent(tab_text));
-        return sa;
+        if (!tab) return;
+
+        var tab_text = "<html xmlns:x=\"urn:schemas-microsoft-com:office:excel\">";
+        tab_text += "<head><meta charset=\"UTF-8\"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>";
+        tab_text += "<x:Name>Grade_Distribution_Matrix</x:Name>";
+        tab_text += "<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head>";
+        tab_text += "<body><table border='1px'><tr bgcolor='#f8fafc'>";
+
+        for (var j = 0; j < tab.rows.length; j++) {
+            if (j === 0) {
+                tab_text += tab.rows[j].innerHTML + "</tr>";
+            } else {
+                tab_text += "<tr>" + tab.rows[j].innerHTML + "</tr>";
+            }
+        }
+        tab_text += "</table></body></html>";
+
+        var blob = new Blob(["\uFEFF" + tab_text], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        var filename = 'CBSE_Grade_Distribution_Matrix.xls';
+
+        if (navigator.msSaveBlob) {
+            navigator.msSaveBlob(blob, filename);
+        } else {
+            var link = document.createElement("a");
+            if (link.download !== undefined) {
+                var url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+        }
     }
 </script>

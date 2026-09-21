@@ -894,33 +894,45 @@
     }
 
     function fnExcelReportStatus() {
-        var tab_text = "<table border='1px'><tr bgcolor='#f8fafc'>";
-        var textRange;
-        var j = 0;
         var tab = document.getElementById('status_excel_table');
+        if (!tab) return;
 
-        for (j = 0; j < tab.rows.length; j++) {
-            tab_text = tab_text + tab.rows[j].innerHTML + "</tr>";
+        var tab_text = "<html xmlns:x=\"urn:schemas-microsoft-com:office:excel\">";
+        tab_text += "<head><meta charset=\"UTF-8\"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>";
+        tab_text += "<x:Name>Marks_Status_Report</x:Name>";
+        tab_text += "<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head>";
+        tab_text += "<body><table border='1px'><tr bgcolor='#f8fafc'>";
+
+        for (var j = 0; j < tab.rows.length; j++) {
+            if (j === 0) {
+                tab_text += tab.rows[j].innerHTML + "</tr>";
+            } else {
+                tab_text += "<tr>" + tab.rows[j].innerHTML + "</tr>";
+            }
         }
+        tab_text += "</table></body></html>";
 
-        tab_text = tab_text + "</table>";
-        tab_text = tab_text.replace(/<A[^>]*>|<\/A>/g, "");
-        tab_text = tab_text.replace(/<img[^>]*>/gi, "");
-        tab_text = tab_text.replace(/<input[^>]*>|<\/input>/gi, "");
+        tab_text = tab_text.replace(/<a\b[^>]*>/gi, "").replace(/<\/a>/gi, "");
+        tab_text = tab_text.replace(/<img\b[^>]*>/gi, "");
+        tab_text = tab_text.replace(/<input\b[^>]*>/gi, "");
 
-        var ua = window.navigator.userAgent;
-        var msie = ua.indexOf("MSIE ");
+        var blob = new Blob(["\uFEFF" + tab_text], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        var filename = 'CBSE_Exam_Marks_Status_Report.xls';
 
-        if (msie > 0 || !navigator.userAgent.match(/Trident.*rv\:11\./)) {
-            var sa = window.open('data:application/vnd.ms-excel,' + encodeURIComponent(tab_text));
+        if (navigator.msSaveBlob) {
+            navigator.msSaveBlob(blob, filename);
         } else {
-            txtArea1.document.open("txt/html", "replace");
-            txtArea1.document.write(tab_text);
-            txtArea1.document.close();
-            txtArea1.focus();
-            sa = txtArea1.document.execCommand("SaveAs", true, "CBSE_Exam_Marks_Status_Report.xls");
+            var link = document.createElement("a");
+            if (link.download !== undefined) {
+                var url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
         }
-
-        return (sa);
     }
 </script>
