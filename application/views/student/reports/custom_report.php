@@ -61,6 +61,16 @@
                             <div class="row">
                                 <div class="col-md-3">
                                     <div class="form-group">
+                                        <label>Select Staff Kid</label>
+                                        <select id="is_staff_kid" name="is_staff_kid[]" class="form-control select2" multiple="multiple" data-placeholder="Select Staff Kid (Leave empty for All)">
+                                            <option value="all">All</option>
+                                            <option value="1">Yes</option>
+                                            <option value="0">No</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
                                         <label>Select Sort By</label>
                                         <select id="sort_by" name="sort_by" class="form-control">
                                             <option value="">Select</option>
@@ -119,6 +129,8 @@
                                     'pen' => 'PEN',
                                     'aadhaar_id' => 'Aadhaar ID',
                                     'rte' => 'RTE',
+                                    'is_staff_kid' => 'Is Staff Kid',
+                                    'staff_name' => 'Staff Name',
                                     'admission_type' => 'Admission Type',
                                     'shrestha' => 'Shrestha',
                                     'is_active' => 'Is Active',

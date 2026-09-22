@@ -35,7 +35,7 @@ class Staffattendancemodel extends MY_Model {
                 
                 if ($query->num_rows() > 0) {
                     $existing = $query->row();
-                    $isLeaveLike = in_array((int)$attendance_value['staff_attendance_type_id'], [3, 5]);
+                    $isLeaveLike = in_array((int)$attendance_value['staff_attendance_type_id'], [3, 5, 8]);
 
                     // Preserve existing in_time/out_time from biometric or QR if manual form posted empty
                     if ($attendance_value['in_time'] === null && !empty($existing->in_time) && $existing->in_time !== '00:00:00' && !$isLeaveLike) {
@@ -228,7 +228,30 @@ class Staffattendancemodel extends MY_Model {
         } else {
             $query = $this->db->query("select  staff_attendance.out_time,staff_attendance.in_time,staff_attendance.staff_attendance_type_id,staff_attendance.created_at as attendence_dt,staff_attendance.biometric_attendence,staff_attendance.qrcode_attendance,staff_attendance.user_agent,staff_attendance.biometric_device_data,staff_attendance.remark,staff.name,staff.surname,staff.employee_id,staff.contact_no,staff.email,roles.name as user_type,roles.id as role_id,IFNULL(staff_attendance.date, 'xxx') as date, IFNULL(staff_attendance.id, 0) as id, staff.id as staff_id ,staff_attendance_type.type as `att_type`,staff_attendance_type.key_value as `key`,staff_attendance_type.long_lang_name,staff_attendance_type.long_name_style $compliance_cols from staff left join staff_roles on (staff.id = staff_roles.staff_id) left join roles on (roles.id = staff_roles.role_id) left join staff_attendance on (staff.id = staff_attendance.staff_id) and staff_attendance.date = " . $this->db->escape($date) . " left join staff_attendance_type on staff_attendance_type.id = staff_attendance.staff_attendance_type_id where roles.name = " . $this->db->escape($user_type) . " and staff.is_active = 1 $condition");            
         }
-        return $query->result_array();
+        $results = $query->result_array();
+
+        // Check active approved Duty Passes for this date
+        $dp_query = $this->db->query("
+            SELECT sdp.id as duty_pass_id, sdp.duty_pass_no, sdp.title as duty_title, sdp.category as duty_category, sdp.venue, sdp.from_date, sdp.to_date, sdpm.staff_id 
+            FROM staff_duty_pass sdp 
+            JOIN staff_duty_pass_members sdpm ON sdpm.duty_pass_id = sdp.id 
+            WHERE sdp.status = 'Approved' 
+            AND sdp.from_date <= " . $this->db->escape($date) . " 
+            AND sdp.to_date >= " . $this->db->escape($date)
+        );
+        $active_duty_passes = array();
+        if ($dp_query) {
+            foreach ($dp_query->result_array() as $dp) {
+                $active_duty_passes[$dp['staff_id']] = $dp;
+            }
+        }
+
+        foreach ($results as $k => $row) {
+            $st_id = $row['staff_id'];
+            $results[$k]['duty_pass'] = isset($active_duty_passes[$st_id]) ? $active_duty_passes[$st_id] : null;
+        }
+
+        return $results;
     }
 
     public function add($data) {

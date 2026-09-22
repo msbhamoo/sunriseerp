@@ -471,6 +471,8 @@ class Studentreport extends Admin_Controller
             $section_ids = $this->input->post('section_id') ? $this->input->post('section_id') : [];
             $admission_types = $this->input->post('admission_type') ? $this->input->post('admission_type') : [];
             $rtes = $this->input->post('rte') ? $this->input->post('rte') : [];
+            $is_staff_kids = $this->input->post('is_staff_kid') ? $this->input->post('is_staff_kid') : [];
+            $sort_by = $this->input->post('sort_by');
             $selected_columns = $this->input->post('columns') ? $this->input->post('columns') : [];
 
             // Get students
@@ -503,11 +505,27 @@ class Studentreport extends Admin_Controller
                         continue;
                     }
                 }
+
+                // Filter by Is Staff Kid
+                if (!empty($is_staff_kids) && !in_array('all', $is_staff_kids)) {
+                    $is_sk = (isset($student['is_staff_kid']) && ($student['is_staff_kid'] == 1 || $student['is_staff_kid'] === '1' || strtolower((string)$student['is_staff_kid']) === 'yes')) ? '1' : '0';
+                    if (!in_array($is_sk, $is_staff_kids)) {
+                        continue;
+                    }
+                }
                 
                 $student['custom_fields'] = $student_custom_fields;
                 
                 // Add to results
                 $results[] = $student;
+            }
+
+            if (!empty($sort_by)) {
+                usort($results, function($a, $b) use ($sort_by) {
+                    $valA = isset($a[$sort_by]) ? $a[$sort_by] : '';
+                    $valB = isset($b[$sort_by]) ? $b[$sort_by] : '';
+                    return strnatcasecmp((string)$valA, (string)$valB);
+                });
             }
 
             // Custom fields and fees

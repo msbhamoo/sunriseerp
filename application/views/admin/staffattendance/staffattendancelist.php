@@ -36,6 +36,11 @@
         --sa-unplanned-text: #be185d;
         --sa-unplanned-border: #fbcfe8;
 
+        --sa-onduty: #0d9488;
+        --sa-onduty-bg: #ccfbf1;
+        --sa-onduty-text: #0f766e;
+        --sa-onduty-border: #99f6e4;
+
         --sa-border: #e2e8f0;
         --sa-card-bg: #ffffff;
         --sa-text-main: #0f172a;
@@ -387,6 +392,7 @@
     .sa-table tbody tr.rt-holiday td:first-child { box-shadow: inset 4px 0 0 var(--sa-holiday); }
     .sa-table tbody tr.rt-half_day_second_shift td:first-child { box-shadow: inset 4px 0 0 var(--sa-halfday); }
     .sa-table tbody tr.rt-unplanned_leave td:first-child { box-shadow: inset 4px 0 0 var(--sa-unplanned); }
+    .sa-table tbody tr.rt-on_duty td:first-child { box-shadow: inset 4px 0 0 var(--sa-onduty); }
 
     /* ===== Single Active Status Badge & Dropdown Selector ===== */
     .sa-status-dropdown {
@@ -443,6 +449,12 @@
 
     .btn-status-unplanned_leave { background: var(--sa-unplanned-bg); color: var(--sa-unplanned-text); border-color: var(--sa-unplanned-border); }
     .btn-status-unplanned_leave .sa-status-dot { background: var(--sa-unplanned); }
+
+    .btn-status-on_duty { background: var(--sa-onduty-bg); color: var(--sa-onduty-text); border-color: var(--sa-onduty-border); }
+    .btn-status-on_duty .sa-status-dot { background: var(--sa-onduty); }
+
+    .dot-on_duty { background: var(--sa-onduty); }
+    .kpi-onduty .sa-kpi-count { background: var(--sa-onduty); }
 
     /* Dropdown menu items */
     .sa-status-menu {
@@ -664,14 +676,11 @@
                     </div>
 
                     <div class="sa-top-actions">
-                        <button type="button" class="sa-btn sa-btn-whatsapp" onclick="openStaffAttendanceShareModal('all')" title="Share Staff Attendance on WhatsApp">
-                            <i class="fa fa-whatsapp"></i> WhatsApp Share
-                        </button>
                         <button type="button" id="btn-quick-sync-biometric" class="sa-btn" title="Sync punches from e-TimeOffice Biometric Machine">
                             <i class="fa fa-fingerprint text-info"></i> Sync Biometric
                         </button>
-                        <a href="<?php echo site_url('admin/staffattendance/scan'); ?>" class="sa-btn sa-btn-primary">
-                            <i class="fa fa-qrcode"></i> Mark My Attendance
+                        <a href="<?php echo site_url('admin/dutypass'); ?>" class="sa-btn" style="background:#f0fdfa; border-color:#99f6e4; color:#0f766e; font-weight:700;" title="Issue & Manage Field Duty Passes">
+                            <i class="fa fa-id-badge text-teal" style="color:#0d9488;"></i> Field Duty Pass
                         </a>
                         <a href="<?php echo site_url('admin/staffattendance/qrdisplay'); ?>" target="_blank" class="sa-btn">
                             <i class="fa fa-desktop text-muted"></i> Display QR
@@ -776,6 +785,9 @@
                                 </span>
                                 <span class="sa-kpi-chip kpi-holiday" data-filter="holiday" title="Filter Holiday staff">
                                     <i class="fa fa-tree" style="color:#7c3aed;"></i> Holiday <span class="sa-kpi-count" id="cnt-holiday">0</span>
+                                </span>
+                                <span class="sa-kpi-chip kpi-onduty" data-filter="on_duty" title="Filter On Duty staff">
+                                    <i class="fa fa-id-badge" style="color:var(--sa-onduty);"></i> On Duty <span class="sa-kpi-count" id="cnt-on_duty">0</span>
                                 </span>
                                 <span class="sa-kpi-chip kpi-missing" data-filter="missing-out" title="Filter staff with Entry punch but Missing Exit punch">
                                     <i class="fa fa-exclamation-triangle text-warning"></i> Missing Exit <span class="sa-kpi-count" id="cnt-missing">0</span>
@@ -895,7 +907,9 @@
                                                         }
                                                     }
                                                 } else {
-                                                    if (!empty($value['in_time']) && $value['in_time'] !== '00:00:00') {
+                                                    if (!empty($value['duty_pass'])) {
+                                                        $selectedTypeKey = "on_duty";
+                                                    } elseif (!empty($value['in_time']) && $value['in_time'] !== '00:00:00') {
                                                         $selectedTypeKey = "present";
                                                     } elseif (!empty($sch_setting->biometric)) {
                                                         $selectedTypeKey = "absent";
@@ -934,6 +948,15 @@
                                                     </td>
                                                     <td>
                                                         <div style="font-weight:700; color:#0f172a; line-height:1.2;"><?php echo html_escape($value['name'] . " " . $value['surname']); ?></div>
+                                                        <?php if (!empty($value['duty_pass'])) { 
+                                                            $dp = $value['duty_pass'];
+                                                        ?>
+                                                            <div style="margin-top: 3px;">
+                                                                <a href="<?php echo base_url('admin/dutypass/print_dutypass/' . $dp['duty_pass_id']); ?>" target="_blank" class="badge" style="background:#0d9488; color:#ffffff; font-size:10px; font-weight:700; text-decoration:none; padding:3px 7px; border-radius:4px; display:inline-flex; align-items:center; gap:4px;" title="Official Duty: <?php echo html_escape($dp['duty_title']); ?> @ <?php echo html_escape($dp['venue']); ?> (<?php echo $dp['from_date']; ?> to <?php echo $dp['to_date']; ?>)">
+                                                                    <i class="fa fa-id-badge"></i> ON DUTY (<?php echo html_escape($dp['duty_pass_no']); ?>) <i class="fa fa-print" style="font-size:9px;"></i>
+                                                                </a>
+                                                            </div>
+                                                        <?php } ?>
                                                         <?php if (!empty($staff_contact)) { ?>
                                                             <div style="font-size:10.5px; color:#64748b; display:inline-flex; align-items:center; gap:4px; margin-top:2px;">
                                                                 <a href="tel:<?php echo html_escape($staff_contact); ?>" style="color:#64748b; text-decoration:none;"><i class="fa fa-phone" style="font-size:9px;"></i> <?php echo html_escape($staff_contact); ?></a>
@@ -1366,12 +1389,12 @@
         $input.val(typeId).data('type-key', typeKey).attr('data-type-key', typeKey);
 
         // Update button style & label
-        $btn.removeClass('btn-status-present btn-status-late btn-status-absent btn-status-half_day btn-status-half_day_second_shift btn-status-holiday btn-status-unplanned_leave btn-status-unmarked');
+        $btn.removeClass('btn-status-present btn-status-late btn-status-absent btn-status-half_day btn-status-half_day_second_shift btn-status-holiday btn-status-unplanned_leave btn-status-on_duty btn-status-unmarked');
         $btn.addClass('btn-status-' + typeKey);
         $btn.find('.sa-status-text').text(typeName);
 
         // Update row tint
-        $tr.removeClass('rt-present rt-late rt-absent rt-half_day rt-half_day_second_shift rt-holiday rt-unplanned_leave');
+        $tr.removeClass('rt-present rt-late rt-absent rt-half_day rt-half_day_second_shift rt-holiday rt-unplanned_leave rt-on_duty');
         $tr.addClass('rt-' + typeKey);
 
         // Enable / Disable times if leave-like
@@ -1414,6 +1437,7 @@
             else if (key === 'absent' || key === 'unplanned_leave') counts.absent++;
             else if (key === 'half_day' || key === 'half_day_second_shift') counts.half_day++;
             else if (key === 'holiday') counts.holiday++;
+            else if (key === 'on_duty') counts.on_duty = (counts.on_duty || 0) + 1;
 
             var inV = $tr.find('.in_time').val();
             var outV = $tr.find('.out_time').val();
@@ -1465,6 +1489,7 @@
         $('#cnt-absent').text(counts.absent);
         $('#cnt-half_day').text(counts.half_day);
         $('#cnt-holiday').text(counts.holiday);
+        $('#cnt-on_duty').text(counts.on_duty || 0);
         $('#cnt-missing').text(counts.missing);
         $('#cnt-shortfall').text(counts.shortfall);
         $('#cnt-qr').text(counts.qr);
@@ -1495,6 +1520,8 @@
                 matchesFilter = (key === 'half_day' || key === 'half_day_second_shift');
             } else if (activeFilter === 'holiday') {
                 matchesFilter = (key === 'holiday');
+            } else if (activeFilter === 'on_duty') {
+                matchesFilter = (key === 'on_duty');
             } else if (activeFilter === 'missing-out') {
                 var inV = $tr.find('.in_time').val();
                 var outV = $tr.find('.out_time').val();

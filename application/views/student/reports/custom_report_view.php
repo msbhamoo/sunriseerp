@@ -55,6 +55,8 @@
                                             'pen' => 'PEN',
                                             'aadhaar_id' => 'Aadhaar ID',
                                             'rte' => 'RTE',
+                                            'is_staff_kid' => 'Is Staff Kid',
+                                            'staff_name' => 'Staff Name',
                                             'admission_type' => 'Admission Type',
                                             'shrestha' => 'Shrestha',
                                             'is_active' => 'Is Active',
@@ -110,6 +112,14 @@
                                                 } else {
                                                     if ($col == 'student_name') {
                                                         $val = trim((isset($student['firstname']) ? $student['firstname'] : '') . ' ' . (isset($student['lastname']) ? $student['lastname'] : ''));
+                                                    } elseif ($col == 'is_staff_kid') {
+                                                        $is_sk = (isset($student['is_staff_kid']) && ($student['is_staff_kid'] == 1 || $student['is_staff_kid'] === '1' || strtolower((string)$student['is_staff_kid']) === 'yes'));
+                                                        $val = $is_sk ? 'Yes' : 'No';
+                                                    } elseif ($col == 'staff_name') {
+                                                        $val = !empty($student['staff_name']) ? trim($student['staff_name'] . ' ' . (isset($student['staff_surname']) ? $student['staff_surname'] : '')) : '';
+                                                        if (!empty($val) && !empty($student['staff_employee_id'])) {
+                                                            $val .= ' (' . $student['staff_employee_id'] . ')';
+                                                        }
                                                     } else {
                                                         $val = isset($student[$col]) ? $student[$col] : '';
                                                     }

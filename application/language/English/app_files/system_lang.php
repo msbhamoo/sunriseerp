@@ -2802,3 +2802,9 @@ $lang['ai_exam_studio'] = 'AI Exam Studio';
 $lang['ai_paper_generator'] = 'AI Paper Generator';
 $lang['ai_answer_evaluator'] = 'AI Answer Sheet Evaluator';
 
+$lang['staff_duty_pass'] = 'Duty Pass';
+$lang['my_duty_pass'] = 'My Duty Pass';
+$lang['on_duty'] = 'On Duty';
+$lang['issue_duty_pass'] = 'Issue Duty Pass';
+
+
