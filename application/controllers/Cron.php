@@ -37,6 +37,15 @@ class Cron extends MY_Controller
 
     public function index($key = '')
     {
+        if (empty($key)) {
+            $key = $this->input->get_post('key') ?: $this->input->get_post('token');
+        }
+
+        if ($key == 'biometric_sync') {
+            $this->biometric_sync($this->input->get_post('token') ?: $this->input->get_post('key'));
+            return;
+        }
+
         if ($key == 'test_digest') {
             $this->test_digest();
             return;
