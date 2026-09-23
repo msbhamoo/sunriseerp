@@ -84,6 +84,11 @@ class Cron extends MY_Controller
             return;
         }
 
+        if ($key == 'test_biometric') {
+            $this->biometric_sync($this->cron_key);
+            return;
+        }
+
         if ($key != "" && $this->cron_key == $key) {
             try { $this->autobackup($key); } catch (Throwable $e) { log_message('error', 'Cron autobackup error: ' . $e->getMessage()); }
             try { $this->feereminder($key); } catch (Throwable $e) { log_message('error', 'Cron feereminder error: ' . $e->getMessage()); }
@@ -92,6 +97,7 @@ class Cron extends MY_Controller
             try { $this->send_email_digests($key); } catch (Throwable $e) { log_message('error', 'Cron send_email_digests error: ' . $e->getMessage()); }
             try { $this->studentcall_followup_reminder($key); } catch (Throwable $e) { log_message('error', 'Cron studentcall_followup_reminder error: ' . $e->getMessage()); }
             try { $this->vehicle_expiration_reminder($key); } catch (Throwable $e) { log_message('error', 'Cron vehicle_expiration_reminder error: ' . $e->getMessage()); }
+            try { $this->biometric_sync($key); } catch (Throwable $e) { log_message('error', 'Cron biometric_sync error: ' . $e->getMessage()); }
             echo "Cron executed successfully.";
         } else {
             echo "Invalid Key or Direct access is not allowed";
@@ -673,4 +679,40 @@ class Cron extends MY_Controller
         }
     }
 
+    /**
+     * Public Cron endpoint for Biometric (e-TimeOffice) Attendance Sync.
+     * Can be triggered via /cron/biometric_sync?token=YOUR_TOKEN or /cron/biometric_sync/YOUR_TOKEN
+     */
+    public function biometric_sync($key = "")
+    {
+        $token = $this->input->get_post('token');
+        if (empty($key) && !empty($token)) {
+            $key = $token;
+        }
+
+        $this->load->model('StaffBiometricSetting_model');
+        $setting = $this->StaffBiometricSetting_model->get();
+
+        $valid = false;
+        if (!empty($key)) {
+            if ($key === $this->cron_key || (!empty($setting['cron_token']) && $key === $setting['cron_token'])) {
+                $valid = true;
+            }
+        }
+
+        if (!$valid) {
+            header('Content-Type: application/json', true, 403);
+            echo json_encode(array('status' => 'error', 'message' => 'Invalid or missing security token.'));
+            return;
+        }
+
+        $this->load->library('biometric_lib');
+        $today = date('Y-m-d');
+        $res = $this->biometric_lib->syncAttendance($today, $today, 'cron');
+
+        header('Content-Type: application/json');
+        echo json_encode($res);
+    }
+
 }
+

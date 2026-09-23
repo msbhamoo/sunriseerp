@@ -77,7 +77,7 @@
                                 <h4><i class="fa fa-clock-o"></i> Automated Sync & CRON Endpoint</h4>
                                 <p class="text-muted">You can set up a recurring task or Windows Task Scheduler to call this endpoint every 15–30 minutes:</p>
                                 <div class="well well-sm" style="background:#f8fafc; font-family:monospace; font-size:13px;">
-                                    <?php echo site_url('admin/staffattendance/sync_biometric_cron?token=' . $setting['cron_token']); ?>
+                                    <?php echo site_url('cron/biometric_sync?token=' . $setting['cron_token']); ?>
                                 </div>
                             </form>
                         </div>
