@@ -46,6 +46,11 @@ class Aiexamgenerator extends Admin_Controller
             if ($check && $check->num_rows() == 0) {
                 $this->db->query("ALTER TABLE `sch_settings` ADD COLUMN `ai_openrouter_api_key` TEXT NULL");
             }
+
+            $check_th = $this->db->query("SHOW COLUMNS FROM `sch_settings` LIKE 'ai_tokenharbor_api_key'");
+            if ($check_th && $check_th->num_rows() == 0) {
+                $this->db->query("ALTER TABLE `sch_settings` ADD COLUMN `ai_tokenharbor_api_key` TEXT NULL");
+            }
         } catch (\Throwable $e) {}
     }
 
@@ -118,7 +123,7 @@ class Aiexamgenerator extends Admin_Controller
                 'blooms_taxonomy'       => is_array($blooms_taxonomy) ? $blooms_taxonomy : null,
                 'generate_multi_sets'   => $generate_multi_sets,
                 'question_distribution' => is_array($question_distribution) ? $question_distribution : null,
-                'api_engine'            => !empty($api_engine) ? $api_engine : 'openrouter',
+                'api_engine'            => !empty($api_engine) ? $api_engine : 'tokenharbor',
                 'api_key'               => !empty($api_key) ? trim($api_key) : ''
             ];
 

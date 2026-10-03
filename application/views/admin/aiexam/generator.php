@@ -765,11 +765,23 @@ foreach ($recent_papers as $rp) {
             <div class="form-group">
                 <label><i class="fa fa-microchip" style="color: #6366f1;"></i> AI Generation Engine</label>
                 <select id="gen_engine" class="form-control input-sm" style="font-weight: 600;">
-                    <option value="openrouter" selected>
-                        🌟 OpenRouter: stealth/union-alpha (Frontier Reasoning & Vision)
+                    <option value="tokenharbor" selected>
+                        🚀 TokenHarbor: MiMo V2.6 Flash (Free & Fast)
+                    </option>
+                    <option value="deepseek-v4.1-flash:free">
+                        🧠 TokenHarbor: DeepSeek V4.1 Flash (Free)
+                    </option>
+                    <option value="qwen3.8-flash:free">
+                        ⚡ TokenHarbor: Qwen 3.8 Flash (Free)
+                    </option>
+                    <option value="mimo-v2.5:free">
+                        🎨 TokenHarbor: MiMo V2.5 (Free)
+                    </option>
+                    <option value="openrouter">
+                        🌟 OpenRouter: stealth/union-alpha
                     </option>
                 </select>
-                <small class="text-muted" style="font-size: 11px;">Powered by OpenRouter API key in <a href="<?php echo base_url(); ?>admin/aisetting" target="_blank" style="color: #6366f1;">AI Settings</a>.</small>
+                <small class="text-muted" style="font-size: 11px;">Powered by TokenHarbor API in <a href="<?php echo base_url(); ?>admin/aisetting" target="_blank" style="color: #6366f1;">AI Settings</a>.</small>
             </div>
 
             <!-- Live Generation Progress Card (with Percentage & Multi-Step Milestones) -->
@@ -1129,7 +1141,7 @@ function onSubjectChange() {
 function fetchChaptersForCurrentSelection(forceReload) {
     const className = $('#gen_class_id option:selected').data('name') || '';
     const subjectName = $('#gen_subject_id option:selected').data('name') || '';
-    const apiEngine = $('#gen_engine').val() || 'openrouter';
+    const apiEngine = $('#gen_engine').val() || 'tokenharbor';
 
     if (!className || !subjectName) {
         $('#ncertChapterBrowserBox').hide();

@@ -216,19 +216,47 @@
                 xhr.responseType = 'blob'
                 return xhr;
             },
-           success: function (data, jqXHR, response) {          
-                
-                   var blob = new Blob([data], {type: 'application/pdf'});
-                   var link = document.createElement('a');
-                   link.href = window.URL.createObjectURL(blob);
-                   link.download =  student_name+'_'+admission_no+".pdf";
-                   document.body.appendChild(link);
-                   link.click();
-                   document.body.removeChild(link);
-                   $button_.button('reset');
+           success: function (data, textStatus, jqXHR) {
+                // If server returned JSON (e.g. error), parse it instead of downloading
+                if (data.type && data.type.indexOf('application/json') !== -1) {
+                    var reader = new FileReader();
+                    reader.onload = function() {
+                        try {
+                            var json = JSON.parse(reader.result);
+                            errorMsg(json.message || "Failed to generate PDF");
+                        } catch(e) {
+                            errorMsg("Failed to generate PDF document.");
+                        }
+                    };
+                    reader.readAsText(data);
+                    $button_.button('reset');
+                    return;
+                }
+
+                var blob = new Blob([data], {type: 'application/pdf'});
+                var link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download =  student_name+'_'+admission_no+".pdf";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                $button_.button('reset');
             },
-            error: function(xhr) { // if error occured
-              
+            error: function(xhr) {
+                if (xhr.responseType === 'blob' && xhr.response instanceof Blob) {
+                    var reader = new FileReader();
+                    reader.onload = function() {
+                        try {
+                            var json = JSON.parse(reader.result);
+                            errorMsg(json.message || "Failed to generate PDF document.");
+                        } catch(e) {
+                            errorMsg("Failed to generate PDF document.");
+                        }
+                    };
+                    reader.readAsText(xhr.response);
+                } else {
+                    errorMsg("An error occurred while generating PDF.");
+                }
                 $button_.button('reset');
             },
             complete: function() {

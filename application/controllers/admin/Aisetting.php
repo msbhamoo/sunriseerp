@@ -47,7 +47,7 @@ class Aisetting extends Admin_Controller
 
         // Ensure database columns exist in sch_settings
         try {
-            $cols = ['ai_gemini_api_key', 'ai_groq_api_key', 'ai_openai_api_key', 'ai_openrouter_api_key', 'ai_nvidia_api_key', 'ai_default_model'];
+            $cols = ['ai_tokenharbor_api_key', 'ai_gemini_api_key', 'ai_groq_api_key', 'ai_openai_api_key', 'ai_openrouter_api_key', 'ai_nvidia_api_key', 'ai_default_model'];
             foreach ($cols as $col) {
                 $check = $this->db->query("SHOW COLUMNS FROM `sch_settings` LIKE '{$col}'");
                 if ($check && $check->num_rows() == 0) {
@@ -58,6 +58,7 @@ class Aisetting extends Admin_Controller
 
         $data = [
             'id'                     => $setting->id,
+            'ai_tokenharbor_api_key' => trim($this->input->post('ai_tokenharbor_api_key')),
             'ai_gemini_api_key'      => trim($this->input->post('ai_gemini_api_key')),
             'ai_groq_api_key'        => trim($this->input->post('ai_groq_api_key')),
             'ai_openai_api_key'      => trim($this->input->post('ai_openai_api_key')),

@@ -2316,6 +2316,19 @@ class Result extends MY_Addon_CBSEController
             } elseif ($template['marksheet_type'] == "without_term") {
                 $return_page = $this->multi_exam_without_term($cbse_template_id, $students);
 
+            } elseif ($template['marksheet_type'] == "midterm_sbbt") {
+                try {
+                    $return_page = $this->midterm_sbbt($cbse_template_id, $students);
+                } catch (\Throwable $e) {
+                    $this->output->set_status_header(500);
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]);
+                    exit();
+                }
             } elseif ($template['marksheet_type'] == "exam_wise") {
 
                 $cbse_temp_term_exam = $this->cbseexam_exam_model->getTemplateSingleExam($cbse_template_id);                
@@ -2366,9 +2379,13 @@ class Result extends MY_Addon_CBSEController
                 $this->cbse_mail_sms->mailSmsMarksheet('cbse_email_pdf_exam_marksheet', $sender_details, '', '', $content);
 
             } elseif ($type == "download") {
-                if (ob_get_length()) { ob_end_clean(); }
-                $content = $mpdf->Output(random_string() . '.pdf', 'I');
-                return $content;
+                while (ob_get_level() > 0) {
+                    ob_end_clean();
+                }
+                header('Content-Type: application/pdf');
+                header('Content-Disposition: attachment; filename="' . random_string() . '.pdf"');
+                $mpdf->Output(random_string() . '.pdf', 'I');
+                exit();
             }
         }
     }
@@ -2468,4 +2485,85 @@ class Result extends MY_Addon_CBSEController
         return $return_array;
     }
 
+
+    public function midterm_sbbt($cbse_template_id, $students)
+    {
+        $data['template'] = $this->cbseexam_template_model->get($cbse_template_id);
+        $data['sch_setting'] = $this->sch_setting_detail;
+        $data['current_setting'] = $this->customlib->getCurrentSession();
+        $cbse_exam_result = $this->cbseexam_exam_model->getStudentExamResultByTemplateId($cbse_template_id, $students);
+
+        $subject_array = [];
+        $gradeexam_id = "";
+        $remarkexam_id = "";
+
+        foreach ($cbse_exam_result as $row) {
+            if (isset($row->subject_code) && $row->subject_code != "") {
+                $subject_array[$row->subject_id] = $row->subject_name . " (" . $row->subject_code . ")";
+            } else {
+                $subject_array[$row->subject_id] = $row->subject_name;
+            }
+        }
+
+        $students_map = [];
+        foreach ($cbse_exam_result as $row) {
+            $gradeexam_id = $row->gradeexam_id;
+            $remarkexam_id = $row->remarkexam_id;
+
+            if (!array_key_exists($row->student_id, $students_map)) {
+                $students_map[$row->student_id] = [
+                    'student_id' => $row->student_id,
+                    'student_session_id' => $row->student_session_id,
+                    'firstname' => $row->firstname,
+                    'middlename' => $row->middlename,
+                    'lastname' => $row->lastname,
+                    'admission_no' => $row->admission_no,
+                    'roll_no' => $row->roll_no,
+                    'dob' => $row->dob,
+                    'father_name' => $row->father_name,
+                    'mother_name' => $row->mother_name,
+                    'class' => $row->class,
+                    'section' => $row->section,
+                    'current_address' => $row->current_address,
+                    'permanent_address' => $row->permanent_address,
+                    'gender' => $row->gender,
+                    'exams' => []
+                ];
+            }
+
+            if (!isset($students_map[$row->student_id]['exams'][$row->id])) {
+                $students_map[$row->student_id]['exams'][$row->id] = [
+                    'name' => $row->name,
+                    'subjects' => []
+                ];
+            }
+
+            if (!isset($students_map[$row->student_id]['exams'][$row->id]['subjects'][$row->subject_id])) {
+                $students_map[$row->student_id]['exams'][$row->id]['subjects'][$row->subject_id] = [
+                    'subject_id' => $row->subject_id,
+                    'subject_name' => $row->subject_name,
+                    'subject_code' => $row->subject_code,
+                    'exam_assessments' => []
+                ];
+            }
+
+            if (!isset($students_map[$row->student_id]['exams'][$row->id]['subjects'][$row->subject_id]['exam_assessments'][$row->cbse_exam_assessment_type_id])) {
+                $students_map[$row->student_id]['exams'][$row->id]['subjects'][$row->subject_id]['exam_assessments'][$row->cbse_exam_assessment_type_id] = [
+                    'name' => $row->cbse_exam_assessment_type_name,
+                    'marks' => $row->marks,
+                    'maximum_marks' => $row->maximum_marks,
+                    'is_absent' => $row->is_absent,
+                ];
+            }
+        }
+
+        $data['result'] = $students_map;
+        $data['subject_array'] = $subject_array;
+        $data['gradeexam_id'] = $gradeexam_id;
+        $data['remarkexam_id'] = $remarkexam_id;
+        $data['exam_grades'] = $this->cbseexam_grade_model->getExamGrades($gradeexam_id);
+
+        $result_page = $this->load->view('cbseexam/result/_printpdf_midterm_sbbt', $data, true);
+        return array('pg' => $result_page);
+    }
 }

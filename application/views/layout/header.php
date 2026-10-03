@@ -751,6 +751,14 @@
                                         <a href="<?php echo base_url() ?>admin/staffattendance/scan"><i class="fa fa-qrcode" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;" aria-hidden="true"></i></a>
                                     </li>
 
+                                    <?php if ($this->rbac->hasPrivilege('store_module', 'can_view')) { ?>
+                                        <li class="cal15" data-placement="bottom" data-toggle="tooltip" title="Store & Inventory Portal">
+                                            <a href="<?php echo base_url(); ?>admin/store_sso/launch" target="_blank" style="color: #0284c7 !important;">
+                                                <i class="fa fa-shopping-bag" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;" aria-hidden="true"></i>
+                                            </a>
+                                        </li>
+                                    <?php } ?>
+
                                     <?php if ($this->rbac->hasPrivilege('student', 'can_view')) {?>
                                         <li class="cal15 hidden-xs" data-placement="bottom" data-toggle="tooltip" title="<?php echo $this->lang->line('search'); ?>">
                                             <a href="#" data-toggle="modal" data-target="#globalSearchModal"><i class="icon-search" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i></a>

@@ -625,6 +625,9 @@ class Template extends MY_Addon_CBSEController
         } elseif ($marksheet_type == 'exam_wise') {
             $data['result'] = $result;
             $data['examdata'] = $this->load->view('cbseexam/template/_exam_wise', $data, true);
+        } elseif ($marksheet_type == 'midterm_sbbt') {
+            $data['result'] = $result;
+            $data['examdata'] = $this->load->view('cbseexam/template/_midterm_sbbt', $data, true);
         }
         echo json_encode($data);
     }
@@ -789,6 +792,15 @@ class Template extends MY_Addon_CBSEController
                 $selectable = implode("|", $selected_exams);
                 $this->form_validation->set_rules('subject_note',$this->lang->line('subject_note'), "callback_check_exam_subject_note[" . $selectable . "]");
             }
+        } elseif ($_POST['marksheet'] == 'midterm_sbbt') {
+            $this->form_validation->set_rules('sbbt1_exam_id', 'SBBT - 1 Exam', 'trim|required|xss_clean');
+            $this->form_validation->set_rules('sbbt2_exam_id', 'SBBT - 2 Exam', 'trim|required|xss_clean');
+            $this->form_validation->set_rules('sbbt3_exam_id', 'SBBT - 3 Exam', 'trim|required|xss_clean');
+            $this->form_validation->set_rules('sbbt4_exam_id', 'SBBT - 4 Exam', 'trim|required|xss_clean');
+            $this->form_validation->set_rules('tee_exam_id', 'TEE - I Exam', 'trim|required|xss_clean');
+            $this->form_validation->set_rules('pt1_max', 'PT - I Max Marks', 'trim|required|numeric|xss_clean');
+            $this->form_validation->set_rules('pt2_max', 'PT - II Max Marks', 'trim|required|numeric|xss_clean');
+            $this->form_validation->set_rules('tee_max', 'TEE - I Max Marks', 'trim|required|numeric|xss_clean');
         }
 
         if ($this->form_validation->run() == false) {
@@ -819,6 +831,27 @@ class Template extends MY_Addon_CBSEController
                 $templatedata['gradeexam_id'] = $exam_first[0];
                 $templatedata['remarkexam_id'] = $exam_first[0];
                 // $templatedata['subjectnoteexam_id'] = $exam_first[0];
+            }
+            if ($_POST['marksheet'] == 'midterm_sbbt') {
+                $sbbt_config = [
+                    'sbbt1_exam_id' => $this->input->post('sbbt1_exam_id'),
+                    'sbbt2_exam_id' => $this->input->post('sbbt2_exam_id'),
+                    'sbbt3_exam_id' => $this->input->post('sbbt3_exam_id'),
+                    'sbbt4_exam_id' => $this->input->post('sbbt4_exam_id'),
+                    'tee_exam_id'   => $this->input->post('tee_exam_id'),
+                    'pt1_max'       => $this->input->post('pt1_max'),
+                    'pt2_max'       => $this->input->post('pt2_max'),
+                    'tee_max'       => $this->input->post('tee_max'),
+                ];
+                $existing_tmpl = $this->cbseexam_template_model->get($_POST['template_id']);
+                $clean_desc = preg_replace('/<!--SBBT_CONFIG:.*?-->/s', '', $existing_tmpl['description'] ?? '');
+                $templatedata['description'] = trim($clean_desc) . ' <!--SBBT_CONFIG:' . json_encode($sbbt_config) . '-->';
+                if (empty($templatedata['gradeexam_id'])) {
+                    $templatedata['gradeexam_id'] = $sbbt_config['tee_exam_id'];
+                }
+                if (empty($templatedata['remarkexam_id'])) {
+                    $templatedata['remarkexam_id'] = $sbbt_config['tee_exam_id'];
+                }
             }
             $template_id = $this->cbseexam_template_model->add($templatedata);
             $this->cbseexam_template_model->delete_template_record($_POST['template_id']);
@@ -864,6 +897,23 @@ class Template extends MY_Addon_CBSEController
                     $msg['section'] = $this->lang->line('please_select_term');
                     $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
                 }
+            } elseif ($_POST['marksheet'] == 'midterm_sbbt') {
+                $unique_exams = array_unique(array_filter([
+                    $this->input->post('sbbt1_exam_id'),
+                    $this->input->post('sbbt2_exam_id'),
+                    $this->input->post('sbbt3_exam_id'),
+                    $this->input->post('sbbt4_exam_id'),
+                    $this->input->post('tee_exam_id')
+                ]));
+                foreach ($unique_exams as $ue_id) {
+                    $cbse_template_term_exam = [
+                        'cbse_exam_id' => $ue_id,
+                        'cbse_template_id' => $_POST['template_id'],
+                        'weightage' => 0
+                    ];
+                    $this->cbseexam_template_model->cbse_template_term_exams($cbse_template_term_exam);
+                }
+                $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('success_message'));
             } elseif (($_POST['marksheet'] == 'exam_wise') || ($_POST['marksheet'] == 'without_term')) {
 
                 if (!empty($_POST['exam'])) {

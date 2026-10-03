@@ -101,7 +101,28 @@
                         </div>
 
                         <form id="formAiSettings">
-                            <!-- 1. Google Gemini -->
+                            <!-- 1. TokenHarbor.ai API Key -->
+                            <div class="ai-key-box" style="border-color: #8b5cf6; background: #faf5ff;">
+                                <div class="ai-key-box-title">
+                                    <i class="fa fa-anchor" style="color: #8b5cf6; font-size: 16px;"></i> TokenHarbor API Key (Primary Engine)
+                                    <span class="badge bg-purple" style="font-size: 10px; margin-left: 6px;">Active Primary Engine</span>
+                                </div>
+                                <div class="ai-key-box-desc">
+                                    High-performance AI Gateway supporting <strong>MiMo V2.6 Flash</strong>, <strong>DeepSeek V4.1 Flash</strong>, <strong>Qwen 3.8 Flash</strong>, Claude 3.5 Sonnet, GPT-5, and OpenAI compatible chat completions for Question Paper Generation.
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon" style="background: #ffffff; border-color: #cbd5e1;"><i class="fa fa-key text-muted"></i></span>
+                                    <input type="password" class="form-control" id="ai_tokenharbor_api_key" name="ai_tokenharbor_api_key" value="<?php echo isset($result->ai_tokenharbor_api_key) && !empty($result->ai_tokenharbor_api_key) ? htmlspecialchars($result->ai_tokenharbor_api_key) : 'thk_live_UMlu5Wap7RFOxtmenp4MmAiSjb1pVQRfJYGauR_FuVGJC20G_vE8ouOCEHNHgcJ-'; ?>" placeholder="thk_live_..." style="border-color: #cbd5e1; font-family: monospace;">
+                                    <span class="input-group-btn">
+                                        <button type="button" class="btn btn-default" onclick="togglePass('ai_tokenharbor_api_key', this)" style="border-color: #cbd5e1;"><i class="fa fa-eye"></i></button>
+                                    </span>
+                                </div>
+                                <small style="display: block; margin-top: 6px; font-size: 11px; color: #64748b;">
+                                    Manage your keys at <a href="https://tokenharbor.ai/dashboard" target="_blank" style="color: #8b5cf6; font-weight: 600;">tokenharbor.ai/dashboard <i class="fa fa-external-link"></i></a>
+                                </small>
+                            </div>
+
+                            <!-- 2. Google Gemini -->
                             <div class="ai-key-box">
                                 <div class="ai-key-box-title">
                                     <i class="fa fa-google" style="color: #4285f4; font-size: 16px;"></i> Google Gemini API Key
@@ -122,28 +143,7 @@
                                 </small>
                             </div>
 
-                            <!-- 2. Groq Cloud -->
-                            <div class="ai-key-box">
-                                <div class="ai-key-box-title">
-                                    <i class="fa fa-bolt" style="color: #f59e0b; font-size: 16px;"></i> Groq Cloud API Key
-                                    <span class="badge bg-purple" style="font-size: 10px; margin-left: 6px;">Ultra Fast</span>
-                                </div>
-                                <div class="ai-key-box-desc">
-                                    Powers instantaneous CBSE blueprint question generation using <strong>LLaMA-3.3 70B Versatile</strong> at 500+ tokens/second.
-                                </div>
-                                <div class="input-group">
-                                    <span class="input-group-addon" style="background: #ffffff; border-color: #cbd5e1;"><i class="fa fa-key text-muted"></i></span>
-                                    <input type="password" class="form-control" id="ai_groq_api_key" name="ai_groq_api_key" value="<?php echo isset($result->ai_groq_api_key) ? htmlspecialchars($result->ai_groq_api_key) : ''; ?>" placeholder="gsk_..." style="border-color: #cbd5e1; font-family: monospace;">
-                                    <span class="input-group-btn">
-                                        <button type="button" class="btn btn-default" onclick="togglePass('ai_groq_api_key', this)" style="border-color: #cbd5e1;"><i class="fa fa-eye"></i></button>
-                                    </span>
-                                </div>
-                                <small style="display: block; margin-top: 6px; font-size: 11px; color: #64748b;">
-                                    Get your free key from <a href="https://console.groq.com/keys" target="_blank" style="color: #6366f1; font-weight: 600;">Groq Cloud Console <i class="fa fa-external-link"></i></a>
-                                </small>
-                            </div>
-
-                            <!-- 3. OpenRouter API Key (Supports stealth/union-alpha, ox-alpha, DeepSeek, Claude, LLaMA) -->
+                            <!-- 3. OpenRouter API Key -->
                             <div class="ai-key-box">
                                 <div class="ai-key-box-title">
                                     <i class="fa fa-cubes" style="color: #ec4899; font-size: 16px;"></i> OpenRouter API Key
@@ -164,45 +164,7 @@
                                 </small>
                             </div>
 
-                            <!-- 4. NVIDIA NIM API Key -->
-                            <div class="ai-key-box">
-                                <div class="ai-key-box-title">
-                                    <i class="fa fa-microchip" style="color: #76b900; font-size: 16px;"></i> NVIDIA NIM API Key
-                                    <span class="badge bg-green" style="font-size: 10px; margin-left: 6px; background-color: #76b900 !important;">Nemotron-3.5-Lightning-30B</span>
-                                </div>
-                                <div class="ai-key-box-desc">
-                                    Powers high-precision reasoning via <strong>nvidia/nemotron-3.5-lightning-30b-a3b</strong> on the NVIDIA NIM cloud platform.
-                                </div>
-                                <div class="input-group">
-                                    <span class="input-group-addon" style="background: #ffffff; border-color: #cbd5e1;"><i class="fa fa-key text-muted"></i></span>
-                                    <input type="password" class="form-control" id="ai_nvidia_api_key" name="ai_nvidia_api_key" value="<?php echo isset($result->ai_nvidia_api_key) ? htmlspecialchars($result->ai_nvidia_api_key) : ''; ?>" placeholder="nvapi-..." style="border-color: #cbd5e1; font-family: monospace;">
-                                    <span class="input-group-btn">
-                                        <button type="button" class="btn btn-default" onclick="togglePass('ai_nvidia_api_key', this)" style="border-color: #cbd5e1;"><i class="fa fa-eye"></i></button>
-                                    </span>
-                                </div>
-                                <small style="display: block; margin-top: 6px; font-size: 11px; color: #64748b;">
-                                    Get your API key from <a href="https://build.nvidia.com" target="_blank" style="color: #76b900; font-weight: 600;">build.nvidia.com <i class="fa fa-external-link"></i></a>
-                                </small>
-                            </div>
-
-                            <!-- 5. OpenAI API Key -->
-                            <div class="ai-key-box">
-                                <div class="ai-key-box-title">
-                                    <i class="fa fa-codepen" style="color: #10b981; font-size: 16px;"></i> OpenAI API Key (Optional)
-                                </div>
-                                <div class="ai-key-box-desc">
-                                    Optional fallback engine for GPT-4o Vision and text synthesis.
-                                </div>
-                                <div class="input-group">
-                                    <span class="input-group-addon" style="background: #ffffff; border-color: #cbd5e1;"><i class="fa fa-key text-muted"></i></span>
-                                    <input type="password" class="form-control" id="ai_openai_api_key" name="ai_openai_api_key" value="<?php echo isset($result->ai_openai_api_key) ? htmlspecialchars($result->ai_openai_api_key) : ''; ?>" placeholder="sk-proj-..." style="border-color: #cbd5e1; font-family: monospace;">
-                                    <span class="input-group-btn">
-                                        <button type="button" class="btn btn-default" onclick="togglePass('ai_openai_api_key', this)" style="border-color: #cbd5e1;"><i class="fa fa-eye"></i></button>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- 6. Default AI Model -->
+                            <!-- 4. Default AI Model -->
                             <div class="ai-key-box">
                                 <div class="ai-key-box-title">
                                     <i class="fa fa-sliders" style="color: #6366f1; font-size: 16px;"></i> Default Institution AI Engine
@@ -211,10 +173,12 @@
                                     Primary AI model that loads automatically across exam creation workflows.
                                 </div>
                                 <select class="form-control" id="ai_default_model" name="ai_default_model" style="border-color: #cbd5e1; max-width: 500px;">
-                                    <option value="stealth/union-alpha" <?php echo (!isset($result->ai_default_model) || in_array($result->ai_default_model, ['stealth/union-alpha', 'openrouter', 'openrouter_ox', ''])) ? 'selected' : ''; ?>>🌟 OpenRouter: stealth/union-alpha (Recommended Frontier Model)</option>
+                                    <option value="mimo-v2.6-flash:free" <?php echo (!isset($result->ai_default_model) || in_array($result->ai_default_model, ['mimo-v2.6-flash:free', 'tokenharbor', ''])) ? 'selected' : ''; ?>>🚀 TokenHarbor: MiMo V2.6 Flash (Fast & Free)</option>
+                                    <option value="deepseek-v4.1-flash:free" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'deepseek-v4.1-flash:free') ? 'selected' : ''; ?>>🧠 TokenHarbor: DeepSeek V4.1 Flash (Free)</option>
+                                    <option value="qwen3.8-flash:free" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'qwen3.8-flash:free') ? 'selected' : ''; ?>>⚡ TokenHarbor: Qwen 3.8 Flash (Free)</option>
+                                    <option value="mimo-v2.5:free" <?php echo (isset($result->ai_default_model) && $result->ai_default_model == 'mimo-v2.5:free') ? 'selected' : ''; ?>>🎨 TokenHarbor: MiMo V2.5 (Free)</option>
+                                    <option value="stealth/union-alpha" <?php echo (isset($result->ai_default_model) && in_array($result->ai_default_model, ['stealth/union-alpha', 'openrouter', 'openrouter_ox'])) ? 'selected' : ''; ?>>🌟 OpenRouter: stealth/union-alpha</option>
                                     <option value="google/gemini-2.0-flash-001" <?php echo (isset($result->ai_default_model) && in_array($result->ai_default_model, ['google/gemini-2.0-flash-001', 'gemini'])) ? 'selected' : ''; ?>>⚡ Google: Gemini 2.0 Flash</option>
-                                    <option value="meta-llama/llama-3.3-70b-instruct" <?php echo (isset($result->ai_default_model) && in_array($result->ai_default_model, ['meta-llama/llama-3.3-70b-instruct', 'llama'])) ? 'selected' : ''; ?>>🦙 Meta: LLaMA 3.3 70B Instruct</option>
-                                    <option value="deepseek/deepseek-chat" <?php echo (isset($result->ai_default_model) && in_array($result->ai_default_model, ['deepseek/deepseek-chat', 'deepseek'])) ? 'selected' : ''; ?>>🧠 DeepSeek: DeepSeek V3</option>
                                 </select>
                             </div>
 

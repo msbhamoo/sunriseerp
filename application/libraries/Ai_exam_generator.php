@@ -7,12 +7,14 @@ if (!defined('BASEPATH')) {
 class Ai_exam_generator
 {
     protected $CI;
+    protected $tokenharbor_api_key;
     protected $openrouter_api_key;
 
     public function __construct()
     {
         $this->CI = &get_instance();
         $sch_setting = $this->CI->setting_model->getSetting();
+        $this->tokenharbor_api_key = !empty($sch_setting->ai_tokenharbor_api_key) ? $sch_setting->ai_tokenharbor_api_key : (defined('TOKENHARBOR_API_KEY') ? TOKENHARBOR_API_KEY : 'thk_live_UMlu5Wap7RFOxtmenp4MmAiSjb1pVQRfJYGauR_FuVGJC20G_vE8ouOCEHNHgcJ-');
         $this->openrouter_api_key = !empty($sch_setting->ai_openrouter_api_key) ? $sch_setting->ai_openrouter_api_key : (defined('OPENROUTER_API_KEY') ? OPENROUTER_API_KEY : '');
     }
 
@@ -34,18 +36,19 @@ class Ai_exam_generator
         $generate_multi_sets   = !empty($params['generate_multi_sets']) && $params['generate_multi_sets'] == 'yes';
         $question_distribution = isset($params['question_distribution']) ? $params['question_distribution'] : null;
         $custom_api_key        = isset($params['api_key']) ? trim($params['api_key']) : '';
+        $api_engine            = isset($params['api_engine']) ? trim($params['api_engine']) : 'tokenharbor';
 
-        $active_openrouter_key = !empty($custom_api_key) ? $custom_api_key : $this->openrouter_api_key;
+        $active_key = !empty($custom_api_key) ? $custom_api_key : (!empty($this->tokenharbor_api_key) ? $this->tokenharbor_api_key : $this->openrouter_api_key);
 
-        if (empty($active_openrouter_key)) {
-            return ['status' => 'error', 'message' => 'OpenRouter API key is not configured. Please set it in AI Settings.'];
+        if (empty($active_key)) {
+            return ['status' => 'error', 'message' => 'TokenHarbor / AI API key is not configured. Please set it in AI Settings.'];
         }
 
         // Build CBSE Exam Prompt
         $prompt = $this->build_cbse_prompt($class_name, $subject_name, $chapter, $total_marks, $difficulty, $language, $academic_session, $blooms_taxonomy, $question_distribution, $generate_multi_sets);
 
-        // Single provider: OpenRouter stealth/union-alpha
-        $response = $this->call_openrouter($prompt, $active_openrouter_key);
+        // Call TokenHarbor / AI Gateway
+        $response = $this->call_ai_api($prompt, $active_key, $api_engine);
 
         if (!$response || isset($response['error'])) {
             return [
@@ -82,8 +85,9 @@ class Ai_exam_generator
         $difficulty     = isset($params['difficulty']) ? $params['difficulty'] : 'Medium';
         $language       = isset($params['language']) ? $params['language'] : 'English';
         $custom_api_key = isset($params['api_key']) ? trim($params['api_key']) : '';
+        $api_engine     = isset($params['api_engine']) ? trim($params['api_engine']) : 'tokenharbor';
 
-        $active_openrouter_key = !empty($custom_api_key) ? $custom_api_key : $this->openrouter_api_key;
+        $active_key = !empty($custom_api_key) ? $custom_api_key : (!empty($this->tokenharbor_api_key) ? $this->tokenharbor_api_key : $this->openrouter_api_key);
 
         $prompt = <<<EOT
 You are an expert CBSE paper setter. Generate 1 replacement question for:
@@ -110,7 +114,7 @@ OUTPUT ONLY 1 VALID JSON OBJECT matching this exact schema with NO markdown code
 }
 EOT;
 
-        $response = $this->call_openrouter($prompt, $active_openrouter_key);
+        $response = $this->call_ai_api($prompt, $active_key, $api_engine);
 
         if (!$response || isset($response['error'])) {
             return ['status' => 'error', 'message' => isset($response['error']) ? $response['error'] : 'Failed to regenerate question.'];
@@ -198,11 +202,11 @@ DIAGRAM, MAP, CHEMISTRY, BIOLOGY & GEOMETRY RULES:
 1. BIOLOGY & HUMAN ANATOMY:
    - For questions on Heart, Nephron, Digestive System, Brain, Plant Cell, or Stomata: Provide a clear labeled inline SVG diagram in 'diagram_svg' (with labeled parts (A), (B), (C), (D) for students to identify) OR a standard framed student drawing schematic.
 2. CHEMISTRY:
-   - For Chemical Apparatus (Electrolysis, Gas preparation, Titration, Distillation) or Organic Reaction schemes (Benzene ring, Hydrocarbon bonds, Functional groups): Embed valid SVG diagrams or structured chemical skeletal formulas in LaTeX ($CH_3-CH_2-OH$).
+   - For Chemical Apparatus (Electrolysis, Gas preparation, Titration, Distillation) or Organic Reaction schemes (Benzene ring, Hydrocarbon bonds, Functional groups): Embed valid SVG diagrams or structured chemical skeletal formulas in LaTeX (\$CH_3-CH_2-OH\$).
 3. PHYSICS:
    - For Electric Circuits (Resistors in series/parallel, Voltmeter, Ammeter, Battery), Ray Optics (Concave/Convex mirrors, Lenses, Refraction through prism), or Magnetic field lines: Provide complete, clean inline SVG vectors in 'diagram_svg'.
 4. GEOMETRY & MATHEMATICS:
-   - For Circles (tangents, secants, cyclic quadrilaterals), Triangles (congruence, Thales theorem, medians), or Coordinate Graphs: Provide high-contrast vector SVG with angle and length markings ($AB=6\text{ cm}$, $\angle ABC=60^\circ$).
+   - For Circles (tangents, secants, cyclic quadrilaterals), Triangles (congruence, Thales theorem, medians), or Coordinate Graphs: Provide high-contrast vector SVG with angle and length markings (\$AB=6\text{ cm}\$, \$\angle ABC=60^\circ\$).
 5. GEOGRAPHY / MAP WORK:
    - For Map-based identification questions (e.g. Major Soil types, Ports, Thermal Power plants, Rivers, National Parks): Provide an outline SVG Map with tagged identification pointers (i), (ii), (iii).
 6. If a question contains a Data Table, Frequency Distribution, or Values Matrix, format using standard markdown table with newlines:
@@ -444,44 +448,76 @@ EOT;
     }
 
     /**
-     * Call OpenRouter API — stealth/union-alpha only
+     * Unified Call AI API — Supports TokenHarbor (primary) and OpenRouter
      */
-    private function call_openrouter($prompt, $api_key)
+    public function call_ai_api($prompt, $api_key = '', $api_engine = 'tokenharbor', $specific_model = '')
     {
-        $url = "https://openrouter.ai/api/v1/chat/completions";
-        $site_url = defined('base_url') ? base_url() : 'https://sunriseschool.in';
-
         $sch_setting = $this->CI->setting_model->getSetting();
         $saved_model = !empty($sch_setting->ai_default_model) ? trim($sch_setting->ai_default_model) : '';
 
-        // Map legacy/friendly provider names to valid OpenRouter model identifiers
-        $model_map = [
-            'openrouter'    => 'stealth/union-alpha',
-            'openrouter_ox' => 'stealth/union-alpha',
-            'ox-alpha'      => 'stealth/union-alpha',
-            'gemini'        => 'google/gemini-2.0-flash-001',
-            'llama'         => 'meta-llama/llama-3.3-70b-instruct',
-            'deepseek'      => 'deepseek/deepseek-chat',
-            'openai'        => 'openai/gpt-4o'
-        ];
-
-        if (isset($model_map[$saved_model])) {
-            $model = $model_map[$saved_model];
-        } elseif (!empty($saved_model) && strpos($saved_model, '/') !== false) {
-            $model = $saved_model;
-        } else {
-            $model = 'stealth/union-alpha';
+        // Determine effective API key
+        if (empty($api_key)) {
+            $api_key = !empty($this->tokenharbor_api_key) ? $this->tokenharbor_api_key : $this->openrouter_api_key;
         }
+
+        // Determine if this is a TokenHarbor key (thk_...) or explicit engine
+        $is_tokenharbor = (substr($api_key, 0, 4) === 'thk_' || $api_engine === 'tokenharbor' || strpos($api_engine, ':free') !== false || strpos($api_engine, 'mimo-') !== false || strpos($api_engine, 'deepseek-') !== false || strpos($api_engine, 'qwen') !== false);
+
+        if ($is_tokenharbor) {
+            $url = "https://tokenharbor.ai/v1/chat/completions";
+            
+            // Model resolution for TokenHarbor
+            if (!empty($specific_model) && $specific_model !== 'tokenharbor') {
+                $model = $specific_model;
+            } elseif (!empty($api_engine) && $api_engine !== 'tokenharbor' && $api_engine !== 'openrouter') {
+                $model = $api_engine;
+            } elseif (!empty($saved_model) && (strpos($saved_model, 'mimo-') !== false || strpos($saved_model, 'deepseek-') !== false || strpos($saved_model, 'qwen') !== false || strpos($saved_model, 'claude-') !== false || strpos($saved_model, 'gemini-') !== false || strpos($saved_model, 'gpt-') !== false)) {
+                $model = $saved_model;
+            } else {
+                // High-performance, ultra-fast free tier model on TokenHarbor
+                $model = 'mimo-v2.6-flash:free';
+            }
+        } else {
+            $url = "https://openrouter.ai/api/v1/chat/completions";
+
+            $model_map = [
+                'openrouter'    => 'stealth/union-alpha',
+                'openrouter_ox' => 'stealth/union-alpha',
+                'ox-alpha'      => 'stealth/union-alpha',
+                'gemini'        => 'google/gemini-2.0-flash-001',
+                'llama'         => 'meta-llama/llama-3.3-70b-instruct',
+                'deepseek'      => 'deepseek/deepseek-chat',
+                'openai'        => 'openai/gpt-4o'
+            ];
+
+            if (!empty($specific_model)) {
+                $model = $specific_model;
+            } elseif (isset($model_map[$saved_model])) {
+                $model = $model_map[$saved_model];
+            } elseif (!empty($saved_model) && strpos($saved_model, '/') !== false) {
+                $model = $saved_model;
+            } else {
+                $model = 'stealth/union-alpha';
+            }
+        }
+
+        $site_url = defined('base_url') ? base_url() : 'https://sunriseschool.in';
 
         $payload = [
             'model' => $model,
             'messages' => [
-                ['role' => 'system', 'content' => 'You are an expert CBSE examination question author. You MUST output ONLY raw valid JSON adhering exactly to the requested schema without any introductory text, conversational remarks, thinking traces, or markdown explanations.'],
-                ['role' => 'user', 'content' => $prompt]
+                [
+                    'role' => 'system',
+                    'content' => 'You are an expert CBSE examination paper generator. You MUST output ONLY raw valid JSON starting directly with { and ending with }. DO NOT output any thinking traces, reasoning steps, planning, preamble, or markdown backticks outside the JSON.'
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
             ],
             'response_format' => ['type' => 'json_object'],
-            'temperature' => 0.2,
-            'max_tokens' => 6000
+            'temperature' => 0.1,
+            'max_tokens' => 8000
         ];
 
         $ch = curl_init($url);
@@ -504,19 +540,46 @@ EOT;
         curl_close($ch);
 
         if ($curl_error) {
-            return ['error' => 'OpenRouter cURL Error: ' . $curl_error];
+            return ['error' => 'AI Gateway cURL Error: ' . $curl_error];
         }
 
         $res_json = json_decode($result, true);
-        if ($http_code === 200 && isset($res_json['choices'][0]['message']['content'])) {
-            return ['raw_text' => $res_json['choices'][0]['message']['content']];
+        if ($http_code === 200) {
+            $content = '';
+            
+            // Primary content field check
+            if (isset($res_json['choices'][0]['message']['content']) && is_string($res_json['choices'][0]['message']['content']) && trim($res_json['choices'][0]['message']['content']) !== '') {
+                $content = trim($res_json['choices'][0]['message']['content']);
+            } elseif (isset($res_json['choices'][0]['text']) && is_string($res_json['choices'][0]['text']) && trim($res_json['choices'][0]['text']) !== '') {
+                $content = trim($res_json['choices'][0]['text']);
+            }
+
+            // If content field only had whitespace or empty string, check if reasoning_content has the JSON
+            if (empty($content) && isset($res_json['choices'][0]['message']['reasoning_content']) && is_string($res_json['choices'][0]['message']['reasoning_content'])) {
+                $content = trim($res_json['choices'][0]['message']['reasoning_content']);
+            }
+
+            if (!empty($content)) {
+                return [
+                    'raw_text'   => $content,
+                    'model_used' => $model
+                ];
+            }
         }
 
         if (isset($res_json['error']['message'])) {
-            return ['error' => 'OpenRouter: ' . $res_json['error']['message']];
+            return ['error' => 'AI Service (' . ($is_tokenharbor ? 'TokenHarbor' : 'OpenRouter') . '): ' . $res_json['error']['message']];
         }
 
-        return ['error' => 'HTTP ' . $http_code . ' from OpenRouter'];
+        return ['error' => 'HTTP ' . $http_code . ' from AI Service' . (!empty($result) ? ': ' . substr($result, 0, 200) : '')];
+    }
+
+    /**
+     * Backward-compatible alias for call_openrouter
+     */
+    private function call_openrouter($prompt, $api_key, $specific_model = '')
+    {
+        return $this->call_ai_api($prompt, $api_key, 'openrouter', $specific_model);
     }
 
     /**
@@ -530,8 +593,9 @@ EOT;
 
         $text = trim($raw_text);
 
-        // 1. Remove reasoning / thought traces if output by reasoning models (<think>...</think> or similar)
-        $text = preg_replace('/<think>.*?<\/think>/is', '', $text);
+        // 1. Remove reasoning / thought tags if output by reasoning models (<think>...</think> or <reasoning>...</reasoning>)
+        $text = preg_replace('/<think>[\s\S]*?<\/think>/i', '', $text);
+        $text = preg_replace('/<reasoning>[\s\S]*?<\/reasoning>/i', '', $text);
 
         // 2. Remove Markdown code block wrappers (```json ... ``` or ``` ...)
         if (preg_match('/```(?:json)?\s*([\s\S]*?)\s*```/i', $text, $matches)) {
@@ -548,25 +612,27 @@ EOT;
             return $this->normalize_parsed_paper($data);
         }
 
-        // 3. Fix duplicate leading / trailing curly braces like '{\n{\n "paper_title"...'
-        $cleaned_text = preg_replace('/^(\s*\{)+\s*\{/i', '{', $text);
-        $cleaned_text = preg_replace('/\}(\s*\})+$/i', '}', $cleaned_text);
-        $data = json_decode($cleaned_text, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
-            return $this->normalize_parsed_paper($data);
-        }
-
-        // 4. Extract between first '{' and last '}' with balanced brace scanner
+        // 3. Find outermost matching JSON object containing "paper_title", "paper_metadata", "sets", or "question_type"
+        // If the model output conversational thought before { (e.g. "I need to produce a complete... Let me plan: ... { ... }")
         $first_brace = strpos($text, '{');
         $last_brace  = strrpos($text, '}');
         if ($first_brace !== false && $last_brace !== false && $last_brace > $first_brace) {
             $candidate = substr($text, $first_brace, $last_brace - $first_brace + 1);
+            
+            // Try direct parse of substring
             $data = json_decode($candidate, true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
                 return $this->normalize_parsed_paper($data);
             }
 
-            // Strip redundant leading/trailing braces inside candidate
+            // Clean unescaped backslashes in math/latex (e.g. \frac, \sqrt, \pm) that break JSON parsers
+            $cleaned_latex = preg_replace('/\\\(?!["\\\\\/bfnrtu])/u', '\\\\\\\\', $candidate);
+            $data = json_decode($cleaned_latex, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+                return $this->normalize_parsed_paper($data);
+            }
+
+            // Strip duplicate leading / trailing curly braces like '{\n{\n "paper_title"...'
             $candidate_cleaned = preg_replace('/^(\s*\{)+\s*\{/i', '{', $candidate);
             $candidate_cleaned = preg_replace('/\}(\s*\})+$/i', '}', $candidate_cleaned);
             $data = json_decode($candidate_cleaned, true);
@@ -581,14 +647,16 @@ EOT;
                 return $this->normalize_parsed_paper($data);
             }
 
-            // Balanced brace parser to find cleanest valid root object
+            // Balanced brace parser to find cleanest valid root object starting at each '{'
             $len = strlen($candidate);
             $depth = 0;
             $start = -1;
             for ($i = 0; $i < $len; $i++) {
                 $ch = $candidate[$i];
                 if ($ch === '{') {
-                    if ($depth === 0) $start = $i;
+                    if ($depth === 0) {
+                        $start = $i;
+                    }
                     $depth++;
                 } elseif ($ch === '}') {
                     $depth--;
@@ -598,20 +666,27 @@ EOT;
                         if (is_array($d)) {
                             return $this->normalize_parsed_paper($d);
                         }
+                        // Try with latex escaping
+                        $sub_latex = preg_replace('/\\\(?!["\\\\\/bfnrtu])/u', '\\\\\\\\', $sub);
+                        $d = json_decode($sub_latex, true);
+                        if (is_array($d)) {
+                            return $this->normalize_parsed_paper($d);
+                        }
                     }
                 }
             }
         }
 
-        // 5. Truncated JSON recovery: if output was cut off mid-stream, close unclosed strings/arrays/objects
+        // 4. Truncated JSON recovery: if output was cut off mid-stream, close unclosed strings/arrays/objects
         $balanced = $text;
+        if ($first_brace !== false) {
+            $balanced = substr($text, $first_brace);
+        }
         $open_braces = substr_count($balanced, '{') - substr_count($balanced, '}');
         $open_brackets = substr_count($balanced, '[') - substr_count($balanced, ']');
         if ($open_braces > 0 || $open_brackets > 0) {
-            // Trim any trailing partial string / key / comma
             $balanced = preg_replace('/,\s*"[^"]*"?\s*:\s*[^,}\]]*$/', '', $balanced);
             $balanced = preg_replace('/,\s*$/', '', $balanced);
-            // Append missing closing brackets and braces
             for ($k = 0; $k < $open_brackets; $k++) { $balanced .= ']'; }
             for ($k = 0; $k < $open_braces; $k++) { $balanced .= '}'; }
             $data = json_decode($balanced, true);
@@ -632,6 +707,24 @@ EOT;
             return null;
         }
 
+        if (isset($data['paper_metadata']) && !isset($data['paper_title'])) {
+            if (isset($data['paper_metadata']['board']) || isset($data['paper_metadata']['subject'])) {
+                $data['paper_title'] = ($data['paper_metadata']['board'] ?? 'CBSE') . ' ' . ($data['paper_metadata']['subject'] ?? 'Exam') . ' Examination';
+            }
+            if (isset($data['paper_metadata']['academic_session'])) {
+                $data['academic_session'] = $data['paper_metadata']['academic_session'];
+            }
+            if (isset($data['paper_metadata']['max_marks'])) {
+                $data['max_marks'] = $data['paper_metadata']['max_marks'];
+            }
+            if (isset($data['paper_metadata']['time_allowed'])) {
+                $data['time_allowed'] = $data['paper_metadata']['time_allowed'];
+            }
+            if (isset($data['paper_metadata']['general_instructions']) && !isset($data['general_instructions'])) {
+                $data['general_instructions'] = $data['paper_metadata']['general_instructions'];
+            }
+        }
+
         if (!isset($data['sets']) && isset($data['sections'])) {
             $data['sets'] = ['Set A' => ['sections' => $data['sections']]];
         }
@@ -642,9 +735,9 @@ EOT;
     /**
      * Fetch complete NCERT / CBSE Chapter List for any Class & Subject dynamically via AI & Database Cache
      */
-    public function fetch_subject_chapters_ai($class_name, $subject_name, $api_engine = 'openrouter', $custom_api_key = '')
+    public function fetch_subject_chapters_ai($class_name, $subject_name, $api_engine = 'tokenharbor', $custom_api_key = '')
     {
-        $active_openrouter_key = !empty($custom_api_key) ? $custom_api_key : $this->openrouter_api_key;
+        $active_key = !empty($custom_api_key) ? $custom_api_key : (!empty($this->tokenharbor_api_key) ? $this->tokenharbor_api_key : $this->openrouter_api_key);
 
         $prompt = <<<EOT
 You are an expert CBSE, NCERT, and State Education Curriculum Director.
@@ -664,12 +757,12 @@ Output MUST be a single valid JSON object strictly matching this schema with NO 
 }
 EOT;
 
-        if (empty($active_openrouter_key)) {
-            return ['status' => 'error', 'message' => 'OpenRouter API Key is not configured.'];
+        if (empty($active_key)) {
+            return ['status' => 'error', 'message' => 'TokenHarbor / AI API Key is not configured.'];
         }
 
-        $response   = $this->call_openrouter($prompt, $active_openrouter_key, 'stealth/union-alpha');
-        $model_used = 'OpenRouter (stealth/union-alpha)';
+        $response   = $this->call_ai_api($prompt, $active_key, $api_engine);
+        $model_used = isset($response['model_used']) ? $response['model_used'] : 'TokenHarbor (mimo-v2.6-flash:free)';
 
         if (!$response || isset($response['error'])) {
             return ['status' => 'error', 'message' => isset($response['error']) ? $response['error'] : 'Failed to fetch chapters from AI.'];
@@ -718,7 +811,8 @@ EOT;
         if ($count > 30) $count = 30;
 
         $custom_api_key = isset($params['api_key']) ? trim($params['api_key']) : '';
-        $active_openrouter_key = !empty($custom_api_key) ? $custom_api_key : $this->openrouter_api_key;
+        $api_engine     = isset($params['api_engine']) ? trim($params['api_engine']) : 'tokenharbor';
+        $active_key     = !empty($custom_api_key) ? $custom_api_key : (!empty($this->tokenharbor_api_key) ? $this->tokenharbor_api_key : $this->openrouter_api_key);
 
         $types_str = implode(', ', $q_types);
         $levels_str = implode(', ', $levels);
@@ -755,11 +849,11 @@ Requirements:
   ]
 }";
 
-        if (empty($active_openrouter_key)) {
-            return ['status' => 'error', 'message' => 'OpenRouter API Key is not configured. Please set it in AI Engine Configuration.'];
+        if (empty($active_key)) {
+            return ['status' => 'error', 'message' => 'TokenHarbor / AI API Key is not configured. Please set it in AI Engine Configuration.'];
         }
 
-        $response = $this->call_openrouter($prompt, $active_openrouter_key, 'stealth/union-alpha');
+        $response = $this->call_ai_api($prompt, $active_key, $api_engine);
 
         if (!$response || isset($response['error'])) {
             return ['status' => 'error', 'message' => isset($response['error']) ? $response['error'] : 'Failed to generate questions.'];

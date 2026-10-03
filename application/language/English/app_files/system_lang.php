@@ -2807,4 +2807,8 @@ $lang['my_duty_pass'] = 'My Duty Pass';
 $lang['on_duty'] = 'On Duty';
 $lang['issue_duty_pass'] = 'Issue Duty Pass';
 
+$lang['staff_compliance_checklist'] = 'Compliance Checklist';
+$lang['staff_compliance'] = 'Staff Compliance Checklist';
+
+
 

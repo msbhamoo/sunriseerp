@@ -12,7 +12,22 @@ class Cbseexam_result_model extends MY_Model {
     */
     public function marksheet_type()
     {
-        return $this->db->select('*')->from('cbse_marksheet_type')->get()->result_array();
+        $types = $this->db->select('*')->from('cbse_marksheet_type')->get()->result_array();
+        $has_midterm = false;
+        foreach ($types as $t) {
+            if ($t['short_code'] == 'midterm_sbbt') {
+                $has_midterm = true;
+                break;
+            }
+        }
+        if (!$has_midterm) {
+            $types[] = [
+                'id' => 5,
+                'type' => 'Mid Term (Best of SBBT + Term)',
+                'short_code' => 'midterm_sbbt'
+            ];
+        }
+        return $types;
     }
 
     public function searchStudents($class_section_id)

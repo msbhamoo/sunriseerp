@@ -679,7 +679,10 @@
                         <button type="button" id="btn-quick-sync-biometric" class="sa-btn" title="Sync punches from e-TimeOffice Biometric Machine">
                             <i class="fa fa-fingerprint text-info"></i> Sync Biometric
                         </button>
-                        <a href="<?php echo site_url('admin/dutypass'); ?>" class="sa-btn" style="background:#f0fdfa; border-color:#99f6e4; color:#0f766e; font-weight:700;" title="Issue & Manage Field Duty Passes">
+                        <a href="<?php echo site_url('admin/staffcompliance'); ?>" class="sa-btn" style="background:#f0fdfa; border-color:#99f6e4; color:#0f766e; font-weight:700;" title="Staff Compliance Checklist">
+                            <i class="fa fa-check-square-o text-teal" style="color:#0d9488;"></i> Compliance Checklist
+                        </a>
+                        <a href="<?php echo site_url('admin/dutypass'); ?>" class="sa-btn" style="background:#f8fafc; border-color:#cbd5e1; color:#334155; font-weight:600;" title="Issue & Manage Field Duty Passes">
                             <i class="fa fa-id-badge text-teal" style="color:#0d9488;"></i> Field Duty Pass
                         </a>
                         <a href="<?php echo site_url('admin/staffattendance/qrdisplay'); ?>" target="_blank" class="sa-btn">
@@ -866,20 +869,6 @@
                                                         </div>
                                                     </div>
                                                 </th>
-                                                <!-- Clearly Understandable Compliance Column -->
-                                                <th style="min-width: 270px;">
-                                                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                                                        <span><i class="fa fa-check-square-o"></i> Compliance Checklist</span>
-                                                        <div class="sa-header-setall">
-                                                            <button type="button" class="sa-setall-pill bulk-set-all-cmp" data-val="true" title="Mark all staff compliant" style="color:#16a34a; font-weight:700;">
-                                                                <i class="fa fa-check"></i> All Yes
-                                                            </button>
-                                                            <button type="button" class="sa-setall-pill bulk-set-all-cmp" data-val="false" title="Mark all non-compliant" style="color:#dc2626; font-weight:700;">
-                                                                <i class="fa fa-times"></i> All No
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </th>
                                                 <th width="75"><?php echo $this->lang->line('source'); ?></th>
                                                 <th width="105"><?php echo $this->lang->line('entry_time'); ?></th>
                                                 <th width="105"><?php echo $this->lang->line('exit_time'); ?></th>
@@ -1002,44 +991,6 @@
                                                         </div>
                                                     </td>
 
-                                                    <!-- Clearly Understandable Compliance Badges -->
-                                                    <?php
-                                                        $u_val  = isset($value['uniform_status']) ? $value['uniform_status'] : null;
-                                                        $id_val = isset($value['id_card_status']) ? $value['id_card_status'] : null;
-                                                        $lp_val = isset($value['lesson_plan_status']) ? $value['lesson_plan_status'] : null;
-                                                        $ph_val = isset($value['phone_handover_status']) ? $value['phone_handover_status'] : null;
-                                                    ?>
-                                                    <td>
-                                                        <div class="sa-cmp-container">
-                                                            <!-- Uniform -->
-                                                            <label class="sa-cmp-chip cmp-uniform <?php echo ($u_val === 'no') ? 'is-no' : 'is-yes'; ?>" title="Uniform Status (Click to toggle)">
-                                                                <input type="checkbox" class="cmp-check uniform-check" name="uniform_status_<?php echo $value['staff_id']; ?>" value="yes" <?php echo ($u_val === 'no') ? '' : 'checked'; ?>>
-                                                                <i class="fa <?php echo ($u_val === 'no') ? 'fa-times' : 'fa-check'; ?>"></i>
-                                                                <span>Uniform</span>
-                                                            </label>
-
-                                                            <!-- ID Card -->
-                                                            <label class="sa-cmp-chip cmp-idcard <?php echo ($id_val === 'no') ? 'is-no' : 'is-yes'; ?>" title="ID Card Status (Click to toggle)">
-                                                                <input type="checkbox" class="cmp-check idcard-check" name="id_card_status_<?php echo $value['staff_id']; ?>" value="yes" <?php echo ($id_val === 'no') ? '' : 'checked'; ?>>
-                                                                <i class="fa <?php echo ($id_val === 'no') ? 'fa-times' : 'fa-check'; ?>"></i>
-                                                                <span>ID Card</span>
-                                                            </label>
-
-                                                            <!-- Lesson Plan -->
-                                                            <label class="sa-cmp-chip cmp-lessonplan <?php echo ($lp_val === 'no') ? 'is-no' : 'is-yes'; ?>" title="Lesson Plan / Diary (Click to toggle)">
-                                                                <input type="checkbox" class="cmp-check lessonplan-check" name="lesson_plan_status_<?php echo $value['staff_id']; ?>" value="yes" <?php echo ($lp_val === 'no') ? '' : 'checked'; ?>>
-                                                                <i class="fa <?php echo ($lp_val === 'no') ? 'fa-times' : 'fa-check'; ?>"></i>
-                                                                <span>Lesson Plan</span>
-                                                            </label>
-
-                                                            <!-- Phone Handover -->
-                                                            <label class="sa-cmp-chip cmp-phone <?php echo ($ph_val === 'no') ? 'is-no' : 'is-yes'; ?>" title="Phone Handover (Click to toggle)">
-                                                                <input type="checkbox" class="cmp-check phone-check" name="phone_handover_status_<?php echo $value['staff_id']; ?>" value="yes" <?php echo ($ph_val === 'no') ? '' : 'checked'; ?>>
-                                                                <i class="fa <?php echo ($ph_val === 'no') ? 'fa-times' : 'fa-check'; ?>"></i>
-                                                                <span>Phone</span>
-                                                            </label>
-                                                        </div>
-                                                    </td>
 
                                                     <!-- Source -->
                                                     <td>
@@ -1996,7 +1947,6 @@ function renderStaffScreenshotCard(tabKey) {
     html += '      <th style="padding:8px 8px;">Role</th>';
     html += '      <th style="padding:8px 8px;">Status</th>';
     html += '      <th style="padding:8px 8px;">In / Out Time</th>';
-    html += '      <th style="padding:8px 8px;">Compliance</th>';
     html += '      <th style="padding:8px 8px;">Contact</th>';
     html += '    </tr>';
     html += '  </thead>';
@@ -2039,7 +1989,6 @@ function renderStaffScreenshotCard(tabKey) {
         html += '      <td style="padding:8px 8px; vertical-align:middle;"><span style="background:#e2e8f0; color:#334155; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600;">' + escapeStaffHtml(item.role) + '</span></td>';
         html += '      <td style="padding:8px 8px; vertical-align:middle;"><span style="' + badgeStyle + ' padding:2px 8px; border-radius:12px; font-size:11px; font-weight:700;">' + escapeStaffHtml(item.status_name) + '</span></td>';
         html += '      <td style="padding:8px 8px; vertical-align:middle; font-size:11.5px; color:#334155;">' + timeDisplay + '</td>';
-        html += '      <td style="padding:8px 8px; vertical-align:middle;">' + cmpHtml + '</td>';
         html += '      <td style="padding:8px 8px; vertical-align:middle; font-weight:600; color:#0f172a; white-space:nowrap; font-size:11.5px;">';
         if (item.contact_no) {
             html += '        <i class="fa fa-phone text-muted" style="margin-right:2px;"></i> ' + escapeStaffHtml(item.contact_no);

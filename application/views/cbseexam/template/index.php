@@ -20,13 +20,25 @@
         display: flex;
         flex-direction: column;
         box-shadow: -3px 0 12px rgba(0,0,0,0.18);
+        overflow: hidden;
+    }
+    .modal.modal-right .modal-content form {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+        margin-bottom: 0;
     }
     .modal.modal-right .modal-body {
         flex: 1 1 auto;
-        overflow-y: auto;
+        overflow-y: auto !important;
+        max-height: calc(100vh - 120px);
+        padding: 15px 20px;
     }
     .modal.modal-right .modal-footer {
         flex: 0 0 auto;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
     }
     /* Slide-in animation from the right */
     .modal.modal-right.fade .modal-dialog {
@@ -174,7 +186,6 @@
                                     ?>
                                 </select>
                                 <span class="text-danger"><?php echo form_error('marksheet'); ?></span>
-                            </div>
                             </div>
                         </div>
                         <div class="col-md-9">
@@ -461,6 +472,12 @@
             var marksheet_type = $('#marksheet').val();
             var template_id = $('#template_id').val();
             var weightage = $('#is_weightage').val();
+            if (marksheet_type === 'midterm_sbbt' || marksheet_type === 'exam_wise') {
+                $('#weightage_help_toggle').hide();
+                $('#weightage_help_body').hide();
+            } else {
+                $('#weightage_help_toggle').show();
+            }
             $('#examdata').html('');
             $('#formlink button[type=submit]').prop('disabled', false);
             $.ajax({

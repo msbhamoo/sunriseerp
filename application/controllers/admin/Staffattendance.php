@@ -231,8 +231,10 @@ class Staffattendance extends Admin_Controller
                     );
 
                     foreach ($available_compliance_cols as $col_name => $post_prefix) {
-                        $val = $this->input->post($post_prefix . $value);
-                        $single_attendance[$col_name] = ($val === 'yes') ? 'yes' : 'no';
+                        if ($this->input->post($post_prefix . $value) !== null) {
+                            $val = $this->input->post($post_prefix . $value);
+                            $single_attendance[$col_name] = ($val === 'yes') ? 'yes' : 'no';
+                        }
                     }
 
                     $attendance_array[] = $single_attendance;

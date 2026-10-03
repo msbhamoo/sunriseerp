@@ -93,6 +93,7 @@ $lang["mark_as_absent"] = "Mark as Absent";
 $lang["marks_obtained"] = "Marks Obtained";
 $lang["marks_range"] = "Marks Range";
 $lang["marksheet_type"] = "Marksheet Type";
+$lang["midterm_sbbt"] = "Mid Term (Best of SBBT + Term)";
 $lang["max"] = "Max";
 $lang["max_mark"] = "Max Mark";
 $lang["max_marks"] = "Max Marks";
