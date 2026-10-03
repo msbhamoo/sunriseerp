@@ -8,10 +8,15 @@
             <div class="col-md-12">
                 <div class="box box-primary" style="border-radius: 10px;">
                     <div class="box-header with-border">
-                        <h3 class="box-title"><i class="fa fa-list"></i> Managed Exams</h3>
+                        <h3 class="box-title"><i class="fa fa-list"></i> Managed Scholarship & Olympiad Exams</h3>
                         <div class="box-tools pull-right">
                             <button type="button" class="btn btn-primary btn-sm" onclick="openAddExamModal()" style="border-radius: 6px;"><i class="fa fa-plus"></i> Create New Exam</button>
                         </div>
+                    </div>
+
+                    <!-- Quick Notice Box -->
+                    <div style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 12px 20px;">
+                        <span class="text-muted"><i class="fa fa-info-circle text-primary"></i> <strong>Sunrise Scholarship Cum Admission Test:</strong> Configure official exam dates, eligibility (Classes 5th - 11th), OMR / CBT modes, fee concessions, and print official notifications/brochures for candidates & parents.</span>
                     </div>
 
                     <div class="box-body table-responsive">
@@ -86,8 +91,10 @@
                                             <td>
                                                 <?php $direct_url = site_url('scholarshipregister/apply/' . urlencode($e['exam_code'])); ?>
                                                 <a href="<?php echo $direct_url; ?>" target="_blank" class="btn btn-xs btn-info" title="Open Direct Registration Form"><i class="fa fa-external-link"></i> Direct Public Form</a>
+                                                <a href="<?php echo site_url('admin/scholarshipexam/brochure/' . $e['id']); ?>" target="_blank" class="btn btn-xs bg-navy" title="View Official Notification & Brochure" style="margin-top: 4px; display:inline-block;"><i class="fa fa-file-text-o"></i> View Brochure</a>
                                             </td>
                                             <td class="text-right">
+                                                <a href="<?php echo site_url('admin/scholarshipexam/brochure/' . $e['id']); ?>" target="_blank" class="btn btn-xs btn-default" title="Print Information Brochure"><i class="fa fa-print"></i> Brochure</a>
                                                 <button type="button" class="btn btn-xs btn-primary" onclick="editExam(<?php echo $e['id']; ?>)"><i class="fa fa-pencil"></i> Edit</button>
                                                 <a href="<?php echo site_url('admin/scholarshipexam/delete_exam/' . $e['id']); ?>" class="btn btn-xs btn-danger" onclick="return confirm('Are you sure you want to delete this exam? All candidate registrations will be removed.');"><i class="fa fa-trash"></i></a>
                                             </td>
@@ -183,6 +190,15 @@
                             <div class="form-group">
                                 <label>Exam Instructions</label>
                                 <input type="text" name="instructions" id="instructions" class="form-control" placeholder="e.g. Bring Admit Card and Blue Pen. No calculators allowed.">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Eligibility & Awards / Full Description</label>
+                                <textarea name="description" id="description" class="form-control" rows="3" placeholder="Eligibility, syllabus breakdown, awards, WhatsApp contact, etc."></textarea>
                             </div>
                         </div>
                     </div>
@@ -298,6 +314,7 @@ function editExam(id) {
                 $('#registration_fee').val(data.registration_fee);
                 $('#exam_center').val(data.exam_center);
                 $('#instructions').val(data.instructions);
+                $('#description').val(data.description);
 
                 $('#modalTitle').html('<i class="fa fa-pencil"></i> Edit Scholarship / Olympiad Exam');
                 $('#examModal').modal('show');

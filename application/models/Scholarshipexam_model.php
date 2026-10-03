@@ -340,6 +340,125 @@ class Scholarshipexam_model extends MY_Model
                 ));
             }
         }
+
+        // Seed Default "SUNRISE SCHOLARSHIP CUM ADMISSION TEST" if no exam exists yet
+        $exam_count = $this->db->count_all('scholarship_exams');
+        if ($exam_count == 0) {
+            $default_exam = array(
+                'title' => 'SUNRISE SCHOLARSHIP CUM ADMISSION TEST',
+                'exam_code' => 'SSAT-2026',
+                'exam_category' => 'Scholarship & Admission',
+                'exam_mode' => 'offline',
+                'roll_no_prefix' => 'SSAT-',
+                'is_paid' => 0,
+                'registration_fee' => 0.00,
+                'description' => "Sunrise Scholarship Cum Admission Test for Class 5th to 11th.\nEligibility: All students from class 5th to 11th from any school other than Sunrise.\nMedium: Hindi & English (bilingual)\nType of Exam: MCQ based on OMR Sheet.\nAwards:\n(a) Upto 100% Scholarship in school fees.\n(b) Thousands of Cash Awards.\n(c) Gifts, Memento and Certificates of participation.\nMode of Registration: Online via portal, WhatsApp to 9783200821, or Offline at School Reception.",
+                'exam_center' => 'Sunrise International Public School Campus',
+                'instructions' => 'OMR Based MCQ Test. Bring Admit Card and Blue/Black Ballpoint pen. Reporting time 30 minutes prior to exam.',
+                'status' => 1,
+                'registration_status' => 1
+            );
+            $this->db->insert('scholarship_exams', $default_exam);
+            $new_exam_id = $this->db->insert_id();
+
+            // Match available classes for 5th, 6th-10th, 11th
+            $all_cls = $this->db->get('classes')->result_array();
+            $cls_by_name = array();
+            foreach ($all_cls as $ac) {
+                $cname = strtolower(trim($ac['class']));
+                $cls_by_name[$cname] = $ac['id'];
+                // Handle numbers (e.g., '5' or '5th')
+                $num = preg_replace('/[^0-9]/', '', $cname);
+                if ($num) {
+                    $cls_by_name[$num] = $ac['id'];
+                }
+            }
+
+            $get_ids = function($names) use ($cls_by_name, $all_cls) {
+                $ids = array();
+                foreach ($names as $n) {
+                    if (isset($cls_by_name[$n])) {
+                        $ids[] = $cls_by_name[$n];
+                    }
+                }
+                if (empty($ids) && !empty($all_cls)) {
+                    $ids[] = $all_cls[0]['id'];
+                }
+                return implode(',', array_unique($ids));
+            };
+
+            $c_5th = $get_ids(array('5', '5th', 'class 5', 'class 5th'));
+            $c_6to10 = $get_ids(array('6', '6th', '7', '7th', '8', '8th', '9', '9th', '10', '10th'));
+            $c_11th_sci = $get_ids(array('11', '11th', 'class 11'));
+            $c_11th_arts = $get_ids(array('11', '11th', 'class 11'));
+
+            $sample_schedules = array(
+                array(
+                    'scholarship_exam_id' => $new_exam_id,
+                    'phase_name' => '5th Class - Hindi, English, Maths, EVS',
+                    'class_id' => !empty($c_5th) ? intval(explode(',', $c_5th)[0]) : 1,
+                    'class_ids' => $c_5th,
+                    'registration_start_date' => '2026-10-15',
+                    'registration_close_date' => '2026-11-10',
+                    'admit_card_release_date' => '2026-11-12',
+                    'exam_date' => '2026-11-15 10:00:00',
+                    'duration_minutes' => 90,
+                    'total_marks' => 50.00,
+                    'passing_marks' => 20.00,
+                    'result_date' => '2026-11-21',
+                    'award_ceremony_date' => '2026-12-05'
+                ),
+                array(
+                    'scholarship_exam_id' => $new_exam_id,
+                    'phase_name' => '6th to 10th - Hindi, Eng, Sci, Maths, SST, Reasoning',
+                    'class_id' => !empty($c_6to10) ? intval(explode(',', $c_6to10)[0]) : 1,
+                    'class_ids' => $c_6to10,
+                    'registration_start_date' => '2026-10-15',
+                    'registration_close_date' => '2026-11-10',
+                    'admit_card_release_date' => '2026-11-12',
+                    'exam_date' => '2026-11-15 10:00:00',
+                    'duration_minutes' => 90,
+                    'total_marks' => 90.00,
+                    'passing_marks' => 36.00,
+                    'result_date' => '2026-11-21',
+                    'award_ceremony_date' => '2026-12-05'
+                ),
+                array(
+                    'scholarship_exam_id' => $new_exam_id,
+                    'phase_name' => '11th Science - English, Maths/Bio, Physics, Chemistry',
+                    'class_id' => !empty($c_11th_sci) ? intval(explode(',', $c_11th_sci)[0]) : 1,
+                    'class_ids' => $c_11th_sci,
+                    'registration_start_date' => '2026-10-15',
+                    'registration_close_date' => '2026-11-10',
+                    'admit_card_release_date' => '2026-11-12',
+                    'exam_date' => '2026-11-15 10:00:00',
+                    'duration_minutes' => 90,
+                    'total_marks' => 120.00,
+                    'passing_marks' => 48.00,
+                    'result_date' => '2026-11-21',
+                    'award_ceremony_date' => '2026-12-05'
+                ),
+                array(
+                    'scholarship_exam_id' => $new_exam_id,
+                    'phase_name' => '11th Arts - English, Pol Sci, History, Geography',
+                    'class_id' => !empty($c_11th_arts) ? intval(explode(',', $c_11th_arts)[0]) : 1,
+                    'class_ids' => $c_11th_arts,
+                    'registration_start_date' => '2026-10-15',
+                    'registration_close_date' => '2026-11-10',
+                    'admit_card_release_date' => '2026-11-12',
+                    'exam_date' => '2026-11-15 10:00:00',
+                    'duration_minutes' => 90,
+                    'total_marks' => 120.00,
+                    'passing_marks' => 48.00,
+                    'result_date' => '2026-11-21',
+                    'award_ceremony_date' => '2026-12-05'
+                )
+            );
+
+            foreach ($sample_schedules as $ss) {
+                $this->db->insert('scholarship_exam_schedules', $ss);
+            }
+        }
     }
 
     public function getExams($id = null)

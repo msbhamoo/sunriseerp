@@ -58,16 +58,54 @@ function isFieldRequired($key, $map) {
 
     <?php if (!empty($selected_exam)) { ?>
         <div class="exam-info-banner">
-            <div class="exam-info-title"><i class="fa fa-trophy"></i> <?php echo htmlspecialchars($selected_exam['title']); ?></div>
-            <div class="exam-info-meta">
-                Code: <strong><?php echo htmlspecialchars($selected_exam['exam_code']); ?></strong> | 
-                Category: <strong><?php echo htmlspecialchars($selected_exam['exam_category']); ?></strong> | 
-                Mode: <strong><?php echo strtoupper($selected_exam['exam_mode']); ?></strong> | 
-                Fee: <strong><?php echo ($selected_exam['is_paid'] == 1) ? '$' . number_format($selected_exam['registration_fee'], 2) : 'FREE'; ?></strong>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <div class="exam-info-title"><i class="fa fa-trophy"></i> <?php echo htmlspecialchars($selected_exam['title']); ?></div>
+                    <div class="exam-info-meta">
+                        Code: <strong><?php echo htmlspecialchars($selected_exam['exam_code']); ?></strong> | 
+                        Category: <strong><?php echo htmlspecialchars($selected_exam['exam_category']); ?></strong> | 
+                        Mode: <strong><?php echo strtoupper($selected_exam['exam_mode']); ?></strong> | 
+                        Fee: <strong><?php echo ($selected_exam['is_paid'] == 1) ? '$' . number_format($selected_exam['registration_fee'], 2) : 'FREE'; ?></strong>
+                    </div>
+                </div>
+                <div>
+                    <a href="<?php echo site_url('admin/scholarshipexam/brochure/' . $selected_exam['id']); ?>" target="_blank" class="btn btn-primary btn-sm" style="font-weight: 600; border-radius: 6px;">
+                        <i class="fa fa-file-text-o"></i> View Official Brochure / Prospectus
+                    </a>
+                </div>
             </div>
+
+            <!-- Quick Key Highlights Box -->
+            <div style="margin-top: 15px; background: #ffffff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 12px 15px; font-size: 13px;">
+                <div class="row">
+                    <div class="col-sm-6" style="margin-bottom: 6px;">
+                        <i class="fa fa-calendar text-primary"></i> <strong>Exam Date:</strong> 15 Nov 2026 (Sunday)
+                    </div>
+                    <div class="col-sm-6" style="margin-bottom: 6px;">
+                        <i class="fa fa-clock-o text-primary"></i> <strong>Duration:</strong> 90 Mins (MCQ OMR)
+                    </div>
+                    <div class="col-sm-6" style="margin-bottom: 6px;">
+                        <i class="fa fa-graduation-cap text-primary"></i> <strong>Eligibility:</strong> Classes 5th to 11th (Other schools)
+                    </div>
+                    <div class="col-sm-6" style="margin-bottom: 6px;">
+                        <i class="fa fa-language text-primary"></i> <strong>Medium:</strong> Hindi & English (Bilingual)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Awards & Highlights -->
+            <div style="margin-top: 10px; background: #fefce8; border: 1px solid #fef08a; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #854d0e;">
+                <strong><i class="fa fa-gift"></i> Attractive Awards:</strong> Upto 100% Scholarship in school fees &bull; Thousands of Cash Awards &bull; Gifts, Mementos & Certificates of Participation.
+            </div>
+
+            <!-- Alternative WhatsApp Registration option -->
+            <div style="margin-top: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #166534;">
+                <i class="fa fa-whatsapp" style="font-size: 16px;"></i> <strong>Register via WhatsApp:</strong> You can also send Student Name, Father's Name, Class, School, Village/District to <a href="https://wa.me/919783200821" target="_blank" style="font-weight: 700; color: #15803d; text-decoration: underline;">9783200821</a>.
+            </div>
+
             <?php if (!empty($selected_exam['description'])) { ?>
-                <div style="font-size: 12px; color: #475569; margin-top: 8px; border-top: 1px dashed #bfdbfe; padding-top: 6px;">
-                    <?php echo htmlspecialchars($selected_exam['description']); ?>
+                <div style="font-size: 12px; color: #475569; margin-top: 10px; border-top: 1px dashed #bfdbfe; padding-top: 8px;">
+                    <?php echo nl2br(htmlspecialchars($selected_exam['description'])); ?>
                 </div>
             <?php } ?>
         </div>

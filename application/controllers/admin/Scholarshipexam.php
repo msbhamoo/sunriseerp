@@ -255,6 +255,13 @@ class Scholarshipexam extends Admin_Controller
         $this->load->view('admin/scholarshipexam/paper_print', $data);
     }
 
+    public function brochure($exam_id)
+    {
+        $data['exam'] = $this->scholarshipexam_model->getExams($exam_id);
+        $data['sch_setting'] = $this->sch_setting_detail;
+        $this->load->view('admin/scholarshipexam/brochure', $data);
+    }
+
     public function candidates()
     {
         $this->session->set_userdata('top_menu', 'scholarship_exam');
