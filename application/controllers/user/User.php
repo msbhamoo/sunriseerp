@@ -356,7 +356,7 @@ class User extends Student_Controller
             if (!empty($exam_list)) {
                 foreach ($exam_list as $exam_key => $exam_value) {
 
-                    $exam_subjects = $this->cbseexam_exam_model->getexamsubjects($exam_value->cbse_exam_id);
+                    $exam_subjects = $this->cbseexam_exam_model->getexamsubjects($exam_value->cbse_exam_id, $student_current_class->class_id);
                     $exam_value->{"subjects"} = $exam_subjects;
                     $exam_value->{"grades"} = $this->cbseexam_grade_model->getGraderangebyGradeID($exam_value->cbse_exam_grade_id);
                     $exam_value->{"exam_assessments"} = $this->cbseexam_assessment_model->getWithAssessmentTypeByAssessmentID($exam_value->cbse_exam_assessment_id);

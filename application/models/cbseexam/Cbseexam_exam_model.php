@@ -162,12 +162,21 @@ class Cbseexam_exam_model extends MY_Model
                     ]);
                     $timetable_id = $this->db->insert_id();
                     
-                    foreach ($assessment_ids as $assess_id) {
-                        if (!empty($assess_id)) {
-                            $this->db->insert('cbse_exam_timetable_assessment_types', [
+                    foreach ($assessment_ids as $assess_item) {
+                        $assess_item = trim($assess_item);
+                        if (!empty($assess_item)) {
+                            $parts = explode(':', $assess_item);
+                            $assess_id = $parts[0];
+                            $custom_max = (isset($parts[1]) && $parts[1] !== '') ? floatval($parts[1]) : null;
+                            
+                            $insert_data = [
                                 'cbse_exam_timetable_id' => $timetable_id,
                                 'cbse_exam_assessment_type_id' => $assess_id
-                            ]);
+                            ];
+                            if ($custom_max !== null) {
+                                $insert_data['maximum_marks'] = $custom_max;
+                            }
+                            $this->db->insert('cbse_exam_timetable_assessment_types', $insert_data);
                         }
                     }
                     
@@ -205,7 +214,7 @@ class Cbseexam_exam_model extends MY_Model
     }
 
     public function getWizardExamTimetable($exam_id) {
-        $this->db->select('cbse_exam_timetable.*, GROUP_CONCAT(DISTINCT cbse_exam_timetable_assessment_types.cbse_exam_assessment_type_id) as assessment_ids, GROUP_CONCAT(DISTINCT cbse_exam_timetable_classes.class_id) as assigned_class_ids');
+        $this->db->select('cbse_exam_timetable.*, GROUP_CONCAT(DISTINCT cbse_exam_timetable_assessment_types.cbse_exam_assessment_type_id) as assessment_ids, GROUP_CONCAT(DISTINCT CONCAT(cbse_exam_timetable_assessment_types.cbse_exam_assessment_type_id, ":", COALESCE(cbse_exam_timetable_assessment_types.maximum_marks, "")) SEPARATOR ",") as assessment_max_marks, GROUP_CONCAT(DISTINCT cbse_exam_timetable_classes.class_id) as assigned_class_ids');
         $this->db->from('cbse_exam_timetable');
         $this->db->join('cbse_exam_timetable_assessment_types', 'cbse_exam_timetable_assessment_types.cbse_exam_timetable_id = cbse_exam_timetable.id', 'left');
         $this->db->join('cbse_exam_timetable_classes', 'cbse_exam_timetable_classes.cbse_exam_timetable_id = cbse_exam_timetable.id', 'left');
@@ -334,12 +343,21 @@ class Cbseexam_exam_model extends MY_Model
                         $this->db->where('cbse_exam_timetable_id', $tt_id);
                         $this->db->delete('cbse_exam_timetable_assessment_types');
                         
-                        foreach ($assessment_ids as $assess_id) {
-                            if (!empty($assess_id)) {
-                                $this->db->insert('cbse_exam_timetable_assessment_types', [
+                        foreach ($assessment_ids as $assess_item) {
+                            $assess_item = trim($assess_item);
+                            if (!empty($assess_item)) {
+                                $parts = explode(':', $assess_item);
+                                $assess_id = $parts[0];
+                                $custom_max = (isset($parts[1]) && $parts[1] !== '') ? floatval($parts[1]) : null;
+                                
+                                $insert_data = [
                                     'cbse_exam_timetable_id' => $tt_id,
                                     'cbse_exam_assessment_type_id' => $assess_id
-                                ]);
+                                ];
+                                if ($custom_max !== null) {
+                                    $insert_data['maximum_marks'] = $custom_max;
+                                }
+                                $this->db->insert('cbse_exam_timetable_assessment_types', $insert_data);
                             }
                         }
                         
@@ -368,12 +386,21 @@ class Cbseexam_exam_model extends MY_Model
                         ]);
                         $new_tt_id = $this->db->insert_id();
                         
-                        foreach ($assessment_ids as $assess_id) {
-                            if (!empty($assess_id)) {
-                                $this->db->insert('cbse_exam_timetable_assessment_types', [
+                        foreach ($assessment_ids as $assess_item) {
+                            $assess_item = trim($assess_item);
+                            if (!empty($assess_item)) {
+                                $parts = explode(':', $assess_item);
+                                $assess_id = $parts[0];
+                                $custom_max = (isset($parts[1]) && $parts[1] !== '') ? floatval($parts[1]) : null;
+                                
+                                $insert_data = [
                                     'cbse_exam_timetable_id' => $new_tt_id,
                                     'cbse_exam_assessment_type_id' => $assess_id
-                                ]);
+                                ];
+                                if ($custom_max !== null) {
+                                    $insert_data['maximum_marks'] = $custom_max;
+                                }
+                                $this->db->insert('cbse_exam_timetable_assessment_types', $insert_data);
                             }
                         }
                         
@@ -640,8 +667,9 @@ class Cbseexam_exam_model extends MY_Model
         students.permanent_address,students.category_id,students.adhar_no,students.samagra_id,students.bank_account_no,students.bank_name, students.ifsc_code , students.guardian_name , students.father_pic ,students.height ,students.weight,students.measurement_date, students.mother_pic , students.guardian_pic , students.guardian_relation,students.guardian_phone,students.guardian_address,students.is_active ,students.created_at ,students.updated_at,students.father_name,students.father_phone,students.blood_group,students.school_house_id,students.father_occupation,students.mother_name,students.mother_phone,students.mother_occupation,students.guardian_occupation,students.gender,students.guardian_is,students.rte,students.guardian_email,subjects.name as subject_name,subjects.code as `subject_code`,classes.id AS `class_id`,classes.class,sections.id AS `section_id`,sections.section,student_session.id as `student_session_id`  FROM `cbse_exams` INNER JOIN cbse_exam_timetable on cbse_exam_timetable.cbse_exam_id=cbse_exams.id INNER JOIN cbse_exam_students on cbse_exam_students.cbse_exam_id=cbse_exams.id INNER JOIN cbse_exam_assessment_types on cbse_exam_assessment_types.cbse_exam_assessment_id=cbse_exams.cbse_exam_assessment_id INNER JOIN cbse_terms on cbse_terms.id=cbse_exams.cbse_term_id left join cbse_student_subject_marks on cbse_student_subject_marks.cbse_exam_timetable_id =cbse_exam_timetable.id and cbse_student_subject_marks.cbse_exam_student_id= cbse_exam_students.id and cbse_student_subject_marks.cbse_exam_assessment_type_id=cbse_exam_assessment_types.id INNER JOIN student_session on student_session.id=cbse_exam_students.student_session_id INNER join students on students.id =student_session.student_id INNER JOIN subjects on subjects.id=cbse_exam_timetable.subject_id INNER join classes on student_session.class_id = classes.id INNER join sections on sections.id = student_session.section_id left join cbse_student_exam_ranks on cbse_student_exam_ranks.student_session_id = student_session.id and cbse_student_exam_ranks.cbse_exam_id=" . $cbse_exam_id . " WHERE cbse_exams.`id` = " . $this->db->escape($cbse_exam_id) . " and cbse_exams.session_id=" . $this->current_session . " and student_session.id in (" . $students . ")";
 
         $query = $this->db->query($sql);
-
-        return $query->result();
+        $rows = $query->result();
+        $this->_apply_max_override($rows);
+        return $rows;
     }
 
     public function getStudentResultByTemplateId($cbse_template_id, $class_section_id)
@@ -1381,15 +1409,22 @@ class Cbseexam_exam_model extends MY_Model
             ->result();
     }
 
-    public function getStudentExamByStudentSession($student_session_id)
+    public function getStudentExamByStudentSession($student_session_id, $publish_only = true)
     {
-        return $this->db->select('cbse_exam_students.*,cbse_exams.cbse_exam_assessment_id,cbse_exams.cbse_term_id,cbse_exams.name,cbse_exams.use_exam_roll_no,cbse_exams.is_active,cbse_exams.is_publish,cbse_exams.cbse_term_id,cbse_exams.cbse_exam_grade_id,cbse_exams.total_working_days')
+        $this->db->select('cbse_exam_students.*,cbse_exams.cbse_exam_assessment_id,cbse_exams.cbse_term_id,cbse_exams.name,cbse_exams.use_exam_roll_no,cbse_exams.is_active,cbse_exams.is_publish,cbse_exams.cbse_exam_grade_id,cbse_exams.total_working_days,student_session.class_id,student_session.section_id')
             ->from('cbse_exam_students')
             ->join('student_session', 'student_session.id=cbse_exam_students.student_session_id')
             ->join('students', 'students.id=student_session.student_id')
             ->join('cbse_exams', 'cbse_exam_students.cbse_exam_id=cbse_exams.id')
-            ->where('cbse_exam_students.student_session_id', $student_session_id)
-            ->where('cbse_exams.is_publish', '1')
+            ->join('class_sections', 'class_sections.class_id=student_session.class_id AND class_sections.section_id=student_session.section_id')
+            ->join('cbse_exam_class_sections', 'cbse_exam_class_sections.cbse_exam_id=cbse_exams.id AND cbse_exam_class_sections.class_section_id=class_sections.id')
+            ->where('cbse_exam_students.student_session_id', $student_session_id);
+            
+        if ($publish_only) {
+            $this->db->where('cbse_exams.is_publish', '1');
+        }
+        
+        return $this->db->group_by('cbse_exams.id')
             ->order_by('cbse_exams.created_at', 'desc')
             ->get()->result();
     }
@@ -3106,6 +3141,191 @@ $my_subjects[]=$value;
             'class_sections' => $cs_summary,
             'students' => $students
         ];
+    }
+
+    /**
+     * Get a compact summary of all CBSE exam marks for a given student session.
+     * Returns an array of associative arrays, each containing:
+     *   exam_name, total_marks, obtained_marks, percentage
+     *
+     * Used by PTM Reports Performance Snapshot and similar pages.
+     */
+    public function getStudentExamMarksSummary($student_session_id)
+    {
+        $student_session = $this->db->select('student_session.id, student_session.class_id, student_session.section_id, student_session.student_id')
+            ->from('student_session')
+            ->where('student_session.id', $student_session_id)
+            ->get()->row_array();
+
+        if (empty($student_session)) {
+            return [];
+        }
+
+        $class_id = $student_session['class_id'];
+
+        $this->load->model('cbseexam/cbseexam_grade_model');
+        $this->load->model('cbseexam/cbseexam_assessment_model');
+
+        // Fetch student's assigned exams (both published and draft/active)
+        $exam_list = $this->getStudentExamByStudentSession($student_session_id, false);
+        if (empty($exam_list)) {
+            return [];
+        }
+
+        $summary = [];
+
+        foreach ($exam_list as $exam_value) {
+            $exam_id = $exam_value->cbse_exam_id;
+            $exam_subjects = $this->getexamsubjects($exam_id, $class_id);
+            $exam_value->subjects = $exam_subjects;
+            $exam_value->grades = $this->cbseexam_grade_model->getGraderangebyGradeID($exam_value->cbse_exam_grade_id);
+            $exam_value->exam_assessments = $this->cbseexam_assessment_model->getWithAssessmentTypeByAssessmentID($exam_value->cbse_exam_assessment_id);
+            $exam_value->exam_subject_assessments = $this->cbseexam_assessment_model->getSubjectAssessmentsByExam($exam_subjects);
+
+            $cbse_exam_result = $this->getStudentResultByExamId($exam_id, [$student_session_id]);
+
+            $student_exam_data = [];
+            $student_rank = "";
+
+            if (!empty($cbse_exam_result)) {
+                foreach ($cbse_exam_result as $row) {
+                    $student_rank = $row->rank;
+                    $sub_id = $row->subject_id;
+                    $at_id = $row->cbse_exam_assessment_type_id;
+
+                    if (!isset($student_exam_data['subjects'][$sub_id])) {
+                        $student_exam_data['subjects'][$sub_id] = [
+                            'subject_id' => $sub_id,
+                            'subject_name' => $row->subject_name,
+                            'subject_code' => $row->subject_code,
+                            'exam_assessments' => []
+                        ];
+                    }
+
+                    if (!isset($student_exam_data['subjects'][$sub_id]['exam_assessments'][$at_id])) {
+                        $student_exam_data['subjects'][$sub_id]['exam_assessments'][$at_id] = [
+                            'cbse_exam_assessment_type_name' => $row->cbse_exam_assessment_type_name,
+                            'cbse_exam_assessment_type_id' => $at_id,
+                            'cbse_exam_assessment_type_code' => $row->cbse_exam_assessment_type_code,
+                            'maximum_marks' => $row->maximum_marks,
+                            'cbse_student_subject_marks_id' => $row->cbse_student_subject_marks_id,
+                            'marks' => $row->marks,
+                            'note' => $row->note,
+                            'is_absent' => $row->is_absent
+                        ];
+                    }
+                }
+            }
+
+            $exam_value->rank = $student_rank;
+            $exam_value->exam_data = $student_exam_data;
+
+            // Build detailed subject breakdown and calculate exam totals
+            $exam_total_marks = 0;
+            $exam_total_max_marks = 0;
+            $subjects_detail = [];
+
+            if (!empty($exam_subjects)) {
+                foreach ($exam_subjects as $subject_value) {
+                    $subject_total = 0;
+                    $subject_max = 0;
+                    $assessments_list = [];
+
+                    if (!empty($exam_value->exam_assessments)) {
+                        foreach ($exam_value->exam_assessments as $assess_type) {
+                            $at_id = $assess_type->id;
+                            $has_assessment = false;
+
+                            // Check if this assessment type applies to this subject
+                            if (!empty($exam_value->exam_subject_assessments)) {
+                                foreach ($exam_value->exam_subject_assessments as $s_item) {
+                                    if ($s_item->id == $subject_value->id && !empty($s_item->subject_assessments)) {
+                                        foreach ($s_item->subject_assessments as $sa) {
+                                            if ($sa->cbse_exam_timetable_id == $subject_value->id && $sa->cbse_exam_assessment_type_id == $at_id) {
+                                                $has_assessment = true;
+                                                break 2;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if ($has_assessment) {
+                                $mark_val = "N/A";
+                                $max_m = !empty($assess_type->maximum_marks) ? $assess_type->maximum_marks : 0;
+                                $is_absent = 0;
+
+                                if (isset($student_exam_data['subjects'][$subject_value->subject_id]['exam_assessments'][$at_id])) {
+                                    $res_cell = $student_exam_data['subjects'][$subject_value->subject_id]['exam_assessments'][$at_id];
+                                    $max_m = !empty($res_cell['maximum_marks']) ? $res_cell['maximum_marks'] : $max_m;
+                                    $is_absent = !empty($res_cell['is_absent']);
+                                    if ($is_absent) {
+                                        $mark_val = "ABS";
+                                    } elseif (!is_null($res_cell['marks']) && $res_cell['marks'] !== '') {
+                                        $mark_val = $res_cell['marks'];
+                                    }
+                                }
+
+                                $numeric_mark = ($mark_val !== "N/A" && $mark_val !== "ABS") ? floatval($mark_val) : 0;
+                                $subject_total += $numeric_mark;
+                                $subject_max += floatval($max_m);
+                                $exam_total_marks += $numeric_mark;
+                                $exam_total_max_marks += floatval($max_m);
+
+                                $assessments_list[] = [
+                                    'assessment_type_id' => $at_id,
+                                    'name' => $assess_type->name,
+                                    'code' => $assess_type->code,
+                                    'max_marks' => $max_m,
+                                    'marks' => $mark_val,
+                                    'is_absent' => $is_absent
+                                ];
+                            }
+                        }
+                    }
+
+                    $subjects_detail[] = [
+                        'subject_id' => $subject_value->subject_id,
+                        'subject_name' => $subject_value->subject_name,
+                        'subject_code' => $subject_value->subject_code,
+                        'subject_total' => $subject_total,
+                        'subject_max' => $subject_max,
+                        'assessments' => $assessments_list
+                    ];
+                }
+            }
+
+            $percentage = ($exam_total_max_marks > 0) ? round(($exam_total_marks / $exam_total_max_marks) * 100, 2) : 0;
+
+            // Determine grade from grade range if available
+            $grade_name = "-";
+            if (!empty($exam_value->grades)) {
+                foreach ($exam_value->grades as $g) {
+                    if ($g->minimum_percentage <= $percentage && $g->maximum_percentage >= $percentage) {
+                        $grade_name = $g->name;
+                        break;
+                    } elseif ($g->minimum_percentage <= $percentage && $grade_name == "-") {
+                        $grade_name = $g->name;
+                    }
+                }
+            }
+
+            $summary[] = [
+                'exam_id' => $exam_id,
+                'exam_name' => $exam_value->name,
+                'is_publish' => $exam_value->is_publish,
+                'total_marks' => $exam_total_max_marks,
+                'obtained_marks' => $exam_total_marks,
+                'percentage' => $percentage,
+                'grade' => $grade_name,
+                'rank' => $exam_value->rank,
+                'subject_count' => count($subjects_detail),
+                'assessments_headers' => !empty($exam_value->exam_assessments) ? $exam_value->exam_assessments : [],
+                'subjects' => $subjects_detail
+            ];
+        }
+
+        return $summary;
     }
 
 }

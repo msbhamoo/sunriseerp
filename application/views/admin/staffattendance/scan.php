@@ -1,111 +1,314 @@
+<style>
+    /* Premium Attendance Scan & History Aesthetics */
+    .sa-scan-wrapper {
+        max-width: 960px;
+        margin: 0 auto;
+    }
+    .sa-history-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+        margin-top: 24px;
+        overflow: hidden;
+    }
+    .sa-history-header {
+        background: #ffffff;
+        padding: 16px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+    .sa-history-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    /* Sleek Segmented Pill Control */
+    .sa-pill-group {
+        display: inline-flex;
+        background: #f1f5f9;
+        padding: 3.5px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        gap: 2px;
+    }
+    .sa-pill-item {
+        color: #475569;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 14px;
+        border-radius: 7px;
+        text-decoration: none !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    .sa-pill-item:hover {
+        color: #0f172a;
+        background: rgba(255, 255, 255, 0.6);
+    }
+    .sa-pill-item.active {
+        background: #ffffff;
+        color: #0f766e;
+        font-weight: 700;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+    /* Modern Table Rows */
+    .sa-history-table {
+        margin: 0;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    .sa-history-table th {
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        font-weight: 700;
+        padding: 11px 16px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .sa-history-table td {
+        padding: 12px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 13px;
+        color: #1e293b;
+    }
+    .sa-history-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+    .sa-history-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    .sa-badge-time {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12.5px;
+        font-weight: 600;
+    }
+    .sa-dur-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #f1f5f9;
+        color: #334155;
+        font-size: 11.5px;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+    }
+    .sa-status-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+    }
+    .sa-tag-present { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .sa-tag-late { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .sa-tag-half { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .sa-tag-absent { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .sa-source-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: #64748b;
+    }
+    @media (max-width: 767px) {
+        .sa-history-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .sa-pill-group {
+            width: 100%;
+            overflow-x: auto;
+        }
+        .sa-pill-item {
+            flex: 1;
+            text-align: center;
+            justify-content: center;
+        }
+    }
+</style>
+
 <div class="content-wrapper">
-    <section class="content-header">
-        <h1><i class="fa fa-qrcode"></i> Mark My Attendance</h1>
+    <section class="content-header" style="padding: 16px 20px 0 20px;">
+        <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fa fa-qrcode text-teal" style="color: #0d9488;"></i> Mark My Attendance
+        </h1>
     </section>
-    <section class="content">
-        <div class="row">
-            <div class="col-md-6 col-md-offset-3">
-                <div class="box box-primary">
-                    <div class="box-body" style="text-align:center;">
+    <section class="content" style="padding: 16px 20px;">
+        <div class="sa-scan-wrapper">
+            <!-- Camera QR Scanner Card -->
+            <div class="box box-solid" style="border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 4px 16px -2px rgba(15,23,42,0.05); overflow: hidden;">
+                <div class="box-body" style="text-align:center; padding: 24px;">
 
-                        <?php if (empty($setting['is_enabled'])) { ?>
-                            <div class="alert alert-warning">QR attendance is currently disabled. Please contact admin.</div>
-                        <?php } else { ?>
+                    <?php if (empty($setting['is_enabled'])) { ?>
+                        <div class="alert alert-warning" style="border-radius: 8px;">QR attendance is currently disabled. Please contact admin.</div>
+                    <?php } else { ?>
 
-                        <p class="text-muted">Point your camera at the attendance QR code on screen.</p>
+                    <p style="color: #64748b; font-size: 13.5px; margin-bottom: 18px; font-weight: 500;">Point your mobile or laptop camera at the attendance QR code displayed at school.</p>
 
-                        <div id="qr-status" class="alert alert-info" style="display:none;"></div>
+                    <div id="qr-status" class="alert alert-info" style="display:none; border-radius: 8px;"></div>
 
-                        <div id="scanner-wrap" style="position:relative;max-width:360px;margin:0 auto;">
-                            <video id="qr-video" style="width:100%;border-radius:8px;background:#000;" playsinline muted></video>
-                            <canvas id="qr-canvas" style="display:none;"></canvas>
+                    <div id="scanner-wrap" style="position:relative; max-width:340px; margin:0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
+                        <video id="qr-video" style="width:100%; border-radius:12px; background:#0f172a;" playsinline muted></video>
+                        <canvas id="qr-canvas" style="display:none;"></canvas>
+                    </div>
+
+                    <!-- Early-exit confirmation -->
+                    <div id="early-box" style="display:none; margin-top:18px; text-align:left; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 10px; padding: 16px;">
+                        <div class="alert alert-warning" id="early-msg" style="margin-bottom: 12px;"></div>
+                        <div class="form-group">
+                            <label style="font-weight: 700; font-size: 12.5px;">Reason for leaving early (optional)</label>
+                            <input type="text" id="early-reason" class="form-control" placeholder="e.g. medical, personal" style="border-radius: 6px;">
                         </div>
+                        <button class="btn btn-danger" id="btn-confirm-early" style="font-weight: 700; border-radius: 6px;">Yes, I'm leaving early</button>
+                        <button class="btn btn-default" id="btn-cancel-early" style="font-weight: 600; border-radius: 6px;">No, stay marked in</button>
+                    </div>
 
-                        <!-- Early-exit confirmation -->
-                        <div id="early-box" style="display:none;margin-top:15px;text-align:left;">
-                            <div class="alert alert-warning" id="early-msg"></div>
-                            <div class="form-group">
-                                <label>Reason for leaving early (optional)</label>
-                                <input type="text" id="early-reason" class="form-control" placeholder="e.g. medical, personal">
-                            </div>
-                            <button class="btn btn-danger" id="btn-confirm-early">Yes, I'm leaving early</button>
-                            <button class="btn btn-default" id="btn-cancel-early">No, stay marked in</button>
+                    <!-- Action choices when already checked in or when no morning check-in exists -->
+                    <div id="choose-box" style="display:none; margin-top:18px; text-align:left; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
+                        <div class="alert alert-info" id="choose-msg" style="margin-bottom: 12px;"></div>
+                        <div id="breakout-reason-wrap" style="display:none; margin-bottom:12px;">
+                            <label style="font-weight: 700; font-size: 12.5px;">Reason (optional)</label>
+                            <input type="text" id="breakout-reason" class="form-control" placeholder="e.g. bank, medical, departure" style="border-radius: 6px;">
                         </div>
-
-                        <!-- Action choices when already checked in or when no morning check-in exists -->
-                        <div id="choose-box" style="display:none;margin-top:15px;text-align:left;">
-                            <div class="alert alert-info" id="choose-msg"></div>
-                            <div id="breakout-reason-wrap" style="display:none;margin-bottom:10px;">
-                                <label>Reason (optional)</label>
-                                <input type="text" id="breakout-reason" class="form-control" placeholder="e.g. bank, medical, departure">
-                            </div>
-                            <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
-                                <button class="btn btn-success" id="btn-mark-in" style="display:none;"><i class="fa fa-sign-in"></i> Check In</button>
-                                <button class="btn btn-danger" id="btn-direct-out" style="display:none;"><i class="fa fa-sign-out"></i> Direct Check Out</button>
-                                <button class="btn btn-warning" id="btn-break-out" style="display:none;"><i class="fa fa-sign-out"></i> Step Out (will return)</button>
-                                <button class="btn btn-success" id="btn-break-in" style="display:none;"><i class="fa fa-sign-in"></i> Step In (returned)</button>
-                                <button class="btn btn-danger" id="btn-final-out" style="display:none;"><i class="fa fa-power-off"></i> Mark Out (end of day)</button>
-                                <button class="btn btn-default" id="btn-choose-cancel"><i class="fa fa-times"></i> Cancel</button>
-                            </div>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                            <button class="btn btn-success" id="btn-mark-in" style="display:none; font-weight: 700; border-radius: 6px;"><i class="fa fa-sign-in"></i> Check In</button>
+                            <button class="btn btn-danger" id="btn-direct-out" style="display:none; font-weight: 700; border-radius: 6px;"><i class="fa fa-sign-out"></i> Direct Check Out</button>
+                            <button class="btn btn-warning" id="btn-break-out" style="display:none; font-weight: 700; border-radius: 6px;"><i class="fa fa-sign-out"></i> Step Out (will return)</button>
+                            <button class="btn btn-success" id="btn-break-in" style="display:none; font-weight: 700; border-radius: 6px;"><i class="fa fa-sign-in"></i> Step In (returned)</button>
+                            <button class="btn btn-danger" id="btn-final-out" style="display:none; font-weight: 700; border-radius: 6px;"><i class="fa fa-power-off"></i> Mark Out (end of day)</button>
+                            <button class="btn btn-default" id="btn-choose-cancel" style="font-weight: 600; border-radius: 6px;"><i class="fa fa-times"></i> Cancel</button>
                         </div>
+                    </div>
 
-                        <div style="margin-top:15px;">
-                            <button class="btn btn-default" id="btn-rescan" style="display:none;"><i class="fa fa-refresh"></i> Scan again</button>
-                        </div>
+                    <div style="margin-top:18px;">
+                        <button class="btn btn-default" id="btn-rescan" style="display:none; border-radius: 8px; font-weight: 600;"><i class="fa fa-refresh"></i> Scan again</button>
+                    </div>
 
-                        <?php } ?>
+                    <?php } ?>
+                </div>
+            </div>
+
+            <!-- Attendance History Card -->
+            <div class="sa-history-card">
+                <div class="sa-history-header">
+                    <h4 class="sa-history-title">
+                        <i class="fa fa-calendar-check-o text-teal" style="color:#0d9488;"></i> My Attendance History
+                    </h4>
+                    <!-- Segmented Pill Selector -->
+                    <?php $curr_period = isset($period) ? $period : '7days'; ?>
+                    <div class="sa-pill-group">
+                        <a href="<?php echo site_url('admin/staffattendance/scan?period=7days'); ?>" 
+                           class="sa-pill-item <?php echo ($curr_period === '7days') ? 'active' : ''; ?>">
+                            <i class="fa fa-clock-o"></i> Last 7 Days
+                        </a>
+                        <a href="<?php echo site_url('admin/staffattendance/scan?period=this_month'); ?>" 
+                           class="sa-pill-item <?php echo ($curr_period === 'this_month') ? 'active' : ''; ?>">
+                            <i class="fa fa-calendar"></i> <?php echo date('M Y'); ?>
+                        </a>
+                        <a href="<?php echo site_url('admin/staffattendance/scan?period=prev_month'); ?>" 
+                           class="sa-pill-item <?php echo ($curr_period === 'prev_month') ? 'active' : ''; ?>">
+                            <i class="fa fa-history"></i> <?php echo date('M Y', strtotime('last month')); ?>
+                        </a>
                     </div>
                 </div>
 
-                <!-- Recent Attendance History (Last 7 Days) -->
-                <?php if (!empty($recent_attendance)) { ?>
-                <div class="box box-solid" style="border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);margin-top:16px;">
-                    <div class="box-header with-border" style="background:#f8f9fa;border-radius:8px 8px 0 0;padding:10px 15px;">
-                        <h4 class="box-title" style="font-size:14px;font-weight:600;color:#333;margin:0;">
-                            <i class="fa fa-history text-primary"></i> My Recent Attendance (Last 7 Days)
-                        </h4>
-                    </div>
-                    <div class="box-body" style="padding:0;">
-                        <div class="table-responsive">
-                            <table class="table table-hover" style="margin-bottom:0;font-size:12.5px;">
-                                <thead>
-                                    <tr style="background:#f1f4f8;color:#555;">
-                                        <th style="padding:8px 12px;">Date</th>
-                                        <th style="padding:8px 8px;">In</th>
-                                        <th style="padding:8px 8px;">Out</th>
-                                        <th style="padding:8px 8px;">Hours</th>
-                                        <th style="padding:8px 12px;">Status</th>
+                <div style="padding: 0;">
+                    <?php if (!empty($recent_attendance)) { ?>
+                    <div class="table-responsive">
+                        <table class="sa-history-table">
+                            <thead>
+                                <tr>
+                                    <th width="140">Date</th>
+                                    <th>In Time</th>
+                                    <th>Out Time</th>
+                                    <th>Working Hours</th>
+                                    <th>Status</th>
+                                    <th>Source</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($recent_attendance as $rec) { 
+                                    $tagClass = 'sa-tag-present';
+                                    $st = strtolower($rec['status']);
+                                    if (strpos($st, 'late') !== false) $tagClass = 'sa-tag-late';
+                                    elseif (strpos($st, 'half') !== false) $tagClass = 'sa-tag-half';
+                                    elseif (strpos($st, 'absent') !== false) $tagClass = 'sa-tag-absent';
+                                ?>
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight: 700; color: #0f172a; line-height: 1.2;"><?php echo $rec['date']; ?></div>
+                                            <span style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase;"><?php echo $rec['day']; ?></span>
+                                        </td>
+                                        <td>
+                                            <?php if ($rec['in_time'] !== '--') { ?>
+                                                <span class="sa-badge-time" style="color: #16a34a;"><i class="fa fa-sign-in" style="font-size: 11px; opacity:0.8;"></i> <?php echo $rec['in_time']; ?></span>
+                                            <?php } else { ?>
+                                                <span class="text-muted">--</span>
+                                            <?php } ?>
+                                        </td>
+                                        <td>
+                                            <?php if ($rec['out_time'] !== '--') { ?>
+                                                <span class="sa-badge-time" style="color: #ea580c;"><i class="fa fa-sign-out" style="font-size: 11px; opacity:0.8;"></i> <?php echo $rec['out_time']; ?></span>
+                                            <?php } else { ?>
+                                                <span class="text-muted">--</span>
+                                            <?php } ?>
+                                        </td>
+                                        <td>
+                                            <?php if ($rec['duration'] !== '--') { ?>
+                                                <span class="sa-dur-pill"><i class="fa fa-clock-o text-muted"></i> <?php echo $rec['duration']; ?></span>
+                                            <?php } else { ?>
+                                                <span class="text-muted">--</span>
+                                            <?php } ?>
+                                        </td>
+                                        <td>
+                                            <span class="sa-status-tag <?php echo $tagClass; ?>">
+                                                <span style="width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block;"></span>
+                                                <?php echo html_escape($rec['status']); ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="sa-source-tag">
+                                                <i class="fa fa-<?php echo ($rec['source'] === 'QR Code' ? 'qrcode text-success' : ($rec['source'] === 'Biometric' ? 'fingerprint text-info' : 'pencil-square-o text-muted')); ?>"></i>
+                                                <?php echo html_escape($rec['source']); ?>
+                                            </span>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($recent_attendance as $rec) { 
-                                        $badge = 'label-success';
-                                        $st = strtolower($rec['status']);
-                                        if (strpos($st, 'late') !== false) $badge = 'label-warning';
-                                        elseif (strpos($st, 'half') !== false) $badge = 'label-info';
-                                        elseif (strpos($st, 'absent') !== false) $badge = 'label-danger';
-                                    ?>
-                                        <tr>
-                                            <td style="padding:8px 12px;font-weight:500;">
-                                                <?php echo $rec['date']; ?> <small class="text-muted">(<?php echo $rec['day']; ?>)</small>
-                                            </td>
-                                            <td style="padding:8px 8px;color:#28a745;font-weight:600;"><?php echo $rec['in_time']; ?></td>
-                                            <td style="padding:8px 8px;color:#dc3545;font-weight:600;"><?php echo $rec['out_time']; ?></td>
-                                            <td style="padding:8px 8px;color:#495057;"><span class="badge" style="background:#e9ecef;color:#333;font-weight:600;"><?php echo $rec['duration']; ?></span></td>
-                                            <td style="padding:8px 12px;">
-                                                <span class="label <?php echo $badge; ?>" style="font-size:10.5px;padding:3px 7px;border-radius:10px;">
-                                                    <?php echo $rec['status']; ?>
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    <?php } ?>
-                                </tbody>
-                            </table>
-                        </div>
+                                <?php } ?>
+                            </tbody>
+                        </table>
                     </div>
+                    <?php } else { ?>
+                        <div style="padding: 40px 20px; text-align: center; color: #64748b;">
+                            <div style="width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; color: #94a3b8; font-size: 22px;">
+                                <i class="fa fa-calendar-o"></i>
+                            </div>
+                            <div style="font-weight: 700; font-size: 14px; color: #1e293b; margin-bottom: 4px;">No Attendance Records</div>
+                            <div style="font-size: 12.5px; color: #64748b;">There are no punch records found for the selected timeframe.</div>
+                        </div>
+                    <?php } ?>
                 </div>
-                <?php } ?>
-
             </div>
         </div>
     </section>

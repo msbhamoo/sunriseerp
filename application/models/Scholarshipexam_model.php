@@ -67,6 +67,9 @@ class Scholarshipexam_model extends MY_Model
             if (!$this->db->field_exists('class_ids', 'scholarship_exam_schedules')) {
                 $this->db->query("ALTER TABLE `scholarship_exam_schedules` ADD `class_ids` VARCHAR(255) DEFAULT NULL;");
             }
+            if (!$this->db->field_exists('section_id', 'scholarship_exam_schedules')) {
+                $this->db->query("ALTER TABLE `scholarship_exam_schedules` ADD `section_id` INT DEFAULT NULL;");
+            }
         } else {
             $this->db->query("
                 CREATE TABLE IF NOT EXISTS `scholarship_exam_schedules` (
@@ -507,10 +510,17 @@ class Scholarshipexam_model extends MY_Model
 
     public function getSchedulesByExam($exam_id)
     {
-        $this->db->select('scholarship_exam_schedules.*, classes.class, sections.section');
+        $has_section = $this->db->field_exists('section_id', 'scholarship_exam_schedules');
+        if ($has_section) {
+            $this->db->select('scholarship_exam_schedules.*, classes.class, sections.section');
+        } else {
+            $this->db->select('scholarship_exam_schedules.*, classes.class');
+        }
         $this->db->from('scholarship_exam_schedules');
         $this->db->join('classes', 'classes.id = scholarship_exam_schedules.class_id', 'left');
-        $this->db->join('sections', 'sections.id = scholarship_exam_schedules.section_id', 'left');
+        if ($has_section) {
+            $this->db->join('sections', 'sections.id = scholarship_exam_schedules.section_id', 'left');
+        }
         $this->db->where('scholarship_exam_id', $exam_id);
         $this->db->order_by('scholarship_exam_schedules.id', 'ASC');
         $raw_schedules = $this->db->get()->result_array();

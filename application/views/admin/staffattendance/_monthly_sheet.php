@@ -8,11 +8,13 @@ $meta = array(
     'holiday'                => array('H',  '#7c3aed'),
     'half_day_second_shift'  => array('½', '#0d9488'),
     'unplanned_leave'        => array('UL', '#db2777'),
+    'on_duty'                => array('OD', '#0d9488'),
 );
 $monthName = date('F Y', mktime(0, 0, 0, $month, 1, $year));
 $staff = $sheet['staff'];
 $map   = $sheet['map'];
 $map_times = isset($sheet['map_times']) ? $sheet['map_times'] : array();
+$map_duty_passes = isset($sheet['map_duty_passes']) ? $sheet['map_duty_passes'] : array();
 $role_req_map = isset($role_required_hours) ? $role_required_hours : array();
 ?>
 <style>
@@ -49,7 +51,7 @@ $role_req_map = isset($role_required_hours) ? $role_required_hours : array();
 
 <div class="ms-legend">
     <?php foreach ($meta as $k => $mc) { ?>
-        <span class="li"><span class="sw" style="background:<?php echo $mc[1]; ?>;"></span> <?php echo $this->lang->line($k) ? $this->lang->line($k) : $k; ?></span>
+        <span class="li"><span class="sw" style="background:<?php echo $mc[1]; ?>;"></span> <?php echo $this->lang->line($k) ? $this->lang->line($k) : ucwords(str_replace('_', ' ', $k)); ?></span>
     <?php } ?>
     <span class="li"><span class="sw" style="background:#f3e8ff;border:1px solid #d8b4fe;"></span> Holiday column</span>
     <span class="li" style="margin-left:auto;"><span class="ms-badge-short">-XXh Shortfall</span> = Under Required Work Hours</span>
@@ -75,6 +77,7 @@ $role_req_map = isset($role_required_hours) ? $role_required_hours : array();
                 <?php } ?>
                 <th class="ms-tot" title="Present Days">P</th>
                 <th class="ms-tot" title="Late Days">L</th>
+                <th class="ms-tot" title="On Duty Days" style="color:#0d9488;">OD</th>
                 <th class="ms-tot" title="Absent Days">A</th>
                 <th class="ms-tot" title="Leave / Half / Holiday">Oth</th>
                 <th class="ms-tot" title="Total Actual Worked Hours (Sum of all In-Out punches)" style="min-width:75px;">Worked</th>
@@ -84,7 +87,7 @@ $role_req_map = isset($role_required_hours) ? $role_required_hours : array();
         <tbody>
             <?php foreach ($staff as $s) {
                 $sid = $s['staff_id'];
-                $tot = array('present' => 0, 'late' => 0, 'absent' => 0, 'oth' => 0);
+                $tot = array('present' => 0, 'late' => 0, 'onduty' => 0, 'absent' => 0, 'oth' => 0);
                 $total_worked_secs = 0;
                 $attended_days_count = 0;
             ?>
@@ -97,12 +100,17 @@ $role_req_map = isset($role_required_hours) ? $role_required_hours : array();
                         $type = isset($map[$sid][$ds]) ? $map[$sid][$ds] : null;
                         if ($type === 'present') { $tot['present']++; $attended_days_count++; }
                         elseif ($type === 'late') { $tot['late']++; $attended_days_count++; }
+                        elseif ($type === 'on_duty') { $tot['onduty']++; $attended_days_count++; }
                         elseif ($type === 'absent') { $tot['absent']++; }
                         elseif ($type === 'half_day' || $type === 'half_day_second_shift') { $tot['oth']++; $attended_days_count += 0.5; }
                         elseif ($type !== null) { $tot['oth']++; }
 
-                        // Calculate day duration if punch exists
+                        // Calculate day duration or duty pass hover text
                         $day_hover = '';
+                        if (isset($map_duty_passes[$sid][$ds])) {
+                            $dp = $map_duty_passes[$sid][$ds];
+                            $day_hover = "On Duty: " . $dp['duty_title'] . (!empty($dp['venue']) ? " @ " . $dp['venue'] : "") . " (" . $dp['duty_pass_no'] . ")";
+                        }
                         if (isset($map_times[$sid][$ds])) {
                             $inS = strtotime("1970-01-01 " . $map_times[$sid][$ds]['in'] . " UTC");
                             $outS = strtotime("1970-01-01 " . $map_times[$sid][$ds]['out'] . " UTC");
@@ -111,11 +119,12 @@ $role_req_map = isset($role_required_hours) ? $role_required_hours : array();
                                 $total_worked_secs += $diff;
                                 $dh = intdiv($diff, 3600);
                                 $dm = intdiv($diff % 3600, 60);
-                                $day_hover = "In: " . date('h:i A', $inS) . " | Out: " . date('h:i A', $outS) . " (" . $dh . "h " . $dm . "m)";
+                                $time_info = "In: " . date('h:i A', $inS) . " | Out: " . date('h:i A', $outS) . " (" . $dh . "h " . $dm . "m)";
+                                $day_hover = !empty($day_hover) ? ($day_hover . " | " . $time_info) : $time_info;
                             }
                         }
                     ?>
-                        <td class="<?php echo $isHol ? 'ms-hol' : ''; ?>" title="<?php echo !empty($day_hover) ? $day_hover : ($type ? ucfirst(str_replace('_', ' ', $type)) : ''); ?>">
+                        <td class="<?php echo $isHol ? 'ms-hol' : ''; ?>" title="<?php echo !empty($day_hover) ? htmlspecialchars($day_hover) : ($type ? ucfirst(str_replace('_', ' ', $type)) : ''); ?>">
                             <?php if ($type !== null && isset($meta[$type])) {
                                 echo '<span class="ms-cell" style="background:' . $meta[$type][1] . ';">' . $meta[$type][0] . '</span>';
                             } elseif ($isHol) {
@@ -127,6 +136,7 @@ $role_req_map = isset($role_required_hours) ? $role_required_hours : array();
                     <?php } ?>
                     <td class="ms-tot" style="color:#16a34a;"><?php echo $tot['present']; ?></td>
                     <td class="ms-tot" style="color:#f59e0b;"><?php echo $tot['late']; ?></td>
+                    <td class="ms-tot" style="color:#0d9488;"><?php echo $tot['onduty']; ?></td>
                     <td class="ms-tot" style="color:#dc2626;"><?php echo $tot['absent']; ?></td>
                     <td class="ms-tot" style="color:#6b7684;"><?php echo $tot['oth']; ?></td>
                     

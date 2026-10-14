@@ -113,7 +113,7 @@ class Exam extends MY_Addon_CBSEController
             'session_id' => $this->setting_model->getCurrentSession(),
             'cbse_exam_grade_id' => $this->input->post('grade_id'),
             'is_active' => $this->input->post('is_active') ? 1 : 0,
-            'is_publish' => 0,
+            'is_publish' => $this->input->post('is_publish') ? 1 : 0,
         ];
         
         $classes = $this->input->post('classes');
@@ -136,11 +136,33 @@ class Exam extends MY_Addon_CBSEController
         }
         
         if ($result) {
-            $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">Exam created successfully!</div>');
+            $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">Exam saved successfully!</div>');
         } else {
-            $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">Failed to create exam.</div>');
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger text-left">Failed to save exam.</div>');
         }
         redirect('cbseexam/exam');
+    }
+
+    public function toggle_publish()
+    {
+        if (!$this->rbac->hasPrivilege('cbse_exam', 'can_edit')) {
+            echo json_encode(['status' => 'fail', 'message' => 'Permission denied']);
+            return;
+        }
+
+        $exam_id = $this->input->post('exam_id');
+        $publish = $this->input->post('publish') ? 1 : 0;
+
+        if (!empty($exam_id)) {
+            $this->db->where('id', $exam_id)->update('cbse_exams', ['is_publish' => $publish]);
+            echo json_encode([
+                'status' => 'success',
+                'is_publish' => $publish,
+                'message' => $publish ? 'Exam result published successfully!' : 'Exam result unpublished successfully!'
+            ]);
+        } else {
+            echo json_encode(['status' => 'fail', 'message' => 'Invalid exam ID']);
+        }
     }
 
 

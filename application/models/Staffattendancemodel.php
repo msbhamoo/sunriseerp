@@ -309,7 +309,43 @@ class Staffattendancemodel extends MY_Model {
             $query = $this->db->query("select staff_attendance.staff_attendance_type_id,staff_attendance_type.type as `att_type`,staff_attendance_type.key_value as `key`,staff_attendance.remark,staff.name,staff.surname,staff.employee_id,staff.contact_no,staff.email,roles.name as user_type,IFNULL(staff_attendance.date, 'xxx') as date, IFNULL(staff_attendance.id, 0) as attendence_id, staff.id as id from staff  left join staff_roles on (staff.id = staff_roles.staff_id) left join roles on (roles.id = staff_roles.role_id) left join staff_attendance on (staff.id = staff_attendance.staff_id) and staff_attendance.date = " . $this->db->escape($date) . " left join staff_attendance_type on staff_attendance_type.id = staff_attendance.staff_attendance_type_id  where roles.name = '" . $user_type . "' and staff.is_active = 1 $condition");
         }
 
-        return $query->result_array();
+        $results = $query->result_array();
+
+        // Check active approved Duty Passes for this date
+        $dp_query = $this->db->query("
+            SELECT sdp.id as duty_pass_id, sdp.duty_pass_no, sdp.title as duty_title, sdp.category as duty_category, sdp.venue, sdp.from_date, sdp.to_date, sdpm.staff_id 
+            FROM staff_duty_pass sdp 
+            JOIN staff_duty_pass_members sdpm ON sdpm.duty_pass_id = sdp.id 
+            WHERE sdp.status = 'Approved' 
+            AND sdp.from_date <= " . $this->db->escape($date) . " 
+            AND sdp.to_date >= " . $this->db->escape($date)
+        );
+        $active_duty_passes = array();
+        if ($dp_query) {
+            foreach ($dp_query->result_array() as $dp) {
+                $active_duty_passes[$dp['staff_id']] = $dp;
+            }
+        }
+
+        foreach ($results as $k => $row) {
+            $st_id = $row['id'];
+            if (isset($active_duty_passes[$st_id])) {
+                $dp = $active_duty_passes[$st_id];
+                $results[$k]['duty_pass'] = $dp;
+                // If staff has no attendance or is marked absent / on duty
+                if (empty($row['staff_attendance_type_id']) || $row['staff_attendance_type_id'] == 3 || $row['staff_attendance_type_id'] == 8) {
+                    $results[$k]['staff_attendance_type_id'] = 8;
+                    $results[$k]['att_type'] = 'On Duty';
+                    $results[$k]['key'] = '<b class="text text-success" style="color:#0d9488;">OD</b>';
+                    $remark_prefix = 'Duty Pass: ' . $dp['duty_pass_no'] . ' - ' . $dp['duty_title'];
+                    $results[$k]['remark'] = !empty($row['remark']) ? ($remark_prefix . ' | ' . $row['remark']) : $remark_prefix;
+                }
+            } else {
+                $results[$k]['duty_pass'] = null;
+            }
+        }
+
+        return $results;
     }
 
     public function attendanceYearCount() {
@@ -865,10 +901,35 @@ class Staffattendancemodel extends MY_Model {
                 ORDER BY staff.name, staff.surname";
         $rows = $this->db->query($sql)->result();
 
+        // Fetch approved Duty Passes overlapping this month
+        $dp_query = $this->db->query("
+            SELECT sdp.id as duty_pass_id, sdp.duty_pass_no, sdp.title as duty_title, sdp.category as duty_category, sdp.venue, sdp.from_date, sdp.to_date, sdpm.staff_id 
+            FROM staff_duty_pass sdp 
+            JOIN staff_duty_pass_members sdpm ON sdpm.duty_pass_id = sdp.id 
+            WHERE sdp.status = 'Approved' 
+            AND sdp.from_date <= " . $this->db->escape($end) . " 
+            AND sdp.to_date >= " . $this->db->escape($start)
+        );
+        $duty_passes_by_staff_date = array();
+        if ($dp_query) {
+            foreach ($dp_query->result_array() as $dp) {
+                $st_date = max($start, $dp['from_date']);
+                $en_date = min($end, $dp['to_date']);
+                $curr = strtotime($st_date);
+                $last = strtotime($en_date);
+                while ($curr <= $last) {
+                    $d_str = date('Y-m-d', $curr);
+                    $duty_passes_by_staff_date[$dp['staff_id']][$d_str] = $dp;
+                    $curr = strtotime('+1 day', $curr);
+                }
+            }
+        }
+
         $staff = array();
         $seen  = array();
         $map   = array();
         $map_times = array();
+        $map_duty_passes = array();
         foreach ($rows as $r) {
             if (!isset($seen[$r->staff_id])) {
                 $seen[$r->staff_id] = true;
@@ -881,6 +942,7 @@ class Staffattendancemodel extends MY_Model {
                 );
                 $map[$r->staff_id] = array();
                 $map_times[$r->staff_id] = array();
+                $map_duty_passes[$r->staff_id] = array();
             }
             if (!empty($r->date)) {
                 if (!empty($r->long_lang_name)) {
@@ -894,7 +956,22 @@ class Staffattendancemodel extends MY_Model {
                 }
             }
         }
-        return array('staff' => $staff, 'map' => $map, 'map_times' => $map_times);
+
+        // Apply Duty Passes to map if not present or if marked absent/unrecorded
+        foreach ($staff as $s) {
+            $sid = $s['staff_id'];
+            if (isset($duty_passes_by_staff_date[$sid])) {
+                foreach ($duty_passes_by_staff_date[$sid] as $dp_date => $dp_info) {
+                    $map_duty_passes[$sid][$dp_date] = $dp_info;
+                    $existing_status = isset($map[$sid][$dp_date]) ? $map[$sid][$dp_date] : null;
+                    if (empty($existing_status) || $existing_status === 'absent' || $existing_status === 'on_duty') {
+                        $map[$sid][$dp_date] = 'on_duty';
+                    }
+                }
+            }
+        }
+
+        return array('staff' => $staff, 'map' => $map, 'map_times' => $map_times, 'map_duty_passes' => $map_duty_passes);
     }
 
 
@@ -930,16 +1007,30 @@ class Staffattendancemodel extends MY_Model {
     }
 
     /**
-     * Recent attendance history (last 7 recorded days) for a given staff member.
+     * Recent attendance history (last 7 recorded days, this month, or previous month) for a given staff member.
      */
-    public function getStaffRecentAttendance($staff_id, $limit = 7)
+    public function getStaffRecentAttendance($staff_id, $period = 7)
     {
         $this->db->select('staff_attendance.*, staff_attendance_type.type as att_type, staff_attendance_type.long_lang_name');
         $this->db->from('staff_attendance');
         $this->db->join('staff_attendance_type', 'staff_attendance_type.id = staff_attendance.staff_attendance_type_id', 'left');
         $this->db->where('staff_attendance.staff_id', $staff_id);
+
+        if ($period === 'this_month') {
+            $start = date('Y-m-01');
+            $end   = date('Y-m-t');
+            $this->db->where('staff_attendance.date >=', $start);
+            $this->db->where('staff_attendance.date <=', $end);
+        } elseif ($period === 'prev_month') {
+            $start = date('Y-m-01', strtotime('first day of last month'));
+            $end   = date('Y-m-t', strtotime('last day of last month'));
+            $this->db->where('staff_attendance.date >=', $start);
+            $this->db->where('staff_attendance.date <=', $end);
+        } elseif (is_numeric($period)) {
+            $this->db->limit((int)$period);
+        }
+
         $this->db->order_by('staff_attendance.date', 'DESC');
-        $this->db->limit($limit);
         $rows = $this->db->get()->result_array();
 
         $result = array();

@@ -267,16 +267,22 @@
                                     <select class="d2-form-control" name="grade_id" id="grade_id" required>
                                         <option value="">Select Grade Scale</option>
                                         <?php foreach ($grade_result as $grade): ?>
-                                            <option value="<?php echo $grade['id']; ?>"><?php echo $grade['name']; ?></option>
+                                            <option value="<?php echo $grade['id']; ?>" <?php echo (isset($exam['cbse_exam_grade_id']) && $exam['cbse_exam_grade_id'] == $grade['id']) ? 'selected' : ''; ?>><?php echo $grade['name']; ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
                                 <div class="col-md-6" style="margin-bottom:15px;">
-                                    <label class="d2-label">&nbsp;</label>
-                                    <label class="d2-checkbox-inline" style="background: #e6f4ea; padding: 8px 15px; border-radius: 4px; border: 1px solid #c3e6cb; color: #155724; display:block;">
-                                        <input type="checkbox" name="is_active" id="is_active" value="1" checked> 
-                                        Publish this exam immediately (Visible in active exams)
-                                    </label>
+                                    <label class="d2-label">Exam Status & Visibility</label>
+                                    <div style="display:flex; flex-direction:column; gap:8px;">
+                                        <label class="d2-checkbox-inline" style="background: #e6f4ea; padding: 8px 15px; border-radius: 4px; border: 1px solid #c3e6cb; color: #155724; display:block; margin:0; cursor:pointer;">
+                                            <input type="checkbox" name="is_active" id="is_active" value="1" <?php echo (!isset($exam['is_active']) || $exam['is_active'] == 1) ? 'checked' : ''; ?>> 
+                                            <strong>Active Exam</strong> (Visible in marks entry, attendance, and exam lists)
+                                        </label>
+                                        <label class="d2-checkbox-inline" style="background: #e8f0fe; padding: 8px 15px; border-radius: 4px; border: 1px solid #b8d5fb; color: #1a73e8; display:block; margin:0; cursor:pointer;">
+                                            <input type="checkbox" name="is_publish" id="is_publish" value="1" <?php echo (isset($exam['is_publish']) && $exam['is_publish'] == 1) ? 'checked' : ''; ?>> 
+                                            <strong>Publish Result</strong> (Visible on Student Profile, Student Portal & Report Cards)
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>

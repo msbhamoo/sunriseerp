@@ -503,24 +503,9 @@ class Ptm extends Admin_Controller
         $this->load->model('studentfeemaster_model');
         $fees = $this->studentfeemaster_model->getStudentFees($student_session_id);
         
-        // CBSE Exams
-        $cbse_exams = [];
-        if ($this->db->table_exists('cbse_exam_students')) {
-            $this->db->select('cbse_exams.name as exam_name');
-            $this->db->from('cbse_exam_students');
-            $this->db->join('cbse_exams', 'cbse_exams.id = cbse_exam_students.cbse_exam_id');
-            $this->db->where('cbse_exam_students.student_session_id', $student_session_id);
-            $student_exams = $this->db->get()->result_array();
-            
-            foreach($student_exams as $exam) {
-                 $cbse_exams[] = [
-                     'exam_name' => $exam['exam_name'],
-                     'total_marks' => '-',
-                     'obtained_marks' => '-',
-                     'percentage' => '-'
-                 ];
-            }
-        }
+        // CBSE Exams - use the proper exam model method
+        $this->load->model('cbseexam/cbseexam_exam_model');
+        $cbse_exams = $this->cbseexam_exam_model->getStudentExamMarksSummary($student_session_id);
         
         // PTM Remarks (current)
         $current_ptm = [];

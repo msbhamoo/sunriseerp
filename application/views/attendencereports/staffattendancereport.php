@@ -200,11 +200,12 @@
                                                     $l_cnt  = isset($curAtt['late']) ? $curAtt['late'] : 0;
                                                     $hd_cnt = isset($curAtt['half_day']) ? $curAtt['half_day'] : 0;
                                                     $sh_cnt = isset($curAtt['half_day_second_shift']) ? $curAtt['half_day_second_shift'] : 0;
+                                                    $od_cnt = isset($curAtt['on_duty']) ? $curAtt['on_duty'] : 0;
                                                     $a_cnt  = isset($curAtt['absent']) ? $curAtt['absent'] : 0;
                                                     $ul_cnt = isset($curAtt['unplanned_leave']) ? $curAtt['unplanned_leave'] : 0;
 
-                                                    $total_present = ($p_cnt + $l_cnt + $hd_cnt + $sh_cnt);
-                                                    $total_days    = ($p_cnt + $l_cnt + $a_cnt + $ul_cnt + $hd_cnt + $sh_cnt);
+                                                    $total_present = ($p_cnt + $l_cnt + $hd_cnt + $sh_cnt + $od_cnt);
+                                                    $total_days    = ($p_cnt + $l_cnt + $a_cnt + $ul_cnt + $hd_cnt + $sh_cnt + $od_cnt);
 
                                                     if ($total_days == 0) {
                                                         $percentage       = -1;

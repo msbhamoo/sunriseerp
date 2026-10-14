@@ -1101,12 +1101,18 @@ class Schsettings extends Admin_Controller
         $setting->folder_path = ($setting->folder_path == "") ? FCPATH : $setting->folder_path;
         $data['result']       = $setting;
 
-        //staff attedance settings
-        $staff_attendance_data   = $this->staffAttendaceSetting_model->getRoleAttendanceSetting();  
+        //staff attendance settings
+        $selected_season_tag     = $this->input->get('season');
+        $selected_season_from    = $this->input->get('from');
+        $staff_attendance_data   = $this->staffAttendaceSetting_model->getRoleAttendanceSetting(null, $selected_season_tag, $selected_season_from);  
+        $seasonal_profiles       = $this->staffAttendaceSetting_model->getSeasonalProfiles();
         $attendance_type         = $this->attendencetype_model->getScheduleTypeStaffAttendance();
         $user_roles              = $this->staff_model->getStaffRole();
-        $data['user_roles']      = $user_roles;    
-        $data['attendance_type'] = $attendance_type;
+        $data['user_roles']          = $user_roles;    
+        $data['attendance_type']     = $attendance_type;
+        $data['seasonal_profiles']   = $seasonal_profiles;
+        $data['selected_season_tag'] = $selected_season_tag;
+        $data['selected_season_from']= $selected_season_from;
         $new_list_attendance     = array();
 
         foreach ($staff_attendance_data as $key => $value) {
@@ -1132,7 +1138,7 @@ class Schsettings extends Admin_Controller
             }
         }
         $data['list_attendance'] = $new_list_attendance;     
-        // staff attedance settings
+        // staff attendance settings
 
         //student attedance settings
         $student_class_section_data = $this->studentAttendaceSetting_model->getClassWiseAttendanceSetting($classid);
@@ -1329,15 +1335,16 @@ class Schsettings extends Admin_Controller
                 $entry_time_to        = $this->input->post('entry_time_to_' . $row_value);
                 $total_institute_hour = $this->input->post('total_institute_hour_' . $row_value);
              
-                if ($class_section == "" || $entry_time_from == "" || $entry_time_to == "" || $total_institute_hour == "" || $attendance_type == "") {
-                    $this->form_validation->set_rules(
-                        'fields',
-                        'fields --r',
-                        'trim|required|xss_clean',
-                        array('required' => $this->lang->line('fields_values_required'))
-                    );
-                    $time_valid = false;
-                    break;
+                // If row has role and type, ensure valid default times instead of crashing
+                if (empty($class_section) || empty($attendance_type)) {
+                    continue;
+                }
+
+                if ($entry_time_from == "" || $entry_time_to == "" || $total_institute_hour == "") {
+                    // Provide automatic fallbacks based on type
+                    if (empty($entry_time_from)) { $_POST['entry_time_from_' . $row_value] = '00:00:00'; }
+                    if (empty($entry_time_to)) { $_POST['entry_time_to_' . $row_value] = '15:00:00'; }
+                    if (empty($total_institute_hour)) { $_POST['total_institute_hour_' . $row_value] = '07:30:00'; }
                 }
             }
         }
@@ -1351,8 +1358,53 @@ class Schsettings extends Admin_Controller
         } else {
             $insert_array = array();
             $role_array = array();
+            $effective_from_input = $this->input->post('effective_from');
+            $effective_to_input   = $this->input->post('effective_to');
+            $season_tag_input     = trim($this->input->post('season_tag'));
+            $season_tag           = !empty($season_tag_input) ? $season_tag_input : 'General Timings';
+
+            $effective_from = !empty($effective_from_input) ? date('Y-m-d', $this->customlib->datetostrtotime($effective_from_input)) : date('Y-m-d');
+            if (empty($effective_from) || $effective_from == '1970-01-01') {
+                $effective_from = date('Y-m-d');
+            }
+
+            $effective_to = !empty($effective_to_input) ? date('Y-m-d', $this->customlib->datetostrtotime($effective_to_input)) : null;
+            if (!empty($effective_to) && $effective_to == '1970-01-01') {
+                $effective_to = null;
+            }
+
+            if (!empty($effective_to) && $effective_to < $effective_from) {
+                echo json_encode(array(
+                    'status' => 0,
+                    'error' => array('fields' => 'Effective To date cannot be earlier than Effective From date.'),
+                    'message' => ''
+                ));
+                return;
+            }
+
             foreach ($row as $row_key => $row_value) {
                 $role_array[] = ($this->input->post('role_id_' . $row_value));
+            }
+            $unique_roles = array_values(array_unique($role_array));
+
+            // Collision check: ensure this seasonal date range doesn't collide with existing seasons for these roles
+            $collision_res = $this->staffAttendaceSetting_model->checkSeasonalCollision($unique_roles, $effective_from, $effective_to, $season_tag);
+            if ($collision_res['collision']) {
+                $conflict_names = array();
+                foreach ($collision_res['conflicts'] as $c) {
+                    $c_label = (!empty($c['season_tag']) ? $c['season_tag'] : 'Timings') . ' (' . $c['effective_from'] . ' to ' . (!empty($c['effective_to']) ? $c['effective_to'] : 'Present') . ')';
+                    $conflict_names[$c_label] = true;
+                }
+                $conflict_str = implode(', ', array_keys($conflict_names));
+                echo json_encode(array(
+                    'status' => 0,
+                    'error' => array('fields' => 'Timing Collision Detected! The date range (' . $effective_from . ' to ' . (!empty($effective_to) ? $effective_to : 'Indefinite') . ') overlaps with existing schedule: ' . $conflict_str . '. Please adjust the date boundaries so no two seasons collide.'),
+                    'message' => ''
+                ));
+                return;
+            }
+
+            foreach ($row as $row_key => $row_value) {
                 $role_id = $this->input->post('role_id_' . $row_value);
                 $attendance_type = $this->input->post('attendance_type_id_' . $row_value);
                 $entry_time_from = $this->input->post('entry_time_from_' . $row_value);
@@ -1373,7 +1425,7 @@ class Schsettings extends Admin_Controller
                 );
             }
 
-            $this->staffAttendaceSetting_model->add($insert_array, $role_array);
+            $this->staffAttendaceSetting_model->add($insert_array, $role_array, $effective_from, $effective_to, $season_tag);
             $array = array('status' => 1, 'message' => $this->lang->line('update_message'));
         }
         echo json_encode($array);

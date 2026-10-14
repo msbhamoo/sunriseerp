@@ -218,13 +218,13 @@ class Student extends Admin_Controller
             $this->load->model("cbseexam/cbseexam_assessment_model");
 
 
-            $exam_list = $this->cbseexam_exam_model->getStudentExamByStudentSession($student['student_session_id']);
+            $exam_list = $this->cbseexam_exam_model->getStudentExamByStudentSession($student['student_session_id'], false);
 
             $student_exams = [];
             if (!empty($exam_list)) {
                 foreach ($exam_list as $exam_key => $exam_value) {
 
-                    $exam_subjects = $this->cbseexam_exam_model->getexamsubjects($exam_value->cbse_exam_id);
+                    $exam_subjects = $this->cbseexam_exam_model->getexamsubjects($exam_value->cbse_exam_id, $student['class_id']);
                     $exam_value->{"subjects"} = $exam_subjects;
                     $exam_value->{"grades"} = $this->cbseexam_grade_model->getGraderangebyGradeID($exam_value->cbse_exam_grade_id);
                     $exam_value->{"exam_assessments"} = $this->cbseexam_assessment_model->getWithAssessmentTypeByAssessmentID($exam_value->cbse_exam_assessment_id);

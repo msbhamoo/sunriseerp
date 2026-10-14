@@ -102,16 +102,19 @@
                                             ?> </td>                                            
                                             
                                             <td><?php                                             
-                                            
-                                            if ($value['is_publish'] == 1) {
-                                                $is_publish = "<i class='fa fa-check-square-o'></i><span style='display:none'>" . $this->lang->line('yes') . "</span>";
-                                            } else {
-                                                $is_publish = "<i class='fa fa-exclamation-circle'></i><span style='display:none'>" . $this->lang->line('no') . "</span>";
-                                            }
-                                            
-                                            echo $is_publish; 
-                                            
-                                            ?> </td> 
+                                                $is_pub = ($value['is_publish'] == 1);
+                                                ?>
+                                                <button type="button" 
+                                                        class="btn btn-xs <?php echo $is_pub ? 'btn-success' : 'btn-default'; ?> toggle-publish-btn" 
+                                                        data-examid="<?php echo $value['id']; ?>" 
+                                                        data-publish="<?php echo $is_pub ? '0' : '1'; ?>" 
+                                                        data-toggle="tooltip" 
+                                                        title="<?php echo $is_pub ? 'Click to Unpublish Result' : 'Click to Publish Result'; ?>"
+                                                        style="font-size:11px; padding: 2px 7px; border-radius: 3px;">
+                                                    <i class="fa <?php echo $is_pub ? 'fa-check-circle' : 'fa-times-circle'; ?>"></i> 
+                                                    <span class="pub-text"><?php echo $is_pub ? 'Published' : 'Draft'; ?></span>
+                                                </button>
+                                            </td> 
                                             
                                             <td>                                                
                                                 <?php echo $value['category_name']; ?>
@@ -122,6 +125,16 @@
                                             <td><?php echo $this->customlib->dateformat($value['created_at']); ?></td> 
                                             <td class="text-right white-space-nowrap">                                           
 
+                                                <?php if ($this->rbac->hasPrivilege('cbse_exam', 'can_edit')) { ?>
+                                                <button type="button" 
+                                                        class="btn btn-xs <?php echo $is_pub ? 'btn-success' : 'btn-warning'; ?> toggle-publish-btn" 
+                                                        data-examid="<?php echo $value['id']; ?>" 
+                                                        data-publish="<?php echo $is_pub ? '0' : '1'; ?>" 
+                                                        data-toggle="tooltip" 
+                                                        title="<?php echo $is_pub ? 'Unpublish Exam Result' : 'Quick Publish Exam Result'; ?>">
+                                                    <i class="fa <?php echo $is_pub ? 'fa-eye' : 'fa-eye-slash'; ?>"></i>
+                                                </button>
+                                                <?php } ?>
                                                 
                                                 <?php  if ($this->rbac->hasPrivilege('cbse_exam_assign_view_student', 'can_view')) { ?>
                                                 
@@ -1558,4 +1571,70 @@ $(document).on('change','.check_absent',function(){
 
         });
     }
+
+    $(document).on('click', '.toggle-publish-btn', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var examId = $btn.data('examid');
+        var newPublish = $btn.data('publish');
+        var originalHtml = $btn.html();
+
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: '<?php echo site_url("cbseexam/exam/toggle_publish"); ?>',
+            type: 'POST',
+            data: {
+                exam_id: examId,
+                publish: newPublish
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    successMsg(response.message);
+                    
+                    var isPublished = (response.is_publish == 1);
+                    var nextPublish = isPublished ? 0 : 1;
+
+                    // Update all buttons referencing this examId on this page
+                    $('.toggle-publish-btn[data-examid="' + examId + '"]').each(function() {
+                        var $el = $(this);
+                        $el.data('publish', nextPublish);
+                        $el.prop('disabled', false);
+
+                        if ($el.find('.pub-text').length > 0) {
+                            // Badge button in column
+                            if (isPublished) {
+                                $el.removeClass('btn-default').addClass('btn-success');
+                                $el.html('<i class="fa fa-check-circle"></i> <span class="pub-text">Published</span>');
+                                $el.attr('data-original-title', 'Click to Unpublish Result').tooltip('fixTitle');
+                            } else {
+                                $el.removeClass('btn-success').addClass('btn-default');
+                                $el.html('<i class="fa fa-times-circle"></i> <span class="pub-text">Draft</span>');
+                                $el.attr('data-original-title', 'Click to Publish Result').tooltip('fixTitle');
+                            }
+                        } else {
+                            // Action icon button
+                            if (isPublished) {
+                                $el.removeClass('btn-warning').addClass('btn-success');
+                                $el.html('<i class="fa fa-eye"></i>');
+                                $el.attr('data-original-title', 'Unpublish Exam Result').tooltip('fixTitle');
+                            } else {
+                                $el.removeClass('btn-success').addClass('btn-warning');
+                                $el.html('<i class="fa fa-eye-slash"></i>');
+                                $el.attr('data-original-title', 'Quick Publish Exam Result').tooltip('fixTitle');
+                            }
+                        }
+                    });
+                } else {
+                    errorMsg(response.message || 'Operation failed');
+                    $btn.prop('disabled', false).html(originalHtml);
+                }
+            },
+            error: function() {
+                errorMsg('Something went wrong. Please try again.');
+                $btn.prop('disabled', false).html(originalHtml);
+            }
+        });
+    });
 </script>

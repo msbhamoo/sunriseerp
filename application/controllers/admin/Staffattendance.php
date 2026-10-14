@@ -268,8 +268,9 @@ class Staffattendance extends Admin_Controller
             }
             $data['is_first_time_attendance']  = $is_first_time_attendance;
             $data['resultlist']  = $resultlist;
-            $data['role_required_hours'] = $this->staffAttendaceSetting_model->getAllRoleRequiredHours();
-            $data['role_schedules_map']  = $this->staffAttendaceSetting_model->getAllRoleSchedulesMap();
+            $filter_date_str = date('Y-m-d', $this->customlib->datetostrtotime($date));
+            $data['role_required_hours'] = $this->staffAttendaceSetting_model->getAllRoleRequiredHours($filter_date_str);
+            $data['role_schedules_map']  = $this->staffAttendaceSetting_model->getAllRoleSchedulesMap($filter_date_str);
 
             $this->load->view('layout/header', $data);
             $this->load->view('admin/staffattendance/staffattendancelist', $data);
@@ -478,9 +479,14 @@ class Staffattendance extends Admin_Controller
 
         $this->session->set_userdata('top_menu', 'HR');
         $this->session->set_userdata('sub_menu', 'admin/staffattendance/scan');
+        $period = $this->input->get('period');
+        if (!in_array($period, ['7days', 'this_month', 'prev_month'])) {
+            $period = '7days';
+        }
         $data['title']             = 'Mark My Attendance';
         $data['setting']           = $setting;
-        $data['recent_attendance'] = $this->staffattendancemodel->getStaffRecentAttendance($admin['id'], 7);
+        $data['period']            = $period;
+        $data['recent_attendance'] = $this->staffattendancemodel->getStaffRecentAttendance($admin['id'], $period === '7days' ? 7 : $period);
         $this->load->view('layout/header', $data);
         $this->load->view('admin/staffattendance/scan', $data);
         $this->load->view('layout/footer', $data);

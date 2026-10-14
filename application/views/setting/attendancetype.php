@@ -355,17 +355,82 @@
                                     <div class="box-body" style="background:#f8fafc; padding:20px;">
                                     <?php
                                         if (!empty($list_attendance)){ ?>
+
+                                        <!-- Seasonal Profiles Bar -->
+                                        <?php if (!empty($seasonal_profiles)) { ?>
+                                            <div class="sa-season-profiles-bar" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                                                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                                    <span style="font-weight:700; font-size:12.5px; color:#334155;"><i class="fa fa-snowflake-o text-info"></i> / <i class="fa fa-sun-o text-warning"></i> Configured Seasons:</span>
+                                                    <?php foreach ($seasonal_profiles as $sp) { 
+                                                        $is_current = (empty($selected_season_tag) && empty($sp['effective_to'])) || ($selected_season_tag === $sp['season_tag'] && $selected_season_from === $sp['effective_from']);
+                                                        $tag_display = !empty($sp['season_tag']) ? $sp['season_tag'] : 'General Timings';
+                                                        $date_range_txt = date('d M Y', strtotime($sp['effective_from'])) . ' → ' . (!empty($sp['effective_to']) ? date('d M Y', strtotime($sp['effective_to'])) : 'Active Now');
+                                                    ?>
+                                                        <a href="<?php echo site_url('schsettings/attendancetype?season=' . urlencode($sp['season_tag']) . '&from=' . $sp['effective_from']); ?>" 
+                                                           class="btn btn-xs <?php echo $is_current ? 'btn-primary' : 'btn-default'; ?>" 
+                                                           style="border-radius:20px; font-weight:700; padding:4px 12px;"
+                                                           title="<?php echo $date_range_txt; ?> (<?php echo $sp['total_roles']; ?> roles)">
+                                                            <?php echo html_escape($tag_display); ?> 
+                                                            <span style="font-size:10px; opacity:0.85; margin-left:4px;">(<?php echo $date_range_txt; ?>)</span>
+                                                        </a>
+                                                    <?php } ?>
+                                                </div>
+                                                <div>
+                                                    <a href="<?php echo site_url('schsettings/attendancetype'); ?>" class="btn btn-xs btn-success" style="border-radius:20px; font-weight:700; padding:4px 12px;">
+                                                        <i class="fa fa-plus-circle"></i> New Season / Shift
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        <?php } ?>
+
                                         <form method="POST" action="<?php echo site_url('schsettings/savestaffsetting'); ?>" class="update" id="staff_attendance_form">
                                             <div class="row">
                                                 <div class="col-md-12">
-                                                    <div class="sa-copy-banner">
-                                                        <div class="checkbox mb0 mt0" style="font-weight:700; color:#0f172a;">
-                                                            <label for="copy_staff_attendance" style="cursor:pointer; display:flex; align-items:center; gap:8px;">
-                                                                <input class="copy_staff_attendance" id="copy_staff_attendance" value="1" type="checkbox" style="margin:0; width:17px; height:17px;">
-                                                                <span><i class="fa fa-clone text-primary"></i> <?php echo $this->lang->line('copy_first_detail_for_all'); ?></span>
-                                                            </label>
+                                                    <div class="sa-copy-banner" style="flex-wrap:wrap; gap:12px; border-left:4px solid #3b82f6;">
+                                                        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; width:100%;">
+                                                            <div class="checkbox mb0 mt0" style="font-weight:700; color:#0f172a;">
+                                                                <label for="copy_staff_attendance" style="cursor:pointer; display:flex; align-items:center; gap:8px;">
+                                                                    <input class="copy_staff_attendance" id="copy_staff_attendance" value="1" type="checkbox" style="margin:0; width:17px; height:17px;">
+                                                                    <span><i class="fa fa-clone text-primary"></i> <?php echo $this->lang->line('copy_first_detail_for_all'); ?></span>
+                                                                </label>
+                                                            </div>
+                                                            <div style="display:inline-flex; align-items:center; gap:6px;">
+                                                                <label style="margin:0; font-weight:700; font-size:12px; color:#1e293b; white-space:nowrap;">
+                                                                    <i class="fa fa-tag text-primary"></i> Season Tag:
+                                                                </label>
+                                                                <div style="width:160px;">
+                                                                    <input type="text" id="staff_season_tag" name="season_tag" class="form-control input-sm" 
+                                                                           value="<?php echo !empty($selected_season_tag) ? html_escape($selected_season_tag) : (date('m') >= 4 && date('m') <= 10 ? 'Summer Timings' : 'Winter Timings'); ?>" 
+                                                                           placeholder="e.g. Summer Timings" 
+                                                                           style="height:32px; font-weight:700; border-radius:6px; background:#ffffff; border:1px solid #cbd5e1;" required>
+                                                                </div>
+                                                            </div>
+                                                            <div style="display:inline-flex; align-items:center; gap:6px;">
+                                                                <label style="margin:0; font-weight:700; font-size:12px; color:#1e293b; white-space:nowrap;">
+                                                                    <i class="fa fa-calendar-check-o text-success"></i> Effective From:
+                                                                </label>
+                                                                <div style="width:130px;">
+                                                                    <input type="text" id="staff_effective_from" name="effective_from" class="form-control date input-sm" 
+                                                                           value="<?php echo !empty($selected_season_from) ? date($this->customlib->getSchoolDateFormat(), strtotime($selected_season_from)) : date($this->customlib->getSchoolDateFormat()); ?>" 
+                                                                           style="height:32px; font-weight:700; border-radius:6px; background:#ffffff; border:1px solid #cbd5e1;" required>
+                                                                </div>
+                                                            </div>
+                                                            <div style="display:inline-flex; align-items:center; gap:6px;">
+                                                                <label style="margin:0; font-weight:700; font-size:12px; color:#1e293b; white-space:nowrap;">
+                                                                    <i class="fa fa-calendar-times-o text-danger"></i> To Date (Optional):
+                                                                </label>
+                                                                <div style="width:130px;">
+                                                                    <input type="text" id="staff_effective_to" name="effective_to" class="form-control date input-sm" 
+                                                                           value="" 
+                                                                           placeholder="Open-ended"
+                                                                           style="height:32px; font-weight:700; border-radius:6px; background:#ffffff; border:1px solid #cbd5e1;">
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <span class="text-muted" style="font-size:12px;"><i class="fa fa-lightbulb-o text-warning"></i> Set the first role and check this box to apply across all roles instantly.</span>
+                                                        <div style="font-size:11.5px; color:#64748b; margin-top:4px; display:flex; align-items:center; gap:6px; width:100%;">
+                                                            <i class="fa fa-shield text-info"></i> 
+                                                            <span><strong>Collision Protection Active:</strong> Dates are strictly verified. Timings auto-activate between From & To dates, and past historical attendance will never be altered or collided.</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <?php $row = 1; ?>
@@ -932,8 +997,14 @@
             $block.find('.hb_early_half').val(ehVal);
             $block.find('.hb_early_grace').val(egVal);
 
-            if (pS === null || lS === null || fS === null || dS === null) return; // incomplete: keep existing
+            if (pS === null) pS = _timeToSeconds('08:30:00');
+            if (lS === null) lS = _timeToSeconds('09:30:00');
+            if (fS === null) fS = _timeToSeconds('10:30:00');
+            if (dS === null) dS = _timeToSeconds('15:00:00');
+
             var total = _secondsToHms(Math.max(0, dS - pS));
+            if (total === '00:00:00') { total = '07:30:00'; }
+
             _setStaffBand($block, 'p', '00:00:00', _secondsToHms(pS), total);
             _setStaffBand($block, 'l', _secondsToHms(pS + 1), _secondsToHms(lS), total);
             _setStaffBand($block, 'f', _secondsToHms(lS + 1), _secondsToHms(fS), total);

@@ -242,7 +242,7 @@ class Cbseexam_assessment_model extends MY_Model {
     }
     
     public function getSubjectAssessments($cbse_exam_timetable_id){
-        $assement_types= $this->db->select('cbse_exam_timetable_assessment_types.*,cbse_exam_assessment_types.maximum_marks')
+        $assement_types= $this->db->select('cbse_exam_timetable_assessment_types.*, COALESCE(cbse_exam_timetable_assessment_types.maximum_marks, cbse_exam_assessment_types.maximum_marks) as maximum_marks')
         ->from('cbse_exam_timetable_assessment_types')
         ->join('cbse_exam_assessment_types','cbse_exam_assessment_types.id=cbse_exam_timetable_assessment_types.cbse_exam_assessment_type_id')
         ->where('cbse_exam_timetable_id', $cbse_exam_timetable_id)

@@ -146,16 +146,9 @@ class Ptmreports extends Admin_Controller
         $this->load->model('studentfeemaster_model');
         $fees = $this->studentfeemaster_model->getStudentFees($student_session_id);
         
-        // CBSE Exams
-        $this->load->model('cbseexam/cbseexam_result_model');
-        // Find exams based on student session
-        $cbse_exams = [];
-        if (method_exists($this->cbseexam_result_model, 'getStudentResult')) {
-            $cbse_exams = $this->cbseexam_result_model->getStudentResult($student_session_id);
-        } else {
-            // fallback generic query if getStudentResult doesn't exist
-            $cbse_exams = $this->db->where('student_session_id', $student_session_id)->get('cbse_exam_results')->result_array();
-        }
+        // CBSE Exams - use the proper exam model method
+        $this->load->model('cbseexam/cbseexam_exam_model');
+        $cbse_exams = $this->cbseexam_exam_model->getStudentExamMarksSummary($student_session_id);
         
         // PTM Remarks (current)
         $current_ptm = $this->ptm_model->get_student_attendances($ptm_id);

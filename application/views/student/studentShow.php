@@ -3082,8 +3082,18 @@ $call_logs_count = !empty($stu_calls) ? count($stu_calls) : 0;
                                         ?>
 
                                                 <div class="sp2-card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
-                                                    <div class="sp2-section-title" style="padding: 16px 20px; border-bottom: 1px solid #eaeaea; background: #fdfdfd; margin: 0; display: flex; align-items: center; gap: 8px;">
-                                                        <i class="fa fa-graduation-cap" style="color: <?php echo $theme_color; ?>; font-size: 16px;"></i> <?php echo  $exam_value->name; ?>
+                                                    <div class="sp2-section-title" style="padding: 16px 20px; border-bottom: 1px solid #eaeaea; background: #fdfdfd; margin: 0; display: flex; align-items: center; justify-content: space-between;">
+                                                        <div style="display:flex; align-items:center; gap:8px;">
+                                                            <i class="fa fa-graduation-cap" style="color: <?php echo $theme_color; ?>; font-size: 16px;"></i> 
+                                                            <strong style="font-size:14px;"><?php echo  $exam_value->name; ?></strong>
+                                                        </div>
+                                                        <div>
+                                                            <?php if ($exam_value->is_publish == 1): ?>
+                                                                <span class="label label-success" style="font-size:11px; padding:3px 8px;"><i class="fa fa-check-circle"></i> Published</span>
+                                                            <?php else: ?>
+                                                                <span class="label label-default" style="font-size:11px; padding:3px 8px; background:#e2e8f0; color:#475569;"><i class="fa fa-clock-o"></i> Unpublished / Draft</span>
+                                                            <?php endif; ?>
+                                                        </div>
                                                     </div>
                                                     <div class="table-responsive" style="padding: 20px;">
                                                         <?php

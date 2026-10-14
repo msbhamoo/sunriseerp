@@ -528,8 +528,39 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
         $month = date('m', strtotime($st_month));
         $year  = date('Y', strtotime($st_month));
         foreach ($this->staff_attendance as $att_key => $att_value) {
-            $s = $this->payroll_model->count_attendance_obj($month, $year, $emp, $att_value);
+            $s = (int) $this->payroll_model->count_attendance_obj($month, $year, $emp, $att_value);
             $r[$att_key] = $s;
+        }
+
+        // Include any approved duty passes for this staff member in this month
+        $start_d = sprintf('%04d-%02d-01', $year, $month);
+        $end_d   = date('Y-m-t', strtotime($start_d));
+        $dp_query = $this->db->query("
+            SELECT sdp.from_date, sdp.to_date 
+            FROM staff_duty_pass sdp 
+            JOIN staff_duty_pass_members sdpm ON sdpm.duty_pass_id = sdp.id 
+            WHERE sdp.status = 'Approved' 
+            AND sdpm.staff_id = " . (int)$emp . "
+            AND sdp.from_date <= " . $this->db->escape($end_d) . " 
+            AND sdp.to_date >= " . $this->db->escape($start_d)
+        );
+        if ($dp_query && $dp_query->num_rows() > 0) {
+            $dp_days = array();
+            foreach ($dp_query->result_array() as $dp) {
+                $st = max($start_d, $dp['from_date']);
+                $en = min($end_d, $dp['to_date']);
+                $curr = strtotime($st);
+                $last = strtotime($en);
+                while ($curr <= $last) {
+                    $dp_days[date('Y-m-d', $curr)] = true;
+                    $curr = strtotime('+1 day', $curr);
+                }
+            }
+            if (!empty($dp_days)) {
+                // If staff attendance table didn't already have OD explicitly saved, ensure the count matches the duty pass dates
+                $existing_od = isset($r['on_duty']) ? (int)$r['on_duty'] : 0;
+                $r['on_duty'] = max($existing_od, count($dp_days));
+            }
         }
 
         $record[$emp] = $r;

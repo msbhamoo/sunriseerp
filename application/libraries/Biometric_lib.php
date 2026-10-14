@@ -214,11 +214,18 @@ class Biometric_lib
                 $punchDate = $fromDate;
             }
 
+            // CRITICAL: Prevent biometric machine from returning/overwriting attendance outside requested date range
+            if (!empty($fromDate) && !empty($toDate)) {
+                if ($punchDate < $fromDate || $punchDate > $toDate) {
+                    continue; // Skip punches not belonging to the chosen date / date range
+                }
+            }
+
             $inTime  = $this->normalizePunchTime(isset($punch['INTime']) ? $punch['INTime'] : null, false);
             $outTime = $this->normalizePunchTime(isset($punch['OUTTime']) ? $punch['OUTTime'] : null, true, $inTime);
 
-            // Determine staff attendance type
-            $attendanceTypeId = $this->resolveAttendanceType($staff['id'], $staff['role_id'], $inTime, $punch);
+            // Determine staff attendance type scoped to that punch's effective date
+            $attendanceTypeId = $this->resolveAttendanceType($staff['id'], $staff['role_id'], $inTime, $punch, $punchDate);
 
             $remark = '';
             if (!empty($punch['Remark'])) {
@@ -346,11 +353,11 @@ class Biometric_lib
      * Determine staff attendance type ID (Present = 1, Late = 2, Half Day = 4, etc.)
      * based on role schedules or API status flag.
      */
-    protected function resolveAttendanceType($staff_id, $role_id, $in_time, $punch)
+    protected function resolveAttendanceType($staff_id, $role_id, $in_time, $punch, $date = null)
     {
-        // 1. If in_time exists and role has attendance schedule configured, match the schedule band
+        // 1. If in_time exists and role has attendance schedule configured, match the schedule band for that specific date
         if ($in_time && $role_id) {
-            $range = $this->CI->staffAttendaceSetting_model->getAttendanceTypeByRole($role_id, $in_time);
+            $range = $this->CI->staffAttendaceSetting_model->getAttendanceTypeByRole($role_id, $in_time, $date);
             if ($range && !empty($range->staff_attendence_type_id)) {
                 return (int) $range->staff_attendence_type_id;
             }

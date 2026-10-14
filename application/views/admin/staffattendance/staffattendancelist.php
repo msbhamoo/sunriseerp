@@ -662,6 +662,12 @@
         color: #94a3b8;
         font-weight: 400;
     }
+
+    /* Ensure Datepicker dropdown floats on top of modals */
+    .datepicker.dropdown-menu,
+    .bootstrap-datetimepicker-widget {
+        z-index: 1070 !important;
+    }
 </style>
 
 <div class="content-wrapper staffatt-page">
@@ -676,7 +682,7 @@
                     </div>
 
                     <div class="sa-top-actions">
-                        <button type="button" id="btn-quick-sync-biometric" class="sa-btn" title="Sync punches from e-TimeOffice Biometric Machine">
+                        <button type="button" id="btn-quick-sync-biometric" class="sa-btn" data-toggle="modal" data-target="#modal-sync-biometric" title="Sync punches from e-TimeOffice Biometric Machine">
                             <i class="fa fa-fingerprint text-info"></i> Sync Biometric
                         </button>
                         <a href="<?php echo site_url('admin/staffcompliance'); ?>" class="sa-btn" style="background:#f0fdfa; border-color:#99f6e4; color:#0f766e; font-weight:700;" title="Staff Compliance Checklist">
@@ -1131,6 +1137,53 @@
             </div>
         </div>
     </section>
+</div>
+
+<!-- ==========================================================================
+     BIOMETRIC SYNC DATE SELECTION MODAL
+     ========================================================================== -->
+<div class="modal fade" id="modal-sync-biometric" tabindex="-1" role="dialog" aria-labelledby="modalSyncBiometricLabel" style="z-index: 1060;">
+    <div class="modal-dialog" role="document" style="max-width: 480px; margin-top: 60px;">
+        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; padding: 16px 20px;">
+                <button type="button" class="close" data-dismiss="modal" style="color: #ffffff; opacity: 0.9; font-size: 24px; text-shadow: none;">&times;</button>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                        <i class="fa fa-fingerprint"></i>
+                    </div>
+                    <div>
+                        <h4 class="modal-title" style="font-weight: 700; margin: 0; font-size: 16px; color: #ffffff;">
+                            Sync Biometric Punches
+                        </h4>
+                        <div style="font-size: 11.5px; opacity: 0.9; margin-top: 2px;">
+                            Punches will only be imported for the selected date
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body" style="padding: 22px 24px; background: #ffffff;">
+                <div class="form-group mb-3">
+                    <label style="font-weight: 700; color: #1e293b; font-size: 13px; margin-bottom: 8px; display: block;">
+                        <i class="fa fa-calendar text-primary"></i> Attendance Date to Synchronize:
+                    </label>
+                    <div class="input-group">
+                        <input type="text" id="bio_sync_selected_date" class="form-control date" value="<?php echo isset($date) && $date ? html_escape($date) : date($this->customlib->getSchoolDateFormat()); ?>" readonly style="background:#ffffff; font-weight:700; font-size:14px; height:40px; cursor:pointer;">
+                        <span class="input-group-addon" style="background:#f1f5f9;"><i class="fa fa-calendar-check-o text-muted"></i></span>
+                    </div>
+                    <small class="text-muted" style="display:block; margin-top: 6px; font-size: 11.5px; line-height: 1.4;">
+                        <i class="fa fa-info-circle text-info"></i> Defaults to the currently viewed date (<strong><?php echo isset($date) && $date ? html_escape($date) : date('d M Y'); ?></strong>). Only attendance punches for this specific date will be synced. Other past dates will NOT be affected.
+                    </small>
+                </div>
+                <div id="bio-sync-status-msg" style="display: none; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; margin-top: 12px;"></div>
+            </div>
+            <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" style="font-weight: 600; border-radius: 6px;">Cancel</button>
+                <button type="button" id="btn-confirm-sync-biometric" class="btn btn-primary" style="font-weight: 700; border-radius: 6px; padding: 8px 20px; background: #0284c7; border-color: #0284c7;">
+                    <i class="fa fa-refresh"></i> Fetch & Sync Punches
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- ==========================================================================
@@ -1662,26 +1715,60 @@
         }
     });
 
-    // 14. Quick Biometric Sync AJAX
-    $('#btn-quick-sync-biometric').on('click', function() {
+    // 14. Quick Biometric Sync AJAX with Date Selection
+    $('#btn-confirm-sync-biometric').on('click', function() {
         var $btn = $(this);
         var originalHtml = $btn.html();
-        var selectedDate = $('#date_field').val() || '';
-        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Syncing...');
+        var selectedDate = $('#bio_sync_selected_date').val() || $('#date_field').val() || '';
+        var $msg = $('#bio-sync-status-msg');
+
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Syncing punches for ' + selectedDate + '...');
+        $msg.hide().removeClass('alert-danger alert-success').addClass('alert alert-info').html('<i class="fa fa-spinner fa-spin"></i> Connecting to e-TimeOffice biometric machine for <strong>' + selectedDate + '</strong>...').slideDown(200);
+
         $.post("<?php echo site_url('admin/staffattendance/sync_biometric_ajax'); ?>", {
             date: selectedDate
         }, function(res) {
             $btn.prop('disabled', false).html(originalHtml);
             if (res.status === 'success') {
-                alert(res.message);
-                location.reload();
+                $msg.removeClass('alert-info alert-danger').addClass('alert alert-success').html('<strong>Success!</strong> ' + res.message);
+                setTimeout(function() {
+                    $('#modal-sync-biometric').modal('hide');
+                    // If viewing the synced date, reload; otherwise offer or redirect to view it
+                    var currentViewDate = $('#date_field').val() || '';
+                    if (currentViewDate === selectedDate) {
+                        location.reload();
+                    } else {
+                        // Redirect to the synced date view
+                        var redirectUrl = "<?php echo site_url('admin/staffattendance/index'); ?>";
+                        var roleVal = $('#class_id').val() || 'select';
+                        var $form = $('<form action="' + redirectUrl + '" method="POST">' +
+                            '<input type="hidden" name="user_id" value="' + roleVal + '">' +
+                            '<input type="hidden" name="date" value="' + selectedDate + '">' +
+                            '<input type="hidden" name="search" value="search">' +
+                            '</form>');
+                        $('body').append($form);
+                        $form.submit();
+                    }
+                }, 1200);
             } else {
-                alert(res.message || 'Biometric synchronization failed.');
+                $msg.removeClass('alert-info alert-success').addClass('alert alert-danger').html('<strong>Sync Failed:</strong> ' + (res.message || 'Error occurred during synchronization.'));
             }
         }, 'json').fail(function() {
             $btn.prop('disabled', false).html(originalHtml);
-            alert('Failed to contact server for biometric synchronization.');
+            $msg.removeClass('alert-info alert-success').addClass('alert alert-danger').html('<strong>Error:</strong> Failed to contact server for biometric synchronization.');
         });
+    });
+
+    // Ensure Datepicker inside Biometric Sync modal renders with proper z-index and container
+    $('#modal-sync-biometric').on('shown.bs.modal', function () {
+        if ($.fn.datepicker) {
+            $('#bio_sync_selected_date').datepicker({
+                format: "<?php echo $this->customlib->getSchoolDateFormat(); ?>",
+                autoclose: true,
+                todayHighlight: true,
+                container: '#modal-sync-biometric'
+            });
+        }
     });
 
     // Initial load

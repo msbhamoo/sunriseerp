@@ -119,39 +119,202 @@
     <div class="row">
         <div class="col-md-12">
             <!-- CBSE Exam Summary -->
-            <h5 style="font-weight:bold; margin-top:15px;">CBSE Exam Details</h5>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 15px; margin-bottom: 8px;">
+                <h5 style="font-weight: bold; margin: 0; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa fa-graduation-cap" style="color: #0284c7;"></i> CBSE Exam Performance & Marks
+                </h5>
+                <span style="font-size: 11px; color: #64748b;"><i class="fa fa-info-circle"></i> Click on any exam row to view subject-wise marks</span>
+            </div>
+
             <div class="table-responsive">
-                <table class="table table-bordered table-striped" style="font-size:12px;">
-                    <thead style="background-color:#4CAF50; color:white;">
-                        <tr>
+                <table class="table table-bordered mb0" style="font-size: 12px; border-collapse: separate; border-spacing: 0;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff;">
+                            <th style="width: 32px; text-align: center;"><i class="fa fa-angle-down"></i></th>
                             <th>EXAM NAME</th>
-                            <th>TOTAL MARKS</th>
-                            <th>OBTAINED MARKS</th>
+                            <th style="text-align: center;">SUBJECTS</th>
+                            <th style="text-align: center;">TOTAL MARKS</th>
+                            <th style="text-align: center;">OBTAINED MARKS</th>
                             <th>PERCENTAGE / GRADE</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php 
                             if (!empty($cbse_exams)) {
-                                foreach ($cbse_exams as $exam) {
+                                foreach ($cbse_exams as $idx => $exam) {
+                                    $pct = isset($exam['percentage']) ? $exam['percentage'] : 0;
+                                    if ($pct >= 90) {
+                                        $badge_bg = '#dcfce7'; $badge_color = '#16a34a'; $grade_label = 'A+';
+                                    } elseif ($pct >= 75) {
+                                        $badge_bg = '#e0f2fe'; $badge_color = '#0284c7'; $grade_label = 'A';
+                                    } elseif ($pct >= 60) {
+                                        $badge_bg = '#fef3c7'; $badge_color = '#d97706'; $grade_label = 'B';
+                                    } elseif ($pct >= 45) {
+                                        $badge_bg = '#ffedd5'; $badge_color = '#ea580c'; $grade_label = 'C';
+                                    } else {
+                                        $badge_bg = '#fee2e2'; $badge_color = '#dc2626'; $grade_label = 'D';
+                                    }
+                                    if (!empty($exam['grade']) && $exam['grade'] != '-') {
+                                        $grade_label = $exam['grade'];
+                                    }
+                                    $has_subjects = !empty($exam['subjects']);
+                                    $row_id = 'exam_detail_' . $idx . '_' . $exam['exam_id'];
                         ?>
-                        <tr>
-                            <td><?php echo isset($exam['exam_name']) ? $exam['exam_name'] : (isset($exam['name']) ? $exam['name'] : '-'); ?></td>
-                            <td><?php echo isset($exam['total_marks']) ? $exam['total_marks'] : '-'; ?></td>
-                            <td><?php echo isset($exam['obtained_marks']) ? $exam['obtained_marks'] : '-'; ?></td>
-                            <td><?php echo isset($exam['percentage']) ? $exam['percentage'].'%' : '-'; ?></td>
+                        <tr class="exam-summary-row" data-target="#<?php echo $row_id; ?>" style="cursor: pointer; background: #ffffff; transition: background 0.15s ease;" title="Click to view subject marks">
+                            <td style="text-align: center; vertical-align: middle; color: #0284c7; font-weight: bold;">
+                                <i class="fa fa-chevron-right exam-toggle-icon" id="icon_<?php echo $row_id; ?>"></i>
+                            </td>
+                            <td style="vertical-align: middle;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <strong style="color: #0f172a; font-size: 13px;"><?php echo htmlspecialchars($exam['exam_name']); ?></strong>
+                                    <?php if (isset($exam['is_publish']) && $exam['is_publish'] == 1): ?>
+                                        <span class="label label-success" style="font-size: 9px; padding: 2px 6px;"><i class="fa fa-check-circle"></i> Published</span>
+                                    <?php else: ?>
+                                        <span class="label label-default" style="font-size: 9px; padding: 2px 6px; background: #e2e8f0; color: #475569;">Draft</span>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                            <td style="text-align: center; vertical-align: middle; font-weight: 600; color: #334155;">
+                                <?php echo isset($exam['subject_count']) ? $exam['subject_count'] : '-'; ?>
+                            </td>
+                            <td style="text-align: center; vertical-align: middle; font-weight: 700; color: #475569;">
+                                <?php echo $exam['total_marks']; ?>
+                            </td>
+                            <td style="text-align: center; vertical-align: middle; font-weight: 800; color: #0284c7; font-size: 13px;">
+                                <?php echo $exam['obtained_marks']; ?>
+                            </td>
+                            <td style="vertical-align: middle;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px; min-width: 60px;">
+                                        <div style="width: <?php echo min($pct, 100); ?>%; height: 100%; background-color: <?php echo $badge_color; ?>; border-radius: 4px;"></div>
+                                    </div>
+                                    <span class="badge" style="background: <?php echo $badge_bg; ?>; color: <?php echo $badge_color; ?>; font-weight: 700; font-size: 11px;">
+                                        <?php echo $pct; ?>% (<?php echo $grade_label; ?>)
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Expandable Subject Marks Breakdown Row -->
+                        <tr id="<?php echo $row_id; ?>" class="exam-detail-row" style="display: none; background: #f8fafc;">
+                            <td colspan="6" style="padding: 12px 16px; border-top: none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; padding: 10px 14px;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f1f5f9;">
+                                        <span style="font-weight: 700; font-size: 12px; color: #334155;">
+                                            <i class="fa fa-book text-info"></i> Subject Marks Breakdown &mdash; <?php echo htmlspecialchars($exam['exam_name']); ?>
+                                        </span>
+                                        <?php if (!empty($exam['rank'])): ?>
+                                            <span class="label label-warning" style="font-size: 11px;"><i class="fa fa-trophy"></i> Rank: <?php echo $exam['rank']; ?></span>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <?php if ($has_subjects): ?>
+                                    <table class="table table-bordered table-condensed mb0" style="font-size: 11px; margin-bottom: 0;">
+                                        <thead>
+                                            <tr style="background: #f1f5f9; color: #475569; font-weight: 700;">
+                                                <th style="width: 40%;">SUBJECT</th>
+                                                <?php 
+                                                if (!empty($exam['assessments_headers'])) {
+                                                    foreach ($exam['assessments_headers'] as $hdr) {
+                                                        $hdr_code = !empty($hdr->code) ? " (" . $hdr->code . ")" : "";
+                                                        echo "<th class='text-center'>" . htmlspecialchars($hdr->name . $hdr_code) . "<br><small style='color:#64748b;'>(Max " . $hdr->maximum_marks . ")</small></th>";
+                                                    }
+                                                }
+                                                ?>
+                                                <th class="text-center" style="width: 15%; background: #e2e8f0;">TOTAL</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($exam['subjects'] as $sub): ?>
+                                            <tr>
+                                                <td>
+                                                    <strong><?php echo htmlspecialchars($sub['subject_name']); ?></strong>
+                                                    <?php if (!empty($sub['subject_code'])): ?>
+                                                        <span class="text-muted">(<?php echo htmlspecialchars($sub['subject_code']); ?>)</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <?php 
+                                                if (!empty($exam['assessments_headers'])) {
+                                                    foreach ($exam['assessments_headers'] as $hdr) {
+                                                        $val_str = "N/A";
+                                                        $cell_style = "color:#94a3b8;";
+                                                        if (!empty($sub['assessments'])) {
+                                                            foreach ($sub['assessments'] as $a_item) {
+                                                                if ($a_item['assessment_type_id'] == $hdr->id) {
+                                                                    if (!empty($a_item['is_absent'])) {
+                                                                        $val_str = "<span class='text-danger font-weight-bold'>ABS</span>";
+                                                                        $cell_style = "";
+                                                                    } elseif ($a_item['marks'] !== "N/A") {
+                                                                        $val_str = "<strong>" . $a_item['marks'] . "</strong>";
+                                                                        $cell_style = "color:#0f172a;";
+                                                                    }
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                        echo "<td class='text-center' style='vertical-align:middle; " . $cell_style . "'>" . $val_str . "</td>";
+                                                    }
+                                                }
+                                                ?>
+                                                <td class="text-center" style="vertical-align: middle; background: #f8fafc; font-weight: 800; color: #0284c7;">
+                                                    <?php echo $sub['subject_total']; ?>
+                                                    <?php if ($sub['subject_max'] > 0): ?>
+                                                        <small style="color: #64748b; font-weight: normal;"> / <?php echo $sub['subject_max']; ?></small>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                            <?php endforeach; ?>
+                                            <tr style="background: #f1f5f9; font-weight: 700;">
+                                                <td colspan="<?php echo 1 + (!empty($exam['assessments_headers']) ? count($exam['assessments_headers']) : 0); ?>" class="text-right">
+                                                    OVERALL TOTAL:
+                                                </td>
+                                                <td class="text-center" style="font-size: 12px; color: #0f172a; font-weight: 800; background: #e2e8f0;">
+                                                    <?php echo $exam['obtained_marks'] . " / " . $exam['total_marks']; ?>
+                                                    <div style="font-size: 10px; color: <?php echo $badge_color; ?>;"><?php echo $pct; ?>% (<?php echo $grade_label; ?>)</div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <?php else: ?>
+                                        <p class="text-muted text-center" style="margin: 10px 0;"><i>No subject marks details available for this exam.</i></p>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
                         </tr>
                         <?php 
                                 }
                             } else {
-                                echo "<tr><td colspan='4' class='text-center'><i>No Exam data available.</i></td></tr>";
+                                echo "<tr><td colspan='6' class='text-center text-muted' style='padding: 20px;'><i>No CBSE Exam records found for this student.</i></td></tr>";
                             }
                         ?>
                     </tbody>
                 </table>
             </div>
+
+            <script>
+            $(document).off('click', '.exam-summary-row').on('click', '.exam-summary-row', function(e) {
+                var targetId = $(this).data('target');
+                var $detailRow = $(targetId);
+                var $icon = $(this).find('.exam-toggle-icon');
+
+                if ($detailRow.is(':visible')) {
+                    $detailRow.slideUp(150);
+                    $icon.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+                    $(this).css('background', '#ffffff');
+                } else {
+                    $('.exam-detail-row').not($detailRow).slideUp(150);
+                    $('.exam-toggle-icon').not($icon).removeClass('fa-chevron-down').addClass('fa-chevron-right');
+                    $('.exam-summary-row').not(this).css('background', '#ffffff');
+
+                    $detailRow.slideDown(150);
+                    $icon.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+                    $(this).css('background', '#f0f9ff');
+                }
+            });
+            </script>
         </div>
     </div>
+
     
     <div class="row">
         <div class="col-md-12">
