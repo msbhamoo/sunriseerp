@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="<?php echo base_url(); ?>backend/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css">
+﻿<link rel="stylesheet" href="<?php echo base_url(); ?>backend/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css">
 <script src="<?php echo base_url(); ?>backend/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.min.js"></script>
 <!-- Content Wrapper. Contains page content -->
 
@@ -156,7 +156,7 @@
       </div>
      </div>
     </div>
-    </div>
+   </div> <!-- /.tab-pane #tab_list -->
     
     <!-- Summary Tab -->
     <div class="tab-pane" id="tab_summary">
@@ -224,7 +224,6 @@
    </div> <!-- tab-content -->
   </div> <!-- nav-tabs-custom -->
   </div> <!-- box box-primary -->
-  </div>
  </section>
 </div>
 
@@ -431,201 +430,6 @@
                       successMsg(res.success);
                       window.location.reload(true);
                   }
-    <div class="modal-body pb0">
-       <div class="row">
-        <div class="col-md-12 col-lg-12 col-sm-12">
-         <div class="form-group">
-          <input type="hidden" name="id" id="id">
-          <label><?php echo $this->lang->line('type'); ?></label><small class="req"> *</small>	  
-          <br>
-			  <ul class="stepradiolist row gy-0">
-        <?php
-        foreach($holiday_type as $key=>$value){ ?>
-          <li class="col-lg-4 col-md-12 col-sm-4">
-          <label><input class="valign-top" type="radio" id="radio_<?php echo $value['id']; ?>" name="holiday_type" value="<?php echo $value['id']; ?>"
-           onchange="showDate(this.value)"/>
-           <div class="stepimage"><?php 
-            if($value['is_default']==1){
-                echo $this->lang->line(strtolower($value['type']));
-            }else{
-                echo $value['type'];
-            }
-            ?></div></label>
-          </li>
-        <?php }  ?>			
-       </ul>
-        </div>
-        </div>
-        <div class="col-md-4 col-lg-4 col-sm-6 relative" id="date_one">
-         <div class="form-group ">
-          <label id="date_text"><?php echo $this->lang->line('from_date'); ?> </label><small class="req"> *</small>
-          <div class="relative"><input id="from_date" name="from_date" placeholder="" type="text" class="form-control date" value="" /></div>
-         </div>
-        </div>
-        <div class="col-md-4 col-lg-4 col-sm-6" id="date_two">
-         <div class="form-group relative">
-          <label><?php echo $this->lang->line('to_date'); ?></label><small class="req"> *</small>
-          <input id="to_date" name="to_date" placeholder="" type="text" class="form-control date" value="" />
-         </div>
-        </div>
-        <div class="col-md-12 col-lg-12 col-sm-12">
-         <div class="form-group">
-          <label for="exampleInputEmail1"><?php echo $this->lang->line('description'); ?></label><small class="req"> *</small>	  
-          <textarea rows="5" id="description" name="description" placeholder="" type="text" class="form-control"></textarea>
-         </div>
-        </div>
-        <div class="col-md-12 col-lg-12 col-sm-12">
-         <div class="form-group">
-          <label for="exampleInputEmail1"><?php echo $this->lang->line('front_site'); ?></label>	  
-			    <div class="material-switch ">
-				  <input id="front_site" name="front_site" type="checkbox" class="chk" value="checked" />
-				  <label for="front_site" class="label-info-success"></label>
-          </div>
-         </div>
-        </div>
-        <div class="col-md-12 col-lg-12 col-sm-12">
-         <div class="form-group">
-          <label>Is Working Day? (Check if this event should NOT deduct from total working days)</label>	  
-			    <div class="material-switch ">
-				  <input id="is_working_day" name="is_working_day" type="checkbox" class="chk" value="1" />
-				  <label for="is_working_day" class="label-info-success"></label>
-          </div>
-         </div>
-        </div>
-       </div>
-    </div>
-    <div class="modal-footer">
-    <button class="btn btn-info pull-right" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Please wait" value=""><?php echo $this->lang->line('save'); ?></button>
-   </form>
-  </div>
- </div>
-</div>
-</div>
-
-<script type="text/javascript">	
-  
- $("#add_holiday").on('submit', (function (e) {
-      e.preventDefault();
-      var $this = $(this).find("button[type=submit]:focus");
-      $.ajax({
-          
-          url: "<?php echo site_url("admin/holiday/add") ?>",
-          type: "POST",
-          data: new FormData(this),
-          dataType: 'json',
-          contentType: false,
-          cache: false,
-          processData: false,
-          beforeSend: function () {
-              $this.button('loading'); 
-          },
-          success: function (res)
-          {
-             if (res.status == "fail") {                
-                  var message = "";
-                  $.each(res.error, function (index, value) {
-                      message += value;
-                  });
-                  errorMsg(message);
-  
-              } else {
-                  successMsg(res.message);
-                  window.location.reload(true);
-              }
-          },
-          error: function (xhr) { // if error occured
-              alert("Error occured.please try again");
-              $this.button('reset');
-          },
-          complete: function () {
-              $this.button('reset');
-          }
-      });
- }));  
- 
- function add_holiday() {
-      $('#add_holiday').trigger("reset");
-      $('input[name="holiday_type"]').prop('checked', false);
-      $("#front_site").prop("checked" , false );
-      $("#is_working_day").prop("checked" , false );
-      $('#title').html('<?php echo $this->lang->line('add_holiday'); ?>');
-      $('#holiday_modal').modal({
-          backdrop: 'static',
-          keyboard: false,
-          show: true
-      });
-      // showDate('');
-  }
- 
-		function get(id) {
-
-			var base_url = '<?php echo base_url() ?>';
-			$('#title').html('<?php echo $this->lang->line('edit_holiday'); ?>');
-				$('#holiday_modal').modal({
-							backdrop: 'static',
-							keyboard: false,
-							show: true
-				});		 
-				  
-			$.ajax({
-				url: base_url+'admin/holiday/getholiday',
-				type: "POST",
-				data: {id: id},
-				dataType: 'json',
-				beforeSend: function(){
-					 
-				},
-				success: function (data) {
-					if (data.status == 0) {                     
-                         errorMsg(message);
-                    } else { 
-						// showDate(data.result.holiday_type);
-                        $('#from_date').val(data.result.from_date);
-                        $('#id').val(data.result.id); 
-                        $('#description').val(data.result.description); 
-                        $('#to_date').val(data.result.to_date);
-						 
-						if(data.result.front_site == '1'){
-							$('#front_site').prop('checked', true); 
-                        } else {
-                            $('#front_site').prop('checked', false); 
-                        }
-						
-						if(data.result.is_working_day == '1'){
-							$('#is_working_day').prop('checked', true); 
-                        } else {
-                            $('#is_working_day').prop('checked', false); 
-                        }
-						
-						$("#radio_"+data.result.holiday_type).prop('checked', true); 
-						$('#myModal').modal('show');						 
-					}					 
-				}, 
-				error: function () {
-					 
-				},
-				complete: function(){
-                    
-                }
-			});			  
-		}
- 
- function delete_holiday(id) {
-      var confirmation = confirm('<?php echo $this->lang->line('delete_confirm') ?>');
-      if (confirmation == true) {
-          $.ajax({
-              url: "<?php echo site_url("admin/holiday/delete_holiday") ?>",
-              type: "POST",
-              data: {'id': id},
-              dataType: "json",
-              success: function (res)
-              {
-                  if (res.status == 0) {
-                      errorMsg(res.error);
-                  } else {
-                      successMsg(res.success);
-                      window.location.reload(true);
-                  }
               }
           });
       }
@@ -633,9 +437,8 @@
  
   // Load Summary when tab is shown
   $(document).ready(function() {
-      $('a[href="#tab_summary"]').on('click', function (e) {
-          // Prevent multiple rapid clicks
-          if ($('#summary_content').data('loading')) return;
+      $('a[href="#tab_summary"]').on('shown.bs.tab', function (e) {
+          if ($('#summary_content').data('loaded')) return;
           $('#summary_content').data('loading', true);
           
           $('#summary_content').html('<p class="text-center" style="padding: 20px;"><i class="fa fa-spinner fa-spin"></i> Loading Summary...</p>');
@@ -646,6 +449,7 @@
               success: function (res) {
                   $('#summary_content').html(res);
                   $('#summary_content').data('loading', false);
+                  $('#summary_content').data('loaded', true);
               },
               error: function(xhr) {
                   $('#summary_content').html('<div class="alert alert-danger">Error loading summary. Please check console for details.</div>');
@@ -654,6 +458,12 @@
               }
           });
       });
+
+      // Handle direct URL hash navigation (e.g. #tab_summary or #tab_settings)
+      var hash = window.location.hash;
+      if (hash) {
+          $('.nav-tabs a[href="' + hash + '"]').tab('show');
+      }
   });
 
 </script>

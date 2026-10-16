@@ -132,20 +132,75 @@
         font-weight: 600;
         color: #64748b;
     }
+    /* Scanner viewfinder */
+    #scanner-wrap { position: relative; width: 100%; max-width: 360px; margin: 0 auto; aspect-ratio: 1 / 1; border-radius: 18px; overflow: hidden; background: #0f172a; box-shadow: 0 8px 24px rgba(15,23,42,0.18); }
+    #qr-video { width: 100%; height: 100%; object-fit: cover; display: block; background: #0f172a; }
+    .sa-vf { position: absolute; inset: 14%; pointer-events: none; }
+    .sa-vf i { position: absolute; width: 34px; height: 34px; border: 4px solid #2dd4bf; }
+    .sa-vf i:nth-child(1) { top: 0; left: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 12px; }
+    .sa-vf i:nth-child(2) { top: 0; right: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 12px; }
+    .sa-vf i:nth-child(3) { bottom: 0; left: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 12px; }
+    .sa-vf i:nth-child(4) { bottom: 0; right: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 12px; }
+    .sa-vf-line { position: absolute; left: 6%; right: 6%; height: 2px; background: linear-gradient(90deg, transparent, #2dd4bf, transparent); box-shadow: 0 0 10px #2dd4bf; animation: saScan 2.2s ease-in-out infinite; }
+    @keyframes saScan { 0%, 100% { top: 4%; } 50% { top: 94%; } }
+    .sa-vf-hint { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; color: #e2e8f0; font-size: 12px; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,0.6); pointer-events: none; }
+    #scanner-wrap.sa-paused .sa-vf-line { display: none; }
+    #scanner-wrap.sa-paused::after { content: ""; position: absolute; inset: 0; background: rgba(15,23,42,0.55); }
+    .sa-head-status { display: none !important; }
+    .sa-big-btn { min-height: 48px; font-size: 15px !important; font-weight: 700 !important; border-radius: 12px !important; }
+
     @media (max-width: 767px) {
-        .sa-history-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .sa-pill-group {
-            width: 100%;
-            overflow-x: auto;
-        }
-        .sa-pill-item {
-            flex: 1;
-            text-align: center;
-            justify-content: center;
-        }
+        .content-wrapper > .content-header { padding: 12px 12px 0 12px !important; }
+        .content-wrapper > .content-header h1 { font-size: 18px !important; }
+        .content-wrapper > .content { padding: 12px !important; }
+        .sa-scan-box .box-body { padding: 16px 12px !important; }
+        .sa-scan-intro { font-size: 13px !important; margin-bottom: 12px !important; }
+        #scanner-wrap { max-width: none; border-radius: 16px; }
+        #btn-rescan { width: 100%; }
+        #early-box .btn, #choose-box .btn { width: 100%; min-height: 48px; font-size: 15px; margin: 0 0 8px 0; }
+        #early-box input, #choose-box input { height: 44px; font-size: 16px; }
+
+        .sa-history-card { margin-top: 16px; border-radius: 14px; }
+        .sa-history-header { flex-direction: column; align-items: stretch; padding: 14px 12px; gap: 10px; }
+        .sa-pill-group { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .sa-pill-item { flex: 1 0 auto; justify-content: center; padding: 9px 10px; font-size: 12.5px; }
+
+        .sa-corr-bar { flex-direction: column; align-items: stretch; padding: 12px; }
+        .sa-corr-bar .sa-corr-btn-main { width: 100%; padding: 11px 12px; font-size: 14px; border-radius: 10px; }
+
+        /* Tables -> stacked cards */
+        .sa-scan-wrapper .table-responsive { border: 0; margin: 0; overflow: visible; }
+        .sa-history-table, .sa-history-table tbody, .sa-history-table tr, .sa-history-table td { display: block; width: 100%; }
+        .sa-history-table thead { display: none; }
+        .sa-history-table tbody { padding: 10px; background: #f8fafc; }
+        .sa-history-table tbody tr { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 10px; padding: 4px 12px; box-shadow: 0 1px 2px rgba(15,23,42,0.04); }
+        .sa-history-table tbody tr:last-child { margin-bottom: 0; }
+        .sa-history-table tbody tr:hover { background: #fff; }
+        .sa-history-table td { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px dashed #eef2f7 !important; text-align: right; max-width: none !important; white-space: normal !important; }
+        .sa-history-table td::before { content: attr(data-label); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #94a3b8; text-align: left; flex-shrink: 0; }
+        .sa-history-table td:last-child { border-bottom: 0 !important; }
+        .sa-history-table td.sa-td-head { display: flex; justify-content: space-between; text-align: left; padding: 10px 0; border-bottom: 1px solid #f1f5f9 !important; }
+        .sa-history-table td.sa-td-head::before { display: none; }
+        .sa-history-table .sa-head-status { display: inline-flex !important; }
+        .sa-history-table td.sa-td-status { display: none; }
+        .sa-history-table td.sa-td-action { justify-content: stretch; padding: 10px 0 8px; }
+        .sa-history-table td.sa-td-action::before { display: none; }
+        .sa-history-table td.sa-td-action:empty { display: none; }
+        .sa-history-table td.sa-td-action .sa-corr-btn, .sa-history-table td.sa-td-action .sa-corr-cancel { width: 100%; padding: 9px; font-size: 13px; border-radius: 9px; }
+        .sa-history-table td.sa-td-action .sa-corr-pending { width: 100%; text-align: center; background: #fffbeb; border-radius: 9px; padding: 8px; }
+
+        /* Result modal as bottom sheet */
+        #scanResultModal .modal-dialog, #corrModal .modal-dialog { position: fixed; left: 0; right: 0; bottom: 0; margin: 0 !important; max-width: none !important; width: 100%; }
+        #scanResultModal.fade .modal-dialog, #corrModal.fade .modal-dialog { transform: translateY(100%); transition: transform .25s ease-out; }
+        #scanResultModal.in .modal-dialog, #corrModal.in .modal-dialog { transform: translateY(0); }
+        #scanResultModal .modal-content, #corrModal .modal-content { border-radius: 20px 20px 0 0 !important; max-height: 92vh; overflow-y: auto; padding-bottom: env(safe-area-inset-bottom); }
+        #scanResultModal .modal-body { padding: 18px 16px !important; }
+        #scanResultModal .modal-footer { padding: 12px 16px !important; }
+        #modal-choice-box .btn { min-height: 52px; font-size: 16px !important; }
+        #modal-breakout-reason, #corrModal .form-control { height: 44px; font-size: 16px; }
+        #corrModal textarea.form-control { height: auto; }
+        #corrModal .modal-footer { display: flex; gap: 8px; }
+        #corrModal .modal-footer .btn { flex: 1; min-height: 46px; margin: 0 !important; font-weight: 700; border-radius: 10px; }
     }
 </style>
 
@@ -158,20 +213,22 @@
     <section class="content" style="padding: 16px 20px;">
         <div class="sa-scan-wrapper">
             <!-- Camera QR Scanner Card -->
-            <div class="box box-solid" style="border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 4px 16px -2px rgba(15,23,42,0.05); overflow: hidden;">
+            <div class="box box-solid sa-scan-box" style="border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 4px 16px -2px rgba(15,23,42,0.05); overflow: hidden;">
                 <div class="box-body" style="text-align:center; padding: 24px;">
 
                     <?php if (empty($setting['is_enabled'])) { ?>
                         <div class="alert alert-warning" style="border-radius: 8px;">QR attendance is currently disabled. Please contact admin.</div>
                     <?php } else { ?>
 
-                    <p style="color: #64748b; font-size: 13.5px; margin-bottom: 18px; font-weight: 500;">Point your mobile or laptop camera at the attendance QR code displayed at school.</p>
+                    <p class="sa-scan-intro" style="color: #64748b; font-size: 13.5px; margin-bottom: 18px; font-weight: 500;">Point your mobile or laptop camera at the attendance QR code displayed at school.</p>
 
                     <div id="qr-status" class="alert alert-info" style="display:none; border-radius: 8px;"></div>
 
-                    <div id="scanner-wrap" style="position:relative; max-width:340px; margin:0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
-                        <video id="qr-video" style="width:100%; border-radius:12px; background:#0f172a;" playsinline muted></video>
+                    <div id="scanner-wrap">
+                        <video id="qr-video" playsinline muted></video>
                         <canvas id="qr-canvas" style="display:none;"></canvas>
+                        <div class="sa-vf"><i></i><i></i><i></i><i></i><div class="sa-vf-line"></div></div>
+                        <div class="sa-vf-hint">Align the QR code inside the frame</div>
                     </div>
 
                     <!-- Early-exit confirmation -->
@@ -203,7 +260,7 @@
                     </div>
 
                     <div style="margin-top:18px;">
-                        <button class="btn btn-default" id="btn-rescan" style="display:none; border-radius: 8px; font-weight: 600;"><i class="fa fa-refresh"></i> Scan again</button>
+                        <button class="btn btn-primary sa-big-btn" id="btn-rescan" style="display:none; padding: 10px 28px;"><i class="fa fa-refresh"></i> Scan again</button>
                     </div>
 
                     <?php } ?>
@@ -270,44 +327,48 @@
                                     elseif (strpos($st, 'absent') !== false) $tagClass = 'sa-tag-absent';
                                 ?>
                                     <tr>
-                                        <td>
-                                            <div style="font-weight: 700; color: #0f172a; line-height: 1.2;"><?php echo $rec['date']; ?></div>
-                                            <span style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase;"><?php echo $rec['day']; ?></span>
+                                        <td class="sa-td-head">
+                                            <div>
+                                                <div style="font-weight: 700; color: #0f172a; line-height: 1.2;"><?php echo $rec['date']; ?></div>
+                                                <span style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase;"><?php echo $rec['day']; ?></span>
+                                            </div>
+                                            <span class="sa-status-tag <?php echo $tagClass; ?> sa-head-status"><?php echo html_escape($rec['status']); ?></span>
                                         </td>
-                                        <td>
+                                        <td data-label="In">
                                             <?php if ($rec['in_time'] !== '--') { ?>
                                                 <span class="sa-badge-time" style="color: #16a34a;"><i class="fa fa-sign-in" style="font-size: 11px; opacity:0.8;"></i> <?php echo $rec['in_time']; ?></span>
                                             <?php } else { ?>
                                                 <span class="text-muted">--</span>
                                             <?php } ?>
                                         </td>
-                                        <td>
+                                        <td data-label="Out">
                                             <?php if ($rec['out_time'] !== '--') { ?>
                                                 <span class="sa-badge-time" style="color: #ea580c;"><i class="fa fa-sign-out" style="font-size: 11px; opacity:0.8;"></i> <?php echo $rec['out_time']; ?></span>
                                             <?php } else { ?>
                                                 <span class="text-muted">--</span>
                                             <?php } ?>
                                         </td>
-                                        <td>
+                                        <td data-label="Hours">
                                             <?php if ($rec['duration'] !== '--') { ?>
                                                 <span class="sa-dur-pill"><i class="fa fa-clock-o text-muted"></i> <?php echo $rec['duration']; ?></span>
                                             <?php } else { ?>
                                                 <span class="text-muted">--</span>
                                             <?php } ?>
                                         </td>
-                                        <td>
+                                        <td class="sa-td-status" data-label="Status">
                                             <span class="sa-status-tag <?php echo $tagClass; ?>">
                                                 <span style="width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block;"></span>
                                                 <?php echo html_escape($rec['status']); ?>
                                             </span>
                                         </td>
-                                        <td>
+                                        <td data-label="Source">
                                             <span class="sa-source-tag">
                                                 <i class="fa fa-<?php echo ($rec['source'] === 'QR Code' ? 'qrcode text-success' : ($rec['source'] === 'Biometric' ? 'fingerprint text-info' : 'pencil-square-o text-muted')); ?>"></i>
                                                 <?php echo html_escape($rec['source']); ?>
                                             </span>
                                         </td>
-                                        <td class="text-right">
+                                        <?php $can_fix = isset($pending_dates[$rec['date_ymd']]) || $rec['date_ymd'] >= $corr_row_min; ?>
+                                        <td class="text-right<?php echo $can_fix ? ' sa-td-action' : ' hidden-xs'; ?>">
                                             <?php if (isset($pending_dates[$rec['date_ymd']])) { ?>
                                                 <span class="sa-corr-pending" title="Correction request pending"><i class="fa fa-hourglass-half"></i> Pending</span>
                                             <?php } elseif ($rec['date_ymd'] >= $corr_row_min) { ?>
@@ -348,17 +409,17 @@
                         <tbody>
                         <?php foreach ($my_corrections as $c) { ?>
                             <tr>
-                                <td><b><?php echo date('d M Y', strtotime($c['date'])); ?></b><br><span style="font-size:11px;color:#64748b;"><?php echo date('D', strtotime($c['date'])); ?></span></td>
-                                <td><?php echo html_escape(isset($correction_types[$c['request_type']]) ? $correction_types[$c['request_type']] : $c['request_type']); ?></td>
-                                <td style="white-space:nowrap;">
+                                <td class="sa-td-head"><div><b><?php echo date('d M Y', strtotime($c['date'])); ?></b><br><span style="font-size:11px;color:#64748b;"><?php echo date('D', strtotime($c['date'])); ?></span></div><span class="sa-corr-status sa-head-status" style="background:<?php echo $badge[$c['status']] ?? '#64748b'; ?>;"><?php echo ucfirst(html_escape($c['status'])); ?></span></td>
+                                <td data-label="Request"><?php echo html_escape(isset($correction_types[$c['request_type']]) ? $correction_types[$c['request_type']] : $c['request_type']); ?></td>
+                                <td data-label="Times asked" style="white-space:nowrap;">
                                     <?php echo $c['requested_in'] ? 'In ' . date('h:i A', strtotime($c['requested_in'])) : ''; ?>
                                     <?php echo $c['requested_out'] ? '<br>Out ' . date('h:i A', strtotime($c['requested_out'])) : ''; ?>
                                 </td>
-                                <td style="max-width:260px; white-space:normal;"><?php echo html_escape($c['reason']); ?>
+                                <td data-label="Reason" style="max-width:260px; white-space:normal;"><?php echo html_escape($c['reason']); ?>
                                     <?php if (!empty($c['admin_remark'])) { ?><div style="font-size:11.5px;color:#475569;margin-top:3px;"><b>Office:</b> <?php echo html_escape($c['admin_remark']); ?></div><?php } ?>
                                 </td>
-                                <td><span class="sa-corr-status" style="background:<?php echo $badge[$c['status']] ?? '#64748b'; ?>;"><?php echo ucfirst(html_escape($c['status'])); ?></span></td>
-                                <td class="text-right"><?php if ($c['status'] === 'pending') { ?><button type="button" class="btn btn-xs btn-default sa-corr-cancel" data-id="<?php echo $c['id']; ?>">Withdraw</button><?php } ?></td>
+                                <td class="sa-td-status" data-label="Status"><span class="sa-corr-status" style="background:<?php echo $badge[$c['status']] ?? '#64748b'; ?>;"><?php echo ucfirst(html_escape($c['status'])); ?></span></td>
+                                <td class="text-right<?php echo $c['status'] === 'pending' ? ' sa-td-action' : ' hidden-xs'; ?>"><?php if ($c['status'] === 'pending') { ?><button type="button" class="btn btn-xs btn-default sa-corr-cancel" data-id="<?php echo $c['id']; ?>">Withdraw</button><?php } ?></td>
                             </tr>
                         <?php } ?>
                         </tbody>
@@ -549,10 +610,14 @@ $(function () {
         statusEl.style.display = 'block';
         statusEl.className = 'alert ' + (cls || 'alert-info');
         statusEl.innerHTML = msg;
+        if (window.innerWidth < 768 && statusEl.scrollIntoView) { statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
     }
+
+    var wrapEl = document.getElementById('scanner-wrap');
 
     function stopCamera() {
         scanning = false;
+        wrapEl.classList.add('sa-paused');
         if (stream) {
             stream.getTracks().forEach(function (t) { t.stop(); });
             stream = null;
@@ -577,9 +642,12 @@ $(function () {
                 video.muted = true;
                 video.play();
                 scanning = true;
+                wrapEl.classList.remove('sa-paused');
                 requestAnimationFrame(tick);
             })
             .catch(function () {
+                wrapEl.classList.add('sa-paused');
+                rescanBtn.style.display = 'inline-block';
                 showStatus('Unable to access the camera. Please allow camera permission.', 'alert-danger');
             });
     }
@@ -839,12 +907,6 @@ $(function () {
     $('#modal-btn-break-out, #btn-break-out').on('click', function () { triggerAction('break_out'); });
     $('#modal-btn-break-in, #btn-break-in').on('click', function () { triggerAction('break_in'); });
     $('#modal-btn-final-out, #btn-final-out').on('click', function () { triggerAction('final_out'); });
-
-    document.getElementById('btn-final-out').addEventListener('click', function () {
-        chooseBox.style.display = 'none';
-        showStatus('<i class="fa fa-spinner fa-spin"></i> Marking out...', 'alert-info');
-        submit({ action: 'final_out' });
-    });
 
     document.getElementById('btn-choose-cancel').addEventListener('click', function () {
         chooseBox.style.display = 'none';

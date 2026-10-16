@@ -54,7 +54,7 @@
  * NOTE: If you change these, also change the error_reporting() code below
  */
  
-	define('ENVIRONMENT', 'production');
+	define('ENVIRONMENT', 'development');
 	@ini_set('pcre.backtrack_limit', '50000000');
 	@ini_set('pcre.recursion_limit', '50000000');
 	
