@@ -3075,131 +3075,246 @@ $call_logs_count = !empty($stu_calls) ? count($stu_calls) : 0;
 
                                         <?php
                                         if (!empty($exams)) {
-                                            foreach ($exams as $exam_key => $exam_value) {
+                                            // Sort exams chronologically (e.g. SBBT - I before SBBT - II, III, IV, then Term End Exam - I)
+                                            usort($exams, function($a, $b) {
+                                                // Convert Roman numerals to integers for accurate ordering
+                                                $extractOrder = function($name) {
+                                                    $romanMap = ['VIII' => 8, 'VII' => 7, 'VI' => 6, 'IV' => 4, 'V' => 5, 'III' => 3, 'II' => 2, 'I' => 1];
+                                                    $prefixPriority = 50;
+                                                    
+                                                    // SBBT / Unit Tests first
+                                                    if (stripos($name, 'SBBT') !== false || stripos($name, 'UNIT') !== false || stripos($name, 'PERIODIC') !== false || stripos($name, 'PT') !== false) {
+                                                        $prefixPriority = 10;
+                                                    } elseif (stripos($name, 'TERM') !== false || stripos($name, 'MID') !== false || stripos($name, 'HALF') !== false) {
+                                                        $prefixPriority = 20;
+                                                    } elseif (stripos($name, 'PRE') !== false || stripos($name, 'MOCK') !== false) {
+                                                        $prefixPriority = 30;
+                                                    } elseif (stripos($name, 'ANNUAL') !== false || stripos($name, 'FINAL') !== false) {
+                                                        $prefixPriority = 40;
+                                                    }
 
-                                                $total_marks = 0;
-                                                $total_max_marks = 0;
+                                                    $num = 99;
+                                                    foreach ($romanMap as $r => $val) {
+                                                        if (preg_match('/\b' . $r . '\b/i', $name)) {
+                                                            $num = $val;
+                                                            break;
+                                                        }
+                                                    }
+                                                    if ($num === 99 && preg_match('/\b(\d+)\b/', $name, $matches)) {
+                                                        $num = (int)$matches[1];
+                                                    }
+
+                                                    return ($prefixPriority * 100) + $num;
+                                                };
+
+                                                $orderA = $extractOrder($a->name);
+                                                $orderB = $extractOrder($b->name);
+
+                                                if ($orderA === $orderB) {
+                                                    // Fallback to exam ID or created_at
+                                                    return (int)$a->id - (int)$b->id;
+                                                }
+                                                return $orderA - $orderB;
+                                            });
+
+                                            // 1. Collect all unique subjects across all assigned exams preserving order
+                                            $all_subjects = [];
+                                            foreach ($exams as $ex) {
+                                                if (!empty($ex->subjects)) {
+                                                    foreach ($ex->subjects as $sub) {
+                                                        if (!isset($all_subjects[$sub->subject_id])) {
+                                                            $all_subjects[$sub->subject_id] = [
+                                                                'subject_id' => $sub->subject_id,
+                                                                'subject_name' => $sub->subject_name,
+                                                                'subject_code' => !empty($sub->subject_code) ? $sub->subject_code : '',
+                                                            ];
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            // Precalculate exam totals, max marks, percentage, grade, rank
+                                            $exam_meta = [];
+                                            foreach ($exams as $ex_idx => $ex) {
+                                                $ex_total = 0;
+                                                $ex_max = 0;
+                                                $sub_scores = [];
+
+                                                if (!empty($ex->subjects)) {
+                                                    foreach ($ex->subjects as $sub) {
+                                                        $sub_obtained = 0;
+                                                        $sub_max = 0;
+                                                        $has_score = false;
+                                                        $is_all_absent = true;
+
+                                                        if (!empty($ex->exam_assessments)) {
+                                                            foreach ($ex->exam_assessments as $assess) {
+                                                                $exists = find_subject_assessment_exists($ex->exam_subject_assessments, $sub->id, $assess->id);
+                                                                if ($exists) {
+                                                                    $val_arr = findAssessmentValue($sub->subject_id, $assess->id, $ex);
+                                                                    $sub_max += (float)$val_arr['maximum_marks'];
+                                                                    if (!empty($val_arr['is_absent'])) {
+                                                                        $has_score = true;
+                                                                    } elseif ($val_arr['marks'] !== 'N/A' && $val_arr['marks'] !== '') {
+                                                                        $sub_obtained += (float)$val_arr['marks'];
+                                                                        $has_score = true;
+                                                                        $is_all_absent = false;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+
+                                                        if ($has_score) {
+                                                            $sub_scores[$sub->subject_id] = [
+                                                                'obtained' => $is_all_absent ? 'ABS' : $sub_obtained,
+                                                                'max' => $sub_max,
+                                                                'is_absent' => $is_all_absent
+                                                            ];
+                                                            if (!$is_all_absent) {
+                                                                $ex_total += $sub_obtained;
+                                                            }
+                                                            $ex_max += $sub_max;
+                                                        } else {
+                                                            $sub_scores[$sub->subject_id] = [
+                                                                'obtained' => '-',
+                                                                'max' => $sub_max,
+                                                                'is_absent' => false
+                                                            ];
+                                                        }
+                                                    }
+                                                }
+
+                                                $pct = ($ex_max > 0) ? round(($ex_total / $ex_max) * 100, 2) : 0;
+                                                $exam_meta[$ex_idx] = [
+                                                    'total' => $ex_total,
+                                                    'max' => $ex_max,
+                                                    'pct' => $pct,
+                                                    'grade' => getGrade($ex->grades, $pct),
+                                                    'rank' => !empty($ex->rank) ? $ex->rank : '-',
+                                                    'sub_scores' => $sub_scores
+                                                ];
+                                            }
                                         ?>
 
-                                                <div class="sp2-card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
-                                                    <div class="sp2-section-title" style="padding: 16px 20px; border-bottom: 1px solid #eaeaea; background: #fdfdfd; margin: 0; display: flex; align-items: center; justify-content: space-between;">
-                                                        <div style="display:flex; align-items:center; gap:8px;">
-                                                            <i class="fa fa-graduation-cap" style="color: <?php echo $theme_color; ?>; font-size: 16px;"></i> 
-                                                            <strong style="font-size:14px;"><?php echo  $exam_value->name; ?></strong>
-                                                        </div>
+                                            <div class="sp2-card" style="padding: 0; overflow: hidden; margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
+                                                <div class="sp2-section-title" style="padding: 16px 20px; border-bottom: 1px solid #eaeaea; background: #ffffff; margin: 0; display: flex; align-items: center; justify-content: space-between;">
+                                                    <div style="display:flex; align-items:center; gap:8px;">
+                                                        <i class="fa fa-graduation-cap" style="color: <?php echo $theme_color; ?>; font-size: 18px;"></i> 
                                                         <div>
-                                                            <?php if ($exam_value->is_publish == 1): ?>
-                                                                <span class="label label-success" style="font-size:11px; padding:3px 8px;"><i class="fa fa-check-circle"></i> Published</span>
-                                                            <?php else: ?>
-                                                                <span class="label label-default" style="font-size:11px; padding:3px 8px; background:#e2e8f0; color:#475569;"><i class="fa fa-clock-o"></i> Unpublished / Draft</span>
-                                                            <?php endif; ?>
+                                                            <strong style="font-size:15px; color:#0f172a;">Academic Performance &mdash; Consolidated Exams</strong>
+                                                            <div style="font-size:11px; color:#64748b; font-weight:normal; margin-top:2px;">Consolidated subject-wise marks across all evaluated examinations</div>
                                                         </div>
                                                     </div>
-                                                    <div class="table-responsive" style="padding: 20px;">
-                                                        <?php
-                                                        if (!empty($exam_value->subjects)) {
-                                                        ?>
-                                                            <table class="table table-bordered sp2-exam-table mb0">
-                                                                <tbody>
-                                                                    <tr>
-                                                                        <td class="bolds" style="background: #f9fafb; color: #4b5563; font-size: 12px; text-transform: uppercase;">
-                                                                            <?php echo $this->lang->line('subject'); ?>
-                                                                        </td>
-                                                                        <?php
-
-                                                                        foreach ($exam_value->exam_assessments as $exam_assessment_key => $exam_assessment_value) {
-                                                                        ?>
-                                                                            <td class="text-center bolds">
-
-                                                                                <?php $assessment_code = ($exam_assessment_value->code == "") ? "" : " (" . $exam_assessment_value->code . ")"; ?>
-                                                                                <?php echo $exam_assessment_value->name . $assessment_code; ?>
-
-
-                                                                                <br />
-                                                                                (<?php echo $this->lang->line('max'); ?> <?php echo $exam_assessment_value->maximum_marks; ?>)
-                                                                            </td>
-                                                                        <?php
-                                                                        }
-
-                                                                        ?>
-                                                                        <td class="bolds">
-                                                                            <?php echo $this->lang->line('total'); ?>
-                                                                        </td>
-                                                                    </tr>
-
-                                                                    <?php
-                                                                    foreach ($exam_value->subjects as $subject_key => $subject_value) {
-                                                                        $subject_total = 0;
-                                                                    ?>
-                                                                        <tr>
-                                                                            <td>
-                                                                                <?php $subject_code = ($subject_value->subject_code == "") ? "" : " (" . $subject_value->subject_code . ")"; ?>
-                                                                                <?php echo $subject_value->subject_name . $subject_code; ?>
-                                                                            </td>
-                                                                            <?php
-                                                                            foreach ($exam_value->exam_assessments as $exam_assessment_key => $exam_assessment_value) {
-
-                                                                            ?>
-                                                                                <td class="text-center">
-                                                                                    <?php
-
-                                                                                    $assessment_exists =  find_subject_assessment_exists($exam_value->exam_subject_assessments, $subject_value->id, $exam_assessment_value->id);
-
-                                                                                    if ($assessment_exists) {
-                                                                                        $assessment_array = findAssessmentValue($subject_value->subject_id, $exam_assessment_value->id, $exam_value);
-                                                                                        echo ($assessment_array['is_absent']) ? $this->lang->line('abs') : $assessment_array['marks'];
-                                                                                        if ($assessment_array['marks'] == "N/A") {
-                                                                                            $assessment_array['marks'] = 0;
-                                                                                        }
-                                                                                        $subject_total += $assessment_array['marks'];
-                                                                                        $total_max_marks += $assessment_array['maximum_marks'];
-                                                                                        $total_marks += $assessment_array['marks'];
-                                                                                    } else {
-                                                                                        echo "<b>xx</b>";
-                                                                                    }
-
-                                                                                    ?>
-                                                                                </td>
-                                                                            <?php
-                                                                            }
-                                                                            ?>
-                                                                            <td class="bolds">
-                                                                                <?php echo  two_digit_float($subject_total); ?>
-                                                                            </td>
-                                                                        </tr>
-                                                                    <?php
-                                                                    }
-                                                                    ?>
-
-                                                                </tbody>
-
-                                                            </table>
-                                                        <?php
-
-                                                        }
-                                                        if ($total_max_marks > 0) {
-                                                            $exam_percentage = getPercent($total_max_marks, $total_marks);
-                                                        } else {
-                                                            $exam_percentage = 0;
-                                                        }
-                                                        ?>
-
-                                                        <table class="table table-bordered sp2-exam-summary-table mb0" style="margin-top: 16px; border: 2px solid #eaeaea;">
-                                                            <tr>
-                                                                <td class="bolds" style="background: #fdfdfd;"><?php echo $this->lang->line('total_marks'); ?> <div style="font-size: 16px; color: <?php echo $theme_color; ?>;"><?php echo $total_marks . " / " . $total_max_marks; ?></div></td>
-                                                                <td class="bolds" style="background: #fdfdfd;"><?php echo $this->lang->line('percentage'); ?> (%) <div style="font-size: 16px; color: <?php echo $theme_color; ?>;"><?php echo $exam_percentage; ?>%</div></td>
-                                                                <td class="bolds" style="background: #fdfdfd;"><?php echo $this->lang->line('grade'); ?> <div style="font-size: 16px; color: #10b981;"><?php echo getGrade($exam_value->grades, $exam_percentage); ?></div></td>
-                                                                <td class="bolds" style="background: #fdfdfd;"><?php echo $this->lang->line('rank'); ?> <div style="font-size: 16px; color: #f59e0b;"><?php echo $exam_value->rank; ?></div></td>
-                                                            </tr>
-                                                        </table>
+                                                    <div>
+                                                        <span class="badge" style="background:#f1f5f9; color:#475569; font-size:11px; padding:6px 12px; border:1px solid #e2e8f0;">
+                                                            <?php echo count($exams); ?> Exam<?php echo count($exams) > 1 ? 's' : ''; ?> Evaluated
+                                                        </span>
                                                     </div>
                                                 </div>
 
-                                            <?php
+                                                <div class="table-responsive" style="padding: 15px 20px 20px;">
+                                                    <table class="table table-bordered table-hover mb0" style="background:#fff; font-size:12px; border-collapse:separate; border-spacing:0; width:100%; border:1px solid #e2e8f0; border-radius:6px; overflow:hidden;">
+                                                        <thead>
+                                                            <tr style="background:#f8fafc; color:#334155;">
+                                                                <th style="vertical-align:middle; width:28%; padding:12px 14px; font-weight:700; border-bottom:2px solid #cbd5e1; text-transform:uppercase; letter-spacing:0.5px; font-size:11px;">
+                                                                    <?php echo $this->lang->line('subject'); ?>
+                                                                </th>
+                                                                <?php foreach ($exams as $ex_idx => $ex_val): ?>
+                                                                    <th class="text-center" style="vertical-align:top; padding:10px 12px; border-bottom:2px solid #cbd5e1; border-left:1px solid #e2e8f0; min-width:130px;">
+                                                                        <div style="font-weight:700; color:#0f172a; font-size:12px; margin-bottom:4px;">
+                                                                            <?php echo htmlspecialchars($ex_val->name); ?>
+                                                                        </div>
+                                                                        <?php if ($ex_val->is_publish == 1): ?>
+                                                                            <span class="label label-success" style="font-size:9px; padding:1px 6px;"><i class="fa fa-check-circle"></i> Published</span>
+                                                                        <?php else: ?>
+                                                                            <span class="label label-default" style="font-size:9px; padding:1px 6px; background:#e2e8f0; color:#475569;">Draft</span>
+                                                                        <?php endif; ?>
+                                                                    </th>
+                                                                <?php endforeach; ?>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <?php foreach ($all_subjects as $s_id => $s_data): ?>
+                                                                <tr>
+                                                                    <td style="padding:10px 14px; vertical-align:middle; background:#fdfdfd; border-top:1px solid #f1f5f9;">
+                                                                        <strong style="color:#1e293b;"><?php echo htmlspecialchars($s_data['subject_name']); ?></strong>
+                                                                        <?php if (!empty($s_data['subject_code'])): ?>
+                                                                            <span class="text-muted" style="font-size:11px;">(<?php echo htmlspecialchars($s_data['subject_code']); ?>)</span>
+                                                                        <?php endif; ?>
+                                                                    </td>
+                                                                    <?php foreach ($exams as $ex_idx => $ex_val): 
+                                                                        $score_info = isset($exam_meta[$ex_idx]['sub_scores'][$s_id]) ? $exam_meta[$ex_idx]['sub_scores'][$s_id] : null;
+                                                                    ?>
+                                                                        <td class="text-center" style="padding:10px 12px; vertical-align:middle; border-top:1px solid #f1f5f9; border-left:1px solid #f1f5f9;">
+                                                                            <?php if ($score_info && $score_info['obtained'] !== '-'): ?>
+                                                                                <?php if ($score_info['is_absent']): ?>
+                                                                                    <span class="label label-danger" style="font-size:10px; padding:2px 6px;">ABS</span>
+                                                                                <?php else: ?>
+                                                                                    <span style="font-weight:700; color:#0f172a; font-size:13px;"><?php echo $score_info['obtained']; ?></span>
+                                                                                    <?php if ($score_info['max'] > 0): ?>
+                                                                                        <span style="color:#64748b; font-size:11px;"> / <?php echo $score_info['max']; ?></span>
+                                                                                    <?php endif; ?>
+                                                                                <?php endif; ?>
+                                                                            <?php else: ?>
+                                                                                <span style="color:#cbd5e1; font-weight:600;">&mdash;</span>
+                                                                            <?php endif; ?>
+                                                                        </td>
+                                                                    <?php endforeach; ?>
+                                                                </tr>
+                                                            <?php endforeach; ?>
 
-                                            }
+                                                            <!-- Summary Rows -->
+                                                            <tr style="background:#f8fafc; font-weight:700; border-top:2px solid #cbd5e1;">
+                                                                <td style="padding:10px 14px; color:#334155; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">
+                                                                    <i class="fa fa-calculator text-muted"></i> <?php echo $this->lang->line('total_marks'); ?>
+                                                                </td>
+                                                                <?php foreach ($exams as $ex_idx => $ex_val): ?>
+                                                                    <td class="text-center" style="padding:10px 12px; font-weight:800; color:#0284c7; font-size:13px; border-left:1px solid #e2e8f0;">
+                                                                        <?php echo $exam_meta[$ex_idx]['total']; ?> <span style="font-weight:500; font-size:11px; color:#64748b;">/ <?php echo $exam_meta[$ex_idx]['max']; ?></span>
+                                                                    </td>
+                                                                <?php endforeach; ?>
+                                                            </tr>
+
+                                                            <tr style="background:#f8fafc; font-weight:700;">
+                                                                <td style="padding:9px 14px; color:#334155; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">
+                                                                    <i class="fa fa-percent text-muted"></i> <?php echo $this->lang->line('percentage'); ?> (%)
+                                                                </td>
+                                                                <?php foreach ($exams as $ex_idx => $ex_val): ?>
+                                                                    <td class="text-center" style="padding:9px 12px; font-weight:700; color:#334155; border-left:1px solid #e2e8f0;">
+                                                                        <?php echo $exam_meta[$ex_idx]['pct']; ?>%
+                                                                    </td>
+                                                                <?php endforeach; ?>
+                                                            </tr>
+
+                                                            <tr style="background:#f8fafc; font-weight:700;">
+                                                                <td style="padding:9px 14px; color:#334155; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">
+                                                                    <i class="fa fa-star text-muted"></i> <?php echo $this->lang->line('grade'); ?>
+                                                                </td>
+                                                                <?php foreach ($exams as $ex_idx => $ex_val): ?>
+                                                                    <td class="text-center" style="padding:9px 12px; font-weight:800; color:#10b981; border-left:1px solid #e2e8f0;">
+                                                                        <?php echo $exam_meta[$ex_idx]['grade']; ?>
+                                                                    </td>
+                                                                <?php endforeach; ?>
+                                                            </tr>
+
+                                                            <tr style="background:#f8fafc; font-weight:700;">
+                                                                <td style="padding:9px 14px; color:#334155; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;">
+                                                                    <i class="fa fa-trophy text-muted"></i> <?php echo $this->lang->line('rank'); ?>
+                                                                </td>
+                                                                <?php foreach ($exams as $ex_idx => $ex_val): ?>
+                                                                    <td class="text-center" style="padding:9px 12px; font-weight:800; color:#f59e0b; border-left:1px solid #e2e8f0;">
+                                                                        <?php echo $exam_meta[$ex_idx]['rank']; ?>
+                                                                    </td>
+                                                                <?php endforeach; ?>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+
+                                        <?php
                                         } else {
-                                            ?>
+                                        ?>
                                             <div class="alert alert-info">
                                                 <?php echo $this->lang->line('no_exam_assigned'); ?>
                                             </div>

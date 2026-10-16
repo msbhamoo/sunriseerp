@@ -19,23 +19,40 @@ class Staffattendancemodel extends MY_Model {
         } else {
             date_default_timezone_set('Asia/Kolkata');
         }
+        $this->load->model('staffAttendaceSetting_model');
     }
-    
+
+    /** Shift in force for the staff member's role on $date (snapshot value for staff_attendance.shift_id). */
+    public function shiftIdForStaff($staff_id, $date)
+    {
+        $role = $this->db->select('role_id')->where('staff_id', $staff_id)->get('staff_roles')->row();
+        if (empty($role)) {
+            return null;
+        }
+        return $this->staffAttendaceSetting_model->resolveShiftId($role->role_id, $date);
+    }
+
     public function addorUpdate($attendances)
     {
         $this->db->trans_start();
         $this->db->trans_strict(false);
-      
+        $has_source_col = $this->db->field_exists('attendance_source', 'staff_attendance');
+
         if(!empty($attendances)){
             foreach ($attendances as $attendance_key => $attendance_value) {
-                            
+
                 $this->db->where('staff_id',  $attendance_value['staff_id']);
                 $this->db->where('date', $attendance_value['date']);
                 $query = $this->db->get('staff_attendance');
                 
                 if ($query->num_rows() > 0) {
                     $existing = $query->row();
-                    $isLeaveLike = in_array((int)$attendance_value['staff_attendance_type_id'], [3, 5, 8]);
+                    $leaveLikeIds = array_filter(array(
+                        $this->staffAttendaceSetting_model->getAttendanceTypeIdByKey('a'),
+                        $this->staffAttendaceSetting_model->getAttendanceTypeIdByKey('h'),
+                        $this->staffAttendaceSetting_model->getAttendanceTypeIdByKey('on_duty'),
+                    ));
+                    $isLeaveLike = in_array((int)$attendance_value['staff_attendance_type_id'], $leaveLikeIds, true);
 
                     // Preserve existing in_time/out_time from biometric or QR if manual form posted empty
                     if ($attendance_value['in_time'] === null && !empty($existing->in_time) && $existing->in_time !== '00:00:00' && !$isLeaveLike) {
@@ -43,6 +60,14 @@ class Staffattendancemodel extends MY_Model {
                     }
                     if ($attendance_value['out_time'] === null && !empty($existing->out_time) && $existing->out_time !== '00:00:00' && !$isLeaveLike) {
                         $attendance_value['out_time'] = $existing->out_time;
+                    }
+                    if (empty($existing->shift_id)) {
+                        $attendance_value['shift_id'] = $this->shiftIdForStaff($attendance_value['staff_id'], $attendance_value['date']);
+                    }
+                    // A status changed by hand is locked against later biometric syncs. Rows the form
+                    // re-posts unchanged keep their source, so syncs can still update them.
+                    if ($has_source_col && (string) $existing->staff_attendance_type_id !== (string) $attendance_value['staff_attendance_type_id']) {
+                        $attendance_value['attendance_source'] = 'manual';
                     }
 
                     // Record exists, update it
@@ -64,6 +89,10 @@ class Staffattendancemodel extends MY_Model {
                     if (!isset($attendance_value['remark']) || $attendance_value['remark'] === null) {
                         $attendance_value['remark'] = '';
                     }
+                    $attendance_value['shift_id'] = $this->shiftIdForStaff($attendance_value['staff_id'], $attendance_value['date']);
+                    if ($has_source_col && !isset($attendance_value['attendance_source'])) {
+                        $attendance_value['attendance_source'] = 'manual';
+                    }
                     $this->db->insert('staff_attendance', $attendance_value);
                 }
 
@@ -81,6 +110,37 @@ class Staffattendancemodel extends MY_Model {
         }    
     }
 
+    /**
+     * Merge a sync remark ("Late: 00:15 | Early Out: 00:30 | ...") into the existing remark without
+     * repeating it on every sync. Machine parts ("Late:", "Early Out:") are replaced in place; other
+     * parts are appended only if not already present. Hand-written text is kept.
+     */
+    public function mergeSyncRemark($existing, $incoming)
+    {
+        $parts = IsNullOrEmptyString($existing) ? array() : array_map('trim', explode(' | ', $existing));
+        foreach (array_map('trim', explode(' | ', (string) $incoming)) as $new) {
+            if ($new === '' || in_array($new, $parts, true)) {
+                continue;
+            }
+            $replaced = false;
+            foreach (array('Late:', 'Early Out:') as $prefix) {
+                if (strpos($new, $prefix) === 0) {
+                    foreach ($parts as $i => $p) {
+                        if (strpos($p, $prefix) === 0) {
+                            $parts[$i] = $new;
+                            $replaced = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!$replaced) {
+                $parts[] = $new;
+            }
+        }
+        return implode(' | ', array_filter($parts, 'strlen'));
+    }
+
     public function saveBiometricAttendanceBatch($attendances)
     {
         $this->db->trans_start();
@@ -95,30 +155,40 @@ class Staffattendancemodel extends MY_Model {
 
                 if ($query->num_rows() > 0) {
                     $existing = $query->row();
+                    // A status set by hand, by approved leave or by a duty pass is never overwritten by a sync
+                    // (punch times are still recorded).
+                    $isManual = isset($existing->attendance_source) && in_array($existing->attendance_source, array('manual', 'leave', 'duty_pass'), true);
                     $update = array(
                         'biometric_attendence'  => 1,
-                        'attendance_source'     => 'biometric',
                         'updated_at'            => date('Y-m-d H:i:s'),
                     );
+                    if (!$isManual) {
+                        $update['attendance_source'] = 'biometric';
+                    }
 
-                    // Update in_time if biometric in_time provided
-                    if (!empty($row['in_time'])) {
+                    // Only widen the day: take an earlier in-punch / later out-punch, or fill an empty one.
+                    $hasIn  = !empty($existing->in_time) && $existing->in_time !== '00:00:00';
+                    $hasOut = !empty($existing->out_time) && $existing->out_time !== '00:00:00';
+                    if (!empty($row['in_time']) && (!$hasIn || $row['in_time'] < $existing->in_time)) {
                         $update['in_time'] = $row['in_time'];
                     }
-                    // Update out_time if biometric out_time provided
-                    if (!empty($row['out_time'])) {
+                    if (!empty($row['out_time']) && (!$hasOut || $row['out_time'] > $existing->out_time)) {
                         $update['out_time'] = $row['out_time'];
                     }
-                    // Update attendance type if empty or present/late
-                    if (!empty($row['staff_attendance_type_id'])) {
+                    if (!$isManual && !empty($row['staff_attendance_type_id'])) {
                         $update['staff_attendance_type_id'] = $row['staff_attendance_type_id'];
                     }
                     if (!empty($row['biometric_device_data'])) {
                         $update['biometric_device_data'] = $row['biometric_device_data'];
                     }
+                    if (empty($existing->shift_id) && !empty($row['shift_id'])) {
+                        $update['shift_id'] = $row['shift_id'];
+                    }
                     if (!empty($row['remark'])) {
-                        $existingRemark = IsNullOrEmptyString($existing->remark) ? '' : $existing->remark . ' | ';
-                        $update['remark'] = $existingRemark . $row['remark'];
+                        $merged = $this->mergeSyncRemark($existing->remark, $row['remark']);
+                        if ($merged !== (string) $existing->remark) {
+                            $update['remark'] = $merged;
+                        }
                     }
 
                     $this->db->where('id', $existing->id);
@@ -327,14 +397,16 @@ class Staffattendancemodel extends MY_Model {
             }
         }
 
+        $absent_id  = $this->staffAttendaceSetting_model->getAttendanceTypeIdByKey('a');
+        $on_duty_id = $this->staffAttendaceSetting_model->getAttendanceTypeIdByKey('on_duty');
         foreach ($results as $k => $row) {
             $st_id = $row['id'];
             if (isset($active_duty_passes[$st_id])) {
                 $dp = $active_duty_passes[$st_id];
                 $results[$k]['duty_pass'] = $dp;
                 // If staff has no attendance or is marked absent / on duty
-                if (empty($row['staff_attendance_type_id']) || $row['staff_attendance_type_id'] == 3 || $row['staff_attendance_type_id'] == 8) {
-                    $results[$k]['staff_attendance_type_id'] = 8;
+                if (empty($row['staff_attendance_type_id']) || $row['staff_attendance_type_id'] == $absent_id || $row['staff_attendance_type_id'] == $on_duty_id) {
+                    $results[$k]['staff_attendance_type_id'] = $on_duty_id;
                     $results[$k]['att_type'] = 'On Duty';
                     $results[$k]['key'] = '<b class="text text-success" style="color:#0d9488;">OD</b>';
                     $remark_prefix = 'Duty Pass: ' . $dp['duty_pass_no'] . ' - ' . $dp['duty_title'];
@@ -375,6 +447,7 @@ class Staffattendancemodel extends MY_Model {
             if ($attendance_range) {
                 $data['staff_attendance_type_id'] = $attendance_range->staff_attendence_type_id;
                 $data['in_time'] = $time;
+                $data['shift_id'] = $attendance_range->shift_id;
 
                 $this->db->insert('staff_attendance', $data);
                 $status = 1; //for successfully saving
@@ -390,7 +463,7 @@ class Staffattendancemodel extends MY_Model {
                 $status = 0;
             } else {
                 $updateArr = ['out_time' => $time];
-                $return_attendance_type =  $this->staff_schedule_hours($return_result->staff_id, $return_result->in_time);
+                $return_attendance_type =  $this->staff_schedule_hours($return_result->staff_id, $return_result->in_time, $return_result->shift_id);
                 if ($return_attendance_type) {
                     $updateArr['staff_attendance_type_id'] = $return_attendance_type;
                 }
@@ -404,24 +477,23 @@ class Staffattendancemodel extends MY_Model {
         return $status;
     }
 
-    public function staff_schedule_hours($staff_id, $in_time)
+    public function staff_schedule_hours($staff_id, $in_time, $shift_id = null)
     {
         $date = date('Y-m-d');
-        $sql    = "SELECT staff_roles.role_id,staff_attendence_schedules.staff_attendence_type_id as staff_attendence_schedule_staff_attendence_type_id,staff_attendence_schedules.entry_time_from,staff_attendence_schedules.entry_time_to,staff_attendence_schedules.total_institute_hour FROM `staff` INNER JOIN staff_roles on staff_roles.staff_id=staff.id INNER join staff_attendence_schedules on staff_attendence_schedules.role_id = staff_roles.role_id WHERE staff.id=" . $this->db->escape($staff_id);     
+        $role = $this->db->select('role_id')->where('staff_id', $staff_id)->get('staff_roles')->row();
+        $bands = $role ? $this->staffAttendaceSetting_model->getRoleShiftBands($role->role_id, $date, $shift_id) : array();
 
         $current_time = date('H:i:s');
-        $query  = $this->db->query($sql);
-        if ($query->num_rows() > 0) {
+        if (!empty($bands)) {
 
             $return_attedance_type = false;
             $time_entry_seconds = strtotime("1970-01-01 $in_time UTC");
             $time_current_seconds = strtotime("1970-01-01 $current_time UTC");
             $total_spend_time = $time_current_seconds - $time_entry_seconds;
 
-            $result = $query->result();
-            $find_array = array();           
+            $find_array = array();
 
-            foreach ($result as $result_key => $result_value) {
+            foreach ($bands as $result_key => $result_value) {
 
                 $entry_time_from_seconds = strtotime("1970-01-01 $result_value->entry_time_from UTC");
                 $entry_time_to_seconds = strtotime("1970-01-01 $result_value->entry_time_to UTC");
@@ -429,7 +501,7 @@ class Staffattendancemodel extends MY_Model {
                 if ($entry_time_from_seconds  <= $time_entry_seconds && $entry_time_to_seconds >= $time_entry_seconds) {
 
                     $find_array[] = array(
-                        'staff_attendence_type_id' => $result_value->staff_attendence_schedule_staff_attendence_type_id,
+                        'staff_attendence_type_id' => $result_value->staff_attendence_type_id,
                         'time_schedule_seconds' => strtotime("1970-01-01 $result_value->total_institute_hour UTC")
                     );
                 }
@@ -452,13 +524,12 @@ class Staffattendancemodel extends MY_Model {
      * given day: the entry time of the band the in_time fell into, plus that
      * band's total_institute_hour. Returns "H:i:s" or null if undeterminable.
      */
-    public function scheduleEarliestOut($role_id, $in_time)
+    public function scheduleEarliestOut($role_id, $in_time, $shift_id = null)
     {
         if (IsNullOrEmptyString($in_time)) {
             return null;
         }
-        $this->db->where('role_id', $role_id);
-        $rows = $this->db->get('staff_attendence_schedules')->result();
+        $rows = $this->staffAttendaceSetting_model->getRoleShiftBands($role_id, date('Y-m-d'), $shift_id);
         if (empty($rows)) {
             return null;
         }
@@ -517,7 +588,7 @@ class Staffattendancemodel extends MY_Model {
 
         // ---- IN scan: no row yet, or row exists without an in_time ----
         if (empty($row) || IsNullOrEmptyString($row->in_time)) {
-            $range = $this->staffAttendaceSetting_model->getAttendanceTypeByRole($role_id, $now);
+            $range = $this->staffAttendaceSetting_model->getAttendanceTypeByRole($role_id, $now, $date, !empty($row) ? $row->shift_id : null);
             if (!$range) {
                 return array('status' => 'no_schedule', 'message' => 'No attendance schedule is configured for your role at this time. Please contact admin.');
             }
@@ -526,6 +597,7 @@ class Staffattendancemodel extends MY_Model {
                 'date'                     => $date,
                 'in_time'                  => $now,
                 'staff_attendance_type_id' => $range->staff_attendence_type_id,
+                'shift_id'                 => $range->shift_id,
                 'remark'                   => '',
                 'is_active'                => 1,
             );
@@ -598,7 +670,7 @@ class Staffattendancemodel extends MY_Model {
                 $earliest_out = date('H:i:s', strtotime($opts['manual_earliest_out_time']));
             }
         } else {
-            $earliest_out = $this->scheduleEarliestOut($role_id, $row->in_time);
+            $earliest_out = $this->scheduleEarliestOut($role_id, $row->in_time, $row->shift_id);
         }
 
         if (!$confirm_early && $earliest_out !== null && $now < $earliest_out) {
@@ -611,9 +683,19 @@ class Staffattendancemodel extends MY_Model {
 
         // Record the out-scan.
         $update = array('out_time' => $now, 'updated_at' => date('Y-m-d H:i:s'));
-        $type   = $this->staff_schedule_hours($row->staff_id, $row->in_time);
+        $locked = isset($row->attendance_source) && in_array($row->attendance_source, array('manual', 'leave', 'duty_pass'), true);
+        $type   = $locked ? false : $this->staff_schedule_hours($row->staff_id, $row->in_time, $row->shift_id);
         if ($type) {
             $update['staff_attendance_type_id'] = $type;
+        }
+        // Leaving before the shift's "Early End Half" time turns Present / Late into Half Day,
+        // unless the status was set by hand.
+        if (!(isset($row->attendance_source) && in_array($row->attendance_source, array('manual', 'leave', 'duty_pass'), true))) {
+            $current_type = isset($update['staff_attendance_type_id']) ? $update['staff_attendance_type_id'] : $row->staff_attendance_type_id;
+            $new_type     = $this->staffAttendaceSetting_model->applyEarlyHalfRule($current_type, $now, $role_id, $date, $row->shift_id);
+            if ((string) $new_type !== (string) $current_type) {
+                $update['staff_attendance_type_id'] = $new_type;
+            }
         }
         $early_note = '';
         if ($earliest_out !== null && $now < $earliest_out) {
@@ -670,11 +752,12 @@ class Staffattendancemodel extends MY_Model {
         }
 
         // Get matching attendance type for role or fallback to Present
-        $default_type_id = 1; // Present
-        $range = $this->staffAttendaceSetting_model->getAttendanceTypeByRole($role_id, $now);
+        $default_type_id = $this->staffAttendaceSetting_model->getAttendanceTypeIdByKey('p');
+        $range = $this->staffAttendaceSetting_model->getAttendanceTypeByRole($role_id, $now, $date, !empty($row) ? $row->shift_id : null);
         if ($range && !empty($range->staff_attendence_type_id)) {
             $default_type_id = $range->staff_attendence_type_id;
         }
+        $shift_id = !empty($row->shift_id) ? $row->shift_id : $this->staffAttendaceSetting_model->resolveShiftId($role_id, $date);
 
         $reason = isset($opts['reason']) ? trim($opts['reason']) : '';
         $remark = 'Direct Check-Out (QR)' . ($reason !== '' ? ': ' . $reason : '');
@@ -686,6 +769,7 @@ class Staffattendancemodel extends MY_Model {
                 'in_time'                  => null,
                 'out_time'                 => $now,
                 'staff_attendance_type_id' => $default_type_id,
+                'shift_id'                 => $shift_id,
                 'remark'                   => $remark,
                 'is_active'                => 1,
                 'created_at'               => date('Y-m-d H:i:s'),
@@ -705,6 +789,9 @@ class Staffattendancemodel extends MY_Model {
                 'out_time'   => $now,
                 'updated_at' => date('Y-m-d H:i:s')
             );
+            if (empty($row->shift_id)) {
+                $update['shift_id'] = $shift_id;
+            }
             if (empty($row->staff_attendance_type_id)) {
                 $update['staff_attendance_type_id'] = $default_type_id;
                 $type_id = $default_type_id;
@@ -891,7 +978,8 @@ class Staffattendancemodel extends MY_Model {
         }
 
         $sql = "SELECT staff.id AS staff_id, staff.name, staff.surname, staff.employee_id,
-                       roles.id AS role_id, roles.name AS role_name, sa.date, sa.in_time, sa.out_time, sat.long_lang_name
+                       roles.id AS role_id, roles.name AS role_name, sa.date, sa.in_time, sa.out_time, sa.shift_id,
+                       COALESCE(NULLIF(sat.long_lang_name, ''), LOWER(TRIM(sat.key_value))) AS long_lang_name
                 FROM staff
                 LEFT JOIN staff_roles ON staff_roles.staff_id = staff.id
                 LEFT JOIN roles ON roles.id = staff_roles.role_id
@@ -930,6 +1018,7 @@ class Staffattendancemodel extends MY_Model {
         $map   = array();
         $map_times = array();
         $map_duty_passes = array();
+        $map_shift = array();
         foreach ($rows as $r) {
             if (!isset($seen[$r->staff_id])) {
                 $seen[$r->staff_id] = true;
@@ -945,6 +1034,9 @@ class Staffattendancemodel extends MY_Model {
                 $map_duty_passes[$r->staff_id] = array();
             }
             if (!empty($r->date)) {
+                if (!empty($r->shift_id)) {
+                    $map_shift[$r->staff_id][$r->date] = (int) $r->shift_id;
+                }
                 if (!empty($r->long_lang_name)) {
                     $map[$r->staff_id][$r->date] = $r->long_lang_name;
                 }
@@ -971,7 +1063,7 @@ class Staffattendancemodel extends MY_Model {
             }
         }
 
-        return array('staff' => $staff, 'map' => $map, 'map_times' => $map_times, 'map_duty_passes' => $map_duty_passes);
+        return array('staff' => $staff, 'map' => $map, 'map_times' => $map_times, 'map_duty_passes' => $map_duty_passes, 'map_shift' => $map_shift);
     }
 
 
@@ -1004,6 +1096,42 @@ class Staffattendancemodel extends MY_Model {
             }
         }
         return array_keys($dates);
+    }
+
+    /**
+     * Off days (Y-m-d => true) between two dates: Sundays plus calendar holidays, minus dates the
+     * annual calendar declares as working days (e.g. a working Sunday).
+     */
+    public function getOffDays($start, $end)
+    {
+        $off = array();
+        for ($t = strtotime($start); $t <= strtotime($end); $t += 86400) {
+            if ((int) date('w', $t) === 0) {
+                $off[date('Y-m-d', $t)] = true;
+            }
+        }
+        if (!$this->db->table_exists('annual_calendar')) {
+            return $off;
+        }
+        $rows = $this->db->query("SELECT from_date, to_date, is_working_day FROM annual_calendar
+                WHERE is_active = 1
+                AND (module_impact IS NULL OR module_impact LIKE '%attendance%')
+                AND DATE(from_date) <= " . $this->db->escape($end) . "
+                AND DATE(to_date) >= " . $this->db->escape($start) . "
+                ORDER BY is_working_day ASC")->result();
+        // Holidays first, then working-day entries, so a declared working day always wins.
+        foreach ($rows as $r) {
+            $d  = max(strtotime($start), strtotime(date('Y-m-d', strtotime($r->from_date))));
+            $to = min(strtotime($end), strtotime(date('Y-m-d', strtotime($r->to_date))));
+            for ($t = $d; $t <= $to; $t += 86400) {
+                if ((int) $r->is_working_day === 1) {
+                    unset($off[date('Y-m-d', $t)]);
+                } else {
+                    $off[date('Y-m-d', $t)] = true;
+                }
+            }
+        }
+        return $off;
     }
 
     /**
@@ -1056,6 +1184,9 @@ class Staffattendancemodel extends MY_Model {
             }
 
             $result[] = array(
+                'date_ymd'     => $row['date'],
+                'in_raw'       => $in_formatted !== '--' ? substr($row['in_time'], 0, 5) : '',
+                'out_raw'      => $out_formatted !== '--' ? substr($row['out_time'], 0, 5) : '',
                 'date'         => date('d M Y', strtotime($row['date'])),
                 'day'          => date('D', strtotime($row['date'])),
                 'in_time'      => $in_formatted,

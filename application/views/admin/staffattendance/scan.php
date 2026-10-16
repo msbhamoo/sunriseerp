@@ -234,6 +234,18 @@
                     </div>
                 </div>
 
+                <?php
+                $pending_dates = array();
+                foreach ((array) $my_corrections as $c) { if ($c['status'] === 'pending') { $pending_dates[$c['date']] = true; } }
+                $corr_min_date = $correction_min;
+                // Per-row "Request fix" only on the last 7 days (and never before this month);
+                // older days this month can still be requested with the main button.
+                $corr_row_min  = max($corr_min_date, date('Y-m-d', strtotime('-6 days')));
+                ?>
+                <div class="sa-corr-bar">
+                    <span><i class="fa fa-info-circle"></i> Missed a punch, wrong time, or were you on official duty? Ask the office to correct it (<?php echo date('F'); ?> only).</span>
+                    <button type="button" class="sa-corr-btn sa-corr-btn-main" data-date="" data-in="" data-out=""><i class="fa fa-plus"></i> Request a correction</button>
+                </div>
                 <div style="padding: 0;">
                     <?php if (!empty($recent_attendance)) { ?>
                     <div class="table-responsive">
@@ -246,6 +258,7 @@
                                     <th>Working Hours</th>
                                     <th>Status</th>
                                     <th>Source</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -294,6 +307,17 @@
                                                 <?php echo html_escape($rec['source']); ?>
                                             </span>
                                         </td>
+                                        <td class="text-right">
+                                            <?php if (isset($pending_dates[$rec['date_ymd']])) { ?>
+                                                <span class="sa-corr-pending" title="Correction request pending"><i class="fa fa-hourglass-half"></i> Pending</span>
+                                            <?php } elseif ($rec['date_ymd'] >= $corr_row_min) { ?>
+                                                <button type="button" class="sa-corr-btn" data-date="<?php echo $rec['date_ymd']; ?>"
+                                                        data-in="<?php echo html_escape($rec['in_raw']); ?>" data-out="<?php echo html_escape($rec['out_raw']); ?>"
+                                                        title="Ask the office to correct this day">
+                                                    <i class="fa fa-pencil"></i> Request fix
+                                                </button>
+                                            <?php } ?>
+                                        </td>
                                     </tr>
                                 <?php } ?>
                             </tbody>
@@ -311,8 +335,123 @@
                 </div>
             </div>
         </div>
+        <?php if (!empty($my_corrections)) {
+            $badge = array('pending' => '#d97706', 'approved' => '#16a34a', 'rejected' => '#dc2626', 'cancelled' => '#94a3b8'); ?>
+        <div class="sa-scan-wrapper" style="margin-top:0;">
+            <div class="sa-history-card">
+                <div class="sa-history-header">
+                    <h4 class="sa-history-title"><i class="fa fa-pencil-square-o" style="color:#7c3aed;"></i> My Correction Requests</h4>
+                </div>
+                <div class="table-responsive">
+                    <table class="sa-history-table">
+                        <thead><tr><th>Date</th><th>Request</th><th>Times asked</th><th>Reason</th><th>Status</th><th></th></tr></thead>
+                        <tbody>
+                        <?php foreach ($my_corrections as $c) { ?>
+                            <tr>
+                                <td><b><?php echo date('d M Y', strtotime($c['date'])); ?></b><br><span style="font-size:11px;color:#64748b;"><?php echo date('D', strtotime($c['date'])); ?></span></td>
+                                <td><?php echo html_escape(isset($correction_types[$c['request_type']]) ? $correction_types[$c['request_type']] : $c['request_type']); ?></td>
+                                <td style="white-space:nowrap;">
+                                    <?php echo $c['requested_in'] ? 'In ' . date('h:i A', strtotime($c['requested_in'])) : ''; ?>
+                                    <?php echo $c['requested_out'] ? '<br>Out ' . date('h:i A', strtotime($c['requested_out'])) : ''; ?>
+                                </td>
+                                <td style="max-width:260px; white-space:normal;"><?php echo html_escape($c['reason']); ?>
+                                    <?php if (!empty($c['admin_remark'])) { ?><div style="font-size:11.5px;color:#475569;margin-top:3px;"><b>Office:</b> <?php echo html_escape($c['admin_remark']); ?></div><?php } ?>
+                                </td>
+                                <td><span class="sa-corr-status" style="background:<?php echo $badge[$c['status']] ?? '#64748b'; ?>;"><?php echo ucfirst(html_escape($c['status'])); ?></span></td>
+                                <td class="text-right"><?php if ($c['status'] === 'pending') { ?><button type="button" class="btn btn-xs btn-default sa-corr-cancel" data-id="<?php echo $c['id']; ?>">Withdraw</button><?php } ?></td>
+                            </tr>
+                        <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <?php } ?>
     </section>
 </div>
+
+<!-- Correction request form -->
+<div class="modal fade" id="corrModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document" style="max-width:460px;">
+        <div class="modal-content" style="border-radius:12px;">
+            <form id="corrForm" autocomplete="off">
+                <div class="modal-header" style="border-bottom:1px solid #e2e8f0;">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title" style="font-weight:700;">Request attendance correction</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" name="date" id="corrDate" class="form-control" required
+                               max="<?php echo date('Y-m-d'); ?>" min="<?php echo $corr_min_date; ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>What needs correcting?</label>
+                        <select name="request_type" id="corrType" class="form-control" required>
+                            <?php foreach ($correction_types as $k => $v) { ?><option value="<?php echo $k; ?>"><?php echo html_escape($v); ?></option><?php } ?>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-6 form-group corr-in"><label>Correct in time</label><input type="time" name="in_time" id="corrIn" class="form-control"></div>
+                        <div class="col-xs-6 form-group corr-out"><label>Correct out time</label><input type="time" name="out_time" id="corrOut" class="form-control"></div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Reason</label>
+                        <textarea name="reason" class="form-control" rows="3" maxlength="500" required placeholder="e.g. Biometric machine was not working; Went to CBSE board office for exam duty"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-paper-plane"></i> Send request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .sa-corr-bar { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 16px; background:#faf5ff; border-bottom:1px solid #ede9fe; font-size:12.5px; color:#5b21b6; }
+    .sa-corr-btn { border:1px solid #c4b5fd; background:#fff; color:#6d28d9; font-weight:600; font-size:12px; border-radius:6px; padding:4px 10px; cursor:pointer; white-space:nowrap; }
+    .sa-corr-btn:hover { background:#f5f3ff; }
+    .sa-corr-btn-main { background:#7c3aed; color:#fff; border-color:#7c3aed; padding:6px 12px; }
+    .sa-corr-btn-main:hover { background:#6d28d9; }
+    .sa-corr-pending { font-size:11.5px; color:#b45309; font-weight:700; white-space:nowrap; }
+    .sa-corr-status { display:inline-block; color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; }
+</style>
+<script>
+$(function () {
+    function toggleTimes() {
+        var t = $('#corrType').val();
+        $('.corr-in').toggle(t === 'missed_in' || t === 'missed_both' || t === 'wrong_time' || t === 'on_duty');
+        $('.corr-out').toggle(t === 'missed_out' || t === 'missed_both' || t === 'wrong_time' || t === 'on_duty');
+    }
+    $('#corrType').on('change', toggleTimes);
+    $(document).on('click', '.sa-corr-btn', function () {
+        var $b = $(this), inT = $b.data('in'), outT = $b.data('out');
+        $('#corrForm')[0].reset();
+        $('#corrDate').val($b.data('date') || '<?php echo date('Y-m-d'); ?>');
+        // Guess the most likely problem from what is missing
+        $('#corrType').val(!$b.data('date') ? 'missed_both' : (!inT && !outT ? 'missed_both' : (!inT ? 'missed_in' : (!outT ? 'missed_out' : 'wrong_time'))));
+        $('#corrIn').val(inT || ''); $('#corrOut').val(outT || '');
+        toggleTimes();
+        $('#corrModal').modal('show');
+    });
+    $('#corrForm').on('submit', function (e) {
+        e.preventDefault();
+        var $b = $(this).find('button[type=submit]').prop('disabled', true);
+        $.post('<?php echo site_url('admin/staffattendance/requestcorrection'); ?>', $(this).serialize(), function (res) {
+            if (res.status == 1) { $('#corrModal').modal('hide'); successMsg(res.message); setTimeout(function () { location.reload(); }, 900); }
+            else { errorMsg(res.message); }
+        }, 'json').fail(function () { errorMsg('Could not send. Please try again.'); }).always(function () { $b.prop('disabled', false); });
+    });
+    $(document).on('click', '.sa-corr-cancel', function () {
+        if (!confirm('Withdraw this request?')) return;
+        $.post('<?php echo site_url('admin/staffattendance/cancelcorrection'); ?>', { id: $(this).data('id') }, function (res) {
+            if (res.status == 1) { successMsg(res.message); setTimeout(function () { location.reload(); }, 700); } else { errorMsg(res.message); }
+        }, 'json');
+    });
+});
+</script>
 
 <!-- Attendance Scan Pop-Up Modal -->
 <div class="modal fade" id="scanResultModal" tabindex="-1" role="dialog" aria-labelledby="scanResultModalLabel" aria-hidden="true" data-backdrop="static">

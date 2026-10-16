@@ -10,7 +10,7 @@ if ($is_localhost) {
         'hostname' => '127.0.0.1:3306',
         'username' => 'root',
         'password' => '',
-        'database' => 'erp',
+        'database' => 'sips_db',
         'dbdriver'     => 'mysqli',
         'dbprefix'     => '',
         'pconnect'     => false,

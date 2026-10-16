@@ -685,22 +685,27 @@
                         <button type="button" id="btn-quick-sync-biometric" class="sa-btn" data-toggle="modal" data-target="#modal-sync-biometric" title="Sync punches from e-TimeOffice Biometric Machine">
                             <i class="fa fa-fingerprint text-info"></i> Sync Biometric
                         </button>
-                        <a href="<?php echo site_url('admin/staffcompliance'); ?>" class="sa-btn" style="background:#f0fdfa; border-color:#99f6e4; color:#0f766e; font-weight:700;" title="Staff Compliance Checklist">
-                            <i class="fa fa-check-square-o text-teal" style="color:#0d9488;"></i> Compliance Checklist
-                        </a>
-                        <a href="<?php echo site_url('admin/dutypass'); ?>" class="sa-btn" style="background:#f8fafc; border-color:#cbd5e1; color:#334155; font-weight:600;" title="Issue & Manage Field Duty Passes">
-                            <i class="fa fa-id-badge text-teal" style="color:#0d9488;"></i> Field Duty Pass
-                        </a>
-                        <a href="<?php echo site_url('admin/staffattendance/qrdisplay'); ?>" target="_blank" class="sa-btn">
-                            <i class="fa fa-desktop text-muted"></i> Display QR
-                        </a>
                         <div class="dropdown" style="display:inline-block;">
-                            <button class="sa-btn dropdown-toggle" type="button" data-toggle="dropdown" title="Settings">
-                                <i class="fa fa-cog text-muted"></i> <span class="caret"></span>
+                            <?php $corr_n = isset($correction_pending) ? (int) $correction_pending : 0; ?>
+                            <button class="sa-btn dropdown-toggle" type="button" data-toggle="dropdown" title="More options<?php echo $corr_n ? ' – ' . $corr_n . ' correction request(s) pending' : ''; ?>" aria-label="More options" style="position:relative;">
+                                <i class="fa fa-ellipsis-v text-muted" style="padding:0 4px;"></i>
+                                <?php if ($corr_n) { ?><span style="position:absolute; top:-6px; right:-6px; background:#dc2626; color:#fff; font-size:10px; font-weight:700; border-radius:9px; min-width:18px; height:18px; line-height:18px; padding:0 4px;"><?php echo $corr_n; ?></span><?php } ?>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-right" style="border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15);">
+                            <ul class="dropdown-menu dropdown-menu-right" style="border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); min-width:230px;">
+                                <li><a href="<?php echo site_url('admin/staffattendance/corrections'); ?>"><i class="fa fa-pencil-square-o" style="color:#7c3aed;"></i> Correction Requests<?php if ($corr_n) { ?> <span class="label label-danger" style="margin-left:4px;"><?php echo $corr_n; ?></span><?php } ?></a></li>
+                                <li><a href="<?php echo site_url('admin/staffattendance/dayoverrides'); ?>"><i class="fa fa-calendar text-primary"></i> Holidays &amp; Working Days</a></li>
+                                <li><a href="<?php echo site_url('admin/staffattendance/auditlog'); ?>"><i class="fa fa-history text-primary"></i> Change Log</a></li>
+                                <li><a href="<?php echo site_url('admin/staffcompliance'); ?>"><i class="fa fa-check-square-o" style="color:#0d9488;"></i> Compliance Checklist</a></li>
+                                <li><a href="<?php echo site_url('admin/dutypass'); ?>"><i class="fa fa-id-badge" style="color:#0d9488;"></i> Field Duty Pass</a></li>
+                                <li><a href="<?php echo site_url('admin/staffattendance/qrdisplay'); ?>" target="_blank"><i class="fa fa-desktop text-muted"></i> Display QR</a></li>
+                                <li role="separator" class="divider"></li>
+                                <li class="dropdown-header">Settings</li>
+                                <li><a href="<?php echo site_url('schsettings/attendancetype'); ?>"><i class="fa fa-clock-o"></i> Shift Timings</a></li>
                                 <li><a href="<?php echo site_url('admin/staffattendance/biometricsettings'); ?>"><i class="fa fa-sliders"></i> Biometric Device Settings</a></li>
                                 <li><a href="<?php echo site_url('admin/staffattendance/qrsettings'); ?>"><i class="fa fa-qrcode"></i> QR Attendance Settings</a></li>
+                                <?php $__r = json_decode($this->customlib->getStaffRole()); if ($__r && $__r->name === 'Super Admin') { ?>
+                                    <li><a href="<?php echo site_url('admin/staffattendance/dbupdate'); ?>"><i class="fa fa-database"></i> Database Update</a></li>
+                                <?php } ?>
                             </ul>
                         </div>
                     </div>
@@ -763,7 +768,7 @@
                             // Attendance types that should NOT have entry/exit time
                             $leave_like_ids = [];
                             foreach ($attendencetypeslist as $__t) {
-                                if (in_array($__t['long_lang_name'], ['absent', 'holiday', 'unplanned_leave'])) {
+                                if (in_array($__t['long_lang_name'], ['absent', 'holiday', 'unplanned_leave', 'leave'])) {
                                     $leave_like_ids[] = (int)$__t['id'];
                                 }
                             }
@@ -774,6 +779,23 @@
                             <input type="hidden" name="user_id" value="<?php echo $user_type_id; ?>">
                             <input type="hidden" name="section_id" value="">
                             <input type="hidden" name="date" value="<?php echo $date; ?>">
+
+                            <?php if (isset($day_date) && ($day_is_off_default || !empty($day_overrides))) { ?>
+                                <!-- Holiday / working-day status of the selected date -->
+                                <div style="background:<?php echo $day_is_off_default ? '#faf5ff' : '#f0fdf4'; ?>; border:1px solid <?php echo $day_is_off_default ? '#e9d5ff' : '#bbf7d0'; ?>; border-radius:8px; padding:9px 12px; margin-bottom:12px; font-size:12.5px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+                                    <div>
+                                        <b><i class="fa fa-calendar"></i> <?php echo date('l, d M Y', strtotime($day_date)); ?>:</b>
+                                        <?php echo $day_is_off_default ? 'Holiday for everyone by default (Sunday / calendar holiday).' : 'Working day by default.'; ?>
+                                        <?php foreach ($day_overrides as $o) { ?>
+                                            <div style="margin-top:3px;">
+                                                <span class="label" style="background:<?php echo $o['day_type'] === 'working' ? '#16a34a' : '#7c3aed'; ?>;"><?php echo $o['day_type'] === 'working' ? 'Working day' : 'Holiday'; ?></span>
+                                                for <?php echo html_escape($o['label']); ?><?php echo !empty($o['reason']) ? ' — ' . html_escape($o['reason']) : ''; ?>
+                                            </div>
+                                        <?php } ?>
+                                    </div>
+                                    <a href="<?php echo site_url('admin/staffattendance/dayoverrides'); ?>" class="btn btn-default btn-xs"><i class="fa fa-pencil"></i> Manage</a>
+                                </div>
+                            <?php } ?>
 
                             <!-- Interactive Live Stats KPI Filter Bar -->
                             <div class="sa-kpi-bar" id="live-att-stats">
@@ -804,6 +826,12 @@
                                 <span class="sa-kpi-chip kpi-shortfall" data-filter="shortfall" title="Filter staff with working hours shortfall">
                                     <i class="fa fa-hourglass-half text-danger"></i> Shortfall <span class="sa-kpi-count" id="cnt-shortfall">0</span>
                                 </span>
+                                <span class="sa-kpi-chip" data-filter="early-leave" style="border-color:#fecaca; background:#fef2f2; color:#b91c1c;" title="Filter staff who left before scheduled school end time">
+                                    <i class="fa fa-sign-out text-danger"></i> Early Left <span class="sa-kpi-count" id="cnt-early" style="background:#fee2e2; color:#b91c1c;">0</span>
+                                </span>
+                                <span class="sa-kpi-chip" data-filter="overtime" style="border-color:#bbf7d0; background:#f0fdf4; color:#15803d;" title="Filter staff who worked overtime beyond scheduled hours">
+                                    <i class="fa fa-trophy text-success"></i> Overtime <span class="sa-kpi-count" id="cnt-overtime" style="background:#dcfce7; color:#15803d;">0</span>
+                                </span>
                                 <span class="sa-kpi-chip kpi-qr" data-filter="biometric" title="Filter Biometric or QR punches">
                                     <i class="fa fa-qrcode text-info"></i> Biometric/QR <span class="sa-kpi-count" id="cnt-qr">0</span>
                                 </span>
@@ -830,6 +858,8 @@
                                             <option value="emp_id">Staff ID</option>
                                             <option value="status">Status</option>
                                             <option value="shortfall">Shortfall First</option>
+                                            <option value="early_exit">Early Left First</option>
+                                            <option value="overtime">Overtime First</option>
                                         </select>
                                     </div>
                                     <button type="button" class="sa-btn sa-btn-whatsapp" onclick="openStaffAttendanceShareModal('all')">
@@ -922,10 +952,12 @@
                                                 }
 
                                                 $isLeaveLike = in_array((int)$selectedTypeId, $leave_like_ids);
+                                                $scheduledDayEnd = (isset($role_schedules_map[$value['role_id']]['dayend_time']) && !empty($role_schedules_map[$value['role_id']]['dayend_time'])) ? $role_schedules_map[$value['role_id']]['dayend_time'] : '';
                                             ?>
                                                 <tr data-staff_id="<?php echo $value['staff_id']; ?>" 
                                                     data-role_id="<?php echo $value['role_id']; ?>"
                                                     data-req_hours="<?php echo isset($role_required_hours[$value['role_id']]) ? $role_required_hours[$value['role_id']] : '08:00:00'; ?>"
+                                                    data-scheduled_dayend="<?php echo html_escape($scheduledDayEnd); ?>"
                                                     data-source="<?php echo (!empty($value['biometric_attendence']) ? 'biometric' : (!empty($value['qrcode_attendance']) ? 'qr' : 'manual')); ?>"
                                                     data-employee_id="<?php echo html_escape($value['employee_id']); ?>" 
                                                     data-staff_name="<?php echo html_escape($value['name'] . " " . $value['surname']); ?>" 
@@ -1126,6 +1158,14 @@
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                        <div style="display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
+                            <button type="button" class="sa-btn ms-register" data-format="print" title="Printable register with school header, totals and signature lines (A4 landscape)">
+                                <i class="fa fa-print text-primary"></i> Print Register
+                            </button>
+                            <button type="button" class="sa-btn ms-register" data-format="excel" title="Download the register as an Excel file">
+                                <i class="fa fa-file-excel-o" style="color:#16a34a;"></i> Excel
+                            </button>
                         </div>
                         <div id="ms-container" style="margin-top:16px;">
                             <div class="text-muted text-center" style="padding:24px; background:#f8fafc; border-radius:8px;">
@@ -1328,6 +1368,13 @@
         });
     });
 
+    // Printable register / Excel for the selected role + month
+    $(document).on('click', '.ms-register', function() {
+        var q = $.param({ role: $('#ms-role').val(), month: $('#ms-month').val(), year: $('#ms-year').val(), format: $(this).data('format') });
+        var url = "<?php echo site_url('admin/staffattendance/register'); ?>?" + q;
+        if ($(this).data('format') === 'excel') { window.location.href = url; } else { window.open(url, '_blank'); }
+    });
+
     // 3. Date Prev / Next Helper Buttons
     $('#btn-prev-day, #btn-next-day').on('click', function() {
         var isNext = $(this).attr('id') === 'btn-next-day';
@@ -1423,8 +1470,11 @@
             absent: 0,
             half_day: 0,
             holiday: 0,
+            on_duty: 0,
             missing: 0,
             shortfall: 0,
+            early: 0,
+            overtime: 0,
             qr: 0,
             manual: 0
         };
@@ -1458,16 +1508,35 @@
 
             // Duration & Shortfall calculation
             var reqStr = $tr.attr('data-req_hours') || $tr.data('req_hours') || '08:00:00';
+            var schedEnd = $tr.attr('data-scheduled_dayend') || $tr.data('scheduled_dayend') || '';
             var reqM = parseTimeMinutes(reqStr) || 480;
+            var schedEndM = parseTimeMinutes(schedEnd);
             var inM = parseTimeMinutes(inV);
             var outM = parseTimeMinutes(outV);
             var $durBadge = $tr.find('.sa-dur-badge');
+
             if (inM !== null && outM !== null && outM > inM) {
                 var diff = outM - inM;
                 var hrs = Math.floor(diff / 60);
                 var mins = diff % 60;
                 var text = (hrs > 0 ? hrs + 'h ' : '') + mins + 'm';
                 $durBadge.removeClass('sa-dur-green sa-dur-amber sa-dur-gray sa-dur-shortfall').show();
+
+                // Check Early Departure against scheduled school end time
+                if (schedEndM !== null && outM < schedEndM && key !== 'half_day' && key !== 'half_day_second_shift') {
+                    counts.early++;
+                    $tr.attr('data-is_early', '1');
+                } else {
+                    $tr.removeAttr('data-is_early');
+                }
+
+                // Check Overtime
+                if (diff > (reqM + 15)) {
+                    counts.overtime++;
+                    $tr.attr('data-is_overtime', '1');
+                } else {
+                    $tr.removeAttr('data-is_overtime');
+                }
 
                 var shortM = reqM - diff;
                 if (shortM > 5) { // more than 5 minutes shortfall
@@ -1484,6 +1553,8 @@
             } else {
                 $durBadge.hide();
                 $tr.removeAttr('data-is_shortfall');
+                $tr.removeAttr('data-is_early');
+                $tr.removeAttr('data-is_overtime');
             }
         });
 
@@ -1496,6 +1567,8 @@
         $('#cnt-on_duty').text(counts.on_duty || 0);
         $('#cnt-missing').text(counts.missing);
         $('#cnt-shortfall').text(counts.shortfall);
+        $('#cnt-early').text(counts.early);
+        $('#cnt-overtime').text(counts.overtime);
         $('#cnt-qr').text(counts.qr);
         $('#cnt-manual').text(counts.manual);
     }
@@ -1532,6 +1605,10 @@
                 matchesFilter = inV && inV !== '' && inV !== '00:00:00' && (!outV || outV === '' || outV === '00:00:00');
             } else if (activeFilter === 'shortfall') {
                 matchesFilter = ($tr.attr('data-is_shortfall') === '1');
+            } else if (activeFilter === 'early-leave') {
+                matchesFilter = ($tr.attr('data-is_early') === '1');
+            } else if (activeFilter === 'overtime') {
+                matchesFilter = ($tr.attr('data-is_overtime') === '1');
             } else if (activeFilter === 'biometric') {
                 var src = ($tr.attr('data-source') || '').toLowerCase();
                 var srcText = $tr.find('td:nth-child(7)').text().toLowerCase();
@@ -1590,7 +1667,7 @@
                 var idB = ($b.attr('data-employee_id') || '').toLowerCase();
                 return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
             } else if (sortBy === 'status') {
-                var statOrder = { 'present': 1, 'late': 2, 'half_day': 3, 'half_day_second_shift': 4, 'absent': 5, 'unplanned_leave': 6, 'holiday': 7, 'unmarked': 8 };
+                var statOrder = { 'present': 1, 'late': 2, 'half_day': 3, 'half_day_second_shift': 4, 'absent': 5, 'unplanned_leave': 6, 'leave': 6, 'holiday': 7, 'unmarked': 8 };
                 var keyA = $a.find('.att-hidden-input').data('type-key') || 'unmarked';
                 var keyB = $b.find('.att-hidden-input').data('type-key') || 'unmarked';
                 var ordA = statOrder[keyA] || 99;
@@ -1600,6 +1677,14 @@
                 var sfA = $a.attr('data-is_shortfall') === '1' ? 1 : 0;
                 var sfB = $b.attr('data-is_shortfall') === '1' ? 1 : 0;
                 return sfB - sfA;
+            } else if (sortBy === 'early_exit') {
+                var eeA = $a.attr('data-is_early') === '1' ? 1 : 0;
+                var eeB = $b.attr('data-is_early') === '1' ? 1 : 0;
+                return eeB - eeA;
+            } else if (sortBy === 'overtime') {
+                var otA = $a.attr('data-is_overtime') === '1' ? 1 : 0;
+                var otB = $b.attr('data-is_overtime') === '1' ? 1 : 0;
+                return otB - otA;
             } else {
                 // Default index (#)
                 var idxA = parseInt($a.find('td:first-child span').text(), 10) || 0;

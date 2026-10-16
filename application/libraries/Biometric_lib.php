@@ -186,6 +186,18 @@ class Biometric_lib
         $unmappedCodes = array();
         $processedRows = array();
 
+        // Shift snapshots already recorded for this range: re-syncs keep evaluating against them.
+        $snapshotShift = array();
+        $snapRows = $this->CI->db->query("SELECT staff_id, date, shift_id FROM staff_attendance WHERE shift_id IS NOT NULL AND date BETWEEN "
+            . $this->CI->db->escape($fromDate) . " AND " . $this->CI->db->escape($toDate))->result_array();
+        foreach ($snapRows as $sr) {
+            $snapshotShift[$sr['staff_id'] . '|' . $sr['date']] = (int) $sr['shift_id'];
+        }
+        // Off days per staff (Sundays + calendar holidays, adjusted by Holidays & Working Days entries):
+        // no punch on an off day is Holiday, not Absent.
+        $this->CI->load->model('staffdayoverride_model');
+        $holidayId = $this->CI->staffAttendaceSetting_model->getAttendanceTypeIdByKey('h');
+
         foreach ($punchList as $punch) {
             $empCode = isset($punch['Empcode']) ? trim($punch['Empcode']) : '';
             if ($empCode === '') {
@@ -225,7 +237,12 @@ class Biometric_lib
             $outTime = $this->normalizePunchTime(isset($punch['OUTTime']) ? $punch['OUTTime'] : null, true, $inTime);
 
             // Determine staff attendance type scoped to that punch's effective date
-            $attendanceTypeId = $this->resolveAttendanceType($staff['id'], $staff['role_id'], $inTime, $punch, $punchDate);
+            $snapKey = $staff['id'] . '|' . $punchDate;
+            $shiftId = isset($snapshotShift[$snapKey]) ? $snapshotShift[$snapKey]
+                : ($staff['role_id'] ? $this->CI->staffAttendaceSetting_model->resolveShiftId($staff['role_id'], $punchDate) : null);
+            $attendanceTypeId = $this->resolveAttendanceType($staff['id'], $staff['role_id'], $inTime, $punch, $punchDate, $shiftId, $outTime);
+            // Leaving before the shift's "Early End Half" time turns Present / Late into Half Day.
+            $attendanceTypeId = $this->CI->staffAttendaceSetting_model->applyEarlyHalfRule($attendanceTypeId, $outTime, $staff['role_id'], $punchDate, $shiftId);
 
             $remark = '';
             if (!empty($punch['Remark'])) {
@@ -239,6 +256,9 @@ class Biometric_lib
             }
 
             $hasPunch = (!empty($inTime) && $inTime !== '00:00:00') || (!empty($outTime) && $outTime !== '00:00:00');
+            if (!$hasPunch && $holidayId && $this->CI->staffdayoverride_model->isOff($staff['id'], $staff['role_id'], $punchDate, $fromDate, $toDate)) {
+                $attendanceTypeId = $holidayId;
+            }
 
             $processedRows[] = array(
                 'staff_id'                 => $staff['id'],
@@ -246,8 +266,10 @@ class Biometric_lib
                 'in_time'                  => $inTime,
                 'out_time'                 => $outTime,
                 'staff_attendance_type_id' => $attendanceTypeId,
+                'shift_id'                 => $shiftId,
                 'biometric_attendence'     => $hasPunch ? 1 : 0,
-                'attendance_source'        => $hasPunch ? 'biometric' : 'manual',
+                // Always 'biometric': 'manual' marks a status set by hand and blocks later syncs from changing it.
+                'attendance_source'        => 'biometric',
                 'remark'                   => $remark,
                 'biometric_device_data'    => json_encode($punch)
             );
@@ -350,48 +372,39 @@ class Biometric_lib
     }
 
     /**
-     * Determine staff attendance type ID (Present = 1, Late = 2, Half Day = 4, etc.)
-     * based on role schedules or API status flag.
+     * Determine the staff attendance type id from the role's shift bands for the day
+     * (configured in Settings > Attendance Type).
      */
-    protected function resolveAttendanceType($staff_id, $role_id, $in_time, $punch, $date = null)
+    protected function resolveAttendanceType($staff_id, $role_id, $in_time, $punch, $date = null, $shift_id = null, $out_time = null)
     {
-        // 1. If in_time exists and role has attendance schedule configured, match the schedule band for that specific date
-        if ($in_time && $role_id) {
-            $range = $this->CI->staffAttendaceSetting_model->getAttendanceTypeByRole($role_id, $in_time, $date);
+        $hasIn = !empty($in_time) && $in_time !== '00:00:00';
+
+        // 1. The role has a shift for the day: its bands decide (gaps between bands fall into the earlier band).
+        if ($hasIn && $role_id) {
+            $range = $this->CI->staffAttendaceSetting_model->getAttendanceTypeByRole($role_id, $in_time, $date, $shift_id);
             if ($range && !empty($range->staff_attendence_type_id)) {
                 return (int) $range->staff_attendence_type_id;
             }
-        }
-
-        // 2. If employee has a valid in_time punch, they ARE present in school - NEVER mark as Absent!
-        if (!empty($in_time) && $in_time !== '00:00:00') {
-            $apiStatus = isset($punch['Status']) ? strtoupper(trim($punch['Status'])) : '';
-            if ($apiStatus === 'L' || strpos($apiStatus, 'LT') !== false) {
-                return 2; // Late
-            } elseif ($apiStatus === 'HD' || $apiStatus === 'H/D' || $apiStatus === 'P/2') {
-                return 4; // Half Day
+            // Punch outside every band: before the first band counts as that band (Present), after the
+            // last band as the last one. No clock-based or device-status guesses when a shift exists.
+            $bands = $this->CI->staffAttendaceSetting_model->getRoleShiftBands($role_id, $date, $shift_id);
+            if (!empty($bands)) {
+                $first = reset($bands);
+                $last  = end($bands);
+                return (int) ($in_time < $first->entry_time_from ? $first->staff_attendence_type_id : $last->staff_attendence_type_id);
             }
-
-            // If punch is after 12:00 PM, assign Half Day (2nd shift)
-            $inSec = strtotime($in_time);
-            if ($inSec && (int)date('H', $inSec) >= 12) {
-                return 6; // Half Day Second Shift
-            }
-
-            return 1; // Present
         }
 
-        // 3. Fallback only when NO in_time exists (missing punch)
-        $apiStatus = isset($punch['Status']) ? strtoupper(trim($punch['Status'])) : '';
-        if ($apiStatus === 'P' || strpos($apiStatus, 'P') !== false) {
-            return 1; // Present
-        } elseif ($apiStatus === 'L' || strpos($apiStatus, 'LT') !== false) {
-            return 2; // Late
-        } elseif ($apiStatus === 'HD' || $apiStatus === 'H/D' || $apiStatus === 'P/2') {
-            return 4; // Half Day
+        // 2. Timing rules come only from Settings > Attendance Type; the device's own status flags are
+        //    ignored. Status ids are looked up by their configured keys, never hard-coded.
+        $settings = $this->CI->staffAttendaceSetting_model;
+        $hasOut   = !empty($out_time) && $out_time !== '00:00:00';
+        if ($hasIn || $hasOut) {
+            // Was in school but no band applies (no shift for the role, or only an out-punch):
+            // Present; the early-half rule may still turn it into Half Day from the out time.
+            return $settings->getAttendanceTypeIdByKey('p');
         }
-
-        return 3; // Absent
+        return $settings->getAttendanceTypeIdByKey('a'); // no punch at all
     }
 
     /**

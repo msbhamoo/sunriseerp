@@ -126,7 +126,22 @@ class Leaverequest_model extends MY_model
             $this->db->trans_rollback();
             return false;
         } else {
-            //return $return_value;
+            $this->syncLeaveAttendance($staff_id); // $staff_id here is the leave request id
+        }
+    }
+
+    /**
+     * Mirror a leave request into staff attendance (approved = Leave days; otherwise undone).
+     * Never lets an attendance problem break the leave screen.
+     */
+    public function syncLeaveAttendance($request_id)
+    {
+        try {
+            $this->load->model('staffleaveattendance_model');
+            return $this->staffleaveattendance_model->syncRequest($request_id);
+        } catch (Throwable $e) {
+            log_message('error', 'Leave -> attendance sync failed for request ' . $request_id . ': ' . $e->getMessage());
+            return null;
         }
     }
 
@@ -138,6 +153,13 @@ class Leaverequest_model extends MY_model
 
     public function leave_remove($id)
     {
+        // Undo the leave's attendance changes before the request disappears.
+        try {
+            $this->load->model('staffleaveattendance_model');
+            $this->staffleaveattendance_model->revertRequest($id);
+        } catch (Throwable $e) {
+            log_message('error', 'Leave -> attendance revert failed for request ' . $id . ': ' . $e->getMessage());
+        }
         $this->db->trans_start(); # Starting Transaction
         $this->db->trans_strict(false); # See Note 01. If you wish can remove as well
         //=======================Code Start===========================
@@ -182,7 +204,7 @@ class Leaverequest_model extends MY_model
                 $this->db->trans_rollback();
                 return false;
             } else {
-                //return $return_value;
+                $this->syncLeaveAttendance($data['id']);
             }
         } else {
 
@@ -202,7 +224,7 @@ class Leaverequest_model extends MY_model
                 $this->db->trans_rollback();
                 return false;
             } else {
-                //return $return_value;
+                $this->syncLeaveAttendance($id);
             }
         }
     }

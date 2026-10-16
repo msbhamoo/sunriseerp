@@ -1102,17 +1102,36 @@ class Schsettings extends Admin_Controller
         $data['result']       = $setting;
 
         //staff attendance settings
-        $selected_season_tag     = $this->input->get('season');
-        $selected_season_from    = $this->input->get('from');
-        $staff_attendance_data   = $this->staffAttendaceSetting_model->getRoleAttendanceSetting(null, $selected_season_tag, $selected_season_from);  
-        $seasonal_profiles       = $this->staffAttendaceSetting_model->getSeasonalProfiles();
+        // ?shift=<id> edits a shift; ?new=regular|temporary starts a new one prefilled from the active
+        // regular shift; no parameter edits the active regular shift.
+        $new_type      = $this->input->get('new');
+        $edit_shift_id = (int) $this->input->get('shift');
+        $active_id     = $this->staffAttendaceSetting_model->getActiveRegularShiftId();
+        $editing_shift = null;
+        if ($edit_shift_id) {
+            $editing_shift = $this->staffAttendaceSetting_model->getShift($edit_shift_id);
+        } elseif (!in_array($new_type, array('regular', 'temporary'), true) && $active_id) {
+            $editing_shift = $this->staffAttendaceSetting_model->getShift($active_id);
+        }
+        if (empty($editing_shift)) {
+            $editing_shift = array(
+                'id'             => '',
+                'name'           => $new_type === 'temporary' ? 'PTM / Event Timings' : (date('m') >= 4 && date('m') <= 9 ? 'Summer Timings' : 'Winter Timings'),
+                'shift_type'     => $new_type === 'temporary' ? 'temporary' : 'regular',
+                'is_active'      => 0,
+                'effective_from' => date('Y-m-d'),
+                'effective_to'   => $new_type === 'temporary' ? date('Y-m-d') : null,
+            );
+        }
+        $template_id             = !empty($editing_shift['id']) ? $editing_shift['id'] : $active_id;
+        $staff_attendance_data   = $this->staffAttendaceSetting_model->getShiftEditorRows($template_id);
         $attendance_type         = $this->attendencetype_model->getScheduleTypeStaffAttendance();
         $user_roles              = $this->staff_model->getStaffRole();
-        $data['user_roles']          = $user_roles;    
+        $data['user_roles']          = $user_roles;
         $data['attendance_type']     = $attendance_type;
-        $data['seasonal_profiles']   = $seasonal_profiles;
-        $data['selected_season_tag'] = $selected_season_tag;
-        $data['selected_season_from']= $selected_season_from;
+        $data['staff_shifts']        = $this->staffAttendaceSetting_model->getShifts();
+        $data['late_policy']         = $this->staffAttendaceSetting_model->getLatePolicy();
+        $data['editing_shift']       = $editing_shift;
         $new_list_attendance     = array();
 
         foreach ($staff_attendance_data as $key => $value) {
@@ -1357,50 +1376,34 @@ class Schsettings extends Admin_Controller
             $array = array('status' => 0, 'error' => $msg, 'message' => '');
         } else {
             $insert_array = array();
-            $role_array = array();
-            $effective_from_input = $this->input->post('effective_from');
-            $effective_to_input   = $this->input->post('effective_to');
-            $season_tag_input     = trim($this->input->post('season_tag'));
-            $season_tag           = !empty($season_tag_input) ? $season_tag_input : 'General Timings';
+            $shift_id   = (int) $this->input->post('shift_id');
+            $shift_name = trim((string) $this->input->post('shift_name'));
+            $shift_type = $this->input->post('shift_type') === 'temporary' ? 'temporary' : 'regular';
+            $activate   = (int) $this->input->post('activate') === 1;
 
-            $effective_from = !empty($effective_from_input) ? date('Y-m-d', $this->customlib->datetostrtotime($effective_from_input)) : date('Y-m-d');
-            if (empty($effective_from) || $effective_from == '1970-01-01') {
-                $effective_from = date('Y-m-d');
-            }
-
-            $effective_to = !empty($effective_to_input) ? date('Y-m-d', $this->customlib->datetostrtotime($effective_to_input)) : null;
-            if (!empty($effective_to) && $effective_to == '1970-01-01') {
-                $effective_to = null;
-            }
-
-            if (!empty($effective_to) && $effective_to < $effective_from) {
-                echo json_encode(array(
-                    'status' => 0,
-                    'error' => array('fields' => 'Effective To date cannot be earlier than Effective From date.'),
-                    'message' => ''
-                ));
+            if ($shift_name === '') {
+                echo json_encode(array('status' => 0, 'error' => array('fields' => 'Please enter a shift name.'), 'message' => ''));
                 return;
             }
 
-            foreach ($row as $row_key => $row_value) {
-                $role_array[] = ($this->input->post('role_id_' . $row_value));
-            }
-            $unique_roles = array_values(array_unique($role_array));
-
-            // Collision check: ensure this seasonal date range doesn't collide with existing seasons for these roles
-            $collision_res = $this->staffAttendaceSetting_model->checkSeasonalCollision($unique_roles, $effective_from, $effective_to, $season_tag);
-            if ($collision_res['collision']) {
-                $conflict_names = array();
-                foreach ($collision_res['conflicts'] as $c) {
-                    $c_label = (!empty($c['season_tag']) ? $c['season_tag'] : 'Timings') . ' (' . $c['effective_from'] . ' to ' . (!empty($c['effective_to']) ? $c['effective_to'] : 'Present') . ')';
-                    $conflict_names[$c_label] = true;
+            $to_ymd = function ($v) {
+                if (empty($v)) { return null; }
+                $d = date('Y-m-d', $this->customlib->datetostrtotime($v));
+                return ($d && $d !== '1970-01-01') ? $d : null;
+            };
+            $effective_from = $to_ymd($this->input->post('effective_from'));
+            $effective_to   = $to_ymd($this->input->post('effective_to'));
+            if ($shift_type === 'temporary') {
+                if (empty($effective_from)) {
+                    echo json_encode(array('status' => 0, 'error' => array('fields' => 'A temporary shift needs a Start date.'), 'message' => ''));
+                    return;
                 }
-                $conflict_str = implode(', ', array_keys($conflict_names));
-                echo json_encode(array(
-                    'status' => 0,
-                    'error' => array('fields' => 'Timing Collision Detected! The date range (' . $effective_from . ' to ' . (!empty($effective_to) ? $effective_to : 'Indefinite') . ') overlaps with existing schedule: ' . $conflict_str . '. Please adjust the date boundaries so no two seasons collide.'),
-                    'message' => ''
-                ));
+                if (empty($effective_to)) {
+                    $effective_to = $effective_from;
+                }
+            }
+            if (!empty($effective_from) && !empty($effective_to) && $effective_to < $effective_from) {
+                echo json_encode(array('status' => 0, 'error' => array('fields' => 'End date cannot be earlier than Start date.'), 'message' => ''));
                 return;
             }
 
@@ -1425,10 +1428,59 @@ class Schsettings extends Admin_Controller
                 );
             }
 
-            $this->staffAttendaceSetting_model->add($insert_array, $role_array, $effective_from, $effective_to, $season_tag);
-            $array = array('status' => 1, 'message' => $this->lang->line('update_message'));
+            $res = $this->staffAttendaceSetting_model->saveShift($shift_id ?: null, array(
+                'name'           => $shift_name,
+                'shift_type'     => $shift_type,
+                'effective_from' => $effective_from,
+                'effective_to'   => $effective_to,
+                'activate'       => $activate,
+            ), $insert_array);
+            if ($res['status']) {
+                $array = array('status' => 1, 'message' => $res['message'], 'shift_id' => $res['shift_id']);
+            } else {
+                $array = array('status' => 0, 'error' => array('fields' => $res['message']), 'message' => '');
+            }
         }
         echo json_encode($array);
+    }
+
+    /** AJAX: save the staff late-coming policy. */
+    public function savelatepolicy()
+    {
+        if (!$this->rbac->hasPrivilege('general_setting', 'can_edit')) {
+            echo json_encode(array('status' => 0, 'message' => 'Access denied.'));
+            return;
+        }
+        list($ok, $msg) = $this->staffAttendaceSetting_model->saveLatePolicy(
+            (int) $this->input->post('late_enabled') === 1,
+            $this->input->post('late_free'),
+            $this->input->post('late_every'),
+            $this->input->post('late_penalty'),
+            $this->customlib->getStaffID()
+        );
+        echo json_encode(array('status' => $ok ? 1 : 0, 'message' => $msg));
+    }
+
+    /** AJAX: activate / deactivate a staff shift. */
+    public function staffshiftstatus()
+    {
+        if (!$this->rbac->hasPrivilege('general_setting', 'can_edit')) {
+            echo json_encode(array('status' => 0, 'message' => 'Access denied.'));
+            return;
+        }
+        $res = $this->staffAttendaceSetting_model->setShiftActive((int) $this->input->post('shift_id'), (int) $this->input->post('active') === 1);
+        echo json_encode(array('status' => $res['status'] ? 1 : 0, 'message' => $res['message']));
+    }
+
+    /** AJAX: delete an unused, inactive staff shift. */
+    public function deletestaffshift()
+    {
+        if (!$this->rbac->hasPrivilege('general_setting', 'can_edit')) {
+            echo json_encode(array('status' => 0, 'message' => 'Access denied.'));
+            return;
+        }
+        $res = $this->staffAttendaceSetting_model->deleteShift((int) $this->input->post('shift_id'));
+        echo json_encode(array('status' => $res['status'] ? 1 : 0, 'message' => $res['message']));
     }
 
 	public function whatsappsettings()

@@ -141,6 +141,39 @@
                     <tbody>
                         <?php 
                             if (!empty($cbse_exams)) {
+                                usort($cbse_exams, function($a, $b) {
+                                    $extractOrder = function($name) {
+                                        $romanMap = ['VIII' => 8, 'VII' => 7, 'VI' => 6, 'IV' => 4, 'V' => 5, 'III' => 3, 'II' => 2, 'I' => 1];
+                                        $prefixPriority = 50;
+                                        if (stripos($name, 'SBBT') !== false || stripos($name, 'UNIT') !== false || stripos($name, 'PERIODIC') !== false || stripos($name, 'PT') !== false) {
+                                            $prefixPriority = 10;
+                                        } elseif (stripos($name, 'TERM') !== false || stripos($name, 'MID') !== false || stripos($name, 'HALF') !== false) {
+                                            $prefixPriority = 20;
+                                        } elseif (stripos($name, 'PRE') !== false || stripos($name, 'MOCK') !== false) {
+                                            $prefixPriority = 30;
+                                        } elseif (stripos($name, 'ANNUAL') !== false || stripos($name, 'FINAL') !== false) {
+                                            $prefixPriority = 40;
+                                        }
+                                        $num = 99;
+                                        foreach ($romanMap as $r => $val) {
+                                            if (preg_match('/\b' . $r . '\b/i', $name)) {
+                                                $num = $val;
+                                                break;
+                                            }
+                                        }
+                                        if ($num === 99 && preg_match('/\b(\d+)\b/', $name, $matches)) {
+                                            $num = (int)$matches[1];
+                                        }
+                                        return ($prefixPriority * 100) + $num;
+                                    };
+                                    $orderA = $extractOrder($a['exam_name']);
+                                    $orderB = $extractOrder($b['exam_name']);
+                                    if ($orderA === $orderB) {
+                                        return (int)$a['exam_id'] - (int)$b['exam_id'];
+                                    }
+                                    return $orderA - $orderB;
+                                });
+
                                 foreach ($cbse_exams as $idx => $exam) {
                                     $pct = isset($exam['percentage']) ? $exam['percentage'] : 0;
                                     if ($pct >= 90) {
