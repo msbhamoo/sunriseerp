@@ -286,6 +286,9 @@
     .sa-day-banner.off { background:#faf5ff; border-color:#e9d5ff; color:#581c87; }
     .sa-day-note { color:#64748b; }
     .sa-day-link { font-weight:700; font-size:12.5px; white-space:nowrap; }
+    .sa-lock-bar { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; border-radius:10px; padding:9px 14px; margin-bottom:12px; font-size:12.5px; border:1px solid; }
+    .sa-lock-bar.locked { background:#fffbeb; border-color:#fde68a; color:#78350f; }
+    .sa-lock-bar.open { background:#f8fafc; border-color:#e2e8f0; color:#475569; padding:6px 14px; font-size:12px; }
     #live-att-stats { display:block; }
     .sa-kpi-group { display:flex; flex-wrap:wrap; align-items:center; gap:8px; width:100%; }
     .sa-kpi-group .sa-attn { margin-left:auto; }
@@ -824,6 +827,17 @@
                                     <a href="<?php echo site_url('admin/staffattendance/dayoverrides'); ?>" class="sa-day-link">Change</a>
                                 </div>
                             <?php } ?>
+
+                            <?php if (isset($day_date)) {
+                                // Day lock: finished days can't be changed by sync or shift changes, only by hand.
+                                if ($day_date < date('Y-m-d')) { ?>
+                                <div class="sa-lock-bar locked">
+                                    <span><i class="fa fa-lock"></i> <b>Locked.</b> This day is over, so biometric sync and shift changes no longer change it. You can still correct a record by hand and click Save; every change is recorded.</span>
+                                    <a href="<?php echo site_url('admin/staffattendance/auditlog') . '?att_date=' . urlencode(date($this->customlib->getSchoolDateFormat(), strtotime($day_date))) . '&from=' . urlencode(date($this->customlib->getSchoolDateFormat(), strtotime($day_date))); ?>" class="sa-day-link">See changes for this day</a>
+                                </div>
+                            <?php } elseif ($day_date === date('Y-m-d')) { ?>
+                                <div class="sa-lock-bar open"><i class="fa fa-unlock"></i> Open: biometric sync keeps updating today. It locks automatically at midnight.</div>
+                            <?php } } ?>
 
                             <!-- Live counts; each chip filters the list -->
                             <div class="sa-kpi-bar" id="live-att-stats">
