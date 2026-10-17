@@ -281,6 +281,28 @@
     .kpi-manual .sa-kpi-count { background: #64748b; }
 
     /* ===== Toolbar with Instant Search & Quick Actions ===== */
+    .sa-day-banner { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; border-radius:10px; padding:10px 14px; margin-bottom:12px; font-size:13px; border:1px solid; }
+    .sa-day-banner.work { background:#f0fdf4; border-color:#bbf7d0; color:#14532d; }
+    .sa-day-banner.off { background:#faf5ff; border-color:#e9d5ff; color:#581c87; }
+    .sa-day-note { color:#64748b; }
+    .sa-day-link { font-weight:700; font-size:12.5px; white-space:nowrap; }
+    #live-att-stats { display:block; }
+    .sa-kpi-group { display:flex; flex-wrap:wrap; align-items:center; gap:8px; width:100%; }
+    .sa-kpi-group .sa-attn { margin-left:auto; }
+    .sa-kpi-label { font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; color:#94a3b8; min-width:118px; }
+    .sa-kpi-group > .sa-kpi-chip.is-zero:not(.active) { display:none; }
+    .sa-attn { display:inline-block; }
+    .sa-attn-btn { display:inline-flex; align-items:center; gap:6px; border:1px solid #fed7aa; background:#fff7ed; color:#9a3412; font-weight:700; font-size:12.5px; border-radius:20px; padding:6px 12px; cursor:pointer; }
+    .sa-attn-btn.active { background:#9a3412; color:#fff; border-color:#9a3412; }
+    .sa-attn-btn .sa-kpi-count { background:#ea580c; }
+    .sa-attn-menu { min-width:220px; border-radius:8px; padding:6px 0; }
+    .sa-attn-menu > li > a.sa-kpi-chip { display:flex !important; align-items:center; gap:8px; border:0 !important; background:none !important; border-radius:0 !important; padding:7px 14px !important; color:#1e293b !important; font-size:13px; box-shadow:none !important; }
+    .sa-attn-menu > li > a.sa-kpi-chip .sa-kpi-count { margin-left:auto; background:#e2e8f0 !important; color:#0f172a !important; min-width:24px; text-align:center; }
+    .sa-attn-menu > li > a.sa-kpi-chip.active, .sa-attn-menu > li > a.sa-kpi-chip:hover { background:#f1f5f9 !important; }
+    .sa-sf-menu { padding:12px; min-width:240px; border-radius:8px; }
+    .sa-sf-menu .form-control { height:32px; font-size:12.5px; border-radius:6px; margin-bottom:10px; }
+    .sa-sf-lbl { display:block; font-size:11.5px; font-weight:700; color:#64748b; margin:0 0 4px; }
+    .sa-sf-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#2563eb; }
     .sa-toolbar {
         display: flex;
         align-items: center;
@@ -780,64 +802,68 @@
                             <input type="hidden" name="section_id" value="">
                             <input type="hidden" name="date" value="<?php echo $date; ?>">
 
-                            <?php if (isset($day_date) && ($day_is_off_default || !empty($day_overrides))) { ?>
-                                <!-- Holiday / working-day status of the selected date -->
-                                <div style="background:<?php echo $day_is_off_default ? '#faf5ff' : '#f0fdf4'; ?>; border:1px solid <?php echo $day_is_off_default ? '#e9d5ff' : '#bbf7d0'; ?>; border-radius:8px; padding:9px 12px; margin-bottom:12px; font-size:12.5px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
-                                    <div>
-                                        <b><i class="fa fa-calendar"></i> <?php echo date('l, d M Y', strtotime($day_date)); ?>:</b>
-                                        <?php echo $day_is_off_default ? 'Holiday for everyone by default (Sunday / calendar holiday).' : 'Working day by default.'; ?>
-                                        <?php foreach ($day_overrides as $o) { ?>
-                                            <div style="margin-top:3px;">
-                                                <span class="label" style="background:<?php echo $o['day_type'] === 'working' ? '#16a34a' : '#7c3aed'; ?>;"><?php echo $o['day_type'] === 'working' ? 'Working day' : 'Holiday'; ?></span>
-                                                for <?php echo html_escape($o['label']); ?><?php echo !empty($o['reason']) ? ' — ' . html_escape($o['reason']) : ''; ?>
-                                            </div>
-                                        <?php } ?>
-                                    </div>
-                                    <a href="<?php echo site_url('admin/staffattendance/dayoverrides'); ?>" class="btn btn-default btn-xs"><i class="fa fa-pencil"></i> Manage</a>
+                            <?php if (isset($day_date) && ($day_is_off_default || !empty($day_overrides))) {
+                                // One plain sentence for the day: what applies, and why if it differs from normal.
+                                $dlabel = date('l, d M Y', strtotime($day_date));
+                                $ov_working = array(); $ov_holiday = array();
+                                foreach ($day_overrides as $o) {
+                                    $txt = html_escape($o['label']) . (!empty($o['reason']) ? ' (' . html_escape($o['reason']) . ')' : '');
+                                    if ($o['day_type'] === 'working') { $ov_working[] = $txt; } else { $ov_holiday[] = $txt; }
+                                }
+                                if ($day_is_off_default && $ov_working) {
+                                    $dtone = 'work'; $dmsg = '<b>Working day</b> for ' . implode(', ', $ov_working) . '. <span class="sa-day-note">Normally a holiday.</span>';
+                                } elseif ($day_is_off_default) {
+                                    $dtone = 'off'; $dmsg = '<b>Holiday</b> for all staff.';
+                                } else {
+                                    $dtone = 'off'; $dmsg = '<b>Holiday</b> for ' . implode(', ', $ov_holiday) . '. <span class="sa-day-note">Normally a working day.</span>';
+                                }
+                                if ($day_is_off_default && $ov_holiday) { $dmsg .= ' Holiday for ' . implode(', ', $ov_holiday) . '.'; }
+                            ?>
+                                <div class="sa-day-banner <?php echo $dtone; ?>">
+                                    <span><i class="fa fa-calendar"></i> <b><?php echo $dlabel; ?></b> &nbsp;·&nbsp; <?php echo $dmsg; ?></span>
+                                    <a href="<?php echo site_url('admin/staffattendance/dayoverrides'); ?>" class="sa-day-link">Change</a>
                                 </div>
                             <?php } ?>
 
-                            <!-- Interactive Live Stats KPI Filter Bar -->
+                            <!-- Live counts; each chip filters the list -->
                             <div class="sa-kpi-bar" id="live-att-stats">
-                                <span class="sa-kpi-chip kpi-all active" data-filter="all">
-                                    <i class="fa fa-users"></i> All Staff <span class="sa-kpi-count" id="cnt-all"><?php echo count($resultlist); ?></span>
-                                </span>
-                                <span class="sa-kpi-chip kpi-present" data-filter="present" title="Filter Present staff">
-                                    <i class="fa fa-check-circle text-success"></i> Present <span class="sa-kpi-count" id="cnt-present">0</span>
-                                </span>
-                                <span class="sa-kpi-chip kpi-late" data-filter="late" title="Filter Late staff">
-                                    <i class="fa fa-clock-o text-warning"></i> Late <span class="sa-kpi-count" id="cnt-late">0</span>
-                                </span>
-                                <span class="sa-kpi-chip kpi-absent" data-filter="absent" title="Filter Absent staff">
-                                    <i class="fa fa-times-circle text-danger"></i> Absent <span class="sa-kpi-count" id="cnt-absent">0</span>
-                                </span>
-                                <span class="sa-kpi-chip kpi-halfday" data-filter="half_day" title="Filter Half Day staff">
-                                    <i class="fa fa-adjust text-info"></i> Half Day <span class="sa-kpi-count" id="cnt-half_day">0</span>
-                                </span>
-                                <span class="sa-kpi-chip kpi-holiday" data-filter="holiday" title="Filter Holiday staff">
-                                    <i class="fa fa-tree" style="color:#7c3aed;"></i> Holiday <span class="sa-kpi-count" id="cnt-holiday">0</span>
-                                </span>
-                                <span class="sa-kpi-chip kpi-onduty" data-filter="on_duty" title="Filter On Duty staff">
-                                    <i class="fa fa-id-badge" style="color:var(--sa-onduty);"></i> On Duty <span class="sa-kpi-count" id="cnt-on_duty">0</span>
-                                </span>
-                                <span class="sa-kpi-chip kpi-missing" data-filter="missing-out" title="Filter staff with Entry punch but Missing Exit punch">
-                                    <i class="fa fa-exclamation-triangle text-warning"></i> Missing Exit <span class="sa-kpi-count" id="cnt-missing">0</span>
-                                </span>
-                                <span class="sa-kpi-chip kpi-shortfall" data-filter="shortfall" title="Filter staff with working hours shortfall">
-                                    <i class="fa fa-hourglass-half text-danger"></i> Shortfall <span class="sa-kpi-count" id="cnt-shortfall">0</span>
-                                </span>
-                                <span class="sa-kpi-chip" data-filter="early-leave" style="border-color:#fecaca; background:#fef2f2; color:#b91c1c;" title="Filter staff who left before scheduled school end time">
-                                    <i class="fa fa-sign-out text-danger"></i> Early Left <span class="sa-kpi-count" id="cnt-early" style="background:#fee2e2; color:#b91c1c;">0</span>
-                                </span>
-                                <span class="sa-kpi-chip" data-filter="overtime" style="border-color:#bbf7d0; background:#f0fdf4; color:#15803d;" title="Filter staff who worked overtime beyond scheduled hours">
-                                    <i class="fa fa-trophy text-success"></i> Overtime <span class="sa-kpi-count" id="cnt-overtime" style="background:#dcfce7; color:#15803d;">0</span>
-                                </span>
-                                <span class="sa-kpi-chip kpi-qr" data-filter="biometric" title="Filter Biometric or QR punches">
-                                    <i class="fa fa-qrcode text-info"></i> Biometric/QR <span class="sa-kpi-count" id="cnt-qr">0</span>
-                                </span>
-                                <span class="sa-kpi-chip kpi-manual" data-filter="manual" title="Filter Manual entries">
-                                    <i class="fa fa-pencil text-muted"></i> Manual <span class="sa-kpi-count" id="cnt-manual">0</span>
-                                </span>
+                                <div class="sa-kpi-group">
+                                    <span class="sa-kpi-chip kpi-all active" data-filter="all">
+                                        All <span class="sa-kpi-count" id="cnt-all"><?php echo count($resultlist); ?></span>
+                                    </span>
+                                    <span class="sa-kpi-chip kpi-present" data-filter="present" title="Show Present staff">
+                                        <i class="fa fa-check-circle text-success"></i> Present <span class="sa-kpi-count" id="cnt-present">0</span>
+                                    </span>
+                                    <span class="sa-kpi-chip kpi-late" data-filter="late" title="Show Late staff">
+                                        <i class="fa fa-clock-o text-warning"></i> Late <span class="sa-kpi-count" id="cnt-late">0</span>
+                                    </span>
+                                    <span class="sa-kpi-chip kpi-halfday" data-filter="half_day" title="Show Half Day staff">
+                                        <i class="fa fa-adjust text-info"></i> Half Day <span class="sa-kpi-count" id="cnt-half_day">0</span>
+                                    </span>
+                                    <span class="sa-kpi-chip kpi-absent" data-filter="absent" title="Show Absent staff">
+                                        <i class="fa fa-times-circle text-danger"></i> Absent <span class="sa-kpi-count" id="cnt-absent">0</span>
+                                    </span>
+                                    <span class="sa-kpi-chip kpi-onduty" data-filter="on_duty" title="Show On Duty staff">
+                                        <i class="fa fa-id-badge" style="color:var(--sa-onduty);"></i> On Duty <span class="sa-kpi-count" id="cnt-on_duty">0</span>
+                                    </span>
+                                    <span class="sa-kpi-chip kpi-holiday" data-filter="holiday" title="Show staff marked Holiday">
+                                        <i class="fa fa-tree" style="color:#7c3aed;"></i> Holiday <span class="sa-kpi-count" id="cnt-holiday">0</span>
+                                    </span>
+                                    <!-- Exceptions live in one menu instead of four more chips -->
+                                    <div class="dropdown sa-attn">
+                                        <button type="button" class="sa-attn-btn dropdown-toggle" data-toggle="dropdown" id="sa-attn-btn">
+                                            <i class="fa fa-exclamation-triangle"></i> <span id="sa-attn-label">Needs attention</span>
+                                            <span class="sa-kpi-count" id="cnt-attn">0</span> <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu sa-attn-menu">
+                                            <li><a href="#" class="sa-kpi-chip" data-filter="missing-out" title="Punched in but no exit punch yet"><i class="fa fa-exclamation-triangle text-warning"></i> Missing exit <span class="sa-kpi-count" id="cnt-missing">0</span></a></li>
+                                            <li><a href="#" class="sa-kpi-chip" data-filter="early-leave" title="Left before the shift's day end time"><i class="fa fa-sign-out text-danger"></i> Left early <span class="sa-kpi-count" id="cnt-early">0</span></a></li>
+                                            <li><a href="#" class="sa-kpi-chip" data-filter="shortfall" title="Worked fewer hours than required"><i class="fa fa-hourglass-half text-danger"></i> Short hours <span class="sa-kpi-count" id="cnt-shortfall">0</span></a></li>
+                                            <li role="separator" class="divider"></li>
+                                            <li><a href="#" class="sa-kpi-chip" data-filter="overtime" title="Worked more than required hours (+15 min)"><i class="fa fa-plus-circle text-success"></i> Overtime <span class="sa-kpi-count" id="cnt-overtime">0</span></a></li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Live Search & Action Bar -->
@@ -847,9 +873,20 @@
                                     <input type="text" id="att-table-search" class="sa-search-input" placeholder="Quick search staff name, ID, phone...">
                                 </div>
                                 <div class="sa-actions-right">
-                                    <div class="sa-sort-wrap" style="display:inline-flex; align-items:center; gap:6px;">
-                                        <span style="font-size:11.5px; font-weight:700; color:#64748b;"><i class="fa fa-sort"></i> Sort:</span>
-                                        <select id="att-sort-select" class="form-control input-sm" style="width:160px; height:32px; font-size:12px; font-weight:600; border-radius:8px; border-color:#cbd5e1; background:#ffffff; cursor:pointer;">
+                                    <div class="dropdown sa-sortfilter">
+                                        <button type="button" class="sa-btn dropdown-toggle" data-toggle="dropdown" id="sa-sortfilter-btn">
+                                            <i class="fa fa-sliders"></i> Sort &amp; filter <span class="sa-sf-dot" id="sa-sf-dot" style="display:none;"></span> <span class="caret"></span>
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-right sa-sf-menu">
+                                    <label class="sa-sf-lbl" for="att-source-select">Recorded by</label>
+                                    <select id="att-source-select" class="form-control input-sm">
+                                        <option value="all">Everyone</option>
+                                        <option value="biometric" id="opt-src-bio">Biometric / QR</option>
+                                        <option value="manual" id="opt-src-manual">Entered by hand</option>
+                                    </select>
+                                    <div class="sa-sort-wrap">
+                                        <label class="sa-sf-lbl" for="att-sort-select">Sort by</label>
+                                        <select id="att-sort-select" class="form-control input-sm">
                                             <option value="default">Default (#)</option>
                                             <option value="name_asc">Name (A → Z)</option>
                                             <option value="name_desc">Name (Z → A)</option>
@@ -861,6 +898,8 @@
                                             <option value="early_exit">Early Left First</option>
                                             <option value="overtime">Overtime First</option>
                                         </select>
+                                    </div>
+                                        </div>
                                     </div>
                                     <button type="button" class="sa-btn sa-btn-whatsapp" onclick="openStaffAttendanceShareModal('all')">
                                         <i class="fa fa-whatsapp"></i> WhatsApp Report
@@ -1499,11 +1538,10 @@
                 counts.missing++;
             }
 
-            var srcText = $tr.find('td:nth-child(7)').text().toLowerCase();
-            if (srcText.indexOf('qr') !== -1 || srcText.indexOf('bio') !== -1) {
-                counts.qr++;
-            } else if (srcText.indexOf('manual') !== -1) {
-                counts.manual++;
+            // Source of a marked record (rows with no status yet are not counted as manual).
+            var src = ($tr.attr('data-source') || '').toLowerCase();
+            if (key) {
+                if (src === 'biometric' || src === 'qr') { counts.qr++; } else { counts.manual++; }
             }
 
             // Duration & Shortfall calculation
@@ -1569,8 +1607,22 @@
         $('#cnt-shortfall').text(counts.shortfall);
         $('#cnt-early').text(counts.early);
         $('#cnt-overtime').text(counts.overtime);
-        $('#cnt-qr').text(counts.qr);
-        $('#cnt-manual').text(counts.manual);
+        $('#opt-src-bio').text('Biometric / QR (' + counts.qr + ')');
+        $('#opt-src-manual').text('Entered by hand (' + counts.manual + ')');
+        // Staff with at least one exception, each counted once (one person can be both early and short).
+        var attn = 0;
+        $('#staff-attendance-table tbody tr').each(function() {
+            var $r = $(this);
+            var iv = $r.find('.in_time').val(), ov = $r.find('.out_time').val();
+            var missing = iv && iv !== '00:00:00' && (!ov || ov === '00:00:00');
+            if (missing || $r.attr('data-is_early') === '1' || $r.attr('data-is_shortfall') === '1') { attn++; }
+        });
+        $('#cnt-attn').text(attn);
+        // Hide status chips with nothing to show.
+        $('#live-att-stats .sa-kpi-chip').each(function() {
+            var n = parseInt($(this).find('.sa-kpi-count').text(), 10) || 0;
+            $(this).toggleClass('is-zero', n === 0 && $(this).data('filter') !== 'all');
+        });
     }
 
     // 7. Live Filter and Search
@@ -1617,6 +1669,13 @@
                 var src = ($tr.attr('data-source') || '').toLowerCase();
                 var srcText = $tr.find('td:nth-child(7)').text().toLowerCase();
                 matchesFilter = (src === 'manual' || srcText.indexOf('manual') !== -1 || srcText.indexOf('-') !== -1);
+            }
+
+            var srcFilter = $('#att-source-select').val() || 'all';
+            if (srcFilter !== 'all') {
+                var rs = ($tr.attr('data-source') || '').toLowerCase();
+                var isBio = (rs === 'biometric' || rs === 'qr');
+                matchesFilter = matchesFilter && !!key && (srcFilter === 'biometric' ? isBio : !isBio);
             }
 
             if (matchesSearch && matchesFilter) {
@@ -1705,6 +1764,23 @@
         applyFilters();
     });
 
+    $('#att-source-select').on('change', function() { applyFilters(); });
+    // Sort & filter menu: stay open while using its selects; a dot shows when something is not default.
+    $('.sa-sf-menu').on('click', function(e) { e.stopPropagation(); });
+    $('#att-source-select, #att-sort-select').on('change', function() {
+        var on = $('#att-source-select').val() !== 'all' || $('#att-sort-select').val() !== 'default';
+        $('#sa-sf-dot').toggle(on);
+    });
+    // Needs-attention menu: the button shows which exception is being filtered.
+    $(document).on('click', '.sa-attn-menu .sa-kpi-chip', function(e) {
+        e.preventDefault();
+        $('#sa-attn-label').text($(this).clone().children('.sa-kpi-count').remove().end().text().trim());
+        $('#sa-attn-btn').addClass('active');
+    });
+    $(document).on('click', '.sa-kpi-group > .sa-kpi-chip', function() {
+        $('#sa-attn-label').text('Needs attention');
+        $('#sa-attn-btn').removeClass('active');
+    });
     $('.sa-kpi-chip').on('click', function() {
         var filter = $(this).data('filter');
         if (!filter) return;
