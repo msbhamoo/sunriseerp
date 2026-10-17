@@ -389,56 +389,121 @@
                                         </form>
 
                                         <!-- Shifts list -->
-                                        <?php $es = $editing_shift; $es_temp = ($es['shift_type'] === 'temporary'); $today_ymd = date('Y-m-d'); ?>
-                                        <div class="sa-shift-list" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:12px 16px; margin-bottom:16px;">
-                                            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
-                                                <span style="font-weight:700; font-size:13px; color:#334155;"><i class="fa fa-clock-o text-primary"></i> Shifts</span>
+                                        <?php
+                                        $es = $editing_shift; $es_temp = ($es['shift_type'] === 'temporary'); $today_ymd = date('Y-m-d');
+                                        $fmt_d = function ($d) { return date('d M Y', strtotime($d)); };
+                                        // Which shift applies today: an active temporary shift covering today wins over the regular one.
+                                        $today_temp = null; $today_reg = null;
+                                        foreach ((array) $staff_shifts as $sh) {
+                                            $covers = (empty($sh['effective_from']) || $sh['effective_from'] <= $today_ymd) && (empty($sh['effective_to']) || $sh['effective_to'] >= $today_ymd);
+                                            if (empty($sh['is_active']) || !$covers) { continue; }
+                                            if ($sh['shift_type'] === 'temporary') { $today_temp = $sh; } elseif (!$today_reg) { $today_reg = $sh; }
+                                        }
+                                        ?>
+                                        <style>
+                                            .sh-panel { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:16px; }
+                                            .sh-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
+                                            .sh-head h4 { margin:0; font-size:15px; font-weight:800; color:#0f172a; }
+                                            .sh-today { background:#f0fdf4; border:1px solid #bbf7d0; color:#14532d; border-radius:8px; padding:9px 12px; font-size:12.5px; margin-bottom:12px; }
+                                            .sh-today.temp { background:#f5f3ff; border-color:#ddd6fe; color:#4c1d95; }
+                                            .sh-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px; }
+                                            .sh-card { border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:8px; background:#fff; }
+                                            .sh-card.editing { border-color:#2563eb; box-shadow:0 0 0 2px #dbeafe; }
+                                            .sh-card.temp { border-left:4px solid #8b5cf6; }
+                                            .sh-card.reg { border-left:4px solid #2563eb; }
+                                            .sh-card .nm { font-size:14px; font-weight:800; color:#0f172a; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+                                            .sh-tag { font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px; white-space:nowrap; }
+                                            .sh-tag.reg { background:#dbeafe; color:#1d4ed8; }
+                                            .sh-tag.temp { background:#ede9fe; color:#6d28d9; }
+                                            .sh-meta { font-size:12px; color:#475569; line-height:1.5; }
+                                            .sh-status { font-size:11.5px; font-weight:700; padding:3px 8px; border-radius:6px; align-self:flex-start; }
+                                            .sh-status.on { background:#dcfce7; color:#15803d; }
+                                            .sh-status.base { background:#fef9c3; color:#854d0e; }
+                                            .sh-status.sched { background:#e0f2fe; color:#0369a1; }
+                                            .sh-status.off { background:#f1f5f9; color:#64748b; }
+                                            .sh-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:auto; }
+                                            .sh-actions .btn { border-radius:6px; }
+                                            .sh-form { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:14px; }
+                                            .sh-form-title { font-size:15px; font-weight:800; color:#0f172a; margin:0 0 12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+                                            .sh-fields { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px 16px; }
+                                            .sh-fields label.lbl { display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:4px; }
+                                            .sh-fields .form-control { height:36px; border-radius:6px; }
+                                            .sh-type { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0 4px; }
+                                            .sh-type label { border:1.5px solid #e2e8f0; border-radius:10px; padding:10px 12px; cursor:pointer; margin:0; font-weight:400; display:flex; gap:10px; align-items:flex-start; }
+                                            .sh-type input { margin-top:3px; }
+                                            .sh-type b { display:block; font-size:13px; color:#0f172a; }
+                                            .sh-type span { font-size:11.5px; color:#64748b; line-height:1.4; }
+                                            .sh-type label.sel-reg { border-color:#2563eb; background:#eff6ff; }
+                                            .sh-type label.sel-temp { border-color:#8b5cf6; background:#f5f3ff; }
+                                            .sh-help { font-size:12px; color:#475569; margin-top:10px; }
+                                            .sh-timings-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin:4px 2px 10px; }
+                                            .sh-timings-head h4 { margin:0; font-size:14px; font-weight:800; color:#0f172a; }
+                                            @media (max-width: 600px) { .sh-type { grid-template-columns:1fr; } }
+                                        </style>
+
+                                        <div class="sh-panel">
+                                            <div class="sh-head">
+                                                <h4><i class="fa fa-clock-o text-primary"></i> Shifts</h4>
                                                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                                                    <a href="<?php echo site_url('schsettings/attendancetype?new=regular'); ?>" class="btn btn-xs btn-success" style="border-radius:20px; font-weight:700; padding:4px 12px;"><i class="fa fa-plus-circle"></i> New Regular Shift</a>
-                                                    <a href="<?php echo site_url('schsettings/attendancetype?new=temporary'); ?>" class="btn btn-xs" style="background:#8b5cf6; color:#fff; border-radius:20px; font-weight:700; padding:4px 12px;"><i class="fa fa-bolt"></i> New Temporary Shift</a>
+                                                    <a href="<?php echo site_url('schsettings/attendancetype?new=regular'); ?>" class="btn btn-sm btn-primary" style="border-radius:6px;"><i class="fa fa-plus"></i> Regular shift</a>
+                                                    <a href="<?php echo site_url('schsettings/attendancetype?new=temporary'); ?>" class="btn btn-sm" style="background:#8b5cf6; color:#fff; border-radius:6px;"><i class="fa fa-bolt"></i> Temporary shift</a>
                                                 </div>
                                             </div>
-                                            <?php if (empty($staff_shifts)) { ?>
-                                                <div class="text-muted" style="font-size:12px;">No shifts yet. Fill in the timings below and save to create the first regular shift.</div>
+
+                                            <?php if ($today_temp) { ?>
+                                                <div class="sh-today temp"><i class="fa fa-info-circle"></i> Today staff follow <b><?php echo html_escape($today_temp['name']); ?></b> (temporary, until <?php echo $fmt_d($today_temp['effective_to']); ?>).
+                                                    <?php if ($today_reg) { ?>After that, <b><?php echo html_escape($today_reg['name']); ?></b> applies again.<?php } ?></div>
+                                            <?php } elseif ($today_reg) { ?>
+                                                <div class="sh-today"><i class="fa fa-check-circle"></i> Today staff follow <b><?php echo html_escape($today_reg['name']); ?></b>.</div>
                                             <?php } else { ?>
-                                            <div class="table-responsive">
-                                            <table class="table table-condensed mb0" style="font-size:12.5px;">
-                                                <thead><tr><th>Name</th><th>Type</th><th>Dates</th><th>Roles</th><th>Used by</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
-                                                <tbody>
+                                                <div class="sh-today temp" style="background:#fef2f2; border-color:#fecaca; color:#991b1b;"><i class="fa fa-exclamation-triangle"></i> No shift applies today. Activate a regular shift so attendance can be graded.</div>
+                                            <?php } ?>
+
+                                            <?php if (empty($staff_shifts)) { ?>
+                                                <div class="text-muted" style="font-size:12.5px;">No shifts yet. Fill in the timings below and save to create the first regular shift.</div>
+                                            <?php } else { ?>
+                                            <div class="sh-grid">
                                                 <?php foreach ($staff_shifts as $sh) {
                                                     $sh_temp   = $sh['shift_type'] === 'temporary';
                                                     $sh_covers = (empty($sh['effective_from']) || $sh['effective_from'] <= $today_ymd) && (empty($sh['effective_to']) || $sh['effective_to'] >= $today_ymd);
                                                     $sh_live   = !empty($sh['is_active']) && $sh_covers;
                                                     $sh_ended  = !empty($sh['effective_to']) && $sh['effective_to'] < $today_ymd;
                                                     $is_editing = (string) $es['id'] === (string) $sh['id'];
+                                                    if ($sh_live && !$sh_temp && $today_temp) { $st = array('base', 'Replaced today by ' . $today_temp['name']); }
+                                                    elseif ($sh_live) { $st = array('on', 'Applies today'); }
+                                                    elseif (!empty($sh['is_active']) && $sh_ended) { $st = array('off', 'Ended'); }
+                                                    elseif (!empty($sh['is_active'])) { $st = array('sched', 'Starts ' . $fmt_d($sh['effective_from'])); }
+                                                    else { $st = array('off', 'Inactive'); }
+                                                    $range = (!empty($sh['effective_from']) ? $fmt_d($sh['effective_from']) : 'No start date') . ' → ' . (!empty($sh['effective_to']) ? $fmt_d($sh['effective_to']) : 'no end date');
+                                                    if ($sh_temp && $sh['effective_from'] === $sh['effective_to']) { $range = $fmt_d($sh['effective_from']) . ' (1 day)'; }
                                                 ?>
-                                                    <tr style="<?php echo $is_editing ? 'background:#eff6ff;' : ''; ?>">
-                                                        <td style="font-weight:700;"><?php echo html_escape($sh['name']); ?></td>
-                                                        <td><?php echo $sh_temp ? '<span class="label" style="background:#8b5cf6;">Temporary</span>' : '<span class="label label-primary">Regular</span>'; ?></td>
-                                                        <td style="white-space:nowrap;"><?php echo (!empty($sh['effective_from']) ? date('d M Y', strtotime($sh['effective_from'])) : 'Always') . ' → ' . (!empty($sh['effective_to']) ? date('d M Y', strtotime($sh['effective_to'])) : 'Open-ended'); ?></td>
-                                                        <td><?php echo (int) $sh['total_roles']; ?></td>
-                                                        <td><?php echo (int) $sh['usage_count']; ?> records</td>
-                                                        <td>
-                                                            <?php if ($sh_live) { ?><span class="label label-success">In force now</span>
-                                                            <?php } elseif (!empty($sh['is_active']) && $sh_ended) { ?><span class="label label-default" style="background:#cbd5e1;">Ended</span>
-                                                            <?php } elseif (!empty($sh['is_active'])) { ?><span class="label label-info">Scheduled</span>
-                                                            <?php } else { ?><span class="label label-default">Inactive</span><?php } ?>
-                                                        </td>
-                                                        <td class="text-right" style="white-space:nowrap;">
-                                                            <a href="<?php echo site_url('schsettings/attendancetype?shift=' . $sh['id']); ?>" class="btn btn-default btn-xs"><i class="fa fa-pencil"></i> Edit</a>
+                                                    <div class="sh-card <?php echo $sh_temp ? 'temp' : 'reg'; ?> <?php echo $is_editing ? 'editing' : ''; ?>">
+                                                        <div class="nm">
+                                                            <span><?php echo html_escape($sh['name']); ?></span>
+                                                            <span class="sh-tag <?php echo $sh_temp ? 'temp' : 'reg'; ?>"><?php echo $sh_temp ? 'Temporary' : 'Regular'; ?></span>
+                                                        </div>
+                                                        <span class="sh-status <?php echo $st[0]; ?>"><?php echo html_escape($st[1]); ?></span>
+                                                        <div class="sh-meta">
+                                                            <i class="fa fa-calendar"></i> <?php echo $range; ?><br>
+                                                            <i class="fa fa-users"></i> <?php echo (int) $sh['total_roles']; ?> roles &nbsp;·&nbsp; used by <?php echo number_format((int) $sh['usage_count']); ?> attendance records
+                                                        </div>
+                                                        <div class="sh-actions">
+                                                            <?php if ($is_editing) { ?>
+                                                                <span class="btn btn-xs btn-default disabled"><i class="fa fa-pencil"></i> Editing below</span>
+                                                            <?php } else { ?>
+                                                                <a href="<?php echo site_url('schsettings/attendancetype?shift=' . $sh['id']); ?>" class="btn btn-default btn-xs"><i class="fa fa-pencil"></i> Edit</a>
+                                                            <?php } ?>
                                                             <?php if (empty($sh['is_active'])) { ?>
                                                                 <button type="button" class="btn btn-success btn-xs sa-shift-status" data-id="<?php echo $sh['id']; ?>" data-active="1"><i class="fa fa-check"></i> Activate</button>
                                                                 <?php if ((int) $sh['usage_count'] === 0) { ?>
-                                                                    <button type="button" class="btn btn-danger btn-xs sa-shift-delete" data-id="<?php echo $sh['id']; ?>"><i class="fa fa-trash"></i></button>
+                                                                    <button type="button" class="btn btn-default btn-xs sa-shift-delete" data-id="<?php echo $sh['id']; ?>" title="Delete"><i class="fa fa-trash text-danger"></i> Delete</button>
                                                                 <?php } ?>
                                                             <?php } elseif ($sh_temp || !$sh_live) { ?>
-                                                                <button type="button" class="btn btn-warning btn-xs sa-shift-status" data-id="<?php echo $sh['id']; ?>" data-active="0"><i class="fa fa-pause"></i> Deactivate</button>
+                                                                <button type="button" class="btn btn-default btn-xs sa-shift-status" data-id="<?php echo $sh['id']; ?>" data-active="0"><i class="fa fa-pause text-warning"></i> Deactivate</button>
                                                             <?php } ?>
-                                                        </td>
-                                                    </tr>
+                                                        </div>
+                                                    </div>
                                                 <?php } ?>
-                                                </tbody>
-                                            </table>
                                             </div>
                                             <?php } ?>
                                         </div>
@@ -446,73 +511,69 @@
                                         <form method="POST" action="<?php echo site_url('schsettings/savestaffsetting'); ?>" class="update" id="staff_attendance_form">
                                             <div class="row">
                                                 <div class="col-md-12">
-                                                    <div style="font-size:15px; font-weight:800; color:#0f172a; margin:0 0 8px 2px;">
-                                                        <?php if (!empty($es['id'])) { ?>
-                                                            <i class="fa fa-pencil text-primary"></i> Editing shift: <span style="color:#2563eb;"><?php echo html_escape($es['name']); ?></span>
-                                                        <?php } else { ?>
-                                                            <i class="fa fa-plus-circle text-success"></i> New <?php echo $es_temp ? 'temporary' : 'regular'; ?> shift
-                                                            <span style="font-size:12px; font-weight:500; color:#64748b;">(timings copied from the current shift; change them below)</span>
-                                                        <?php } ?>
-                                                    </div>
-                                                    <div class="sa-copy-banner" id="sa_banner_container" style="flex-wrap:wrap; gap:12px; border-left:4px solid <?php echo $es_temp ? '#8b5cf6' : '#3b82f6'; ?>;">
-                                                        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; width:100%;">
-                                                            <div class="checkbox mb0 mt0" style="font-weight:700; color:#0f172a;">
-                                                                <label for="copy_staff_attendance" style="cursor:pointer; display:flex; align-items:center; gap:8px;">
-                                                                    <input class="copy_staff_attendance" id="copy_staff_attendance" value="1" type="checkbox" style="margin:0; width:17px; height:17px;">
-                                                                    <span><i class="fa fa-clone text-primary"></i> <?php echo $this->lang->line('copy_first_detail_for_all'); ?></span>
-                                                                </label>
-                                                            </div>
-                                                            <input type="hidden" name="shift_id" value="<?php echo html_escape($es['id']); ?>">
-                                                            <div style="display:inline-flex; align-items:center; gap:6px;">
-                                                                <label style="margin:0; font-weight:700; font-size:12px; color:#1e293b; white-space:nowrap;">
-                                                                    <i class="fa fa-tag text-primary"></i> Shift Name:
-                                                                </label>
-                                                                <div style="width:180px;">
-                                                                    <input type="text" id="staff_shift_name" name="shift_name" class="form-control input-sm"
-                                                                           value="<?php echo html_escape($es['name']); ?>" placeholder="e.g. Winter Timings"
-                                                                           style="height:32px; font-weight:700; border-radius:6px; background:#ffffff; border:1px solid #cbd5e1;" required>
-                                                                </div>
-                                                            </div>
-                                                            <div style="display:inline-flex; align-items:center; gap:6px;">
-                                                                <label style="margin:0; font-weight:700; font-size:12px; color:#1e293b; white-space:nowrap;">
-                                                                    <i class="fa fa-sliders text-primary"></i> Type:
-                                                                </label>
-                                                                <select id="staff_shift_type" name="shift_type" class="form-control input-sm" style="height:32px; font-weight:700; border-radius:6px; background:#ffffff; border:1.5px solid #cbd5e1; width:150px;">
-                                                                    <option value="regular" <?php echo !$es_temp ? 'selected' : ''; ?>>Regular</option>
-                                                                    <option value="temporary" <?php echo $es_temp ? 'selected' : ''; ?>>Temporary (event)</option>
-                                                                </select>
-                                                            </div>
-                                                            <div style="display:inline-flex; align-items:center; gap:6px;">
-                                                                <label style="margin:0; font-weight:700; font-size:12px; color:#1e293b; white-space:nowrap;"><i class="fa fa-calendar-check-o text-success"></i> Start Date:</label>
-                                                                <div style="width:120px;">
-                                                                    <input type="text" id="staff_effective_from" name="effective_from" class="form-control date input-sm"
-                                                                           value="<?php echo !empty($es['effective_from']) ? date($this->customlib->getSchoolDateFormat(), strtotime($es['effective_from'])) : ''; ?>"
-                                                                           placeholder="Always"
-                                                                           style="height:32px; font-weight:700; border-radius:6px; background:#ffffff; border:1px solid #cbd5e1;">
-                                                                </div>
-                                                                <label style="margin:0; font-weight:700; font-size:12px; color:#1e293b; white-space:nowrap;"><i class="fa fa-calendar-times-o text-danger"></i> End Date:</label>
-                                                                <div style="width:120px;">
-                                                                    <input type="text" id="staff_effective_to" name="effective_to" class="form-control date input-sm"
-                                                                           value="<?php echo !empty($es['effective_to']) ? date($this->customlib->getSchoolDateFormat(), strtotime($es['effective_to'])) : ''; ?>"
-                                                                           placeholder="<?php echo $es_temp ? 'Same as start' : 'Open-ended'; ?>"
-                                                                           style="height:32px; font-weight:700; border-radius:6px; background:#ffffff; border:1px solid #cbd5e1;">
-                                                                </div>
-                                                            </div>
-                                                            <?php if (empty($es['is_active'])) { ?>
-                                                                <label style="cursor:pointer; display:inline-flex; align-items:center; gap:6px; margin:0; font-weight:700; color:#0f172a; white-space:nowrap;">
-                                                                    <input type="checkbox" name="activate" value="1" checked style="margin:0; width:16px; height:16px;"> Activate on save
-                                                                </label>
-                                                            <?php } else { ?>
-                                                                <span class="label label-success" style="font-size:11px;">Active shift</span>
+                                                    <div class="sh-form" id="sa_banner_container">
+                                                        <div class="sh-form-title">
+                                                            <span>
+                                                                <?php if (!empty($es['id'])) { ?>
+                                                                    <i class="fa fa-pencil text-primary"></i> Edit shift: <span style="color:#2563eb;"><?php echo html_escape($es['name']); ?></span>
+                                                                <?php } else { ?>
+                                                                    <i class="fa fa-plus-circle text-success"></i> New shift
+                                                                <?php } ?>
+                                                            </span>
+                                                            <?php if (!empty($es['id']) || isset($_GET['new'])) { ?>
+                                                                <a href="<?php echo site_url('schsettings/attendancetype'); ?>" class="btn btn-xs btn-default" style="border-radius:6px;"><i class="fa fa-times"></i> Cancel</a>
                                                             <?php } ?>
                                                         </div>
-                                                        <div id="sa_info_msg" style="font-size:11.5px; color:#64748b; margin-top:4px; display:flex; align-items:center; gap:6px; width:100%;">
-                                                            <i class="fa fa-shield text-info"></i>
-                                                            <span id="sa_info_text">
-                                                                On any date only one regular shift applies per role. A new regular shift with a Start date automatically ends the previous open-ended one the day before.
-                                                                A temporary shift applies on top only between its dates. Past attendance keeps the shift it was recorded under.
-                                                            </span>
+                                                        <input type="hidden" name="shift_id" value="<?php echo html_escape($es['id']); ?>">
+
+                                                        <div class="sh-type" id="staff_shift_type">
+                                                            <label class="<?php echo !$es_temp ? 'sel-reg' : ''; ?>">
+                                                                <input type="radio" name="shift_type" value="regular" <?php echo !$es_temp ? 'checked' : ''; ?>>
+                                                                <div><b>Regular shift</b><span>Normal timings for a season (e.g. Summer, Winter). Runs from the start date until the next regular shift begins.</span></div>
+                                                            </label>
+                                                            <label class="<?php echo $es_temp ? 'sel-temp' : ''; ?>">
+                                                                <input type="radio" name="shift_type" value="temporary" <?php echo $es_temp ? 'checked' : ''; ?>>
+                                                                <div><b>Temporary shift</b><span>Special timings for a few days (PTM, exams, events). Replaces the regular shift only on these dates; attendance on those dates is re-checked.</span></div>
+                                                            </label>
                                                         </div>
+
+                                                        <div class="sh-fields" style="margin-top:12px;">
+                                                            <div>
+                                                                <label class="lbl" for="staff_shift_name">Shift name</label>
+                                                                <input type="text" id="staff_shift_name" name="shift_name" class="form-control"
+                                                                       value="<?php echo html_escape($es['name']); ?>" placeholder="e.g. Winter Timings" required>
+                                                            </div>
+                                                            <div>
+                                                                <label class="lbl" for="staff_effective_from">Start date</label>
+                                                                <input type="text" id="staff_effective_from" name="effective_from" class="form-control date"
+                                                                       value="<?php echo !empty($es['effective_from']) ? date($this->customlib->getSchoolDateFormat(), strtotime($es['effective_from'])) : ''; ?>"
+                                                                       placeholder="No start date">
+                                                            </div>
+                                                            <div>
+                                                                <label class="lbl" for="staff_effective_to">End date <span class="sh-end-hint" style="font-weight:400; color:#94a3b8;">(optional)</span></label>
+                                                                <input type="text" id="staff_effective_to" name="effective_to" class="form-control date"
+                                                                       value="<?php echo !empty($es['effective_to']) ? date($this->customlib->getSchoolDateFormat(), strtotime($es['effective_to'])) : ''; ?>"
+                                                                       placeholder="<?php echo $es_temp ? 'Same as start date' : 'No end date'; ?>">
+                                                            </div>
+                                                            <div style="display:flex; align-items:flex-end;">
+                                                                <?php if (empty($es['is_active'])) { ?>
+                                                                    <label style="cursor:pointer; display:inline-flex; align-items:center; gap:8px; margin:0 0 8px; font-weight:700; color:#0f172a;">
+                                                                        <input type="checkbox" name="activate" value="1" checked style="margin:0; width:17px; height:17px;"> Activate when saved
+                                                                    </label>
+                                                                <?php } else { ?>
+                                                                    <span class="sh-status on" style="margin-bottom:8px;"><i class="fa fa-check"></i> Active</span>
+                                                                <?php } ?>
+                                                            </div>
+                                                        </div>
+                                                        <div class="sh-help" id="sa_info_text"></div>
+                                                    </div>
+
+                                                    <div class="sh-timings-head">
+                                                        <h4><i class="fa fa-sliders text-primary"></i> Timings by role</h4>
+                                                        <label for="copy_staff_attendance" style="cursor:pointer; display:inline-flex; align-items:center; gap:8px; margin:0; font-weight:600; font-size:12.5px;">
+                                                            <input class="copy_staff_attendance" id="copy_staff_attendance" value="1" type="checkbox" style="margin:0; width:16px; height:16px;">
+                                                            <?php echo $this->lang->line('copy_first_detail_for_all'); ?>
+                                                        </label>
                                                     </div>
                                                 </div>
                                                 <?php $row = 1; ?>
@@ -530,6 +591,7 @@
                                                                     $prefill = array('p' => '', 'l' => '', 'f' => '', 'sh' => '');
                                                                     $early_half_val = isset($list_value['early_half']) ? $list_value['early_half'] : '';
                                                                     $early_grace_val = isset($list_value['early_grace']) ? $list_value['early_grace'] : '';
+                                                                    $day_start_val = isset($list_value['day_start']) ? $list_value['day_start'] : '';
                                                                     $carriers = '';
                                                                     if (!empty($attendance_type)) {
                                                                         foreach ($attendance_type as $att_type_value) {
@@ -546,6 +608,7 @@
                                                                             $carriers .= '<input type="hidden" class="hb_total hbk_' . $k . '" name="total_institute_hour_' . $row . '" value="' . $rv['total_institute_hour'] . '">';
                                                                             $carriers .= '<input type="hidden" class="hb_early_half" name="early_half_time_' . $row . '" value="' . $early_half_val . '">';
                                                                             $carriers .= '<input type="hidden" class="hb_early_grace" name="early_grace_time_' . $row . '" value="' . $early_grace_val . '">';
+                                                                            $carriers .= '<input type="hidden" class="hb_day_start" name="day_start_time_' . $row . '" value="' . $day_start_val . '">';
                                                                             $row++;
                                                                         }
                                                                     }
@@ -557,6 +620,14 @@
                                                                         <div class="col-md-6">
                                                                             <div class="sa-group-box">
                                                                                 <div class="sa-group-title sa-group-in"><i class="fa fa-sign-in"></i> Morning Check-In Cutoffs</div>
+                                                                                <div class="sa-field-item" style="margin-bottom:8px;">
+                                                                                    <label class="sa-field-label" title="Official start of the working day">Day Start Time</label>
+                                                                                    <div class="sa-time-wrap" style="max-width:180px;">
+                                                                                        <input type="text" class="form-control time sa-time-control cut_daystart" value="<?php echo $day_start_val; ?>" placeholder="08:00:00">
+                                                                                        <span class="fa fa-clock-o sa-time-icon" style="color:#0f766e;"></span>
+                                                                                    </div>
+                                                                                    <div class="sa-field-subtext">Required hours = Day End − Day Start: <strong class="sa-req-hours">—</strong></div>
+                                                                                </div>
                                                                                 <div class="sa-grid-3">
                                                                                     <div class="sa-field-item">
                                                                                         <label class="sa-field-label" title="Present Up To">Present Up To</label>
@@ -1076,23 +1147,29 @@
             var ehVal = $block.find('.cut_early_half').val() || '';
             var egVal = $block.find('.cut_early_grace').val() || '';
 
+            var dsVal = $block.find('.cut_daystart').val() || '';
+            var sS = _timeToSeconds(dsVal);
+
             $block.find('.hb_early_half').val(ehVal);
             $block.find('.hb_early_grace').val(egVal);
+            $block.find('.hb_day_start').val(sS === null ? '' : _secondsToHms(sS));
 
             if (pS === null) pS = _timeToSeconds('08:30:00');
             if (lS === null) lS = _timeToSeconds('09:30:00');
             if (fS === null) fS = _timeToSeconds('10:30:00');
             if (dS === null) dS = _timeToSeconds('15:00:00');
 
-            var total = _secondsToHms(Math.max(0, dS - pS));
+            // Required hours = Day End - Day Start; without a Day Start, the older Day End - Present cut-off.
+            var total = _secondsToHms(Math.max(0, dS - (sS !== null ? sS : pS)));
             if (total === '00:00:00') { total = '07:30:00'; }
+            $block.find('.sa-req-hours').text(total.substr(0, 5) + (sS === null ? ' (set Day Start)' : ''));
 
             _setStaffBand($block, 'p', '00:00:00', _secondsToHms(pS), total);
             _setStaffBand($block, 'l', _secondsToHms(pS + 1), _secondsToHms(lS), total);
             _setStaffBand($block, 'f', _secondsToHms(lS + 1), _secondsToHms(fS), total);
             _setStaffBand($block, 'sh', _secondsToHms(fS + 1), _secondsToHms(dS), total);
         }
-        $(document).on('change dp.change blur', '#staff_attendance_form .cut_present, #staff_attendance_form .cut_late, #staff_attendance_form .cut_halfday, #staff_attendance_form .cut_early_half, #staff_attendance_form .cut_early_grace, #staff_attendance_form .cut_dayend', function () {
+        $(document).on('change dp.change blur', '#staff_attendance_form .cut_daystart, #staff_attendance_form .cut_present, #staff_attendance_form .cut_late, #staff_attendance_form .cut_halfday, #staff_attendance_form .cut_early_half, #staff_attendance_form .cut_early_grace, #staff_attendance_form .cut_dayend', function () {
             var $block = $(this).closest('.staff_attendance_row');
             if ($block.length) { genStaffBands($block); }
         });
@@ -1192,7 +1269,9 @@
                 var eh = $first.find('.cut_early_half').val();
                 var eg = $first.find('.cut_early_grace').val();
                 var d = $first.find('.cut_dayend').val();
+                var st = $first.find('.cut_daystart').val();
                 $blocks.each(function () {
+                    $(this).find('.cut_daystart').val(st);
                     $(this).find('.cut_present').val(p);
                     $(this).find('.cut_late').val(l);
                     $(this).find('.cut_halfday').val(f);
@@ -1217,11 +1296,19 @@
             }
         });
 
-        $(document).on('change', '#staff_shift_type', function() {
-            var isTemp = $(this).val() === 'temporary';
-            $('#staff_effective_to').attr('placeholder', isTemp ? 'Same as start' : 'Open-ended');
-            $('#sa_banner_container').css('border-left', isTemp ? '4px solid #8b5cf6' : '4px solid #3b82f6');
-        });
+        function staffShiftTypeUi() {
+            var isTemp = $('#staff_shift_type input:checked').val() === 'temporary';
+            var $labels = $('#staff_shift_type label').removeClass('sel-reg sel-temp');
+            $('#staff_shift_type input:checked').closest('label').addClass(isTemp ? 'sel-temp' : 'sel-reg');
+            $('#staff_effective_to').attr('placeholder', isTemp ? 'Same as start date' : 'No end date');
+            $('#staff_effective_from').attr('placeholder', isTemp ? 'Required' : 'No start date');
+            $('.sh-end-hint').text(isTemp ? '(leave empty for a 1-day shift)' : '(optional)');
+            $('#sa_info_text').html(isTemp
+                ? '<i class="fa fa-info-circle" style="color:#8b5cf6;"></i> On these dates staff follow the timings below instead of the regular shift. Attendance already recorded on these dates is re-checked when you save. Hand-entered attendance is not changed.'
+                : '<i class="fa fa-info-circle text-primary"></i> Set a start date to switch seasons: the current regular shift ends automatically the day before. Leave the end date empty unless the season has a fixed end.');
+        }
+        $(document).on('change', '#staff_shift_type input', staffShiftTypeUi);
+        $(staffShiftTypeUi);
 
         // Late-coming policy: live example + save
         function latePolicyPreview() {

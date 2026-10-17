@@ -314,6 +314,7 @@ class Staffattendancedbupdate_model extends CI_Model
         $s = 'staff_attendence_schedules';
         $this->_addColumn($s, 'early_half_time', "TIME NULL AFTER `total_institute_hour`");
         $this->_addColumn($s, 'early_grace_time', "TIME NULL AFTER `early_half_time`");
+        $this->_addColumn($s, 'day_start_time', "TIME NULL AFTER `total_institute_hour`");
         $this->_addColumn($s, 'effective_from', "DATE NOT NULL DEFAULT '2000-01-01' AFTER `is_active`");
         $this->_addColumn($s, 'effective_to', "DATE NULL DEFAULT NULL AFTER `effective_from`");
         $this->_addColumn($s, 'season_tag', "VARCHAR(100) NULL DEFAULT 'General Timings' AFTER `effective_to`");

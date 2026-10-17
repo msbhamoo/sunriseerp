@@ -32,6 +32,10 @@ class StaffAttendaceSetting_model extends CI_Model
             // and checks that no existing attendance data changed. It runs once.
             $this->load->model(array('staffattendancedbupdate_model', 'staffattendanceaudit_model'));
             $this->staffattendancedbupdate_model->ensure();
+            // Added after the versioned update had already run on some databases (additive, nullable).
+            if ($this->db->table_exists('staff_attendence_schedules') && !$this->db->field_exists('day_start_time', 'staff_attendence_schedules')) {
+                $this->db->query("ALTER TABLE `staff_attendence_schedules` ADD COLUMN `day_start_time` TIME NULL AFTER `total_institute_hour`");
+            }
             $this->staffattendanceaudit_model->ensureSchema();
             $this->staffattendanceaudit_model->setContext();
         }
@@ -82,7 +86,7 @@ class StaffAttendaceSetting_model extends CI_Model
         $join_cond = $shift_id ? " AND sas.shift_id = " . (int) $shift_id : " AND 1 = 0";
         $sql = "SELECT roles.*, sas.role_id, sas.staff_attendence_type_id, sas.id AS `staff_attendence_schedules`,
                        sas.entry_time_from, sas.entry_time_to, sas.total_institute_hour, sas.early_half_time, sas.early_grace_time,
-                       sas.shift_id, roles.name AS `role_name`
+                       sas.day_start_time, sas.shift_id, roles.name AS `role_name`
                 FROM `roles`
                 LEFT JOIN staff_attendence_schedules sas ON sas.role_id = roles.id $join_cond
                 ORDER BY roles.id";
@@ -240,7 +244,18 @@ class StaffAttendaceSetting_model extends CI_Model
             'ended'       => $cap,
             'band_count'  => count($bands),
         ));
-        return array('status' => true, 'message' => 'Shift saved.' . $this->_capMessage($cap), 'shift_id' => (int) $shift_id);
+        // Temporary shift: re-grade the days it covers now and covered before the edit.
+        $recalc = null;
+        $was_temp = !empty($existing) && $existing['shift_type'] === 'temporary';
+        if ($type === 'temporary' || $was_temp) {
+            $r_from = array_filter(array($type === 'temporary' ? $from : null, $was_temp ? $existing['effective_from'] : null));
+            $r_to   = array_filter(array($type === 'temporary' ? $to : null, $was_temp ? $existing['effective_to'] : null));
+            if (!empty($r_from)) {
+                $recalc = $this->recalculateRange($roles, min($r_from), !empty($r_to) ? max($r_to) : null);
+            }
+        }
+
+        return array('status' => true, 'message' => 'Shift saved.' . $this->_capMessage($cap) . $this->_recalcMessage($recalc), 'shift_id' => (int) $shift_id);
     }
 
     private function _capMessage($cap)
@@ -254,6 +269,16 @@ class StaffAttendaceSetting_model extends CI_Model
             $parts[] = '"' . ($s ? $s['name'] : '#' . $id) . '" now ends on ' . date('d M Y', strtotime($to));
         }
         return ' ' . implode('; ', $parts) . '.';
+    }
+
+    /**
+     * Day lock: once a day is over its attendance is locked. Automatic processes (biometric sync,
+     * shift / timing changes) never change a locked day; only a manual admin edit can, and that is
+     * recorded in the change log.
+     */
+    public function isDayLocked($date)
+    {
+        return !empty($date) && $date < date('Y-m-d');
     }
 
     /** True when a shift's dates include $date (empty from = always, empty to = open-ended). */
@@ -279,7 +304,9 @@ class StaffAttendaceSetting_model extends CI_Model
             $this->db->where('id', (int) $shift_id)->update('staff_shifts', array('is_active' => 0, 'updated_at' => $now));
             $this->shift_map_cache = array();
             $this->staffattendanceaudit_model->logShift('SHIFT_DEACTIVATE', $shift_id, $shift, null);
-            return array('status' => true, 'message' => 'Shift deactivated.');
+            $recalc = $shift['shift_type'] === 'temporary'
+                ? $this->recalculateRange($this->getShiftRoles($shift_id), $shift['effective_from'], $shift['effective_to']) : null;
+            return array('status' => true, 'message' => 'Shift deactivated.' . $this->_recalcMessage($recalc));
         }
 
         $check = $this->checkActivation($this->getShiftRoles($shift_id), $shift['shift_type'], $shift['effective_from'], $shift['effective_to'], $shift_id);
@@ -292,7 +319,9 @@ class StaffAttendaceSetting_model extends CI_Model
         $this->db->trans_complete();
         $this->shift_map_cache = array();
         $this->staffattendanceaudit_model->logShift('SHIFT_ACTIVATE', $shift_id, $shift, array('ended' => $check['cap']));
-        return array('status' => true, 'message' => 'Shift activated.' . $this->_capMessage($check['cap']));
+        $recalc = $shift['shift_type'] === 'temporary'
+            ? $this->recalculateRange($this->getShiftRoles($shift_id), $shift['effective_from'], $shift['effective_to']) : null;
+        return array('status' => true, 'message' => 'Shift activated.' . $this->_capMessage($check['cap']) . $this->_recalcMessage($recalc));
     }
 
     /** Delete an inactive shift that no attendance row refers to. */
@@ -551,6 +580,99 @@ class StaffAttendaceSetting_model extends CI_Model
             }
         }
         return $this->applyEarlyHalfRule($t, $out_time, $role_id, $date, $shift_id);
+    }
+
+    /**
+     * Re-grade recorded attendance for $roles between $from and $to (capped at today) against the
+     * shift now in force on each date, and re-point the row's shift_id snapshot to it.
+     * Used when a temporary shift is saved, activated or deactivated, so its timings apply to days
+     * already recorded (including back-dated ones).
+     *
+     * Only punch-based statuses (Present / Late / Half Day / Half Day 2nd shift) with an in or out time
+     * are re-graded. Absent, leave, holiday, on-duty and hand-entered rows (source manual / leave /
+     * duty_pass) are never touched. Each change is recorded by the audit triggers.
+     *
+     * Returns array('updated' => n, 'unchanged' => n, 'locked' => n).
+     */
+    public function recalculateRange($roles, $from, $to)
+    {
+        $out   = array('updated' => 0, 'unchanged' => 0, 'locked' => 0, 'past_locked' => false);
+        $roles = array_values(array_unique(array_filter(array_map('intval', (array) $roles))));
+        $today = date('Y-m-d');
+        if (empty($roles) || empty($from) || $from > $today) {
+            return $out;
+        }
+        // Day lock: finished days are never re-graded by a shift change; only today can be.
+        if ($this->isDayLocked($from)) {
+            $out['past_locked'] = true;
+            $from = $today;
+        }
+        $to = (empty($to) || $to > $today) ? $today : $to;
+        if ($to < $from) {
+            return $out;
+        }
+
+        $gradable = array_filter(array(
+            $this->getAttendanceTypeIdByKey('p'), $this->getAttendanceTypeIdByKey('l'),
+            $this->getAttendanceTypeIdByKey('f'), $this->getAttendanceTypeIdByKey('sh'),
+        ));
+        if (empty($gradable)) {
+            return $out;
+        }
+
+        $rows = $this->db->query("SELECT sa.id, sa.date, sa.in_time, sa.out_time, sa.staff_attendance_type_id, sa.shift_id,
+                                         sa.attendance_source, sr.role_id
+                                  FROM staff_attendance sa
+                                  JOIN staff_roles sr ON sr.staff_id = sa.staff_id
+                                  WHERE sr.role_id IN (" . implode(',', $roles) . ")
+                                    AND sa.date BETWEEN " . $this->db->escape($from) . " AND " . $this->db->escape($to) . "
+                                    AND sa.staff_attendance_type_id IN (" . implode(',', $gradable) . ")
+                                    AND ((sa.in_time IS NOT NULL AND sa.in_time <> '00:00:00')
+                                         OR (sa.out_time IS NOT NULL AND sa.out_time <> '00:00:00'))")->result();
+
+        $this->shift_map_cache = array();
+        foreach ($rows as $r) {
+            if (in_array($r->attendance_source, array('manual', 'leave', 'duty_pass'), true)) {
+                $out['locked']++;
+                continue;
+            }
+            $sid = $this->resolveShiftId($r->role_id, $r->date);
+            if (!$sid) {
+                $out['unchanged']++;
+                continue;
+            }
+            $type = $this->statusForTimes($r->role_id, $r->date, $sid, $r->in_time, $r->out_time);
+            if ((int) $type === (int) $r->staff_attendance_type_id && (int) $sid === (int) $r->shift_id) {
+                $out['unchanged']++;
+                continue;
+            }
+            $this->db->where('id', $r->id)->update('staff_attendance', array(
+                'staff_attendance_type_id' => $type,
+                'shift_id'                 => $sid,
+                'updated_at'               => date('Y-m-d H:i:s'),
+            ));
+            $out['updated']++;
+        }
+        return $out;
+    }
+
+    private function _recalcMessage($res)
+    {
+        if (empty($res)) {
+            return '';
+        }
+        $msg = '';
+        if (($res['updated'] + $res['unchanged'] + $res['locked']) > 0) {
+            $msg = ' Today\'s attendance re-checked: ' . $res['updated'] . ' record(s) updated';
+            if ($res['locked']) {
+                $msg .= ', ' . $res['locked'] . ' hand-entered record(s) kept as they were';
+            }
+            $msg .= '.';
+        }
+        if (!empty($res['past_locked'])) {
+            $msg .= ' Past days are locked and were not changed; edit them by hand if needed.';
+        }
+        return $msg;
     }
 
     public function getAllRoleRequiredHours($date = null)

@@ -143,6 +143,12 @@ class Biometric_lib
             return array('status' => 'disabled', 'message' => 'Biometric integration is currently disabled in settings.');
         }
 
+        // Day lock: past days are never re-synced. Nothing to fetch if the whole range is locked.
+        if ($this->CI->staffAttendaceSetting_model->isDayLocked($toDate)) {
+            return array('status' => 'locked', 'message' => 'Attendance for ' . ($fromDate === $toDate ? date('d M Y', strtotime($fromDate)) : 'these dates')
+                . ' is locked because the day is over. Biometric sync only updates today. To fix a past day, edit that staff member\'s attendance by hand; the change is recorded in the Change Log.');
+        }
+
         // Convert Y-m-d to dd/MM/yyyy as required by e-TimeOffice
         $apiFromDate = date('d/m/Y', strtotime($fromDate));
         $apiToDate   = date('d/m/Y', strtotime($toDate));
@@ -185,6 +191,7 @@ class Biometric_lib
         $unmappedCount = 0;
         $unmappedCodes = array();
         $processedRows = array();
+        $lockedCount   = 0;
 
         // Shift snapshots already recorded for this range: re-syncs keep evaluating against them.
         $snapshotShift = array();
@@ -231,6 +238,11 @@ class Biometric_lib
                 if ($punchDate < $fromDate || $punchDate > $toDate) {
                     continue; // Skip punches not belonging to the chosen date / date range
                 }
+            }
+            // Day lock: a finished day is never changed by sync (only by a manual admin edit).
+            if ($this->CI->staffAttendaceSetting_model->isDayLocked($punchDate)) {
+                $lockedCount++;
+                continue;
             }
 
             $inTime  = $this->normalizePunchTime(isset($punch['INTime']) ? $punch['INTime'] : null, false);
@@ -284,7 +296,7 @@ class Biometric_lib
         $this->CI->StaffBiometricSetting_model->save(array(
             'last_sync_time'    => $now,
             'last_sync_status'  => 'success',
-            'last_sync_message' => "Synced {$syncedCount} records for {$fromDate} to {$toDate}. Unmapped: {$unmappedCount}."
+            'last_sync_message' => "Synced {$syncedCount} records for {$fromDate} to {$toDate}. Unmapped: {$unmappedCount}. Locked days skipped: {$lockedCount}."
         ));
 
         // Audit Log
@@ -296,12 +308,14 @@ class Biometric_lib
             'synced_count'          => $syncedCount,
             'unmapped_count'        => $unmappedCount,
             'status'                => 'success',
-            'log_summary'           => "Fetched " . count($punchList) . " punches, synced {$syncedCount} records.{$unmappedSummary}"
+            'log_summary'           => "Fetched " . count($punchList) . " punches, synced {$syncedCount} records, skipped {$lockedCount} on locked days.{$unmappedSummary}"
         ));
 
+        $lockedNote = $lockedCount ? " {$lockedCount} punch(es) for past days were skipped because those days are locked; correct them by editing the attendance by hand." : '';
         return array(
             'status'         => 'success',
-            'message'        => "Biometric sync completed: {$syncedCount} attendance records updated successfully.",
+            'message'        => "Biometric sync completed: {$syncedCount} attendance records updated successfully.{$lockedNote}",
+            'locked'         => $lockedCount,
             'fetched'        => count($punchList),
             'synced'         => $syncedCount,
             'unmapped'       => $unmappedCount,

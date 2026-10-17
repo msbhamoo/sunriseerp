@@ -1137,9 +1137,13 @@ class Schsettings extends Admin_Controller
         foreach ($staff_attendance_data as $key => $value) {
             $early_half = (isset($value->early_half_time) && !empty($value->early_half_time) && $value->early_half_time !== '00:00:00') ? $value->early_half_time : '';
             $early_grace = (isset($value->early_grace_time) && !empty($value->early_grace_time) && $value->early_grace_time !== '00:00:00') ? $value->early_grace_time : '';
+            $day_start = (isset($value->day_start_time) && !empty($value->day_start_time) && $value->day_start_time !== '00:00:00') ? $value->day_start_time : '';
 
             if (array_key_exists($value->id, $new_list_attendance)) {
                 $new_list_attendance[$value->id]['schedule'][] = $value;
+                if (!empty($day_start)) {
+                    $new_list_attendance[$value->id]['day_start'] = $day_start;
+                }
                 if (!empty($early_half)) {
                     $new_list_attendance[$value->id]['early_half'] = $early_half;
                 }
@@ -1152,7 +1156,8 @@ class Schsettings extends Admin_Controller
                     'role' => $value->role_name,
                     'schedule' => array($value),
                     'early_half' => $early_half,
-                    'early_grace' => $early_grace
+                    'early_grace' => $early_grace,
+                    'day_start' => $day_start
                 ];
             }
         }
@@ -1415,7 +1420,8 @@ class Schsettings extends Admin_Controller
                 $total_institute_hour = $this->input->post('total_institute_hour_' . $row_value);
                 $early_half_time = $this->input->post('early_half_time_' . $row_value);
                 $early_grace_time = $this->input->post('early_grace_time_' . $row_value);
-       
+                $day_start_time   = $this->input->post('day_start_time_' . $row_value);
+
                 $insert_array[] = array(
                     'staff_attendence_type_id' => $attendance_type,
                     'role_id'                  => $role_id,
@@ -1424,6 +1430,7 @@ class Schsettings extends Admin_Controller
                     'total_institute_hour'     => ($total_institute_hour),
                     'early_half_time'          => (!empty($early_half_time) && $early_half_time !== '00:00:00') ? $early_half_time : null,
                     'early_grace_time'         => (!empty($early_grace_time) && $early_grace_time !== '00:00:00') ? $early_grace_time : null,
+                    'day_start_time'           => (!empty($day_start_time) && $day_start_time !== '00:00:00') ? $day_start_time : null,
                     'is_active'                => 1
                 );
             }

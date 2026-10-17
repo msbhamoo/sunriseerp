@@ -1835,6 +1835,8 @@
                         $form.submit();
                     }
                 }, 1200);
+            } else if (res.status === 'locked') {
+                $msg.removeClass('alert-success alert-danger').addClass('alert alert-warning').html('<i class="fa fa-lock"></i> <strong>Day locked.</strong> ' + res.message);
             } else {
                 $msg.removeClass('alert-info alert-success').addClass('alert alert-danger').html('<strong>Sync Failed:</strong> ' + (res.message || 'Error occurred during synchronization.'));
             }
