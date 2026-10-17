@@ -51,7 +51,7 @@
             <?php 
                 $image = $student['image'] ? $student['image'] : 'uploads/student_images/no_image.png';
             ?>
-            <img src="<?php echo base_url($image); ?>" alt="student" style="max-height:100px; max-width:100px; border-radius:50%; border:2px solid #ddd;">
+            <img src="<?php echo base_url($image); ?>" alt="" onerror="this.onerror=null;this.src='<?php echo base_url('uploads/student_images/no_image.png'); ?>';" style="width:90px; height:90px; object-fit:cover; border-radius:50%; border:2px solid #e2e8f0; background:#f1f5f9;">
         </div>
     </div>
 
@@ -118,233 +118,158 @@
     
     <div class="row">
         <div class="col-md-12">
-            <!-- CBSE Exam Summary -->
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 15px; margin-bottom: 8px;">
-                <h5 style="font-weight: bold; margin: 0; color: #1e293b; display: flex; align-items: center; gap: 6px;">
-                    <i class="fa fa-graduation-cap" style="color: #0284c7;"></i> CBSE Exam Performance & Marks
-                </h5>
-                <span style="font-size: 11px; color: #64748b;"><i class="fa fa-info-circle"></i> Click on any exam row to view subject-wise marks</span>
+            <!-- CBSE Exam Summary: consolidated subject x exam matrix -->
+            <?php
+            if (!empty($cbse_exams)) {
+                usort($cbse_exams, function($a, $b) {
+                    $extractOrder = function($name) {
+                        $romanMap = ['VIII' => 8, 'VII' => 7, 'VI' => 6, 'IV' => 4, 'V' => 5, 'III' => 3, 'II' => 2, 'I' => 1];
+                        $prefixPriority = 50;
+                        if (stripos($name, 'SBBT') !== false || stripos($name, 'UNIT') !== false || stripos($name, 'PERIODIC') !== false || stripos($name, 'PT') !== false) {
+                            $prefixPriority = 10;
+                        } elseif (stripos($name, 'TERM') !== false || stripos($name, 'MID') !== false || stripos($name, 'HALF') !== false) {
+                            $prefixPriority = 20;
+                        } elseif (stripos($name, 'PRE') !== false || stripos($name, 'MOCK') !== false) {
+                            $prefixPriority = 30;
+                        } elseif (stripos($name, 'ANNUAL') !== false || stripos($name, 'FINAL') !== false) {
+                            $prefixPriority = 40;
+                        }
+                        $num = 99;
+                        foreach ($romanMap as $r => $val) {
+                            if (preg_match('/\b' . $r . '\b/i', $name)) {
+                                $num = $val;
+                                break;
+                            }
+                        }
+                        if ($num === 99 && preg_match('/\b(\d+)\b/', $name, $matches)) {
+                            $num = (int)$matches[1];
+                        }
+                        return ($prefixPriority * 100) + $num;
+                    };
+                    $orderA = $extractOrder($a['exam_name']);
+                    $orderB = $extractOrder($b['exam_name']);
+                    if ($orderA === $orderB) {
+                        return (int)$a['exam_id'] - (int)$b['exam_id'];
+                    }
+                    return $orderA - $orderB;
+                });
+            }
+
+            // Build subject rows and per-exam cells; only marks actually entered count toward totals
+            $mx_subjects = [];
+            $mx_cells = [];
+            $mx_totals = [];
+            if (!empty($cbse_exams)) {
+                foreach ($cbse_exams as $ei => $exam) {
+                    $mx_totals[$ei] = ['obt' => 0, 'max' => 0];
+                    if (empty($exam['subjects'])) continue;
+                    foreach ($exam['subjects'] as $sub) {
+                        $key = strtoupper(trim($sub['subject_name'])) . '|' . strtoupper(trim(isset($sub['subject_code']) ? $sub['subject_code'] : ''));
+                        if (!isset($mx_subjects[$key])) {
+                            $mx_subjects[$key] = ['name' => $sub['subject_name'], 'code' => isset($sub['subject_code']) ? $sub['subject_code'] : ''];
+                        }
+                        $entered = false;
+                        $absent = false;
+                        if (!empty($sub['assessments'])) {
+                            foreach ($sub['assessments'] as $a_item) {
+                                if (!empty($a_item['is_absent'])) { $absent = true; }
+                                elseif (isset($a_item['marks']) && $a_item['marks'] !== 'N/A' && $a_item['marks'] !== '' && $a_item['marks'] !== null) { $entered = true; }
+                            }
+                        }
+                        if ($entered || $absent) {
+                            $mx_cells[$key][$ei] = ['obt' => $sub['subject_total'], 'max' => $sub['subject_max'], 'abs' => ($absent && !$entered)];
+                            $mx_totals[$ei]['obt'] += (float)$sub['subject_total'];
+                            $mx_totals[$ei]['max'] += (float)$sub['subject_max'];
+                        }
+                    }
+                }
+            }
+            $fmt = function($n) { return (floor($n) == $n) ? (int)$n : round($n, 2); };
+            ?>
+            <style>
+                .cx-head { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:22px 0 12px; }
+                .cx-head h5 { margin:0; font-weight:800; font-size:15px; letter-spacing:.4px; text-transform:uppercase; color:#0f172a; }
+                .cx-head .cx-sub { font-size:11px; letter-spacing:.6px; text-transform:uppercase; color:#64748b; margin-top:2px; }
+                .cx-pill { border:1px solid #e2e8f0; background:#f8fafc; border-radius:7px; padding:3px 10px; font-size:11px; font-weight:700; color:#475569; letter-spacing:.4px; text-transform:uppercase; }
+                .cx-wrap { border:1px solid #e2e8f0; border-radius:12px; overflow-x:auto; }
+                .cx-table { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
+                .cx-table th { background:#f8fafc; color:#0f172a; font-weight:800; font-size:11px; letter-spacing:.5px; text-transform:uppercase; text-align:center; padding:14px 10px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+                .cx-table th.cx-subj { text-align:left; color:#64748b; padding-left:16px; position:sticky; left:0; z-index:2; }
+                .cx-table td { padding:14px 10px; text-align:center; border-bottom:1px solid #f1f5f9; color:#0f172a; vertical-align:middle; }
+                .cx-table td.cx-subj { text-align:left; padding-left:16px; font-weight:800; text-transform:uppercase; background:#fff; position:sticky; left:0; z-index:1; min-width:170px; }
+                .cx-table td.cx-subj small { font-weight:500; color:#64748b; }
+                .cx-dash { color:#cbd5e1; }
+                .cx-max { color:#64748b; font-size:11px; }
+                .cx-draft { display:inline-block; margin-top:6px; background:#e2e8f0; color:#475569; border-radius:6px; padding:2px 8px; font-size:10px; }
+                .cx-pub { display:inline-block; margin-top:6px; background:#dcfce7; color:#16a34a; border-radius:6px; padding:2px 8px; font-size:10px; }
+                .cx-table tr.cx-total td { background:#f8fafc; font-weight:800; border-top:1px solid #e2e8f0; }
+                .cx-table tr.cx-total td.cx-subj, .cx-table tr.cx-pct td.cx-subj { background:#f8fafc; }
+                .cx-table tr.cx-pct td { background:#f8fafc; font-weight:800; }
+            </style>
+            <div class="cx-head">
+                <i class="fa fa-graduation-cap" style="font-size:20px; color:#0f3d3e;"></i>
+                <div>
+                    <h5>Academic Performance &mdash; Consolidated Exams</h5>
+                    <div class="cx-sub">Consolidated subject-wise marks across all evaluated examinations</div>
+                </div>
+                <span class="cx-pill"><?php echo count((array)$cbse_exams); ?> Exams Evaluated</span>
             </div>
 
-            <div class="table-responsive">
-                <table class="table table-bordered mb0" style="font-size: 12px; border-collapse: separate; border-spacing: 0;">
+            <?php if (empty($cbse_exams)) { ?>
+                <p class="text-muted text-center" style="padding:20px;"><i>No CBSE Exam records found for this student.</i></p>
+            <?php } else { ?>
+            <div class="cx-wrap">
+                <table class="cx-table">
                     <thead>
-                        <tr style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff;">
-                            <th style="width: 32px; text-align: center;"><i class="fa fa-angle-down"></i></th>
-                            <th>EXAM NAME</th>
-                            <th style="text-align: center;">SUBJECTS</th>
-                            <th style="text-align: center;">TOTAL MARKS</th>
-                            <th style="text-align: center;">OBTAINED MARKS</th>
-                            <th>PERCENTAGE / GRADE</th>
+                        <tr>
+                            <th class="cx-subj">Subject</th>
+                            <?php foreach ($cbse_exams as $exam) { ?>
+                                <th>
+                                    <?php echo htmlspecialchars($exam['exam_name']); ?><br>
+                                    <?php if (!empty($exam['is_publish'])) { ?><span class="cx-pub">Published</span><?php } else { ?><span class="cx-draft">Draft</span><?php } ?>
+                                </th>
+                            <?php } ?>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php 
-                            if (!empty($cbse_exams)) {
-                                usort($cbse_exams, function($a, $b) {
-                                    $extractOrder = function($name) {
-                                        $romanMap = ['VIII' => 8, 'VII' => 7, 'VI' => 6, 'IV' => 4, 'V' => 5, 'III' => 3, 'II' => 2, 'I' => 1];
-                                        $prefixPriority = 50;
-                                        if (stripos($name, 'SBBT') !== false || stripos($name, 'UNIT') !== false || stripos($name, 'PERIODIC') !== false || stripos($name, 'PT') !== false) {
-                                            $prefixPriority = 10;
-                                        } elseif (stripos($name, 'TERM') !== false || stripos($name, 'MID') !== false || stripos($name, 'HALF') !== false) {
-                                            $prefixPriority = 20;
-                                        } elseif (stripos($name, 'PRE') !== false || stripos($name, 'MOCK') !== false) {
-                                            $prefixPriority = 30;
-                                        } elseif (stripos($name, 'ANNUAL') !== false || stripos($name, 'FINAL') !== false) {
-                                            $prefixPriority = 40;
-                                        }
-                                        $num = 99;
-                                        foreach ($romanMap as $r => $val) {
-                                            if (preg_match('/\b' . $r . '\b/i', $name)) {
-                                                $num = $val;
-                                                break;
-                                            }
-                                        }
-                                        if ($num === 99 && preg_match('/\b(\d+)\b/', $name, $matches)) {
-                                            $num = (int)$matches[1];
-                                        }
-                                        return ($prefixPriority * 100) + $num;
-                                    };
-                                    $orderA = $extractOrder($a['exam_name']);
-                                    $orderB = $extractOrder($b['exam_name']);
-                                    if ($orderA === $orderB) {
-                                        return (int)$a['exam_id'] - (int)$b['exam_id'];
-                                    }
-                                    return $orderA - $orderB;
-                                });
-
-                                foreach ($cbse_exams as $idx => $exam) {
-                                    $pct = isset($exam['percentage']) ? $exam['percentage'] : 0;
-                                    if ($pct >= 90) {
-                                        $badge_bg = '#dcfce7'; $badge_color = '#16a34a'; $grade_label = 'A+';
-                                    } elseif ($pct >= 75) {
-                                        $badge_bg = '#e0f2fe'; $badge_color = '#0284c7'; $grade_label = 'A';
-                                    } elseif ($pct >= 60) {
-                                        $badge_bg = '#fef3c7'; $badge_color = '#d97706'; $grade_label = 'B';
-                                    } elseif ($pct >= 45) {
-                                        $badge_bg = '#ffedd5'; $badge_color = '#ea580c'; $grade_label = 'C';
-                                    } else {
-                                        $badge_bg = '#fee2e2'; $badge_color = '#dc2626'; $grade_label = 'D';
-                                    }
-                                    if (!empty($exam['grade']) && $exam['grade'] != '-') {
-                                        $grade_label = $exam['grade'];
-                                    }
-                                    $has_subjects = !empty($exam['subjects']);
-                                    $row_id = 'exam_detail_' . $idx . '_' . $exam['exam_id'];
-                        ?>
-                        <tr class="exam-summary-row" data-target="#<?php echo $row_id; ?>" style="cursor: pointer; background: #ffffff; transition: background 0.15s ease;" title="Click to view subject marks">
-                            <td style="text-align: center; vertical-align: middle; color: #0284c7; font-weight: bold;">
-                                <i class="fa fa-chevron-right exam-toggle-icon" id="icon_<?php echo $row_id; ?>"></i>
-                            </td>
-                            <td style="vertical-align: middle;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <strong style="color: #0f172a; font-size: 13px;"><?php echo htmlspecialchars($exam['exam_name']); ?></strong>
-                                    <?php if (isset($exam['is_publish']) && $exam['is_publish'] == 1): ?>
-                                        <span class="label label-success" style="font-size: 9px; padding: 2px 6px;"><i class="fa fa-check-circle"></i> Published</span>
-                                    <?php else: ?>
-                                        <span class="label label-default" style="font-size: 9px; padding: 2px 6px; background: #e2e8f0; color: #475569;">Draft</span>
-                                    <?php endif; ?>
-                                </div>
-                            </td>
-                            <td style="text-align: center; vertical-align: middle; font-weight: 600; color: #334155;">
-                                <?php echo isset($exam['subject_count']) ? $exam['subject_count'] : '-'; ?>
-                            </td>
-                            <td style="text-align: center; vertical-align: middle; font-weight: 700; color: #475569;">
-                                <?php echo $exam['total_marks']; ?>
-                            </td>
-                            <td style="text-align: center; vertical-align: middle; font-weight: 800; color: #0284c7; font-size: 13px;">
-                                <?php echo $exam['obtained_marks']; ?>
-                            </td>
-                            <td style="vertical-align: middle;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div style="flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px; min-width: 60px;">
-                                        <div style="width: <?php echo min($pct, 100); ?>%; height: 100%; background-color: <?php echo $badge_color; ?>; border-radius: 4px;"></div>
-                                    </div>
-                                    <span class="badge" style="background: <?php echo $badge_bg; ?>; color: <?php echo $badge_color; ?>; font-weight: 700; font-size: 11px;">
-                                        <?php echo $pct; ?>% (<?php echo $grade_label; ?>)
-                                    </span>
-                                </div>
-                            </td>
+                        <?php if (empty($mx_subjects)) { ?>
+                            <tr><td colspan="<?php echo 1 + count($cbse_exams); ?>" class="text-muted"><i>No subject marks available.</i></td></tr>
+                        <?php } ?>
+                        <?php foreach ($mx_subjects as $key => $s) { ?>
+                            <tr>
+                                <td class="cx-subj"><?php echo htmlspecialchars($s['name']); ?><?php if ($s['code'] !== '') { ?> <small>(<?php echo htmlspecialchars($s['code']); ?>)</small><?php } ?></td>
+                                <?php foreach ($cbse_exams as $ei => $exam) {
+                                    $c = isset($mx_cells[$key][$ei]) ? $mx_cells[$key][$ei] : null; ?>
+                                    <td>
+                                        <?php if (!$c) { ?>
+                                            <span class="cx-dash">&mdash;</span>
+                                        <?php } elseif ($c['abs']) { ?>
+                                            <span class="text-danger" style="font-weight:700;">ABS</span>
+                                        <?php } else { ?>
+                                            <strong><?php echo $fmt((float)$c['obt']); ?></strong> <span class="cx-max">/ <?php echo $fmt((float)$c['max']); ?></span>
+                                        <?php } ?>
+                                    </td>
+                                <?php } ?>
+                            </tr>
+                        <?php } ?>
+                        <tr class="cx-total">
+                            <td class="cx-subj"><i class="fa fa-calculator"></i> Total Marks</td>
+                            <?php foreach ($cbse_exams as $ei => $exam) { ?>
+                                <td><?php echo $fmt($mx_totals[$ei]['obt']); ?> <span class="cx-max">/ <?php echo $fmt($mx_totals[$ei]['max']); ?></span></td>
+                            <?php } ?>
                         </tr>
-
-                        <!-- Expandable Subject Marks Breakdown Row -->
-                        <tr id="<?php echo $row_id; ?>" class="exam-detail-row" style="display: none; background: #f8fafc;">
-                            <td colspan="6" style="padding: 12px 16px; border-top: none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
-                                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; padding: 10px 14px;">
-                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f1f5f9;">
-                                        <span style="font-weight: 700; font-size: 12px; color: #334155;">
-                                            <i class="fa fa-book text-info"></i> Subject Marks Breakdown &mdash; <?php echo htmlspecialchars($exam['exam_name']); ?>
-                                        </span>
-                                        <?php if (!empty($exam['rank'])): ?>
-                                            <span class="label label-warning" style="font-size: 11px;"><i class="fa fa-trophy"></i> Rank: <?php echo $exam['rank']; ?></span>
-                                        <?php endif; ?>
-                                    </div>
-
-                                    <?php if ($has_subjects): ?>
-                                    <table class="table table-bordered table-condensed mb0" style="font-size: 11px; margin-bottom: 0;">
-                                        <thead>
-                                            <tr style="background: #f1f5f9; color: #475569; font-weight: 700;">
-                                                <th style="width: 40%;">SUBJECT</th>
-                                                <?php 
-                                                if (!empty($exam['assessments_headers'])) {
-                                                    foreach ($exam['assessments_headers'] as $hdr) {
-                                                        $hdr_code = !empty($hdr->code) ? " (" . $hdr->code . ")" : "";
-                                                        echo "<th class='text-center'>" . htmlspecialchars($hdr->name . $hdr_code) . "<br><small style='color:#64748b;'>(Max " . $hdr->maximum_marks . ")</small></th>";
-                                                    }
-                                                }
-                                                ?>
-                                                <th class="text-center" style="width: 15%; background: #e2e8f0;">TOTAL</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($exam['subjects'] as $sub): ?>
-                                            <tr>
-                                                <td>
-                                                    <strong><?php echo htmlspecialchars($sub['subject_name']); ?></strong>
-                                                    <?php if (!empty($sub['subject_code'])): ?>
-                                                        <span class="text-muted">(<?php echo htmlspecialchars($sub['subject_code']); ?>)</span>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <?php 
-                                                if (!empty($exam['assessments_headers'])) {
-                                                    foreach ($exam['assessments_headers'] as $hdr) {
-                                                        $val_str = "N/A";
-                                                        $cell_style = "color:#94a3b8;";
-                                                        if (!empty($sub['assessments'])) {
-                                                            foreach ($sub['assessments'] as $a_item) {
-                                                                if ($a_item['assessment_type_id'] == $hdr->id) {
-                                                                    if (!empty($a_item['is_absent'])) {
-                                                                        $val_str = "<span class='text-danger font-weight-bold'>ABS</span>";
-                                                                        $cell_style = "";
-                                                                    } elseif ($a_item['marks'] !== "N/A") {
-                                                                        $val_str = "<strong>" . $a_item['marks'] . "</strong>";
-                                                                        $cell_style = "color:#0f172a;";
-                                                                    }
-                                                                    break;
-                                                                }
-                                                            }
-                                                        }
-                                                        echo "<td class='text-center' style='vertical-align:middle; " . $cell_style . "'>" . $val_str . "</td>";
-                                                    }
-                                                }
-                                                ?>
-                                                <td class="text-center" style="vertical-align: middle; background: #f8fafc; font-weight: 800; color: #0284c7;">
-                                                    <?php echo $sub['subject_total']; ?>
-                                                    <?php if ($sub['subject_max'] > 0): ?>
-                                                        <small style="color: #64748b; font-weight: normal;"> / <?php echo $sub['subject_max']; ?></small>
-                                                    <?php endif; ?>
-                                                </td>
-                                            </tr>
-                                            <?php endforeach; ?>
-                                            <tr style="background: #f1f5f9; font-weight: 700;">
-                                                <td colspan="<?php echo 1 + (!empty($exam['assessments_headers']) ? count($exam['assessments_headers']) : 0); ?>" class="text-right">
-                                                    OVERALL TOTAL:
-                                                </td>
-                                                <td class="text-center" style="font-size: 12px; color: #0f172a; font-weight: 800; background: #e2e8f0;">
-                                                    <?php echo $exam['obtained_marks'] . " / " . $exam['total_marks']; ?>
-                                                    <div style="font-size: 10px; color: <?php echo $badge_color; ?>;"><?php echo $pct; ?>% (<?php echo $grade_label; ?>)</div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <?php else: ?>
-                                        <p class="text-muted text-center" style="margin: 10px 0;"><i>No subject marks details available for this exam.</i></p>
-                                    <?php endif; ?>
-                                </div>
-                            </td>
+                        <tr class="cx-pct">
+                            <td class="cx-subj">% Percentage (%)</td>
+                            <?php foreach ($cbse_exams as $ei => $exam) {
+                                $p = $mx_totals[$ei]['max'] > 0 ? round($mx_totals[$ei]['obt'] / $mx_totals[$ei]['max'] * 100, 2) : null;
+                                $pc = $p === null ? '#94a3b8' : ($p >= 75 ? '#16a34a' : ($p >= 50 ? '#0284c7' : ($p >= 33 ? '#d97706' : '#dc2626'))); ?>
+                                <td style="color:<?php echo $pc; ?>;"><?php echo $p === null ? '&mdash;' : $p . '%'; ?></td>
+                            <?php } ?>
                         </tr>
-                        <?php 
-                                }
-                            } else {
-                                echo "<tr><td colspan='6' class='text-center text-muted' style='padding: 20px;'><i>No CBSE Exam records found for this student.</i></td></tr>";
-                            }
-                        ?>
                     </tbody>
                 </table>
             </div>
-
-            <script>
-            $(document).off('click', '.exam-summary-row').on('click', '.exam-summary-row', function(e) {
-                var targetId = $(this).data('target');
-                var $detailRow = $(targetId);
-                var $icon = $(this).find('.exam-toggle-icon');
-
-                if ($detailRow.is(':visible')) {
-                    $detailRow.slideUp(150);
-                    $icon.removeClass('fa-chevron-down').addClass('fa-chevron-right');
-                    $(this).css('background', '#ffffff');
-                } else {
-                    $('.exam-detail-row').not($detailRow).slideUp(150);
-                    $('.exam-toggle-icon').not($icon).removeClass('fa-chevron-down').addClass('fa-chevron-right');
-                    $('.exam-summary-row').not(this).css('background', '#ffffff');
-
-                    $detailRow.slideDown(150);
-                    $icon.removeClass('fa-chevron-right').addClass('fa-chevron-down');
-                    $(this).css('background', '#f0f9ff');
-                }
-            });
-            </script>
+            <?php } ?>
         </div>
     </div>
 

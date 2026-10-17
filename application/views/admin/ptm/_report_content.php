@@ -71,6 +71,25 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
         color: #0f172a;
         margin-top: 2px;
     }
+    .kpi-filter { cursor: pointer; transition: all 0.2s ease; }
+    .kpi-filter:hover { border-color: #cbd5e1; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.05); }
+    .kpi-filter.active { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2,132,199,0.15); }
+    .kpi-hint { font-size: 10px; color: #94a3b8; font-weight: 600; }
+    .rep-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .rep-search { position: relative; flex: 1; min-width: 200px; max-width: 360px; }
+    .rep-search i { position: absolute; left: 12px; top: 12px; color: #94a3b8; }
+    .rep-search input { width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px 0 34px; font-size: 13px; }
+    .rep-search input:focus { border-color: #0284c7; outline: none; box-shadow: 0 0 0 3px rgba(2,132,199,0.12); }
+    .rep-count { font-size: 12px; font-weight: 600; color: #64748b; }
+    .rep-actions { margin-left: auto; display: flex; gap: 8px; }
+    .rep-actions .btn { border-radius: 8px; font-weight: 600; font-size: 12px; border: 1px solid #cbd5e1; }
+    .ptm-report-table thead th { position: sticky; top: 0; background: #f8fafc; z-index: 1; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #475569; }
+    .ptm-report-table td { vertical-align: middle !important; }
+    .ptm-report-table tr.row-absent td:first-child { box-shadow: inset 3px 0 0 #fca5a5; }
+    .ptm-report-table tr.row-present td:first-child { box-shadow: inset 3px 0 0 #86efac; }
+    .rep-empty-filter { display: none; padding: 24px; text-align: center; color: #64748b; }
+    .btn-snapshot { border-radius: 6px !important; background: #f0f9ff !important; color: #0369a1 !important; border: 1px solid #bae6fd !important; font-weight: 600; }
+    .btn-snapshot:hover { background: #0284c7 !important; color: #fff !important; }
     .mobile-call-btn {
         display: inline-flex;
         align-items: center;
@@ -103,9 +122,10 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
 </style>
 
 <!-- KPI Metrics Summary Row -->
+<?php $kpi_clickable = !in_array($report_type, ['analytics_report', 'followup_report', 'absentee_report']); ?>
 <div class="row">
     <div class="col-md-3 col-sm-6 col-xs-6">
-        <div class="kpi-card">
+        <div class="kpi-card <?php echo $kpi_clickable ? 'kpi-filter active' : ''; ?>" data-filter="all" title="Show all students">
             <div class="kpi-icon-box" style="background: #e0f2fe; color: #0284c7;">
                 <i class="fa fa-users"></i>
             </div>
@@ -116,7 +136,7 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
         </div>
     </div>
     <div class="col-md-3 col-sm-6 col-xs-6">
-        <div class="kpi-card">
+        <div class="kpi-card <?php echo $kpi_clickable ? 'kpi-filter' : ''; ?>" data-filter="present" title="Show present only">
             <div class="kpi-icon-box" style="background: #dcfce7; color: #16a34a;">
                 <i class="fa fa-check-circle"></i>
             </div>
@@ -127,7 +147,7 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
         </div>
     </div>
     <div class="col-md-3 col-sm-6 col-xs-6">
-        <div class="kpi-card">
+        <div class="kpi-card <?php echo $kpi_clickable ? 'kpi-filter' : ''; ?>" data-filter="absent" title="Show absent only">
             <div class="kpi-icon-box" style="background: #fee2e2; color: #dc2626;">
                 <i class="fa fa-times-circle"></i>
             </div>
@@ -138,7 +158,7 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
         </div>
     </div>
     <div class="col-md-3 col-sm-6 col-xs-6">
-        <div class="kpi-card">
+        <div class="kpi-card <?php echo $kpi_clickable ? 'kpi-filter' : ''; ?>" data-filter="followup" title="Show follow-ups only">
             <div class="kpi-icon-box" style="background: #fef3c7; color: #d97706;">
                 <i class="fa fa-flag"></i>
             </div>
@@ -173,10 +193,23 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
         </span>
     </div>
     <div class="box-body" style="padding: 20px;">
+        <div class="rep-toolbar">
+            <?php if ($report_type != 'analytics_report') { ?>
+            <div class="rep-search">
+                <i class="fa fa-search"></i>
+                <input type="text" class="rep-search-input" placeholder="Search by name, adm no, class...">
+            </div>
+            <?php } ?>
+            <span class="rep-count"></span>
+            <div class="rep-actions">
+                <button type="button" class="btn btn-default btn-sm rep-export-csv"><i class="fa fa-file-excel-o" style="color:#16a34a;"></i> Export CSV</button>
+                <button type="button" class="btn btn-default btn-sm rep-print"><i class="fa fa-print" style="color:#0284c7;"></i> Print</button>
+            </div>
+        </div>
         <?php if ($report_type == 'analytics_report') { ?>
             <!-- Class-wise Turnout Breakdown -->
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-hover">
+                <table class="table table-bordered table-hover ptm-report-table">
                     <thead>
                         <tr style="background: #f8fafc;">
                             <th>Class & Section</th>
@@ -213,7 +246,7 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
         <?php } else if ($report_type == 'followup_report') { ?>
             <!-- Follow-up Report -->
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-hover">
+                <table class="table table-bordered table-hover ptm-report-table">
                     <thead>
                         <tr style="background: #f8fafc;">
                             <th>Adm No</th>
@@ -243,7 +276,7 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
                                     <td><?php echo $stu['admission_no']; ?></td>
                                     <td>
                                         <strong><?php echo $stu['firstname'] . ' ' . $stu['lastname']; ?></strong>
-                                        <a href="#" class="btn btn-xs btn-info view-snapshot" data-student="<?php echo $stu['id']; ?>" data-session="<?php echo $stu['student_session_id']; ?>" style="margin-left: 4px;"><i class="fa fa-line-chart"></i></a>
+                                        <a href="#" class="btn btn-xs btn-snapshot view-snapshot" title="View performance snapshot" data-student="<?php echo $stu['id']; ?>" data-session="<?php echo $stu['student_session_id']; ?>" style="margin-left: 4px;"><i class="fa fa-line-chart"></i></a>
                                     </td>
                                     <td><?php echo $stu['class'] . ' (' . $stu['section'] . ')'; ?></td>
                                     <td>
@@ -284,7 +317,7 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
         <?php } else if ($report_type == 'remarks_report') { ?>
             <!-- Remarks & Discussions Report -->
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-hover">
+                <table class="table table-bordered table-hover ptm-report-table">
                     <thead>
                         <tr style="background: #f8fafc;">
                             <th>Adm No</th>
@@ -306,7 +339,7 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
                                 <td><?php echo $stu['admission_no']; ?></td>
                                 <td>
                                     <strong><?php echo $stu['firstname'] . ' ' . $stu['lastname']; ?></strong>
-                                    <a href="#" class="btn btn-xs btn-info view-snapshot" data-student="<?php echo $stu['id']; ?>" data-session="<?php echo $stu['student_session_id']; ?>" style="margin-left: 4px;"><i class="fa fa-line-chart"></i></a>
+                                    <a href="#" class="btn btn-xs btn-snapshot view-snapshot" title="View performance snapshot" data-student="<?php echo $stu['id']; ?>" data-session="<?php echo $stu['student_session_id']; ?>" style="margin-left: 4px;"><i class="fa fa-line-chart"></i></a>
                                 </td>
                                 <td><?php echo $stu['class'] . ' (' . $stu['section'] . ')'; ?></td>
                                 <td><?php echo ($att && !empty($att['attendee_type'])) ? ucfirst($att['attendee_type']) : '-'; ?></td>
@@ -322,7 +355,7 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
         <?php } else if ($report_type == 'absentee_report') { ?>
             <!-- Absentee List -->
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-hover">
+                <table class="table table-bordered table-hover ptm-report-table">
                     <thead>
                         <tr style="background: #f8fafc;">
                             <th>Adm No</th>
@@ -348,7 +381,7 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
                                     <td><?php echo $stu['admission_no']; ?></td>
                                     <td>
                                         <strong><?php echo $stu['firstname'] . ' ' . $stu['lastname']; ?></strong>
-                                        <a href="#" class="btn btn-xs btn-info view-snapshot" data-student="<?php echo $stu['id']; ?>" data-session="<?php echo $stu['student_session_id']; ?>" style="margin-left: 4px;"><i class="fa fa-line-chart"></i></a>
+                                        <a href="#" class="btn btn-xs btn-snapshot view-snapshot" title="View performance snapshot" data-student="<?php echo $stu['id']; ?>" data-session="<?php echo $stu['student_session_id']; ?>" style="margin-left: 4px;"><i class="fa fa-line-chart"></i></a>
                                     </td>
                                     <td><?php echo $stu['class'] . ' (' . $stu['section'] . ')'; ?></td>
                                     <td><?php echo !empty($stu['father_name']) ? htmlspecialchars($stu['father_name']) : '-'; ?></td>
@@ -385,7 +418,7 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
         <?php } else { ?>
             <!-- Standard Attendance & Participation Report -->
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-hover">
+                <table class="table table-bordered table-hover ptm-report-table">
                     <thead>
                         <tr style="background: #f8fafc;">
                             <th>Adm No</th>
@@ -402,11 +435,15 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
                             $sess_id = $stu['student_session_id'];
                             $att = isset($attendances[$sess_id]) ? $attendances[$sess_id] : null;
                             $is_present = ($att && isset($att['status']) && $att['status'] == 'present');
+                            $has_followup = ($att && !empty($att['followup_required']) && $att['followup_required'] == 1);
                         ?>
-                            <tr>
+                            <tr class="<?php echo $is_present ? 'row-present' : 'row-absent'; ?>" data-status="<?php echo $is_present ? 'present' : 'absent'; ?>" data-followup="<?php echo $has_followup ? 1 : 0; ?>">
                                 <td><?php echo $stu['admission_no']; ?></td>
                                 <td>
-                                    <strong><?php echo $stu['firstname'] . ' ' . $stu['lastname']; ?></strong>
+                                    <strong><?php echo htmlspecialchars($stu['firstname'] . ' ' . $stu['lastname']); ?></strong>
+                                    <?php if ($has_followup) { ?>
+                                        <i class="fa fa-flag" style="color:#d97706; margin-left:4px;" title="Follow-up required"></i>
+                                    <?php } ?>
                                 </td>
                                 <td><?php echo $stu['class'] . ' (' . $stu['section'] . ')'; ?></td>
                                 <td>
@@ -416,10 +453,10 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
                                         <span class="badge" style="background:#fee2e2;color:#dc2626;"><i class="fa fa-times"></i> Absent</span>
                                     <?php } ?>
                                 </td>
-                                <td><?php echo ($att && !empty($att['attendee_type'])) ? ucfirst($att['attendee_type']) : '-'; ?></td>
+                                <td><?php echo ($is_present && !empty($att['attendee_type'])) ? ucfirst($att['attendee_type']) : '<span class="text-muted">-</span>'; ?></td>
                                 <td>
-                                    <?php 
-                                    if ($att && (!empty($att['arrival_time']) || !empty($att['departure_time']))) {
+                                    <?php
+                                    if ($is_present && (!empty($att['arrival_time']) || !empty($att['departure_time']))) {
                                         echo ($att['arrival_time'] ?: '--:--') . ' - ' . ($att['departure_time'] ?: '--:--');
                                     } else {
                                         echo '-';
@@ -427,7 +464,7 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
                                     ?>
                                 </td>
                                 <td>
-                                    <a href="#" class="btn btn-xs btn-info view-snapshot" data-student="<?php echo $stu['id']; ?>" data-session="<?php echo $stu['student_session_id']; ?>"><i class="fa fa-line-chart"></i> Performance</a>
+                                    <a href="#" class="btn btn-xs btn-snapshot view-snapshot" title="View performance snapshot" data-student="<?php echo $stu['id']; ?>" data-session="<?php echo $stu['student_session_id']; ?>"><i class="fa fa-line-chart"></i> Performance</a>
                                 </td>
                             </tr>
                         <?php } ?>
@@ -435,5 +472,6 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
                 </table>
             </div>
         <?php } ?>
+        <div class="rep-empty-filter"><i class="fa fa-filter"></i> No students match the current filter.</div>
     </div>
 </div>

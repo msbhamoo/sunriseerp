@@ -183,6 +183,22 @@
         height: calc(100% - 60px);
     }
 
+    .ptm-sidebar-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        z-index: 10001;
+    }
+    .ptm-sidebar-backdrop.show { display: block; }
+    body.ptm-drawer-open { overflow: hidden; }
+    .ptm-sidebar-header .drawer-close {
+        width: 34px; height: 34px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        color: #475569; transition: background 0.15s ease;
+    }
+    .ptm-sidebar-header .drawer-close:hover { background: #e2e8f0; color: #0f172a; }
+
     @media (max-width: 767px) {
         .content-header {
             padding: 12px 14px 4px 14px !important;
@@ -334,17 +350,89 @@
 </div>
 
 <!-- Right Sidebar for Performance Snapshot -->
-<div id="ptmSnapshotSidebar" class="ptm-sidebar">
+<div id="ptmSnapshotBackdrop" class="ptm-sidebar-backdrop" onclick="closeSnapshotNav()"></div>
+<div id="ptmSnapshotSidebar" class="ptm-sidebar" role="dialog" aria-labelledby="snapshot_title">
     <div class="ptm-sidebar-header">
-        <h4><i class="fa fa-line-chart" style="color:#0284c7;"></i> Performance Snapshot</h4>
-        <div class="drawer-close" onclick="closeSnapshotNav()" style="cursor:pointer;font-size:20px;">&times;</div>
+        <h4 id="snapshot_title"><i class="fa fa-line-chart" style="color:#0284c7;"></i> Performance Snapshot <span id="snapshot_student_name" style="color:#64748b;font-weight:600;"></span></h4>
+        <div class="drawer-close" onclick="closeSnapshotNav()" style="cursor:pointer;font-size:22px;" title="Close (Esc)" aria-label="Close">&times;</div>
     </div>
     <div class="ptm-sidebar-content" id="snapshot_content"></div>
 </div>
 
 <script type="text/javascript">
     $(document).ready(function () {
-        $('.select2').select2();
+        $('#rep_class_id').select2({placeholder: 'All classes'});
+        $('#rep_section_id').select2({placeholder: 'All sections (select a class first)'});
+
+        // ---- Result table: KPI filter + search + count ----
+        var activeFilter = 'all';
+        function applyReportFilters() {
+            var $box = $('#report_results_container');
+            var q = ($box.find('.rep-search-input').val() || '').toLowerCase().trim();
+            var shown = 0, total = 0;
+            $box.find('.ptm-report-table tbody tr').each(function () {
+                var $tr = $(this);
+                if ($tr.find('td[colspan]').length && $tr.children('td').length === 1) return; // empty-state row
+                if ($tr.hasClass('exam-detail-row')) return;
+                total++;
+                var ok = true;
+                if (activeFilter === 'present' || activeFilter === 'absent') ok = $tr.data('status') === activeFilter;
+                else if (activeFilter === 'followup') ok = String($tr.data('followup')) === '1';
+                if (ok && q) ok = $tr.text().toLowerCase().indexOf(q) !== -1;
+                $tr.toggle(ok);
+                if (ok) shown++;
+            });
+            $box.find('.rep-count').text(total ? ('Showing ' + shown + ' of ' + total) : '');
+            $box.find('.rep-empty-filter').toggle(total > 0 && shown === 0);
+        }
+        $(document).on('input', '.rep-search-input', applyReportFilters);
+        $(document).on('click', '.kpi-filter', function () {
+            $('.kpi-filter').removeClass('active');
+            $(this).addClass('active');
+            activeFilter = $(this).data('filter');
+            applyReportFilters();
+        });
+
+        // ---- Export visible rows to CSV ----
+        $(document).on('click', '.rep-export-csv', function () {
+            var $table = $('#report_results_container .ptm-report-table');
+            var lines = [];
+            var clean = function (t) { return '"' + $.trim(t).replace(/\s+/g, ' ').replace(/"/g, '""') + '"'; };
+            var skipLast = $table.find('thead th:last').text().match(/snapshot|actions/i);
+            var heads = [];
+            $table.find('thead th').each(function (i, th) { heads.push(clean($(th).text())); });
+            if (skipLast) heads.pop();
+            lines.push(heads.join(','));
+            $table.find('tbody tr:visible').each(function () {
+                var $tds = $(this).children('td');
+                if ($tds.length === 1) return;
+                var cells = [];
+                $tds.each(function (i, td) { cells.push(clean($(td).text())); });
+                if (skipLast) cells.pop();
+                lines.push(cells.join(','));
+            });
+            var title = $.trim($('#report_results_container .sc-card-title').text()) || 'ptm_report';
+            var blob = new Blob(['﻿' + lines.join('\n')], {type: 'text/csv;charset=utf-8;'});
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = title.replace(/[^a-z0-9]+/gi, '_').toLowerCase() + '.csv';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        });
+
+        // ---- Print current report ----
+        $(document).on('click', '.rep-print', function () {
+            var $card = $('#report_results_container .sc-card').clone();
+            $card.find('.rep-toolbar, .view-snapshot, .rep-empty-filter').remove();
+            $card.find('tr:hidden').remove();
+            var w = window.open('', '', 'height=700,width=1000');
+            w.document.write('<html><head><title>PTM Report</title><link rel="stylesheet" href="<?php echo base_url(); ?>backend/bootstrap/css/bootstrap.min.css"><style>body{padding:20px;font-family:Arial,sans-serif;font-size:12px}.badge{color:#000!important;background:#eee!important}</style></head><body>' + $card.html() + '</body></html>');
+            w.document.close();
+            setTimeout(function () { w.focus(); w.print(); w.close(); }, 500);
+        });
+
+        $(document).on('keydown', function (e) {
+            if (e.key === 'Escape') closeSnapshotNav();
+        });
 
         // Reports click handler - opens filter card below
         $('.report-link-btn').click(function(e) {
@@ -415,6 +503,8 @@
                     $btn.button('reset');
                     if (res.status === 1) {
                         $('#report_results_container').html(res.html);
+                        activeFilter = 'all';
+                        applyReportFilters();
                         $('html, body').animate({
                             scrollTop: $("#report_results_container").offset().top - 80
                         }, 300);
@@ -435,7 +525,9 @@
             var student_id = $(this).data('student');
             var sess_id = $(this).data('session');
             var ptm_id = $('#rep_ptm_id').val() || 0;
-            
+            var stuName = $.trim($(this).closest('tr').find('td:eq(1) strong').text());
+            $('#snapshot_student_name').text(stuName ? '— ' + stuName : '');
+
             $('#snapshot_content').html('<div class="text-center" style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x" style="color:#0284c7;"></i></div>');
             openSnapshotNav();
             
@@ -446,6 +538,9 @@
                 dataType: 'json',
                 success: function (res) {
                     $('#snapshot_content').html(res.page);
+                },
+                error: function () {
+                    $('#snapshot_content').html('<div class="alert alert-danger">Could not load the snapshot. Please try again.</div>');
                 }
             });
         });
@@ -460,11 +555,15 @@
         if ($(window).width() < 768) {
             document.getElementById("ptmSnapshotSidebar").style.width = "100%";
         } else {
-            document.getElementById("ptmSnapshotSidebar").style.width = "750px";
+            document.getElementById("ptmSnapshotSidebar").style.width = "820px";
         }
+        $('#ptmSnapshotBackdrop').addClass('show');
+        $('body').addClass('ptm-drawer-open');
     }
 
     function closeSnapshotNav() {
         document.getElementById("ptmSnapshotSidebar").style.width = "0";
+        $('#ptmSnapshotBackdrop').removeClass('show');
+        $('body').removeClass('ptm-drawer-open');
     }
 </script>
