@@ -305,6 +305,19 @@ class Student extends Admin_Controller
                             }
                         }
                     }
+                    // Stored rank exists only after "Generate Rank"; otherwise compute it live
+                    // the same way the report card does (within the student's class/section).
+                    if ($student_rank === "" || $student_rank === null) {
+                        $card = $this->cbseexam_exam_model->get_cbse_reportcard_data($exam_value->cbse_exam_id, [$student['class_id']], [$student['section_id']]);
+                        if (!empty($card['report'])) {
+                            foreach ($card['report'] as $rc) {
+                                if ($rc['student']['id'] == $student['id'] && !empty($rc['rank'])) {
+                                    $student_rank = $rc['rank'];
+                                    break;
+                                }
+                            }
+                        }
+                    }
                     $exam_value->{"rank"} = $student_rank;
                     $exam_value->{"exam_data"} = $students;
                 }

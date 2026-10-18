@@ -53,7 +53,7 @@ class Ptm extends Admin_Controller
             $target_type = $this->input->post('target_type');
             $data_insert = array(
                 'title' => $this->input->post('title'),
-                'ptm_date' => $this->customlib->dateFormatToYYYYMMDD($this->input->post('ptm_date')),
+                'ptm_date' => $this->normalizePtmDate($this->input->post('ptm_date')),
                 'time_from' => $this->input->post('time_from'),
                 'time_to' => $this->input->post('time_to'),
                 'venue' => $this->input->post('venue'),
@@ -133,7 +133,7 @@ class Ptm extends Admin_Controller
             $data_insert = array(
                 'id' => $id,
                 'title' => $this->input->post('title'),
-                'ptm_date' => $this->customlib->dateFormatToYYYYMMDD($this->input->post('ptm_date')),
+                'ptm_date' => $this->normalizePtmDate($this->input->post('ptm_date')),
                 'time_from' => $this->input->post('time_from'),
                 'time_to' => $this->input->post('time_to'),
                 'venue' => $this->input->post('venue'),
@@ -536,5 +536,15 @@ class Ptm extends Admin_Controller
         
         $html = $this->load->view('admin/ptm/_student_profile', $data, true);
         echo json_encode(['status' => 1, 'page' => $html]);
+    }
+
+    // Native <input type="date"> posts YYYY-MM-DD; older clients post the school date format
+    private function normalizePtmDate($date)
+    {
+        $date = trim((string) $date);
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return $date;
+        }
+        return $this->customlib->dateFormatToYYYYMMDD($date);
     }
 }

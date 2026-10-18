@@ -6109,7 +6109,8 @@ function findAssessmentValue($find_subject_id, $find_cbse_exam_assessment_type_i
 
     if (property_exists($student_value, 'subjects')) {
 
-        if (array_key_exists($find_subject_id, $student_value->exam_data['subjects'])) {
+        // exam_data is empty when the student has no saved marks for this exam
+        if (isset($student_value->exam_data['subjects'][$find_subject_id]['exam_assessments'][$find_cbse_exam_assessment_type_id])) {
 
             $result_array = ($student_value->exam_data['subjects'][$find_subject_id]['exam_assessments'][$find_cbse_exam_assessment_type_id]);
 

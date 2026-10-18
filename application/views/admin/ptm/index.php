@@ -537,7 +537,7 @@ $default_venue = isset($school_setting[0]['name']) ? $school_setting[0]['name'] 
                 <div class="col-xs-12 col-md-4" style="padding: 0 8px;">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label-custom" for="drawer_ptm_date"><?php echo $this->lang->line('date'); ?> <span class="text-danger">*</span></label>
-                        <input id="drawer_ptm_date" name="ptm_date" type="text" class="form-control-custom date" placeholder="Select Date" readonly="readonly" required />
+                        <input id="drawer_ptm_date" name="ptm_date" type="date" class="form-control-custom" required onclick="try{this.showPicker()}catch(e){}" />
                     </div>
                 </div>
                 <div class="col-xs-6 col-md-4" style="padding: 0 8px;">
@@ -718,7 +718,7 @@ $default_venue = isset($school_setting[0]['name']) ? $school_setting[0]['name'] 
                     $('#ptmDrawerForm').attr('action', '<?php echo site_url('admin/ptm/edit/'); ?>' + p.id);
                     $('#drawer_ptm_id').val(p.id);
                     $('#drawer_title').val(p.title);
-                    $('#drawer_ptm_date').val(p.ptm_date_formatted);
+                    $('#drawer_ptm_date').val(p.ptm_date); // native date input needs YYYY-MM-DD
                     $('#drawer_time_from').val(p.time_from);
                     $('#drawer_time_to').val(p.time_to);
                     $('#drawer_venue').val(p.venue);
