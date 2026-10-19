@@ -33,6 +33,10 @@ class Gateway
         'admin/stuattendence/*',
         'admin/feegroup',
         'admin/feegroup/*',
+        'admin/feetype',
+        'admin/feetype/*',
+        'feetype',
+        'feetype/*',
     ];
 
     /**
