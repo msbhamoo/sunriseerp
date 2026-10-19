@@ -90,40 +90,46 @@ class DatabaseBridge
     protected function getBuilder()
     {
         if ($this->builder === null) {
-            $this->builder = $this->connection->table($this->currentTable ?: 'dual');
+            $table = !empty($this->currentTable) ? $this->currentTable : 'dual';
+            $this->builder = $this->connection->table($table);
         }
         return $this->builder;
     }
 
-    protected $pendingSelect = [];
-    protected $pendingWhere = [];
-    protected $pendingOrder = [];
+    protected $pendingCalls = [];
+
+    protected function invokeBuilderMethod(string $method, array $args)
+    {
+        if ($this->builder !== null) {
+            call_user_func_array([$this->builder, $method], $args);
+        } else {
+            $this->pendingCalls[] = [$method, $args];
+        }
+        return $this;
+    }
 
     public function select($select = '*', $escape = null)
     {
-        if ($this->builder !== null) {
-            $this->builder->select($select, $escape);
-        } else {
-            $this->pendingSelect[] = [$select, $escape];
-        }
-        return $this;
+        return $this->invokeBuilderMethod('select', func_get_args());
     }
 
     public function from($from)
     {
         $this->currentTable = $from;
-        $this->builder = $this->connection->table($from);
+        if ($this->builder !== null) {
+            $this->builder->setTable($from);
+        } else {
+            $this->builder = $this->connection->table($from);
+        }
 
-        // Apply buffered selects
-        if (!empty($this->pendingSelect)) {
-            foreach ($this->pendingSelect as $s) {
-                if ($s[0] === null || $s[0] === '') {
-                    $this->builder->select('*');
-                } else {
-                    $this->builder->select($s[0], $s[1]);
-                }
+        // Apply buffered calls
+        if (!empty($this->pendingCalls)) {
+            $calls = $this->pendingCalls;
+            $this->pendingCalls = [];
+            foreach ($calls as $call) {
+                [$method, $args] = $call;
+                call_user_func_array([$this->builder, $method], $args);
             }
-            $this->pendingSelect = [];
         }
 
         return $this;
@@ -131,54 +137,47 @@ class DatabaseBridge
 
     public function where($key, $value = null, $escape = null)
     {
-        $this->getBuilder()->where($key, $value, $escape);
-        return $this;
+        return $this->invokeBuilderMethod('where', func_get_args());
     }
 
     public function or_where($key, $value = null, $escape = null)
     {
-        $this->getBuilder()->orWhere($key, $value, $escape);
-        return $this;
+        return $this->invokeBuilderMethod('orWhere', func_get_args());
     }
 
     public function where_in($key = null, $values = null, $escape = null)
     {
-        $this->getBuilder()->whereIn($key, $values, $escape);
-        return $this;
+        return $this->invokeBuilderMethod('whereIn', func_get_args());
     }
 
     public function join($table, $cond, $type = '', $escape = null)
     {
-        $this->getBuilder()->join($table, $cond, $type, $escape);
-        return $this;
+        return $this->invokeBuilderMethod('join', func_get_args());
     }
 
     public function order_by($orderby, $direction = '', $escape = null)
     {
-        $this->getBuilder()->orderBy($orderby, $direction, $escape);
-        return $this;
+        return $this->invokeBuilderMethod('orderBy', func_get_args());
     }
 
     public function group_by($by, $escape = null)
     {
-        $this->getBuilder()->groupBy($by, $escape);
-        return $this;
+        return $this->invokeBuilderMethod('groupBy', func_get_args());
     }
 
     public function limit($value, $offset = 0)
     {
-        $this->getBuilder()->limit($value, $offset);
-        return $this;
+        return $this->invokeBuilderMethod('limit', func_get_args());
     }
 
     public function group_start()
     {
-        return $this->getBuilder()->groupStart();
+        return $this->invokeBuilderMethod('groupStart', func_get_args());
     }
 
     public function group_end()
     {
-        return $this->getBuilder()->groupEnd();
+        return $this->invokeBuilderMethod('groupEnd', func_get_args());
     }
 
     public function get($table = '', ?int $limit = null, int $offset = 0)
@@ -189,6 +188,8 @@ class DatabaseBridge
         $builder = $this->getBuilder();
         $result = $builder->get($limit, $offset);
         $this->builder = null; // reset for next query
+        $this->currentTable = null;
+        $this->pendingCalls = [];
         return new ResultBridge($result);
     }
 
