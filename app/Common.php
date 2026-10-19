@@ -14,6 +14,46 @@
  * @see: https://codeigniter.com/user_guide/extending/common.html
  */
 
+if (!class_exists('CI_Controller')) {
+    #[\AllowDynamicProperties]
+    class CI_Controller
+    {
+        private static $instance;
+        public $load;
+        public $session;
+        public $customlib;
+        public $rbac;
+        public $lang;
+        public $db;
+        public $input;
+        public $form_validation;
+
+        public function __construct()
+        {
+            self::$instance = &$this;
+            $bridge = new \App\Libraries\ViewBridge();
+            $this->load      = $bridge->load;
+            $this->customlib = $bridge->customlib;
+            $this->rbac      = $bridge->rbac;
+            $this->lang      = $bridge->lang;
+            $this->session   = service('session');
+            $this->input     = service('request');
+        }
+
+        public static function &get_instance()
+        {
+            return self::$instance;
+        }
+    }
+}
+
+if (!function_exists('get_instance')) {
+    function &get_instance()
+    {
+        return CI_Controller::get_instance();
+    }
+}
+
 if (!function_exists('access_denied')) {
     function access_denied(): void
     {
