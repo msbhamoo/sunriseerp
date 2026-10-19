@@ -76,9 +76,10 @@ class BatchMigrateControllers extends BaseCommand
             return false;
         }
 
-        $namespace = 'App\\Controllers\\' . ucfirst($subfolder);
+        $isRoot = empty($subfolder) || $subfolder === '.' || $subfolder === '/';
+        $namespace = $isRoot ? 'App\\Controllers' : 'App\\Controllers\\' . ucfirst($subfolder);
         $ci4ControllerName = ucfirst($className) . 'Controller';
-        $targetDir = APPPATH . 'Controllers/' . ucfirst($subfolder);
+        $targetDir = $isRoot ? APPPATH . 'Controllers' : APPPATH . 'Controllers/' . ucfirst($subfolder);
 
         if (!is_dir($targetDir)) {
             mkdir($targetDir, 0755, true);
@@ -103,6 +104,7 @@ class BatchMigrateControllers extends BaseCommand
         }
 
         $methodsCode = implode("\n\n", $methodStubs);
+        $legacySubPath = $isRoot ? '' : $subfolder . '/';
 
         $code = <<<PHP
 <?php
@@ -128,7 +130,7 @@ class {$ci4ControllerName} extends BaseController
         \$_SERVER['CI4_LEGACY_PARAMS'] = \$params;
 
         require_once APPPATH . '../application/core/MY_Controller.php';
-        \$target = APPPATH . '../application/controllers/{$subfolder}/' . \$controller . '.php';
+        \$target = APPPATH . '../application/controllers/{$legacySubPath}' . \$controller . '.php';
         if (file_exists(\$target)) {
             require_once \$target;
             \$instance = new \$controller();

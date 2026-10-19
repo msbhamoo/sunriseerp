@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controllers\.;
+namespace App\Controllers;
 
 use App\Controllers\BaseController;
 
@@ -69,7 +69,7 @@ class StudentreportController extends BaseController
         $_SERVER['CI4_LEGACY_PARAMS'] = $params;
 
         require_once APPPATH . '../application/core/MY_Controller.php';
-        $target = APPPATH . '../application/controllers/./' . $controller . '.php';
+        $target = APPPATH . '../application/controllers/' . $controller . '.php';
         if (file_exists($target)) {
             require_once $target;
             $instance = new $controller();
