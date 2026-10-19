@@ -154,11 +154,11 @@ class LoaderBridge
     public function database($params = '', $return = false, $query_builder = null)
     {
         $ci = &get_instance();
-        $db = \Config\Database::connect();
-        $ci->db = $db;
+        $bridge = new \DatabaseBridge();
+        $ci->db = $bridge;
 
         if ($return) {
-            return $db;
+            return $bridge;
         }
         return $this;
     }
