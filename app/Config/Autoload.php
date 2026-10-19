@@ -60,6 +60,22 @@ class Autoload extends AutoloadConfig
      */
     public $classmap = [];
 
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Autoload legacy libraries into CI4 autoloader
+        $libDir = realpath(APPPATH . '../application/libraries');
+        if ($libDir && is_dir($libDir)) {
+            $files = glob($libDir . '/*.php');
+            foreach ($files as $file) {
+                $class = basename($file, '.php');
+                $this->classmap[$class] = $file;
+                $this->classmap[strtolower($class)] = $file;
+            }
+        }
+    }
+
     /**
      * -------------------------------------------------------------------
      * Files
