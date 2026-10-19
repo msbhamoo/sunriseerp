@@ -102,6 +102,18 @@ class LoaderBridge
     {
         return true;
     }
+
+    public function database($params = '', $return = false, $query_builder = null)
+    {
+        $ci = &get_instance();
+        $db = \Config\Database::connect();
+        $ci->db = $db;
+
+        if ($return) {
+            return $db;
+        }
+        return $this;
+    }
 }
 
 class CustomlibBridge
