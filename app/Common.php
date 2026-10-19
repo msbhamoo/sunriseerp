@@ -244,12 +244,46 @@ class DatabaseBridge
         $this->connection->transCommit();
     }
 
+    public function escape_like_str($str)
+    {
+        if (is_array($str)) {
+            foreach ($str as $key => $val) {
+                $str[$key] = $this->escape_like_str($val);
+            }
+            return $str;
+        }
+        return addcslashes((string)$str, '%_\\\'"');
+    }
+
+    public function escape_str($str, $like = false)
+    {
+        if (is_array($str)) {
+            foreach ($str as $key => $val) {
+                $str[$key] = $this->escape_str($val, $like);
+            }
+            return $str;
+        }
+        $escaped = $this->connection->escapeString((string)$str);
+        if ($like === true) {
+            return addcslashes($escaped, '%_');
+        }
+        return $escaped;
+    }
+
+    public function escape($str)
+    {
+        return $this->connection->escape($str);
+    }
+
     public function __call($method, $args)
     {
         if (method_exists($this->connection, $method)) {
             return call_user_func_array([$this->connection, $method], $args);
         }
-        return call_user_func_array([$this->getBuilder(), $method], $args);
+        if (method_exists($this->getBuilder(), $method)) {
+            return call_user_func_array([$this->getBuilder(), $method], $args);
+        }
+        return null;
     }
 }
 
