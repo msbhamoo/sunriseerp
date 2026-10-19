@@ -5530,13 +5530,13 @@ $call_logs_count = !empty($stu_calls) ? count($stu_calls) : 0;
 
     function send_password() {
         var base_url = '<?php echo base_url() ?>';
-        var student_session_id = '<?php echo $student['student_session_id']; ?>';
-        var student_id = '<?php echo $student['id']; ?>';
-        var username = '<?php echo $student['username']; ?>';
-        var password = '<?php echo $student['password']; ?>';
-        var contact_no = '<?php echo $student['mobileno']; ?>';
-        var email = '<?php echo $student['email']; ?>';
-        var admission_no = '<?php echo $student['admission_no']; ?>';
+        var student_session_id = '<?php echo $student['student_session_id'] ?? ''; ?>';
+        var student_id = '<?php echo $student['id'] ?? ''; ?>';
+        var username = '<?php echo $student['username'] ?? ''; ?>';
+        var password = '<?php echo $student['password'] ?? ''; ?>';
+        var contact_no = '<?php echo $student['mobileno'] ?? ''; ?>';
+        var email = '<?php echo $student['email'] ?? ''; ?>';
+        var admission_no = '<?php echo $student['admission_no'] ?? ''; ?>';
 
         $.ajax({
             type: "post",
@@ -5558,13 +5558,13 @@ $call_logs_count = !empty($stu_calls) ? count($stu_calls) : 0;
 
     function send_parent_password() {
         var base_url = '<?php echo base_url() ?>';
-        var student_id = '<?php echo $student['id']; ?>';
-        var student_session_id = '<?php echo $student['student_session_id']; ?>';
-        var username = '<?php echo $guardian_credential['username']; ?>';
-        var password = '<?php echo $guardian_credential['password']; ?>';
-        var contact_no = '<?php echo $student['guardian_phone']; ?>';
-        var email = '<?php echo $student['guardian_email']; ?>';
-        var admission_no = '<?php echo $student['admission_no']; ?>';
+        var student_id = '<?php echo $student['id'] ?? ''; ?>';
+        var student_session_id = '<?php echo $student['student_session_id'] ?? ''; ?>';
+        var username = '<?php echo $guardian_credential['username'] ?? ''; ?>';
+        var password = '<?php echo $guardian_credential['password'] ?? ''; ?>';
+        var contact_no = '<?php echo $student['guardian_phone'] ?? ''; ?>';
+        var email = '<?php echo $student['guardian_email'] ?? ''; ?>';
+        var admission_no = '<?php echo $student['admission_no'] ?? ''; ?>';
 
         $.ajax({
             type: "post",
