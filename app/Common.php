@@ -41,19 +41,7 @@ if ($appHelpers) {
     }
 }
 
-// Load application core controllers and models
-$coreFiles = [
-    APPPATH . '../application/core/MY_Controller.php',
-    APPPATH . '../application/core/MY_Model.php',
-    APPPATH . '../application/core/MY_Addon_AccountsController.php',
-    APPPATH . '../application/core/MY_Addon_CBSEController.php',
-    APPPATH . '../application/core/MY_Addon_MBController.php',
-];
-foreach ($coreFiles as $coreFile) {
-    if (file_exists($coreFile)) {
-        require_once $coreFile;
-    }
-}
+
 
 if (!function_exists('html_escape')) {
     function html_escape($var, $double_encode = true)
@@ -587,6 +575,29 @@ class AgentBridge
     }
 }
 
+class SecurityBridge
+{
+    public function get_csrf_token_name(): string
+    {
+        return csrf_token();
+    }
+
+    public function get_csrf_hash(): string
+    {
+        return csrf_hash();
+    }
+
+    public function xss_clean($str, $is_image = false)
+    {
+        return $str;
+    }
+
+    public function sanitize_filename($str, $relative_path = false)
+    {
+        return sanitize_filename($str);
+    }
+}
+
 if (!class_exists('CI_Controller')) {
     #[\AllowDynamicProperties]
     class CI_Controller
@@ -600,6 +611,7 @@ if (!class_exists('CI_Controller')) {
         public $db;
         public $config;
         public $input;
+        public $security;
         public $agent;
         public $user_agent;
         public $form_validation;
@@ -617,6 +629,7 @@ if (!class_exists('CI_Controller')) {
             $this->session    = new SessionBridge();
             $this->config     = new ConfigBridge();
             $this->db         = new DatabaseBridge();
+            $this->security   = new SecurityBridge();
             $agentBridge      = new AgentBridge();
             $this->agent      = $agentBridge;
             $this->user_agent = $agentBridge;
@@ -830,6 +843,20 @@ if (!function_exists('get_instance')) {
     function &get_instance()
     {
         return CI_Controller::get_instance();
+    }
+}
+
+// Load application core controllers and models now that CI_Controller is defined
+$coreFiles = [
+    APPPATH . '../application/core/MY_Controller.php',
+    APPPATH . '../application/core/MY_Model.php',
+    APPPATH . '../application/core/MY_Addon_AccountsController.php',
+    APPPATH . '../application/core/MY_Addon_CBSEController.php',
+    APPPATH . '../application/core/MY_Addon_MBController.php',
+];
+foreach ($coreFiles as $coreFile) {
+    if (file_exists($coreFile)) {
+        require_once $coreFile;
     }
 }
 

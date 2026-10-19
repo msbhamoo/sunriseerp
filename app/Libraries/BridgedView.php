@@ -65,6 +65,8 @@ class BridgedView extends View
                 return new \App\Models\StudentfeemasterModel();
             case 'session':
                 return new \SessionBridge();
+            case 'security':
+                return new \SecurityBridge();
             case 'router':
                 return service('router');
             default:
