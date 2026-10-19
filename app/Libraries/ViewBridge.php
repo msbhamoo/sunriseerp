@@ -132,6 +132,11 @@ class LoaderBridge
         }
         return $this;
     }
+
+    public function language($files = [], $lang = '')
+    {
+        return $this;
+    }
 }
 
 class CustomlibBridge
