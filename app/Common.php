@@ -41,6 +41,20 @@ if ($appHelpers) {
     }
 }
 
+// Load application core controllers and models
+$coreFiles = [
+    APPPATH . '../application/core/MY_Controller.php',
+    APPPATH . '../application/core/MY_Model.php',
+    APPPATH . '../application/core/MY_Addon_AccountsController.php',
+    APPPATH . '../application/core/MY_Addon_CBSEController.php',
+    APPPATH . '../application/core/MY_Addon_MBController.php',
+];
+foreach ($coreFiles as $coreFile) {
+    if (file_exists($coreFile)) {
+        require_once $coreFile;
+    }
+}
+
 if (!function_exists('html_escape')) {
     function html_escape($var, $double_encode = true)
     {
