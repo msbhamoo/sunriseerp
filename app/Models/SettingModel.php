@@ -22,8 +22,9 @@ class SettingModel extends BaseModel
 
     /**
      * Retrieve school settings joined with language, session, and currency.
+     * Returns an object supporting both object property access (->prop) and array access (['prop']).
      */
-    public function getSetting(?int $id = null): ?array
+    public function getSetting(?int $id = null)
     {
         $builder = $this->db->table('sch_settings')
             ->select('sch_settings.*, languages.language, languages.short_code, languages.short_code as language_code, sessions.session, languages.is_rtl, currencies.symbol as currency_symbol, currencies.base_price, currencies.short_name as currency, currencies.short_name as currency_name, currencies.id as currency_id')
@@ -34,13 +35,13 @@ class SettingModel extends BaseModel
         if ($id !== null) {
             $builder->where('sch_settings.id', $id);
             $result = $builder->get()->getRowArray();
-            return $result ?: null;
+            return $result ? new SettingResultBridge($result) : null;
         }
 
         $builder->orderBy('sch_settings.id', 'ASC');
         $results = $builder->get()->getResultArray();
 
-        return !empty($results) ? $results[0] : null;
+        return !empty($results) ? new SettingResultBridge($results[0]) : null;
     }
 
     /**
@@ -106,3 +107,55 @@ class SettingModel extends BaseModel
         return $setting ? (object) $setting : (object) ['language' => 'English'];
     }
 }
+
+#[\AllowDynamicProperties]
+class SettingResultBridge implements \ArrayAccess, \JsonSerializable
+{
+    protected array $data = [];
+
+    public function __construct(array $data)
+    {
+        $this->data = $data;
+        foreach ($data as $k => $v) {
+            $this->$k = $v;
+        }
+    }
+
+    public function offsetExists($offset): bool
+    {
+        return isset($this->data[$offset]) || property_exists($this, $offset);
+    }
+
+    #[\ReturnTypeWillChange]
+    public function offsetGet($offset)
+    {
+        return $this->data[$offset] ?? ($this->$offset ?? null);
+    }
+
+    public function offsetSet($offset, $value): void
+    {
+        if ($offset === null) {
+            $this->data[] = $value;
+        } else {
+            $this->data[$offset] = $value;
+            $this->$offset = $value;
+        }
+    }
+
+    public function offsetUnset($offset): void
+    {
+        unset($this->data[$offset]);
+        unset($this->$offset);
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        return $this->data;
+    }
+
+    public function toArray(): array
+    {
+        return $this->data;
+    }
+}
+
