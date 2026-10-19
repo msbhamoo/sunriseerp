@@ -330,7 +330,7 @@ class Student extends Admin_Controller
         $module = $this->module_model->getPermissionByModulename('transport');
         if ($module['is_active']) {
 
-            $transport_fees = $this->studentfeemaster_model->getStudentTransportFees($student['student_session_id'], $student['route_pickup_point_id']);
+            $transport_fees = $this->studentfeemaster_model->getStudentTransportFees($student['student_session_id'] ?? null, $student['route_pickup_point_id'] ?? null);
         }
 
         $data['transport_fees'] = $transport_fees;

@@ -36,7 +36,7 @@ class StudentModel extends BaseModel
         }
 
         return $this->db->table('students')
-            ->select('students.*, student_session.id as student_session_id, student_session.session_id, student_session.class_id, student_session.section_id, classes.class, sections.section, categories.category, users.username, users.is_active as user_active')
+            ->select('students.*, student_session.id as student_session_id, student_session.session_id, student_session.class_id, student_session.section_id, student_session.route_pickup_point_id, student_session.vehroute_id, student_session.transport_fees, student_session.fees_discount, classes.class, sections.section, categories.category, users.username, users.is_active as user_active')
             ->join('student_session', 'student_session.student_id = students.id AND student_session.session_id = ' . (int)$sessionId)
             ->join('classes', 'classes.id = student_session.class_id', 'left')
             ->join('sections', 'sections.id = student_session.section_id', 'left')
