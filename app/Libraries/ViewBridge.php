@@ -73,18 +73,36 @@ class LoaderBridge
             return $this;
         }
 
-        $propName = empty($name) ? strtolower($model) : $name;
-        // Check if namespaced CI4 model exists
+        $propName = empty($name) ? $model : $name;
+        $lowerName = strtolower($propName);
         $parts = explode('_', $model);
         $ci4Name = 'App\\Models\\' . implode('', array_map('ucfirst', $parts));
+
+        $instance = null;
         if (class_exists($ci4Name)) {
-            $ci->$propName = new $ci4Name();
-            return $this;
+            $instance = new $ci4Name();
+        } elseif (class_exists($model)) {
+            $instance = new $model();
+        } else {
+            $legacyFile = APPPATH . '../application/models/' . ucfirst($model) . '.php';
+            if (!file_exists($legacyFile)) {
+                $legacyFile = APPPATH . '../application/models/' . $model . '.php';
+            }
+            if (file_exists($legacyFile)) {
+                require_once $legacyFile;
+                $class = basename($legacyFile, '.php');
+                if (class_exists($class)) {
+                    $instance = new $class();
+                }
+            }
         }
 
-        if (class_exists($model)) {
-            $ci->$propName = new $model();
+        if ($instance !== null) {
+            $ci->$propName = $instance;
+            $ci->$lowerName = $instance;
+            $ci->$model = $instance;
         }
+
         return $this;
     }
 
