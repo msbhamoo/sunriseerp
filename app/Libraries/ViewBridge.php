@@ -43,6 +43,65 @@ class LoaderBridge
 
         echo $output;
     }
+
+    public function library($library = '', $params = null, $object_name = null)
+    {
+        $ci = &get_instance();
+        if (is_array($library)) {
+            foreach ($library as $l) {
+                $this->library($l, $params);
+            }
+            return $this;
+        }
+
+        $class = ucfirst($library);
+        $name = $object_name ?? strtolower($library);
+
+        if (class_exists($class)) {
+            $ci->$name = new $class($params);
+        }
+        return $this;
+    }
+
+    public function model($model, $name = '', $db_conn = false)
+    {
+        $ci = &get_instance();
+        if (is_array($model)) {
+            foreach ($model as $m) {
+                $this->model($m);
+            }
+            return $this;
+        }
+
+        $propName = empty($name) ? strtolower($model) : $name;
+        // Check if namespaced CI4 model exists
+        $parts = explode('_', $model);
+        $ci4Name = 'App\\Models\\' . implode('', array_map('ucfirst', $parts));
+        if (class_exists($ci4Name)) {
+            $ci->$propName = new $ci4Name();
+            return $this;
+        }
+
+        if (class_exists($model)) {
+            $ci->$propName = new $model();
+        }
+        return $this;
+    }
+
+    public function helper($helpers = [])
+    {
+        if (is_array($helpers)) {
+            helper($helpers);
+        } else {
+            helper([$helpers]);
+        }
+        return $this;
+    }
+
+    public function config($file = '', $use_sections = false, $fail_gracefully = false)
+    {
+        return true;
+    }
 }
 
 class CustomlibBridge
