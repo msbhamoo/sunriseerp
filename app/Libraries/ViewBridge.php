@@ -185,7 +185,7 @@ class LoaderBridge
 class CustomlibBridge
 {
     protected ?array $admin = null;
-    protected ?array $setting = null;
+    protected mixed $setting = null;
 
     public function __construct()
     {
