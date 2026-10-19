@@ -78,4 +78,17 @@ class View extends BaseView
      *   ''          -> app/Views/Example/Blog/post/card.php (direct mapping)
      */
     public string $appOverridesFolder = 'overrides';
+
+    /**
+     * Legacy CI3 config item compatibility
+     */
+    public function item(string $item, string $index = '')
+    {
+        $ci = &get_instance();
+        if ($ci !== null && isset($ci->config)) {
+            return $ci->config->item($item, $index);
+        }
+        $bridge = new \ConfigBridge();
+        return $bridge->item($item, $index);
+    }
 }
