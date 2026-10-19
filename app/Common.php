@@ -44,16 +44,38 @@ class DatabaseBridge
         return $this->builder;
     }
 
+    protected $pendingSelect = [];
+    protected $pendingWhere = [];
+    protected $pendingOrder = [];
+
     public function select($select = '*', $escape = null)
     {
-        return $this->getBuilder()->select($select, $escape);
+        if ($this->builder !== null) {
+            $this->builder->select($select, $escape);
+        } else {
+            $this->pendingSelect[] = [$select, $escape];
+        }
+        return $this;
     }
 
     public function from($from)
     {
         $this->currentTable = $from;
         $this->builder = $this->connection->table($from);
-        return $this->builder;
+
+        // Apply buffered selects
+        if (!empty($this->pendingSelect)) {
+            foreach ($this->pendingSelect as $s) {
+                if ($s[0] === null || $s[0] === '') {
+                    $this->builder->select('*');
+                } else {
+                    $this->builder->select($s[0], $s[1]);
+                }
+            }
+            $this->pendingSelect = [];
+        }
+
+        return $this;
     }
 
     public function where($key, $value = null, $escape = null)
