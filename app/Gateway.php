@@ -22,6 +22,7 @@ class Gateway
     protected static array $ci4Routes = [
         'ci4-status',
         'ci4-status/*',
+        'api/v2/*',
     ];
 
     /**
