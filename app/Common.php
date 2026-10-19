@@ -18,6 +18,35 @@ if (!defined('BASEPATH')) {
     define('BASEPATH', realpath(__DIR__ . '/../system') . DIRECTORY_SEPARATOR);
 }
 
+if (!class_exists('CI_Model')) {
+    #[\AllowDynamicProperties]
+    class CI_Model
+    {
+        public $db;
+        public $load;
+        public $session;
+        public $customlib;
+
+        public function __construct()
+        {
+            $bridge = new \App\Libraries\ViewBridge();
+            $this->db        = \Config\Database::connect();
+            $this->load      = $bridge->load;
+            $this->customlib = $bridge->customlib;
+            $this->session   = new SessionBridge();
+        }
+
+        public function __get($key)
+        {
+            $ci = &get_instance();
+            if (isset($ci->$key)) {
+                return $ci->$key;
+            }
+            return null;
+        }
+    }
+}
+
 class SessionBridge
 {
     protected $ci4Session;
