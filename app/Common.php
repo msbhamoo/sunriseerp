@@ -101,7 +101,7 @@ class DatabaseBridge
         return $this->getBuilder()->groupEnd();
     }
 
-    public function get($table = '', $limit = null, $offset = null)
+    public function get($table = '', ?int $limit = null, int $offset = 0)
     {
         if (!empty($table)) {
             $this->from($table);
