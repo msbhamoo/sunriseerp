@@ -26,7 +26,7 @@ class SettingModel extends BaseModel
     public function getSetting(?int $id = null): ?array
     {
         $builder = $this->db->table('sch_settings')
-            ->select('sch_settings.*, languages.language, languages.short_code as language_code, sessions.session, languages.is_rtl, currencies.symbol as currency_symbol, currencies.base_price, currencies.short_name as currency_name, currencies.id as currency_id')
+            ->select('sch_settings.*, languages.language, languages.short_code, languages.short_code as language_code, sessions.session, languages.is_rtl, currencies.symbol as currency_symbol, currencies.base_price, currencies.short_name as currency, currencies.short_name as currency_name, currencies.id as currency_id')
             ->join('sessions', 'sessions.id = sch_settings.session_id', 'left')
             ->join('languages', 'languages.id = sch_settings.lang_id', 'left')
             ->join('currencies', 'currencies.id = sch_settings.currency', 'left');
@@ -41,6 +41,42 @@ class SettingModel extends BaseModel
         $results = $builder->get()->getResultArray();
 
         return !empty($results) ? $results[0] : null;
+    }
+
+    /**
+     * Backwards-compatible get() method matching CI3 Setting_model::get()
+     */
+    public function get($id = null)
+    {
+        $builder = $this->db->table('sch_settings')
+            ->select('sch_settings.*, languages.language, languages.short_code, languages.short_code as language_code, sessions.session, languages.is_rtl, currencies.symbol as currency_symbol, currencies.base_price, currencies.short_name as currency, currencies.short_name as currency_name, currencies.id as currency_id')
+            ->join('sessions', 'sessions.id = sch_settings.session_id', 'left')
+            ->join('languages', 'languages.id = sch_settings.lang_id', 'left')
+            ->join('currencies', 'currencies.id = sch_settings.currency', 'left');
+
+        if ($id !== null) {
+            $builder->where('sch_settings.id', $id);
+            return $builder->get()->getRowArray();
+        }
+
+        $builder->orderBy('sch_settings.id', 'ASC');
+        $results = $builder->get()->getResultArray();
+
+        if (!empty($results)) {
+            $results[0]['current_session'] = [
+                'session_id' => $results[0]['session_id'] ?? null,
+                'session'    => $results[0]['session'] ?? null,
+            ];
+
+            $session = session();
+            if ($session->has('session_array')) {
+                $session_array = $session->get('session_array');
+                $results[0]['session_id'] = $session_array['session_id'] ?? $results[0]['session_id'];
+                $results[0]['session']    = $session_array['session'] ?? $results[0]['session'];
+            }
+        }
+
+        return $results;
     }
 
     /**
