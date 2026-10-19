@@ -180,6 +180,17 @@ class DatabaseBridge
         return $this->invokeBuilderMethod('groupEnd', func_get_args());
     }
 
+    public function get_where($table = '', $where = null, ?int $limit = null, int $offset = 0)
+    {
+        if (!empty($table)) {
+            $this->from($table);
+        }
+        if (!empty($where)) {
+            $this->where($where);
+        }
+        return $this->get('', $limit, $offset);
+    }
+
     public function get($table = '', ?int $limit = null, int $offset = 0)
     {
         if (!empty($table)) {
