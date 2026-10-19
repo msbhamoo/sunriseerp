@@ -156,11 +156,17 @@ foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
                                 }
                             }
 
-                            ?>
-
+                            if ($submenu_value->url == '#') {
+                                ?>
+                                <li class="submenu-section-heading" style="padding: 12px 14px 4px 14px; font-weight: 700; font-size: 11px; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px; list-style: none;">
+                                    <?php echo !empty($this->lang->line($submenu_value->lang_key)) ? $this->lang->line($submenu_value->lang_key) : $submenu_value->menu; ?>
+                                </li>
+                                <?php
+                            } else {
+                                ?>
                         <li class="<?php echo activate_submenu($submenu_value->activate_controller, explode(',', (string)$submenu_value->activate_methods)); ?>"><a href="<?php echo site_url($submenu_value->url); ?>"><i class="icon-circle-small"></i><?php echo !empty($this->lang->line($submenu_value->lang_key)) ? $this->lang->line($submenu_value->lang_key) : $submenu_value->menu; ?></a></li>
-
-                          <?php
+                                <?php
+                            }
 }
 
                     }

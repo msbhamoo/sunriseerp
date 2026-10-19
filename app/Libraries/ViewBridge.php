@@ -435,6 +435,64 @@ class RbacBridge
 
 class LangBridge
 {
+    protected static array $lines = [];
+    protected static bool $loaded = false;
+
+    public static function loadFile(string $file): void
+    {
+        if (file_exists($file)) {
+            if (!defined('BASEPATH')) {
+                define('BASEPATH', true);
+            }
+            $lang = [];
+            include $file;
+            if (!empty($lang) && is_array($lang)) {
+                self::$lines = array_merge(self::$lines, $lang);
+            }
+        }
+    }
+
+    public static function initLanguage(string $language = 'English'): void
+    {
+        if (self::$loaded && !empty(self::$lines)) {
+            return;
+        }
+        self::$loaded = true;
+
+        $baseApp = defined('APPPATH') ? APPPATH : dirname(__DIR__) . '/';
+        $paths = [
+            $baseApp . '../application/language/' . $language . '/app_files',
+            $baseApp . 'Language/' . $language . '/app_files',
+        ];
+
+        foreach ($paths as $dir) {
+            if (is_dir($dir)) {
+                $files = glob($dir . '/*.php');
+                if ($files) {
+                    foreach ($files as $f) {
+                        self::loadFile($f);
+                    }
+                }
+            }
+        }
+
+        // Also check root language files
+        $rootPaths = [
+            $baseApp . '../application/language/' . $language,
+            $baseApp . 'Language/' . $language,
+        ];
+        foreach ($rootPaths as $rdir) {
+            if (is_dir($rdir)) {
+                $rfiles = glob($rdir . '/*.php');
+                if ($rfiles) {
+                    foreach ($rfiles as $rf) {
+                        self::loadFile($rf);
+                    }
+                }
+            }
+        }
+    }
+
     public function line($key = null, $log_errors = true)
     {
         if (empty($key)) {
@@ -442,7 +500,14 @@ class LangBridge
         }
 
         $strKey = (string)$key;
-        // Check CI4 translation or format key into readable title
+        self::initLanguage();
+
+        // 1. Check legacy lines array first (system_lang, accounts_lang, etc.)
+        if (isset(self::$lines[$strKey])) {
+            return self::$lines[$strKey];
+        }
+
+        // 2. Check CI4 translation
         $translated = lang('App.' . $strKey);
         if ($translated !== 'App.' . $strKey) {
             return $translated;
