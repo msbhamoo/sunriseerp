@@ -216,7 +216,7 @@ class CbseexamExamModel extends BaseModel
         return $this->callLegacyModel('Cbseexam_exam_model', 'add_student', func_get_args());
     }
 
-    public function insert($insert_value)
+    public function insert($data = null, bool $returnID = true)
     {
         return $this->callLegacyModel('Cbseexam_exam_model', 'insert', func_get_args());
     }

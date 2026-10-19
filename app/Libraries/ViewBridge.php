@@ -57,8 +57,26 @@ class LoaderBridge
         $class = ucfirst($library);
         $name = $object_name ?? strtolower($library);
 
+        // Check if library file exists in app/Libraries or application/libraries
+        $libPaths = [
+            APPPATH . 'Libraries/' . $class . '.php',
+            APPPATH . 'Libraries/' . $library . '.php',
+            APPPATH . '../application/libraries/' . $class . '.php',
+            APPPATH . '../application/libraries/' . $library . '.php',
+        ];
+        foreach ($libPaths as $lp) {
+            if (file_exists($lp)) {
+                require_once $lp;
+                break;
+            }
+        }
+
         if (class_exists($class)) {
-            $ci->$name = new $class($params);
+            $obj = new $class($params);
+            if ($ci !== null) {
+                $ci->$name = $obj;
+            }
+            return $obj;
         }
         return $this;
     }
@@ -136,6 +154,19 @@ class LoaderBridge
     public function language($files = [], $lang = '')
     {
         return $this;
+    }
+
+    public function is_loaded($class = '')
+    {
+        $ci = &get_instance();
+        if (empty($class)) {
+            return [];
+        }
+        $lower = strtolower($class);
+        if ($ci !== null && (isset($ci->$class) || isset($ci->$lower))) {
+            return $class;
+        }
+        return false;
     }
 }
 
@@ -264,7 +295,31 @@ class CustomlibBridge
         }
         return trim((string)$name);
     }
+
+    public function superadmin_visible()
+    {
+        if ($this->admin && isset($this->admin['superadmin_restriction'])) {
+            return $this->admin['superadmin_restriction'];
+        }
+        return 'disabled';
+    }
+
+    public function __call($method, $args)
+    {
+        // Check if legacy Customlib class exists and delegate
+        if (class_exists('\\Customlib')) {
+            static $legacyInstance = null;
+            if ($legacyInstance === null) {
+                $legacyInstance = new \Customlib();
+            }
+            if (method_exists($legacyInstance, $method)) {
+                return call_user_func_array([$legacyInstance, $method], $args);
+            }
+        }
+        return null;
+    }
 }
+
 
 class RbacBridge
 {

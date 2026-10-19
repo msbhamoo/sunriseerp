@@ -21,7 +21,7 @@ class StudenttransportfeeModel extends BaseModel
         return $this->callLegacyModel('Studenttransportfee_model', 'add', func_get_args());
     }
 
-    public function update($data_insert, $student_session_id)
+    public function update($id = null, $row = null): bool
     {
         return $this->callLegacyModel('Studenttransportfee_model', 'update', func_get_args());
     }

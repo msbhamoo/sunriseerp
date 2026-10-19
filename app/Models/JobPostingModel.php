@@ -36,7 +36,7 @@ class JobPostingModel extends BaseModel
         return $this->callLegacyModel('Job_posting_model', 'add', func_get_args());
     }
 
-    public function delete($id)
+    public function delete($id = null, bool $purge = false)
     {
         return $this->callLegacyModel('Job_posting_model', 'delete', func_get_args());
     }

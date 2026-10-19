@@ -41,7 +41,7 @@ class RoleModel extends BaseModel
         return $this->callLegacyModel('Role_model', 'check_data_exists', func_get_args());
     }
 
-    public function find($role_id = null)
+    public function find($id = null)
     {
         return $this->callLegacyModel('Role_model', 'find', func_get_args());
     }

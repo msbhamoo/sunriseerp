@@ -171,7 +171,26 @@ class BatchMigrateModels extends BaseCommand
 
                 $params = trim(implode('', $paramTokens));
 
-                $methodStubs[] = "    public function {$funcName}({$params})\n" .
+                // Align method signature with CodeIgniter\Model for built-in method names to satisfy PHP 8 strict compatibility
+                $sig = "public function {$funcName}({$params})";
+                $lowerFunc = strtolower($funcName);
+                if ($lowerFunc === 'update') {
+                    $sig = "public function update(\$id = null, \$row = null): bool";
+                } elseif ($lowerFunc === 'insert') {
+                    $sig = "public function insert(\$data = null, bool \$returnID = true)";
+                } elseif ($lowerFunc === 'delete') {
+                    $sig = "public function delete(\$id = null, bool \$purge = false)";
+                } elseif ($lowerFunc === 'save') {
+                    $sig = "public function save(\$data): bool";
+                } elseif ($lowerFunc === 'find') {
+                    $sig = "public function find(\$id = null)";
+                } elseif ($lowerFunc === 'updatebatch') {
+                    $sig = "public function updateBatch(?array \$set = null, ?string \$index = null, int \$batchSize = 100, bool \$returnSQL = false)";
+                } elseif ($lowerFunc === 'insertbatch') {
+                    $sig = "public function insertBatch(?array \$set = null, ?bool \$escape = null, int \$batchSize = 100, bool \$testing = false)";
+                }
+
+                $methodStubs[] = "    {$sig}\n" .
                                  "    {\n" .
                                  "        return \$this->callLegacyModel('{$legacyClass}', '{$funcName}', func_get_args());\n" .
                                  "    }";

@@ -26,7 +26,7 @@ class StudentsubjectgroupModel extends BaseModel
         return $this->callLegacyModel('Studentsubjectgroup_model', 'add', func_get_args());
     }
 
-    public function delete($fee_session_groups, $array)
+    public function delete($id = null, bool $purge = false)
     {
         return $this->callLegacyModel('Studentsubjectgroup_model', 'delete', func_get_args());
     }

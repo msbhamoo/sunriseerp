@@ -36,7 +36,7 @@ class GatepassModel extends BaseModel
         return $this->callLegacyModel('Gatepass_model', 'generate_gate_pass_no', func_get_args());
     }
 
-    public function delete($id)
+    public function delete($id = null, bool $purge = false)
     {
         return $this->callLegacyModel('Gatepass_model', 'delete', func_get_args());
     }

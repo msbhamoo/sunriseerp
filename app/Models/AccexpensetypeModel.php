@@ -31,7 +31,7 @@ class AccexpensetypeModel extends BaseModel
         return $this->callLegacyModel('Accexpensetype_model', 'getByType', func_get_args());
     }
 
-    public function delete($id)
+    public function delete($id = null, bool $purge = false)
     {
         return $this->callLegacyModel('Accexpensetype_model', 'delete', func_get_args());
     }

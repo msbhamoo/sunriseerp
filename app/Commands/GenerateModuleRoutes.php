@@ -65,9 +65,9 @@ class GenerateModuleRoutes extends BaseCommand
                 continue;
             }
 
-            $output .= "\$routes->match(['GET', 'POST'], '{$slug}', 'App\\Controllers\\{$ctrlName}::index');\n";
-            $output .= "\$routes->match(['GET', 'POST'], '{$slug}/(:segment)', 'App\\Controllers\\{$ctrlName}::\$1');\n";
-            $output .= "\$routes->match(['GET', 'POST'], '{$slug}/(:segment)/(:any)', 'App\\Controllers\\{$ctrlName}::\$1/\$2');\n";
+            $output .= "\$routes->match(['GET', 'POST'], '{$slug}', '{$ctrlName}::index');\n";
+            $output .= "\$routes->match(['GET', 'POST'], '{$slug}/(:segment)', '{$ctrlName}::\$1');\n";
+            $output .= "\$routes->match(['GET', 'POST'], '{$slug}/(:segment)/(:any)', '{$ctrlName}::\$1/\$2');\n";
         }
 
         file_put_contents($routesFile, $output);

@@ -18,6 +18,55 @@ if (!defined('BASEPATH')) {
     define('BASEPATH', realpath(__DIR__ . '/../system') . DIRECTORY_SEPARATOR);
 }
 
+// Load legacy CI3 system helpers for zero-downtime functional compatibility
+$helperFiles = [
+    BASEPATH . 'helpers/captcha_helper.php',
+    BASEPATH . 'helpers/form_helper.php',
+    BASEPATH . 'helpers/string_helper.php',
+    BASEPATH . 'helpers/directory_helper.php',
+    BASEPATH . 'helpers/download_helper.php',
+    BASEPATH . 'helpers/security_helper.php',
+];
+foreach ($helperFiles as $helperFile) {
+    if (file_exists($helperFile)) {
+        require_once $helperFile;
+    }
+}
+
+// Load application domain helpers
+$appHelpers = glob(APPPATH . '../application/helpers/*.php');
+if ($appHelpers) {
+    foreach ($appHelpers as $ah) {
+        require_once $ah;
+    }
+}
+
+if (!function_exists('html_escape')) {
+    function html_escape($var, $double_encode = true)
+    {
+        if (empty($var)) {
+            return $var;
+        }
+        if (is_array($var)) {
+            foreach (array_keys($var) as $key) {
+                $var[$key] = html_escape($var[$key], $double_encode);
+            }
+            return $var;
+        }
+        return htmlspecialchars($var, ENT_QUOTES, config('App')->charset ?? 'UTF-8', $double_encode);
+    }
+}
+
+// In CI4, APPPATH is app/, but CI3 code often maps APPPATH . "./language/..."
+// Ensure directory junction/link or fallback exists for language directories
+if (!is_dir(APPPATH . 'language')) {
+    @mkdir(APPPATH . 'language', 0755, true);
+}
+// Copy or map language folder to APPPATH . 'language' if empty
+if (is_dir(APPPATH . '../application/language') && count(glob(APPPATH . 'language/*')) === 0) {
+    exec('robocopy "application\\language" "app\\language" /E /NFL /NDL /NJH /NJS /nc /ns /np');
+}
+
 class DatabaseBridge
 {
     protected $connection;
@@ -80,37 +129,44 @@ class DatabaseBridge
 
     public function where($key, $value = null, $escape = null)
     {
-        return $this->getBuilder()->where($key, $value, $escape);
+        $this->getBuilder()->where($key, $value, $escape);
+        return $this;
     }
 
     public function or_where($key, $value = null, $escape = null)
     {
-        return $this->getBuilder()->orWhere($key, $value, $escape);
+        $this->getBuilder()->orWhere($key, $value, $escape);
+        return $this;
     }
 
     public function where_in($key = null, $values = null, $escape = null)
     {
-        return $this->getBuilder()->whereIn($key, $values, $escape);
+        $this->getBuilder()->whereIn($key, $values, $escape);
+        return $this;
     }
 
     public function join($table, $cond, $type = '', $escape = null)
     {
-        return $this->getBuilder()->join($table, $cond, $type, $escape);
+        $this->getBuilder()->join($table, $cond, $type, $escape);
+        return $this;
     }
 
     public function order_by($orderby, $direction = '', $escape = null)
     {
-        return $this->getBuilder()->orderBy($orderby, $direction, $escape);
+        $this->getBuilder()->orderBy($orderby, $direction, $escape);
+        return $this;
     }
 
     public function group_by($by, $escape = null)
     {
-        return $this->getBuilder()->groupBy($by, $escape);
+        $this->getBuilder()->groupBy($by, $escape);
+        return $this;
     }
 
     public function limit($value, $offset = 0)
     {
-        return $this->getBuilder()->limit($value, $offset);
+        $this->getBuilder()->limit($value, $offset);
+        return $this;
     }
 
     public function group_start()
@@ -256,9 +312,30 @@ if (!class_exists('CI_Model')) {
         public function __get($key)
         {
             $ci = &get_instance();
-            if (isset($ci->$key)) {
-                return $ci->$key;
+            // Fallback to CI instance property
+            if ($ci !== null) {
+                if (isset($ci->$key)) {
+                    return $ci->$key;
+                }
+                $prop = $ci->$key;
+                if ($prop !== null) {
+                    return $prop;
+                }
             }
+
+            // Case-insensitive model check
+            $parts = explode('_', $key);
+            $ci4Name = 'App\\Models\\' . implode('', array_map('ucfirst', $parts));
+            if (class_exists($ci4Name)) {
+                $this->$key = new $ci4Name();
+                return $this->$key;
+            }
+
+            if (class_exists($key)) {
+                $this->$key = new $key();
+                return $this->$key;
+            }
+
             return null;
         }
     }
@@ -300,6 +377,21 @@ class SessionBridge
         $this->ci4Session->remove($key);
     }
 
+    public function flashdata($key = null)
+    {
+        return $this->ci4Session->getFlashdata($key);
+    }
+
+    public function set_flashdata($data, $value = null): void
+    {
+        $this->ci4Session->setFlashdata($data, $value);
+    }
+
+    public function keep_flashdata($key): void
+    {
+        $this->ci4Session->keepFlashdata($key);
+    }
+
     public function sess_destroy(): void
     {
         $this->ci4Session->destroy();
@@ -313,19 +405,67 @@ class SessionBridge
 
 class ConfigBridge
 {
+    protected array $config = [];
+
+    public function __construct()
+    {
+        $this->config['installed'] = true;
+        $this->config['migration_enabled'] = false;
+    }
+
     public function load($file = '', $use_sections = false, $fail_gracefully = false)
     {
-        return true;
+        $file = str_replace('.php', '', $file);
+        $paths = [
+            APPPATH . '../application/config/' . $file . '.php',
+            APPPATH . 'Config/' . $file . '.php',
+        ];
+
+        foreach ($paths as $path) {
+            if (file_exists($path)) {
+                include $path;
+                if (isset($config) && is_array($config)) {
+                    $this->config = array_merge($this->config, $config);
+                }
+                return true;
+            }
+        }
+
+        return $fail_gracefully;
     }
 
     public function item($item, $index = '')
     {
+        if (array_key_exists($item, $this->config)) {
+            return $this->config[$item];
+        }
         return config('App')->$item ?? null;
     }
 
     public function set_item($item, $value)
     {
+        $this->config[$item] = $value;
         return true;
+    }
+
+    public function base_url($uri = '', $protocol = null)
+    {
+        $base = rtrim(config('App')->baseURL ?? 'http://localhost/lms/', '/') . '/';
+        return $base . ltrim($uri, '/');
+    }
+
+    public function site_url($uri = '', $protocol = null)
+    {
+        $base = rtrim(config('App')->baseURL ?? 'http://localhost/lms/', '/') . '/';
+        $indexPage = config('App')->indexPage ?? 'index.php';
+        $prefix = !empty($indexPage) ? $base . $indexPage . '/' : $base;
+        return $prefix . ltrim($uri, '/');
+    }
+
+    public function slash_item($item)
+    {
+        $val = $this->item($item);
+        return !empty($val) ? rtrim($val, '/') . '/' : '/';
     }
 }
 
@@ -343,6 +483,8 @@ if (!class_exists('CI_Controller')) {
         public $config;
         public $input;
         public $form_validation;
+        public $router;
+        public $uri;
 
         public function __construct()
         {
@@ -354,8 +496,172 @@ if (!class_exists('CI_Controller')) {
             $this->lang      = $bridge->lang;
             $this->session   = new SessionBridge();
             $this->config    = new ConfigBridge();
-            $this->db        = \Config\Database::connect();
-            $this->input     = service('request');
+            $this->db        = new DatabaseBridge();
+            $this->input     = new class {
+                public function post($index = null, $xss_clean = false)
+                {
+                    $req = service('request');
+                    return $index === null ? $req->getPost() : $req->getPost($index);
+                }
+                public function get($index = null, $xss_clean = false)
+                {
+                    $req = service('request');
+                    return $index === null ? $req->getGet() : $req->getGet($index);
+                }
+                public function get_post($index = null)
+                {
+                    $req = service('request');
+                    return $req->getPostGet($index);
+                }
+                public function is_ajax_request()
+                {
+                    return service('request')->isAJAX();
+                }
+                public function ip_address()
+                {
+                    return service('request')->getIPAddress();
+                }
+                public function server($index = null)
+                {
+                    $req = service('request');
+                    return $index === null ? $req->getServer() : $req->getServer($index);
+                }
+                public function method($upper = false)
+                {
+                    $method = service('request')->getMethod();
+                    return $upper ? strtoupper($method) : strtolower($method);
+                }
+                public function __call($method, $args)
+                {
+                    return call_user_func_array([service('request'), $method], $args);
+                }
+            };
+            $this->router    = new class {
+                public function fetch_class()
+                {
+                    return $_SERVER['CI4_LEGACY_CONTROLLER'] ?? service('router')->controllerName();
+                }
+                public function fetch_method()
+                {
+                    return $_SERVER['CI4_LEGACY_METHOD'] ?? service('router')->methodName();
+                }
+            };
+            $this->uri       = new class {
+                public function segment($n)
+                {
+                    $uri = service('request')->getUri();
+                    return $uri->getSegment($n);
+                }
+                public function total_segments()
+                {
+                    $uri = service('request')->getUri();
+                    return $uri->getTotalSegments();
+                }
+                public function segment_array()
+                {
+                    $uri = service('request')->getUri();
+                    return $uri->getSegments();
+                }
+                public function rsegment($n)
+                {
+                    return $this->segment($n);
+                }
+                public function uri_string()
+                {
+                    $uri = service('request')->getUri();
+                    return $uri->getPath();
+                }
+                public function __call($method, $args)
+                {
+                    return call_user_func_array([service('request')->getUri(), $method], $args);
+                }
+            };
+            $this->form_validation = new class {
+                protected $rules = [];
+                protected $errors = [];
+                public function set_rules($field, $label = '', $rules = '', $errors = [])
+                {
+                    $this->rules[$field] = ['label' => $label, 'rules' => $rules, 'errors' => $errors];
+                    return $this;
+                }
+                public function has_rule($field)
+                {
+                    return isset($this->rules[$field]);
+                }
+                public function set_message($rule, $message = '')
+                {
+                    return $this;
+                }
+                public function run($group = '')
+                {
+                    // Check if request is POST
+                    if (strtolower(service('request')->getMethod()) !== 'post') {
+                        return false;
+                    }
+                    if (empty($this->rules)) {
+                        return true;
+                    }
+                    $ci4Rules = [];
+                    foreach ($this->rules as $field => $data) {
+                        $ci4Rules[$field] = [
+                            'label' => $data['label'],
+                            'rules' => str_replace('|xss_clean', '', str_replace('xss_clean|', '', $data['rules'])),
+                        ];
+                    }
+                    $validation = service('validation');
+                    $validation->setRules($ci4Rules);
+                    $req = service('request');
+                    $data = $req->getPost();
+                    $success = $validation->run($data);
+                    if (!$success) {
+                        $this->errors = $validation->getErrors();
+                    }
+                    return $success;
+                }
+                public function error($field = '', $prefix = '', $suffix = '')
+                {
+                    $err = $this->errors[$field] ?? '';
+                    return !empty($err) ? $prefix . $err . $suffix : '';
+                }
+                public function error_string($prefix = '', $suffix = '')
+                {
+                    return implode("\n", array_map(fn($e) => $prefix . $e . $suffix, $this->errors));
+                }
+                public function error_array()
+                {
+                    return $this->errors;
+                }
+                public function set_value($field = '', $default = '')
+                {
+                    $post = service('request')->getPost($field);
+                    return $post !== null ? $post : $default;
+                }
+                public function set_select($field = '', $value = '', $default = false)
+                {
+                    $post = service('request')->getPost($field);
+                    if ($post !== null) {
+                        return (string)$post === (string)$value ? ' selected="selected"' : '';
+                    }
+                    return $default ? ' selected="selected"' : '';
+                }
+                public function set_checkbox($field = '', $value = '', $default = false)
+                {
+                    $post = service('request')->getPost($field);
+                    if ($post !== null) {
+                        return (string)$post === (string)$value ? ' checked="checked"' : '';
+                    }
+                    return $default ? ' checked="checked"' : '';
+                }
+                public function set_radio($field = '', $value = '', $default = false)
+                {
+                    return $this->set_checkbox($field, $value, $default);
+                }
+                public function reset_validation()
+                {
+                    $this->rules = [];
+                    $this->errors = [];
+                }
+            };
         }
 
         public static function &get_instance()

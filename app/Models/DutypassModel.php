@@ -56,7 +56,7 @@ class DutypassModel extends BaseModel
         return $this->callLegacyModel('Dutypass_model', 'autoMarkAttendanceForDutyPass', func_get_args());
     }
 
-    public function delete($id)
+    public function delete($id = null, bool $purge = false)
     {
         return $this->callLegacyModel('Dutypass_model', 'delete', func_get_args());
     }

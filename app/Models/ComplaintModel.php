@@ -41,7 +41,7 @@ class ComplaintModel extends BaseModel
         return $this->callLegacyModel('Complaint_Model', 'compalaint_update', func_get_args());
     }
 
-    public function delete($id)
+    public function delete($id = null, bool $purge = false)
     {
         return $this->callLegacyModel('Complaint_Model', 'delete', func_get_args());
     }

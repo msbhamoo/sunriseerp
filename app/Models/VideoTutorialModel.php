@@ -61,7 +61,7 @@ class VideoTutorialModel extends BaseModel
         return $this->callLegacyModel('Video_tutorial_model', 'getclassid', func_get_args());
     }
 
-    public function delete($id, $class_section_id)
+    public function delete($id = null, bool $purge = false)
     {
         return $this->callLegacyModel('Video_tutorial_model', 'delete', func_get_args());
     }

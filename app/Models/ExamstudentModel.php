@@ -36,7 +36,7 @@ class ExamstudentModel extends BaseModel
         return $this->callLegacyModel('Examstudent_model', 'checkStudentExists', func_get_args());
     }
 
-    public function insert($insert_value)
+    public function insert($data = null, bool $returnID = true)
     {
         return $this->callLegacyModel('Examstudent_model', 'insert', func_get_args());
     }

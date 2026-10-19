@@ -51,12 +51,12 @@ class MaterialregisterModel extends BaseModel
         return $this->callLegacyModel('Materialregister_model', 'ensure_sidebar_title', func_get_args());
     }
 
-    public function update($id, $data, $items = null)
+    public function update($id = null, $row = null): bool
     {
         return $this->callLegacyModel('Materialregister_model', 'update', func_get_args());
     }
 
-    public function delete($id)
+    public function delete($id = null, bool $purge = false)
     {
         return $this->callLegacyModel('Materialregister_model', 'delete', func_get_args());
     }

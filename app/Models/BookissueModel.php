@@ -46,7 +46,7 @@ class BookissueModel extends BaseModel
         return $this->callLegacyModel('Bookissue_model', 'getissuereturnMemberBooks', func_get_args());
     }
 
-    public function update($data)
+    public function update($id = null, $row = null): bool
     {
         return $this->callLegacyModel('Bookissue_model', 'update', func_get_args());
     }

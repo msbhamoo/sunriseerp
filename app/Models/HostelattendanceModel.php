@@ -26,7 +26,7 @@ class HostelattendanceModel extends BaseModel
         return $this->callLegacyModel('Hostelattendance_model', 'get_attendance', func_get_args());
     }
 
-    public function save($data)
+    public function save($data): bool
     {
         return $this->callLegacyModel('Hostelattendance_model', 'save', func_get_args());
     }

@@ -26,12 +26,12 @@ class SourceModel extends BaseModel
         return $this->callLegacyModel('Source_model', 'source_list', func_get_args());
     }
 
-    public function delete($id)
+    public function delete($id = null, bool $purge = false)
     {
         return $this->callLegacyModel('Source_model', 'delete', func_get_args());
     }
 
-    public function update($id, $data)
+    public function update($id = null, $row = null): bool
     {
         return $this->callLegacyModel('Source_model', 'update', func_get_args());
     }

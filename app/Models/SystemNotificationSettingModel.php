@@ -21,7 +21,7 @@ class SystemNotificationSettingModel extends BaseModel
         return $this->callLegacyModel('SystemNotificationSetting_model', 'get', func_get_args());
     }
 
-    public function update($data)
+    public function update($id = null, $row = null): bool
     {
         return $this->callLegacyModel('SystemNotificationSetting_model', 'update', func_get_args());
     }

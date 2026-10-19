@@ -18,7 +18,7 @@ class NotificationModel extends BaseModel
         'visible_student', 'visible_staff', 'visible_parent', 'created_id', 'created_by'
     ];
 
-    public function insertBatch(array $data, array $staffRoles = [], array $deleteArray = []): ?int
+    public function insertNotificationBatch(array $data, array $staffRoles = [], array $deleteArray = []): ?int
     {
         $this->db->transStart();
 

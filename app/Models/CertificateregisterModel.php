@@ -31,7 +31,7 @@ class CertificateregisterModel extends BaseModel
         return $this->callLegacyModel('Certificateregister_model', 'add', func_get_args());
     }
 
-    public function update($id, $data)
+    public function update($id = null, $row = null): bool
     {
         return $this->callLegacyModel('Certificateregister_model', 'update', func_get_args());
     }

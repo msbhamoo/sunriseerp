@@ -16,7 +16,7 @@ class DispatchModel extends BaseModel
     protected $useAutoIncrement = true;
     protected $returnType = 'array';
 
-    public function insert($table, $data)
+    public function insert($data = null, bool $returnID = true)
     {
         return $this->callLegacyModel('Dispatch_model', 'insert', func_get_args());
     }
@@ -56,7 +56,7 @@ class DispatchModel extends BaseModel
         return $this->callLegacyModel('Dispatch_model', 'image_delete', func_get_args());
     }
 
-    public function delete($id)
+    public function delete($id = null, bool $purge = false)
     {
         return $this->callLegacyModel('Dispatch_model', 'delete', func_get_args());
     }

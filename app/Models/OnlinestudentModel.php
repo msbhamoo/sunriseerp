@@ -41,7 +41,7 @@ class OnlinestudentModel extends BaseModel
         return $this->callLegacyModel('Onlinestudent_model', 'checkpaymentstatus', func_get_args());
     }
 
-    public function update($data,$fee_session_group_id,$transport_feemaster_id,$discount_id,$action = "save")
+    public function update($id = null, $row = null): bool
     {
         return $this->callLegacyModel('Onlinestudent_model', 'update', func_get_args());
     }

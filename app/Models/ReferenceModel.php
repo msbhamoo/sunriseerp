@@ -26,12 +26,12 @@ class ReferenceModel extends BaseModel
         return $this->callLegacyModel('Reference_model', 'reference_list', func_get_args());
     }
 
-    public function delete($id)
+    public function delete($id = null, bool $purge = false)
     {
         return $this->callLegacyModel('Reference_model', 'delete', func_get_args());
     }
 
-    public function update($id, $data)
+    public function update($id = null, $row = null): bool
     {
         return $this->callLegacyModel('Reference_model', 'update', func_get_args());
     }

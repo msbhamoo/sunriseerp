@@ -45,4 +45,43 @@ class BaseModel extends Model
 
         return (bool) $this->db->table('logs')->insert($data);
     }
+
+    /**
+     * Fallback for any method defined in CI3 legacy model but not yet implemented natively in CI4.
+     */
+    public function __call(string $name, array $params)
+    {
+        // Infer legacy model name from CI4 model class
+        $shortName = (new \ReflectionClass($this))->getShortName();
+        // E.g., SettingModel -> Setting_model
+        $legacyName = preg_replace('/Model$/', '_model', $shortName);
+
+        static $legacyInstances = [];
+
+        if (!isset($legacyInstances[$legacyName])) {
+            require_once APPPATH . '../application/core/MY_Model.php';
+            $paths = [
+                APPPATH . '../application/models/' . $legacyName . '.php',
+                APPPATH . '../application/models/' . strtolower($legacyName) . '.php',
+                APPPATH . '../application/models/' . ucfirst($legacyName) . '.php',
+            ];
+
+            foreach ($paths as $path) {
+                if (file_exists($path)) {
+                    require_once $path;
+                    $class = basename($path, '.php');
+                    if (class_exists($class)) {
+                        $legacyInstances[$legacyName] = new $class();
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (isset($legacyInstances[$legacyName]) && method_exists($legacyInstances[$legacyName], $name)) {
+            return call_user_func_array([$legacyInstances[$legacyName], $name], $params);
+        }
+
+        return parent::__call($name, $params);
+    }
 }

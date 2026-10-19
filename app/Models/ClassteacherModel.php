@@ -46,7 +46,7 @@ class ClassteacherModel extends BaseModel
         return $this->callLegacyModel('Classteacher_model', 'classbysubjectteacher', func_get_args());
     }
 
-    public function delete($class_id, $section_id, $array)
+    public function delete($id = null, bool $purge = false)
     {
         return $this->callLegacyModel('Classteacher_model', 'delete', func_get_args());
     }

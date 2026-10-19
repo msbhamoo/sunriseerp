@@ -26,12 +26,12 @@ class FeereminderModel extends BaseModel
         return $this->callLegacyModel('Feereminder_model', 'add', func_get_args());
     }
 
-    public function update($data)
+    public function update($id = null, $row = null): bool
     {
         return $this->callLegacyModel('Feereminder_model', 'update', func_get_args());
     }
 
-    public function updatebatch($update_array)
+    public function updateBatch(?array $set = null, ?string $index = null, int $batchSize = 100, bool $returnSQL = false)
     {
         return $this->callLegacyModel('Feereminder_model', 'updatebatch', func_get_args());
     }

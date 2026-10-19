@@ -26,12 +26,12 @@ class ComplaintTypeModel extends BaseModel
         return $this->callLegacyModel('ComplaintType_model', 'get', func_get_args());
     }
 
-    public function update($table, $complaint_type_id, $data)
+    public function update($id = null, $row = null): bool
     {
         return $this->callLegacyModel('ComplaintType_model', 'update', func_get_args());
     }
 
-    public function delete($table, $id)
+    public function delete($id = null, bool $purge = false)
     {
         return $this->callLegacyModel('ComplaintType_model', 'delete', func_get_args());
     }

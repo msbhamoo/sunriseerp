@@ -26,7 +26,7 @@ class HostelgatepassModel extends BaseModel
         return $this->callLegacyModel('Hostelgatepass_model', 'add', func_get_args());
     }
 
-    public function delete($id)
+    public function delete($id = null, bool $purge = false)
     {
         return $this->callLegacyModel('Hostelgatepass_model', 'delete', func_get_args());
     }

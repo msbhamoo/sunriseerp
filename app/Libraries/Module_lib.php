@@ -37,7 +37,7 @@ class Module_lib
     function hasActive($module = null)
     {
 
-        if ($this->modules[$module]) {
+        if (!empty($this->modules[$module])) {
             return true;
         }
 

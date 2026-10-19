@@ -43,25 +43,11 @@ class Gateway
 
     /**
      * Checks if the incoming request path matches any registered CI4 route.
+     * Full cutover: 100% of requests are handled natively by CodeIgniter 4.
      */
     public static function shouldRouteToCI4(): bool
     {
-        $path = static::getRequestPath();
-
-        foreach (static::$ci4Routes as $pattern) {
-            if ($pattern === $path) {
-                return true;
-            }
-
-            if (str_ends_with($pattern, '/*')) {
-                $prefix = rtrim(substr($pattern, 0, -2), '/');
-                if ($path === $prefix || str_starts_with($path, $prefix . '/')) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return true;
     }
 
     /**

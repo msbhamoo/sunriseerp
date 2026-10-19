@@ -64,12 +64,25 @@ class BridgedView extends View
             case 'studentfeemaster_model':
                 return new \App\Models\StudentfeemasterModel();
             case 'session':
-                return service('session');
+                return new \SessionBridge();
             case 'router':
                 return service('router');
             default:
+                $ci = &get_instance();
+                if ($ci !== null && isset($ci->$key)) {
+                    return $ci->$key;
+                }
                 if (isset($this->data[$key])) {
                     return $this->data[$key];
+                }
+                // Try case-insensitive matching in CI instance
+                if ($ci !== null) {
+                    $lower = strtolower($key);
+                    foreach (get_object_vars($ci) as $prop => $val) {
+                        if (strtolower($prop) === $lower) {
+                            return $val;
+                        }
+                    }
                 }
                 return null;
         }

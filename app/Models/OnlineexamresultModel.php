@@ -26,7 +26,7 @@ class OnlineexamresultModel extends BaseModel
         return $this->callLegacyModel('Onlineexamresult_model', 'add', func_get_args());
     }
 
-    public function update($data_update)
+    public function update($id = null, $row = null): bool
     {
         return $this->callLegacyModel('Onlineexamresult_model', 'update', func_get_args());
     }
