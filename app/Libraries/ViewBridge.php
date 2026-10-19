@@ -81,6 +81,19 @@ class CustomlibBridge
         return base_url();
     }
 
+    public function getSchoolCurrencyFormat(): string
+    {
+        return $this->setting['currency_symbol'] ?? '$';
+    }
+
+    public function getCSRF(): string
+    {
+        if (function_exists('csrf_field')) {
+            return csrf_field();
+        }
+        return '';
+    }
+
     public function getCurrentThemeSetting(): ?object
     {
         $db = \Config\Database::connect();

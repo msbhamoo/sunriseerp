@@ -33,3 +33,23 @@ $routes->group('admin/ptm', ['namespace' => 'App\Controllers\Admin', 'filter' =>
     $routes->post('get_ptm_detail/(:num)', 'PtmController::get_ptm_detail/$1');
     $routes->post('get_sections_multi', 'PtmController::get_sections_multi');
 });
+
+// Classes Web Routes
+$routes->group('classes', ['namespace' => 'App\Controllers\Admin', 'filter' => 'admin_auth'], static function ($routes) {
+    $routes->match(['GET', 'POST'], '/', 'ClassesController::index');
+    $routes->match(['GET', 'POST'], 'index', 'ClassesController::index');
+    $routes->match(['GET', 'POST'], 'edit/(:num)', 'ClassesController::edit/$1');
+    $routes->get('delete/(:num)', 'ClassesController::delete/$1');
+    $routes->get('get_section/(:num)', 'ClassesController::get_section/$1');
+});
+
+// Sections Web Routes
+$routes->group('sections', ['namespace' => 'App\Controllers\Admin', 'filter' => 'admin_auth'], static function ($routes) {
+    $routes->match(['GET', 'POST'], '/', 'SectionsController::index');
+    $routes->match(['GET', 'POST'], 'index', 'SectionsController::index');
+    $routes->get('view/(:num)', 'SectionsController::view/$1');
+    $routes->match(['GET', 'POST'], 'edit/(:num)', 'SectionsController::edit/$1');
+    $routes->get('delete/(:num)', 'SectionsController::delete/$1');
+    $routes->get('getByClass', 'SectionsController::getByClass');
+    $routes->get('getClassTeacherSection', 'SectionsController::getClassTeacherSection');
+});

@@ -25,6 +25,10 @@ class Gateway
         'api/v2/*',
         'admin/ptm',
         'admin/ptm/*',
+        'classes',
+        'classes/*',
+        'sections',
+        'sections/*',
     ];
 
     /**

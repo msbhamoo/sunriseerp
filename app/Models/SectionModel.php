@@ -29,16 +29,68 @@ class SectionModel extends BaseModel
     }
 
     /**
-     * Get sections assigned to a specific class ID.
+     * Get sections - compatible with CI3 Section_model get($id = null)
      */
-    public function getByClassId(int $classId): array
+    public function get(?int $id = null): array
+    {
+        if ($id !== null) {
+            $record = $this->find($id);
+            return $record ?: [];
+        }
+
+        return $this->orderBy('id', 'ASC')->findAll();
+    }
+
+    /**
+     * Insert or update a section
+     */
+    public function add(array $data): int|bool
+    {
+        if (isset($data['id'])) {
+            $id = (int)$data['id'];
+            $this->update($id, $data);
+            $this->logAudit("Section updated on ID {$id}", $id, 'Update');
+            return $id;
+        }
+
+        $id = $this->insert($data);
+        $this->logAudit("Section added on ID {$id}", (int)$id, 'Insert');
+        return (int)$id;
+    }
+
+    /**
+     * Delete a section
+     */
+    public function remove(int $id): bool
+    {
+        $this->db->transStart();
+        $this->db->table('sections')->where('id', $id)->delete();
+        $this->db->table('class_sections')->where('section_id', $id)->delete();
+        $this->logAudit("Delete On sections id {$id}", $id, 'Delete');
+        $this->db->transComplete();
+
+        return $this->db->transStatus();
+    }
+
+    /**
+     * Get sections for a class - compatible with getClassBySection
+     */
+    public function getClassBySection(int $classId): array
     {
         return $this->db->table('class_sections')
-            ->select('class_sections.id as class_section_id, class_sections.section_id, sections.section')
+            ->select('class_sections.id, class_sections.section_id, sections.section')
             ->join('sections', 'sections.id = class_sections.section_id')
             ->where('class_sections.class_id', $classId)
             ->orderBy('class_sections.id', 'ASC')
             ->get()
             ->getResultArray();
+    }
+
+    /**
+     * Get sections assigned to a specific class ID.
+     */
+    public function getByClassId(int $classId): array
+    {
+        return $this->getClassBySection($classId);
     }
 }
