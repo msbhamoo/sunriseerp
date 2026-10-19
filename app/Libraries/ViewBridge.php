@@ -146,6 +146,14 @@ class CustomlibBridge
         return date('Y-m-d', strtotime(str_replace('/', '-', $date)));
     }
 
+    public function datetostrtotime($date): int
+    {
+        if (empty($date)) {
+            return time();
+        }
+        return (int)strtotime(str_replace('/', '-', $date));
+    }
+
     public function getTimeZone(): string
     {
         return $this->setting['timezone'] ?? 'Asia/Kolkata';

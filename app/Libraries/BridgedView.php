@@ -37,6 +37,16 @@ class BridgedView extends View
                 return $bridge->lang;
             case 'setting_model':
                 return $bridge->setting_model;
+            case 'session_model':
+                return new \App\Models\SessionModel();
+            case 'class_model':
+                return new \App\Models\ClassModel();
+            case 'section_model':
+                return new \App\Models\SectionModel();
+            case 'attendencetype_model':
+                return new \App\Models\AttendencetypeModel();
+            case 'stuattendence_model':
+                return new \App\Models\StuattendenceModel();
             case 'session':
                 return service('session');
             case 'router':

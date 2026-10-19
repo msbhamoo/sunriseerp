@@ -29,6 +29,8 @@ class Gateway
         'classes/*',
         'sections',
         'sections/*',
+        'admin/stuattendence',
+        'admin/stuattendence/*',
     ];
 
     /**

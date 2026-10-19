@@ -53,3 +53,10 @@ $routes->group('sections', ['namespace' => 'App\Controllers\Admin', 'filter' => 
     $routes->get('getByClass', 'SectionsController::getByClass');
     $routes->get('getClassTeacherSection', 'SectionsController::getClassTeacherSection');
 });
+
+// Student Attendance Web Routes
+$routes->group('admin/stuattendence', ['namespace' => 'App\Controllers\Admin', 'filter' => 'admin_auth'], static function ($routes) {
+    $routes->match(['GET', 'POST'], '/', 'StuattendenceController::index');
+    $routes->match(['GET', 'POST'], 'index', 'StuattendenceController::index');
+});
+
