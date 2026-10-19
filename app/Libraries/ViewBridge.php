@@ -395,14 +395,19 @@ class RbacBridge
 
 class LangBridge
 {
-    public function line(string $key): string
+    public function line($key = null, $log_errors = true)
     {
+        if (empty($key)) {
+            return false;
+        }
+
+        $strKey = (string)$key;
         // Check CI4 translation or format key into readable title
-        $translated = lang('App.' . $key);
-        if ($translated !== 'App.' . $key) {
+        $translated = lang('App.' . $strKey);
+        if ($translated !== 'App.' . $strKey) {
             return $translated;
         }
 
-        return ucwords(str_replace('_', ' ', $key));
+        return ucwords(str_replace('_', ' ', $strKey));
     }
 }
