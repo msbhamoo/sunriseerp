@@ -103,10 +103,21 @@ class LoaderBridge
             return $this;
         }
 
-        $propName = empty($name) ? $model : $name;
+        if (empty($name)) {
+            $propName = basename(str_replace('\\', '/', $model));
+        } else {
+            $propName = $name;
+        }
         $lowerName = strtolower($propName);
-        $parts = explode('_', $model);
-        $ci4Name = 'App\\Models\\' . implode('', array_map('ucfirst', $parts));
+
+        // Compute CI4 namespace name (e.g. cbseexam/cbseexam_exam_model -> App\Models\Cbseexam\CbseexamExamModel)
+        $subparts = explode('/', str_replace('\\', '/', $model));
+        $ci4Parts = [];
+        foreach ($subparts as $sub) {
+            $subPartsUnderscore = explode('_', $sub);
+            $ci4Parts[] = implode('', array_map('ucfirst', $subPartsUnderscore));
+        }
+        $ci4Name = 'App\\Models\\' . implode('\\', $ci4Parts);
 
         $instance = null;
         if (class_exists($ci4Name)) {
@@ -114,20 +125,35 @@ class LoaderBridge
         } elseif (class_exists($model)) {
             $instance = new $model();
         } else {
-            $legacyFile = APPPATH . '../application/models/' . ucfirst($model) . '.php';
-            if (!file_exists($legacyFile)) {
-                $legacyFile = APPPATH . '../application/models/' . $model . '.php';
-            }
-            if (file_exists($legacyFile)) {
-                require_once $legacyFile;
-                $class = basename($legacyFile, '.php');
-                if (class_exists($class)) {
-                    $instance = new $class();
+            // Check legacy application/models paths
+            $modelBase = basename(str_replace('\\', '/', $model));
+            $modelDir = dirname(str_replace('\\', '/', $model));
+            $dirPrefix = ($modelDir === '.' || empty($modelDir)) ? '' : $modelDir . '/';
+
+            $candidates = [
+                APPPATH . '../application/models/' . $dirPrefix . ucfirst($modelBase) . '.php',
+                APPPATH . '../application/models/' . $dirPrefix . $modelBase . '.php',
+                APPPATH . '../application/models/' . $dirPrefix . strtolower($modelBase) . '.php',
+            ];
+
+            foreach ($candidates as $candidate) {
+                if (file_exists($candidate)) {
+                    require_once $candidate;
+                    $class = basename($candidate, '.php');
+                    if (class_exists($class)) {
+                        $instance = new $class();
+                        break;
+                    }
+                    $ucClass = ucfirst($class);
+                    if (class_exists($ucClass)) {
+                        $instance = new $ucClass();
+                        break;
+                    }
                 }
             }
         }
 
-        if ($instance !== null) {
+        if ($instance !== null && $ci !== null) {
             $ci->$propName = $instance;
             $ci->$lowerName = $instance;
             $ci->$model = $instance;
