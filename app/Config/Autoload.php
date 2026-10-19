@@ -64,8 +64,8 @@ class Autoload extends AutoloadConfig
     {
         parent::__construct();
 
-        // Autoload legacy libraries into CI4 autoloader
-        $libDir = realpath(APPPATH . '../application/libraries');
+        // Autoload libraries into CI4 autoloader from native app/Libraries
+        $libDir = realpath(APPPATH . 'Libraries');
         if ($libDir && is_dir($libDir)) {
             $files = glob($libDir . '/*.php');
             foreach ($files as $file) {
