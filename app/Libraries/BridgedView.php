@@ -53,6 +53,14 @@ class BridgedView extends View
                 return new \App\Models\FeetypeModel();
             case 'feesessiongroup_model':
                 return new \App\Models\FeesessiongroupModel();
+            case 'studentcall_model':
+                return new \App\Models\StudentcallModel();
+            case 'staff_model':
+                return new \App\Models\StaffModel();
+            case 'notification_model':
+                return new \App\Models\NotificationModel();
+            case 'student_model':
+                return new \App\Models\StudentModel();
             case 'session':
                 return service('session');
             case 'router':

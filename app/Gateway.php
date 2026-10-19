@@ -41,6 +41,8 @@ class Gateway
         'admin/feemaster/*',
         'feemaster',
         'feemaster/*',
+        'admin/studentcall',
+        'admin/studentcall/*',
     ];
 
     /**

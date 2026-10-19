@@ -84,6 +84,33 @@ $routes->group('admin/feemaster', ['namespace' => 'App\Controllers\Admin', 'filt
     $routes->get('deletegrp/(:num)', 'FeemasterController::deletegrp/$1');
 });
 
+// Student Call Log Web Routes
+$routes->group('admin/studentcall', ['namespace' => 'App\Controllers\Admin', 'filter' => 'admin_auth'], static function ($routes) {
+    $routes->match(['GET', 'POST'], '/', 'StudentcallController::index');
+    $routes->match(['GET', 'POST'], 'index', 'StudentcallController::index');
+    $routes->match(['GET', 'POST'], 'assigned_to_me', 'StudentcallController::assigned_to_me');
+    $routes->post('search_student', 'StudentcallController::search_student');
+    $routes->post('search_ajax', 'StudentcallController::search_ajax');
+    $routes->post('add_call', 'StudentcallController::add_call');
+    $routes->get('get_siblings/(:num)', 'StudentcallController::get_siblings/$1');
+    $routes->get('get_recent_history/(:num)', 'StudentcallController::get_recent_history/$1');
+    $routes->match(['GET', 'POST'], 'follow_up/(:num)', 'StudentcallController::follow_up/$1');
+    $routes->post('add_follow_up_task', 'StudentcallController::add_follow_up_task');
+    $routes->post('edit_follow_up_task', 'StudentcallController::edit_follow_up_task');
+    $routes->post('update_followup', 'StudentcallController::update_followup');
+    $routes->post('students_status_ajax', 'StudentcallController::students_status_ajax');
+    $routes->post('quick_resolve_followup', 'StudentcallController::quick_resolve_followup');
+    $routes->post('quick_update_assignee_ajax', 'StudentcallController::quick_update_assignee_ajax');
+    $routes->post('quick_update_followup_status_ajax', 'StudentcallController::quick_update_followup_status_ajax');
+    $routes->post('quick_reschedule_followup', 'StudentcallController::quick_reschedule_followup');
+    $routes->get('get_call_details_ajax/(:num)', 'StudentcallController::get_call_details_ajax/$1');
+    $routes->match(['GET', 'POST'], 'get_call_logs_ajax', 'StudentcallController::get_call_logs_ajax');
+    $routes->match(['GET', 'POST'], 'get_pending_reminders_ajax', 'StudentcallController::get_pending_reminders_ajax');
+    $routes->post('quick_log_reminder_ajax', 'StudentcallController::quick_log_reminder_ajax');
+    $routes->post('quick_reschedule_reminder_ajax', 'StudentcallController::quick_reschedule_reminder_ajax');
+});
+
+
 
 
 

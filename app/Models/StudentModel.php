@@ -241,4 +241,27 @@ class StudentModel extends BaseModel
 
         return $this->db->transStatus() !== false;
     }
+
+    /**
+     * Get parent's children (siblings) for the current session.
+     */
+    public function getParentChilds($parentId): array
+    {
+        $sessionModel = new SessionModel();
+        $sessionId = (int)$sessionModel->getCurrentSession();
+
+        return $this->db->table('students')
+            ->select('students.*, student_session.id as student_session_id, student_session.session_id, student_session.student_id, student_session.class_id, student_session.default_login, student_session.section_id, classes.class, sections.section')
+            ->join('student_session', 'student_session.student_id = students.id')
+            ->join('classes', 'student_session.class_id = classes.id')
+            ->join('sections', 'sections.id = student_session.section_id')
+            ->where('students.parent_id', $parentId)
+            ->where('student_session.session_id', $sessionId)
+            ->where('students.is_active', 'yes')
+            ->orderBy('student_session.default_login', 'desc')
+            ->orderBy('student_session.class_id', 'asc')
+            ->get()
+            ->getResult();
+    }
 }
+
