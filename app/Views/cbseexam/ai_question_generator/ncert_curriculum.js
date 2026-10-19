@@ -1,0 +1,256 @@
+// Pre-mapped CBSE & NCERT Syllabus Catalog for Classes 1 to 12
+const NCERT_SYLLABUS_CATALOG = {
+    "Class 10": {
+        "Mathematics": [
+            "Ch 1: Real Numbers",
+            "Ch 2: Polynomials",
+            "Ch 3: Pair of Linear Equations in Two Variables",
+            "Ch 4: Quadratic Equations",
+            "Ch 5: Arithmetic Progressions",
+            "Ch 6: Triangles (Geometry)",
+            "Ch 7: Coordinate Geometry",
+            "Ch 8: Introduction to Trigonometry",
+            "Ch 9: Some Applications of Trigonometry",
+            "Ch 10: Circles",
+            "Ch 11: Areas Related to Circles",
+            "Ch 12: Surface Areas and Volumes",
+            "Ch 13: Statistics",
+            "Ch 14: Probability"
+        ],
+        "Science": [
+            "Ch 1: Chemical Reactions and Equations",
+            "Ch 2: Acids, Bases and Salts",
+            "Ch 3: Metals and Non-metals",
+            "Ch 4: Carbon and its Compounds",
+            "Ch 5: Life Processes",
+            "Ch 6: Control and Coordination",
+            "Ch 7: How do Organisms Reproduce?",
+            "Ch 8: Heredity and Evolution",
+            "Ch 9: Light – Reflection and Refraction",
+            "Ch 10: The Human Eye and the Colourful World",
+            "Ch 11: Electricity",
+            "Ch 12: Magnetic Effects of Electric Current",
+            "Ch 13: Our Environment"
+        ],
+        "Social Science": [
+            "History - Ch 1: The Rise of Nationalism in Europe",
+            "History - Ch 2: Nationalism in India",
+            "Geography - Ch 1: Resources and Development",
+            "Geography - Ch 2: Forest and Wildlife",
+            "Geography - Ch 3: Water Resources",
+            "Geography - Ch 4: Agriculture",
+            "Civics - Ch 1: Power Sharing",
+            "Civics - Ch 2: Federalism",
+            "Civics - Ch 3: Gender, Religion and Caste",
+            "Economics - Ch 1: Development",
+            "Economics - Ch 2: Sectors of the Indian Economy",
+            "Economics - Ch 3: Money and Credit",
+            "Economics - Ch 4: Globalisation and the Indian Economy"
+        ],
+        "English": [
+            "A Letter to God",
+            "Nelson Mandela: Long Walk to Freedom",
+            "Two Stories about Flying",
+            "From the Diary of Anne Frank",
+            "Glimpses of India",
+            "Madam Rides the Bus",
+            "The Sermon at Benares",
+            "The Proposal (Play)",
+            "Poetry: Dust of Snow, Fire and Ice, A Tiger in the Zoo, Fog"
+        ]
+    },
+    "Class 12": {
+        "Physics": [
+            "Ch 1: Electric Charges and Fields",
+            "Ch 2: Electrostatic Potential and Capacitance",
+            "Ch 3: Current Electricity",
+            "Ch 4: Moving Charges and Magnetism",
+            "Ch 5: Magnetism and Matter",
+            "Ch 6: Electromagnetic Induction",
+            "Ch 7: Alternating Current",
+            "Ch 8: Electromagnetic Waves",
+            "Ch 9: Ray Optics and Optical Instruments",
+            "Ch 10: Wave Optics",
+            "Ch 11: Dual Nature of Radiation and Matter",
+            "Ch 12: Atoms",
+            "Ch 13: Nuclei",
+            "Ch 14: Semiconductor Electronics"
+        ],
+        "Chemistry": [
+            "Ch 1: Solutions",
+            "Ch 2: Electrochemistry",
+            "Ch 3: Chemical Kinetics",
+            "Ch 4: The d-and f-Block Elements",
+            "Ch 5: Coordination Compounds",
+            "Ch 6: Haloalkanes and Haloarenes",
+            "Ch 7: Alcohols, Phenols and Ethers",
+            "Ch 8: Aldehydes, Ketones and Carboxylic Acids",
+            "Ch 9: Amines",
+            "Ch 10: Biomolecules"
+        ],
+        "Mathematics": [
+            "Ch 1: Relations and Functions",
+            "Ch 2: Inverse Trigonometric Functions",
+            "Ch 3: Matrices",
+            "Ch 4: Determinants",
+            "Ch 5: Continuity and Differentiability",
+            "Ch 6: Application of Derivatives",
+            "Ch 7: Integrals",
+            "Ch 8: Application of Integrals",
+            "Ch 9: Differential Equations",
+            "Ch 10: Vector Algebra",
+            "Ch 11: Three Dimensional Geometry",
+            "Ch 12: Linear Programming",
+            "Ch 13: Probability"
+        ],
+        "Biology": [
+            "Ch 1: Sexual Reproduction in Flowering Plants",
+            "Ch 2: Human Reproduction",
+            "Ch 3: Reproductive Health",
+            "Ch 4: Principles of Inheritance and Variation",
+            "Ch 5: Molecular Basis of Inheritance",
+            "Ch 6: Evolution",
+            "Ch 7: Human Health and Disease",
+            "Ch 8: Microbes in Human Welfare",
+            "Ch 9: Biotechnology - Principles and Processes",
+            "Ch 10: Biotechnology and its Applications",
+            "Ch 11: Organisms and Populations",
+            "Ch 12: Ecosystem",
+            "Ch 13: Biodiversity and Conservation"
+        ],
+        "Accountancy": [
+            "Ch 1: Accounting for Partnership: Basic Concepts",
+            "Ch 2: Reconstitution: Admission of a Partner",
+            "Ch 3: Reconstitution: Retirement/Death of a Partner",
+            "Ch 4: Dissolution of Partnership Firm",
+            "Ch 5: Accounting for Share Capital",
+            "Ch 6: Issue and Redemption of Debentures",
+            "Ch 7: Financial Statements of a Company",
+            "Ch 8: Analysis of Financial Statements",
+            "Ch 9: Accounting Ratios",
+            "Ch 10: Cash Flow Statement"
+        ]
+    },
+    "Class 9": {
+        "Mathematics": [
+            "Ch 1: Number Systems",
+            "Ch 2: Polynomials",
+            "Ch 3: Coordinate Geometry",
+            "Ch 4: Linear Equations in Two Variables",
+            "Ch 5: Introduction to Euclid's Geometry",
+            "Ch 6: Lines and Angles",
+            "Ch 7: Triangles",
+            "Ch 8: Quadrilaterals",
+            "Ch 9: Circles",
+            "Ch 10: Heron's Formula",
+            "Ch 11: Surface Areas and Volumes",
+            "Ch 12: Statistics"
+        ],
+        "Science": [
+            "Ch 1: Matter in Our Surroundings",
+            "Ch 2: Is Matter Around Us Pure",
+            "Ch 3: Atoms and Molecules",
+            "Ch 4: Structure of the Atom",
+            "Ch 5: The Fundamental Unit of Life",
+            "Ch 6: Tissues",
+            "Ch 7: Motion",
+            "Ch 8: Force and Laws of Motion",
+            "Ch 9: Gravitation",
+            "Ch 10: Work and Energy",
+            "Ch 11: Sound",
+            "Ch 12: Improvement in Food Resources"
+        ]
+    },
+    "Class 8": {
+        "Mathematics": [
+            "Ch 1: Rational Numbers",
+            "Ch 2: Linear Equations in One Variable",
+            "Ch 3: Understanding Quadrilaterals",
+            "Ch 4: Data Handling",
+            "Ch 5: Square and Square Roots",
+            "Ch 6: Cube and Cube Roots",
+            "Ch 7: Comparing Quantities",
+            "Ch 8: Algebraic Expressions and Identities",
+            "Ch 9: Mensuration",
+            "Ch 10: Exponents and Powers",
+            "Ch 11: Direct and Inverse Proportions",
+            "Ch 12: Factorisation",
+            "Ch 13: Introduction to Graphs"
+        ],
+        "Science": [
+            "Ch 1: Crop Production and Management",
+            "Ch 2: Microorganisms: Friend and Foe",
+            "Ch 3: Coal and Petroleum",
+            "Ch 4: Combustion and Flame",
+            "Ch 5: Conservation of Plants and Animals",
+            "Ch 6: Reproduction in Animals",
+            "Ch 7: Reaching the Age of Adolescence",
+            "Ch 8: Force and Pressure",
+            "Ch 9: Friction",
+            "Ch 10: Sound",
+            "Ch 11: Chemical Effects of Electric Current",
+            "Ch 12: Some Natural Phenomena",
+            "Ch 13: Light"
+        ]
+    },
+    "Class 7": {
+        "Mathematics": [
+            "Ch 1: Integers",
+            "Ch 2: Fractions and Decimals",
+            "Ch 3: Data Handling",
+            "Ch 4: Simple Equations",
+            "Ch 5: Lines and Angles",
+            "Ch 6: The Triangle and its Properties",
+            "Ch 7: Comparing Quantities",
+            "Ch 8: Rational Numbers",
+            "Ch 9: Perimeter and Area",
+            "Ch 10: Algebraic Expressions",
+            "Ch 11: Exponents and Powers",
+            "Ch 12: Symmetry"
+        ],
+        "Science": [
+            "Ch 1: Nutrition in Plants",
+            "Ch 2: Nutrition in Animals",
+            "Ch 3: Heat",
+            "Ch 4: Acids, Bases and Salts",
+            "Ch 5: Physical and Chemical Changes",
+            "Ch 6: Respiration in Organisms",
+            "Ch 7: Transportation in Animals and Plants",
+            "Ch 8: Reproduction in Plants",
+            "Ch 9: Motion and Time",
+            "Ch 10: Electric Current and its Effects",
+            "Ch 11: Light",
+            "Ch 12: Forests: Our Lifeline",
+            "Ch 13: Wastewater Story"
+        ]
+    },
+    "Class 6": {
+        "Mathematics": [
+            "Ch 1: Knowing Our Numbers",
+            "Ch 2: Whole Numbers",
+            "Ch 3: Playing with Numbers",
+            "Ch 4: Basic Geometrical Ideas",
+            "Ch 5: Understanding Elementary Shapes",
+            "Ch 6: Integers",
+            "Ch 7: Fractions",
+            "Ch 8: Decimals",
+            "Ch 9: Data Handling",
+            "Ch 10: Mensuration",
+            "Ch 11: Algebra",
+            "Ch 12: Ratio and Proportion"
+        ],
+        "Science": [
+            "Ch 1: Components of Food",
+            "Ch 2: Sorting Materials into Groups",
+            "Ch 3: Separation of Substances",
+            "Ch 4: Getting to Know Plants",
+            "Ch 5: Body Movements",
+            "Ch 6: The Living Organisms — Characteristics and Habitats",
+            "Ch 7: Motion and Measurement of Distances",
+            "Ch 8: Light, Shadows and Reflections",
+            "Ch 9: Electricity and Circuits",
+            "Ch 10: Fun with Magnets",
+            "Ch 11: Air Around Us"
+        ]
+    }
+};
