@@ -397,6 +397,40 @@ class SessionBridge
         $this->ci4Session->destroy();
     }
 
+    public function __get($key)
+    {
+        if ($key === 'userdata') {
+            return $this->userdata();
+        }
+        if ($key === 'session_id') {
+            return session_id();
+        }
+        if ($this->ci4Session->has($key)) {
+            return $this->ci4Session->get($key);
+        }
+        if (isset($_SESSION[$key])) {
+            return $_SESSION[$key];
+        }
+        return null;
+    }
+
+    public function __set($key, $value)
+    {
+        $this->ci4Session->set($key, $value);
+        $_SESSION[$key] = $value;
+    }
+
+    public function __isset($key)
+    {
+        if ($key === 'userdata') {
+            return true;
+        }
+        if ($key === 'session_id') {
+            return session_status() === PHP_SESSION_ACTIVE;
+        }
+        return $this->ci4Session->has($key) || isset($_SESSION[$key]);
+    }
+
     public function __call($method, $args)
     {
         return call_user_func_array([$this->ci4Session, $method], $args);
