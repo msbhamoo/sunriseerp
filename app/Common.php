@@ -65,6 +65,24 @@ class SessionBridge
     }
 }
 
+class ConfigBridge
+{
+    public function load($file = '', $use_sections = false, $fail_gracefully = false)
+    {
+        return true;
+    }
+
+    public function item($item, $index = '')
+    {
+        return config('App')->$item ?? null;
+    }
+
+    public function set_item($item, $value)
+    {
+        return true;
+    }
+}
+
 if (!class_exists('CI_Controller')) {
     #[\AllowDynamicProperties]
     class CI_Controller
@@ -76,6 +94,7 @@ if (!class_exists('CI_Controller')) {
         public $rbac;
         public $lang;
         public $db;
+        public $config;
         public $input;
         public $form_validation;
 
@@ -88,6 +107,8 @@ if (!class_exists('CI_Controller')) {
             $this->rbac      = $bridge->rbac;
             $this->lang      = $bridge->lang;
             $this->session   = new SessionBridge();
+            $this->config    = new ConfigBridge();
+            $this->db        = \Config\Database::connect();
             $this->input     = service('request');
         }
 
