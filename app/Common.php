@@ -469,6 +469,76 @@ class ConfigBridge
     }
 }
 
+class AgentBridge
+{
+    protected $agent;
+
+    public function __construct()
+    {
+        $this->agent = service('request')->getUserAgent();
+    }
+
+    public function is_browser(?string $key = null): bool
+    {
+        return $this->agent->isBrowser($key);
+    }
+
+    public function is_robot(?string $key = null): bool
+    {
+        return $this->agent->isRobot($key);
+    }
+
+    public function is_mobile(?string $key = null): bool
+    {
+        return $this->agent->isMobile($key);
+    }
+
+    public function browser(): string
+    {
+        return $this->agent->getBrowser();
+    }
+
+    public function version(): string
+    {
+        return $this->agent->getVersion();
+    }
+
+    public function robot(): string
+    {
+        return $this->agent->getRobot();
+    }
+
+    public function mobile(): string
+    {
+        return $this->agent->getMobile();
+    }
+
+    public function platform(): string
+    {
+        return $this->agent->getPlatform();
+    }
+
+    public function string(): string
+    {
+        return $this->agent->getAgentString();
+    }
+
+    public function is_referral(): bool
+    {
+        return $this->agent->isReferral();
+    }
+
+    public function referrer(): string
+    {
+        return $this->agent->getReferrer();
+    }
+
+    public function __call($method, $args)
+    {
+        return call_user_func_array([$this->agent, $method], $args);
+    }
+}
+
 if (!class_exists('CI_Controller')) {
     #[\AllowDynamicProperties]
     class CI_Controller
@@ -482,6 +552,8 @@ if (!class_exists('CI_Controller')) {
         public $db;
         public $config;
         public $input;
+        public $agent;
+        public $user_agent;
         public $form_validation;
         public $router;
         public $uri;
@@ -490,14 +562,17 @@ if (!class_exists('CI_Controller')) {
         {
             self::$instance = &$this;
             $bridge = new \App\Libraries\ViewBridge();
-            $this->load      = $bridge->load;
-            $this->customlib = $bridge->customlib;
-            $this->rbac      = $bridge->rbac;
-            $this->lang      = $bridge->lang;
-            $this->session   = new SessionBridge();
-            $this->config    = new ConfigBridge();
-            $this->db        = new DatabaseBridge();
-            $this->input     = new class {
+            $this->load       = $bridge->load;
+            $this->customlib  = $bridge->customlib;
+            $this->rbac       = $bridge->rbac;
+            $this->lang       = $bridge->lang;
+            $this->session    = new SessionBridge();
+            $this->config     = new ConfigBridge();
+            $this->db         = new DatabaseBridge();
+            $agentBridge      = new AgentBridge();
+            $this->agent      = $agentBridge;
+            $this->user_agent = $agentBridge;
+            $this->input      = new class {
                 public function post($index = null, $xss_clean = false)
                 {
                     $req = service('request');

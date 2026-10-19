@@ -54,15 +54,26 @@ class LoaderBridge
             return $this;
         }
 
-        $class = ucfirst($library);
-        $name = $object_name ?? strtolower($library);
+        $lowerLib = strtolower($library);
+        $varmap = [
+            'user_agent' => 'agent',
+            'unit_test'  => 'unit',
+        ];
 
-        // Check if library file exists in app/Libraries or application/libraries
+        $name = $object_name ?? ($varmap[$lowerLib] ?? $lowerLib);
+        $class = ucfirst($library);
+        if ($lowerLib === 'user_agent') {
+            $class = 'CI_User_agent';
+        }
+
+        // Check if library file exists in app/Libraries or application/libraries or system/libraries
         $libPaths = [
-            APPPATH . 'Libraries/' . $class . '.php',
+            APPPATH . 'Libraries/' . ucfirst($library) . '.php',
             APPPATH . 'Libraries/' . $library . '.php',
-            APPPATH . '../application/libraries/' . $class . '.php',
+            APPPATH . '../application/libraries/' . ucfirst($library) . '.php',
             APPPATH . '../application/libraries/' . $library . '.php',
+            BASEPATH . 'libraries/' . ucfirst($library) . '.php',
+            BASEPATH . 'libraries/' . $library . '.php',
         ];
         foreach ($libPaths as $lp) {
             if (file_exists($lp)) {
@@ -75,6 +86,7 @@ class LoaderBridge
             $obj = new $class($params);
             if ($ci !== null) {
                 $ci->$name = $obj;
+                $ci->$lowerLib = $obj;
             }
             return $obj;
         }
