@@ -37,6 +37,10 @@ class Gateway
         'admin/feetype/*',
         'feetype',
         'feetype/*',
+        'admin/feemaster',
+        'admin/feemaster/*',
+        'feemaster',
+        'feemaster/*',
     ];
 
     /**

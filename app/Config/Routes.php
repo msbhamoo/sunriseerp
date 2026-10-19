@@ -76,5 +76,14 @@ $routes->group('admin/feetype', ['namespace' => 'App\Controllers\Admin', 'filter
     $routes->get('delete/(:num)', 'FeetypeController::delete/$1');
 });
 
+// Fee Masters Web Routes
+$routes->group('admin/feemaster', ['namespace' => 'App\Controllers\Admin', 'filter' => 'admin_auth'], static function ($routes) {
+    $routes->match(['GET', 'POST'], '/', 'FeemasterController::index');
+    $routes->match(['GET', 'POST'], 'index', 'FeemasterController::index');
+    $routes->get('delete/(:num)', 'FeemasterController::delete/$1');
+    $routes->get('deletegrp/(:num)', 'FeemasterController::deletegrp/$1');
+});
+
+
 
 
