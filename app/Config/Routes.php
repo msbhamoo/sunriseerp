@@ -119,6 +119,13 @@ $routes->group('studentfee', ['namespace' => 'App\Controllers\Admin', 'filter' =
     $routes->post('ajaxSearch', 'StudentfeeController::ajaxSearch');
 });
 
+// Load all explicit module routes generated from migrated controllers
+if (file_exists(APPPATH . 'Config/GeneratedRoutes.php')) {
+    require APPPATH . 'Config/GeneratedRoutes.php';
+}
+
+
+
 
 
 
