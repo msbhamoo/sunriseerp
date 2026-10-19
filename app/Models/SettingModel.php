@@ -60,4 +60,13 @@ class SettingModel extends BaseModel
         $setting = $this->getSetting();
         return !empty($setting['timezone']) ? $setting['timezone'] : 'Asia/Kolkata';
     }
+
+    /**
+     * Get school details as an object for legacy controller compatibility.
+     */
+    public function getSchoolDetail(?int $id = null): ?object
+    {
+        $setting = $this->getSetting($id);
+        return $setting ? (object) $setting : (object) ['language' => 'English'];
+    }
 }
