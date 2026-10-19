@@ -231,16 +231,27 @@ class CustomlibBridge
         return '';
     }
 
-    public function getCurrentThemeSetting(): ?object
+    public function getCurrentThemeSetting()
     {
-        $db = \Config\Database::connect();
-        $row = $db->table('theme_settings')->get()->getRow();
-        return $row ?: (object)[
+        $session = session();
+        $admin = $session->get('admin');
+        $student = $session->get('student');
+
+        if ($admin && isset($admin['theme']) && is_array($admin['theme'])) {
+            return $admin['theme'];
+        }
+        if ($student && isset($student['theme']) && is_array($student['theme'])) {
+            return $student['theme'];
+        }
+
+        return [
+            'theme_color'      => '#7367f0',
+            'theme_shadow'     => '',
             'theme_background' => 'light-mode',
             'theme_content'    => 'container-fluid',
-            'theme_shadow'     => '',
-            'theme_color'      => '#7367f0',
+            'theme_type'       => 'default',
             'theme_navigation' => 'expanded',
+            'theme_font_color' => '',
         ];
     }
 
