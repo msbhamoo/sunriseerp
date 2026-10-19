@@ -56,9 +56,14 @@ class Session extends BaseConfig
      * For the 'database' driver, it's a table name.
      * Please read up the manual for the format with other session drivers.
      *
-     * IMPORTANT: You are REQUIRED to set a valid save path!
      */
-    public string $savePath = WRITEPATH . 'session';
+    public string $savePath = '';
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->savePath = sys_get_temp_dir();
+    }
 
     /**
      * --------------------------------------------------------------------------
