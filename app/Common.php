@@ -18,6 +18,201 @@ if (!defined('BASEPATH')) {
     define('BASEPATH', realpath(__DIR__ . '/../system') . DIRECTORY_SEPARATOR);
 }
 
+class DatabaseBridge
+{
+    protected $connection;
+    protected $builder;
+    protected $currentTable = '';
+
+    public function __construct()
+    {
+        $this->connection = \Config\Database::connect();
+    }
+
+    public function table(string $tableName)
+    {
+        $this->currentTable = $tableName;
+        $this->builder = $this->connection->table($tableName);
+        return $this->builder;
+    }
+
+    protected function getBuilder()
+    {
+        if ($this->builder === null) {
+            $this->builder = $this->connection->table($this->currentTable ?: 'dual');
+        }
+        return $this->builder;
+    }
+
+    public function select($select = '*', $escape = null)
+    {
+        return $this->getBuilder()->select($select, $escape);
+    }
+
+    public function from($from)
+    {
+        $this->currentTable = $from;
+        $this->builder = $this->connection->table($from);
+        return $this->builder;
+    }
+
+    public function where($key, $value = null, $escape = null)
+    {
+        return $this->getBuilder()->where($key, $value, $escape);
+    }
+
+    public function or_where($key, $value = null, $escape = null)
+    {
+        return $this->getBuilder()->orWhere($key, $value, $escape);
+    }
+
+    public function where_in($key = null, $values = null, $escape = null)
+    {
+        return $this->getBuilder()->whereIn($key, $values, $escape);
+    }
+
+    public function join($table, $cond, $type = '', $escape = null)
+    {
+        return $this->getBuilder()->join($table, $cond, $type, $escape);
+    }
+
+    public function order_by($orderby, $direction = '', $escape = null)
+    {
+        return $this->getBuilder()->orderBy($orderby, $direction, $escape);
+    }
+
+    public function group_by($by, $escape = null)
+    {
+        return $this->getBuilder()->groupBy($by, $escape);
+    }
+
+    public function limit($value, $offset = 0)
+    {
+        return $this->getBuilder()->limit($value, $offset);
+    }
+
+    public function group_start()
+    {
+        return $this->getBuilder()->groupStart();
+    }
+
+    public function group_end()
+    {
+        return $this->getBuilder()->groupEnd();
+    }
+
+    public function get($table = '', $limit = null, $offset = null)
+    {
+        if (!empty($table)) {
+            $this->from($table);
+        }
+        $builder = $this->getBuilder();
+        $result = $builder->get($limit, $offset);
+        $this->builder = null; // reset for next query
+        return new ResultBridge($result);
+    }
+
+    public function insert($table = '', $set = null, $escape = null)
+    {
+        $res = $this->connection->table($table)->insert($set, $escape);
+        return $res;
+    }
+
+    public function insert_id()
+    {
+        return $this->connection->insertID();
+    }
+
+    public function update($table = '', $set = null, $where = null, $limit = null)
+    {
+        return $this->connection->table($table)->update($set, $where, $limit);
+    }
+
+    public function delete($table = '', $where = '', $limit = null, $reset_data = true)
+    {
+        return $this->connection->table($table)->delete($where, $limit, $reset_data);
+    }
+
+    public function query($sql, $binds = false, $return_object = true)
+    {
+        $res = $this->connection->query($sql, $binds);
+        return new ResultBridge($res);
+    }
+
+    public function trans_start()
+    {
+        $this->connection->transStart();
+    }
+
+    public function trans_complete()
+    {
+        $this->connection->transComplete();
+    }
+
+    public function trans_status()
+    {
+        return $this->connection->transStatus();
+    }
+
+    public function trans_rollback()
+    {
+        $this->connection->transRollback();
+    }
+
+    public function trans_commit()
+    {
+        $this->connection->transCommit();
+    }
+
+    public function __call($method, $args)
+    {
+        if (method_exists($this->connection, $method)) {
+            return call_user_func_array([$this->connection, $method], $args);
+        }
+        return call_user_func_array([$this->getBuilder(), $method], $args);
+    }
+}
+
+class ResultBridge
+{
+    protected $result;
+
+    public function __construct($result)
+    {
+        $this->result = $result;
+    }
+
+    public function result_array()
+    {
+        return method_exists($this->result, 'getResultArray') ? $this->result->getResultArray() : [];
+    }
+
+    public function result()
+    {
+        return method_exists($this->result, 'getResult') ? $this->result->getResult() : [];
+    }
+
+    public function row_array()
+    {
+        return method_exists($this->result, 'getRowArray') ? $this->result->getRowArray() : [];
+    }
+
+    public function row()
+    {
+        return method_exists($this->result, 'getRow') ? $this->result->getRow() : null;
+    }
+
+    public function num_rows()
+    {
+        return method_exists($this->result, 'getNumRows') ? $this->result->getNumRows() : 0;
+    }
+
+    public function __call($method, $args)
+    {
+        return call_user_func_array([$this->result, $method], $args);
+    }
+}
+
 if (!class_exists('CI_Model')) {
     #[\AllowDynamicProperties]
     class CI_Model
@@ -30,7 +225,7 @@ if (!class_exists('CI_Model')) {
         public function __construct()
         {
             $bridge = new \App\Libraries\ViewBridge();
-            $this->db        = \Config\Database::connect();
+            $this->db        = new DatabaseBridge();
             $this->load      = $bridge->load;
             $this->customlib = $bridge->customlib;
             $this->session   = new SessionBridge();
