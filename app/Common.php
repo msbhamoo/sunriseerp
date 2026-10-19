@@ -551,3 +551,49 @@ if (!function_exists('fix_utf8_notes')) {
     }
 }
 
+if (!function_exists('redirect')) {
+    /**
+     * Backward-compatible redirect() function supporting both CI3 (URIs) and CI4 (named routes / RedirectResponse).
+     */
+    function redirect(?string $uri = null, $method = 'auto', ?int $code = null)
+    {
+        $response = service('redirectresponse');
+
+        if (empty($uri)) {
+            return $response;
+        }
+
+        // 1. If it's already an absolute URL (e.g. http:// or https://)
+        if (preg_match('#^https?://#i', $uri)) {
+            $targetUrl = $uri;
+        } else {
+            // 2. Try CI4 reverse routing first in case it's a named route
+            try {
+                $reverse = service('routes')->reverseRoute($uri);
+                if ($reverse) {
+                    $targetUrl = site_url($reverse);
+                } else {
+                    $targetUrl = site_url($uri);
+                }
+            } catch (\Throwable $e) {
+                // Fallback to site_url for CI3 relative paths
+                $targetUrl = site_url($uri);
+            }
+        }
+
+        // If called directly inside a legacy CI3 controller or library without return,
+        // perform immediate header redirect as CI3 expects
+        if (PHP_SAPI !== 'cli' && !headers_sent()) {
+            if ($code === null) {
+                $code = (isset($_SERVER['SERVER_PROTOCOL'], $_SERVER['REQUEST_METHOD']) && $_SERVER['SERVER_PROTOCOL'] === 'HTTP/1.1')
+                    ? ($method !== 'auto' && $method !== 'location' ? 303 : 302)
+                    : 302;
+            }
+            header('Location: ' . $targetUrl, true, $code);
+            exit;
+        }
+
+        return $response->to($targetUrl, $code);
+    }
+}
+
