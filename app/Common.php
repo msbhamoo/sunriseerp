@@ -14,6 +14,10 @@
  * @see: https://codeigniter.com/user_guide/extending/common.html
  */
 
+if (!defined('BASEPATH')) {
+    define('BASEPATH', realpath(__DIR__ . '/../system') . DIRECTORY_SEPARATOR);
+}
+
 if (!class_exists('CI_Controller')) {
     #[\AllowDynamicProperties]
     class CI_Controller

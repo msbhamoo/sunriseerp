@@ -123,6 +123,11 @@ class Gateway
             define('FCPATH', realpath(__DIR__ . '/..') . DIRECTORY_SEPARATOR);
         }
 
+        // Define legacy BASEPATH for CI3 compatibility
+        if (!defined('BASEPATH')) {
+            define('BASEPATH', realpath(__DIR__ . '/../system') . DIRECTORY_SEPARATOR);
+        }
+
         require_once __DIR__ . '/Config/Paths.php';
         $paths = new Paths();
 
