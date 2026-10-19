@@ -291,7 +291,13 @@ class CustomlibBridge
 
     public function getStaffRole(): string
     {
-        return isset($this->admin['roles']) ? json_encode($this->admin['roles']) : '{"id":"7","name":"Super Admin"}';
+        $admin = $this->admin ?? session()->get('admin');
+        if ($admin && isset($admin['roles']) && is_array($admin['roles'])) {
+            $roles = $admin['roles'];
+            $role_key = key($roles);
+            return json_encode(['id' => $roles[$role_key], 'name' => $role_key]);
+        }
+        return json_encode(['id' => '7', 'name' => 'Super Admin']);
     }
 
     public function dateformat($date): string
