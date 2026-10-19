@@ -18,6 +18,53 @@ if (!defined('BASEPATH')) {
     define('BASEPATH', realpath(__DIR__ . '/../system') . DIRECTORY_SEPARATOR);
 }
 
+class SessionBridge
+{
+    protected $ci4Session;
+
+    public function __construct()
+    {
+        $this->ci4Session = service('session');
+    }
+
+    public function userdata($item = null)
+    {
+        if ($item === null) {
+            return $this->ci4Session->get();
+        }
+        return $this->ci4Session->get($item);
+    }
+
+    public function has_userdata($item): bool
+    {
+        return $this->ci4Session->has($item);
+    }
+
+    public function set_userdata($data, $value = null): void
+    {
+        if (is_array($data)) {
+            $this->ci4Session->set($data);
+        } else {
+            $this->ci4Session->set($data, $value);
+        }
+    }
+
+    public function unset_userdata($key): void
+    {
+        $this->ci4Session->remove($key);
+    }
+
+    public function sess_destroy(): void
+    {
+        $this->ci4Session->destroy();
+    }
+
+    public function __call($method, $args)
+    {
+        return call_user_func_array([$this->ci4Session, $method], $args);
+    }
+}
+
 if (!class_exists('CI_Controller')) {
     #[\AllowDynamicProperties]
     class CI_Controller
@@ -40,7 +87,7 @@ if (!class_exists('CI_Controller')) {
             $this->customlib = $bridge->customlib;
             $this->rbac      = $bridge->rbac;
             $this->lang      = $bridge->lang;
-            $this->session   = service('session');
+            $this->session   = new SessionBridge();
             $this->input     = service('request');
         }
 
