@@ -31,6 +31,8 @@ class Gateway
         'sections/*',
         'admin/stuattendence',
         'admin/stuattendence/*',
+        'admin/feegroup',
+        'admin/feegroup/*',
     ];
 
     /**
@@ -80,9 +82,18 @@ class Gateway
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
         $baseDir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
 
-        // Strip baseDir from URI if present (e.g. /lms)
-        if ($baseDir !== '' && str_starts_with($uri, $baseDir)) {
-            $uri = substr($uri, strlen($baseDir));
+        // If inside api/ subdirectory (e.g. /lms/api), strip /api from baseDir
+        $isApiSubdir = str_ends_with($baseDir, '/api');
+        $rootBaseDir = $isApiSubdir ? substr($baseDir, 0, -4) : $baseDir;
+
+        // Strip rootBaseDir from URI if present (e.g. /lms)
+        if ($rootBaseDir !== '' && str_starts_with($uri, $rootBaseDir)) {
+            $uri = substr($uri, strlen($rootBaseDir));
+        }
+
+        // Strip /api if present when accessed directly
+        if ($isApiSubdir && str_starts_with($uri, '/api')) {
+            // Keep as is so api/v2/... matches our route
         }
 
         // Strip index.php if present

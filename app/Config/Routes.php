@@ -60,3 +60,12 @@ $routes->group('admin/stuattendence', ['namespace' => 'App\Controllers\Admin', '
     $routes->match(['GET', 'POST'], 'index', 'StuattendenceController::index');
 });
 
+// Fee Groups Web Routes
+$routes->group('admin/feegroup', ['namespace' => 'App\Controllers\Admin', 'filter' => 'admin_auth'], static function ($routes) {
+    $routes->match(['GET', 'POST'], '/', 'FeegroupController::index');
+    $routes->match(['GET', 'POST'], 'index', 'FeegroupController::index');
+    $routes->match(['GET', 'POST'], 'edit/(:num)', 'FeegroupController::edit/$1');
+    $routes->get('delete/(:num)', 'FeegroupController::delete/$1');
+});
+
+

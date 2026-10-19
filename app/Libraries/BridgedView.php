@@ -47,6 +47,8 @@ class BridgedView extends View
                 return new \App\Models\AttendencetypeModel();
             case 'stuattendence_model':
                 return new \App\Models\StuattendenceModel();
+            case 'feegroup_model':
+                return new \App\Models\FeegroupModel();
             case 'session':
                 return service('session');
             case 'router':

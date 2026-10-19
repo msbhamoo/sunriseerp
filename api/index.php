@@ -18,6 +18,12 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
     http_response_code(200);
     exit();
 }
+
+// Dual-Stack Gateway: route v2 APIs to CodeIgniter 4
+require_once __DIR__ . '/../app/Gateway.php';
+if (\App\Gateway::shouldRouteToCI4()) {
+    \App\Gateway::dispatch();
+}
 /**
  * CodeIgniter
  *
