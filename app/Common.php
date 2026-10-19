@@ -116,6 +116,38 @@ if (!class_exists('CI_Controller')) {
         {
             return self::$instance;
         }
+
+        public function __get($key)
+        {
+            // Case-insensitive model check
+            $parts = explode('_', $key);
+            $ci4Name = 'App\\Models\\' . implode('', array_map('ucfirst', $parts));
+            if (class_exists($ci4Name)) {
+                $this->$key = new $ci4Name();
+                return $this->$key;
+            }
+
+            if (class_exists($key)) {
+                $this->$key = new $key();
+                return $this->$key;
+            }
+
+            // Check if legacy model file exists
+            $legacyFile = APPPATH . '../application/models/' . ucfirst($key) . '.php';
+            if (!file_exists($legacyFile)) {
+                $legacyFile = APPPATH . '../application/models/' . $key . '.php';
+            }
+            if (file_exists($legacyFile)) {
+                require_once $legacyFile;
+                $class = basename($legacyFile, '.php');
+                if (class_exists($class)) {
+                    $this->$key = new $class();
+                    return $this->$key;
+                }
+            }
+
+            return null;
+        }
     }
 }
 
