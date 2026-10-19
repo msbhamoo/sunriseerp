@@ -110,6 +110,16 @@ $routes->group('admin/studentcall', ['namespace' => 'App\Controllers\Admin', 'fi
     $routes->post('quick_reschedule_reminder_ajax', 'StudentcallController::quick_reschedule_reminder_ajax');
 });
 
+// Student Fee Collection Routes
+$routes->group('studentfee', ['namespace' => 'App\Controllers\Admin', 'filter' => 'admin_auth'], static function ($routes) {
+    $routes->match(['GET', 'POST'], '/', 'StudentfeeController::index');
+    $routes->match(['GET', 'POST'], 'index', 'StudentfeeController::index');
+    $routes->match(['GET', 'POST'], 'dashboard', 'StudentfeeController::dashboard');
+    $routes->post('search', 'StudentfeeController::search');
+    $routes->post('ajaxSearch', 'StudentfeeController::ajaxSearch');
+});
+
+
 
 
 

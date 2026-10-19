@@ -158,6 +158,18 @@ class CustomlibBridge
     {
         return $this->setting['timezone'] ?? 'Asia/Kolkata';
     }
+
+    public function getFullName($firstname, $middlename, $lastname, $is_middlename = true, $is_lastname = true): string
+    {
+        $name = $firstname;
+        if ($is_middlename && !empty($middlename)) {
+            $name .= ' ' . $middlename;
+        }
+        if ($is_lastname && !empty($lastname)) {
+            $name .= ' ' . $lastname;
+        }
+        return trim((string)$name);
+    }
 }
 
 class RbacBridge

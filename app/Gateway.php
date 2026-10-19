@@ -43,6 +43,11 @@ class Gateway
         'feemaster/*',
         'admin/studentcall',
         'admin/studentcall/*',
+        'studentfee',
+        'studentfee/index',
+        'studentfee/dashboard',
+        'studentfee/search',
+        'studentfee/ajaxSearch',
     ];
 
     /**
