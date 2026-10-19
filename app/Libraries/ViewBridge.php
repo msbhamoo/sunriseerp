@@ -262,6 +262,25 @@ class CustomlibBridge
 
     public function getUserData(): array
     {
+        $admin = $this->admin ?? session()->get('admin');
+        if ($admin && !empty($admin['id'])) {
+            $staffModel = new \App\Models\StaffModel();
+            $staff = $staffModel->get((int)$admin['id']);
+            if (!empty($staff)) {
+                if (!isset($staff['role_id']) && isset($admin['role_id'])) {
+                    $staff['role_id'] = $admin['role_id'];
+                }
+                return array_merge($admin, $staff);
+            }
+            return $admin;
+        }
+
+        $student = session()->get('student');
+        if ($student) {
+            $student['role_id'] = $student['role_id'] ?? '';
+            return $student;
+        }
+
         return $this->admin ?? [];
     }
 
