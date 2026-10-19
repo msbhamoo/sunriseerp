@@ -59,12 +59,6 @@ class Session extends BaseConfig
      */
     public string $savePath = '';
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->savePath = sys_get_temp_dir();
-    }
-
     /**
      * --------------------------------------------------------------------------
      * Session Match IP

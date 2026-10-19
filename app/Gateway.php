@@ -23,6 +23,8 @@ class Gateway
         'ci4-status',
         'ci4-status/*',
         'api/v2/*',
+        'admin/ptm',
+        'admin/ptm/*',
     ];
 
     /**
