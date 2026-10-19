@@ -200,7 +200,21 @@ class CustomlibBridge
 
     public function getRTL(): string
     {
-        return !empty($this->setting['is_rtl']) && $this->setting['is_rtl'] === 'disabled' ? 'dir="ltr"' : 'dir="ltr"';
+        $admin = $this->admin ?? session()->get('admin');
+        if ($admin && isset($admin['is_rtl'])) {
+            return $admin['is_rtl'] === 'disabled' ? '' : "dir='rtl' lang='ar'";
+        }
+
+        $student = session()->get('student');
+        if ($student && isset($student['is_rtl'])) {
+            return $student['is_rtl'] === 'disabled' ? '' : "dir='rtl' lang='ar'";
+        }
+
+        if (!empty($this->setting['is_rtl']) && $this->setting['is_rtl'] === 'disabled') {
+            return '';
+        }
+
+        return '';
     }
 
     public function getAppName(): string
