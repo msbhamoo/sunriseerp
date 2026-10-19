@@ -36,12 +36,20 @@ class StudentModel extends BaseModel
         }
 
         return $this->db->table('students')
-            ->select('students.*, student_session.id as student_session_id, student_session.session_id, student_session.class_id, student_session.section_id, student_session.route_pickup_point_id, student_session.vehroute_id, student_session.transport_fees, student_session.fees_discount, classes.class, sections.section, categories.category, users.username, users.is_active as user_active')
+            ->select('students.*, student_session.id as student_session_id, student_session.session_id, student_session.class_id, student_session.section_id, student_session.route_pickup_point_id, student_session.vehroute_id, student_session.transport_fees, student_session.fees_discount, classes.class, sections.section, categories.category, users.username, users.is_active as user_active, pickup_point.name as pickup_point_name, transport_route.route_title, vehicles.vehicle_no, vehicles.driver_name, vehicles.driver_contact, hostel_rooms.room_no, hostel.hostel_name, room_types.room_type')
             ->join('student_session', 'student_session.student_id = students.id AND student_session.session_id = ' . (int)$sessionId)
             ->join('classes', 'classes.id = student_session.class_id', 'left')
             ->join('sections', 'sections.id = student_session.section_id', 'left')
             ->join('categories', 'categories.id = students.category_id', 'left')
-            ->join('users', 'users.user_id = students.id AND users.role = "student"', 'left');
+            ->join('users', 'users.user_id = students.id AND users.role = "student"', 'left')
+            ->join('route_pickup_point', 'route_pickup_point.id = student_session.route_pickup_point_id', 'left')
+            ->join('pickup_point', 'pickup_point.id = route_pickup_point.pickup_point_id', 'left')
+            ->join('vehicle_routes', 'vehicle_routes.id = student_session.vehroute_id', 'left')
+            ->join('transport_route', 'transport_route.id = vehicle_routes.route_id', 'left')
+            ->join('vehicles', 'vehicles.id = vehicle_routes.vehicle_id', 'left')
+            ->join('hostel_rooms', 'hostel_rooms.id = students.hostel_room_id', 'left')
+            ->join('hostel', 'hostel.id = hostel_rooms.hostel_id', 'left')
+            ->join('room_types', 'room_types.id = hostel_rooms.room_type_id', 'left');
     }
 
     /**

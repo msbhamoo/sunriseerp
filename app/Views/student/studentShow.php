@@ -2910,10 +2910,10 @@ $call_logs_count = !empty($stu_calls) ? count($stu_calls) : 0;
                                         </div>
                                     </div>
 
-                                    <!-- Transport Details Card -->
+                                     <!-- Transport Details Card -->
                                     <?php if ($sch_setting->route_list) {
                                         if ($this->module_lib->hasActive('transport')) {
-                                            if ($student['pickup_point_name'] != '') {
+                                            if (!empty($student['pickup_point_name'])) {
                                     ?>
                                         <div class="sp3-section-card">
                                             <div class="sp3-section-header">
@@ -2923,7 +2923,7 @@ $call_logs_count = !empty($stu_calls) ? count($stu_calls) : 0;
                                                 </div>
                                             </div>
                                             <div class="sp3-facility-item">
-                                                <div class="sp3-facility-title"><i class="fa fa-map-signs text-primary"></i> <?php echo $student['route_title']; ?></div>
+                                                <div class="sp3-facility-title"><i class="fa fa-map-signs text-primary"></i> <?php echo $student['route_title'] ?? ''; ?></div>
                                                 <div class="sp3-facility-grid">
                                                     <div class="sp3-facility-cell">
                                                         <span class="sp3-facility-cell-label"><?php echo $this->lang->line('pick_up_point'); ?></span>
@@ -2957,7 +2957,7 @@ $call_logs_count = !empty($stu_calls) ? count($stu_calls) : 0;
                                     <!-- Hostel Details Card -->
                                     <?php if ($sch_setting->hostel_id) {
                                         if ($this->module_lib->hasActive('hostel')) {
-                                            if ($student['hostel_room_id'] != 0) {
+                                            if (!empty($student['hostel_room_id'])) {
                                     ?>
                                         <div class="sp3-section-card">
                                             <div class="sp3-section-header">
