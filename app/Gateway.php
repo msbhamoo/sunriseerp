@@ -38,7 +38,6 @@ class Gateway
         'feetype/*',
         'feemaster',
         'feemaster/*',
-        'site/*',
         'student/*',
     ];
 
