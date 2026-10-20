@@ -914,9 +914,8 @@ class Customlib
 
     public function getStudentSessionUserName()
     {
-        $student_session = $this->CI->session->all_userdata();
         $session_Array   = $this->CI->session->userdata('student');
-        $studentUsername = $session_Array['username'];
+        $studentUsername = is_array($session_Array) && isset($session_Array['username']) ? $session_Array['username'] : null;
         return $studentUsername;
     }
 
@@ -929,16 +928,15 @@ class Customlib
 
     public function getStudentSessionGardianname()
     {
-        $student_session = $this->CI->session->all_userdata();
         $session_Array   = $this->CI->session->userdata('student');
-        $studentUsername = $session_Array['guardian_name'];
+        $studentUsername = is_array($session_Array) && isset($session_Array['guardian_name']) ? $session_Array['guardian_name'] : null;
         return $studentUsername;
     }
 
     public function getUserRole()
     {
         $user = $this->CI->session->userdata('student');
-        return $user['role'];
+        return is_array($user) && isset($user['role']) ? $user['role'] : null;
     }
 
     public function getMonthNoDropdown($start_month = null)
@@ -1665,7 +1663,7 @@ class Customlib
         $user       =   $this->CI->session->userdata('student');
 
         if ($user) {
-            $user_role  =   $user['role'];
+            $user_role  =   isset($user['role']) ? $user['role'] : null;
 
             if ($user_role == "student") {
                 $data['role'] =   $user_role;
@@ -2373,7 +2371,7 @@ class Customlib
     {
 
         $user       =   $this->CI->session->userdata('student');
-        $user_role  =   $user['role'];
+        $user_role  =   isset($user['role']) ? $user['role'] : null;
 
         if ($user_role == "student") {
             $status = $this->CI->student_model->get_student_dashboard_setting_status($fieldname);
