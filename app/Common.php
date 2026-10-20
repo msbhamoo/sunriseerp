@@ -445,6 +445,31 @@ class SessionBridge
         return $this->ci4Session->get($item);
     }
 
+    public function all_userdata(): array
+    {
+        return $this->ci4Session->get() ?? [];
+    }
+
+    public function sess_regenerate(bool $destroy = false): void
+    {
+        $this->ci4Session->regenerate($destroy);
+    }
+
+    public function tempdata($key = null)
+    {
+        return $this->ci4Session->getTempdata($key);
+    }
+
+    public function set_tempdata($data, $value = null, int $ttl = 300): void
+    {
+        $this->ci4Session->setTempdata($data, $value, $ttl);
+    }
+
+    public function unset_tempdata($key): void
+    {
+        $this->ci4Session->removeTempdata($key);
+    }
+
     public function has_userdata($item): bool
     {
         return $this->ci4Session->has($item);
