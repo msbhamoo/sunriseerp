@@ -77,3 +77,18 @@ defined('EXIT_USER_INPUT')     || define('EXIT_USER_INPUT', 7);     // invalid u
 defined('EXIT_DATABASE')       || define('EXIT_DATABASE', 8);       // database error
 defined('EXIT__AUTO_MIN')      || define('EXIT__AUTO_MIN', 9);      // lowest automatically-assigned error code
 defined('EXIT__AUTO_MAX')      || define('EXIT__AUTO_MAX', 125);    // highest automatically-assigned error code
+
+/*
+ | --------------------------------------------------------------------------
+ | Legacy CI3 Application Constants
+ | --------------------------------------------------------------------------
+ */
+if (!defined('BASEPATH')) {
+    define('BASEPATH', realpath(__DIR__ . '/../../system') . DIRECTORY_SEPARATOR);
+}
+if (defined('ROOTPATH') && file_exists(ROOTPATH . 'application/config/constants.php')) {
+    require_once ROOTPATH . 'application/config/constants.php';
+}
+
+
+
