@@ -489,6 +489,7 @@ class User extends Student_Controller
         $data["homeworklist"] = $homeworklist;
 
         // notification list start
+        $notifications = array();
         $user_role = $this->customlib->getUserRole();
         if ($user_role == 'student') {
             $student_id    = $this->customlib->getStudentSessionUserID();
