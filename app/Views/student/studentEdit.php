@@ -81,7 +81,7 @@ if ($student['class_id'] == $class['id']) {
     }
     ?>><?php echo $class['class'] ?></option>
                                                                 <?php
-$count++;
+// $count++;
 }
 ?>
                                                 </select>
@@ -1555,7 +1555,7 @@ if (set_value('sibiling_class_id') == $class['id']) {
     }
     ?>><?php echo $class['class'] ?></option>
                                             <?php
-$count++;
+// $count++;
 }
 ?>
                                     </select>
