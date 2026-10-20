@@ -117,7 +117,7 @@ class DatabaseBridge
     {
         $this->currentTable = $from;
         if ($this->builder !== null) {
-            $this->builder->setTable($from);
+            $this->builder->from($from, true);
         } else {
             $this->builder = $this->connection->table($from);
         }
