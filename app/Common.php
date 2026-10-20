@@ -217,12 +217,51 @@ class DatabaseBridge
 
     public function update($table = '', $set = null, $where = null, $limit = null)
     {
-        return $this->connection->table($table)->update($set, $where, $limit);
+        if (!empty($table)) {
+            $builder = $this->connection->table($table);
+        } else {
+            $builder = $this->getBuilder();
+        }
+
+        // Apply any pending calls buffered before update (such as $this->db->where(...))
+        if (!empty($this->pendingCalls)) {
+            $calls = $this->pendingCalls;
+            $this->pendingCalls = [];
+            foreach ($calls as $call) {
+                [$method, $args] = $call;
+                call_user_func_array([$builder, $method], $args);
+            }
+        }
+
+        $res = $builder->update($set, $where, $limit);
+        $this->builder = null;
+        $this->currentTable = null;
+        $this->pendingCalls = [];
+        return $res;
     }
 
     public function delete($table = '', $where = '', $limit = null, $reset_data = true)
     {
-        return $this->connection->table($table)->delete($where, $limit, $reset_data);
+        if (!empty($table)) {
+            $builder = $this->connection->table($table);
+        } else {
+            $builder = $this->getBuilder();
+        }
+
+        if (!empty($this->pendingCalls)) {
+            $calls = $this->pendingCalls;
+            $this->pendingCalls = [];
+            foreach ($calls as $call) {
+                [$method, $args] = $call;
+                call_user_func_array([$builder, $method], $args);
+            }
+        }
+
+        $res = $builder->delete($where, $limit, $reset_data);
+        $this->builder = null;
+        $this->currentTable = null;
+        $this->pendingCalls = [];
+        return $res;
     }
 
     public function query($sql, $binds = false, $return_object = true)
