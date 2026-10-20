@@ -2369,7 +2369,7 @@ class Customlib
 
     public function get_user_dashboard_setting_status($fieldname)
     {
-
+        $status     =   0;
         $user       =   $this->CI->session->userdata('student');
         $user_role  =   isset($user['role']) ? $user['role'] : null;
 
@@ -2378,7 +2378,7 @@ class Customlib
         } else if ($user_role == "parent") {
             $status = $this->CI->student_model->get_parent_dashboard_setting_status($fieldname);
         }
-        return $status;
+        return (int) $status;
     }
 
     //fees master  fees collect //
