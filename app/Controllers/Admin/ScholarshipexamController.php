@@ -91,7 +91,7 @@ class ScholarshipexamController extends BaseController
         return $this->dispatchLegacy('Scholarshipexam', 'register_candidates', func_get_args());
     }
 
-    public function admitcard($candidate_id)
+    public function admitcard($candidate_id = null)
     {
         return $this->dispatchLegacy('Scholarshipexam', 'admitcard', func_get_args());
     }

@@ -316,8 +316,12 @@ class Scholarshipexam extends Admin_Controller
         redirect('admin/scholarshipexam/candidates?exam_id=' . $exam_id);
     }
 
-    public function admitcard($candidate_id)
+    public function admitcard($candidate_id = null)
     {
+        if (empty($candidate_id)) {
+            redirect('admin/scholarshipexam/candidates');
+            return;
+        }
         $data['candidate'] = $this->scholarshipexam_model->getCandidateAdmitCardData($candidate_id);
         $data['sch_setting'] = $this->sch_setting_detail;
         $this->load->view('admin/scholarshipexam/admitcard', $data);
