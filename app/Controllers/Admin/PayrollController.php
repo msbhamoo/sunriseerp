@@ -16,12 +16,12 @@ class PayrollController extends BaseController
         return $this->dispatchLegacy('Payroll', 'index', func_get_args());
     }
 
-    public function create($month, $year, $id)
+    public function create($month = null, $year = null, $id = null)
     {
         return $this->dispatchLegacy('Payroll', 'create', func_get_args());
     }
 
-    public function edit($id)
+    public function edit($id = null)
     {
         return $this->dispatchLegacy('Payroll', 'edit', func_get_args());
     }

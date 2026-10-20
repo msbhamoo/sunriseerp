@@ -70,7 +70,7 @@ class Payroll extends Admin_Controller
         $this->load->view("layout/footer", $data);
     }
 
-    public function create($month, $year, $id)
+    public function create($month = null, $year = null, $id = null)
     {       
         
         $data["staff_id"]            = "";
