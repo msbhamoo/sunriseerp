@@ -758,7 +758,7 @@ if (!function_exists('check_login_token')) {
 
         $student_session = $CI->session->userdata('student');
 
-        if ($student_session['role'] == 'student') {
+        if (!empty($student_session) && is_array($student_session) && !empty($student_session['role']) && $student_session['role'] == 'student') {
             $CI->db->select('login_token');
             $CI->db->from('users');
             $CI->db->where('user_id', $student_session['student_id']);

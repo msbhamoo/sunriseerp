@@ -43,7 +43,7 @@ class Auth
     {
         if ($this->CI->session->has_userdata('student')) {
             $user = $this->CI->session->userdata('student');
-            $role = $user['role'];
+            $role = $user['role'] ?? null;
             if ($role == "student") {
                 redirect('user/user/dashboard');
             } else if ($role == "parent") {
@@ -100,7 +100,7 @@ class Auth
 
             $user = $this->CI->session->userdata('student');
 
-            if ($user['role'] == "guest") {
+            if (isset($user['role']) && $user['role'] == "guest") {
 
                 return true;
             }
