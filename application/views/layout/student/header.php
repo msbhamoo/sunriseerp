@@ -199,6 +199,7 @@ if ($this->customlib->getRTL() != "") {
         <div class="wrapper">
             <header class="main-header" id="alert">
 <?php
+$function = 'user/user/dashboard';
 if ($role == 'guest') {
     $function = 'user/studentcourse/profile';
 } elseif ($role == 'student') {

@@ -14,6 +14,10 @@ $role            = $this->customlib->getUserRole();
         <title><?php echo $this->customlib->getAppName(); ?></title>
         <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
         <meta name="theme-color" content="#424242" />
+        <link rel="manifest" href="<?php echo base_url('manifest.json'); ?>">
+        <link rel="apple-touch-icon" href="<?php echo base_url('backend/images/icons/icon-192x192.png'); ?>">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <link rel="stylesheet" href="<?php echo base_url('theme.css'); ?>">
 		<script>
         // === Load PHP theme settings safely ===
@@ -199,6 +203,7 @@ if ($this->customlib->getRTL() != "") {
         <div class="wrapper">
             <header class="main-header" id="alert">
 <?php
+$function = 'user/user/dashboard';
 if ($role == 'guest') {
     $function = 'user/studentcourse/profile';
 } elseif ($role == 'student') {
