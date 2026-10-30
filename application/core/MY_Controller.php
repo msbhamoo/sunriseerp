@@ -165,7 +165,17 @@ class MY_Controller extends CI_Controller
 
         $this->config->set_item('language', $language);
         $lang_array = array('form_validation_lang');
-        $map        = directory_map(APPPATH . "./language/" . $language . "/app_files");
+        $lang_dir = is_dir(APPPATH . "Language/" . $language . "/app_files")
+            ? APPPATH . "Language/" . $language . "/app_files"
+            : (is_dir(APPPATH . "language/" . $language . "/app_files")
+                ? APPPATH . "language/" . $language . "/app_files"
+                : (is_dir(FCPATH . "application/language/" . $language . "/app_files")
+                    ? FCPATH . "application/language/" . $language . "/app_files"
+                    : false));
+        $map = ($lang_dir && function_exists("directory_map")) ? directory_map($lang_dir) : [];
+        if (!is_array($map)) {
+            $map = [];
+        }
         foreach ($map as $lang_key => $lang_value) {
             $lang_array[] = 'app_files/' . str_replace(".php", "", $lang_value);
         }
@@ -473,7 +483,17 @@ class Front_Controller extends CI_Controller
         $this->config->set_item('language', $language);
         $this->load->helper(array('directory', 'custom'));
         $lang_array = array('form_validation_lang');
-        $map        = directory_map(APPPATH . "./language/" . $language . "/app_files");
+        $lang_dir = is_dir(APPPATH . "Language/" . $language . "/app_files")
+            ? APPPATH . "Language/" . $language . "/app_files"
+            : (is_dir(APPPATH . "language/" . $language . "/app_files")
+                ? APPPATH . "language/" . $language . "/app_files"
+                : (is_dir(FCPATH . "application/language/" . $language . "/app_files")
+                    ? FCPATH . "application/language/" . $language . "/app_files"
+                    : false));
+        $map = ($lang_dir && function_exists("directory_map")) ? directory_map($lang_dir) : [];
+        if (!is_array($map)) {
+            $map = [];
+        }
         foreach ($map as $lang_key => $lang_value) {
             $lang_array[] = 'app_files/' . str_replace(".php", "", $lang_value);
         }
