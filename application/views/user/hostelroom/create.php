@@ -9,7 +9,7 @@
 </style>
 <?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
-$student_hostel  = $studentList['hostel_room_id'];
+$student_hostel = isset($studentList) ? ($studentList['hostel_room_id'] ?? null) : null;
 ?>
 <div class="content-wrapper">
     <!-- Main content -->

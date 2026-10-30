@@ -142,7 +142,11 @@ class Notification extends Admin_Controller
     public function gettemplate()
     {
         $id             = $this->input->post('id');
-        $data['record'] = $this->notificationsetting_model->get($id);
+        $record = !empty($id) ? $this->notificationsetting_model->get($id) : null;
+        if (empty($record)) {
+            $record = is_array($record) ? ['id' => '', 'type' => '', 'name' => '', 'subject' => '', 'template' => ''] : (object)['id' => '', 'type' => '', 'name' => '', 'subject' => '', 'template' => ''];
+        }
+        $data['record'] = $record;
 
         $template = $this->load->view('admin/notification/gettemplate', $data, true);
         $response = array('status' => 1, 'template' => $template);
@@ -233,6 +237,10 @@ class Notification extends Admin_Controller
     public function notification()
     {
         $message_id       = $this->input->post('message_id');
+        if (empty($message_id)) {
+            echo json_encode([]);
+            return;
+        }
         $notificationlist = $this->notification_model->get($message_id);
         $data['notificationlist'] = $notificationlist;
        
@@ -779,7 +787,10 @@ class Notification extends Admin_Controller
 	public function view_template()
     {
         $id             = $this->input->post('id');
-        $record = $this->notificationsetting_model->get($id);		
+        $record = !empty($id) ? $this->notificationsetting_model->get($id) : null;
+        if (empty($record) || !is_object($record)) {
+            $record = (object)['subject' => '', 'template' => ''];
+        }
 		
 		$data['subject'] = $record->subject;
 		$data['body'] = $record->template;	

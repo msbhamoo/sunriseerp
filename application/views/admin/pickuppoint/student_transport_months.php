@@ -1,4 +1,22 @@
 <?php
+if (empty($student)) {
+    $student = [
+        "firstname" => "",
+        "middlename" => "",
+        "lastname" => "",
+        "class" => "",
+        "section" => "",
+        "father_name" => "",
+        "admission_no" => "",
+        "mobileno" => "",
+        "roll_no" => ""
+    ];
+}
+if (empty($route_pickup_point)) {
+    $route_pickup_point = ["pickup_point" => "", "fees" => 0];
+}
+?>
+<?php
 $currency = $this->customlib->getSchoolCurrencyFormat();
 ?>
 <div class="pb30">
@@ -27,16 +45,16 @@ $currency = $this->customlib->getSchoolCurrencyFormat();
                                                     </tr>
                                                      <tr>
                                                         <th><?php echo $this->lang->line("pickup"); ?></th>
-                                                        <td><?php echo $route_pickup_point->name; ?></td>
+                                                        <td><?php echo (is_array($route_pickup_point) ? ($route_pickup_point['name'] ?? "") : ($route_pickup_point->name ?? "")); ?></td>
                                                         <th><?php echo $this->lang->line("pickup_time"); ?></th>
-                                                        <td> <?php echo $route_pickup_point->pickup_time; ?>
+                                                        <td> <?php echo (is_array($route_pickup_point) ? ($route_pickup_point['pickup_time'] ?? "") : ($route_pickup_point->pickup_time ?? "")); ?>
                                                         </td>
                                                     </tr>
                                                        <tr>
                                                         <th><?php echo $this->lang->line("fees"); ?> (<?php echo $currency; ?>)</th>
-                                                        <td><?php echo amountFormat($route_pickup_point->fees); ?> </td>
+                                                        <td><?php echo amountFormat((is_array($route_pickup_point) ? ($route_pickup_point['fees'] ?? "") : ($route_pickup_point->fees ?? ""))); ?> </td>
                                                         <th><?php echo $this->lang->line("distance_km"); ?></th>
-                                                        <td> <?php echo $route_pickup_point->destination_distance; ?>
+                                                        <td> <?php echo (is_array($route_pickup_point) ? ($route_pickup_point['destination_distance'] ?? "") : ($route_pickup_point->destination_distance ?? "")); ?>
                                                         </td>
                                                     </tr>
 
@@ -112,7 +130,7 @@ foreach ($fees as $fee_key => $fee_value) {
  <input type="hidden" name="prev_ids[]" value="<?php echo $fee_value['student_transport_fee_id']; ?>">
             <input type="hidden" name="student_transport_fee_id_<?php echo $fee_value['id']; ?>" value="<?php echo $fee_value['student_transport_fee_id']; ?>">
             <input type="hidden" name="transport_feemaster_id" value="<?php echo $fee_value['id']; ?>">
-            <input type="hidden" name="monthly_fees_<?php echo $fee_value['id']; ?>" value="<?php echo $route_pickup_point->fees; ?>">
+            <input type="hidden" name="monthly_fees_<?php echo $fee_value['id']; ?>" value="<?php echo (is_array($route_pickup_point) ? ($route_pickup_point['fees'] ?? "") : ($route_pickup_point->fees ?? "")); ?>">
             <input type="hidden" name="due_date_<?php echo $fee_value['id']; ?>" value="<?php echo $fee_value['due_date']; ?>">
             <input type="hidden" name="fine_type_<?php echo $fee_value['id']; ?>" value="<?php echo $fee_value['fine_type']; ?>">
             <input type="hidden" name="fine_percentage_<?php echo $fee_value['id']; ?>" value="<?php echo $fee_value['fine_percentage']; ?>">

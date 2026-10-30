@@ -43,6 +43,7 @@ class Transfercertificate extends Admin_Controller
 
     public function sortQueue()
     {
+        if (empty($_POST['position']) || !is_array($_POST['position'])) { echo json_encode(['status' => 1]); return; }
         $position  = $this->input->post("position");
         $queueData = array();
         $data      = array();
@@ -127,7 +128,9 @@ class Transfercertificate extends Admin_Controller
         }
     }
 
-    public function print_transfer_certificate(){ 
+    public function print_transfer_certificate()
+    {
+        if (empty($_POST['data'])) { echo ''; return; } 
 
         $student_id                    =    $this->input->post('student_id'); 
         $student_session_id            =    $this->input->post('student_session_id'); 
@@ -166,7 +169,9 @@ class Transfercertificate extends Admin_Controller
         return $content;    
     }
 
-    public function edit_custom_field($id){  
+    public function edit_custom_field($id = 0)
+    {
+        if (empty($id)) { echo ''; return; }  
         $data['id']              = $id;
         $data['sch_setting']     = $this->sch_setting_detail;
         $student                 = $this->student_model->get($id);
@@ -180,7 +185,9 @@ class Transfercertificate extends Admin_Controller
     }
 
 	public function save_custom_fields()
-    { 
+    {
+        if (empty($_POST)) { echo json_encode(['status' => 1]); return; }
+        $custom_value_array = []; 
 		$id = $this->input->post('student_id');
 		$data['id']              = $id;
         $data['sch_setting']     = $this->sch_setting_detail;

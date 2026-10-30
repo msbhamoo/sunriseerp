@@ -1,4 +1,10 @@
 <?php
+// Dual-Stack Gateway: route migrated endpoints to CodeIgniter 4
+require_once __DIR__ . '/app/Gateway.php';
+if (\App\Gateway::shouldRouteToCI4()) {
+    \App\Gateway::dispatch();
+}
+
 /**
  * CodeIgniter
  *

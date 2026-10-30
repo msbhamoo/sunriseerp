@@ -54,6 +54,7 @@ class Hostelattendance_model extends MY_Model
                 $this->db->insert('hostel_attendance', $row);
             }
         }
+        return true;
     }
     public function get_monthly_attendance($hostel_id, $month, $year, $roll_call_type = 'morning')
     {

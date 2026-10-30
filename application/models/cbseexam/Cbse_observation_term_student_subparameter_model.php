@@ -6,7 +6,7 @@ if (!defined('BASEPATH')) {
 
 class Cbse_observation_term_student_subparameter_model extends MY_Model {
 
-    public function add($insert_array, $update_array) {
+    public function add($insert_array, $update_array = []) {
 
         $this->db->trans_begin();
 

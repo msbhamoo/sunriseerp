@@ -38,10 +38,14 @@ class Income_model extends My_Model
                 ->select('income.id,income.date,income.name,income.invoice_no,income.amount,income.documents,income.note,income_head.income_category,income.income_head_id')
                 ->searchable('income.name,income.invoice_no,income.date,income_head.income_category,income.amount')
                 ->orderable('income.name,income.invoice_no,income.date,income_head.income_category,income.amount')
-                ->join("income_head", "income.income_head_id = income_head.id")
-                ->where('income.date <=', $end_date)
-                ->where('income.date >=', $start_date)
-                ->from('income');
+                ->join("income_head", "income.income_head_id = income_head.id");
+            if (!empty($end_date)) {
+                $this->datatables->where('income.date <=', $end_date);
+            }
+            if (!empty($start_date)) {
+                $this->datatables->where('income.date >=', $start_date);
+            }
+            $this->datatables->from('income');
         }
 
         return $this->datatables->generate('json');
@@ -196,15 +200,7 @@ class Income_model extends My_Model
 
     public function getTypeByFeecategory($type, $class_id)
     {
-        $this->db->select('income.id,income.session_id,income.amount,income.invoice_no,income.documents,income.note,income_head.class,feetype.type')->from('income');
-        $this->db->join('income_head', 'income.class_id = income_head.id');
-        $this->db->join('feetype', 'income.feetype_id = feetype.id');
-        $this->db->where('income.class_id', $class_id);
-        $this->db->where('income.feetype_id', $type);
-        $this->db->where('income.session_id', $this->current_session);
-        $this->db->order_by('income.id');
-        $query = $this->db->get();
-        return $query->row_array();
+        return [];
     }
 
     public function getTotalExpenseBydate($date)

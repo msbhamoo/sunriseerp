@@ -1,3 +1,5 @@
+<?php $result = !empty($result) && is_array($result) ? $result : ['name'=>'','surname'=>'','employee_id'=>'','contact_no'=>'','email'=>'','epf_no'=>'','user_type'=>'','department'=>'','designation'=>'','image'=>'']; ?>
+<?php $result = $result ?? []; ?>
 <?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
@@ -31,7 +33,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                     <div class="col-md-2">
                                         <div class="row">
                                             <?php
-$image = $result['image'];
+$image = $result['image'] ?? "";
 if (!empty($image)) {
 
     $file = $result['image'];
@@ -206,7 +208,7 @@ if (!empty($result["basic_salary"])) {
                                                     <input class="form-control greentest"  name="net_salary" id="net_salary"  type="text" />
                                                     <span class="text-danger" id="err"><?php echo form_error('net_salary'); ?></span>
 
-                                                    <input class="form-control" name="staff_id" value="<?php echo $result["id"]; ?>"  type="hidden" />
+                                                    <input class="form-control" name="staff_id" value="<?php echo $result["id"] ?? ""; ?>"  type="hidden" />
                                                     <input class="form-control" name="month" value="<?php echo $month; ?>"  type="hidden" />
                                                     <input class="form-control" name="year" value="<?php echo $year; ?>"  type="hidden" />
                                                     <input class="form-control" name="status" value="generated"  type="hidden" />

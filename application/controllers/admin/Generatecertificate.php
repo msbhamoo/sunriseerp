@@ -91,7 +91,7 @@ class Generatecertificate extends Admin_Controller
     {
 
         $studentid           = $this->input->post('data');
-        $student_array       = json_decode($studentid);
+        $student_array       = $studentid ? (json_decode($studentid) ?: []) : [];
         $certificate_id      = $this->input->post('certificate_id');
         $class               = $this->input->post('class_id');
         $data                = array();

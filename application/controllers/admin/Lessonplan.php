@@ -33,6 +33,7 @@ class Lessonplan extends Admin_Controller
         $data['subject_id']       = "";
         $data['subject_name']     = "";
         $data['lessons']          = array();
+        $data['no_record']        = 0;
         $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('section_id', $this->lang->line('section'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('subject_group_id', $this->lang->line('subject_group'), 'trim|required|xss_clean');
@@ -45,7 +46,11 @@ class Lessonplan extends Admin_Controller
             $data['subject_group_id']       = $_POST['subject_group_id'];
             $data['subject_id']             = $_POST['subject_id'];
             $subject_details                = $this->lessonplan_model->get_subjectNameBySubjectGroupSubjectId($_POST['subject_id']);
-            $subject_group_class_sectionsId = $this->lessonplan_model->getsubject_group_class_sectionsId($_POST['class_id'], $_POST['section_id'], $_POST['subject_group_id']);
+            if (empty($_POST['class_id']) || empty($_POST['section_id']) || empty($_POST['subject_group_id'])) {
+            echo json_encode(['status' => 'fail', 'error' => ['class_id' => 'Required']]);
+            return;
+        }
+        $subject_group_class_sectionsId = $this->lessonplan_model->getsubject_group_class_sectionsId($_POST['class_id'], $_POST['section_id'], $_POST['subject_group_id']);
             $data['subject_name']           = $subject_details['name'] . " (" . $subject_details['code'] . ")";
             $lessonlist                     = $this->lessonplan_model->getlessonBysubjectid($_POST['subject_id'], $subject_group_class_sectionsId['id']);
 
@@ -86,6 +91,7 @@ class Lessonplan extends Admin_Controller
         $data['subject_id']       = "";
         $data['subject_name']     = "";
         $data['lessons']          = array();
+        $data['no_record']        = 0;
 
         $this->form_validation->set_rules('old_session_id', $this->lang->line('session'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('old_class_id', $this->lang->line('class'), 'trim|required|xss_clean');
@@ -184,7 +190,11 @@ class Lessonplan extends Admin_Controller
             $msg   = array('lesson' => $this->lang->line('lesson_name_field_is_required'));
             $array = array('status' => 'fail', 'error' => $msg, 'message' => '');
         } else {
-            $subject_group_class_sectionsId = $this->lessonplan_model->getsubject_group_class_sectionsId($_POST['class_id'], $_POST['section_id'], $_POST['subject_group_id']);
+            if (empty($_POST['class_id']) || empty($_POST['section_id']) || empty($_POST['subject_group_id'])) {
+            echo json_encode(['status' => 'fail', 'error' => ['class_id' => 'Required']]);
+            return;
+        }
+        $subject_group_class_sectionsId = $this->lessonplan_model->getsubject_group_class_sectionsId($_POST['class_id'], $_POST['section_id'], $_POST['subject_group_id']);
             foreach ($_POST['lessons'] as $key => $value) {
                 $data = array(
                     'subject_group_subject_id'        => $_POST['subject_id'],
@@ -341,6 +351,10 @@ class Lessonplan extends Admin_Controller
         $this->form_validation->set_rules('subject_group_id', $this->lang->line('subject_group'), 'trim|required|xss_clean');
         $this->form_validation->set_rules('subject_id', $this->lang->line('subject'), 'trim|required|xss_clean');
 
+        if (empty($_POST['class_id']) || empty($_POST['section_id']) || empty($_POST['subject_group_id'])) {
+            echo json_encode(['status' => 'fail', 'error' => ['class_id' => 'Required']]);
+            return;
+        }
         $subject_group_class_sectionsId = $this->lessonplan_model->getsubject_group_class_sectionsId($_POST['class_id'], $_POST['section_id'], $_POST['subject_group_id']);
         $all_lessons                    = $this->lessonplan_model->getlessonBysubjectid($_POST['subject_id'], $subject_group_class_sectionsId['id']);
         $userdata                       = $this->customlib->getUserData();
@@ -400,7 +414,11 @@ class Lessonplan extends Admin_Controller
                 }
             }
 
-            $subject_group_class_sectionsId = $this->lessonplan_model->getsubject_group_class_sectionsId($_POST['class_id'], $_POST['section_id'], $_POST['subject_group_id']);
+            if (empty($_POST['class_id']) || empty($_POST['section_id']) || empty($_POST['subject_group_id'])) {
+            echo json_encode(['status' => 'fail', 'error' => ['class_id' => 'Required']]);
+            return;
+        }
+        $subject_group_class_sectionsId = $this->lessonplan_model->getsubject_group_class_sectionsId($_POST['class_id'], $_POST['section_id'], $_POST['subject_group_id']);
             $all_lessons                    = $this->lessonplan_model->getlessonBysubjectid($_POST['subject_id'], $subject_group_class_sectionsId['id']);
 
             foreach ($all_lessons as $lessonkey => $lessonvalue) {
@@ -460,6 +478,10 @@ class Lessonplan extends Admin_Controller
 
     public function getlessonBysubjectid($sub_id)
     {
+        if (empty($_POST['class_id']) || empty($_POST['section_id']) || empty($_POST['subject_group_id'])) {
+            echo json_encode(['status' => 'fail', 'error' => ['class_id' => 'Required']]);
+            return;
+        }
         $subject_group_class_sectionsId = $this->lessonplan_model->getsubject_group_class_sectionsId($_POST['class_id'], $_POST['section_id'], $_POST['subject_group_id']);
         $data                           = $this->lessonplan_model->getlessonBysubjectid($sub_id, $subject_group_class_sectionsId['id']);
 
@@ -592,6 +614,10 @@ class Lessonplan extends Admin_Controller
         $this->form_validation->set_rules('lesson_id', $this->lang->line('lesson'), 'trim|required|xss_clean');
 
         $validate = 1;
+        if (empty($_POST['lesson_id'])) {
+            echo json_encode(['status' => 'fail', 'error' => ['lesson_id' => 'Required']]);
+            return;
+        }
         $alltopic = $this->lessonplan_model->gettopicBylessonid($_POST['lesson_id'], $this->sch_current_session);
         $userdata = $this->customlib->getUserData();
         $role_id  = $userdata["role_id"];
@@ -650,7 +676,11 @@ class Lessonplan extends Admin_Controller
                 }
             }
 
-            $alltopic = $this->lessonplan_model->gettopicBylessonid($_POST['lesson_id'], $this->sch_current_session);
+            if (empty($_POST['lesson_id'])) {
+            echo json_encode(['status' => 'fail', 'error' => ['lesson_id' => 'Required']]);
+            return;
+        }
+        $alltopic = $this->lessonplan_model->gettopicBylessonid($_POST['lesson_id'], $this->sch_current_session);
 
             foreach ($alltopic as $topickey => $topicvalue) {
                 if (isset($_POST['topic_' . $topicvalue['id']])) {

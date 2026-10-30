@@ -64,7 +64,7 @@ form.gauthenticate-form {
                                         if ($menu_value['ext_url']) {
                                             $url = $menu_value['ext_url_link'];
                                         } else {
-                                            $url = site_url($menu_value['page_url']);
+                                            $url = site_url($menu_value['page_url'] ?? '');
                                         }
                                         ?>
 
@@ -85,7 +85,7 @@ form.gauthenticate-form {
                                                 if ($submenu_value['ext_url']) {
                                                     $url = $submenu_value['ext_url_link'];
                                                 } else {
-                                                    $url = site_url($submenu_value['page_url']);
+                                                    $url = site_url($submenu_value['page_url'] ?? '');
                                                 }
                                                 ?>
                                                 <li><a href="<?php echo $url; ?>" <?php echo $child_new_tab; ?> ><?php echo $submenu_value['menu'] ?></a></li>

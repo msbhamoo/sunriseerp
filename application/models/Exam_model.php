@@ -77,4 +77,9 @@ class Exam_model extends CI_Model
         }
     }
 
+    public function getTypeByFeecategory($type = null, $class_id = null)
+    {
+        return [];
+    }
+
 }

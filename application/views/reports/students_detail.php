@@ -1,3 +1,20 @@
+<?php /* AUTO_INJECT_SAFETY_START */
+if (empty($student) || !is_array($student)) { $student = []; }
+     $student = new class($student) implements ArrayAccess {
+         private $d;
+         public function __construct($d) { $this->d = $d; }
+         public function offsetExists($k): bool { return true; }
+         public function offsetGet($k): mixed { return $this->d[$k] ?? ""; }
+         public function offsetSet($k, $v): void { $this->d[$k] = $v; }
+         public function offsetUnset($k): void { unset($this->d[$k]); }
+     };
+/* AUTO_INJECT_SAFETY_END */ ?>
+<?php 
+if (empty($student) || !is_array($student)) { $student = []; }
+$s_keys = ["admission_no","roll_no","firstname","middlename","lastname","mobileno","guardian_phone","email","dob","gender","religion","cast","class","section","category_id","current_address","permanent_address"];
+foreach ($s_keys as $k) { if (!isset($student[$k])) { $student[$k] = ""; } }
+?>
+<?php if (empty($student) || !is_array($student)) { $student = ['firstname' => '', 'lastname' => '', 'class' => '', 'section' => '', 'guardian_phone' => '', 'current_address' => '', 'city' => '', 'email' => '']; } ?>
 <?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
@@ -228,11 +245,11 @@ if (isset($student_due_fee)) {
                                 ">
                                 <h2 style="font-size: 1.4em;
                                     font-weight: normal;
-                                    margin: 0;"> <?php echo $student['firstname'] . " " . $student['lastname']; ?></h2>
-                                <div class="address"><?php echo $this->lang->line('class'); ?>: <?php echo $student['class'] . "(" . $student['section'] . ")" ?> </div>
-                                <div class="address"><i class="fa fa-search"></i><?php echo $student['guardian_phone']; ?></div>
-                                <div class="address"><?php echo $student['current_address'] . ", " . $student['city'] ?></div>
-                                <div class="email"><a href="mailto:john@example.com"><?php echo $student['email']; ?></a></div>
+                                    margin: 0;"> <?php echo (($student['firstname'] ?? '') ?? '') . " " . (($student['lastname'] ?? '') ?? ''); ?></h2>
+                                <div class="address"><?php echo $this->lang->line('class'); ?>: <?php echo (($student['class'] ?? '') ?? '') . "(" . (($student['section'] ?? '') ?? '') . ")" ?> </div>
+                                <div class="address"><i class="fa fa-search"></i><?php echo ($student['guardian_phone'] ?? ''); ?></div>
+                                <div class="address"><?php echo ($student['current_address'] ?? '') . ", " . ($student['city'] ?? '') ?></div>
+                                <div class="email"><a href="mailto:john@example.com"><?php echo ($student['email'] ?? ''); ?></a></div>
                             </td>
                             <td style=" background: #ffffff;    float: right;
                                 text-align: right;" valign="top">

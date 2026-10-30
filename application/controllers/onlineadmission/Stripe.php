@@ -45,7 +45,7 @@ class Stripe extends OnlineAdmission_Controller
       public function create_customer()
     {
         $jsonStr = file_get_contents('php://input');
-        $jsonObj = json_decode($jsonStr);
+        $jsonObj = json_decode($jsonStr) ?: new \stdClass();
         $reference = $this->session->userdata('reference');
         $online_data = $this->onlinestudent_model->getAdmissionData($reference);
         $total = $this->amount;

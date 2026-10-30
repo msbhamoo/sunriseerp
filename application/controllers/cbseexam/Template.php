@@ -65,7 +65,7 @@ class Template extends MY_Addon_CBSEController
         $this->session->set_userdata('sub_menu', 'cbse_exam/template');
         $data['title'] = 'Edit Template';
         
-        $result = $this->cbseexam_template_model->get($template_id);
+        $result = $template_id ? $this->cbseexam_template_model->get($template_id) : null; if (empty($result)) { echo json_encode(["status" => 0]); return; }
         $data['classlist'] = $this->class_model->get();
         $data['result'] = $result;
         $data['sections'] = $this->cbseexam_template_model->getclasssection($template_id);
@@ -553,6 +553,7 @@ class Template extends MY_Addon_CBSEController
 
     public function viewtemplate()
     {
+        if (empty($this->input->post('template_id'))) { echo json_encode(['status' => 0]); return; }
         $template_id = $this->input->post('template_id');
         $result = $this->cbseexam_template_model->get($template_id);
         $data = [];
@@ -605,8 +606,7 @@ class Template extends MY_Addon_CBSEController
         echo json_encode($array);
     }
 
-    public function get_examdata()
-    {
+    public function get_examdata() { if (empty($_POST["marksheet_type"]) || empty($_POST["template_id"])) { echo json_encode(["status" => 0]); return; }
         $marksheet_type = $_POST['marksheet_type'];
         $template_id = $_POST['template_id'];
 
@@ -650,8 +650,7 @@ class Template extends MY_Addon_CBSEController
         echo json_encode($array);
     }
 
-    public function linkexams()
-    {
+    public function linkexams() { if (empty($_POST["marksheet"])) { echo ""; return; }
         if (!$this->rbac->hasPrivilege('cbse_exam_link_exam', 'can_view')) {
             access_denied();
         }
@@ -941,6 +940,7 @@ class Template extends MY_Addon_CBSEController
 
     public function get()
     {
+        if (empty($_POST['class_section_id'])) { echo json_encode([]); return; }
         $class_section_id = $_POST['class_section_id'];
 
         $template_list = $this->cbseexam_template_model->getTemplateListbyclasssectionid($class_section_id);

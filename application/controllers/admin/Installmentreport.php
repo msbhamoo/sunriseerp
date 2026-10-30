@@ -26,6 +26,7 @@ class Installmentreport extends Admin_Controller
         $this->session->set_userdata('sub_menu', 'Reports/finance');
         $this->session->set_userdata('subsub_menu', 'Reports/finance/installmentreport');
         
+        $data["currency_symbol"] = $this->customlib->getSchoolCurrencyFormat();
         $data['title'] = 'Installment Due Report';
         $data['classlist'] = $this->class_model->get();
         $data['installment_plans'] = $this->Installmentplan_model->get();

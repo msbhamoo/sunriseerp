@@ -1,9 +1,10 @@
-<input type="hidden" name="id" value="<?php echo $singletimelinelist["id"] ?>" id="student_timeline_id">
-<input type="hidden" name="student_id" value="<?php echo $singletimelinelist["student_id"] ?>" id="student_timeline_id">
+<?php $singletimelinelist = $singletimelinelist ?? []; ?>
+<input type="hidden" name="id" value="<?php echo ($singletimelinelist['id'] ?? 0) ?>" id="student_timeline_id">
+<input type="hidden" name="student_id" value="<?php echo ($singletimelinelist['student_id'] ?? 0) ?>" id="student_timeline_id">
 <div class="col-md-12">
     <div class="form-group">
         <label><?php echo $this->lang->line('title'); ?></label><small class="req"> *</small>
-        <input id="timeline_title" name="timeline_title" placeholder="" type="text" class="form-control" value="<?php echo $singletimelinelist["title"] ?>" />
+        <input id="timeline_title" name="timeline_title" placeholder="" type="text" class="form-control" value="<?php echo ($singletimelinelist['title'] ?? '') ?>" />
         <span class="text-danger"><?php echo form_error('timeline_title'); ?></span>
     </div>
     <div class="form-group">
@@ -13,7 +14,7 @@
     </div>
     <div class="form-group">
         <label><?php echo $this->lang->line('description'); ?></label>
-        <textarea id="timeline_desc" name="timeline_desc" placeholder=""  class="form-control"><?php echo $singletimelinelist["description"] ?></textarea>
+        <textarea id="timeline_desc" name="timeline_desc" placeholder=""  class="form-control"><?php echo ($singletimelinelist['description'] ?? '') ?></textarea>
         <span class="text-danger"><?php echo form_error('description'); ?></span>
     </div>
     <div class="form-group">

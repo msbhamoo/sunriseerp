@@ -264,7 +264,7 @@ class Observation extends MY_Addon_CBSEController
 
     public function addobservationparam()
     {
-        $row          = $this->input->post('row');
+        $row          = $this->input->post('row') ?: [];
         $insert_array = [];
         foreach ($row as $row_key => $row_value) {
             $insert_array[] = [
@@ -472,8 +472,14 @@ class Observation extends MY_Addon_CBSEController
 
     public function get_assignclasssections()
     {
-        $class_sections       = $this->cbseexam_observation_model->get_assignclasssections($_POST['cbse_observation_parameter_id'], $_POST['class_id']);
-        $data['section_list'] = $this->section_model->getClassBySection($_POST['class_id']);
+        $param_id = $_POST['cbse_observation_parameter_id'] ?? null;
+        $class_id = $_POST['class_id'] ?? null;
+        if (empty($param_id) || empty($class_id)) {
+            echo json_encode(array('acs' => [], 'view' => ''));
+            return;
+        }
+        $class_sections       = $this->cbseexam_observation_model->get_assignclasssections($param_id, $class_id);
+        $data['section_list'] = $this->section_model->getClassBySection($class_id);
         $view = $this->load->view('cbseexam/observation/_get_assignclasssections', $data, true);
         echo json_encode(array('acs' => $class_sections, 'view' => $view));
     }
@@ -548,6 +554,10 @@ class Observation extends MY_Addon_CBSEController
 
     public function add_observation_marks()
     {
+        if (empty($_POST['sub_parameter']) || !is_array($_POST['sub_parameter'])) {
+            redirect('cbseexam/observation/assign');
+            return;
+        }
         foreach ($_POST['sub_parameter'] as $studentskey => $students) {
             foreach ($students as $parameterkey => $parameter) {
                 foreach ($parameter as $sub_parameterkey => $sub_parameter_marks) {

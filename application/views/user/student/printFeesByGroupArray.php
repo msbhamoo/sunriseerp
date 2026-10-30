@@ -1,3 +1,4 @@
+<?php $feearray = $feearray ?? []; ?>
 <?php $currency_symbol = $this->customlib->getSchoolCurrencyFormat();?>
 <style type="text/css">
     .page-break { display: block; page-break-before: always; }
@@ -242,13 +243,20 @@ if (in_array('0', $print_copy)) {
                                 <br/>
                                    <address>
                                         <strong><?php
-
-    echo $this->customlib->getFullName($feearray[0]->firstname, $feearray[0]->middlename, $feearray[0]->lastname, $sch_setting->middlename, $sch_setting->lastname);
-
-    ?></strong><?php echo " (" . $feearray[0]->admission_no . ")"; ?> <br>
-
-                                        <?php echo $this->lang->line('father_name'); ?>: <?php echo $feearray[0]->father_name; ?><br>
-                                        <?php echo $this->lang->line('class'); ?>: <?php echo $feearray[0]->class . " (" . $feearray[0]->section . ")"; ?>
+    $f0 = $feearray[0] ?? null;
+    $fn = is_object($f0) ? ($f0->firstname ?? "") : ($f0["firstname"] ?? "");
+    $mn = is_object($f0) ? ($f0->middlename ?? "") : ($f0["middlename"] ?? "");
+    $ln = is_object($f0) ? ($f0->lastname ?? "") : ($f0["lastname"] ?? "");
+    $adm = is_object($f0) ? ($f0->admission_no ?? "") : ($f0["admission_no"] ?? "");
+    $fat = is_object($f0) ? ($f0->father_name ?? "") : ($f0["father_name"] ?? "");
+    $cls = is_object($f0) ? ($f0->class ?? "") : ($f0["class"] ?? "");
+    $sec = is_object($f0) ? ($f0->section ?? "") : ($f0["section"] ?? "");
+    $smn = is_object($sch_setting) ? ($sch_setting->middlename ?? "") : ($sch_setting["middlename"] ?? "");
+    $sln = is_object($sch_setting) ? ($sch_setting->lastname ?? "") : ($sch_setting["lastname"] ?? "");
+    echo $this->customlib->getFullName($fn, $mn, $ln, $smn, $sln);
+    ?></strong><?php echo " (" . $adm . ")"; ?> <br>
+                                        <?php echo $this->lang->line('father_name'); ?>: <?php echo $fat; ?><br>
+                                        <?php echo $this->lang->line('class'); ?>: <?php echo $cls . " (" . $sec . ")"; ?>
                                     </address>
                             </div>
                             <div class="col-xs-6 text-right">
@@ -647,9 +655,9 @@ if (in_array('0', $print_copy)) {
                                 <div class="col-xs-6">
                                     <br/>
                                        <address>
-                                            <strong><?php  echo $this->customlib->getFullName($feearray[0]->firstname, $feearray[0]->middlename, $feearray[0]->lastname, $sch_setting->middlename, $sch_setting->lastname);  ?></strong><?php echo " (" . $feearray[0]->admission_no . ")"; ?><br>
-                                            <?php echo $this->lang->line('father_name'); ?>: <?php echo $feearray[0]->father_name; ?><br>
-                                            <?php echo $this->lang->line('class'); ?>: <?php echo $feearray[0]->class . " (" . $feearray[0]->section . ")"; ?>
+                                            <strong><?php  echo $this->customlib->getFullName(($feearray[0] ?? new stdClass())->firstname, ($feearray[0] ?? new stdClass())->middlename, ($feearray[0] ?? new stdClass())->lastname, $sch_setting->middlename, $sch_setting->lastname);  ?></strong><?php echo " (" . ($feearray[0] ?? new stdClass())->admission_no . ")"; ?><br>
+                                            <?php echo $this->lang->line('father_name'); ?>: <?php echo ($feearray[0] ?? new stdClass())->father_name; ?><br>
+                                            <?php echo $this->lang->line('class'); ?>: <?php echo ($feearray[0] ?? new stdClass())->class . " (" . ($feearray[0] ?? new stdClass())->section . ")"; ?>
                                         </address>
                                 </div>
                                 <div class="col-xs-6 text-right">
@@ -1066,9 +1074,9 @@ if (in_array('1', $print_copy)) {
                                 <div class="col-xs-6">
                                     <br/>
                                        <address>
-                                            <strong><?php  echo $this->customlib->getFullName($feearray[0]->firstname, $feearray[0]->middlename, $feearray[0]->lastname, $sch_setting->middlename, $sch_setting->lastname);  ?></strong><?php echo " (" . $feearray[0]->admission_no . ")"; ?><br>
-                                            <?php echo $this->lang->line('father_name'); ?>: <?php echo $feearray[0]->father_name; ?><br>
-                                            <?php echo $this->lang->line('class'); ?>: <?php echo $feearray[0]->class . " (" . $feearray[0]->section . ")"; ?>
+                                            <strong><?php  echo $this->customlib->getFullName(($feearray[0] ?? new stdClass())->firstname, ($feearray[0] ?? new stdClass())->middlename, ($feearray[0] ?? new stdClass())->lastname, $sch_setting->middlename, $sch_setting->lastname);  ?></strong><?php echo " (" . ($feearray[0] ?? new stdClass())->admission_no . ")"; ?><br>
+                                            <?php echo $this->lang->line('father_name'); ?>: <?php echo ($feearray[0] ?? new stdClass())->father_name; ?><br>
+                                            <?php echo $this->lang->line('class'); ?>: <?php echo ($feearray[0] ?? new stdClass())->class . " (" . ($feearray[0] ?? new stdClass())->section . ")"; ?>
                                         </address>
                                 </div>
                                 <div class="col-xs-6 text-right">

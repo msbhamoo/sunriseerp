@@ -12,6 +12,9 @@ class Api_test extends Admin_Controller
         parent::__construct();
       
         $this->load->library('ResourceQuota');
+        if (!isset($this->resourcequota)) {
+            $this->resourcequota = new \ResourceQuota();
+        }
     }
 
 

@@ -247,6 +247,9 @@ class Pickuppoint_model extends MY_Model
 
     public function reorder($id)
     {
+        if (empty($id) || !is_array($id)) {
+            return ['transport_route_id' => ''];
+        }
         $sn = 1;
         foreach ($id as $key => $value) {
             $order['id']           = $value;

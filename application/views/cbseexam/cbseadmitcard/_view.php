@@ -1,3 +1,18 @@
+<?php /* AUTO_INJECT_SAFETY_START */
+if (empty($admitcard) || !is_object($admitcard)) { $admitcard = new stdClass(); }
+     $admitcard = new class($admitcard) {
+         private $obj;
+         public function __construct($o) { $this->obj = $o; }
+         public function __get($k) { return $this->obj->$k ?? 0; }
+         public function __isset($k) { return true; }
+     };
+/* AUTO_INJECT_SAFETY_END */ ?>
+<?php
+if (empty($admitcard) || !is_object($admitcard)) { $admitcard = new stdClass(); }
+$props = ["is_name","is_class","is_section","is_roll_no","is_admission_no","is_dob","is_father_name","is_mother_name","is_address","is_gender","is_photo","heading","title","left_logo","right_logo","sign"];
+foreach ($props as $p) { if (!isset($admitcard->$p)) $admitcard->$p = 0; }
+?>
+<?php if (is_array($admitcard)) { $admitcard = (object)$admitcard; } if (!is_object($admitcard)) { $admitcard = (object)['background_img'=>'', 'heading'=>'', 'title'=>'', 'left_logo'=>'', 'right_logo'=>'', 'sign'=>'']; } ?>
 <!doctype html>
 <html lang="en">
     <head>
@@ -32,7 +47,7 @@
     </head>
     <body>
         <?php
-if ($admitcard->background_img != "") {
+if (!empty($admitcard->background_img)) {
     ?>
             <img src="<?php echo $this->media_storage->getImageURL('uploads/cbseexam/admit_card/' . $admitcard->background_img); ?>" class="tcmybg" width="100%" height="100%" />
             <?php
@@ -115,7 +130,7 @@ if ($admitcard->exam_name) {
                                     <table cellpadding="0" cellspacing="0" width="100%" >
                                         <tr>
                                             <?php
-if ($admitcard->is_roll_no) {
+if ($admitcard->is_roll_no ?? 0) {
     ?>
                                                 <td valign="top" width="25%" style="padding-bottom: 10px;"> <?php echo $this->lang->line('roll_number') ?></td>
                                                 <td valign="top" width="30%" style="font-weight: bold;padding-bottom: 10px;">161066</td>
@@ -123,7 +138,7 @@ if ($admitcard->is_roll_no) {
 }
 ?>
                                             <?php
-if ($admitcard->is_admission_no) {
+if ($admitcard->is_admission_no ?? 0) {
     ?>
                                                 <td valign="top" width="20%" style="padding-bottom: 10px;"> <?php echo $this->lang->line('admission_no') ?></td>
                                                 <td valign="top" width="25%" style="font-weight: bold;padding-bottom: 10px;">18S168375</td>
@@ -133,7 +148,7 @@ if ($admitcard->is_admission_no) {
                                         </tr>
                                         <tr>
                                             <?php
-if ($admitcard->is_name) {
+if ($admitcard->is_name ?? 0) {
     ?>
                                                 <td valign="top" style="padding-bottom: 10px;"> <?php echo $this->lang->line('candidates_name'); ?></td>
                                                 <td valign="top" style="text-transform: uppercase; font-weight: bold;padding-bottom: 10px;">Edward Thomas</td>

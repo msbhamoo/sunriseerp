@@ -233,6 +233,10 @@ class Certificate extends Admin_Controller
     public function view()
     {
         $id     = $this->input->post('certificateid');
+        if (empty($id)) {
+            echo '';
+            return;
+        }
         $output = '';
         $data   = array();
 
@@ -244,6 +248,10 @@ class Certificate extends Admin_Controller
     public function view1()
     {
         $id          = $this->input->post('certificateid');
+        if (empty($id)) {
+            echo '';
+            return;
+        }
         $output      = '';
         $certificate = $this->certificate_model->certifiatebyid($id);
         ?>

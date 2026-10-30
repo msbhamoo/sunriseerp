@@ -1,3 +1,4 @@
+<?php $section_list = $section_list ?? []; ?>
 <?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 $month_list= $this->customlib->getMonthDropdown($start_month);

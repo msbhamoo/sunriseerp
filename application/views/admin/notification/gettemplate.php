@@ -29,11 +29,11 @@
     <div class="col-md-12">
         <div class="form-group">
             <label for="form_message"><?php echo $this->lang->line('template_id'); ?> (<?php echo $this->lang->line('this_field_is_reqiured_only_for_indian_sms_gateway'); ?>)</label>
-            <input type="text" id="template_id" name="template_id" class="form-control" value="<?php echo $record->template_id; ?>">
+            <input type="text" id="template_id" name="template_id" class="form-control" value="<?php echo $record->template_id ?? ''; ?>">
             <div class="text text-danger template_id_error"></div>
         </div>
     </div>
-	<?php if ($this->module_lib->hasModule('whatsapp_messaging') && $this->module_lib->hasActive('whatsapp_messaging') && $record->display_whatsapp != 0) { ?>
+	<?php if ($this->module_lib->hasModule('whatsapp_messaging') && $this->module_lib->hasActive('whatsapp_messaging') && ($record->display_whatsapp ?? 0) != 0) { ?>
     <div class="col-md-12">
         <div class="form-group">
             <label for="form_message"><?php echo $this->lang->line('whatsapp_template_id'); ?> (<?php echo $this->lang->line('this_field_is_reqiured_only_for_whatsapp_gateway'); ?>)</label>
@@ -50,7 +50,7 @@
             <div class="hide_in_read">
                 <p class="lead_template_variable"><?php echo $this->lang->line('you_can_use_variables'); ?></p>
                 <b>
-                    <?php echo $record->variables; ?>
+                    <?php echo ($record->variables ?? ''); ?>
                 </b>
             </div>
         </div>

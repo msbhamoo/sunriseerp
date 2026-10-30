@@ -132,7 +132,7 @@ foreach ($monthlist as $key => $value) {
                 $datemonth = date("m", strtotime($value));
                 $att_dates = date("Y") . "-" . $datemonth . "-" . sprintf("%02d", $i);
                 ?>
-                                                    <td><?php echo $resultlist[$att_dates]["key"]; ?></td>
+                                                    <td><?php echo isset($resultlist[$att_dates]["key"]) ? $resultlist[$att_dates]["key"] : ""; ?></td>
 
                                                 <?php }?>
                                             </tr>

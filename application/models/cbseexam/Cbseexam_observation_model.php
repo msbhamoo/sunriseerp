@@ -156,6 +156,34 @@ class Cbseexam_observation_model extends MY_Model {
         } else {
             //return $return_value;
         }
-    } 
+    }
 
+    public function get_editdetails($id)
+    {
+        $result = $this->db->select('*')->where('id', $id)->get('cbse_exam_observations')->row_array();
+        if (!empty($result)) {
+            $result['list'] = $this->getObservationSubparameter($id);
+        }
+        return $result;
+    }
+
+    public function get_observation_subparameterbyId($id)
+    {
+        return $this->db->select('cbse_observation_subparameter.*, cbse_observation_parameters.name')
+            ->from('cbse_observation_subparameter')
+            ->join('cbse_observation_parameters', 'cbse_observation_parameters.id = cbse_observation_subparameter.cbse_observation_parameter_id', 'left')
+            ->where('cbse_observation_subparameter.id', $id)
+            ->get()
+            ->row_array();
+    }
+
+    public function get_observation_student($observation_id)
+    {
+        return [];
+    }
+
+    public function observationsubparameter($observation_id)
+    {
+        return $this->getObservationSubparameter($observation_id);
+    }
 }

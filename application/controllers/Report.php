@@ -254,8 +254,8 @@ class Report extends Admin_Controller
         $date_to             = $this->input->get('dateto');
         $setting_result      = $this->setting_model->get();
         $data['exp_title']   = 'Transaction From ' . $date_from . " To " . $date_to;
-        $date_from           = date('Y-m-d', $this->customlib->datetostrtotime($date_from));
-        $date_to             = date('Y-m-d', $this->customlib->datetostrtotime($date_to));
+        $date_from           = date("Y-m-d", (int)($this->customlib->datetostrtotime($date_from) ?: time()));
+        $date_to             = date("Y-m-d", (int)($this->customlib->datetostrtotime($date_to) ?: time()));
         $expenseList         = $this->expense_model->search("", $date_from, $date_to);
         $feeList             = $this->studentfee_model->getFeeBetweenDate($date_from, $date_to);
         $data['expenseList'] = $expenseList;

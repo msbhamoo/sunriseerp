@@ -6,6 +6,8 @@ application/logs/*
 
 # Ignore user uploads (so you don't overwrite live uploads)
 uploads/
+backend/captcha_images/*
+!backend/captcha_images/index.html
 
 # Ignore database config if you have different local/live databases
 
@@ -13,3 +15,42 @@ uploads/
 # Ignore addons
 /addons/
 backup/database_backup/
+
+# CI4 Specific Ignores
+/vendor/
+.env
+writable/cache/*
+!writable/cache/index.html
+!writable/cache/.gitkeep
+writable/debugbar/*
+!writable/debugbar/index.html
+!writable/debugbar/.gitkeep
+writable/logs/*
+!writable/logs/index.html
+!writable/logs/.gitkeep
+writable/session/*
+!writable/session/index.html
+!writable/session/.gitkeep
+writable/uploads/*
+!writable/uploads/index.html
+!writable/uploads/.gitkeep
+app/Config/SmokeTest.php
+writable/smoke_reports/*
+
+
+# Temporary test & debug scripts
+inspect_*.php
+test_*.php
+dump_*.php
+find_*.php
+patch_*.php
+parse_fails.php
+remaining_list.php
+simulate_crawler.php
+verify_all_syntax.php
+failures_summary.txt
+writable/cookies*.txt
+load()
+create_lang_pharses.php
+ajax_log.txt
+all_errors.txt

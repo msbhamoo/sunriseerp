@@ -16,6 +16,9 @@ class Examschedule_model extends CI_Model
 
     public function getDetailbyClsandSection($class_id, $section_id, $exam_id)
     {
+        if (!$this->db->table_exists('teacher_subjects')) {
+            return [];
+        }
         $query = $this->db->query("SELECT exam_schedules.*,subjects.name,subjects.id as subject_id,subjects.type FROM exam_schedules,teacher_subjects,exams,class_sections,subjects WHERE exam_schedules.teacher_subject_id = teacher_subjects.id and exam_schedules.exam_id =exams.id and class_sections.id =teacher_subjects.class_section_id and teacher_subjects.subject_id=subjects.id and class_sections.class_id =" . $this->db->escape($class_id) . " and class_sections.section_id=" . $this->db->escape($section_id) . " and exam_id =" . $this->db->escape($exam_id) . " and exam_schedules.session_id=" . $this->db->escape($this->current_session));
         return $query->result_array();
     }
@@ -29,6 +32,7 @@ class Examschedule_model extends CI_Model
 
     public function getExamByClassandSection($class_id, $section_id)
     {
+        if (!$this->db->table_exists('teacher_subjects')) { return []; }
         $sql = "SELECT * FROM exams INNER JOIN (SELECT exam_schedules.*,teacher_subjects.class_id,teacher_subjects.class_name ,teacher_subjects.section_id,teacher_subjects.section_name FROM `exam_schedules` INNER JOIN (SELECT teacher_subjects.*,classes.id as `class_id`,classes.class as `class_name` ,sections.id as `section_id`,sections.section as `section_name` FROM `class_sections`
         INNER JOIN teacher_subjects on teacher_subjects.class_section_id=class_sections.id
         INNER JOIN classes on classes.id=class_sections.class_id

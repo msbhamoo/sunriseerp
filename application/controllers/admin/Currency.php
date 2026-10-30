@@ -37,6 +37,10 @@ class Currency extends Admin_Controller
     {
         $base_price   = $this->input->post('base_price');
         $currency_id  = $this->input->post('currency_id');
+        if (empty($currency_id) || $base_price === null) {
+            echo json_encode(['status' => 0, 'message' => 'Missing parameter']);
+            return;
+        }
         $data = array(
             'id'         => $currency_id,
             'base_price' => $base_price,
@@ -86,13 +90,19 @@ class Currency extends Admin_Controller
     public function change_currency()
     {
         $currency_id=$this->input->post('currency_id');
+        if (empty($currency_id)) {
+            echo json_encode(['status' => 0, 'message' => 'Missing currency_id']);
+            return;
+        }
         $currency=$this->currency_model->get($currency_id);
         $staff_id= $this->customlib->getStaffID();
         $update_data=array('id'=>$staff_id,'currency_id'=>$currency_id);
         $this->staff_model->update($update_data);
-        $this->session->userdata['admin']['currency_base_price'] = $currency->base_price;
-        $this->session->userdata['admin']['currency_symbol'] = $currency->symbol;
-        $this->session->userdata['admin']['currency'] = $currency_id;
+        if (!empty($currency)) {
+            $this->session->userdata['admin']['currency_base_price'] = $currency->base_price ?? '';
+            $this->session->userdata['admin']['currency_symbol'] = $currency->symbol ?? '';
+            $this->session->userdata['admin']['currency'] = $currency_id;
+        }
         echo json_encode(['status' => 1, 'message' => $this->lang->line('currency_changed_successfully')]);
       
     }

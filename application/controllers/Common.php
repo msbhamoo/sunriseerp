@@ -136,9 +136,9 @@ class Common extends Public_Controller
         if ($session_array) {
             $this->session->unset_userdata('session_array');
         }
-        $session = $this->session_model->get($session);
-
-        $session_array = array('session_id' => $session['id'], 'session' => $session['session']);
+        $session_data = $session ? $this->session_model->get($session) : null;
+        if (empty($session_data)) { $session_data = ['id' => $this->sch_current_session ?? 0, 'session' => '']; }
+        $session_array = array('session_id' => $session_data['id'] ?? 0, 'session' => $session_data['session'] ?? '');
         $this->session->set_userdata('session_array', $session_array);
 
         if ($role == "student"  || $role == "parent") {

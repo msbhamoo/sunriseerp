@@ -85,14 +85,15 @@ class Notification extends Student_Controller
         $notificationlist         = $this->notification_model->notification($message_id);                 
         
         if ($superadmin_restriction == 'disabled') {
-            $staff = $this->staff_model->get($notificationlist['staff_id']); 
+            $staff_id = $notificationlist['staff_id'] ?? null;
+            $staff = $staff_id ? $this->staff_model->get($staff_id) : null; 
             if ($staff['role_id'] != 7) {
-                 $notificationlist['created_by'] = ($notificationlist['surname'] != "") ? $notificationlist["name"] . " " . $notificationlist["surname"] . "  (" . $notificationlist["employee_id"] . ")" : $notificationlist["name"] . " (" . $notificationlist['employee_id'] . ")";
+                 $name = $notificationlist["name"] ?? ""; $surname = $notificationlist["surname"] ?? ""; $emp = $notificationlist["employee_id"] ?? ""; $notificationlist['created_by'] = ($surname != "") ? $name . " " . $surname . "  (" . $emp . ")" : $name . " (" . $emp . ")";
             } else {
                  $notificationlist['created_by'] = '';
             }  
         } else { 
-            $notificationlist['created_by'] = ($notificationlist['surname'] != "") ? $notificationlist["name"] . " " . $notificationlist["surname"] . "  (" . $notificationlist["employee_id"] . ")" : $notificationlist["name"] . " (" . $notificationlist['employee_id'] . ")";            
+            $name = $notificationlist["name"] ?? ""; $surname = $notificationlist["surname"] ?? ""; $emp = $notificationlist["employee_id"] ?? ""; $notificationlist['created_by'] = ($surname != "") ? $name . " " . $surname . "  (" . $emp . ")" : $name . " (" . $emp . ")";            
         } 
         
         $data['notificationlist'] = $notificationlist;

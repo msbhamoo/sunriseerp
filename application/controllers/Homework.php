@@ -488,7 +488,7 @@ class Homework extends Admin_Controller
             access_denied();
         }
         $id             = $this->input->post('id');
-        $result         = $this->homework_model->get($id);
+        $result = $id ? $this->homework_model->get($id) : null; if (empty($result)) { $result = ["class_id" => 0, "section_id" => 0, "subject_id" => 0]; }
         $data["result"] = $result;
 
         echo json_encode($result);
@@ -506,9 +506,9 @@ class Homework extends Admin_Controller
         $data['classlist']  = $class;
         $result             = $this->homework_model->get($id);
         $data["result"]     = $result;
-        $data['class_id']   = $result["class_id"];
-        $data['section_id'] = $result["section_id"];
-        $data['subject_id'] = $result["subject_id"];
+        $data['class_id'] = $result["class_id"] ?? 0;
+        $data['section_id'] = $result["section_id"] ?? 0;
+        $data['subject_id'] = $result["subject_id"] ?? 0;
         $data["id"]         = $id;
         $userdata           = $this->customlib->getUserData();
         $this->form_validation->set_rules('class_id', $this->lang->line('class'), 'trim|required|xss_clean');
@@ -1009,6 +1009,7 @@ class Homework extends Admin_Controller
 
     public function getdailyassignmentdetails()
     {
+        if (empty($this->input->post('id'))) { echo json_encode(['status' => 0]); return; }
         $id             = $this->input->post('id');
         $assignmentlist = $this->homework_model->getsingledailyassignment($id);
         if ($assignmentlist['evaluation_date'] != "") {
@@ -1096,8 +1097,7 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
         $this->load->view("layout/footer", $data); 
     }
 
-    public function getStudentByClassSection()
-    {
+    public function getStudentByClassSection() { $data = array(); $student_list = array();
         $data               = array();
         $class_id           = $this->input->post('class_id');
         $section_id         = $this->input->post('section_id');

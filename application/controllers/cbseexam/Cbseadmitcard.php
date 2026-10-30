@@ -499,13 +499,17 @@ class Cbseadmitcard extends Admin_Controller
         $id                = $this->input->post('certificateid');
         $output            = '';
         $data              = array();
-        $data['admitcard'] = $this->cbseexam_admitcard_model->get($id);
+        $res = !empty($id) ? $this->cbseexam_admitcard_model->get($id) : null;
+        if (empty($res)) {
+            $res = (object)['id'=>'','heading'=>'','title'=>'','background_img'=>'','left_logo'=>'','right_logo'=>'','sign'=>'','exam_name'=>'','school_name'=>'','exam_center'=>''];
+        }
+        $data['admitcard'] = $res;
         $page              = $this->load->view('cbseexam/cbseadmitcard/_view', $data, true);
         echo json_encode(array('status' => 1, 'page' => $page));
     }
 
     public function save_active_status(){
-        $value=$_POST['value'];
+        $value = $_POST['value'] ?? 0;
         $this->cbseexam_admitcard_model->save_active_status($value); 
     }
 

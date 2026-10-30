@@ -239,16 +239,19 @@ class Onlineexam extends Student_Controller
         $recordid        = $this->input->post('recordid');
         $exam            = $this->onlineexam_model->getexamdetails($recordid);
         $data['exam']    = $exam;
-        $data['questions'] = $this->onlineexam_model->getExamQuestions($recordid, $exam->is_random_question);
+        $is_rand = is_object($exam) ? ($exam->is_random_question ?? 0) : ($exam['is_random_question'] ?? 0);
+        $data['questions'] = $this->onlineexam_model->getExamQuestions($recordid, $is_rand);
         $student_current_class         = $this->customlib->getStudentCurrentClsSection();
         $student_session_id            = $student_current_class->student_session_id;
-        $onlineexam_student            = $this->onlineexam_model->examstudentsID($student_session_id, $exam->id);
+        $exam_id = is_object($exam) ? ($exam->id ?? 0) : ($exam['id'] ?? 0);
+        $onlineexam_student            = $this->onlineexam_model->examstudentsID($student_session_id, $exam_id);
         $data['onlineexam_student_id'] = $onlineexam_student;
-        $getStudentAttemts             = $this->onlineexam_model->getStudentAttemts($onlineexam_student->id);
+        $st_exam_id = is_object($onlineexam_student) ? ($onlineexam_student->id ?? 0) : ($onlineexam_student['id'] ?? 0);
+        $getStudentAttemts             = !empty($st_exam_id) ? $this->onlineexam_model->getStudentAttemts($st_exam_id) : [];
         $data['question_status']       = 0;
-        $data['exam_duration']         = $exam->duration;
+        $data['exam_duration']         = is_object($exam) ? ((is_object($exam) ? ($exam->duration ?? "") : ($exam["duration"] ?? "")) ?? '') : ($exam['duration'] ?? '');
 
-        if (strtotime(date('Y-m-d H:i:s')) >= strtotime(date($exam->exam_to))) {
+        if (strtotime(date('Y-m-d H:i:s')) >= strtotime(date((is_object($exam) ? ($exam->exam_to ?? '') : ($exam['exam_to'] ?? ''))))) {
             $question_status         = 1;
             $data['question_status'] = 1;
         } else if ($exam->attempt > $getStudentAttemts) {
@@ -262,8 +265,10 @@ class Onlineexam extends Student_Controller
         $data['questionOpt'] = $questionOpt;
         $pag_content         = $this->load->view('user/onlineexam/_searchQuestionByExamID', $data, true);
 
-        $total_remaining_seconds = round((strtotime($exam->exam_to) - strtotime(date('Y-m-d H:i:s'))) / 3600 * 60 * 60, 1);
-        $exam_duration           = ($total_remaining_seconds < getSecondsFromHMS($exam->duration)) ? getHMSFromSeconds($total_remaining_seconds) : $exam->duration;
+        $total_remaining_seconds = round((strtotime((is_object($exam) ? ($exam->exam_to ?? '') : ($exam['exam_to'] ?? ''))) - strtotime(date('Y-m-d H:i:s'))) / 3600 * 60 * 60, 1);
+        $dur_raw = is_object($exam) ? ($exam->duration ?? "") : ($exam["duration"] ?? "");
+        $dur_sec = (!empty($dur_raw) && is_string($dur_raw) && strpos($dur_raw, ":") !== false) ? getSecondsFromHMS($dur_raw) : (int)$dur_raw;
+        $exam_duration = ($dur_sec > 0 && $total_remaining_seconds < $dur_sec) ? getHMSFromSeconds($total_remaining_seconds) : $dur_raw;
 
         echo json_encode(array('status' => 0, 'exam' => $exam, 'duration' => $exam_duration, 'page' => $pag_content, 'question_status' => $question_status, 'total_question' => count($data['questions'])));
     }

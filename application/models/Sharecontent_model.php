@@ -193,6 +193,7 @@ class Sharecontent_model extends MY_Model
     
     public function getSharedUserBySharedID($share_content_id)
     {
+        if (empty($share_content_id)) { return []; }
         $sql= "SELECT share_content_for.*,classes.class,sections.section,students.firstname as student_first_name,students.lastname as student_last_name,students.middlename as `student_middle_name`, students.admission_no as `student_admission_on`,users.username,staff.name,roles.name as role_name,staff.name as staff_first_name,staff.surname as staff_surname ,staff_roles.id as staff_role_id ,staff_role_alias.name as staff_role_name, staff.employee_id as staff_employee_id,users.childs,parent_student.guardian_name  FROM `share_content_for` LEFT JOIN roles on roles.id= share_content_for.group_id LEFT join students on students.id =share_content_for.student_id LEFT join users on users.id =share_content_for.user_parent_id LEFT JOIN students as parent_student on parent_student.id = users.childs LEFT join staff on staff.id = share_content_for.staff_id LEFT JOIN staff_roles on staff_roles.staff_id =staff.id LEFT JOIN roles as `staff_role_alias` on staff_role_alias.id = staff_roles.role_id LEFT JOIN class_sections on class_sections.id =share_content_for.class_section_id LEFT JOIN classes on classes.id=class_sections.class_id LEFT JOIN sections on sections.id=class_sections.section_id WHERE share_content_id=".$share_content_id;
           $query = $this->db->query($sql);
           return $query->result();

@@ -1,3 +1,21 @@
+<?php
+if (empty($student)) {
+    $student = [
+        "is_active" => "yes",
+        "image" => "",
+        "gender" => "Male",
+        "firstname" => "",
+        "middlename" => "",
+        "lastname" => "",
+        "admission_no" => "",
+        "roll_no" => "",
+        "class" => "",
+        "section" => "",
+        "guardian_name" => "",
+        "mobileno" => ""
+    ];
+}
+?>
 <div class="content-wrapper">
  <!-- Main content -->
  <section class="content">
@@ -12,7 +30,7 @@
             if (!empty($student["image"])) {
                 $image_url = $this->media_storage->getImageURL($student["image"]);
             } else {
-                if ($student['gender'] == 'Female') {
+                if (($student['gender'] ?? '') == 'Female') {
                 $image_url = $this->media_storage->getImageURL("uploads/student_images/default_female.jpg");
             } else {
                 $image_url = $this->media_storage->getImageURL("uploads/student_images/default_male.jpg");

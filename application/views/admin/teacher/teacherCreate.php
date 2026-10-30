@@ -1,3 +1,4 @@
+<?php $edit_teacher = $edit_teacher ?? []; ?>
 <div class="content-wrapper">
     <section class="content-header">
         <h1>
@@ -98,10 +99,10 @@
                                         foreach ($teacherlist as $teacher) {
                                             ?>
                                             <tr>
-                                                <td class="mailbox-name"> <?php echo $teacher['name'] ?></td>
-                                                <td class="mailbox-name"> <?php echo $teacher['email'] ?></td>
-                                                <td class="mailbox-name"> <?php echo $teacher['dob'] ?></td>
-                                                <td class="mailbox-name"> <?php echo $teacher['phone'] ?></td>
+                                                <td class="mailbox-name"> <?php echo $teacher['name'] ?? "" ?></td>
+                                                <td class="mailbox-name"> <?php echo $teacher['email'] ?? "" ?></td>
+                                                <td class="mailbox-name"> <?php echo $teacher['dob'] ?? "" ?></td>
+                                                <td class="mailbox-name"> <?php echo $teacher['phone'] ?? ($teacher['contact_no'] ?? "") ?></td>
                                                 <td class="mailbox-date pull-right">
                                                     <a href="<?php echo base_url(); ?>admin/teacher/view/<?php echo $teacher['id'] ?>" class="btn btn-default btn-xs"  data-toggle="tooltip" title="<?php echo $this->lang->line('show'); ?>" >
                                                         <i class="fa fa-reorder"></i>

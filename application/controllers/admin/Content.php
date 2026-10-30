@@ -778,6 +778,13 @@ class Content extends Admin_Controller
 
         $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_upload');
         if ($this->form_validation->run() == false) {
+            $staff_id                       = $this->customlib->getStaffID();
+            $data['count']                  = $this->uploadcontent_model->total_record($staff_id);
+            $data['sch_setting']            = $this->setting_model->getSetting();
+            $data['roles']                  = $this->role_model->get();
+            $data['content_types']          = $this->contenttype_model->get();
+            $data['superadmin_restriction'] = $this->customlib->superadmin_visible();
+            $data['branch_url']             = $this->customlib->getBaseUrl();
 
             $this->load->view('layout/header');
             $this->load->view('admin/content/createcontent', $data);
@@ -828,8 +835,12 @@ class Content extends Admin_Controller
 
     public function getsharedcontents()
     {
-        $response                    = array();
         $share_content_id            = $this->input->post('share_content_id');
+        if (empty($share_content_id)) {
+            echo json_encode(array('status' => '1', 'error' => '', 'page' => ''));
+            return;
+        }
+        $response                    = array();
         $response['shared_contents'] = $this->sharecontent_model->getShareContentWithDocuments($share_content_id);
         $response['sch_setting']     = $this->setting_model->getSetting();
         $response['result_array']    = $this->sharecontent_model->getSharedUserBySharedID($share_content_id);
@@ -862,6 +873,14 @@ class Content extends Admin_Controller
 
         $this->form_validation->set_rules('file', $this->lang->line('image'), 'callback_handle_upload');
         if ($this->form_validation->run() == false) {
+            $staff_id                       = $this->customlib->getStaffID();
+            $data['count']                  = $this->uploadcontent_model->total_record($staff_id);
+            $data['sch_setting']            = $this->setting_model->getSetting();
+            $data['roles']                  = $this->role_model->get();
+            $data['content_types']          = $this->contenttype_model->get();
+            $data['superadmin_restriction'] = $this->customlib->superadmin_visible();
+            $data['branch_url']             = $this->customlib->getBaseUrl();
+
             $this->load->view('layout/header');
             $this->load->view('admin/content/createcontent', $data);
             $this->load->view('layout/footer');

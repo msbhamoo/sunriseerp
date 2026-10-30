@@ -124,4 +124,65 @@ class Staffcompliance extends Admin_Controller
         $this->staffcompliance_model->saveCompliance($data);
         json_output(200, ['status' => 'success', 'message' => 'Updated', 'field' => $field, 'value' => $status_val]);
     }
+
+    /**
+     * AJAX endpoint to render monthly compliance sheet partial
+     */
+    public function monthsheet()
+    {
+        if (!$this->rbac->hasPrivilege('staff_compliance', 'can_view')) {
+            access_denied();
+        }
+
+        $role  = $this->input->post('role');
+        $month = (int)$this->input->post('month');
+        $year  = (int)$this->input->post('year');
+
+        if (empty($month)) {
+            $month = (int)date('n');
+        }
+        if (empty($year)) {
+            $year = (int)date('Y');
+        }
+
+        $data['role']          = $role;
+        $data['month']         = $month;
+        $data['year']          = $year;
+        $data['days_in_month'] = (int)date('t', mktime(0, 0, 0, $month, 1, $year));
+
+        // Get off days (Sundays + annual_calendar holidays)
+        $m_start = sprintf('%04d-%02d-01', $year, $month);
+        $m_end   = sprintf('%04d-%02d-%02d', $year, $month, $data['days_in_month']);
+
+        $holiday_dates = [];
+        for ($t = strtotime($m_start); $t <= strtotime($m_end); $t += 86400) {
+            if ((int)date('w', $t) === 0) {
+                $holiday_dates[date('Y-m-d', $t)] = true;
+            }
+        }
+        if ($this->db->table_exists('annual_calendar')) {
+            $c_rows = $this->db->query("SELECT from_date, to_date, is_working_day FROM annual_calendar
+                WHERE is_active = 1
+                AND DATE(from_date) <= " . $this->db->escape($m_end) . "
+                AND DATE(to_date) >= " . $this->db->escape($m_start) . "
+                ORDER BY is_working_day ASC")->result();
+            foreach ($c_rows as $cr) {
+                $cd  = max(strtotime($m_start), strtotime(date('Y-m-d', strtotime($cr->from_date))));
+                $cto = min(strtotime($m_end), strtotime(date('Y-m-d', strtotime($cr->to_date))));
+                for (; $cd <= $cto; $cd += 86400) {
+                    $c_str = date('Y-m-d', $cd);
+                    if ((int)$cr->is_working_day === 1) {
+                        unset($holiday_dates[$c_str]);
+                    } else {
+                        $holiday_dates[$c_str] = true;
+                    }
+                }
+            }
+        }
+
+        $data['holiday_dates'] = $holiday_dates;
+        $data['sheet']         = $this->staffcompliance_model->getMonthlyComplianceSheet($role, $year, $month);
+
+        $this->load->view('admin/staffcompliance/_monthly_sheet', $data);
+    }
 }

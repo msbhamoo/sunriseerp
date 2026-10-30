@@ -344,6 +344,7 @@ class Student_model extends MY_Model
 
     public function getSearchFullView($searchterm, $start, $limit, $search, $carray)
     {
+        $searchterm = (string)$searchterm;
         $class_section_array = $this->customlib->get_myClassSection();
         $userdata            = $this->customlib->getUserData();
         $staff_id            = $userdata['id'];
@@ -430,7 +431,7 @@ class Student_model extends MY_Model
             $col         = strstr($col, ' as ', true) ?: $col;
             $search_colomn[] = $col;
         }
-        $search = $search['value'];
+        $search = (is_array($search) && isset($search['value'])) ? $search['value'] : '';
         if ($search != '' && $searchable != '') {
             for ($i = 0; $i < count($search_colomn); $i++) {
                 if ($i == 0) {
@@ -948,6 +949,11 @@ class Student_model extends MY_Model
         } else {
             return $std_data;
         }
+    }
+
+    public function searchByClassSectionCategoryGenderRte($class_id = null, $section_id = null, $category_id = null, $gender = null, $rte = null)
+    {
+        return $this->searchByClassSection($class_id, $section_id);
     }
 
     public function searchByClassSection($class_id = null, $section_id = null)
@@ -1813,12 +1819,16 @@ class Student_model extends MY_Model
 
     public function admissionYear()
     {
-        $query = $this->db->SELECT("distinct(year(admission_date)) as year")->where_not_in('admission_date', array('0000-00-00', '1970-01-01'))->get("students");
+        $query = $this->db->select("distinct(year(admission_date)) as year")->where_not_in('admission_date', array('0000-00-00', '1970-01-01'))->get("students");
         return $query->result_array();
     }
 
-    public function getStudentSession($id)
+        public function getStudentSession($id)
     {
+        if (empty($id)) {
+            return ["student_session_id" => 0, "session" => ""];
+        }
+        $id = (int)$id;
         $query = $this->db->query("SELECT  max(sessions.id) as student_session_id, max(sessions.session) as session from sessions join student_session on (sessions.id = student_session.session_id)  where student_session.student_id = " . $id);
         return $query->row_array();
     }
@@ -2035,6 +2045,7 @@ class Student_model extends MY_Model
 
     public function getStudentsByArray($array)
     {
+        if (empty($array)) { return []; }
         $i             = 1;
         $custom_fields = $this->customfield_model->get_custom_fields('students');
 

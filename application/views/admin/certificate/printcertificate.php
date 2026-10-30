@@ -18,6 +18,7 @@
 <?php
         
 
+if (empty($certificate) || empty($certificate[0])) { echo "<div>No certificate selected</div>"; return; }
 $certificate[0]->certificate_text = str_replace('[present_date]', date($this->customlib->getSchoolDateFormat()), $certificate[0]->certificate_text);
 $certificate[0]->certificate_text = str_replace('[name]', '[name]', $certificate[0]->certificate_text);
 $certificate[0]->certificate_text = str_replace('[present_address]', '[current_address]', $certificate[0]->certificate_text);

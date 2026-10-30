@@ -1,12 +1,26 @@
 <?php
+if (empty($online_exam_validate) || !is_object($online_exam_validate)) {
+    $online_exam_validate = (object)["is_attempted" => 0];
+}
+if (empty($exam) || !is_object($exam)) {
+    $exam = (object)[
+        "is_quiz" => 0,
+        "publish_result" => false,
+        "auto_publish_date" => "",
+        "is_neg_marking" => 0,
+        "passing_percentage" => 0
+    ];
+}
+?>
+<?php
 
-if ($online_exam_validate->is_attempted == 1 && ($exam->is_quiz)) {
+if ($online_exam_validate->is_attempted == 1 && (($exam->is_quiz ?? ""))) {
     $exam->publish_result = true;
-} else if (($exam->auto_publish_date != "0000-00-00" && $exam->auto_publish_date != "" && $exam->auto_publish_date != null) && $exam->publish_result) {
+} else if ((($exam->auto_publish_date ?? "") != "0000-00-00" && ($exam->auto_publish_date ?? "") != "" && ($exam->auto_publish_date ?? "") != null) && ($exam->publish_result ?? "")) {
     $exam->publish_result = true;
-} else if (($exam->auto_publish_date != "0000-00-00" && $exam->auto_publish_date != "" && $exam->auto_publish_date != null) && !$exam->publish_result) {
+} else if ((($exam->auto_publish_date ?? "") != "0000-00-00" && ($exam->auto_publish_date ?? "") != "" && ($exam->auto_publish_date ?? "") != null) && !($exam->publish_result ?? "")) {
 
-    if (strtotime($exam->auto_publish_date) <= strtotime(date('Y-m-d H:i:s'))) {
+    if (strtotime(($exam->auto_publish_date ?? "")) <= strtotime(date('Y-m-d H:i:s'))) {
         $exam->publish_result = true;
     } else {
         $exam->publish_result = false;
@@ -15,7 +29,7 @@ if ($online_exam_validate->is_attempted == 1 && ($exam->is_quiz)) {
 
 }
 
-$dispaly_negative_marks = $exam->is_neg_marking;
+$dispaly_negative_marks = ($exam->is_neg_marking ?? "");
 if (!empty($online_exam_validate)) {
     $correct_ans            = 0;
     $wrong_ans              = 0;
@@ -63,10 +77,10 @@ if (!empty($online_exam_validate)) {
     }
 
     ?>
-                  <button class="btn btn-primary btn-xs print_div" title="<?php echo $this->lang->line('print'); ?>" data-examid="<?php echo $exam->id; ?>" data-student_session_id="<?php echo $student_session_id; ?>" data-recordid="<?php echo $onlineexam_student_id; ?>"  data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-print"></i></button>
+                  <button class="btn btn-primary btn-xs print_div" title="<?php echo $this->lang->line('print'); ?>" data-examid="<?php echo ($exam->id ?? ""); ?>" data-student_session_id="<?php echo $student_session_id; ?>" data-recordid="<?php echo $onlineexam_student_id; ?>"  data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-print"></i></button>
 
                   <div class="">
-                  <h4 class="text-center font-weight-bold"><?php echo $exam->exam; ?></h4>
+                  <h4 class="text-center font-weight-bold"><?php echo ($exam->exam ?? ""); ?></h4>
                   <div class="row" >
                      <div class="col-lg-8 col-md-8 col-sm-12">
                         <dl class="row mb10">
@@ -81,31 +95,31 @@ if (!empty($online_exam_validate)) {
                                  <dt class="col-sm-6 col-xs-6"><?php echo $this->lang->line('father_name'); ?></dt>
                                  <dd class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php if ($father_name != "") {echo $father_name;} else {echo "&nbsp;";}?></dd>
                                  <dt class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php echo $this->lang->line('total_attempt'); ?></dt>
-                                 <dd class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php echo $exam->attempt; ?></dd>
+                                 <dd class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php echo ($exam->attempt ?? ""); ?></dd>
                                  <dt class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php echo $this->lang->line('exam_from'); ?></dt>
                                  <dd class="col-sm-6 col-xs-6 col-md-6 col-lg-6">
-                                  <?php echo $this->customlib->dateyyyymmddToDateTimeformat($exam->exam_from, false); ?>
+                                  <?php echo $this->customlib->dateyyyymmddToDateTimeformat(($exam->exam_from ?? ""), false); ?>
                                   </dd>
                                  <dt class="col-sm-6 col-xs-6 col-md-6 col-lg-6">
                                   <?php echo $this->lang->line('exam_to') ?></dt>
                                  <dd class="col-sm-6 col-xs-6 col-md-6 col-lg-6">
-                                 <?php echo $this->customlib->dateyyyymmddToDateTimeformat($exam->exam_to, false); ?>
+                                 <?php echo $this->customlib->dateyyyymmddToDateTimeformat(($exam->exam_to ?? ""), false); ?>
                                   </dd>
                                              <?php
-if (($exam->auto_publish_date != "0000-00-00" && $exam->auto_publish_date != "" && $exam->auto_publish_date != null)) {
+if ((($exam->auto_publish_date ?? "") != "0000-00-00" && ($exam->auto_publish_date ?? "") != "" && ($exam->auto_publish_date ?? "") != null)) {
         ?>
  <dt class="col-sm-6 col-xs-12 col-md-6 col-lg-6">
                                  <?php echo $this->lang->line('result_publish_date') ?></dt>
                                  <dd class="col-sm-6 col-xs-6 col-md-6 col-lg-6">
-                                 <?php echo $this->customlib->dateyyyymmddToDateTimeformat($exam->auto_publish_date, false); ?>
+                                 <?php echo $this->customlib->dateyyyymmddToDateTimeformat(($exam->auto_publish_date ?? ""), false); ?>
                                   </dd>
   <?php
 }
     ?>
                                  <dt class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php echo $this->lang->line('duration') ?></dt>
-                                 <dd class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php echo $exam->duration; ?></dd>
+                                 <dd class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php echo ($exam->duration ?? ""); ?></dd>
                                  <dt class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php echo $this->lang->line('passing') ?>   (%)</dt>
-                                 <dd class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php echo $exam->passing_percentage; ?></dd>
+                                 <dd class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php echo ($exam->passing_percentage ?? ""); ?></dd>
                               </div>
                            </div>
                            <!--lcol-lg-6-->
@@ -116,7 +130,7 @@ if (($exam->auto_publish_date != "0000-00-00" && $exam->auto_publish_date != "" 
                                  <dt class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php echo $this->lang->line('descriptive_questions'); ?></dt>
                                  <dd class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php echo $exam_total_descriptive; ?></dd>
                                  <?php
-if ($exam->publish_result) {
+if (($exam->publish_result ?? "")) {
         ?>
                                  <dt class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php echo $this->lang->line('correct_answer') ?></dt>
                                  <dd class="col-sm-6 col-xs-6 col-md-6 col-lg-6"><?php echo $correct_ans; ?></dd>
@@ -143,11 +157,11 @@ if ($exam->publish_result) {
                   </div>
                    <div class="row pb10">
                      <div class="col-sm-12 col-xs-12 col-md-12 col-lg-12">
-                    <span class="font-weight-bold"> <?php echo $this->lang->line('description'); ?>:</span> <?php echo $exam->description; ?>
+                    <span class="font-weight-bold"> <?php echo $this->lang->line('description'); ?>:</span> <?php echo ($exam->description ?? ""); ?>
                      </div>
                      </div>
                   <?php
-if ($exam->publish_result) {
+if (($exam->publish_result ?? "")) {
         if (!$online_exam_validate->is_attempted) {
             ?>
   <div class="alert alert-info">
@@ -176,7 +190,7 @@ if ($dispaly_negative_marks) {
         ?></div>
                         <div class="col-sm-6 col-xs-12 col-md-3 col-lg-3"><span class="font-weight-bold"><?php echo $this->lang->line('exam_rank') ?>: </span>
                                <?php
-if ($exam->is_rank_generated && $exam->publish_result) {
+if (($exam->is_rank_generated ?? "") && ($exam->publish_result ?? "")) {
             echo ($online_exam_validate->rank);
 
         } else {
@@ -190,7 +204,7 @@ if ($exam->is_rank_generated && $exam->publish_result) {
 }
     ?>
                   <?php
-if (!empty($question_result) && ($exam->publish_result)) {
+if (!empty($question_result) && (($exam->publish_result ?? ""))) {
 
         $question_no = 1;
         foreach ($question_result as $result_key => $question_value) {
@@ -349,7 +363,7 @@ $question_no++;
     ?>
                   <?php
 
-    if (!$exam->publish_result) {
+    if (!($exam->publish_result ?? "")) {
         ?>
                   <div class="row no-print">
                      <div class="col-xs-12">

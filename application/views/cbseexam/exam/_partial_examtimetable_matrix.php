@@ -1,3 +1,4 @@
+<?php $exam_name = $exam_name ?? ''; ?>
 <a class="btn btn-primary btn-xs pull-right mt8 mr-1 hide-print" id="print" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('print'); ?>" onclick="printDiv('print_matrix')"><i class="fa fa-print"></i></a>
 <div id="print_matrix">
 

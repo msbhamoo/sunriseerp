@@ -86,7 +86,8 @@ class Chatuser_model extends CI_Model
 
     public function getLastMessages($chat_connection_id)
     {
-        $sql = "SELECT * FROM chat_messages WHERE id=(SELECT max(id) FROM `chat_messages` WHERE chat_connection_id=" . $chat_connection_id . ")";
+        if (empty($chat_connection_id)) { return null; }
+        $sql = "SELECT * FROM chat_messages WHERE id=(SELECT max(id) FROM `chat_messages` WHERE chat_connection_id=" . (int)$chat_connection_id . ")";
         $query         = $this->db->query($sql);
         $chat_messages = $query->row();
         return $chat_messages;
@@ -95,7 +96,7 @@ class Chatuser_model extends CI_Model
     public function getChatUserDetail($chat_user_id)
     {
         $sql = "SELECT chat_users.id as `chat_user_id`, chat_users.user_type,chat_users.student_id,staff_id ,students.guardian_pic,students.guardian_name,students.father_name,students.firstname,students.middlename,students.lastname,staff.name,staff.surname,(CASE WHEN staff_id IS NULL THEN (students.gender) ELSE (staff.gender) END) as gender,(CASE WHEN staff_id IS NULL THEN (SELECT
-students.image as `image` FROM students WHERE students.id=chat_users.student_id) ELSE (SELECT staff.image as `image` FROM staff WHERE staff.id=chat_users.staff_id) END) as image FROM `chat_users` left JOIN students on students.id=chat_users.student_id left JOIN staff on staff.id=chat_users.staff_id WHERE chat_users.id=" . $chat_user_id;
+students.image as `image` FROM students WHERE students.id=chat_users.student_id) ELSE (SELECT staff.image as `image` FROM staff WHERE staff.id=chat_users.staff_id) END) as image FROM `chat_users` left JOIN students on students.id=chat_users.student_id left JOIN staff on staff.id=chat_users.staff_id WHERE chat_users.id=" . (int)$chat_user_id;
         $query     = $this->db->query($sql);
         $chat_user = $query->row();
 
@@ -345,15 +346,18 @@ students.image as `image` FROM students WHERE students.id=chat_users.student_id)
         return $chat_messages;
     }
 
-    public function get_student_parent_chat_msg_count($student_id, $user_type)
+    public function get_student_parent_chat_msg_count($student_id = null, $user_type = 'student')
     {
-        if ($user_type == 'student') {
-            $sql = " SELECT id from chat_messages WHERE chat_messages.chat_user_id= (SELECT id FROM `chat_users` WHERE student_id=" . $student_id . "   and user_type='student') and `is_read`=0  group by `chat_connection_id`";
-        } else if ($user_type == 'parent') {
-            $sql = " SELECT id from chat_messages WHERE chat_messages.chat_user_id= (SELECT id FROM `chat_users` WHERE student_id=" . $student_id . "   and user_type='parent')  and `is_read`=0   group by `chat_connection_id`";
+        if (empty($student_id)) {
+            return [];
+        }
+        if ($user_type == 'parent') {
+            $sql = " SELECT id from chat_messages WHERE chat_messages.chat_user_id= (SELECT id FROM `chat_users` WHERE student_id=" . (int)$student_id . "   and user_type='parent')  and `is_read`=0   group by `chat_connection_id`";
+        } else {
+            $sql = " SELECT id from chat_messages WHERE chat_messages.chat_user_id= (SELECT id FROM `chat_users` WHERE student_id=" . (int)$student_id . "   and user_type='student') and `is_read`=0  group by `chat_connection_id`";
         }
         $query         = $this->db->query($sql);
-        $chat_messages = $query->result();
+        $chat_messages = $query ? $query->result() : [];
         return $chat_messages;
     }
 }

@@ -205,6 +205,7 @@ class Welcome extends Front_Controller
 
     public function ajaxPaginationData()
     {
+        echo ''; return;
         $page              = $this->input->post('page');
         $page_content_type = $this->input->post('page_content_type');
         if (!$page) {
@@ -1499,7 +1500,7 @@ class Welcome extends Front_Controller
 
     public function getstudentexam()
     {
-        $admission_no = $_REQUEST['admission_no'];
+        $admission_no = $_REQUEST['admission_no'] ?? '';
         $result       = $this->examstudent_model->getstudentexam($admission_no);
         echo json_encode($result);
     }
@@ -1512,7 +1513,8 @@ class Welcome extends Front_Controller
     
     public function loadCaptcha()
     {
-        $data['login_type'] = $_POST['login_type'];
+        echo ''; return;
+        $data['login_type'] = $_POST['login_type'] ?? '';
 
         $data['is_captcha']    = $this->captchalib->is_captcha('guest_login_signup');
         $captcha               = $this->captchalib->generate_captcha();
@@ -1525,7 +1527,11 @@ class Welcome extends Front_Controller
     {
         $currency_id = $this->input->post('currency_id');
         //================
-        $currency = $this->currency_model->get($currency_id);
+        $currency = $currency_id ? $this->currency_model->get($currency_id) : null;
+        if (empty($currency)) {
+            echo json_encode(['status' => 0]);
+            return;
+        }
 
         if ($this->session->has_userdata('student')) {
             $logged_session = $this->session->userdata('student'); 

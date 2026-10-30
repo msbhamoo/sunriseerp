@@ -122,7 +122,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                     <td><?php echo $value["leave_days"]; ?></td>
                                                   
                                                     <?php
-                                                        if ($value["status"] == "approved") {
+                                                        $label = "class='label label-default'"; $status1 = "pending"; if ($value["status"] == "approved") {
                                                             $status1 = 'approved';
                                                             $label = "class='label label-success'";
                                                         } else if ($value["status"] == "pending") {

@@ -46,9 +46,9 @@ class Chat extends Admin_Controller
 
     public function load_page()
     {
-
-        $sender_id = $_REQUEST['sender_id'];
-        $receiver_id = $_REQUEST['receiver_id'];
+        $sender_id = $_REQUEST["sender_id"] ?? ""; if (!$sender_id) { echo ""; return; }
+        $receiver_id = $_REQUEST["receiver_id"] ?? "";
+        $type = $_REQUEST["type"] ?? "";
         $type = $_REQUEST['type'];
         $data['sender_id'] = $sender_id;
         $data['conversation'] = $type;
@@ -82,7 +82,7 @@ class Chat extends Admin_Controller
 
     public function reply()
     {
-
+        if (empty($_POST["sender_id"])) { echo ""; return; }
         $data['sender_id'] = $_POST['sender_id'];
         $data['receiver_id'] = $_POST['receiver_id'];
         $data['sender_type'] = 1;
@@ -103,7 +103,7 @@ class Chat extends Admin_Controller
 
     public function load_message()
     {
-
+        if (empty($_POST["sender_id"])) { echo ""; return; }
         $result = $this->Chat_model->get_chat($_POST['sender_id'], $_POST['receiver_id']);
         $data['sender_id'] = $_POST['sender_id'];
         $data['result'] = $result;
@@ -151,12 +151,14 @@ class Chat extends Admin_Controller
 
     public function chat_seen()
     {
-        $sender_id = $_REQUEST['sender_id'];
-        $receiver_id = $_REQUEST['receiver_id'];
-        $receiver_type = $_REQUEST['type'];
+        $sender_id = $_REQUEST['sender_id'] ?? null;
+        $receiver_id = $_REQUEST['receiver_id'] ?? null;
+        $receiver_type = $_REQUEST['type'] ?? 'staff';
         $sender_type = 1;
         $data['seen'] = '1';
-        $this->Chat_model->seen($sender_id, $receiver_id, $sender_type, $receiver_type, $data);
+        if ($sender_id && $receiver_id) {
+            $this->Chat_model->seen($sender_id, $receiver_id, $sender_type, $receiver_type, $data);
+        }
     }
 
     public function searchuser()
@@ -213,13 +215,17 @@ class Chat extends Admin_Controller
 
     public function getChatRecord()
     {
+        $chat_connection_id = $this->input->post('chat_connection_id');
+        if (empty($chat_connection_id)) {
+            echo json_encode(array('status' => '1', 'error' => '', 'page' => '', 'chat_to_user' => 0, 'chat_connection_id' => 0, 'user_last_chat' => ''));
+            return;
+        }
         $chat_user = $this->chatuser_model->getMyID($this->customlib->getStaffID(), 'staff');
         $data['chat_user'] = $chat_user;
-        $chat_connection_id = $this->input->post('chat_connection_id');
         $chat_to_user = 0;
         $user_last_chat = $this->chatuser_model->getLastMessages($chat_connection_id);
         $chat_connection = $this->chatuser_model->getChatConnectionByID($chat_connection_id);
-        if (!empty($chat_connection)) {
+        if (!empty($chat_connection) && !empty($chat_user)) {
             $chat_to_user = $chat_connection->chat_user_one;
             $chat_connection_id = $chat_connection->id;
             if ($chat_connection->chat_user_one == $chat_user->id) {
@@ -227,10 +233,11 @@ class Chat extends Admin_Controller
             }
         }
 
-        $data['chatList'] = $this->chatuser_model->myChatAndUpdate($chat_connection_id, $chat_user->id);
+        $current_chat_user_id = !empty($chat_user) ? $chat_user->id : 0;
+        $data['chatList'] = $this->chatuser_model->myChatAndUpdate($chat_connection_id, $current_chat_user_id);
 
         $sch_setting = $this->sch_setting_detail;
-        $data['delete_chat_enable'] = $sch_setting->staff_delete_chat;
+        $data['delete_chat_enable'] = isset($sch_setting->staff_delete_chat) ? $sch_setting->staff_delete_chat : 0;
 
         $userlist = $this->load->view('admin/chat/_partialChatRecord', $data, true);
         $array = array('status' => '1', 'error' => '', 'page' => $userlist, 'chat_to_user' => $chat_to_user, 'chat_connection_id' => $chat_connection_id, 'user_last_chat' => $user_last_chat);
@@ -241,6 +248,10 @@ class Chat extends Admin_Controller
     {
         $chat_connection_id = $this->input->post('chat_connection_id');
         $chat_to_user = $this->input->post('chat_to_user');
+        if (empty($chat_to_user)) {
+            echo json_encode(array('status' => '0', 'error' => 'No recipient'));
+            return;
+        }
         $message = $this->input->post('message');
         $time = $this->input->post('time');
         $insert_record = array(
@@ -258,12 +269,17 @@ class Chat extends Admin_Controller
     public function chatUpdate()
     {
         $chat_connection_id = $this->input->post('chat_connection_id');
+        if (empty($chat_connection_id)) {
+            echo json_encode(array('status' => '1', 'error' => '', 'page' => '', 'user_last_chat' => ''));
+            return;
+        }
         $chat_user_id = $this->input->post('chat_to_user');
-        $last_chat_id = $this->input->post('last_chat_id');
+        $last_chat_id = $this->input->post('last_chat_id') ?: 0;
         $user_last_chat = $this->chatuser_model->getLastMessages($chat_connection_id);
         $data['chat_user_id'] = $chat_user_id;
         $chat_user = $this->chatuser_model->getMyID($this->customlib->getStaffID(), 'staff');
-        $data['updated_chat'] = $this->chatuser_model->getUpdatedchat($chat_connection_id, $last_chat_id, $chat_user->id);
+        $current_chat_user_id = !empty($chat_user) ? $chat_user->id : 0;
+        $data['updated_chat'] = $this->chatuser_model->getUpdatedchat($chat_connection_id, $last_chat_id, $current_chat_user_id);
         $userlist = $this->load->view('admin/chat/_chatupdate', $data, true);
         $array = array('status' => '1', 'error' => '', 'page' => $userlist, 'user_last_chat' => $user_last_chat);
         echo json_encode($array);
@@ -423,9 +439,10 @@ class Chat extends Admin_Controller
     public function get_student_parent_chat_msg_count()
     {
         $userdata = $this->customlib->getUserData();
-        $userid   = $userdata['id'];
-        $result    = $this->chatuser_model->get_student_parent_chat_msg_count($userid);
-        $array = array('status' => '1', 'error' => '', 'count' => count($result));
+        $userid   = $userdata['id'] ?? null;
+        $role     = $userdata['role'] ?? 'staff';
+        $result   = $this->chatuser_model->get_student_parent_chat_msg_count($userid, $role);
+        $array = array('status' => '1', 'error' => '', 'count' => is_countable($result) ? count($result) : 0);
         echo json_encode($array);
     }
 }

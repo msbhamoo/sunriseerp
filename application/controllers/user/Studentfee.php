@@ -324,7 +324,7 @@ class Studentfee extends Student_Controller
         $record_array        = json_decode($record);
         $trans_array         = array();
         $fees_array          = array();
-        foreach ($record_array as $key => $value) {
+        if (!empty($record_array)) foreach ($record_array as $key => $value) {
             $category = $value->category;
             $row_id   = $value->row_id;
             if ($category == "fees") {

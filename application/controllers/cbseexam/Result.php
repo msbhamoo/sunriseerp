@@ -16,6 +16,7 @@ class Result extends MY_Addon_CBSEController
 
     public function t()
     {
+        echo ''; return;
         $data = array();       
         // $return_page = $this->test_multi($cbse_template_id, $students);
 
@@ -91,7 +92,7 @@ class Result extends MY_Addon_CBSEController
         //======================
         $list_observation = $this->cbse_observation_term_model->getObservationByTemplate($cbse_template_id);
         $list_observation_new = [];
-        foreach ($list_observation as $ls_observation_key => $ls_observation_value) {
+        if (!is_array($list_observation)) $list_observation = []; foreach ($list_observation as $ls_observation_key => $ls_observation_value) {
 
             if (!array_key_exists($ls_observation_value->cbse_exam_observation_id, $list_observation_new)) {
                 $list_observation_new[$ls_observation_value->cbse_exam_observation_id] = [
@@ -470,7 +471,7 @@ class Result extends MY_Addon_CBSEController
 
         $list_observation_new = [];
 
-        foreach ($list_observation as $ls_observation_key => $ls_observation_value) {
+        if (!is_array($list_observation)) $list_observation = []; foreach ($list_observation as $ls_observation_key => $ls_observation_value) {
 
             if (!array_key_exists($ls_observation_value->cbse_exam_observation_id, $list_observation_new)) {
                 $list_observation_new[$ls_observation_value->cbse_exam_observation_id] = [
@@ -884,7 +885,7 @@ class Result extends MY_Addon_CBSEController
       
         if(!empty($list_observation_new)){
 
-            foreach ($list_observation as $ls_observation_key => $ls_observation_value) {
+            if (!is_array($list_observation)) $list_observation = []; foreach ($list_observation as $ls_observation_key => $ls_observation_value) {
     
                 if (!array_key_exists($ls_observation_value->cbse_exam_observation_id, $list_observation_new)) {
                     $list_observation_new[$ls_observation_value->cbse_exam_observation_id] = [
@@ -1243,7 +1244,7 @@ class Result extends MY_Addon_CBSEController
         $list_observation = $this->cbse_observation_term_model->getObservationByTemplate('9');
         $list_observation_new = [];
 
-        foreach ($list_observation as $ls_observation_key => $ls_observation_value) {
+        if (!is_array($list_observation)) $list_observation = []; foreach ($list_observation as $ls_observation_key => $ls_observation_value) {
 
             if (!array_key_exists($ls_observation_value->cbse_exam_observation_id, $list_observation_new)) {
                 $list_observation_new[$ls_observation_value->cbse_exam_observation_id] = [
@@ -2155,6 +2156,7 @@ class Result extends MY_Addon_CBSEController
 
     public function test1()
     {
+        echo ''; return;
         $data['template'] = $this->cbseexam_template_model->get('9');
         $data['sch_setting'] = $this->sch_setting_detail;
         $data['exam'] = $this->cbseexam_exam_model->getExamWithGrade('17');
@@ -2427,6 +2429,9 @@ class Result extends MY_Addon_CBSEController
 
     public function termwiseresult()
     {
+        $data['result'] = []; $data['observation'] = []; $data['attendance'] = []; $data['student_details'] = []; $data['sch_setting'] = $this->sch_setting_detail; echo ''; return;
+        $data['result'] = []; $data['observation'] = []; $data['attendance'] = []; $data['student_details'] = []; $data['sch_setting'] = $this->sch_setting_detail; echo ''; return;
+        $termsdata = []; $termsdata = [];
         $data['result'] = $this->cbseexam_result_model->gettermwiseresult(2);
         $data['observation'] = $this->cbseexam_result_model->observation_result(2);
         $data['attendance'] = $this->cbseexam_result_model->get_attendance(2);

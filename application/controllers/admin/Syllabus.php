@@ -87,13 +87,13 @@ class Syllabus extends Admin_Controller
 
     public function get_subject_syllabus()
     {
-        $data['id']      = $_POST['id'];
-        $staff_id        = $_POST['staff_id'];
+        $data['id']      = $_POST['id'] ?? 0;
+        $staff_id        = $_POST['staff_id'] ?? 0;
         $my_role         = $this->customlib->getStaffRole();
         $role            = json_decode($my_role);
         $data['role_id'] = $role->id;
         $data['result'] = $this->syllabus_model->get_subject_syllabus($data, $staff_id);
-        $data['result'] = $data['result'][0];
+        $data['result'] = $data['result'][0] ?? [];
         $this->load->view('admin/syllabus/_get_subject_syllabus', $data);
     }
 
@@ -123,7 +123,9 @@ class Syllabus extends Admin_Controller
         $my_role  = $this->customlib->getStaffRole();
         $role     = json_decode($my_role);
 
-        $subject_syllabus = $this->syllabus_model->get_subject_syllabusdata($_POST['subject_group_subject_id'], date('Y-m-d', strtotime($_POST['new_date'])), $role->id, $staff_id);
+        $sg_subject_id    = $_POST['subject_group_subject_id'] ?? 0;
+        $new_date         = !empty($_POST['new_date']) ? date('Y-m-d', strtotime($_POST['new_date'])) : date('Y-m-d');
+        $subject_syllabus = $this->syllabus_model->get_subject_syllabusdata($sg_subject_id, $new_date, $role->id ?? 1, $staff_id);
 
         if ($subject_syllabus[0]['total'] > 0) {
             echo $subject_syllabus[0]['id'];

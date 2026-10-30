@@ -122,6 +122,7 @@ class Subject extends Admin_Controller
 
     public function getSubjctByClassandSection()
     {
+        $data = [];
         $class_id   = $this->input->post('class_id');
         $section_id = $this->input->post('section_id');
         $date       = $this->teachersubject_model->getSubjectByClsandSection($class_id, $section_id);

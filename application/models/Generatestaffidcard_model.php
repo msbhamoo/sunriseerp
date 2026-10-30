@@ -30,6 +30,7 @@ class Generatestaffidcard_model extends CI_model
 
     public function getEmployee($array, $active)
     {
+        if (empty($array)) { return []; }
         $this->db->select("staff.*,staff_designation.designation,department.department_name as department,roles.name as user_type")->from('staff');
         $this->db->join('staff_designation', "staff_designation.id = staff.designation", "left");
         $this->db->join('staff_roles', "staff_roles.staff_id = staff.id", "left");

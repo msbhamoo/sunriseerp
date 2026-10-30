@@ -579,6 +579,7 @@ class Examgroup extends Admin_Controller
 
     public function getexamSubjects()
     {
+        if (!$this->input->post('exam_id')) { echo json_encode(['status' => 0]); return; }
         $exam_id                 = $this->input->post('exam_id');
         $class_batch_id          = $this->input->post('class_batch_id');
         $exam_group_ids          = $this->input->post('exam_group_id');
@@ -595,6 +596,7 @@ class Examgroup extends Admin_Controller
 
     public function getSubjectByExam()
     {
+        if (!$this->input->post('recordid')) { echo json_encode(['status' => 0]); return; }
         $data                    = array();
         $id                      = $this->input->post('recordid');
         $data['examgroupDetail'] = $this->examgroup_model->getExamByID($id);
@@ -610,6 +612,7 @@ class Examgroup extends Admin_Controller
 
     public function getTeacherRemarkByExam()
     {
+        if (!$this->input->post('recordid')) { echo json_encode(['status' => 0]); return; }
         $data                      = array();
         $id                        = $this->input->post('recordid');
         $data['examgroupDetail']   = $this->examgroup_model->getExamByID($id);

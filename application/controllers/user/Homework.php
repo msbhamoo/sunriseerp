@@ -65,7 +65,7 @@ class Homework extends Student_Controller
 
     public function upload_docs()
     {
-        $homework_id         = $_REQUEST['homework_id'];
+        $homework_id = $_REQUEST['homework_id'] ?? ($this->input->post('homework_id') ?: 0);
         $userdata            = $this->customlib->getLoggedInUserData();
         $student_id          = $userdata["student_id"];
         $data['homework_id'] = $homework_id;
@@ -370,7 +370,7 @@ class Homework extends Student_Controller
     {
         $assignment_id               = $this->input->post('assignment_id');
         $singledailyassignmentlist   = $this->homework_model->getsingledailyassignment($assignment_id);
-        $data["dailyassignmentlist"] = $singledailyassignmentlist;
+        $data["dailyassignmentlist"] = $singledailyassignmentlist ?: ['id' => 0, 'subject_group_subject_id' => 0, 'title' => '', 'description' => ''];
         $student_current_class       = $this->customlib->getStudentCurrentClsSection();
         $class_id                    = $student_current_class->class_id;
         $section_id                  = $student_current_class->section_id;

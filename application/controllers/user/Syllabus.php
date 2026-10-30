@@ -33,7 +33,8 @@ class Syllabus extends Student_Controller
     public function get_weekdates()
     {
         $this->session->set_userdata('top_menu', 'Time_table');
-        $this_week_start         = $this->customlib->dateFormatToYYYYMMDD($_POST['date']);
+        $input_date              = $_POST['date'] ?? ($this->input->post('date') ?: date('Y-m-d'));
+        $this_week_start         = $this->customlib->dateFormatToYYYYMMDD($input_date);
         $prev_week_start         = date("Y-m-d", strtotime('last ' . $this->start_weekday, strtotime($this_week_start)));
         $next_week_start         = date("Y-m-d", strtotime('next ' . $this->start_weekday, strtotime($this_week_start)));
         $this_week_end           = date("Y-m-d", strtotime($this_week_start . " +6 day"));
@@ -57,7 +58,7 @@ class Syllabus extends Student_Controller
 
     public function get_subject_syllabus()
     {
-        $data['subject_syllabus_id'] = $_POST['subject_syllabus_id'];
+        $data['subject_syllabus_id'] = $_POST['subject_syllabus_id'] ?? ($this->input->post('subject_syllabus_id') ?: 0);
         $data['result']              = $this->syllabus_model->get_subject_syllabus_student($data);         
         $this->load->view('user/syllabus/_get_subject_syllabus', $data);
     }

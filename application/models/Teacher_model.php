@@ -16,8 +16,11 @@ class Teacher_model extends CI_Model
         $this->current_date    = $this->setting_model->getDateYmd();
     }
 
-    public function get($id = null)
-    {
+    public function get($id = null) {
+        if (!$this->db->table_exists('teachers')) {
+            $this->load->model('staff_model');
+            return $this->staff_model->getStaffbyrole(2);
+        }
         $this->db->select()->from('teachers');
         if ($id != null) {
             $this->db->where('id', $id);

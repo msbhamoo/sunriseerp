@@ -184,8 +184,8 @@ class Gatepass extends Admin_Controller
         $this->gatepass_model->add($data);
 
         // Notify Class Teacher if student
-        $gatepass = $this->gatepass_model->get($id);
-        if ($gatepass['user_type'] == 'student' && $status == 'Approved') {
+        $gatepass = !empty($id) ? $this->gatepass_model->get($id) : null;
+        if (!empty($gatepass) && isset($gatepass['user_type']) && $gatepass['user_type'] == 'student' && $status == 'Approved') {
             $this->load->model('classteacher_model');
             $this->load->model('notification_model');
             

@@ -32,9 +32,7 @@ class Mark extends Student_Controller
         $reportcard              = $this->examschedule_model->getExamByClassandSection($data['class_id'], $data['section_id']);
         $class_id                = $stu_record['class_id'];
         $section_id              = $stu_record['section_id'];
-        foreach ($reportcard as $data) {
-            echo $exam_id = $data['exam_id'];
-        }
+        $exam_id = 0; foreach ($reportcard as $rpt) { $exam_id = $rpt['exam_id']; }
         $data['class_id']     = $stu_record['class_id'];
         $data['section_id']   = $stu_record['section_id'];
         $examSchedule         = $this->examschedule_model->getDetailbyClsandSection($class_id, $section_id, $exam_id);
@@ -95,7 +93,7 @@ class Mark extends Student_Controller
         $data['gradeList']       = $gradeList;
         $student_due_fee         = $this->studentfee_model->getDueFeeBystudent($student['class_id'], $student['section_id'], $student_id);
         $data['student_due_fee'] = $student_due_fee;
-        $transport_fee           = $this->studenttransportfee_model->getTransportFeeByStudent($student['student_session_id']);
+        $transport_fee = method_exists($this->studenttransportfee_model, 'getTransportFeeByStudent') ? $this->studenttransportfee_model->getTransportFeeByStudent($student['student_session_id']) : [];
         $data['transport_fee']   = $transport_fee;
         $examList                = $this->examschedule_model->getExamByClassandSection($student['class_id'], $student['section_id']);
         $data['examSchedule']    = array();

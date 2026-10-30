@@ -134,15 +134,15 @@ class Sslcommerz extends OnlineAdmission_Controller
 
     public function fail()
     {
-
-        redirect(base_url("onlineadmission/checkout/paymentfailed/" . $online_data->reference_no));
-
+        $reference = $this->session->userdata("reference");
+        $online_data = $this->onlinestudent_model->getAdmissionData($reference);
+        redirect(base_url("onlineadmission/checkout/paymentfailed/" . ($online_data->reference_no ?? "")));
     }
     public function cancel()
     {
-
-        redirect(base_url("onlineadmission/checkout/paymentfailed/" . $online_data->reference_no));
-
+        $reference = $this->session->userdata("reference");
+        $online_data = $this->onlinestudent_model->getAdmissionData($reference);
+        redirect(base_url("onlineadmission/checkout/paymentfailed/" . ($online_data->reference_no ?? "")));
     }
 
 }

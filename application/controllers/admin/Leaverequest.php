@@ -129,14 +129,18 @@ class Leaverequest extends Admin_Controller
     public function leaveRecord()
     {
         $id                   = $this->input->post("id");
-        $result               = $this->staff_model->getLeaveRecord($id);
+        $result               = !empty($id) ? $this->staff_model->getLeaveRecord($id) : null;
+        if (empty($result) || !is_object($result)) {
+            echo json_encode(new stdClass());
+            return;
+        }
         $leave_from           = date("m/d/Y", strtotime($result->leave_from));
         $result->leavefrom    = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result->leave_from));
         $result->date         = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result->date));
         $leave_to             = date("m/d/Y", strtotime($result->leave_to));
         $result->leaveto      = date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($result->leave_to));
         $result->days         = $this->dateDifference($leave_from, $leave_to);
-        $result->leave_status = $this->lang->line($result->status);
+        $result->leave_status = $this->lang->line($result->status ?? '');
         echo json_encode($result);
     }
 
@@ -150,8 +154,16 @@ class Leaverequest extends Admin_Controller
 
     public function getDateDifference()
     {
-        $date_1 = date("Y-m-d", $this->customlib->datetostrtotime($this->input->post('date_1')));
-        $date_2 = date("Y-m-d", $this->customlib->datetostrtotime($this->input->post('date_2')));
+        $d1_raw = $this->input->post('date_1');
+        $d2_raw = $this->input->post('date_2');
+        if (empty($d1_raw) || empty($d2_raw)) {
+            echo 0;
+            return;
+        }
+        $ts1 = $this->customlib->datetostrtotime($d1_raw);
+        $ts2 = $this->customlib->datetostrtotime($d2_raw);
+        $date_1 = !empty($ts1) && is_numeric($ts1) ? date("Y-m-d", (int)$ts1) : date("Y-m-d");
+        $date_2 = !empty($ts2) && is_numeric($ts2) ? date("Y-m-d", (int)$ts2) : date("Y-m-d");
         $differenceFormat = '%a';
         
 

@@ -257,6 +257,7 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
         $this->session->set_userdata('top_menu', 'Fees Collection');
         $this->session->set_userdata('sub_menu', 'admin/feediscount/approvalQueue');
         
+        $data["currency_symbol"] = $this->customlib->getSchoolCurrencyFormat();
         $this->load->model('feediscountrequest_model');
         $data['requests'] = $this->feediscountrequest_model->getAll();
         

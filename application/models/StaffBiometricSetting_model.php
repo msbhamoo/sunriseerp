@@ -50,6 +50,7 @@ class StaffBiometricSetting_model extends CI_Model
             $data['created_at'] = date('Y-m-d H:i:s');
             $this->db->insert('staff_biometric_setting', $data);
         }
+        return true;
     }
 
     /**

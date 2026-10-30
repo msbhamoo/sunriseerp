@@ -1,3 +1,4 @@
+<?php $feeList = $feeList ?? []; ?>
 <html lang="en">
 <head>
 <title><?php echo $this->lang->line('fees_receipt'); ?></title>

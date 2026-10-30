@@ -10,11 +10,14 @@ use Mpdf\Mpdf;
 
 class M_pdf
 {
+    public $pdf;
 
     public function __construct()
     {
+        @ini_set("pcre.backtrack_limit", "10000000");
         $CI = &get_instance();
-        log_message('Debug', 'mPDF class is loaded.');
+        log_message('debug', 'mPDF class is loaded.');
+        $this->pdf = $this->load();
     }
 
     public function load($param = NULL)

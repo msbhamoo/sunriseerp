@@ -199,10 +199,10 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
         <header class="clearfix">
             <table style="background: #ffffff !important;">
                 <tr>
-                    <td style="background: #ffffff !important;text-align: left; margin-top: 8px;">
+                    <td valign="top" style="background: #ffffff !important;text-align: left; margin-top: 8px;">
                         <img style="height:70px; " src="<?php echo base_url(); ?>/images/<?php echo $settinglist[0]['image']; ?>">
                     </td>
-                    <td style="background: #ffffff !important;float: right;
+                    <td valign="top" style="background: #ffffff !important;float: right;
                         text-align: right;">
                         <h2 class="name"><?php echo $settinglist[0]['name']; ?></h2>
                         <div><?php echo $settinglist[0]['address']; ?></div>
@@ -240,7 +240,7 @@ $grd_total = 0;
 if (empty($feeList)) {
     ?>
                             <tr>
-                                <td colspan="8" class="text-danger text-center"><?php echo $this->lang->line('no_transaction_found'); ?></td>
+                                <td valign="top" colspan="8" class="text-danger text-center"><?php echo $this->lang->line('no_transaction_found'); ?></td>
                             </tr>
                             <?php
 } else {
@@ -264,16 +264,16 @@ if (empty($feeList)) {
                                     <td>
                                         <?php echo $value['type']; ?>
                                     </td>
-                                    <td class="text text-right">
+                                    <td valign="top" class="text text-right">
                                         <?php echo $currency_symbol . $value['amount']; ?>
                                     </td>
-                                    <td class="text text-right">
+                                    <td valign="top" class="text text-right">
                                         <?php echo $currency_symbol . $value['amount_discount']; ?>
                                     </td>
-                                    <td class="text text-right">
+                                    <td valign="top" class="text text-right">
                                         <?php echo $currency_symbol . $value['amount_fine']; ?>
                                     </td>
-                                    <td class="text text-right">
+                                    <td valign="top" class="text text-right">
                                         <?php
 $t = ($value['amount'] + $value['amount_fine']) - $value['amount_discount'];
         echo $currency_symbol . number_format($t, 2, '.', '')
@@ -311,11 +311,11 @@ $grand_total = 0;
 if (empty($expenseList)) {
     ?>
                             <tr>
-                                <td colspan="5" class="text-danger text-center"><?php echo $this->lang->line('no_transaction_found'); ?></td>
+                                <td valign="top" colspan="5" class="text-danger text-center"><?php echo $this->lang->line('no_transaction_found'); ?></td>
                             </tr>
                             <?php
 } else {
-    foreach ($expenseList as $key => $value) {
+    if (!is_array($expenseList)) $expenseList = []; foreach ($expenseList as $key => $value) {
         $grand_total = $grand_total + $value['amount'];
         ?>
                                 <tr>
@@ -331,7 +331,7 @@ if (empty($expenseList)) {
                                     <td>
                                         <?php echo $value['name']; ?>
                                     </td>
-                                    <td class="text text-right">
+                                    <td valign="top" class="text text-right">
                                         <?php echo $currency_symbol . $value['amount']; ?>
                                     </td>
                                 </tr>

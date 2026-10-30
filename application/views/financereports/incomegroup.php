@@ -1,3 +1,4 @@
+<?php $search_type = $search_type ?? ''; ?>
 <?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>

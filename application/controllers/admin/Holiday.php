@@ -135,9 +135,13 @@ class Holiday extends Admin_Controller
 	public function getholiday()
     {
         $id                  = $this->input->post("id");        
-        $result              = $this->holiday_model->get($id);
-		$result['from_date'] = date($this->customlib->getSchoolDateFormat(),strtotime($result['from_date']));
-		$result['to_date']   = date($this->customlib->getSchoolDateFormat(),strtotime($result['to_date']));
+        $result              = !empty($id) ? $this->holiday_model->get($id) : null;
+        if (!empty($result) && is_array($result)) {
+            $result['from_date'] = !empty($result['from_date']) ? date($this->customlib->getSchoolDateFormat(), strtotime($result['from_date'])) : '';
+            $result['to_date']   = !empty($result['to_date']) ? date($this->customlib->getSchoolDateFormat(), strtotime($result['to_date'])) : '';
+        } else {
+            $result = ['from_date' => '', 'to_date' => ''];
+        }
         $json_array          = array('status' => '1', 'error' => '', 'result' => $result);
         echo json_encode($json_array);
     }

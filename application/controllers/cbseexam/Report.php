@@ -393,8 +393,7 @@ class Report extends MY_Addon_CBSEController
         }
     }
 
-    public function getTermTemplateWise()
-    {
+    public function getTermTemplateWise() { if (empty($this->input->post("template_id"))) { echo json_encode(["status" => 0, "page" => ""]); return; }
         $template_id           = $this->input->post('template_id');
         $data['template_data'] = $this->cbseexam_template_model->getTemplateTermsOrExam($template_id);
         $page                  = $this->load->view('cbseexam/report/_getTermTemplateWise', $data, true);

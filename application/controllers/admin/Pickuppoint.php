@@ -218,7 +218,8 @@ class Pickuppoint extends Admin_Controller
 
     public function create()
     {
-        if ($_POST['action_type'] == 'add') {
+        $action_type = $_POST['action_type'] ?? '';
+        if ($action_type == 'add') {
                 $this->form_validation->set_rules('route_id', $this->lang->line('route'), 'trim|required|xss_clean');
                 $pickup_point_id=implode(",",$_POST['pickup_point']);
                 $route_id=$_POST['route_id'];
@@ -375,7 +376,8 @@ class Pickuppoint extends Admin_Controller
         $student                       = $this->student_model->getByStudentSession($student_session_id);
         $data['student']               = $student;
         $data['student_session_id']    = $student_session_id;
-        $route_pickup_point_id         = $student['route_pickup_point_id'];
+        $student = $student ?: [];
+        $route_pickup_point_id         = $student['route_pickup_point_id'] ?? 0;
         $data['route_pickup_point_id'] = $route_pickup_point_id;
         $route_pickup_point            = $this->routepickuppoint_model->get($route_pickup_point_id);
         $data['route_pickup_point']    = $route_pickup_point;
@@ -383,7 +385,7 @@ class Pickuppoint extends Admin_Controller
 			$data['fees'][] = $this->studenttransportfee_model->getTransportFeeByMonthStudentSession($student_session_id, $route_pickup_point_id,$key);   
         }
         
-        $data['yearly_fees'] = $this->transportyearlyfee_model->getStudentTransportYearlyFees($student_session_id, $route_pickup_point_id, $student['class_id']);
+        $data['yearly_fees'] = $this->transportyearlyfee_model->getStudentTransportYearlyFees($student_session_id, $route_pickup_point_id, $student['class_id'] ?? null);
 
         $page  = $this->load->view('admin/pickuppoint/student_transport_months', $data, true);
         $array = array('status' => '1', 'error' => '', 'page' => $page);

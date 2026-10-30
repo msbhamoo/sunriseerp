@@ -263,8 +263,11 @@ class Onlineexam_model extends MY_model
         return $query->result_array();
     }
 
-    public function searchAllOnlineExamStudents($onlineexam_id, $class_id = null, $section_id = null,$is_attempted=null)
-    {   
+        public function searchAllOnlineExamStudents($onlineexam_id, $class_id = null, $section_id = null,$is_attempted=null)
+    {
+        if (empty($onlineexam_id)) {
+            return [];
+        }   
         $userdata = $this->customlib->getUserData();
          $class_section_array=$this->customlib->get_myClassSection();
         $this->db->select('class_sections.id as class_section_id,classes.id AS `class_id`,student_session.id as student_session_id,students.id,classes.class,sections.id AS `section_id`,sections.section,students.id,students.admission_no , students.roll_no,students.admission_date,students.firstname,students.middlename,students.lastname,students.image,   students.mobileno,students.email,students.state,students.city , students.pincode,students.religion,students.dob ,students.current_address,students.permanent_address,IFNULL(students.category_id, 0) as `category_id`,IFNULL(categories.category, "") as `category`,students.adhar_no,students.samagra_id,students.bank_account_no,students.bank_name, students.ifsc_code , students.guardian_name, students.guardian_relation,students.guardian_phone,students.guardian_address,students.is_active ,students.created_at ,students.updated_at,students.father_name,students.rte,students.gender,IFNULL(onlineexam_students.id, 0) as onlineexam_student_id,IFNULL(onlineexam_students.student_session_id, 0) as onlineexam_student_session_id,IFNULL(onlineexam_students.rank, 0) as exam_rank,onlineexam_students.is_attempted')->from('students');
@@ -428,7 +431,7 @@ class Onlineexam_model extends MY_model
     public function onlineexamReport($condition)
     {   
         $class_section_array=$this->customlib->get_myClassSectionQuerystring('student_session');
-        $query = "SELECT onlineexam.*,(select count(*) from onlineexam_students WHERE onlineexam_students.onlineexam_id = onlineexam.id) as assign,(select count(*) from onlineexam_questions where onlineexam_questions.onlineexam_id=onlineexam.id) as questions FROM `onlineexam` inner join onlineexam_students on onlineexam_students.onlineexam_id=onlineexam.id inner join student_session on student_session.id=onlineexam_students.student_session_id   where " . $condition .$class_section_array. " ";
+        $query = "SELECT onlineexam.*,(select count(*) from onlineexam_students WHERE onlineexam_students.onlineexam_id = onlineexam.id) as assign,(select count(*) from onlineexam_questions where onlineexam_questions.onlineexam_id=onlineexam.id) as questions FROM `onlineexam` inner join onlineexam_students on onlineexam_students.onlineexam_id=onlineexam.id inner join student_session on student_session.id=onlineexam_students.student_session_id   where " . str_replace("onlineexam.created_at", "onlineexam.created_at", $condition) .$class_section_array. " ";
         $this->datatables->query($query)
         ->searchable('onlineexam.exam,onlineexam.attempt,onlineexam.exam_from,onlineexam.exam_to,onlineexam.duration')
         ->orderable('onlineexam.exam,onlineexam.attempt,onlineexam.exam_from,onlineexam.exam_to,onlineexam.duration,null,null,null') 
@@ -440,7 +443,7 @@ class Onlineexam_model extends MY_model
     public function dtonlineexamReport($condition)
     {   
         $class_section_array=$this->customlib->get_myClassSectionQuerystring('student_session');
-        $query = "SELECT onlineexam.*,(select count(*) from onlineexam_students WHERE onlineexam_students.onlineexam_id = onlineexam.id) as assign,(select count(*) from onlineexam_questions where onlineexam_questions.onlineexam_id=onlineexam.id) as questions FROM `onlineexam` inner join onlineexam_students on onlineexam_students.onlineexam_id=onlineexam.id inner join student_session on student_session.id=onlineexam_students.student_session_id   where " . $condition .$class_section_array. " ";
+        $query = "SELECT onlineexam.*,(select count(*) from onlineexam_students WHERE onlineexam_students.onlineexam_id = onlineexam.id) as assign,(select count(*) from onlineexam_questions where onlineexam_questions.onlineexam_id=onlineexam.id) as questions FROM `onlineexam` inner join onlineexam_students on onlineexam_students.onlineexam_id=onlineexam.id inner join student_session on student_session.id=onlineexam_students.student_session_id   where " . str_replace("onlineexam.created_at", "onlineexam.created_at", $condition) .$class_section_array. " ";
         $this->datatables->query($query)
 		 
 		->group_by("onlineexam.id",true)

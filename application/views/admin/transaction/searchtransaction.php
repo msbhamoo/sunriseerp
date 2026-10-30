@@ -336,7 +336,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 
                                                         <?php
                                                     } else {
-                                                        foreach ($expenseList as $key => $value) {
+                                                        if (!is_array($expenseList)) $expenseList = []; foreach ($expenseList as $key => $value) {
                                                             $grand_total = $grand_total + $value['amount'];
                                                             ?>
                                                             <tr>
@@ -403,7 +403,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 
                                                         <?php
                                                     } else {
-                                                        foreach ($incomeList as $key => $values) {
+                                                        if (!is_array($incomeList)) $incomeList = []; foreach ($incomeList as $key => $values) {
                                                             $grand_total = $grand_total + $values['amount'];
                                                             ?>
                                                             <tr>

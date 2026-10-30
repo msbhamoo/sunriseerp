@@ -489,6 +489,7 @@ class User extends Student_Controller
         $data["homeworklist"] = $homeworklist;
 
         // notification list start
+        $notifications = array();
         $user_role = $this->customlib->getUserRole();
         if ($user_role == 'student') {
             $student_id    = $this->customlib->getStudentSessionUserID();
@@ -609,8 +610,8 @@ class User extends Student_Controller
 
             if ($this->form_validation->run() == false) {
                 $sessionData            = $this->session->userdata('student');
-                $this->data['id']       = $sessionData['id'];
-                $this->data['username'] = $sessionData['username'];
+                $data['id']       = $sessionData['id'];
+                $data['username'] = $sessionData['username'];
                 $this->load->view('layout/student/header', $data);
                 $this->load->view('user/change_password', $data);
                 $this->load->view('layout/student/footer', $data);
@@ -745,10 +746,12 @@ class User extends Student_Controller
             $this->user_model->add($update_data);
         }
 
-        $this->session->userdata['student']['currency_base_price'] = $currency->base_price;
-        $this->session->userdata['student']['currency_symbol']     = $currency->symbol;
-        $this->session->userdata['student']['currency']            = $currency_id;
-        $this->session->userdata['student']['currency_name']       = $currency->short_name;
+        $st_sess = $this->session->userdata('student') ?: [];
+        $st_sess['currency_base_price'] = is_object($currency) ? ($currency->base_price ?? 1) : ($currency['base_price'] ?? 1);
+        $st_sess['currency_symbol']     = is_object($currency) ? ($currency->symbol ?? '') : ($currency['symbol'] ?? '');
+        $st_sess['currency']            = $currency_id;
+        $st_sess['currency_name']       = is_object($currency) ? ($currency->short_name ?? '') : ($currency['short_name'] ?? '');
+        $this->session->set_userdata('student', $st_sess);
         echo json_encode(['status' => 1, 'message' => $this->lang->line('currency_changed_successfully')]);
     }
 
@@ -1127,7 +1130,7 @@ class User extends Student_Controller
     {
         $data['sch_setting'] = $this->sch_setting_detail;
         $record              = $this->input->post('data');
-        $record_array        = json_decode($record);
+        $record_array        = json_decode($record) ?: [];
         $fees_array          = array();
         foreach ($record_array as $key => $value) {
             $fee_groups_feetype_id = $value->fee_groups_feetype_id;
@@ -1157,7 +1160,7 @@ class User extends Student_Controller
         $setting_result      = $this->setting_model->get();
         $data['settinglist'] = $setting_result;
         $record              = $this->input->post('data');
-        $record_array        = json_decode($record);
+        $record_array        = json_decode($record) ?: [];
         $fees_array          = array();
         foreach ($record_array as $key => $value) {
             $fee_groups_feetype_id = $value->fee_groups_feetype_id;
@@ -1285,6 +1288,7 @@ class User extends Student_Controller
     {
         $image_validate = $this->config->item('file_validate');
         $result         = $this->filetype_model->get();
+        if (empty($_FILES['first_doc']['name']) || !is_array($_FILES['first_doc']['name'])) { return true; }
         for ($i = 0; $i < count($_FILES['first_doc']['name']); $i++) {
             if (isset($_FILES["first_doc"]) && !empty($_FILES['first_doc']['name'][$i])) {
 
@@ -1955,11 +1959,11 @@ class User extends Student_Controller
     public function save_image()
     {
         $student_id     = $this->customlib->getStudentSessionUserID();
-        $first_title    = $_POST['first_title'];
-        $accessToken    = $_POST['accessToken'];
-        $data           = $_POST['data'];
+        $first_title    = $_POST['first_title'] ?? '';
+        $accessToken    = $_POST['accessToken'] ?? '';
+        $data           = $_POST['data'] ?? [];
         $savedFiles = [];
-        $totalSize = $this->media_storage->getTmpGoogleDriveFileSize($data['docs'], $accessToken);
+        $totalSize = (!empty($data['docs']) && is_array($data['docs'])) ? $this->media_storage->getTmpGoogleDriveFileSize($data['docs'], $accessToken) : 0;
 
         $this->form_validation->set_rules(
             'validate_resource',

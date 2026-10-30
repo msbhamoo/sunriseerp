@@ -1,0 +1,1684 @@
+<style>
+/* Modern Transportation Attendance Styles */
+.trans-stat-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+.trans-stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+.trans-stat-card .stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.trans-stat-card.stat-total { border-top: 3px solid #3b82f6; }
+.trans-stat-card.stat-total .stat-icon { background: #eff6ff; color: #2563eb; }
+
+.trans-stat-card.stat-present { border-top: 3px solid #10b981; }
+.trans-stat-card.stat-present .stat-icon { background: #ecfdf5; color: #059669; }
+
+.trans-stat-card.stat-flow { border-top: 3px solid #6366f1; }
+.trans-stat-card.stat-flow .stat-icon { background: #eef2ff; color: #4f46e5; }
+
+.trans-stat-card.stat-other { border-top: 3px solid #f59e0b; }
+.trans-stat-card.stat-other .stat-icon { background: #fffbeb; color: #d97706; }
+
+.trans-stat-val {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.15;
+    color: #0f172a;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+.trans-stat-lbl {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #64748b;
+    margin: 0 0 3px 0;
+}
+.trans-stat-sub {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    margin: 3px 0 0 0;
+    white-space: nowrap;
+}
+
+/* Shift Flow Insight Banner */
+.shift-flow-banner {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #6366f1;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #334155;
+}
+
+/* Unified Action & Filter Toolbar */
+.trans-toolbar-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.trans-toolbar-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.trans-toolbar-row + .trans-toolbar-row {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.btn-cta-action {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 6px 14px !important;
+    border-radius: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: all 0.15s ease-in-out !important;
+    border: none !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+}
+.btn-cta-present {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+}
+.btn-cta-present:hover {
+    background-color: #059669 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(16,185,129,0.3) !important;
+}
+
+.btn-cta-absent {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+}
+.btn-cta-absent:hover {
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(239,68,68,0.3) !important;
+}
+
+/* Filter Chips */
+.filter-chip-group {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.filter-chip {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    user-select: none;
+}
+.filter-chip:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+.filter-chip.active {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 2px 5px rgba(37,99,235,0.25);
+}
+.filter-chip .badge-count {
+    background: rgba(0,0,0,0.07);
+    border-radius: 10px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 800;
+}
+.filter-chip.active .badge-count {
+    background: rgba(255,255,255,0.28);
+    color: #ffffff;
+}
+
+/* Search Box Container */
+.search-box-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+}
+.search-box-wrap input {
+    width: 100%;
+    height: 32px;
+    padding-left: 32px;
+    padding-right: 28px;
+    font-size: 12px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    transition: border-color 0.15s ease;
+}
+.search-box-wrap input:focus {
+    border-color: #3b82f6;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+}
+.search-box-wrap .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: #94a3b8;
+    pointer-events: none;
+}
+.search-box-wrap .clear-icon {
+    position: absolute;
+    right: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: #94a3b8;
+    cursor: pointer;
+    display: none;
+}
+.search-box-wrap .clear-icon:hover {
+    color: #475569;
+}
+
+/* Inline Segmented Attendance Action Buttons */
+.status-toggle-group {
+    display: inline-flex;
+    background: #f1f5f9;
+    padding: 2px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    gap: 2px;
+    white-space: nowrap;
+}
+
+.btn-touch-status {
+    font-weight: 600 !important;
+    padding: 4px 9px !important;
+    font-size: 11px !important;
+    border-radius: 4px !important;
+    margin: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    color: #64748b !important;
+    transition: all 0.12s ease-in-out !important;
+    outline: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+}
+.btn-touch-status:hover {
+    background-color: #e2e8f0 !important;
+    color: #1e293b !important;
+}
+
+.btn-present-active {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(16, 185, 129, 0.35) !important;
+}
+.btn-present-active:hover {
+    background-color: #059669 !important;
+    color: #ffffff !important;
+}
+
+.btn-absent-active {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(239, 68, 68, 0.35) !important;
+}
+.btn-absent-active:hover {
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+}
+
+.btn-hostel-active {
+    background-color: #8b5cf6 !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(139, 92, 246, 0.35) !important;
+}
+.btn-hostel-active:hover {
+    background-color: #7c3aed !important;
+    color: #ffffff !important;
+}
+
+.btn-gatepass-active {
+    background-color: #f59e0b !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(245, 158, 11, 0.35) !important;
+}
+.btn-gatepass-active:hover {
+    background-color: #d97706 !important;
+    color: #ffffff !important;
+}
+
+.btn-switched-active {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.35) !important;
+}
+.btn-switched-active:hover {
+    background-color: #1d4ed8 !important;
+    color: #ffffff !important;
+}
+
+/* Student Circular Avatar */
+.student-avatar-img {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    display: inline-block;
+    flex-shrink: 0;
+    aspect-ratio: 1 / 1;
+}
+
+/* Modal Duration Preset Buttons */
+.duration-preset-btn {
+    background: #ffffff !important;
+    color: #475569 !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    padding: 7px 10px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease-in-out !important;
+    text-align: center !important;
+    outline: none !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 1 1 0px !important;
+    min-width: 85px !important;
+}
+.duration-preset-btn:hover {
+    background: #f1f5f9 !important;
+    color: #1e293b !important;
+    border-color: #94a3b8 !important;
+    text-decoration: none !important;
+}
+.duration-preset-btn.active {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35) !important;
+    text-decoration: none !important;
+}
+
+/* Sortable Headers */
+.sortable-th {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    transition: background-color 0.15s ease;
+}
+.sortable-th:hover {
+    background-color: #f1f5f9 !important;
+    color: #2563eb;
+}
+.sort-icon {
+    font-size: 11px;
+    margin-left: 5px;
+    color: #94a3b8;
+}
+.sortable-th.sorted-asc .sort-icon {
+    color: #2563eb;
+}
+.sortable-th.sorted-desc .sort-icon {
+    color: #2563eb;
+}
+
+/* Table Enhancements */
+.trans-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.trans-table thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #cbd5e1 !important;
+    padding: 10px 10px !important;
+    vertical-align: middle !important;
+}
+.trans-table tbody tr:hover {
+    background-color: #f8fafc !important;
+}
+.trans-table td {
+    padding: 8px 10px !important;
+    vertical-align: middle !important;
+    border-top: 1px solid #edf2f7 !important;
+}
+
+/* Sticky Save Footer */
+.sticky-save-bar {
+    position: sticky;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(8px);
+    padding: 10px 18px;
+    border-top: 2px solid #3b82f6;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+    z-index: 1020;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 0 0 6px 6px;
+}
+
+@media (max-width: 991px) {
+    .trans-toolbar-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .search-box-wrap {
+        max-width: 100%;
+    }
+}
+@media (max-width: 768px) {
+    .sticky-save-bar {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+    .status-toggle-group {
+        display: flex;
+        width: 100%;
+    }
+    .btn-touch-status {
+        flex: 1;
+        justify-content: center;
+        padding: 6px 4px !important;
+        font-size: 10px !important;
+    }
+}
+</style>
+
+<div class="content-wrapper">
+    <section class="content-header" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 15px;">
+        <h1 style="margin:0; font-size:20px; font-weight:700; color:#1e293b;">
+            <i class="fa fa-bus text-primary" style="margin-right:6px;"></i> <?php echo $this->lang->line('transport'); ?> Attendance
+        </h1>
+        <div>
+            <?php 
+                $mobile_query_params = array();
+                if (!empty($vehicle_id)) $mobile_query_params['vehicle_id'] = $vehicle_id;
+                if (!empty($date)) $mobile_query_params['date'] = date('Y-m-d', strtotime($date));
+                if (!empty($attendance_type)) $mobile_query_params['attendance_type'] = $attendance_type;
+                if (!empty($route_id)) $mobile_query_params['route_id'] = $route_id;
+                $mobile_url = site_url('admin/transportattendance/mobile') . (!empty($mobile_query_params) ? '?' . http_build_query($mobile_query_params) : '');
+            ?>
+            <a href="<?php echo $mobile_url; ?>" class="btn btn-sm btn-default" style="font-weight:600; border-radius:6px; border-color:#cbd5e1; box-shadow:0 1px 2px rgba(0,0,0,0.05); color:#334155;">
+                <i class="fa fa-mobile-phone fa-lg text-primary"></i> Mobile Quick Mode
+            </a>
+        </div>
+    </section>
+    
+    <section class="content" style="padding-top: 5px;">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- Search Criteria Box -->
+                <div class="box box-primary" style="border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05); margin-bottom:15px;">
+                    <div class="box-header with-border" style="padding:10px 15px;">
+                        <h3 class="box-title" style="font-size:14px; font-weight:700; color:#334155;"><i class="fa fa-sliders"></i> Select Criteria</h3>
+                    </div>
+                    <form id="attendance_form" action="<?php echo site_url('admin/transportattendance/index'); ?>" method="post">
+                        <div class="box-body" style="padding:12px 15px 5px 15px;">
+                            <?php echo $this->customlib->getCSRF(); ?>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group" style="margin-bottom:10px;">
+                                        <label for="date" style="font-size:12px; font-weight:600; color:#475569;"><?php echo $this->lang->line('date'); ?></label> <small class="req"> *</small>
+                                        <input type="text" id="date" name="date" class="form-control date input-sm" value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat())); ?>" autocomplete="off" style="border-radius:4px;" />
+                                        <span class="text-danger"><?php echo form_error('date'); ?></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group" style="margin-bottom:10px;">
+                                        <label style="font-size:12px; font-weight:600; color:#475569;">Vehicle / Bus</label> <small class="req"> *</small>
+                                        <select class="form-control select2 input-sm" name="vehicle_id" id="vehicle_id" style="width:100%;">
+                                            <option value="">Select Bus</option>
+                                            <?php 
+                                             $auto_select_single = (isset($vehiclelist) && count($vehiclelist) == 1);
+                                             foreach ($vehiclelist as $vehicle) { 
+                                                 $selected = set_select('vehicle_id', $vehicle['id'], (isset($vehicle_id) && $vehicle_id == $vehicle['id']));
+                                                 if (empty($selected) && $auto_select_single && !isset($_POST['vehicle_id'])) {
+                                                     $selected = 'selected="selected"';
+                                                 }
+                                             ?>
+                                                 <option value="<?php echo $vehicle['id'] ?>" <?php echo $selected; ?>><?php echo $vehicle['vehicle_no'] ?></option>
+                                             <?php } ?>
+                                        </select>
+                                        <span class="text-danger"><?php echo form_error('vehicle_id'); ?></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group" style="margin-bottom:10px;">
+                                        <label style="font-size:12px; font-weight:600; color:#475569;">Route (Route-Wise Attendance)</label>
+                                        <select class="form-control select2 input-sm" name="route_id" id="route_id" style="width:100%;">
+                                            <option value="">All Routes (or Select Route)</option>
+                                            <?php 
+                                            if (isset($all_routes) && !empty($all_routes)) {
+                                                foreach ($all_routes as $r) {
+                                                    $r_selected = (isset($route_id) && $route_id == $r['id']) ? 'selected="selected"' : '';
+                                                    echo '<option value="' . $r['id'] . '" ' . $r_selected . '>' . $r['route_title'] . '</option>';
+                                                }
+                                            } elseif (isset($vehicle_routes) && !empty($vehicle_routes)) {
+                                                $seen_routes = array();
+                                                foreach ($vehicle_routes as $vr) {
+                                                    $curr_r_id = isset($vr['route_id']) ? $vr['route_id'] : $vr['vehroute_id'];
+                                                    if (!isset($seen_routes[$curr_r_id])) {
+                                                        $seen_routes[$curr_r_id] = true;
+                                                        $r_selected = (isset($route_id) && $route_id == $curr_r_id) ? 'selected="selected"' : '';
+                                                        echo '<option value="' . $curr_r_id . '" ' . $r_selected . '>' . $vr['route_title'] . '</option>';
+                                                    }
+                                                }
+                                            }
+                                            ?>
+                                        </select>
+                                        <span class="text-danger"><?php echo form_error('route_id'); ?></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group" style="margin-bottom:10px;">
+                                        <label style="font-size:12px; font-weight:600; color:#475569;">Attendance Shift</label> <small class="req"> *</small>
+                                        <select class="form-control select2 input-sm" name="attendance_type" style="width:100%;">
+                                            <option value="">Select Shift</option>
+                                            <option value="morning" <?php echo set_select('attendance_type', 'morning', (isset($attendance_type) && $attendance_type == 'morning')); ?>>Morning Shift</option>
+                                            <option value="evening" <?php echo set_select('attendance_type', 'evening', (isset($attendance_type) && $attendance_type == 'evening')); ?>>Evening Shift</option>
+                                        </select>
+                                        <span class="text-danger"><?php echo form_error('attendance_type'); ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-footer" style="background:#fafbfc; border-top:1px solid #f1f5f9; padding:8px 15px; border-radius:0 0 8px 8px;">
+                            <button type="submit" name="search" value="search" class="btn btn-primary pull-right btn-sm" style="font-weight:600; padding:4px 14px; border-radius:4px;">
+                                <i class="fa fa-search"></i> Search Students
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <?php if (isset($resultlist)) { ?>
+                    <div class="box box-solid" id="attendance" style="border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05); border:1px solid #e2e8f0;">
+                        <div class="box-header" style="background:#ffffff; border-bottom:1px solid #e2e8f0; padding:12px 16px; border-radius:8px 8px 0 0; display:flex; justify-content:space-between; align-items:center;">
+                            <h3 class="box-title" style="font-size:15px; font-weight:700; color:#1e293b; margin:0;">
+                                <i class="fa fa-users text-primary" style="margin-right:5px;"></i> Student List
+                            </h3>
+                            <div class="box-tools">
+                                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#customRiderModal" style="font-weight:600; font-size:12px; border-radius:6px; padding:4px 12px; box-shadow:0 1px 2px rgba(37,99,235,0.2);">
+                                    <i class="fa fa-user-plus"></i> Add Custom Rider
+                                </button>
+                            </div>
+                        </div>
+                        <div class="box-body" style="padding:15px;">
+                            <?php if ($this->session->flashdata('msg')) { ?>
+                                <?php echo $this->session->flashdata('msg') ?>
+                            <?php } ?>
+                            
+                            <?php if (empty($resultlist)) { ?>
+                                <div class="alert alert-info" style="border-radius:6px;"><i class="fa fa-info-circle"></i> No students found for the selected vehicle and criteria.</div>
+                            <?php } else { ?>
+
+                                <!-- Executive Metric Summary Cards -->
+                                <?php
+                                    $is_evening = (strtolower($attendance_type) == 'evening');
+                                    $m_total = isset($metrics['total_strength']) ? $metrics['total_strength'] : count($resultlist);
+                                    $m_reg = isset($metrics['regular_count']) ? $metrics['regular_count'] : $m_total;
+                                    $m_cust = isset($metrics['custom_count']) ? $metrics['custom_count'] : 0;
+                                    $m_pres = isset($metrics['present_count']) ? $metrics['present_count'] : 0;
+                                    $m_abs = isset($metrics['absent_count']) ? $metrics['absent_count'] : 0;
+                                    $m_morning_pres = isset($metrics['morning_present_count']) ? $metrics['morning_present_count'] : 0;
+                                    $m_flow_retained = isset($metrics['retained_flow_count']) ? $metrics['retained_flow_count'] : 0;
+                                    $m_gp = isset($metrics['gatepass_count']) ? $metrics['gatepass_count'] : 0;
+                                    $m_sw_out = isset($metrics['switched_out_count']) ? $metrics['switched_out_count'] : 0;
+                                ?>
+                                <div class="row" style="margin-bottom:6px;">
+                                    <!-- Card 1: Total Strength -->
+                                    <div class="col-xs-6 col-sm-3">
+                                        <div class="trans-stat-card stat-total">
+                                            <div>
+                                                <p class="trans-stat-lbl"><i class="fa fa-users text-primary"></i> Total Bus Strength</p>
+                                                <div class="trans-stat-val">
+                                                    <span id="count_total"><?php echo $m_total; ?></span>
+                                                    <small style="font-size:12px; color:#64748b; font-weight:600;">Riders</small>
+                                                </div>
+                                                <p class="trans-stat-sub" id="count_regular_sub">
+                                                    <?php echo $m_reg; ?> Regular + <?php echo $m_cust; ?> Custom
+                                                </p>
+                                            </div>
+                                            <div class="stat-icon"><i class="fa fa-bus"></i></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 2: Current Shift Attendance -->
+                                    <div class="col-xs-6 col-sm-3">
+                                        <div class="trans-stat-card stat-present">
+                                            <div>
+                                                <p class="trans-stat-lbl"><i class="fa fa-check-circle text-success"></i> <?php echo ucfirst($attendance_type); ?> Shift Status</p>
+                                                <div class="trans-stat-val">
+                                                    <span id="count_present" style="color:#059669;"><?php echo $m_pres; ?></span>
+                                                    <span style="font-size:14px; color:#cbd5e1; font-weight:400;">/</span>
+                                                    <span id="count_absent" style="font-size:16px; color:#dc2626;"><?php echo $m_abs; ?> <small style="font-size:10px; color:#ef4444; font-weight:700;">ABSENT</small></span>
+                                                </div>
+                                                <p class="trans-stat-sub" id="count_present_sub">
+                                                    Live Marked for Current Trip
+                                                </p>
+                                            </div>
+                                            <div class="stat-icon"><i class="fa fa-check"></i></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 3: Cross-Shift Flow Metric -->
+                                    <div class="col-xs-6 col-sm-3">
+                                        <div class="trans-stat-card stat-flow">
+                                            <div>
+                                                <p class="trans-stat-lbl">
+                                                    <i class="fa fa-exchange text-indigo"></i> 
+                                                    <?php echo $is_evening ? 'Morning &rarr; Evening Flow' : 'Morning Pickup Flow'; ?>
+                                                </p>
+                                                <div class="trans-stat-val">
+                                                    <span id="flow_metric_val" style="color:#4f46e5;">
+                                                        <?php echo $is_evening ? ($m_flow_retained . ' / ' . $m_morning_pres) : ($m_pres . ' / ' . $m_total); ?>
+                                                    </span>
+                                                    <small style="font-size:11px; color:#64748b; font-weight:600;">
+                                                        <?php echo $is_evening ? 'Boarded Return' : 'Boarded Pickup'; ?>
+                                                    </small>
+                                                </div>
+                                                <p class="trans-stat-sub" id="flow_metric_sub">
+                                                    <?php if ($is_evening) { ?>
+                                                        <?php 
+                                                            $missing_morning = $m_morning_pres - $m_flow_retained;
+                                                            if ($missing_morning > 0) {
+                                                                echo '<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> ' . $missing_morning . ' Morning Riders Not On Board</span>';
+                                                            } else {
+                                                                echo '<span class="text-success"><i class="fa fa-check-circle"></i> All Morning Riders Accounted</span>';
+                                                            }
+                                                        ?>
+                                                    <?php } else { ?>
+                                                        <span class="text-muted"><i class="fa fa-sun-o"></i> Morning Pickup Boarding</span>
+                                                    <?php } ?>
+                                                </p>
+                                            </div>
+                                            <div class="stat-icon"><i class="fa <?php echo $is_evening ? 'fa-exchange' : 'fa-sun-o'; ?>"></i></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 4: Exceptions & Switches -->
+                                    <div class="col-xs-6 col-sm-3">
+                                        <div class="trans-stat-card stat-other">
+                                            <div>
+                                                <p class="trans-stat-lbl"><i class="fa fa-id-card-o text-warning"></i> Gatepass & Exceptions</p>
+                                                <div class="trans-stat-val">
+                                                    <span id="count_exceptions" style="color:#d97706;"><?php echo ($m_gp + $m_sw_out); ?></span>
+                                                    <small style="font-size:11px; color:#64748b; font-weight:600;">Exceptions</small>
+                                                </div>
+                                                <p class="trans-stat-sub" id="count_exceptions_sub">
+                                                    <?php echo $m_gp; ?> Gatepass &bull; <?php echo $m_sw_out; ?> Switched Out
+                                                </p>
+                                            </div>
+                                            <div class="stat-icon"><i class="fa fa-ticket"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Unified Action & Filter Toolbar -->
+                                <div class="trans-toolbar-box">
+                                    <!-- Row 1: Bulk Actions & Sort/Sound Controls -->
+                                    <div class="trans-toolbar-row">
+                                        <!-- Left: Bulk CTAs -->
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <button type="button" class="btn btn-cta-action btn-cta-present" onclick="markAllStatus('Present')" title="Mark all listed students as Present">
+                                                <i class="fa fa-check-circle"></i> Mark All Present
+                                            </button>
+                                            <button type="button" class="btn btn-cta-action btn-cta-absent" onclick="markAllStatus('Absent')" title="Mark all listed students as Absent">
+                                                <i class="fa fa-times-circle"></i> Mark All Absent
+                                            </button>
+                                        </div>
+
+                                        <!-- Right: Sort & Sound Controls -->
+                                        <div style="display:flex; align-items:center; gap:10px;">
+                                            <button type="button" id="btn_sound_toggle" class="btn btn-default input-sm sound-feedback-toggle" style="height:32px; padding:4px 10px; font-size:11px; font-weight:700; border-radius:6px; border-color:#cbd5e1; display:inline-flex; align-items:center; gap:5px; color:#475569; background:#ffffff;" title="Toggle Sound & Haptic Feedback">
+                                                <i class="fa fa-volume-up text-success" id="sound_icon" style="font-size:13px;"></i> <span id="sound_toggle_text">Sound: ON</span>
+                                            </button>
+
+                                            <div style="display:flex; align-items:center; gap:5px;">
+                                                <span style="font-size:11px; font-weight:700; color:#64748b;"><i class="fa fa-sort"></i> Sort:</span>
+                                                <select id="quick_sort_select" class="form-control input-sm" style="width:170px; font-size:11px; height:32px; padding:4px 8px; border-radius:6px; border-color:#cbd5e1; font-weight:600;">
+                                                    <option value="name_asc" selected>Student Name (A &rarr; Z)</option>
+                                                    <option value="name_desc">Student Name (Z &rarr; A)</option>
+                                                    <option value="adm_asc">Adm No (Low - High)</option>
+                                                    <option value="adm_desc">Adm No (High - Low)</option>
+                                                    <option value="stop_asc">Bus Stop (A &rarr; Z)</option>
+                                                    <option value="class_asc">Class (A &rarr; Z)</option>
+                                                    <option value="status_present">Status (Present first)</option>
+                                                    <option value="status_absent">Status (Absent first)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Row 2: Live Search & Category Filter Pills -->
+                                    <div class="trans-toolbar-row">
+                                        <!-- Search Box -->
+                                        <div class="search-box-wrap" style="flex: 1; max-width: 380px;">
+                                            <i class="fa fa-search search-icon"></i>
+                                            <input type="text" id="touch_student_search" placeholder="Search student name, adm no, route, or bus stop...">
+                                            <i class="fa fa-times-circle clear-icon" id="clear_search_btn" title="Clear search"></i>
+                                        </div>
+
+                                        <!-- Filter Pills -->
+                                        <div class="filter-chip-group">
+                                            <span style="font-size:11px; font-weight:700; color:#64748b; margin-right:2px;">Filter:</span>
+                                            <span class="filter-chip active" data-filter="all">All <span class="badge-count chip-count-all"><?php echo $m_total; ?></span></span>
+                                            <span class="filter-chip" data-filter="Present">Present <span class="badge-count chip-count-present"><?php echo $m_pres; ?></span></span>
+                                            <span class="filter-chip" data-filter="Absent">Absent <span class="badge-count chip-count-absent"><?php echo $m_abs; ?></span></span>
+                                            <span class="filter-chip" data-filter="Custom">Custom Riders <span class="badge-count chip-count-custom"><?php echo $m_cust; ?></span></span>
+                                            <span class="filter-chip" data-filter="Gatepass">Gatepass <span class="badge-count chip-count-gatepass"><?php echo $m_gp; ?></span></span>
+                                            <span class="filter-chip" data-filter="Switched">Switched Out <span class="badge-count chip-count-switched"><?php echo $m_sw_out; ?></span></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <form id="save_bus_attendance_form" action="<?php echo site_url('admin/transportattendance/save') ?>" method="post">
+                                    <?php echo $this->customlib->getCSRF(); ?>
+                                    <input type="hidden" name="date" value="<?php echo date('Y-m-d', strtotime($date)); ?>">
+                                    <input type="hidden" name="vehicle_id" value="<?php echo $vehicle_id; ?>">
+                                    <input type="hidden" name="attendance_type" value="<?php echo $attendance_type; ?>">
+                                    
+                                    <div class="table-responsive p-b-20" style="border:1px solid #e2e8f0; border-radius:6px;">
+                                        <table class="table table-hover trans-table" id="attendance_table" style="margin-bottom:0;">
+                                            <thead>
+                                                <tr>
+                                                    <th class="sortable-th" data-sort="adm" style="width:10%;">
+                                                        Adm No <i class="fa fa-sort sort-icon"></i>
+                                                    </th>
+                                                    <th class="sortable-th sorted-asc" data-sort="name" style="width:30%;">
+                                                        Student & Stop Info <i class="fa fa-sort-alpha-asc sort-icon"></i>
+                                                    </th>
+                                                    <th class="sortable-th" data-sort="class" style="width:12%;">
+                                                        Class (Section) <i class="fa fa-sort sort-icon"></i>
+                                                    </th>
+                                                    <th class="sortable-th" data-sort="opp_status" style="width:16%;">
+                                                        <?php echo isset($opposite_shift) ? $opposite_shift . ' Shift Status' : 'Morning Status'; ?> <i class="fa fa-sort sort-icon"></i>
+                                                    </th>
+                                                    <th class="sortable-th" data-sort="status" style="width:20%;">
+                                                        Attendance Action <i class="fa fa-sort sort-icon"></i>
+                                                    </th>
+                                                    <th style="width:12%;">Remark</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="student_list_tbody">
+                                                <?php foreach ($resultlist as $student) { 
+                                                    $st_val = isset($student['attendance_status']) ? $student['attendance_status'] : 'Present';
+                                                    $is_custom = (isset($student['status']) && $student['status'] == 'Switched Bus');
+                                                    if ($is_custom) {
+                                                        $st_val = 'Present';
+                                                    }
+                                                    $has_switched_out = !empty($student['switched_out_info']);
+                                                    $full_name = trim($student['firstname'] . ' ' . $student['lastname']);
+                                                    $stop_title = !empty($student['pickup_point_name']) ? $student['pickup_point_name'] : (!empty($student['route_title']) ? $student['route_title'] : '');
+                                                    $class_sec = $student['class'] . ' (' . $student['section'] . ')';
+                                                    $opp_status = isset($student['opposite_shift_status']) ? $student['opposite_shift_status'] : 'Not Marked';
+                                                ?>
+                                                    <tr class="student-row" 
+                                                        data-adm="<?php echo (int)preg_replace('/[^0-9]/', '', $student['admission_no']); ?>" 
+                                                        data-adm-raw="<?php echo htmlspecialchars($student['admission_no']); ?>" 
+                                                        data-name="<?php echo htmlspecialchars(strtolower($full_name)); ?>" 
+                                                        data-stop="<?php echo htmlspecialchars(strtolower($stop_title)); ?>" 
+                                                        data-class="<?php echo htmlspecialchars(strtolower($class_sec)); ?>" 
+                                                        data-status="<?php echo htmlspecialchars($st_val); ?>"
+                                                        data-opp-status="<?php echo htmlspecialchars(strtolower($opp_status)); ?>"
+                                                        data-custom="<?php echo $is_custom ? 'yes' : 'no'; ?>">
+                                                        
+                                                        <td style="vertical-align:middle; font-weight:700; color:#1e293b;">
+                                                            <?php echo $student['admission_no']; ?>
+                                                            <input type="hidden" name="student_session[]" value="<?php echo $student['student_session_id']; ?>">
+                                                            <?php if ($is_custom) { ?>
+                                                                <input type="hidden" name="is_custom_rider<?php echo $student['student_session_id']; ?>" value="yes">
+                                                            <?php } ?>
+                                                        </td>
+
+                                                        <td style="vertical-align:middle;">
+                                                            <div style="display:flex; align-items:center; gap:12px;">
+                                                                <?php 
+                                                                $img_src = !empty($student['image']) ? base_url($student['image']) : base_url('uploads/student_images/no_image.png');
+                                                                ?>
+                                                                <div class="student-avatar-wrapper" style="width:40px; height:40px; min-width:40px; max-width:40px; min-height:40px; max-height:40px; border-radius:50%; overflow:hidden; border:2px solid #e2e8f0; box-shadow:0 1px 3px rgba(0,0,0,0.08); flex-shrink:0; display:flex; align-items:center; justify-content:center; background:#f8fafc;">
+                                                                    <img src="<?php echo $img_src; ?>" style="width:100% !important; height:100% !important; max-width:100% !important; max-height:100% !important; object-fit:cover !important; border-radius:50% !important; display:block;" onerror="this.src='<?php echo base_url('uploads/student_images/no_image.png'); ?>';">
+                                                                </div>
+                                                                <div style="min-width:0; flex-grow:1;">
+                                                                    <div style="font-size:13px; font-weight:700; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                                                        <?php echo $full_name; ?>
+                                                                    </div>
+                                                                    <?php if (!empty($student['route_title']) || !empty($student['pickup_point_name'])) { ?>
+                                                                        <div style="font-size:11px; color:#64748b; margin-top:2px; display:flex; flex-wrap:wrap; gap:6px;">
+                                                                            <?php if (!empty($student['route_title'])) { ?>
+                                                                                <span style="color:#2563eb;"><i class="fa fa-road"></i> <strong><?php echo $student['route_title']; ?></strong></span>
+                                                                            <?php } ?>
+                                                                            <?php if (!empty($student['pickup_point_name'])) { ?>
+                                                                                <span style="color:#475569;"><i class="fa fa-map-marker text-danger"></i> Stop: <strong><?php echo $student['pickup_point_name']; ?></strong></span>
+                                                                            <?php } ?>
+                                                                        </div>
+                                                                    <?php } ?>
+                                                                    <?php if (!empty($student['has_gatepass'])) { ?>
+                                                                        <span class="label" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a; font-size:10px; margin-top:2px; display:inline-block; padding:1px 5px;"><i class="fa fa-ticket"></i> Gatepass Issued Today</span>
+                                                                    <?php } ?>
+                                                                    <?php if ($has_switched_out) { ?>
+                                                                        <div style="margin-top:2px;">
+                                                                            <span class="label" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; font-size:10px; display:inline-block; padding:2px 6px; font-weight:700;">
+                                                                                <i class="fa fa-exchange text-warning"></i> Switched to Bus #<?php echo htmlspecialchars($student['switched_out_info']['new_vehicle_no']); ?>
+                                                                                <?php if (!empty($student['switched_out_info']['remark'])) { ?>
+                                                                                    <span style="font-weight:normal; opacity:0.9;">(<?php echo htmlspecialchars($student['switched_out_info']['remark']); ?>)</span>
+                                                                                <?php } ?>
+                                                                            </span>
+                                                                        </div>
+                                                                    <?php } ?>
+                                                                    <?php if ($is_custom) { 
+                                                                        if (!empty($student['original_vehicle_no'])) {
+                                                                            $rider_type = 'Custom Rider (Orig: ' . $student['original_vehicle_no'] . ')';
+                                                                        } elseif (!empty($student['hostel_room_id']) && $student['hostel_room_id'] > 0) {
+                                                                            $rider_type = 'Custom Rider (Hosteler)';
+                                                                        } else {
+                                                                            $rider_type = 'Custom Rider';
+                                                                        }
+                                                                    ?>
+                                                                        <span class="label" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:10px; margin-top:2px; display:inline-block; padding:1px 5px; font-weight:700;">
+                                                                            <i class="fa fa-user-plus"></i> <?php echo $rider_type; ?>
+                                                                        </span>
+                                                                    <?php } ?>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+
+                                                        <td style="vertical-align:middle; font-size:12px; color:#334155; font-weight:600;">
+                                                            <?php echo $class_sec; ?>
+                                                        </td>
+
+                                                        <td style="vertical-align:middle;">
+                                                            <?php
+                                                             $opp_title = isset($opposite_shift) ? $opposite_shift : 'Morning';
+                                                             if ($opp_status == 'Present') {
+                                                                 echo '<span class="label" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:11px; padding:3px 7px;"><i class="fa fa-check"></i> ' . $opp_title . ': Present</span>';
+                                                             } elseif ($opp_status == 'Absent') {
+                                                                 echo '<span class="label" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; font-size:11px; padding:3px 7px;"><i class="fa fa-times"></i> ' . $opp_title . ': Absent</span>';
+                                                             } elseif ($opp_status == 'Switched Bus') {
+                                                                 echo '<span class="label" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:11px; padding:3px 7px;"><i class="fa fa-exchange"></i> ' . $opp_title . ': Switched</span>';
+                                                             } elseif ($opp_status == 'Gatepass') {
+                                                                 echo '<span class="label" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a; font-size:11px; padding:3px 7px;"><i class="fa fa-ticket"></i> ' . $opp_title . ': Gatepass</span>';
+                                                             } elseif ($opp_status == 'Hostel') {
+                                                                 echo '<span class="label" style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe; font-size:11px; padding:3px 7px;"><i class="fa fa-building"></i> ' . $opp_title . ': Hostel</span>';
+                                                             } elseif (strpos($opp_status, 'Present') !== false) {
+                                                                 echo '<span class="label" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:11px; padding:3px 7px;"><i class="fa fa-bus"></i> ' . $opp_title . ': ' . $opp_status . '</span>';
+                                                             } else {
+                                                                 echo '<span class="label" style="background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; font-size:11px; padding:3px 7px;">' . $opp_title . ': Not Marked</span>';
+                                                             }
+                                                            ?>
+                                                        </td>
+
+                                                        <td style="vertical-align:middle;">
+                                                            <?php if ($is_custom) { ?>
+                                                                <input type="hidden" name="attendencetype<?php echo $student['student_session_id']; ?>" value="Switched Bus" class="attendencetype-field">
+                                                                <input type="hidden" name="is_custom_rider<?php echo $student['student_session_id']; ?>" value="yes">
+                                                                <span class="label" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:11px; padding:5px 8px; display:inline-block; font-weight:600;"><i class="fa fa-check"></i> Custom Rider (Present)</span>
+                                                            <?php } else { ?>
+                                                                <input type="hidden" name="attendencetype<?php echo $student['student_session_id']; ?>" id="attendencetype_<?php echo $student['student_session_id']; ?>" class="attendencetype-field" value="<?php echo $st_val; ?>">
+                                                                <div class="status-toggle-group" data-session-id="<?php echo $student['student_session_id']; ?>">
+                                                                    <button type="button" class="btn btn-touch-status <?php echo ($st_val == 'Present') ? 'btn-present-active' : ''; ?>" data-value="Present" title="Present">
+                                                                        <i class="fa fa-check"></i> Present
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-touch-status <?php echo ($st_val == 'Absent') ? 'btn-absent-active' : ''; ?>" data-value="Absent" title="Absent">
+                                                                        <i class="fa fa-times"></i> Absent
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-touch-status <?php echo ($st_val == 'Switched Bus') ? 'btn-switched-active' : ''; ?>" data-value="Switched Bus" title="Switched to another bus">
+                                                                        <i class="fa fa-exchange"></i> Switched
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-touch-status <?php echo ($st_val == 'Hostel') ? 'btn-hostel-active' : ''; ?>" data-value="Hostel" title="Hostel">
+                                                                        Hostel
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-touch-status <?php echo ($st_val == 'Gatepass') ? 'btn-gatepass-active' : ''; ?>" data-value="Gatepass" title="Gatepass">
+                                                                        Gatepass
+                                                                    </button>
+                                                                </div>
+                                                            <?php } ?>
+                                                        </td>
+
+                                                        <td style="vertical-align:middle;">
+                                                            <div style="display: flex; align-items: center; gap: 4px;">
+                                                                <input type="text" name="remark<?php echo $student['student_session_id']; ?>" class="form-control input-sm" value="<?php echo htmlspecialchars($student['remark']); ?>" placeholder="Remark..." style="font-size:11px; height:28px; border-radius:4px; border-color:#cbd5e1;">
+                                                                <?php if ($is_custom) { ?>
+                                                                    <button type="button" class="btn btn-default btn-xs" title="Remove custom rider" onclick="removeCustomRider(<?php echo $student['student_session_id']; ?>, this)" style="color:#ef4444; border-color:#fecaca; padding:4px 6px;">
+                                                                        <i class="fa fa-trash"></i>
+                                                                    </button>
+                                                                <?php } ?>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                <?php } ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Sticky Bottom Save Action Bar -->
+                                    <div class="sticky-save-bar">
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <span style="font-size:13px; font-weight:700; color:#1e293b;"><i class="fa fa-bar-chart text-primary"></i> Attendance Summary:</span>
+                                            <span id="sticky_summary" style="font-size:13px; font-weight:700; color:#059669;">0 Present, 0 Absent</span>
+                                        </div>
+                                        <button type="submit" class="btn btn-success" style="font-weight:700; padding:6px 22px; font-size:13px; border-radius:6px; background:#10b981; border-color:#059669; box-shadow:0 2px 4px rgba(16,185,129,0.3);">
+                                            <i class="fa fa-save"></i> Save Attendance
+                                        </button>
+                                    </div>
+                                </form>
+                            <?php } ?>
+                        </div>
+                    </div>
+                <?php } ?>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Custom Rider Modal (Enhanced with Multi-Day / Date Range Support) -->
+<div id="customRiderModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content" style="border-radius:10px; overflow:hidden; box-shadow:0 10px 25px rgba(0,0,0,0.15);">
+            <div class="modal-header" style="background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:14px 20px;">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" style="font-weight:700; font-size:16px; color:#1e293b;">
+                    <i class="fa fa-user-plus text-primary"></i> Add Custom Rider / Temporary Bus Switch
+                </h4>
+            </div>
+            <div class="modal-body" style="padding:20px;">
+                <!-- Step 1: Duration Preset Selection -->
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label style="font-size:12px; font-weight:700; color:#334155; margin-bottom:8px; display:block;">
+                        <i class="fa fa-calendar-check-o text-primary"></i> Transfer Duration:
+                    </label>
+                    <div style="display:flex; gap:8px; width:100%; flex-wrap:wrap;" id="duration_presets_group">
+                        <button type="button" class="duration-preset-btn active" data-days="1">1 Day (Selected)</button>
+                        <button type="button" class="duration-preset-btn" data-days="2">Next 2 Days</button>
+                        <button type="button" class="duration-preset-btn" data-days="3">Next 3 Days</button>
+                        <button type="button" class="duration-preset-btn" data-days="custom">Custom Dates</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Date Range Pickers -->
+                <div class="row" style="margin-bottom:14px;">
+                    <div class="col-xs-6">
+                        <label style="font-size:11px; font-weight:600; color:#475569;">From Date</label>
+                        <div class="input-group">
+                            <input type="text" id="custom_from_date" class="form-control input-sm date" value="<?php echo isset($date) ? date($this->customlib->getSchoolDateFormat(), strtotime($date)) : date($this->customlib->getSchoolDateFormat()); ?>" style="border-radius:4px 0 0 4px; font-size:12px;">
+                            <span class="input-group-addon" style="padding:4px 8px; font-size:11px;"><i class="fa fa-calendar"></i></span>
+                        </div>
+                    </div>
+                    <div class="col-xs-6">
+                        <label style="font-size:11px; font-weight:600; color:#475569;">To Date</label>
+                        <div class="input-group">
+                            <input type="text" id="custom_to_date" class="form-control input-sm date" value="<?php echo isset($date) ? date($this->customlib->getSchoolDateFormat(), strtotime($date)) : date($this->customlib->getSchoolDateFormat()); ?>" style="border-radius:4px 0 0 4px; font-size:12px;">
+                            <span class="input-group-addon" style="padding:4px 8px; font-size:11px;"><i class="fa fa-calendar"></i></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Shift Selection -->
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label style="font-size:11px; font-weight:600; color:#475569; margin-bottom:4px; display:block;">Applicable Shift</label>
+                    <select id="custom_shift_select" class="form-control input-sm" style="border-radius:4px; font-size:12px; font-weight:600;">
+                        <option value="both" selected>Both Shifts (Morning & Evening)</option>
+                        <option value="morning">Morning Shift Only</option>
+                        <option value="evening">Evening Shift Only</option>
+                    </select>
+                </div>
+
+                <!-- Step 4: Optional Reason Note -->
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label style="font-size:11px; font-weight:600; color:#475569; margin-bottom:4px; display:block;">Reason / Note (Optional)</label>
+                    <input type="text" id="custom_rider_remark" class="form-control input-sm" placeholder="e.g. Staying with relatives / Exam duty transfer" style="border-radius:4px; font-size:12px;">
+                </div>
+
+                <hr style="margin:14px 0; border-color:#e2e8f0;">
+
+                <!-- Step 5: Student Search -->
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label style="font-size:12px; font-weight:700; color:#1e293b;"><i class="fa fa-search text-primary"></i> Search Student (Name or Admission No)</label>
+                    <input type="text" id="search_student_text" class="form-control input-sm" placeholder="Type name or adm no to find student..." style="border-radius:4px; font-size:12px;">
+                </div>
+                <div id="search_results" style="max-height: 220px; overflow-y: auto; border:1px solid #e2e8f0; border-radius:6px; display:none; background:#ffffff;">
+                    
+                </div>
+            </div>
+            <div class="modal-footer" style="background:#fafbfc; border-top:1px solid #f1f5f9; padding:10px 20px;">
+                <button type="button" class="btn btn-default btn-sm" data-dismiss="modal" style="border-radius:4px; font-weight:600;">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+// Default sorting: Alphabetical by Student Name
+var currentSortKey = 'name';
+var currentSortOrder = 'asc';
+var currentFilter = 'all';
+
+// ==========================================
+// Web Audio & Haptic Feedback Engine
+// ==========================================
+var audioCtx = null;
+var soundEnabled = (localStorage.getItem('transport_attendance_sound') !== 'false');
+
+function initAudioContext() {
+    if (!audioCtx) {
+        var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+        }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}
+
+function playAttendanceFeedback(type) {
+    if (!soundEnabled) return;
+
+    try {
+        // 1. Tactile Haptic Vibration on Mobile / Tablets
+        if (window.navigator && window.navigator.vibrate) {
+            if (type === 'Present') {
+                window.navigator.vibrate(30);
+            } else if (type === 'Absent') {
+                window.navigator.vibrate([40, 30, 40]);
+            } else {
+                window.navigator.vibrate(20);
+            }
+        }
+
+        // 2. Synthesized Audio Chimes (Web Audio API)
+        initAudioContext();
+        if (!audioCtx) return;
+
+        var now = audioCtx.currentTime;
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'Present') {
+            // High crisp positive chime (C6 -> E6 harmonic)
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1046.5, now); // C6
+            osc.frequency.exponentialRampToValueAtTime(1318.5, now + 0.08); // E6
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+            osc.start(now);
+            osc.stop(now + 0.14);
+        } else if (type === 'Absent') {
+            // Low soft warning tone (E4 -> C4)
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(329.63, now); // E4
+            osc.frequency.exponentialRampToValueAtTime(261.63, now + 0.12); // C4
+            gain.gain.setValueAtTime(0.14, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+            osc.start(now);
+            osc.stop(now + 0.18);
+        } else if (type === 'bulk') {
+            // Rapid double chime for Mark All action
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, now);
+            osc.frequency.exponentialRampToValueAtTime(1760, now + 0.15);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        } else {
+            // Soft subtle pop for Switched Bus / Gatepass / Hostel
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(659.25, now); // E5
+            gain.gain.setValueAtTime(0.09, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        }
+    } catch (err) {
+        console.warn('Audio feedback error:', err);
+    }
+}
+
+function updateSoundToggleUI() {
+    var $btn = $('#btn_sound_toggle');
+    var $icon = $('#sound_icon');
+    var $text = $('#sound_toggle_text');
+
+    if (soundEnabled) {
+        $icon.removeClass('fa-volume-off text-muted').addClass('fa-volume-up text-success');
+        $text.text('Sound: ON');
+        $btn.css({ 'background': '#ffffff', 'color': '#15803d', 'border-color': '#86efac' });
+    } else {
+        $icon.removeClass('fa-volume-up text-success').addClass('fa-volume-off text-muted');
+        $text.text('Sound: OFF');
+        $btn.css({ 'background': '#f8fafc', 'color': '#94a3b8', 'border-color': '#cbd5e1' });
+    }
+}
+
+function updateCounters() {
+    var total = $('.student-row').length;
+    var regularCount = $('.student-row[data-custom="no"]').length;
+    var customCount = $('.student-row[data-custom="yes"]').length;
+
+    var present = 0;
+    var absent = 0;
+    var switchedOutCount = 0;
+    var gatepassCount = 0;
+
+    var morningPresentTotal = 0;
+    var morningRetainedEvening = 0;
+
+    $('.student-row').each(function() {
+        var row = $(this);
+        var val = row.find('.attendencetype-field').val();
+        var isCustom = (row.attr('data-custom') === 'yes');
+        var hasGatepass = row.find('.label:contains("Gatepass")').length > 0;
+        var isSwitchedOut = row.find('.label:contains("Switched to Bus")').length > 0;
+        var oppStatus = (row.attr('data-opp-status') || '').toLowerCase();
+
+        var wasMorningPresent = (oppStatus.indexOf('present') !== -1 || oppStatus.indexOf('switched') !== -1);
+        if (wasMorningPresent) {
+            morningPresentTotal++;
+        }
+
+        if (val === 'Present' || (isCustom && val === 'Switched Bus')) {
+            present++;
+            if (wasMorningPresent) {
+                morningRetainedEvening++;
+            }
+        } else if (val === 'Absent') {
+            absent++;
+        } else if (val === 'Switched Bus') {
+            if (!isCustom) {
+                switchedOutCount++;
+            }
+        }
+
+        if (hasGatepass) {
+            gatepassCount++;
+        }
+        if (isSwitchedOut && !isCustom) {
+            switchedOutCount++;
+        }
+    });
+
+    $('#count_total').text(total);
+    $('#count_regular_sub').text(regularCount + ' Regular + ' + customCount + ' Custom');
+    $('#count_present').text(present);
+    $('#count_absent').text(absent);
+
+    var isEvening = ('<?php echo strtolower($attendance_type ?? "morning"); ?>' === 'evening');
+    if (isEvening) {
+        $('#flow_metric_val').text(morningRetainedEvening + ' / ' + morningPresentTotal);
+        var missingMorning = morningPresentTotal - morningRetainedEvening;
+        if (missingMorning > 0) {
+            $('#flow_metric_sub').html('<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> ' + missingMorning + ' Morning Riders Not On Board</span>');
+        } else {
+            $('#flow_metric_sub').html('<span class="text-success"><i class="fa fa-check-circle"></i> All ' + morningPresentTotal + ' Morning Riders Accounted</span>');
+        }
+    } else {
+        $('#flow_metric_val').text(present + ' / ' + total);
+        $('#flow_metric_sub').html('<span class="text-muted"><i class="fa fa-sun-o"></i> Morning Pickup Boarding</span>');
+    }
+
+    $('#count_exceptions').text(gatepassCount + switchedOutCount);
+    $('#count_exceptions_sub').text(gatepassCount + ' Gatepass \u2022 ' + switchedOutCount + ' Switched Out');
+
+    $('.chip-count-all').text(total);
+    $('.chip-count-present').text(present);
+    $('.chip-count-absent').text(absent);
+    $('.chip-count-custom').text(customCount);
+    $('.chip-count-gatepass').text(gatepassCount);
+    $('.chip-count-switched').text(switchedOutCount);
+
+    $('#sticky_summary').text(present + ' Present, ' + absent + ' Absent' + (customCount > 0 ? ', ' + customCount + ' Custom' : '') + (gatepassCount > 0 ? ', ' + gatepassCount + ' Gatepass' : ''));
+}
+
+function markAllStatus(status) {
+    $('.status-toggle-group').each(function() {
+        var sessionId = $(this).data('session-id');
+        var row = $(this).closest('.student-row');
+        $('#attendencetype_' + sessionId).val(status);
+        row.attr('data-status', status);
+        
+        $(this).find('.btn-touch-status').removeClass('btn-present-active btn-absent-active btn-switched-active btn-hostel-active btn-gatepass-active');
+        if (status === 'Present') {
+            $(this).find('[data-value="Present"]').addClass('btn-present-active');
+        } else if (status === 'Absent') {
+            $(this).find('[data-value="Absent"]').addClass('btn-absent-active');
+        }
+    });
+    playAttendanceFeedback('bulk');
+    updateCounters();
+    applyFilterAndSearch();
+}
+
+function sortTable(key, order) {
+    var $tbody = $('#student_list_tbody');
+    var $rows = $tbody.find('tr.student-row').get();
+
+    $rows.sort(function(a, b) {
+        var valA, valB;
+        if (key === 'name') {
+            valA = ($(a).attr('data-name') || '').trim();
+            valB = ($(b).attr('data-name') || '').trim();
+            return order === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        } else if (key === 'adm') {
+            valA = parseInt($(a).attr('data-adm')) || 0;
+            valB = parseInt($(b).attr('data-adm')) || 0;
+            return order === 'asc' ? valA - valB : valB - valA;
+        } else if (key === 'stop') {
+            valA = ($(a).attr('data-stop') || '').trim();
+            valB = ($(b).attr('data-stop') || '').trim();
+            return order === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        } else if (key === 'class') {
+            valA = ($(a).attr('data-class') || '').trim();
+            valB = ($(b).attr('data-class') || '').trim();
+            return order === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        } else if (key === 'opp_status') {
+            valA = ($(a).attr('data-opp-status') || '').trim();
+            valB = ($(b).attr('data-opp-status') || '').trim();
+            return order === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        } else if (key === 'status') {
+            valA = ($(a).attr('data-status') || '').trim();
+            valB = ($(b).attr('data-status') || '').trim();
+            return order === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        }
+        return 0;
+    });
+
+    $.each($rows, function(idx, row) {
+        $tbody.append(row);
+    });
+
+    // Update Header Icons
+    $('.sortable-th').removeClass('sorted-asc sorted-desc');
+    $('.sortable-th .sort-icon').removeClass('fa-sort-asc fa-sort-desc fa-sort-numeric-asc fa-sort-numeric-desc fa-sort-alpha-asc fa-sort-alpha-desc').addClass('fa-sort');
+
+    var $activeTh = $('.sortable-th[data-sort="' + key + '"]');
+    $activeTh.addClass(order === 'asc' ? 'sorted-asc' : 'sorted-desc');
+    var $icon = $activeTh.find('.sort-icon');
+    $icon.removeClass('fa-sort');
+    if (key === 'name') {
+        $icon.addClass(order === 'asc' ? 'fa-sort-alpha-asc' : 'fa-sort-alpha-desc');
+    } else if (key === 'adm') {
+        $icon.addClass(order === 'asc' ? 'fa-sort-numeric-asc' : 'fa-sort-numeric-desc');
+    } else {
+        $icon.addClass(order === 'asc' ? 'fa-sort-asc' : 'fa-sort-desc');
+    }
+
+    currentSortKey = key;
+    currentSortOrder = order;
+
+    // Sync dropdown value if matched
+    var matchingVal = key + '_' + order;
+    if ($('#quick_sort_select option[value="' + matchingVal + '"]').length > 0) {
+        $('#quick_sort_select').val(matchingVal);
+    } else if (key === 'status') {
+        $('#quick_sort_select').val(order === 'asc' ? 'status_present' : 'status_absent');
+    }
+}
+
+function applyFilterAndSearch() {
+    var query = $('#touch_student_search').val().toLowerCase().trim();
+    var filter = currentFilter;
+    var visibleCount = 0;
+    var totalCount = $('.student-row').length;
+
+    $('.student-row').each(function() {
+        var $row = $(this);
+        var status = $row.attr('data-status');
+        var isCustom = ($row.attr('data-custom') === 'yes');
+        var text = $row.text().toLowerCase();
+
+        var matchesSearch = (query === '' || text.indexOf(query) !== -1);
+        var matchesFilter = true;
+
+        if (filter === 'Present') {
+            matchesFilter = (status === 'Present' || (isCustom && status === 'Switched Bus'));
+        } else if (filter === 'Absent') {
+            matchesFilter = (status === 'Absent');
+        } else if (filter === 'Custom') {
+            matchesFilter = isCustom;
+        } else if (filter === 'Gatepass') {
+            matchesFilter = ($row.find('.label:contains("Gatepass")').length > 0 || status === 'Gatepass');
+        } else if (filter === 'Switched') {
+            matchesFilter = ($row.find('.label:contains("Switched to Bus")').length > 0 || (!isCustom && status === 'Switched Bus'));
+        }
+
+        if (matchesSearch && matchesFilter) {
+            $row.show();
+            visibleCount++;
+        } else {
+            $row.hide();
+        }
+    });
+
+    var sortLabel = $('#quick_sort_select option:selected').text();
+    if (query !== '' || filter !== 'all') {
+        $('#filtered_info').text('Showing ' + visibleCount + ' of ' + totalCount + ' students (' + sortLabel + ')');
+    } else {
+        $('#filtered_info').text('Showing all ' + totalCount + ' students (' + sortLabel + ')');
+    }
+
+    $('#clear_search_btn').toggle(query.length > 0);
+}
+
+function removeCustomRider(student_session_id, btn) {
+    if (confirm('Are you sure you want to remove this custom rider?')) {
+        var vehicle_id = $('select[name="vehicle_id"]').val();
+        var date = $('#date').val();
+        var attendance_type = $('select[name="attendance_type"]').val();
+        
+        $.ajax({
+            url: "<?php echo site_url('admin/transportattendance/remove_custom_rider') ?>",
+            type: "POST",
+            data: {
+                student_session_id: student_session_id,
+                vehicle_id: vehicle_id,
+                date: date,
+                attendance_type: attendance_type
+            },
+            dataType: 'json',
+            success: function(res) {
+                if (res.status == 1) {
+                    successMsg(res.msg);
+                    $(btn).closest('tr').fadeOut(300, function() {
+                        $(this).remove();
+                        updateCounters();
+                        applyFilterAndSearch();
+                    });
+                } else {
+                    errorMsg(res.msg);
+                }
+            }
+        });
+    }
+}
+
+$(document).ready(function() {
+    $('.select2').select2();
+    updateCounters();
+    updateSoundToggleUI();
+
+    // Sound Toggle Button Click
+    $('#btn_sound_toggle').on('click', function(e) {
+        e.preventDefault();
+        soundEnabled = !soundEnabled;
+        localStorage.setItem('transport_attendance_sound', soundEnabled ? 'true' : 'false');
+        updateSoundToggleUI();
+        if (soundEnabled) {
+            playAttendanceFeedback('Present');
+        }
+    });
+
+    // Column Header Sorting
+    $('.sortable-th').on('click', function() {
+        var key = $(this).data('sort');
+        var order = 'asc';
+        if (currentSortKey === key && currentSortOrder === 'asc') {
+            order = 'desc';
+        }
+        sortTable(key, order);
+        applyFilterAndSearch();
+    });
+
+    // Quick Sort Dropdown Change
+    $('#quick_sort_select').on('change', function() {
+        var val = $(this).val();
+        if (val === 'name_asc') sortTable('name', 'asc');
+        else if (val === 'name_desc') sortTable('name', 'desc');
+        else if (val === 'adm_asc') sortTable('adm', 'asc');
+        else if (val === 'adm_desc') sortTable('adm', 'desc');
+        else if (val === 'stop_asc') sortTable('stop', 'asc');
+        else if (val === 'class_asc') sortTable('class', 'asc');
+        else if (val === 'status_present') sortTable('status', 'asc');
+        else if (val === 'status_absent') sortTable('status', 'desc');
+        applyFilterAndSearch();
+    });
+
+    // Filter Chips
+    $('.filter-chip').on('click', function() {
+        $('.filter-chip').removeClass('active');
+        $(this).addClass('active');
+        currentFilter = $(this).data('filter');
+        applyFilterAndSearch();
+    });
+
+    // Search Input & Clear
+    $('#touch_student_search').on('keyup search input', function() {
+        applyFilterAndSearch();
+    });
+
+    $('#clear_search_btn').on('click', function() {
+        $('#touch_student_search').val('').focus();
+        applyFilterAndSearch();
+        $(this).hide();
+    });
+
+    // Status Toggle Button Click with Audio & Haptic Feedback
+    $(document).on('click', '.btn-touch-status', function(e) {
+        e.preventDefault();
+        var val = $(this).data('value');
+        var group = $(this).closest('.status-toggle-group');
+        var sessionId = group.data('session-id');
+        var row = $(this).closest('.student-row');
+        
+        $('#attendencetype_' + sessionId).val(val);
+        row.attr('data-status', val);
+        
+        group.find('.btn-touch-status').removeClass('btn-present-active btn-absent-active btn-switched-active btn-hostel-active btn-gatepass-active');
+        
+        if (val === 'Present') $(this).addClass('btn-present-active');
+        else if (val === 'Absent') $(this).addClass('btn-absent-active');
+        else if (val === 'Switched Bus') $(this).addClass('btn-switched-active');
+        else if (val === 'Hostel') $(this).addClass('btn-hostel-active');
+        else if (val === 'Gatepass') $(this).addClass('btn-gatepass-active');
+        
+        // Play Audio & Haptic Feedback
+        playAttendanceFeedback(val);
+
+        updateCounters();
+        if (currentFilter !== 'all') {
+            applyFilterAndSearch();
+        }
+    });
+
+    // Helper to calculate and set custom rider To Date based on duration preset
+    function updateCustomRiderToDate() {
+        var activeBtn = $('.duration-preset-btn.active');
+        var days = activeBtn.data('days');
+        if (days === 'custom') {
+            return;
+        }
+
+        var numDays = parseInt(days) || 1;
+        var baseDateStr = $('#custom_from_date').val() || $('#date').val();
+        if (!baseDateStr) return;
+
+        var fromD = null;
+        if ($('#custom_from_date').data('datepicker')) {
+            fromD = $('#custom_from_date').datepicker('getDate');
+        }
+        
+        if (!fromD || isNaN(fromD.getTime())) {
+            if (typeof moment !== 'undefined') {
+                var m = moment(baseDateStr, [
+                    typeof date_format !== 'undefined' ? date_format.toUpperCase() : 'DD-MM-YYYY',
+                    'DD-MM-YYYY', 'D-M-YYYY', 'DD/MM/YYYY', 'D/M/YYYY', 'DD MMM YYYY', 'D MMM YYYY', 'YYYY-MM-DD'
+                ]);
+                if (m.isValid()) {
+                    fromD = m.toDate();
+                }
+            }
+        }
+
+        if (!fromD || isNaN(fromD.getTime())) {
+            fromD = new Date(baseDateStr);
+        }
+
+        if (fromD && !isNaN(fromD.getTime())) {
+            var toD = new Date(fromD.getTime());
+            toD.setDate(toD.getDate() + (numDays - 1));
+
+            if ($('#custom_to_date').data('datepicker')) {
+                $('#custom_to_date').datepicker('setDate', toD);
+            } else {
+                var dd = String(toD.getDate()).padStart(2, '0');
+                var mm = String(toD.getMonth() + 1).padStart(2, '0');
+                var yyyy = toD.getFullYear();
+                var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                var mon = monthNames[toD.getMonth()];
+
+                if (baseDateStr.indexOf('/') !== -1) {
+                    $('#custom_to_date').val(dd + '/' + mm + '/' + yyyy);
+                } else if (/[a-zA-Z]/.test(baseDateStr)) {
+                    $('#custom_to_date').val(dd + ' ' + mon + ' ' + yyyy);
+                } else {
+                    $('#custom_to_date').val(dd + '-' + mm + '-' + yyyy);
+                }
+            }
+        }
+    }
+
+    // Reset and sync modal dates on show
+    $('#customRiderModal').on('show.bs.modal', function() {
+        var baseDate = $('#date').val();
+        if (baseDate) {
+            $('#custom_from_date').val(baseDate);
+            $('#custom_to_date').val(baseDate);
+        }
+        $('.duration-preset-btn').removeClass('active');
+        $('.duration-preset-btn[data-days="1"]').addClass('active');
+        $('#search_student_text').val('');
+        $('#search_results').hide().html('');
+        $('#custom_rider_remark').val('');
+    });
+
+    // Duration Presets Click in Custom Rider Modal
+    $('.duration-preset-btn').on('click', function() {
+        $('.duration-preset-btn').removeClass('active');
+        $(this).addClass('active');
+
+        var days = $(this).data('days');
+        if (days === 'custom') {
+            $('#custom_to_date').focus();
+            return;
+        }
+
+        updateCustomRiderToDate();
+    });
+
+    $('#custom_from_date').on('change changeDate', function() {
+        updateCustomRiderToDate();
+    });
+
+    // Route & Vehicle 2-way sync
+    var initial_route_id = '<?php echo isset($route_id) ? $route_id : ""; ?>';
+    var syncingSelects = false;
+    
+    $('#route_id').on('change', function(e, triggeredByLoad) {
+        if (triggeredByLoad || syncingSelects) return;
+        var route_id = $(this).val();
+        if (route_id) {
+            syncingSelects = true;
+            $.ajax({
+                url: '<?php echo site_url("admin/transportattendance/get_route_vehicles"); ?>',
+                type: 'POST',
+                data: { route_id: route_id },
+                dataType: 'json',
+                success: function(vehicles) {
+                    if (vehicles && vehicles.length > 0) {
+                        var targetVehicleId = vehicles[0].id || vehicles[0].vehicle_id;
+                        if (targetVehicleId && $('#vehicle_id').val() != targetVehicleId) {
+                            $('#vehicle_id').val(targetVehicleId).trigger('change.select2');
+                        }
+                    }
+                    syncingSelects = false;
+                },
+                error: function() {
+                    syncingSelects = false;
+                }
+            });
+        }
+    });
+    
+    $('#vehicle_id').on('change', function(e, triggeredByLoad) {
+        if (triggeredByLoad || syncingSelects) return;
+        var vehicle_id = $(this).val();
+        var route_select = $('#route_id');
+        
+        if (vehicle_id) {
+            syncingSelects = true;
+            $.ajax({
+                url: '<?php echo site_url("admin/transportattendance/get_vehicle_routes"); ?>',
+                type: 'POST',
+                data: { vehicle_id: vehicle_id },
+                dataType: 'json',
+                success: function(routes) {
+                    if (routes && routes.length > 0) {
+                        var current_r = route_select.val();
+                        route_select.html('<option value="">All Routes on this Bus</option>');
+                        $.each(routes, function(idx, r) {
+                            var sel = (current_r && current_r == r.route_id) || (initial_route_id && initial_route_id == r.route_id) ? ' selected="selected"' : '';
+                            route_select.append('<option value="' + r.route_id + '"' + sel + '>' + r.route_title + '</option>');
+                        });
+                        route_select.trigger('change.select2');
+                    }
+                    syncingSelects = false;
+                },
+                error: function() {
+                    syncingSelects = false;
+                }
+            });
+        }
+    });
+
+    // Custom Rider Search
+    $('#search_student_text').on('keyup', function() {
+        var search = $(this).val();
+        if (search.length >= 2) {
+            $.ajax({
+                url: '<?php echo site_url("admin/transportattendance/search_student") ?>',
+                type: 'POST',
+                data: {search: search},
+                dataType: 'json',
+                success: function(data) {
+                    if (data && data.length > 0) {
+                        var html = '<ul class="list-group" style="margin-bottom:0;">';
+                        $.each(data, function(index, student) {
+                            var imgSrc = student.image ? '<?php echo base_url(); ?>' + student.image : '<?php echo base_url("uploads/student_images/no_image.png"); ?>';
+                            html += '<li class="list-group-item" style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px;">';
+                            html += '<div style="display:flex; align-items:center; gap:10px;">';
+                            html += '<div style="width:36px; height:36px; min-width:36px; max-width:36px; min-height:36px; max-height:36px; border-radius:50%; overflow:hidden; border:1.5px solid #cbd5e1; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:#f8fafc;">';
+                            html += '<img src="' + imgSrc + '" style="width:100% !important; height:100% !important; max-width:100% !important; max-height:100% !important; object-fit:cover !important; display:block;" onerror="this.src=\'<?php echo base_url("uploads/student_images/no_image.png"); ?>\';">';
+                            html += '</div>';
+                            html += '<div><strong>' + student.firstname + ' ' + student.lastname + '</strong> (' + student.admission_no + ') <br><small class="text-muted">' + student.class + ' (' + student.section + ')</small></div>';
+                            html += '</div>';
+                            html += '<button type="button" class="btn btn-xs btn-success add_custom_btn" data-studentid="'+student.id+'" style="border-radius:4px; font-weight:700; padding:5px 12px;"><i class="fa fa-plus"></i> Add Rider</button>';
+                            html += '</li>';
+                        });
+                        html += '</ul>';
+                        $('#search_results').html(html).show();
+                    } else {
+                        $('#search_results').html('<div style="padding:12px 16px; color:#94a3b8; font-size:12px;">No matching active students found.</div>').show();
+                    }
+                }
+            });
+        } else {
+            $('#search_results').hide().html('');
+        }
+    });
+
+    $(document).on('click', '.add_custom_btn', function() {
+        var student_id = $(this).data('studentid');
+        var vehicle_id = $('select[name="vehicle_id"]').val();
+        var from_date = $('#custom_from_date').val() || $('#date').val();
+        var to_date = $('#custom_to_date').val() || from_date;
+        var attendance_type = $('#custom_shift_select').val() || $('select[name="attendance_type"]').val();
+        var remark = $('#custom_rider_remark').val();
+        
+        if(!vehicle_id || !from_date) {
+            errorMsg('Please ensure you have selected a date and vehicle.');
+            return;
+        }
+        
+        var $btn = $(this);
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Adding...');
+        
+        $.ajax({
+            url: '<?php echo site_url("admin/transportattendance/add_custom_rider") ?>',
+            type: 'POST',
+            data: {
+                student_id: student_id,
+                vehicle_id: vehicle_id,
+                from_date: from_date,
+                to_date: to_date,
+                date: from_date,
+                attendance_type: attendance_type,
+                remark: remark
+            },
+            dataType: 'json',
+            success: function(res) {
+                if (res.status == 1) {
+                    successMsg(res.msg);
+                    setTimeout(function(){ location.reload(); }, 900);
+                } else {
+                    errorMsg(res.msg);
+                    $btn.prop('disabled', false).html('<i class="fa fa-plus"></i> Add Rider');
+                }
+            },
+            error: function(xhr) {
+                errorMsg('An error occurred while adding custom rider. Please try again.');
+                $btn.prop('disabled', false).html('<i class="fa fa-plus"></i> Add Rider');
+                console.error(xhr.responseText);
+            }
+        });
+    });
+});
+</script>

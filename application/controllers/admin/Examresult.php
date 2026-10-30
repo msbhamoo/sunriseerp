@@ -152,11 +152,16 @@ class Examresult extends Admin_Controller
 
     public function pdftmarksheet()
     {       
-        $template         = $this->marksheet_model->get($this->input->post('marksheet_template'));
+        $template_id = $this->input->post('marksheet_template');
+        $template    = !empty($template_id) ? $this->marksheet_model->get($template_id) : null;
         $data['template'] = $template;
 
         $student_id                             = $this->input->post('student_id');
         $post_exam_id                           = $this->input->post('post_exam_id');
+        if (empty($post_exam_id)) {
+            echo "No exam selected";
+            return;
+        }
         $post_exam_group_id                     = $this->input->post('post_exam_group_id');
         $exam_group_class_batch_exam_student_id = $this->input->post('exam_group_class_batch_exam_student_id');
         $exam                                   = $this->examgroup_model->getExamByID($post_exam_id);
@@ -358,6 +363,10 @@ class Examresult extends Admin_Controller
     public function examrank()
     {
         $exam_id       = $this->input->post('exam_id');
+        if (empty($exam_id)) {
+            echo json_encode(array('status' => '1', 'page' => '', 'exam_details' => null, 'message' => 'No exam_id'));
+            return;
+        }
         $studentList   = $this->examgroupstudent_model->searchExamStudentsByExam($exam_id);         
         $exam_details  = $this->examgroup_model->getExamByID($exam_id);
         $exam_subjects = $this->batchsubject_model->getExamSubjects($exam_id);        

@@ -122,7 +122,7 @@ class Teacher extends Student_Controller
         $class_id   = $this->input->post('class_id');
         $section_id = $this->input->post('section_id');
         $dt         = $this->classsection_model->getDetailbyClassSection($class_id, $section_id);
-        $data       = $this->teachersubject_model->getDetailByclassAndSection($dt['id']);
+        $class_section_id = $dt['id'] ?? 0; $data = $class_section_id ? $this->teachersubject_model->getDetailByclassAndSection($class_section_id) : [];
         echo json_encode($data);
     }
 

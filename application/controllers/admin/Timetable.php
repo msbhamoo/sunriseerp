@@ -859,6 +859,7 @@ class Timetable extends Admin_Controller
 
     public function printclasstimetable()
     {
+        if (empty($_POST['class_id'])) { echo ""; return; }
 
         $class_id    = $this->input->post('class_id');
         $section_id  = $this->input->post('section_id');

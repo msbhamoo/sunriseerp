@@ -74,7 +74,7 @@ class Admin extends Admin_Controller
         $data['notifications'] = $notifications;
         $input                 = $this->setting_model->getCurrentSessionName();
 
-        list($a, $b)  = explode('-', $input);
+        $parts = explode('-', (string)$input); $a = $parts[0] ?? date('Y'); $b = $parts[1] ?? date('Y', strtotime('+1 year'));
         $Current_year = $a;
         if (strlen($b) == 2) {
             $Next_year = substr($a, 0, 2) . $b;
@@ -662,6 +662,7 @@ class Admin extends Admin_Controller
 
     public function updateSession()
     {
+        if (empty($_POST["popup_session"])) { echo json_encode(["status" => 0]); return; }
         $session       = $this->input->post('popup_session');
         $session_array = $this->session->has_userdata('session_array');
         if ($session_array) {

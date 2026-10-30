@@ -189,6 +189,8 @@ class Expense extends Admin_Controller
             access_denied();
         }
         $data['title'] = 'Add Fees Master';
+        $expheadlist = $this->expensehead_model->get();
+        $data['expheadlist'] = $expheadlist;
         $this->form_validation->set_rules('expense', $this->lang->line('fees_master'), 'trim|required|xss_clean');
         if ($this->form_validation->run() == false) {
             $this->load->view('layout/header', $data);
@@ -426,7 +428,7 @@ class Expense extends Admin_Controller
         } else {
 
             $search_text = $this->input->post('search_text');
-            $resultList  = $this->expense_model->search($search_text, "", "");
+            $resultList  = $this->expense_model->search($search_text, null, null);
             $resultList  = $resultList;
         }
 

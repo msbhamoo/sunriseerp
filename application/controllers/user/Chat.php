@@ -32,7 +32,12 @@ class Chat extends Student_Controller
 
     public function myuser()
     {
-        $user_type = $this->session->userdata['student']['role'];///added
+        $student_session = isset($this->session->userdata['student']) ? $this->session->userdata['student'] : [];
+        $user_type = isset($student_session['role']) ? $student_session['role'] : '';
+        if (empty($user_type)) {
+            echo json_encode(array('status' => '0', 'error' => 'Not logged in', 'count' => 0));
+            return;
+        }
         $data              = array();
         $student_id        = $this->customlib->getStudentSessionUserID();
         $chat_user         = $this->chatuser_model->getMyID($student_id,"$user_type");
@@ -62,11 +67,11 @@ class Chat extends Student_Controller
         if (!empty($chat_connection)) {
             $chat_to_user       = $chat_connection->chat_user_one;
             $chat_connection_id = $chat_connection->id;
-            if ($chat_connection->chat_user_one == $chat_user->id) {
+            if (!empty($chat_user) && $chat_connection->chat_user_one == ($chat_user->id ?? 0)) {
                 $chat_to_user = $chat_connection->chat_user_two;
             }
         }
-        $data['chatList'] = $this->chatuser_model->myChatAndUpdate($chat_connection_id, $chat_user->id);
+        $my_chat_id = $chat_user->id ?? 0; $data['chatList'] = $my_chat_id ? $this->chatuser_model->myChatAndUpdate($chat_connection_id, $my_chat_id) : [];
         
         $sch_setting = $this->sch_setting_detail;
         if($user_type=="student"){
@@ -92,6 +97,10 @@ class Chat extends Student_Controller
             'created_at'         => date('Y-m-d H:i:s', $this->customlib->dateTimeformatTwentyfourhour($time, true)),
         );
 
+        if (empty($insert_record['chat_user_id'])) {
+            echo json_encode(array('status' => '0', 'error' => 'Missing chat_user_id'));
+            return;
+        }
         $last_insert_id = $this->chatuser_model->addMessage($this->security->xss_clean($insert_record));
         $array = array('status' => '1', 'last_insert_id' => $last_insert_id, 'error' => '', 'message' => $this->lang->line('inserted'));
         echo json_encode($array);
@@ -107,7 +116,7 @@ class Chat extends Student_Controller
         $data['chat_user_id'] = $chat_user_id;
         $student_id           = $this->customlib->getStudentSessionUserID();
         $chat_user            = $this->chatuser_model->getMyID($student_id,"$user_type");
-        $data['updated_chat'] = $this->chatuser_model->getUpdatedchat($chat_connection_id, $last_chat_id, $chat_user->id);
+        $my_chat_id = $chat_user->id ?? 0; $data['updated_chat'] = $my_chat_id ? $this->chatuser_model->getUpdatedchat($chat_connection_id, $last_chat_id, $my_chat_id) : [];
         $userlist = $this->load->view('user/chat/_chatupdate', $data, true);
         $array    = array('status' => '1', 'error' => '', 'page' => $userlist, 'user_last_chat' => $user_last_chat);
         echo json_encode($array);
@@ -147,7 +156,12 @@ class Chat extends Student_Controller
 
     public function mynewuser()
     {
-        $user_type = $this->session->userdata['student']['role'];///added
+        $student_session = isset($this->session->userdata['student']) ? $this->session->userdata['student'] : [];
+        $user_type = isset($student_session['role']) ? $student_session['role'] : '';
+        if (empty($user_type)) {
+            echo json_encode(array('status' => '0', 'error' => 'Not logged in', 'count' => 0));
+            return;
+        }
         $users_list            = $this->input->post('users');
         $student_id            = $this->customlib->getStudentSessionUserID();
         $chat_user             = $this->chatuser_model->getMyID($student_id,"$user_type");
@@ -221,7 +235,7 @@ class Chat extends Student_Controller
             if (!empty($chat_connection)) {
                 $chat_to_user       = $chat_connection->chat_user_one;
                 $chat_connection_id = $chat_connection->id;
-                if ($chat_connection->chat_user_one == $chat_user->id) {
+                if (!empty($chat_user) && $chat_connection->chat_user_one == ($chat_user->id ?? 0)) {
                     $chat_to_user = $chat_connection->chat_user_two;
                 }
             }
@@ -233,7 +247,7 @@ class Chat extends Student_Controller
                 $data['delete_chat_enable']=$sch_setting->guardian_delete_chat;
             }
  
-            $data['chatList'] = $this->chatuser_model->myChatAndUpdate($chat_connection_id, $chat_user->id);
+            $my_chat_id = $chat_user->id ?? 0; $data['chatList'] = $my_chat_id ? $this->chatuser_model->myChatAndUpdate($chat_connection_id, $my_chat_id) : [];
             $chat_records     = $this->load->view('user/chat/_partialChatRecord', $data, true);
             $array            = array('status' => '1', 'error' => '', 'message' => $this->lang->line('success_message'), 'new_user' => $new_user, 'chat_connection_id' => $json_record->new_user_chat_connection_id, 'chat_records' => $chat_records, 'user_last_chat' => $user_last_chat);
             echo json_encode($array);
@@ -257,7 +271,12 @@ class Chat extends Student_Controller
     }
 
     public function get_student_parent_chat_msg_count(){
-        $user_type = $this->session->userdata['student']['role'];///added
+        $student_session = isset($this->session->userdata['student']) ? $this->session->userdata['student'] : [];
+        $user_type = isset($student_session['role']) ? $student_session['role'] : '';
+        if (empty($user_type)) {
+            echo json_encode(array('status' => '0', 'error' => 'Not logged in', 'count' => 0));
+            return;
+        }
         $student_or_parent_id = $this->customlib->getStudentSessionUserID();
         $result    = $this->chatuser_model->get_student_parent_chat_msg_count($student_or_parent_id,"$user_type");
         $array = array('status' => '1', 'error' => '', 'count' => count($result));

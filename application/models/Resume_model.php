@@ -46,24 +46,28 @@ class Resume_model extends MY_Model
     }
 
     public function get_student_work_experience($student_id) {
+        if (empty($student_id)) { return []; }
         $this->db->where("student_id in ($student_id)");
         $query =    $this->db->get("student_work_experience");      
         return $query->result_array();
     }
 
     public function get_student_education($student_id) {
+        if (empty($student_id)) { return []; }
         $this->db->where("student_id in ($student_id)");
         $query =    $this->db->get("student_educational_details");
         return $query->result_array();
     }
 
     public function get_student_skills($student_id) {
+        if (empty($student_id)) { return []; }
         $this->db->where("student_id in ($student_id)");
         $query =    $this->db->get("student_skills_detail");
         return $query->result_array();
     }
 
     public function get_student_reference($student_id) {
+        if (empty($student_id)) { return []; }
         $this->db->where("student_id in ($student_id)");
         $query =    $this->db->get("student_refrence");
         return $query->result_array();

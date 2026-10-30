@@ -217,23 +217,23 @@ if (isset($resultlist)) {
             </header>
             <main>
                 <div id="details" class="clearfix">                   
-                    <h2 style="text-align: center;margin: 4px;">  <th><?php echo $this->lang->line('student_record'); ?></th></h2>
-                    <div  style="text-align: center;"><b>  <th><?php echo $this->lang->line('class'); ?></th>: <?php echo $class['class']; ?></b></div>
-                    <div  style="text-align: center;">  <th><?php echo $this->lang->line('date'); ?></th>: <?php echo date($this->customlib->getSchoolDateFormat()); ?></div>                 
+                    <h2 style="text-align: center;margin: 4px;">  <?php echo $this->lang->line('student_record'); ?></h2>
+                    <div  style="text-align: center;"><b>  <?php echo $this->lang->line('class'); ?>: <?php echo $class['class'] ?? ''; ?></b></div>
+                    <div  style="text-align: center;">  <?php echo $this->lang->line('date'); ?>: <?php echo date($this->customlib->getSchoolDateFormat()); ?></div>                 
                 </div>
                 <div id="details" class="clearfix">                
                     <table>
                         <thead>
                             <tr>
-                                <th class="no">  <th><?php echo $this->lang->line('enroll_no'); ?></th></th>
-                                <th class="no">  <th><?php echo $this->lang->line('roll_no'); ?></th></th>
-                                <th class="no">  <th><?php echo $this->lang->line('name'); ?></th></th>
-                                <th class="no">  <th><?php echo $this->lang->line('guardian'); ?></th></th>
-                                <th class="no">  <th><?php echo $this->lang->line('class'); ?></th></th>
-                                <th class="no">  <th><?php echo $this->lang->line('section'); ?></th></th>
-                                <th class="no">  <th><?php echo $this->lang->line('mobile_no'); ?></th></th>
-                                <th class="no">  <th><?php echo $this->lang->line('date_of_birth'); ?></th></th>
-                                <th class="no">  <th><?php echo $this->lang->line('address'); ?></th></th>
+                                <th class="no"><?php echo $this->lang->line('enroll_no'); ?></th>
+                                <th class="no"><?php echo $this->lang->line('roll_no'); ?></th>
+                                <th class="no"><?php echo $this->lang->line('name'); ?></th>
+                                <th class="no"><?php echo $this->lang->line('guardian'); ?></th>
+                                <th class="no">  <?php echo $this->lang->line('class'); ?></th>
+                                <th class="no"><?php echo $this->lang->line('section'); ?></th>
+                                <th class="no"><?php echo $this->lang->line('mobile_no'); ?></th>
+                                <th class="no"><?php echo $this->lang->line('date_of_birth'); ?></th>
+                                <th class="no"><?php echo $this->lang->line('address'); ?></th>
                             </tr>
                         </thead>
                         <?php

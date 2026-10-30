@@ -1,7 +1,7 @@
 <div class="form-group">
     <label><?php echo $this->lang->line('template'); ?></label><small class="req"> *</small>
-    <input type="text" id="name" name="name" class="form-control" value="<?php echo $result['name']; ?>">
-    <input type="hidden" name="templateid" value="<?php echo $result['id']; ?>">
+    <input type="text" id="name" name="name" class="form-control" value="<?php echo ($result['name'] ?? ''); ?>">
+    <input type="hidden" name="templateid" value="<?php echo ($result['id'] ?? ''); ?>">
 </div> 
 <div class="row">
     <div class="col-md-4">
@@ -48,11 +48,11 @@
                     <div id="input-type" class="row">
                         <div class="col-sm-4">
                             <label class="radio-inline">                               
-                                <input name="orientation" class="orientation" id="input-type-student" value="L" type="radio" <?php echo ($result['orientation'] == "L") ? "checked='checked'":"" ?>><?php echo $this->lang->line('landscape'); ?> </label>
+                                <input name="orientation" class="orientation" id="input-type-student" value="L" type="radio" <?php echo (($result['orientation'] ?? '') == "L") ? "checked='checked'":"" ?>><?php echo $this->lang->line('landscape'); ?> </label>
                         </div>
                       <div class="col-sm-4">
                           <label class="radio-inline">
-                              <input name="orientation" class="orientation" id="input-type-student" value="P" type="radio" <?php echo ($result['orientation'] == "P") ? "checked='checked'":"" ?>><?php echo $this->lang->line('portrait'); ?> </label>
+                              <input name="orientation" class="orientation" id="input-type-student" value="P" type="radio" <?php echo (($result['orientation'] ?? '') == "P") ? "checked='checked'":"" ?>><?php echo $this->lang->line('portrait'); ?> </label>
                           </div>                                                    
                       </div>
                   </div>
@@ -63,21 +63,21 @@
     <div class="col-md-4">
            <div class="form-group">            
                         <label><?php echo $this->lang->line('school_name') ?></label>
-                        <input autofocus="" id="line" value="<?php echo set_value('school_name',$result['school_name']); ?>" name="school_name" placeholder="" type="text" class="form-control" />
+                        <input autofocus="" id="line" value="<?php echo set_value('school_name',($result['school_name'] ?? '')); ?>" name="school_name" placeholder="" type="text" class="form-control" />
                         <span class="text-danger"><?php echo form_error('line'); ?></span>
                     </div> 
     </div>
      <div class="col-md-4">
             <div class="form-group">
                         <label><?php echo $this->lang->line('exam_center'); ?></label>
-                        <input autofocus="" id="exam_center" value="<?php echo set_value('exam_center',$result['exam_center']); ?>" name="exam_center" placeholder="" type="text" class="form-control" />
+                        <input autofocus="" id="exam_center" value="<?php echo set_value('exam_center',($result['exam_center'] ?? '')); ?>" name="exam_center" placeholder="" type="text" class="form-control" />
                         <span class="text-danger"><?php echo form_error('exam_center'); ?></span>
                     </div>             
     </div>
      <div class="col-md-4">
          <div class="form-group">
                             <label><?php echo $this->lang->line('printing_date'); ?></label>
-                            <input autofocus="" id="date" name="date" value="<?php echo set_value('date',$this->customlib->dateformat($result['date'])); ?>" placeholder="" type="text" class="form-control date" />
+                            <input autofocus="" id="date" name="date" value="<?php echo set_value('date',$this->customlib->dateformat(($result['date'] ?? ''))); ?>" placeholder="" type="text" class="form-control date" />
                             <span class="text-danger"><?php echo form_error('date'); ?></span>
                         </div> 
     </div>    
@@ -89,7 +89,7 @@
                     </div>  
       <div class="form-group">
                         <label><?php echo $this->lang->line('footer_text'); ?></label>
-                         <textarea class="form-control" id="ckeditor" name="content_footer"><?php echo $result['content_footer'] ?></textarea>
+                         <textarea class="form-control" id="ckeditor" name="content_footer"><?php echo ($result['content_footer'] ?? '') ?></textarea>
                         <span class="text-danger"><?php echo form_error('content_footer'); ?></span>
                     </div> 
 <div class="form-group">
@@ -114,7 +114,7 @@
 </div>
 <div class="form-group">
     <label><?php echo $this->lang->line('template_description'); ?></label>
-     <textarea type="text" name="description" cols="115" rows="3" class="form-control"><?php echo $result['description']; ?></textarea>
+     <textarea type="text" name="description" cols="115" rows="3" class="form-control"><?php echo ($result['description'] ?? ''); ?></textarea>
 </div>
 
                     <div class="form-group">
@@ -124,7 +124,7 @@
                             </div>
                             <div class="col-md-1 col-sm-2 col-xs-2">
                                 <div class="material-switch switchcheck pt0">
-                                    <input id="stu_name" name="stu_name" type="checkbox" class="chk" value="1" <?php if ($result['is_name'] == 1) {echo "checked"; } ?>>
+                                    <input id="stu_name" name="stu_name" type="checkbox" class="chk" value="1" <?php if (($result['is_name'] ?? '') == 1) {echo "checked"; } ?>>
                                     <label for="stu_name" class="label-info-success"></label>
                                 </div>
                             </div>                         
@@ -137,7 +137,7 @@
                             </div>
                             <div class="col-md-1 col-sm-2 col-xs-2">
                                 <div class="material-switch switchcheck pt0">
-                                    <input id="father_name" name="father_name" type="checkbox" class="chk" value="1" <?php if ($result['is_father_name'] == 1) {echo "checked"; } ?>>
+                                    <input id="father_name" name="father_name" type="checkbox" class="chk" value="1" <?php if (($result['is_father_name'] ?? '') == 1) {echo "checked"; } ?>>
                                     <label for="father_name" class="label-info-success"></label>
                                 </div>
                             </div>                         
@@ -151,7 +151,7 @@
                             </div>
                             <div class="col-md-1 col-sm-2 col-xs-2">
                                 <div class="material-switch switchcheck pt0">
-                                    <input id="mother_name" name="mother_name" type="checkbox" class="chk" value="1" <?php if ($result['is_mother_name'] == 1) {echo "checked"; } ?>>
+                                    <input id="mother_name" name="mother_name" type="checkbox" class="chk" value="1" <?php if (($result['is_mother_name'] ?? '') == 1) {echo "checked"; } ?>>
                                     <label for="mother_name" class="label-info-success"></label>
                                 </div>
                             </div>                         
@@ -165,7 +165,7 @@
                             </div>
                             <div class="col-md-1 col-sm-2 col-xs-2">
                                 <div class="material-switch switchcheck pt0">
-                                    <input id="examsession" name="examsession" type="checkbox" class="chk" value="1" <?php if ($result['exam_session'] == 1) {echo "checked"; } ?>>
+                                    <input id="examsession" name="examsession" type="checkbox" class="chk" value="1" <?php if (($result['exam_session'] ?? '') == 1) {echo "checked"; } ?>>
                                     <label for="examsession" class="label-info-success"></label>
                                 </div>
                             </div>                         
@@ -179,7 +179,7 @@
                             </div>
                             <div class="col-md-1 col-sm-2 col-xs-2">
                                 <div class="material-switch switchcheck pt0">
-                                    <input id="admission_no" name="admission_no" type="checkbox" class="chk" value="1" <?php if ($result['is_admission_no'] == 1) {echo "checked"; } ?>>
+                                    <input id="admission_no" name="admission_no" type="checkbox" class="chk" value="1" <?php if (($result['is_admission_no'] ?? '') == 1) {echo "checked"; } ?>>
                                     <label for="admission_no" class="label-info-success"></label>
                                 </div>
                             </div>                         
@@ -193,7 +193,7 @@
                             </div>
                             <div class="col-md-1 col-sm-2 col-xs-2">
                                 <div class="material-switch switchcheck pt0">
-                                    <input id="roll_no" name="roll_no" type="checkbox" class="chk" value="1" <?php if ($result['is_roll_no'] == 1) {echo "checked"; } ?>>
+                                    <input id="roll_no" name="roll_no" type="checkbox" class="chk" value="1" <?php if (($result['is_roll_no'] ?? '') == 1) {echo "checked"; } ?>>
                                     <label for="roll_no" class="label-info-success"></label>
                                 </div>
                             </div>                         
@@ -207,7 +207,7 @@
                             </div>
                             <div class="col-md-1 col-sm-2 col-xs-2">
                                 <div class="material-switch switchcheck pt0">
-                                    <input id="photo" name="photo" type="checkbox" class="chk" value="1" <?php if ($result['is_photo'] == 1) {echo "checked"; } ?> >
+                                    <input id="photo" name="photo" type="checkbox" class="chk" value="1" <?php if (($result['is_photo'] ?? '') == 1) {echo "checked"; } ?> >
                                     <label for="photo" class="label-info-success"></label>
                                 </div>
                             </div>                         
@@ -221,7 +221,7 @@
                             </div>
                             <div class="col-md-1 col-sm-2 col-xs-2">
                                 <div class="material-switch switchcheck pt0">
-                                    <input id="class" name="class" type="checkbox" class="chk" value="1" <?php if ($result['is_class'] == 1) {echo "checked"; } ?>>
+                                    <input id="class" name="class" type="checkbox" class="chk" value="1" <?php if (($result['is_class'] ?? '') == 1) {echo "checked"; } ?>>
                                     <label for="class" class="label-info-success"></label>
                                 </div>
                             </div>                         
@@ -235,7 +235,7 @@
                             </div>
                             <div class="col-md-1 col-sm-2 col-xs-2">
                                 <div class="material-switch switchcheck pt0">
-                                    <input id="section" name="is_section" type="checkbox" class="chk" value="1" <?php if ($result['is_section'] == 1) {echo "checked"; } ?>>
+                                    <input id="section" name="is_section" type="checkbox" class="chk" value="1" <?php if (($result['is_section'] ?? '') == 1) {echo "checked"; } ?>>
                                     <label for="section" class="label-info-success"></label>
                                 </div>
                             </div>                         
@@ -248,7 +248,7 @@
                             </div>
                             <div class="col-md-1 col-sm-2 col-xs-2">
                                 <div class="material-switch switchcheck pt0">
-                                    <input id="date_of_birth" name="date_of_birth" type="checkbox" class="chk" value="1" <?php if ($result['is_dob'] == 1) {echo "checked"; } ?>>
+                                    <input id="date_of_birth" name="date_of_birth" type="checkbox" class="chk" value="1" <?php if (($result['is_dob'] ?? '') == 1) {echo "checked"; } ?>>
                                     <label for="date_of_birth" class="label-info-success"></label>
                                 </div>
                             </div>                         
@@ -262,7 +262,7 @@
                             </div>
                             <div class="col-md-1 col-sm-2 col-xs-2">
                                 <div class="material-switch switchcheck pt0">
-                                    <input id="is_remark" name="is_remark" type="checkbox" class="chk" value="1" <?php if ($result['is_remark'] == 1) {echo "checked"; } ?>>
+                                    <input id="is_remark" name="is_remark" type="checkbox" class="chk" value="1" <?php if (($result['is_remark'] ?? '') == 1) {echo "checked"; } ?>>
                                     <label for="is_remark" class="label-info-success"></label>
                                 </div>
                             </div>                         
@@ -277,7 +277,7 @@
                            
                             <div class="col-md-1 col-sm-2 col-xs-2">
                                 <div class="material-switch switchcheck pt0">
-                                    <input id="is_subject_note" name="is_subject_note" type="checkbox" class="chk" value="1" <?php if ($result['is_subject_note'] == 1) {echo "checked"; } ?>>
+                                    <input id="is_subject_note" name="is_subject_note" type="checkbox" class="chk" value="1" <?php if (($result['is_subject_note'] ?? '') == 1) {echo "checked"; } ?>>
                                     <label for="is_subject_note" class="label-info-success"></label>
                                 </div>
                             </div>                         

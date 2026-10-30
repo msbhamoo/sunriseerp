@@ -11,6 +11,7 @@ class Leavetypes_model extends MY_model
     protected $current_date;
     public function __construct()
     {
+        parent::__construct();
         $this->current_session = $this->setting_model->getCurrentSession();
         $this->current_date    = $this->setting_model->getDateYmd();
     }

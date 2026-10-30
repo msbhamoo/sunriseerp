@@ -310,6 +310,7 @@ class Batchsubject_model extends CI_Model
 
     public function getExamSubject($exam_subject_id)
     {
+        if (empty($exam_subject_id)) { return null; }
         $sql   = "SELECT exam_group_class_batch_exam_subjects.*,subjects.name as `subject_name`,subjects.code FROM `exam_group_class_batch_exam_subjects` INNER JOIN subjects on subjects.id=exam_group_class_batch_exam_subjects.subject_id WHERE exam_group_class_batch_exam_subjects.id=" . $this->db->escape_str($exam_subject_id);
         $query = $this->db->query($sql);
         return $query->row();

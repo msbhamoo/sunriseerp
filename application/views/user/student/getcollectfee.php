@@ -1,3 +1,4 @@
+<?php $total_amount_for_pay_numeric = $total_amount_for_pay_numeric ?? 0; ?>
 <?php
 
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();

@@ -170,7 +170,7 @@ class Admin_model extends CI_Model
     public function saveNewPass($data)
     {
         $this->db->where('id', $data['id']);
-        $query = $this->db->update('staff', $data);
+        $query = $this->db->update('admin', $data);
         if ($query) {
             return true;
         } else {

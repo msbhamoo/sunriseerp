@@ -35,6 +35,7 @@ function modal_loader_div(){
 
  $(document).ready(function() {
 
+    if (typeof $.fn.popover !== 'undefined') {
        $('body').popover({
     selector: '[data-toggle="popover"]',
     trigger: 'hover',
@@ -44,6 +45,7 @@ function modal_loader_div(){
          return $(this).closest('td').find('.fee_detail_popover').html();
     }
 });
+    }
      $('#sessionModal').modal({
          backdrop: 'static',
          keyboard: false,

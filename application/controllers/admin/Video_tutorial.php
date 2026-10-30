@@ -125,7 +125,7 @@ class Video_tutorial extends Admin_Controller
     {
         $videotutorialid           = $this->input->post('videotutorialid');
         $videotutoriallist         = $this->video_tutorial_model->get($videotutorialid);
-        $data['videotutoriallist'] = $videotutoriallist;
+        if (is_array($videotutoriallist)) { $videotutoriallist = !empty($videotutoriallist) ? (is_object($videotutoriallist[0]) ? $videotutoriallist[0] : (object)$videotutoriallist[0]) : (object)['id'=>'','class_id'=>'']; } $data['videotutoriallist'] = $videotutoriallist ?: (object)['id'=>'','class_id'=>''];
         $data['classlist']         = $this->class_model->get();
         $data['classid']           = $this->video_tutorial_model->getclassid($videotutorialid);
         $page                      = $this->load->view('admin/video_tutorial/edit', $data, true);

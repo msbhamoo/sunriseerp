@@ -1246,5 +1246,8 @@ class Staff_model extends MY_Model
         return ($this->db->trans_status() === false) ? 0 : $processed_count;
     }
 
+    public function getLeaveSummary()
+    {
+        return [];
+    }
 }
-

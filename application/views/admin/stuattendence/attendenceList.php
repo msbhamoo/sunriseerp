@@ -590,7 +590,7 @@
 
 <script type="text/javascript">
     //****intime out time class***//
-    var attendance_setting = <?php echo json_encode($student_class_section_setting) ?>;
+    var attendance_setting = <?php echo json_encode($student_class_section_setting ?? false) ?>;
         $(function() {
         $('.time').datetimepicker({
             format: 'LT'
