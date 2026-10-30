@@ -1,7 +1,9 @@
+<?php if (empty($visitor_data) || !is_array($visitor_data)) { $visitor_data = ["id" => "", "purpose" => "", "name" => "", "contact" => "", "id_proof" => "", "no_of_people" => "", "date" => "", "in_time" => "", "out_time" => "", "note" => "", "meeting_with" => "", "staff_id" => "", "student_session_id" => ""]; } ?>
+<?php if (false) { $visitor_data = ["id" => "", "purpose" => "", "name" => "", "contact" => "", "id_proof" => "", "no_of_people" => "", "date" => "", "in_time" => "", "out_time" => "", "note" => "", "meeting_with" => "", "staff_id" => "", "student_session_id" => ""]; } ?>
 <div class="row">
 <div class="col-lg-12 col-md-12 col-sm-12">
     <div class="row">
-        <input type="hidden" name="visitor_id" value="<?php echo $visitor_data['id'];?>">
+        <input type="hidden" name="visitor_id" value="<?php echo ($visitor_data['id'] ?? '');?>">
         <div class="col-sm-4">
             <div class="form-group">
                 <label for="exampleInputEmail1"><?php echo $this->lang->line('purpose'); ?></label><small class="req"> *</small>
@@ -9,7 +11,7 @@
                     <option value=""><?php echo $this->lang->line('select'); ?> </option>
                     <?php foreach ($Purpose as $key => $value) { 
                         $selected = '';
-                        if($value['visitors_purpose'] == $visitor_data['purpose']){
+                        if($value['visitors_purpose'] == ($visitor_data['purpose'] ?? '')){
                             $selected = 'selected';
                         }
                         ?>
@@ -27,7 +29,7 @@
                     <option value=""><?php echo $this->lang->line('select'); ?> </option>
                     <?php foreach ($meeting_with as $key => $meeting_with_value) {
                             $selected = '';
-                            if($key == $visitor_data['meeting_with']){
+                            if($key == ($visitor_data['meeting_with'] ?? '')){
                                 $selected = 'selected';
                             }
                         ?>
@@ -46,7 +48,7 @@
                         <option value=""><?php echo $this->lang->line('select'); ?> </option>
                         <?php foreach($stafflist as $key => $stafflist_value){ 
                                $selected = '';
-                               if($stafflist_value['id'] == $visitor_data['staff_id']){
+                               if($stafflist_value['id'] == ($visitor_data['staff_id'] ?? '')){
                                  $selected = 'selected';
                                }
                             ?>
@@ -66,7 +68,7 @@
                         <?php
                         foreach ($classlist as $class) {
                             $selected = '';
-                            if($class['id'] == $visitor_data['class_id']){
+                            if($class['id'] == ($visitor_data['class_id'] ?? '')){
                                 $selected = 'selected';
                             }
                             ?>
@@ -99,7 +101,7 @@
         <div class="col-sm-4">
             <div class="form-group">
                 <label for="pwd"><?php echo $this->lang->line('visitor_name'); ?></label>  <small class="req"> *</small>
-                <input type="text" class="form-control" value="<?php echo set_value('name', $visitor_data['name']); ?>" name="name">
+                <input type="text" class="form-control" value="<?php echo set_value('name', ($visitor_data['name'] ?? '')); ?>" name="name">
                 <span class="text-danger"><?php echo form_error('name'); ?></span>
             </div>
         </div>
@@ -107,7 +109,7 @@
         <div class="col-sm-4">
             <div class="form-group">
                 <label for="pwd"><?php echo $this->lang->line('phone'); ?></label>
-                <input type="text" class="form-control" value="<?php echo set_value('contact', $visitor_data['contact']); ?>" name="contact">
+                <input type="text" class="form-control" value="<?php echo set_value('contact', ($visitor_data['contact'] ?? '')); ?>" name="contact">
             </div>
         </div>
     </div>
@@ -115,19 +117,19 @@
         <div class="col-sm-4">
             <div class="form-group">
                 <label for="pwd"><?php echo $this->lang->line('id_card'); ?></label>
-                <input type="text" class="form-control" value="<?php echo set_value('id_proof', $visitor_data['id_proof']); ?>" name="id_proof">
+                <input type="text" class="form-control" value="<?php echo set_value('id_proof', ($visitor_data['id_proof'] ?? '')); ?>" name="id_proof">
             </div>
         </div>
         <div class="col-sm-4">
             <div class="form-group">
                 <label for="email"><?php echo $this->lang->line('number_of_person'); ?></label>
-                <input type="text" class="form-control" value="<?php echo set_value('no_of_people', $visitor_data['no_of_people']); ?>" name="pepples">
+                <input type="text" class="form-control" value="<?php echo set_value('no_of_people', ($visitor_data['no_of_people'] ?? '')); ?>" name="pepples">
             </div>
         </div>
         <div class="col-sm-4">
             <div class="form-group">
                 <label for="pwd"><?php echo $this->lang->line('date'); ?></label><small class="req"> *</small>
-                <input type="text" id="date" class="form-control date" value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($visitor_data['date']))); ?>"  name="date" readonly="">
+                <input type="text" id="date" class="form-control date" value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat(), strtotime((string)($visitor_data['date'] ?? '')) ? strtotime((string)$visitor_data['date']) : time())); ?>"  name="date" readonly="">
                 <span class="text-danger"><?php echo form_error('date'); ?></span>
             </div>
         </div>
@@ -139,7 +141,7 @@
                 <div class="bootstrap-timepicker">
                     <div class="form-group">
                         <div class="input-group">
-                            <input type="text" name="time" class="form-control timepicker" id="stime_" value="<?php echo set_value('time', $visitor_data['in_time']); ?>">
+                            <input type="text" name="time" class="form-control timepicker" id="stime_" value="<?php echo set_value('time', ($visitor_data['in_time'] ?? '')); ?>">
                             <div class="input-group-addon">
                                 <i class="fa fa-clock-o"></i>
                             </div>
@@ -155,7 +157,7 @@
                 <div class="bootstrap-timepicker">
                     <div class="form-group">
                         <div class="input-group">
-                            <input type="text" name="out_time" class="form-control timepicker" id="stime_" value="<?php echo set_value('out_time', $visitor_data['out_time']); ?>">
+                            <input type="text" name="out_time" class="form-control timepicker" id="stime_" value="<?php echo set_value('out_time', ($visitor_data['out_time'] ?? '')); ?>">
                             <div class="input-group-addon">
                                 <i class="fa fa-clock-o"></i>
                             </div>
@@ -179,7 +181,7 @@
         <div class="col-sm-12">
             <div class="form-group">
                 <label for="pwd"><?php echo $this->lang->line('note'); ?></label>
-                <textarea class="form-control" id="description" name="note" name="note" rows="3"><?php echo set_value('note', $visitor_data['note']); ?></textarea>
+                <textarea class="form-control" id="description" name="note" name="note" rows="3"><?php echo set_value('note', ($visitor_data['note'] ?? '')); ?></textarea>
                 <span class="text-danger"><?php echo form_error('note'); ?></span>
             </div>
         </div>
@@ -191,11 +193,11 @@
     $('.filestyle').dropify();
     $(document).ready(function(){
         var class_id = $('#edit_class_id').val();
-        var section_id = '<?php echo $visitor_data['section_id']; ?>';
+        var section_id = '<?php echo ($visitor_data['section_id'] ?? ''); ?>';
         getsectionbyclass(class_id,section_id);
-        var students_id = '<?php echo $visitor_data['student_session_id']; ?>';   
+        var students_id = '<?php echo ($visitor_data['student_session_id'] ?? ''); ?>';   
         studentbysection(class_id,section_id,students_id);     
-        var meeting_with = '<?php echo $visitor_data['meeting_with']; ?>';
+        var meeting_with = '<?php echo ($visitor_data['meeting_with'] ?? ''); ?>';
 
         if(meeting_with == 'staff'){
             $('#edit_visible_staff').show();

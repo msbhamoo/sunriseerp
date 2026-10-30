@@ -5,6 +5,7 @@ class Temp_install extends CI_Controller {
     public function index() {
         // 1. Permission Group/Category
         // Check if permission category "student_dashboard" exists
+        echo "Install skipped"; return;
         $q = $this->db->get_where('permission_category', ['short_code' => 'student_dashboard']);
         if ($q->num_rows() == 0) {
             $this->db->insert('permission_category', [

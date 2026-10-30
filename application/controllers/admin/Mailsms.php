@@ -1869,7 +1869,7 @@ class Mailsms extends Admin_Controller
         }
 
         $id                        = $this->input->post('id');
-        $data['sms_template_list'] = $this->messages_model->get_sms_template($id);
+        $res = $this->messages_model->get_sms_template($id); if (is_array($res)) { $res = !empty($res) ? (is_object($res[0]) ? $res[0] : (object)$res[0]) : (object)['id'=>'','title'=>'','message'=>'']; } $data['sms_template_list'] = $res ?: (object)['id'=>'','title'=>'','message'=>''];
         $page                      = $this->load->view('admin/mailsms/sms_template/_edit_sms_template', $data, true);
         echo json_encode(array('status' => 1, 'page' => $page));
     }
@@ -1943,10 +1943,11 @@ class Mailsms extends Admin_Controller
 
     public function get_birthday_preview()
     {
+        if (empty($_POST['dir_path'])) { echo json_encode([]); return; }
         $is_image  = "0";
         $is_video  = "0";
-        $delete_id = $_POST['delete_id'];
-        $img_name  = $_POST['img_name'];
+        $delete_id = $_POST['delete_id'] ?? ($this->input->post('delete_id') ?: 0);
+        $img_name = $_POST["img_name"] ?? ($this->input->post("img_name") ?: "");
         $dir_path  = $_POST['dir_path'];
         $file_type = $_POST['file_type'];
         if ($file_type == 'image/png' || $file_type == 'image/jpeg' || $file_type == 'image/jpeg' || $file_type == 'image/jpeg' || $file_type == 'image/gif') {
@@ -2002,10 +2003,11 @@ class Mailsms extends Admin_Controller
 
     public function get_class_preview()
     {
+        if (empty($_POST['dir_path'])) { echo json_encode([]); return; }
         $is_image  = "0";
         $is_video  = "0";
-        $delete_id = $_POST['delete_id'];
-        $img_name  = $_POST['img_name'];
+        $delete_id = $_POST['delete_id'] ?? ($this->input->post('delete_id') ?: 0);
+        $img_name = $_POST["img_name"] ?? ($this->input->post("img_name") ?: "");
         $dir_path  = $_POST['dir_path'];
         $file_type = $_POST['file_type'];
         if ($file_type == 'image/png' || $file_type == 'image/jpeg' || $file_type == 'image/jpeg' || $file_type == 'image/jpeg' || $file_type == 'image/gif') {
@@ -2064,10 +2066,11 @@ class Mailsms extends Admin_Controller
 
     public function get_individual_preview()
     {
+        if (empty($_POST['dir_path'])) { echo json_encode([]); return; }
         $is_image  = "0";
         $is_video  = "0";
-        $delete_id = $_POST['delete_id'];
-        $img_name  = $_POST['img_name'];
+        $delete_id = $_POST['delete_id'] ?? ($this->input->post('delete_id') ?: 0);
+        $img_name = $_POST["img_name"] ?? ($this->input->post("img_name") ?: "");
         $dir_path  = $_POST['dir_path'];
         $file_type = $_POST['file_type'];
         if ($file_type == 'image/png' || $file_type == 'image/jpeg' || $file_type == 'image/jpeg' || $file_type == 'image/jpeg' || $file_type == 'image/gif') {
@@ -2112,10 +2115,14 @@ class Mailsms extends Admin_Controller
 
     public function get_preview()
     {
+        if (empty($_POST['dir_path'])) {
+            echo json_encode([]);
+            return;
+        }
         $is_image  = "0";
         $is_video  = "0";
-        $delete_id = $_POST['delete_id'];
-        $img_name  = $_POST['img_name'];
+        $delete_id = $_POST['delete_id'] ?? ($this->input->post('delete_id') ?: 0);
+        $img_name = $_POST["img_name"] ?? ($this->input->post("img_name") ?: "");
         $dir_path  = $_POST['dir_path'];
         $file_type = $_POST['file_type'];
         if ($file_type == 'image/png' || $file_type == 'image/jpeg' || $file_type == 'image/jpeg' || $file_type == 'image/jpeg' || $file_type == 'image/gif') {
@@ -3575,7 +3582,7 @@ class Mailsms extends Admin_Controller
             access_denied();
         }
         $id = $this->input->post('id');
-        $data['whatsapp_template_list'] = $this->messages_model->get_whatsapp_template($id);
+        $res = $this->messages_model->get_whatsapp_template($id); if (is_array($res)) { $res = !empty($res) ? (is_object($res[0]) ? $res[0] : (object)$res[0]) : (object)['id'=>'','title'=>'','message'=>'']; } $data['whatsapp_template_list'] = $res ?: (object)['id'=>'','title'=>'','message'=>''];
         $page = $this->load->view('admin/mailsms/whatsapp_template/_edit_whatsapp_template', $data, true);
         echo json_encode(array('status' => 1, 'page' => $page));
     }

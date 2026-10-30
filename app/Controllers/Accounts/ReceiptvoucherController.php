@@ -31,6 +31,15 @@ class ReceiptvoucherController extends BaseController
         return $this->dispatchLegacy('Receiptvoucher', 'delete', func_get_args());
     }
 
+
+    public function _remap($method, ...$params)
+    {
+        if (method_exists($this, $method)) {
+            return $this->$method(...$params);
+        }
+        return $this->dispatchLegacy('Receiptvoucher', $method, $params);
+    }
+
     protected function dispatchLegacy(string $controller, string $method, array $params)
     {
         // Set up compatibility environment

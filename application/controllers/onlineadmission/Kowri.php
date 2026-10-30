@@ -32,6 +32,7 @@ class Kowri extends OnlineAdmission_Controller
         $data['currency_name'] = $this->customlib->get_currencyShortName();
         // Payment options are now hardcoded to only show PayNow Card and PayNow MOMO
         $data['payment_options'] = array();
+        $data['api_error'] = array();
         $this->load->view('onlineadmission/kowri/index', $data);
     }
 

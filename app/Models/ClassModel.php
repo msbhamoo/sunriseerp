@@ -20,7 +20,7 @@ class ClassModel extends BaseModel
      */
     public function getAll(?int $id = null): array
     {
-        if ($id !== null) {
+        if (!empty($id)) {
             $record = $this->find($id);
             return $record ?: [];
         }
@@ -51,9 +51,9 @@ class ClassModel extends BaseModel
     /**
      * Get class by ID or all classes (compatible with CI3 legacy controller/views)
      */
-    public function get(?int $id = null): array
+    public function get($id = null): array
     {
-        if ($id !== null) {
+        if (!empty($id)) {
             $record = $this->find($id);
             return $record ?: [];
         }

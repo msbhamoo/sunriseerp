@@ -51,6 +51,29 @@ class CbseexamObservationModel extends BaseModel
         return $this->callLegacyModel('Cbseexam_observation_model', 'remove', func_get_args());
     }
 
+
+    public function get_editdetails($id)
+    {
+        return $this->callLegacyModel('Cbseexam_observation_model', 'get_editdetails', func_get_args());
+    }
+
+
+    public function get_observation_subparameterbyId($id)
+    {
+        return $this->callLegacyModel('Cbseexam_observation_model', 'get_observation_subparameterbyId', func_get_args());
+    }
+
+
+    public function get_observation_student($observation_id)
+    {
+        return $this->callLegacyModel('Cbseexam_observation_model', 'get_observation_student', func_get_args());
+    }
+
+    public function observationsubparameter($observation_id)
+    {
+        return $this->callLegacyModel('Cbseexam_observation_model', 'observationsubparameter', func_get_args());
+    }
+
     /**
      * Compatibility Bridge: Delegates execution to the legacy model instance
      * maintaining full compatibility with query builder and CI3 environment.

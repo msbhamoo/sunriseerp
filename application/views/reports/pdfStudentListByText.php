@@ -237,7 +237,7 @@ if (isset($resultlist)) {
                         </thead>
                         <?php
                         $row_count = 1;
-                        foreach ($resultlist as $key => $student) {
+                        if (is_array($resultlist) || is_object($resultlist)) foreach ($resultlist as $key => $student) {
                             ?>
                             <tr>
                                 <td class="desc"><h3><?php echo $student['admission_no']; ?></h3></td>

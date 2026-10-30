@@ -1,3 +1,4 @@
+<?php if (empty($examDetail)) { $examDetail = ["name" => "", "class_sections" => ""]; } ?>
 <div class="row pb10">
     <div class="col-lg-2 col-md-3 col-sm-12">   
         <p class="examinfo"><span><?php echo $this->lang->line('exam')?></span><?php echo $examDetail['name']; ?></p>

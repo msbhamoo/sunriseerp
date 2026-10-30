@@ -112,8 +112,12 @@ class Payroll extends Admin_Controller
         $this->load->view("layout/footer", $data);
     }
 
-    public function edit($id)
+    public function edit($id = null)
     {
+        if (empty($id)) {
+            redirect('admin/payroll');
+            return;
+        }
         $data["staff_id"]         = "";
         $data["basic"]            = "";
         $data["name"]             = "";

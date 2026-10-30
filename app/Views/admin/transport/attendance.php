@@ -1172,7 +1172,7 @@ function updateCounters() {
     $('#count_present').text(present);
     $('#count_absent').text(absent);
 
-    var isEvening = ('<?php echo strtolower($attendance_type); ?>' === 'evening');
+    var isEvening = ('<?php echo strtolower($attendance_type ?? "morning"); ?>' === 'evening');
     if (isEvening) {
         $('#flow_metric_val').text(morningRetainedEvening + ' / ' + morningPresentTotal);
         var missingMorning = morningPresentTotal - morningRetainedEvening;

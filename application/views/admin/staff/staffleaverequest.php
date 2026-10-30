@@ -53,7 +53,7 @@ foreach ($leave_request as $key => $value) {
                                                     <td><?php echo $value["leave_days"]; ?></td>
                                                     <td><?php echo date($this->customlib->getSchoolDateFormat(), strtotime($value["date"]));  ?></td>
                                                     <?php
-if ($value["status"] == "approved") {
+$label = "class='label label-default'"; $status1 = "pending"; if ($value["status"] == "approved") {
         $status1 = 'approve';
         $label = "class='label label-success'";
     } else if ($value["status"] == "pending") {

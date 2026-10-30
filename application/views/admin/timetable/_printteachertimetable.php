@@ -135,7 +135,7 @@
     <div class="row">
       <div class="col-md-12 text">
         <h3 class="text-center bolder"><?php echo $this->lang->line('timetable'); ?></h3>
-        <h4 class="bolds"><?php echo $staff['name'] . " " . $staff['surname'] . " (" . $staff['employee_id'] . ")"; ?></h4>
+        <h4 class="bolds"><?php echo ($staff['name'] ?? '') . ' ' . ($staff['surname'] ?? '') . ' (' . ($staff['employee_id'] ?? '') . ')'; ?></h4>
       </div>
     </div>
 

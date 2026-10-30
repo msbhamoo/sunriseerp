@@ -1,0 +1,1 @@
+<?php if (file_exists(APPPATH . "Views/user/hostelroom/create.php")) { include APPPATH . "Views/user/hostelroom/create.php"; } elseif (file_exists(FCPATH . "application/views/user/hostelroom/create.php")) { include FCPATH . "application/views/user/hostelroom/create.php"; } ?>

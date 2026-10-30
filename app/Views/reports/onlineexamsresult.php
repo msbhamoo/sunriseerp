@@ -155,7 +155,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                 <tbody>
                                     <?php
                                     $count = 1;
-                                    foreach ($resultlist as $subject_key => $subject_value) {
+                                    if (is_array($resultlist) || is_object($resultlist)) foreach ($resultlist as $subject_key => $subject_value) {
                                         ?>
                                         <tr>
                                             <td class="mailbox-name"> <?php echo $subject_value->exam; ?></td>

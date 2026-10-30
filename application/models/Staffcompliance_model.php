@@ -132,4 +132,93 @@ class Staffcompliance_model extends MY_Model
         $this->db->trans_complete();
         return $this->db->trans_status();
     }
+
+    /**
+     * Get monthly compliance grid data for all days in a month.
+     *
+     * @param string $role_name
+     * @param int $year
+     * @param int $month
+     * @return array
+     */
+    public function getMonthlyComplianceSheet($role_name, $year, $month)
+    {
+        $start = sprintf('%04d-%02d-01', $year, $month);
+        $end   = date('Y-m-t', strtotime($start));
+
+        $role_cond = '';
+        if (!empty($role_name) && $role_name !== 'select') {
+            $role_cond = " AND roles.name = " . $this->db->escape($role_name);
+        }
+
+        $condition = '';
+        if ($this->session->has_userdata('admin')) {
+            $getStaffRole       = $this->customlib->getStaffRole();
+            $staffrole          = json_decode($getStaffRole);
+            $superadmin_visible = $this->customlib->superadmin_visible();
+            if ($superadmin_visible == 'disabled' && $staffrole->id != 7) {
+                $condition = " AND roles.id != 7";
+            }
+        }
+
+        $sql = "SELECT staff.id AS staff_id, staff.name, staff.surname, staff.employee_id,
+                       roles.id AS role_id, roles.name AS role_name,
+                       sa.date,
+                       sa.uniform_status,
+                       sa.id_card_status,
+                       sa.lesson_plan_status,
+                       sa.phone_handover_status,
+                       sa.remark,
+                       sat.type AS att_type,
+                       COALESCE(NULLIF(sat.long_lang_name, ''), LOWER(TRIM(sat.key_value))) AS att_status
+                FROM staff
+                LEFT JOIN staff_roles ON staff_roles.staff_id = staff.id
+                LEFT JOIN roles ON roles.id = staff_roles.role_id
+                LEFT JOIN staff_attendance sa ON sa.staff_id = staff.id AND sa.date BETWEEN " . $this->db->escape($start) . " AND " . $this->db->escape($end) . "
+                LEFT JOIN staff_attendance_type sat ON sat.id = sa.staff_attendance_type_id
+                WHERE staff.is_active = 1" . $role_cond . $condition . "
+                ORDER BY roles.name ASC, staff.name ASC, staff.surname ASC";
+
+        $rows = $this->db->query($sql)->result();
+
+        $staff = [];
+        $map   = []; // [staff_id][Y-m-d] => array of compliance statuses
+
+        foreach ($rows as $r) {
+            if (!isset($staff[$r->staff_id])) {
+                $staff[$r->staff_id] = (object)[
+                    'staff_id'    => (int)$r->staff_id,
+                    'name'        => $r->name,
+                    'surname'     => $r->surname,
+                    'employee_id' => $r->employee_id,
+                    'role_name'   => $r->role_name,
+                ];
+                $map[$r->staff_id] = [];
+            }
+
+            if (!empty($r->date)) {
+                $is_fully_compliant = (
+                    $r->uniform_status === 'yes' &&
+                    $r->id_card_status === 'yes' &&
+                    $r->lesson_plan_status === 'yes' &&
+                    $r->phone_handover_status === 'yes'
+                );
+
+                $map[$r->staff_id][$r->date] = [
+                    'uniform'        => $r->uniform_status,
+                    'id_card'        => $r->id_card_status,
+                    'lesson_plan'    => $r->lesson_plan_status,
+                    'phone_handover' => $r->phone_handover_status,
+                    'is_compliant'   => $is_fully_compliant,
+                    'att_status'     => $r->att_status,
+                    'remark'         => $r->remark,
+                ];
+            }
+        }
+
+        return [
+            'staff' => array_values($staff),
+            'map'   => $map,
+        ];
+    }
 }

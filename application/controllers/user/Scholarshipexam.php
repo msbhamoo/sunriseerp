@@ -16,8 +16,8 @@ class Scholarshipexam extends Student_Controller
     public function index()
     {
         $this->session->set_userdata('top_menu', 'scholarship_exam');
-        $student_session_id = $this->session->userdata('student')['student_session_id'];
-        $class_id = $this->session->userdata('student')['class_id'];
+        $student_session_id = $this->session->userdata('student')['student_session_id'] ?? ($this->customlib->getStudentSessionUserID() ?: 0);
+        $class_id = $this->session->userdata('student')['class_id'] ?? 0;
         $student_id = $this->session->userdata('student')['student_id'];
 
         // Get exams active for student class
@@ -44,7 +44,7 @@ class Scholarshipexam extends Student_Controller
 
     public function apply($exam_id, $schedule_id)
     {
-        $student_session_id = $this->session->userdata('student')['student_session_id'];
+        $student_session_id = $this->session->userdata('student')['student_session_id'] ?? ($this->customlib->getStudentSessionUserID() ?: 0);
         $exam = $this->scholarshipexam_model->getExams($exam_id);
 
         if ($exam) {

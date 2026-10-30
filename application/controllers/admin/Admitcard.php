@@ -539,6 +539,7 @@ class Admitcard extends Admin_Controller
     public function view()
     {
         $id                = $this->input->post('certificateid');
+        if (empty($id)) { echo json_encode(array('status' => 0, 'page' => '')); return; }
         $output            = '';
         $data              = array();
         $data['admitcard'] = $this->admitcard_model->get($id);
@@ -547,7 +548,7 @@ class Admitcard extends Admin_Controller
     }
 
     public function save_active_status(){
-        $value=$_POST['value'];
+        $value = isset($_POST['value']) ? $_POST['value'] : 0;
         $this->admitcard_model->save_active_status($value); 
     }
 

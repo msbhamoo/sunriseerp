@@ -137,6 +137,11 @@ class Cbseexam_grade_model extends MY_Model
         return $result;
     }
 
+    public function get_editdetails($id)
+    {
+        return $this->getWithRange($id);
+    }
+
     /*
     This function is used to get cbse exam grade range based on grade id
     */

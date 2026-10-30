@@ -230,7 +230,7 @@ class Cbseexam_result_model extends MY_Model {
     public function observation_result($student_session_id)
     { 
         $observations=array();
-        $observation=  $this->db->select('cbse_observation_student_marks.marks,cbse_observation_subparameter.name as subname,cbse_observation_parameters.name,cbse_observation_subparameter.id,cbse_observation_parameters.id as observation_id')->from('cbse_observation_student_marks')->join('cbse_observation_subparameter','cbse_observation_subparameter.id=cbse_observation_student_marks.cbse_observation_subparameter_id')->join('cbse_observation_parameters','cbse_observation_parameters.id=cbse_observation_subparameter.cbse_observation_parameter_id')->where('cbse_observation_student_marks.student_session_id',$student_session_id)->get()->result_array();
+        $observation=  $this->db->select('cbse_observation_term_student_subparameter.obtain_marks as marks,cbse_observation_parameters.name as subname,cbse_observation_parameters.name,cbse_observation_subparameter.id,cbse_observation_parameters.id as observation_id')->from('cbse_observation_term_student_subparameter')->join('cbse_observation_subparameter','cbse_observation_subparameter.id=cbse_observation_term_student_subparameter.cbse_observation_subparameter_id')->join('cbse_observation_parameters','cbse_observation_parameters.id=cbse_observation_subparameter.cbse_observation_parameter_id')->where('cbse_observation_term_student_subparameter.student_session_id',$student_session_id)->get()->result_array();
         foreach($observation as $key=>$value)
         {
 
@@ -283,8 +283,10 @@ class Cbseexam_result_model extends MY_Model {
         return  $this->db->select('students.*')->from('students')->join('student_session','student_session.student_id=students.id')->where('student_session.id',$student_session_id)->get()->row_array();
     }
 
-    public function gettermwiseresult($student_session_id)
+    public function gettermwiseresult($id = 0)
     {
+        $termsdata = [];
+        $termsdata = [];
         $grade=$this->db->select('*')->from('cbse_exam_grades_range')->where('cbse_exam_grade_id',1)->get()->result_array();
     
         $terms=$this->db->select('cbse_terms.id,cbse_terms.name')->from('cbse_exam_students')->join('cbse_exams','cbse_exams.id=cbse_exam_students.cbse_exam_id')->join('cbse_terms','cbse_terms.id=cbse_exams.cbse_term_id')->where('cbse_exam_students.student_session_id',$student_session_id)->where('cbse_terms.id',1)->get()->result_array();

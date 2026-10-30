@@ -1759,7 +1759,9 @@ class CssManager
 			$p['BORDER-SPACING-H'] = $p['BORDER-SPACING-V'] = $attr['CELLSPACING'];
 		}
 		// cellPadding overwrites TD/TH default but not specific CSS set on cell
-		if (($tag === 'TD' || $tag === 'TH') && isset($this->mpdf->table[$this->mpdf->tableLevel][$this->mpdf->tbctr[$this->mpdf->tableLevel]]['cell_padding']) && ($this->mpdf->table[$this->mpdf->tableLevel][$this->mpdf->tbctr[$this->mpdf->tableLevel]]['cell_padding'] || $this->mpdf->table[$this->mpdf->tableLevel][$this->mpdf->tbctr[$this->mpdf->tableLevel]]['cell_padding'] === '0')) {  // mPDF 5.7.3
+		$lvl = $this->mpdf->tableLevel ?? 0;
+		$ctr = $this->mpdf->tbctr[$lvl] ?? 0;
+		if (($tag === 'TD' || $tag === 'TH') && isset($this->mpdf->table[$lvl][$ctr]['cell_padding']) && ($this->mpdf->table[$lvl][$ctr]['cell_padding'] || $this->mpdf->table[$lvl][$ctr]['cell_padding'] === '0')) {  // mPDF 5.7.3
 			$p['PADDING-LEFT'] = $this->mpdf->table[$this->mpdf->tableLevel][$this->mpdf->tbctr[$this->mpdf->tableLevel]]['cell_padding'];
 			$p['PADDING-RIGHT'] = $this->mpdf->table[$this->mpdf->tableLevel][$this->mpdf->tbctr[$this->mpdf->tableLevel]]['cell_padding'];
 			$p['PADDING-TOP'] = $this->mpdf->table[$this->mpdf->tableLevel][$this->mpdf->tbctr[$this->mpdf->tableLevel]]['cell_padding'];

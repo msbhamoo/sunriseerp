@@ -148,20 +148,7 @@ class Income extends Admin_Controller
 
     public function create()
     {
-        $data['title'] = 'Add Fees Master';
-        $this->form_validation->set_rules('income', $this->lang->line('fees_master'), 'trim|required|xss_clean');
-        if ($this->form_validation->run() == false) {
-            $this->load->view('layout/header', $data);
-            $this->load->view('income/incomeCreate', $data);
-            $this->load->view('layout/footer', $data);
-        } else {
-            $data = array(
-                'income' => $this->input->post('income'),
-            );
-            $this->income_model->add($data);
-            $this->session->set_flashdata('msg', '<div class="alert alert-success text-left">' . $this->lang->line('success_message') . '</div>');
-            redirect('income/index');
-        }
+        redirect('admin/income/index');
     }
 
     public function handle_upload()

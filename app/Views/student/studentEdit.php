@@ -2,7 +2,6 @@
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
 <link href="<?php echo base_url(); ?>backend/multiselect/css/jquery.multiselect.css" rel="stylesheet">
-<script src="<?php echo base_url(); ?>backend/multiselect/js/jquery.min.js"></script>
 <script src="<?php echo base_url(); ?>backend/multiselect/js/jquery.multiselect.js"></script>
 <div class="content-wrapper">
     <!-- Main content -->
@@ -2070,7 +2069,7 @@ $(document).on('change','#vehroute_id',function(){
 
 <script type="text/template" id="teacher_drp">
     <?php
-    foreach ($teacher_staffs as $teacher_staff) {
+    foreach (($teacher_staffs ?? []) as $teacher_staff) {
     ?>
         <option value="<?php echo $teacher_staff['id'] ?>"
               <?php

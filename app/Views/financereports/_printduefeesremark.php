@@ -216,7 +216,7 @@
                         <div class="row">                           
                             <div class="col-xs-9">                               
                                 <h3> <?php echo $this->lang->line('balance_fees_report_with_remark'); ?></h3>                  
-                                <div class="font14"> <strong>Class</strong> <?php echo $class['class'] ."-". $section['section']; ?></div>
+                                <div class="font14"> <strong>Class</strong> <?php echo ($class['class'] ?? '') . '-' . ($section['section'] ?? ''); ?></div>
                             </div>
                             <div class="col-xs-3 text-right">
                                 <br/>

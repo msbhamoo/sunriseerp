@@ -249,7 +249,7 @@ if ($class_id == $class["id"]) {
         $('#homework_date,#submit_date,#homeworkdate,#submitdate').datepicker({
             format: date_format,
             autoclose: true,
-            language: '<?php echo $language_name ?>'
+            language: '<?php echo $language_name ?? "en" ?>'
         });
     });
 </script>
@@ -259,8 +259,8 @@ if ($class_id == $class["id"]) {
 
     $(document).ready(function (e) {
         getSectionByClass("<?php echo $class_id ?>", "", 'secid');
-        getSubjectGroup("<?php echo $class_id ?>", "<?php echo $section_id ?>", "<?php echo $subject_group_id ?>", 'subject_group_id')
-        getsubjectBySubjectGroup("<?php echo $class_id ?>", "<?php echo $section_id ?>", "<?php echo $subject_group_id ?>", "<?php echo $subject_id ?>", 'subid');
+        getSubjectGroup("<?php echo $class_id ?>", "<?php echo $section_id ?? '' ?>", "<?php echo $subject_group_id ?? '' ?>", 'subject_group_id')
+        getsubjectBySubjectGroup("<?php echo $class_id ?>", "<?php echo $section_id ?? '' ?>", "<?php echo $subject_group_id ?? '' ?>", "<?php echo $subject_id ?? '' ?>", 'subid');
     });
 </script>
 

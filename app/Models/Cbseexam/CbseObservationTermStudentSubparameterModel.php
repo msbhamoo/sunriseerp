@@ -16,7 +16,7 @@ class CbseObservationTermStudentSubparameterModel extends BaseModel
     protected $useAutoIncrement = true;
     protected $returnType = 'array';
 
-    public function add($insert_array, $update_array)
+    public function add($insert_array, $update_array = [])
     {
         return $this->callLegacyModel('Cbse_observation_term_student_subparameter_model', 'add', func_get_args());
     }

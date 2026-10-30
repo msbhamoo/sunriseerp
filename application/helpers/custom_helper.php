@@ -465,7 +465,7 @@ function amountFormat($amount)
     $currency_price = $CI->customlib->getSchoolCurrencyPrice();
 
     // $calculated_amount = bcmul((string)$amount, (string)$currency_price, 6);
-    $calculated_amount = ($amount * $currency_price);
+    $calculated_amount = ((float)$amount * (float)$currency_price);
 
     if ($currency_format == "#,###.##") {
         $return_amt = number_format($calculated_amount, 2, '.', ',');

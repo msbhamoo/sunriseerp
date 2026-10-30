@@ -212,6 +212,11 @@ class MY_Controller extends CI_Controller
             }
         }
 
+        $parentVal = parent::__get($key);
+        if ($parentVal !== null) {
+            return $parentVal;
+        }
+
         return null;
     }
 
@@ -394,7 +399,7 @@ class Parent_Controller extends MY_Controller
 class Front_Controller extends CI_Controller
 {
 
-    protected $data           = array();
+    public $data = array();
     protected $school_details = array();
     protected $parent_menu    = '';
     protected $page_title     = '';

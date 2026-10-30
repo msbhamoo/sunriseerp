@@ -29,9 +29,11 @@ class Student extends Admin_Controller
 
     public function index()
     {
-        $data['title']       = 'Student List';
-        $student_result      = $this->student_model->get();
-        $data['studentlist'] = $student_result;
+        $data['title']        = 'Student List';
+        $student_result       = $this->student_model->get();
+        $data['studentlist']  = $student_result;
+        $data['categorylist'] = $this->category_model->get();
+        $data['classlist']    = $this->class_model->get();
         $this->load->view('layout/header', $data);
         $this->load->view('student/studentList', $data);
         $this->load->view('layout/footer', $data);
@@ -1717,6 +1719,9 @@ class Student extends Admin_Controller
 
     public function handle_uploadcreate_doc()
     {
+        if (empty($_FILES['first_doc']) || empty($_FILES['first_doc']['name'])) {
+            return true;
+        }
         $image_validate = $this->config->item('file_validate');
         $result         = $this->filetype_model->get();
 
@@ -2906,14 +2911,17 @@ class Student extends Admin_Controller
     public function getStudentRecordByID()
     {
         $student_id = $this->input->get('student_id');
+        if (empty($student_id)) {
+            echo json_encode([]);
+            return;
+        }
         $resultlist = $this->student_model->get($student_id);
 
-        foreach ($resultlist as $key => $value) {
-
-            $resultlist['full_name'] = $this->customlib->getFullName($resultlist['firstname'], $resultlist['middlename'], $resultlist['lastname'], $this->sch_setting_detail->middlename, $this->sch_setting_detail->lastname);
+        if (!empty($resultlist) && is_array($resultlist)) {
+            $resultlist['full_name'] = $this->customlib->getFullName($resultlist['firstname'] ?? '', $resultlist['middlename'] ?? '', $resultlist['lastname'] ?? '', $this->sch_setting_detail->middlename, $this->sch_setting_detail->lastname);
         }
 
-        echo json_encode($resultlist);
+        echo json_encode($resultlist ?: []);
     }
 
     public function uploadimage($id)
@@ -3723,14 +3731,14 @@ class Student extends Admin_Controller
 
         $sch_setting = $this->sch_setting_detail;
 
+        $resultlist = array();
         if ($search_type == "search_filter") {
             $resultlist = $this->student_model->searchdtByClassSection($class, $section);
         } elseif ($search_type == "search_full") {
             $resultlist = $this->student_model->searchFullText($search_text, $carray);
         }
 
-        $students = array();
-        $students = json_decode($resultlist);
+        $students = is_string($resultlist) ? json_decode($resultlist) : (is_array($resultlist) ? (object)['data' => $resultlist] : (object)['data' => []]);
 
         $dt_data = array();
         $fields  = $this->customfield_model->get_custom_fields('students');
@@ -3823,9 +3831,9 @@ class Student extends Admin_Controller
         $sch_setting         = $this->sch_setting_detail;
         $student_detail_view = $this->load->view('student/_searchDetailView', array('sch_setting' => $sch_setting, 'students' => $students), true);
         $json_data           = array(
-            "draw"                => intval($students->draw),
-            "recordsTotal"        => intval($students->recordsTotal),
-            "recordsFiltered"     => intval($students->recordsFiltered),
+            "draw"                => intval($students->draw ?? 0),
+            "recordsTotal"        => intval($students->recordsTotal ?? 0),
+            "recordsFiltered"     => intval($students->recordsFiltered ?? 0),
             "data"                => $dt_data,
             "student_detail_view" => $student_detail_view,
         );
@@ -3994,8 +4002,8 @@ class Student extends Admin_Controller
 
     public function getAdmissionNoByGuardianEmail()
     {
-        $student_id =   $_POST['student_id'];
-        $guardian_email =   $_POST['guardian_email'];
+        $student_id = $_POST["student_id"] ?? "";
+        $guardian_email = $_POST["guardian_email"] ?? "";
 
         $student_admission_no = $this->student_model->getAdmissionNoByGuardianEmail($student_id, $guardian_email);
 
@@ -4009,8 +4017,8 @@ class Student extends Admin_Controller
 
     public function getAdmissionNoByGuardianPhone()
     {
-        $student_id =   $_POST['student_id'];
-        $guardian_phone =   $_POST['guardian_phone'];
+        $student_id = $_POST["student_id"] ?? "";
+        $guardian_phone = $_POST["guardian_phone"] ?? "";
 
         $student_admission_no = $this->student_model->getAdmissionNoByGuardianPhone($student_id, $guardian_phone);
 
@@ -4024,7 +4032,10 @@ class Student extends Admin_Controller
 
     public function printStudentDetails()
     {
-        $student_id  = $_POST['student_id'];
+        $student_id  = $_POST['student_id'] ?? null;
+        if (empty($student_id)) {
+            return;
+        }
         $result      = $this->student_model->getRecentRecord($student_id);
         $data['student']  = $this->student_model->getStudentByClassSectionIDWithCustomfield($result['class_id'], $result['section_id'], $student_id);
         $data['sch_setting']    =    $this->sch_setting_detail;
@@ -4070,7 +4081,11 @@ class Student extends Admin_Controller
     public function save_image()
     {
 
-        $student_id     = $_POST['student_id'];
+        $student_id     = $_POST['student_id'] ?? 0;
+        if (empty($student_id)) {
+            echo json_encode([]);
+            return;
+        }
         $first_title    = $_POST['first_title'];
         $accessToken    = $_POST['accessToken'];
         $data           = $_POST['data'];

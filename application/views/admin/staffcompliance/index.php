@@ -341,6 +341,35 @@
         color: #ffffff !important;
         border-color: #0f172a;
     }
+    /* Top Tabs */
+    .cmp-nav-tabs {
+        display: inline-flex;
+        background: #e2e8f0;
+        border-radius: 10px;
+        padding: 3px;
+        gap: 2px;
+    }
+
+    .cmp-tab-btn {
+        border: none;
+        background: transparent;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 7px 16px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .cmp-tab-btn.active {
+        background: #ffffff;
+        color: #0f172a;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
 </style>
 
 <div class="content-wrapper compliance-page">
@@ -349,13 +378,20 @@
             <div class="col-md-12">
                 <!-- Top Navigation & Action Bar -->
                 <div class="cmp-top-header">
-                    <div class="cmp-page-title">
-                        <div style="background: rgba(15, 118, 110, 0.12); color: var(--cmp-primary); width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
-                            <i class="fa fa-check-square-o"></i>
+                    <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                        <div class="cmp-page-title">
+                            <div style="background: rgba(15, 118, 110, 0.12); color: var(--cmp-primary); width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                                <i class="fa fa-check-square-o"></i>
+                            </div>
+                            <div>
+                                <h3><?php echo $this->lang->line('compliance_checklist'); ?></h3>
+                                <small>Daily verification & Monthly Monitoring for Uniform, ID Card, Lesson Plan & Phone</small>
+                            </div>
                         </div>
-                        <div>
-                            <h3><?php echo $this->lang->line('compliance_checklist'); ?></h3>
-                            <small>Daily verification of Uniform, ID Card, Lesson Plan & Phone Handover</small>
+
+                        <div class="cmp-nav-tabs">
+                            <button type="button" class="cmp-tab-btn active" data-tab="daily"><i class="fa fa-calendar-check-o"></i> Daily Checklist</button>
+                            <button type="button" class="cmp-tab-btn" data-tab="monthly"><i class="fa fa-table"></i> Monthly Sheet</button>
                         </div>
                     </div>
 
@@ -368,6 +404,9 @@
                         </a>
                     </div>
                 </div>
+
+                <!-- Daily Tab Container -->
+                <div id="tab-daily">
 
                 <!-- Criteria Filter Card -->
                 <div class="cmp-filter-card">
@@ -702,6 +741,63 @@
                         </div>
                     </form>
                 <?php } ?>
+                </div><!-- /#tab-daily -->
+
+                <!-- Monthly Tab Container -->
+                <div id="tab-monthly" style="display:none;">
+                    <div class="cmp-filter-card">
+                        <div style="font-size:15px; font-weight:700; color:#0f172a; margin-bottom:12px;">
+                            <i class="fa fa-table text-primary"></i> Monthly Compliance Sheet
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 col-sm-6">
+                                <div class="form-group">
+                                    <label><?php echo $this->lang->line('role'); ?></label>
+                                    <select id="ms-role" class="form-control" style="border-radius:8px; height:36px;">
+                                        <option value="select">All Roles</option>
+                                        <?php foreach ($classlist as $c) { ?>
+                                            <option value="<?php echo html_escape($c['type']); ?>"><?php echo html_escape($c['type']); ?></option>
+                                        <?php } ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-4">
+                                <div class="form-group">
+                                    <label>Month</label>
+                                    <select id="ms-month" class="form-control" style="border-radius:8px; height:36px;">
+                                        <?php for ($mn = 1; $mn <= 12; $mn++) { ?>
+                                            <option value="<?php echo $mn; ?>" <?php echo ($mn == date('n')) ? 'selected' : ''; ?>><?php echo date('F', mktime(0, 0, 0, $mn, 1)); ?></option>
+                                        <?php } ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-4">
+                                <div class="form-group">
+                                    <label>Year</label>
+                                    <select id="ms-year" class="form-control" style="border-radius:8px; height:36px;">
+                                        <?php
+                                        $cur_yr = (int)date('Y');
+                                        for ($y = $cur_yr; $y >= $cur_yr - 3; $y--) { ?>
+                                            <option value="<?php echo $y; ?>"><?php echo $y; ?></option>
+                                        <?php } ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2 col-sm-4">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <div>
+                                        <button type="button" id="ms-show" class="cmp-btn cmp-btn-primary" style="height:36px; width:100%; justify-content:center;">
+                                            <i class="fa fa-search"></i> View Sheet
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="ms-container" style="margin-top:14px;"></div>
+                </div><!-- /#tab-monthly -->
             </div>
         </div>
     </section>
@@ -790,6 +886,34 @@
             $dateField.val(yyyy + '-' + mm + '-' + dd);
         }
         $('#filter_form').submit();
+    });
+
+    // 6. Tab Switching (Daily vs Monthly)
+    $(document).on('click', '.cmp-tab-btn', function() {
+        var t = $(this).data('tab');
+        $('.cmp-tab-btn').removeClass('active');
+        $(this).addClass('active');
+        $('#tab-daily').toggle(t === 'daily');
+        $('#tab-monthly').toggle(t === 'monthly');
+
+        if (t === 'monthly' && $('#ms-container').is(':empty')) {
+            loadMonthlySheet();
+        }
+    });
+
+    // 7. Monthly Sheet AJAX Loading
+    function loadMonthlySheet() {
+        var role = $('#ms-role').val(), month = $('#ms-month').val(), year = $('#ms-year').val();
+        $('#ms-container').html('<div style="padding:32px; text-align:center; background:#ffffff; border-radius:10px; border:1px solid #e2e8f0;"><i class="fa fa-spinner fa-spin text-primary" style="font-size:26px;"></i><p style="margin-top:10px; font-weight:600; color:#475569;">Loading monthly compliance sheet...</p></div>');
+        $.post("<?php echo site_url('admin/staffcompliance/monthsheet'); ?>", { role: role, month: month, year: year }, function(html) {
+            $('#ms-container').html(html);
+        }).fail(function() {
+            $('#ms-container').html('<div class="alert alert-danger" style="border-radius:8px;">Could not load monthly compliance sheet. Please try again.</div>');
+        });
+    }
+
+    $(document).on('click', '#ms-show', function() {
+        loadMonthlySheet();
     });
 
 })(jQuery);

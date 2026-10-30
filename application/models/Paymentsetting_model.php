@@ -25,7 +25,34 @@ class Paymentsetting_model extends MY_Model {
         $this->db->select()->from('payment_settings');
         $this->db->where('is_active', 'yes');
         $query = $this->db->get();
-        return $query->row();
+        $row = $query->row();
+        if (!$row) {
+            $default = new \stdClass();
+            $default->id = 0;
+            $default->payment_type = 'none';
+            $default->api_username = '';
+            $default->api_secret_key = '';
+            $default->salt = '';
+            $default->api_publishable_key = '';
+            $default->api_password = '';
+            $default->api_signature = '';
+            $default->api_email = '';
+            $default->paypal_demo = 0;
+            $default->account_no = '';
+            $default->is_active = 'no';
+            $default->gateway_mode = 'sandbox';
+            $default->paytm_website = '';
+            $default->paytm_industrytype = '';
+            $default->charge_type = 'percentage';
+            $default->charge_value = 0;
+            return $default;
+        }
+        return $row;
+    }
+
+    public function insta_webhooksalt() {
+        $method = $this->getActiveMethod();
+        return $method->salt ?? '';
     }
 
     public function add($data) {

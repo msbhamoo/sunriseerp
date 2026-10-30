@@ -75,12 +75,12 @@
                                                     <tbody>
                                                         <tr>
                                                             <td><?php echo $this->lang->line('total_documents'); ?></td>
-                                                            <td class="total_files"><?php echo $count->number; ?></td>
+                                                            <td class="total_files"><?php echo is_object($count) ? ($count->number ?? 0) : (is_array($count) ? ($count['number'] ?? 0) : $count); ?></td>
                                                         </tr>
                                                         <tr>
                                                             <td><?php echo $this->lang->line('size'); ?></td>
                                                             <td class="total_size">
-                                                                <?php echo format_file_size($count->file_size); ?></td>
+                                                                <?php echo format_file_size(is_object($count) ? ($count->file_size ?? 0) : (is_array($count) ? ($count['file_size'] ?? 0) : 0)); ?></td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -127,7 +127,7 @@
                                                                 <option value="">
                                                                     <?php echo $this->lang->line('select'); ?></option>
                                                                 <?php
-foreach ($content_types as $content_type_key => $content_type_value) {
+foreach (($content_types ?? []) as $content_type_key => $content_type_value) {
     ?>
                                                                 <option value="<?php echo $content_type_value->id; ?>">
                                                                     <?php echo $content_type_value->name; ?></option>
@@ -176,7 +176,7 @@ foreach ($content_types as $content_type_key => $content_type_value) {
                                 <select id="content_type" name="content_type" class="form-control">
                                     <option value=""><?php echo $this->lang->line('select'); ?></option>
                                     <?php
-foreach ($content_types as $content_type_key => $content_type_value) {
+foreach (($content_types ?? []) as $content_type_key => $content_type_value) {
     ?>
                                     <option value="<?php echo $content_type_value->id; ?>">
                                         <?php echo $content_type_value->name; ?></option>

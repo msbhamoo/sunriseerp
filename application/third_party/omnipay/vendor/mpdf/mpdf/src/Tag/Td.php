@@ -29,11 +29,35 @@ class Td extends Tag
 		}
 
 		// Update number column
-		if ($this->mpdf->table[$this->mpdf->tableLevel][$this->mpdf->tbctr[$this->mpdf->tableLevel]]['nc'] < $this->mpdf->col + 1) {
-			$this->mpdf->table[$this->mpdf->tableLevel][$this->mpdf->tbctr[$this->mpdf->tableLevel]]['nc'] = $this->mpdf->col + 1;
+		$t_lvl = $this->mpdf->tableLevel ?? 0;
+		$t_ctr = $this->mpdf->tbctr[$t_lvl] ?? 0;
+		if (!isset($this->mpdf->table[$t_lvl][$t_ctr]['nc'])) {
+			$this->mpdf->table[$t_lvl][$t_ctr]['nc'] = 0;
+		}
+		if ($this->mpdf->table[$t_lvl][$t_ctr]['nc'] < $this->mpdf->col + 1) {
+			$this->mpdf->table[$t_lvl][$t_ctr]['nc'] = $this->mpdf->col + 1;
 		}
 
-		$table = &$this->mpdf->table[$this->mpdf->tableLevel][$this->mpdf->tbctr[$this->mpdf->tableLevel]];
+		if (!isset($this->mpdf->table[$t_lvl][$t_ctr])) { $this->mpdf->table[$t_lvl][$t_ctr] = []; }
+		$table = &$this->mpdf->table[$t_lvl][$t_ctr];
+		if (!is_array($table)) { $table = []; }
+		$defaultTableKeys = [
+			'borders_separate' => false,
+			'cell_padding' => 0,
+			'cellLineHeight' => 0,
+			'cellLineStackingStrategy' => 'inline-line-height',
+			'cellLineStackingShift' => 'consider-shifts',
+			'direction' => 'ltr',
+			'decimal_align' => '',
+			'border_details' => [],
+			'va' => '',
+			'txta' => ''
+		];
+		foreach ($defaultTableKeys as $k => $v) {
+			if (!isset($table[$k])) {
+				$table[$k] = $v;
+			}
+		}
 
 		$c = ['a' => false,
 			'R' => false,
@@ -410,9 +434,14 @@ class Td extends Tag
 			$cs = $this->mpdf->cell[$this->mpdf->row][$this->mpdf->col]['colspan'] = $attr['COLSPAN'];
 		}
 
-		if ($this->mpdf->table[$this->mpdf->tableLevel][$this->mpdf->tbctr[$this->mpdf->tableLevel]]['nc'] < $this->mpdf->col + $cs) {
-			$this->mpdf->table[$this->mpdf->tableLevel][$this->mpdf->tbctr[$this->mpdf->tableLevel]]['nc'] = $this->mpdf->col + $cs;
-		} // following code moved outside if...
+		$t_lvl = $this->mpdf->tableLevel ?? 0;
+		$t_ctr = $this->mpdf->tbctr[$t_lvl] ?? 0;
+		if (!isset($this->mpdf->table[$t_lvl][$t_ctr]['nc'])) {
+			$this->mpdf->table[$t_lvl][$t_ctr]['nc'] = 0;
+		}
+		if ($this->mpdf->table[$t_lvl][$t_ctr]['nc'] < $this->mpdf->col + $cs) {
+			$this->mpdf->table[$t_lvl][$t_ctr]['nc'] = $this->mpdf->col + $cs;
+		}
 
 		for ($l = $this->mpdf->col; $l < $this->mpdf->col + $cs; $l++) {
 			if ($l - $this->mpdf->col) {

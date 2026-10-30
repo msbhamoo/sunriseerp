@@ -3414,13 +3414,15 @@ function findAssessmentValue($find_subject_id, $find_cbse_exam_assessment_type_i
    * Callback after Google Identity Services are loaded.
    */
   function gisLoaded() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
+    if (CLIENT_ID && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+      tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID,
       scope: SCOPES,
       callback: '', // defined later
     });
-    gisInited = true;
-    maybeEnableButtons();
+      gisInited = true;
+      maybeEnableButtons();
+    }
   }
 
   /**

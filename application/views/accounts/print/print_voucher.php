@@ -56,15 +56,47 @@ if ($voucher_type == 'purchase') {
 }
 $amount_in_words = get_amount_in_words($total_amount);
 
+$sch_name = !empty($school_setting->name) ? $school_setting->name : '';
+$sch_address = !empty($school_setting->address) ? $school_setting->address : '';
+$sch_phone = !empty($school_setting->phone) ? $school_setting->phone : '';
+$sch_email = !empty($school_setting->email) ? $school_setting->email : '';
+
+$logo_img = !empty($school_setting->admin_logo) ? $school_setting->admin_logo : (!empty($school_setting->image) ? $school_setting->image : '');
+$sch_logo = '';
+if (!empty($logo_img)) {
+    if (file_exists(FCPATH . 'uploads/school_content/admin_logo/' . $logo_img)) {
+        $sch_logo = base_url('uploads/school_content/admin_logo/' . $logo_img);
+    } elseif (file_exists(FCPATH . 'uploads/school_content/logo/' . $logo_img)) {
+        $sch_logo = base_url('uploads/school_content/logo/' . $logo_img);
+    }
+}
+
 ob_start();
 ?>
 <div class="voucher-container" id="{{COPY_ID}}">
-    <!-- Header from print settings -->
-    <?php if (!empty($print_header)): ?>
-        <div class="header-image-box">
-            <img src="<?php echo base_url('uploads/print_headerfooter/general_purpose/' . $print_header); ?>" alt="Header">
+    <!-- School Header from System Settings -->
+    <div class="voucher-header">
+        <div class="voucher-header-logo">
+            <?php if (!empty($sch_logo)): ?>
+                <img src="<?php echo $sch_logo; ?>" alt="<?php echo htmlspecialchars($sch_name); ?>">
+            <?php endif; ?>
         </div>
-    <?php endif; ?>
+        <div class="voucher-header-info">
+            <h1 class="school-brand-title"><?php echo htmlspecialchars($sch_name); ?></h1>
+            <?php if (!empty($sch_address)): ?>
+                <div class="school-brand-address"><?php echo htmlspecialchars($sch_address); ?></div>
+            <?php endif; ?>
+            <div class="school-brand-contact">
+                <?php if (!empty($sch_phone)): ?>
+                    <span>Phone: <?php echo htmlspecialchars($sch_phone); ?></span>
+                <?php endif; ?>
+                <?php if (!empty($sch_phone) && !empty($sch_email)): ?> | <?php endif; ?>
+                <?php if (!empty($sch_email)): ?>
+                    <span>Email: <?php echo htmlspecialchars($sch_email); ?></span>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
 
     <div class="voucher-title-box">
         <h1 class="voucher-title"><?php echo $title; ?> <span class="copy-text">{{COPY_TYPE}}</span></h1>
@@ -308,12 +340,55 @@ $voucher_html = ob_get_clean();
             margin: 0 auto;
         }
         .voucher-container {
-            height: 133mm; /* Adjusted to allow a taller full-width header */
+            height: 133mm;
             padding: 5px 20px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             page-break-inside: avoid;
+        }
+        .voucher-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+            gap: 15px;
+        }
+        .voucher-header-logo {
+            flex-shrink: 0;
+        }
+        .voucher-header-logo img {
+            max-height: 52px;
+            max-width: 90px;
+            object-fit: contain;
+            display: block;
+        }
+        .voucher-header-info {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .school-brand-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 2px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+        }
+        .school-brand-address {
+            font-size: 10px;
+            color: #4b5563;
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
+        .school-brand-contact {
+            font-size: 9.5px;
+            color: #6b7280;
+            font-weight: 500;
+            line-height: 1.2;
         }
         .header-image-box {
             text-align: center;
@@ -323,7 +398,7 @@ $voucher_html = ob_get_clean();
         .header-image-box img {
             width: 100%;
             height: auto;
-            max-height: 110px; /* Increased to allow natural 100% width scaling */
+            max-height: 110px;
             object-fit: contain;
         }
         .voucher-title-box {

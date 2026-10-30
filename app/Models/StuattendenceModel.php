@@ -38,7 +38,7 @@ class StuattendenceModel extends BaseModel
     public function searchAttendenceClassSection(int $classId, int $sectionId, string $date): array
     {
         $sessionModel = new SessionModel();
-        $currentSession = (int)$sessionModel->getCurrentSession();
+        $currentSession = $sessionModel->getCurrentSessionId();
 
         $sql = "SELECT student_sessions.in_time, student_sessions.out_time, student_sessions.attendence_id,
                        student_sessions.attendence_dt, students.firstname, students.middlename, students.lastname,
@@ -96,7 +96,7 @@ class StuattendenceModel extends BaseModel
     public function searchAttendenceReport(int $classId, int $sectionId, string $date): array
     {
         $sessionModel = new SessionModel();
-        $currentSession = (int)$sessionModel->getCurrentSession();
+        $currentSession = $sessionModel->getCurrentSessionId();
 
         $sql = "SELECT student_sessions.attendence_id, students.firstname, students.middlename, student_sessions.date,
                        student_sessions.remark, students.roll_no, students.admission_no, students.lastname,

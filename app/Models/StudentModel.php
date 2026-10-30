@@ -36,7 +36,7 @@ class StudentModel extends BaseModel
         }
 
         return $this->db->table('students')
-            ->select('students.*, student_session.id as student_session_id, student_session.session_id, student_session.class_id, student_session.section_id, student_session.route_pickup_point_id, student_session.vehroute_id, student_session.transport_fees, student_session.fees_discount, classes.class, sections.section, categories.category, users.username, users.password, users.id as user_id, users.is_active as user_active, pickup_point.name as pickup_point_name, transport_route.route_title, vehicles.vehicle_no, vehicles.driver_name, vehicles.driver_contact, hostel_rooms.room_no, hostel.hostel_name, room_types.room_type')
+            ->select('students.*, student_session.id as student_session_id, student_session.session_id, student_session.class_id, student_session.section_id, student_session.route_pickup_point_id, student_session.vehroute_id, student_session.transport_fees, student_session.fees_discount, classes.class, sections.section, categories.category, users.username, users.password, users.id as user_id, users.is_active as user_active, pickup_point.name as pickup_point_name, transport_route.route_title, vehicle_routes.route_id, vehicle_routes.vehicle_id, vehicles.vehicle_no, vehicles.driver_name, vehicles.driver_contact, vehicles.vehicle_model, vehicles.manufacture_year, vehicles.driver_licence, vehicles.vehicle_photo, hostel_rooms.room_no, hostel.id as hostel_id, hostel.hostel_name, room_types.id as room_type_id, room_types.room_type')
             ->join('student_session', 'student_session.student_id = students.id AND student_session.session_id = ' . (int)$sessionId)
             ->join('classes', 'classes.id = student_session.class_id', 'left')
             ->join('sections', 'sections.id = student_session.section_id', 'left')
@@ -256,7 +256,7 @@ class StudentModel extends BaseModel
     public function getParentChilds($parentId): array
     {
         $sessionModel = new SessionModel();
-        $sessionId = (int)$sessionModel->getCurrentSession();
+        $sessionId = $sessionModel->getCurrentSessionId();
 
         return $this->db->table('students')
             ->select('students.*, student_session.id as student_session_id, student_session.session_id, student_session.student_id, student_session.class_id, student_session.default_login, student_session.section_id, classes.class, sections.section')
@@ -278,7 +278,7 @@ class StudentModel extends BaseModel
     public function getDatatableByClassSection($class_id = null, $section_id = null): string
     {
         $sessionModel = new SessionModel();
-        $sessionId = (int)$sessionModel->getCurrentSession();
+        $sessionId = $sessionModel->getCurrentSessionId();
 
         $request = \Config\Services::request();
         $draw   = (int)($request->getPost('draw') ?? 1);
@@ -354,7 +354,7 @@ class StudentModel extends BaseModel
     public function getDatatableByFullTextSearch($searchterm): string
     {
         $sessionModel = new SessionModel();
-        $sessionId = (int)$sessionModel->getCurrentSession();
+        $sessionId = $sessionModel->getCurrentSessionId();
 
         $request = \Config\Services::request();
         $draw   = (int)($request->getPost('draw') ?? 1);

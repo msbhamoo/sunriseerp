@@ -26,6 +26,11 @@ class StaffcomplianceModel extends BaseModel
         return $this->callLegacyModel('Staffcompliance_model', 'saveCompliance', func_get_args());
     }
 
+    public function getMonthlyComplianceSheet($role_name, $year, $month)
+    {
+        return $this->callLegacyModel('Staffcompliance_model', 'getMonthlyComplianceSheet', func_get_args());
+    }
+
     /**
      * Compatibility Bridge: Delegates execution to the legacy model instance
      * maintaining full compatibility with query builder and CI3 environment.

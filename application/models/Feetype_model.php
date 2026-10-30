@@ -156,6 +156,13 @@ class Feetype_model extends MY_Model
         $query = $this->db->get();        
         return $query->result_array();         
     }
+
+    public function getTypeByFeecategory($feecategory_id = null)
+    {
+        $this->db->select()->from('feetype');
+        $query = $this->db->get();
+        return $query->result_array();
+    }
     
 
     

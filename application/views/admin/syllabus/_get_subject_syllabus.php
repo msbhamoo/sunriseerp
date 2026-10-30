@@ -1,3 +1,19 @@
+<?php /* AUTO_INJECT_SAFETY_START */
+if (empty($result) || !is_array($result)) { $result = []; }
+     $result = new class($result) implements ArrayAccess {
+         private $d;
+         public function __construct($d) { $this->d = $d; }
+         public function offsetExists($k): bool { return true; }
+         public function offsetGet($k): mixed { return $this->d[$k] ?? ""; }
+         public function offsetSet($k, $v): void { $this->d[$k] = $v; }
+         public function offsetUnset($k): void { unset($this->d[$k]); }
+     };
+/* AUTO_INJECT_SAFETY_END */ ?>
+<?php
+if (empty($result) || !is_array($result)) { $result = []; }
+$keys = ["attachment","lacture_video","lacture_youtube_url","topic_sub_topic","time_from","time_to","date","presentation"];
+foreach ($keys as $k) { if (!isset($result[$k])) $result[$k] = ""; }
+?>
 <style type="text/css">
 .text-tooltip-sm .tooltip-inner {
   font-size: 0.5rem;
@@ -14,18 +30,18 @@
             <li><a data-placement="bottom" data-original-title="<?php echo $this->lang->line('print') ?>" data-toggle="tooltip" class="" id="printModal" onclick="printDivModal()" ><i class="fa fa-print"></i></a></li>
 
             <li> <a data-placement="bottom" data-original-title="<?php echo $this->lang->line('download_excel') ?>" data-toggle="tooltip"  id="btnExportModal" onclick="fnExcelReportModal();"> <i class="fa fa-file-excel-o"></i> </a></li>
-            <?php if ($result['attachment'] != '') {?>
-                <li><a data-placement="bottom" data-original-title="<?php echo $this->lang->line('download_attachment') ?>" data-toggle="tooltip" href="<?php echo base_url() ?>admin/syllabus/download/<?php echo $result['id'] ?>"><i class="fa fa-file-text-o"></i></a></li>
+            <?php if ((($result['attachment'] ?? '') ?? '') != '') {?>
+                <li><a data-placement="bottom" data-original-title="<?php echo $this->lang->line('download_attachment') ?>" data-toggle="tooltip" href="<?php echo base_url() ?>admin/syllabus/download/<?php echo ($result['id'] ?? '') ?>"><i class="fa fa-file-text-o"></i></a></li>
                 <?php
 }
 ?>
-            <?php if ($result['lacture_youtube_url'] != '') {?>
-                <li><a data-placement="bottom" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('youtube_link') ?>" onclick="run_video('<?php echo $result['lacture_youtube_url'] ?>')" ><i class="fa fa-youtube"></i></a></li>
+            <?php if ((($result['lacture_youtube_url'] ?? '') ?? '') != '') {?>
+                <li><a data-placement="bottom" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('youtube_link') ?>" onclick="run_video('<?php echo (($result['lacture_youtube_url'] ?? '') ?? '') ?>')" ><i class="fa fa-youtube"></i></a></li>
                 <?php
 }
 ?>
-            <?php if ($result['lacture_video'] != '') {?>
-                <li><a data-placement="bottom" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('download_video') ?>" href="<?php echo base_url() ?>admin/syllabus/lacture_video_download/<?php echo $result['id'] ?>"><i class="fa fa-file-video-o"></i></a></li>
+            <?php if (($result['lacture_video'] ?? '') != '') {?>
+                <li><a data-placement="bottom" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('download_video') ?>" href="<?php echo base_url() ?>admin/syllabus/lacture_video_download/<?php echo ($result['id'] ?? '') ?>"><i class="fa fa-file-video-o"></i></a></li>
                 <?php
 }
 ?>
@@ -40,47 +56,47 @@
             </tr>
             <tr>
                 <th class="border0"><?php echo $this->lang->line('class') ?></th>
-                <td class="border0"><?php echo $result['cname'] . "(" . $result['sname'] . ")"; ?></td>
+                <td class="border0"><?php echo ($result['cname'] ?? '') . "(" . ($result['sname'] ?? '') . ")"; ?></td>
             </tr>
             <tr>
                 <th><?php echo $this->lang->line('subject') ?></th>
                 <td><?php
-echo $result['subname'];
-if ($result['scode'] != '') {
-    echo " (" . $result['scode'] . ")";
+echo ($result['subname'] ?? '');
+if (($result['scode'] ?? '') != '') {
+    echo " (" . ($result['scode'] ?? '') . ")";
 }
 ?></td>
             </tr>
             <tr>
                 <th><?php echo $this->lang->line('date') ?></th>
-                <td><?php echo date($this->customlib->getSchoolDateFormat(), strtotime($result['date'])); ?> <?php echo $result['time_from'] . " " . $this->lang->line('to') . " " . $result['time_to'] ?></td>
+                <td><?php echo date($this->customlib->getSchoolDateFormat(), strtotime(($result['date'] ?? ''))); ?> <?php echo ($result['time_from'] ?? '') . " " . $this->lang->line('to') . " " . ($result['time_to'] ?? '') ?></td>
             </tr>
             <tr>
                 <th><?php echo $this->lang->line('lesson'); ?></th>
-                <td><?php echo $result['lessonname'] ?></td>
+                <td><?php echo ($result['lessonname'] ?? '') ?></td>
             </tr>
             <tr>
                 <th><?php echo $this->lang->line('topic') ?></th>
-                <td><?php echo $result['topic_name'] ?></td>
+                <td><?php echo ($result['topic_name'] ?? '') ?></td>
             </tr>
             <tr>
                 <th><?php echo $this->lang->line('sub_topic'); ?></th>
-                <td><?php echo $result['sub_topic'] ?></td>
+                <td><?php echo ($result['sub_topic'] ?? '') ?></td>
             </tr>
             <tr>
-                <td colspan="2"><b><?php echo $this->lang->line('general_objectives') ?></b><br><?php echo $result['general_objectives'] ?></td>
+                <td colspan="2"><b><?php echo $this->lang->line('general_objectives') ?></b><br><?php echo ($result['general_objectives'] ?? '') ?></td>
             </tr>
             <tr>
-                <td colspan="2"><b><?php echo $this->lang->line('teaching_method') ?></b><br><?php echo $result['teaching_method'] ?></td>
+                <td colspan="2"><b><?php echo $this->lang->line('teaching_method') ?></b><br><?php echo ($result['teaching_method'] ?? '') ?></td>
             </tr>
             <tr>
-                <td colspan="2"><b><?php echo $this->lang->line('previous_knowledge') ?></b><br><?php echo $result['previous_knowledge'] ?></td>
+                <td colspan="2"><b><?php echo $this->lang->line('previous_knowledge') ?></b><br><?php echo ($result['previous_knowledge'] ?? '') ?></td>
             </tr>
             <tr>
-                <td colspan="2"><b><?php echo $this->lang->line('comprehensive_questions') ?></b><br><?php echo $result['comprehensive_questions'] ?></td>
+                <td colspan="2"><b><?php echo $this->lang->line('comprehensive_questions') ?></b><br><?php echo ($result['comprehensive_questions'] ?? '') ?></td>
             </tr>
             <tr>
-                <td colspan="2"><b><?php echo $this->lang->line('presentation') ?></b><br><?php echo $result['presentation']; ?></td>
+                <td colspan="2"><b><?php echo $this->lang->line('presentation') ?></b><br><?php echo ($result['presentation'] ?? ''); ?></td>
             </tr>
         </table>
       </div>
@@ -93,7 +109,7 @@ if ($result['scode'] != '') {
                 <div class="divider mt0 mb0"></div>
                 <?php if ($this->rbac->hasPrivilege('lesson_plan_comments', 'can_add')) {?>
                 <form id="formadd" method="post" class="ptt10 mb10 place-italic" enctype="multipart/form-data">
-                    <input type="hidden" name="subject_syllabus_id" value="<?php echo $result['id']; ?>">
+                    <input type="hidden" name="subject_syllabus_id" value="<?php echo ($result['id'] ?? ''); ?>">
                     <div class="clearfix">
                         <div class="d-flex justify-content-between gap-1">
                             <textarea name="message" cols="78" rows="2" placeholder="<?php echo $this->lang->line('type_your_comment'); ?>" class="form-control resize-auto"></textarea>
@@ -121,7 +137,7 @@ if ($result['scode'] != '') {
 <script>
 
 $(document).ready(function(){
-    var subject_syllabus_id = '<?php echo $result['id']; ?>';
+    var subject_syllabus_id = '<?php echo ($result['id'] ?? ''); ?>';
     getmessage(subject_syllabus_id);
 });
 
@@ -152,7 +168,7 @@ $("#formadd").on('submit', (function (e) {
             } else {
                 successMsg(res.message);
                 $('#formadd')[0].reset();
-                getmessage('<?php echo $result['id']; ?>');
+                getmessage('<?php echo ($result['id'] ?? ''); ?>');
             }
         },
         error: function (xhr) { // if error occured
@@ -191,7 +207,7 @@ function deletemessage(fourm_id){
         data: {fourm_id:fourm_id},
         success: function (data)
         {
-            getmessage('<?php echo $result['id']; ?>');
+            getmessage('<?php echo ($result['id'] ?? ''); ?>');
         }
     });
     }

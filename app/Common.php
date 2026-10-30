@@ -25,7 +25,6 @@ $helperFiles = [
     BASEPATH . 'helpers/string_helper.php',
     BASEPATH . 'helpers/directory_helper.php',
     BASEPATH . 'helpers/download_helper.php',
-    BASEPATH . 'helpers/security_helper.php',
 ];
 foreach ($helperFiles as $helperFile) {
     if (file_exists($helperFile)) {
@@ -42,6 +41,13 @@ if ($appHelpers) {
 }
 
 
+
+if (!function_exists('show_error')) {
+    function show_error($message, int $status_code = 500, string $heading = 'An Error Was Encountered')
+    {
+        throw new \CodeIgniter\Exceptions\PageNotFoundException(is_array($message) ? implode(' ', $message) : $message);
+    }
+}
 
 if (!function_exists('html_escape')) {
     function html_escape($var, $double_encode = true)
@@ -115,10 +121,14 @@ class DatabaseBridge
 
     public function from($from)
     {
-        $this->currentTable = $from;
         if ($this->builder !== null) {
-            $this->builder->from($from, true);
+            if ($this->currentTable !== $from) {
+                // If a new base table is explicitly requested without an existing join, recreate the builder to drop stale WHERE/SELECT clauses from previous queries
+                $this->currentTable = $from;
+                $this->builder = $this->connection->table($from);
+            }
         } else {
+            $this->currentTable = $from;
             $this->builder = $this->connection->table($from);
         }
 
@@ -133,6 +143,11 @@ class DatabaseBridge
         }
 
         return $this;
+    }
+
+    public function set($key, $value = '', $escape = null)
+    {
+        return $this->invokeBuilderMethod('set', func_get_args());
     }
 
     public function where($key, $value = null, $escape = null)
@@ -152,7 +167,10 @@ class DatabaseBridge
 
     public function join($table, $cond, $type = '', $escape = null)
     {
-        return $this->invokeBuilderMethod('join', func_get_args());
+        $type = ($type === null) ? '' : (string)$type;
+        $args = func_get_args();
+        $args[2] = $type;
+        return $this->invokeBuilderMethod('join', $args);
     }
 
     public function order_by($orderby, $direction = '', $escape = null)
@@ -178,6 +196,136 @@ class DatabaseBridge
     public function group_end()
     {
         return $this->invokeBuilderMethod('groupEnd', func_get_args());
+    }
+
+    public function or_group_start()
+    {
+        return $this->invokeBuilderMethod('orGroupStart', func_get_args());
+    }
+
+    public function not_group_start()
+    {
+        return $this->invokeBuilderMethod('notGroupStart', func_get_args());
+    }
+
+    public function or_not_group_start()
+    {
+        return $this->invokeBuilderMethod('orNotGroupStart', func_get_args());
+    }
+
+    public function like($field, $match = '', $side = 'both', $escape = null, $insensitiveSearch = false)
+    {
+        $match = ($match === null) ? '' : (string)$match;
+        if ($escape === false) {
+            $escapedMatch = $this->connection ? $this->connection->escapeLikeString($match) : addslashes($match);
+            if ($side === 'both') {
+                $wrapped = "'%" . $escapedMatch . "%'";
+            } elseif ($side === 'before') {
+                $wrapped = "'%" . $escapedMatch . "'";
+            } elseif ($side === 'after') {
+                $wrapped = "'" . $escapedMatch . "%'";
+            } else {
+                $wrapped = "'" . $escapedMatch . "'";
+            }
+            return $this->invokeBuilderMethod('where', ["$field LIKE $wrapped", null, false]);
+        }
+        return $this->invokeBuilderMethod('like', [$field, $match, $side, $escape, $insensitiveSearch]);
+    }
+
+    public function not_like($field, $match = '', $side = 'both', $escape = null, $insensitiveSearch = false)
+    {
+        $match = ($match === null) ? '' : (string)$match;
+        if ($escape === false) {
+            $escapedMatch = $this->connection ? $this->connection->escapeLikeString($match) : addslashes($match);
+            if ($side === 'both') {
+                $wrapped = "'%" . $escapedMatch . "%'";
+            } elseif ($side === 'before') {
+                $wrapped = "'%" . $escapedMatch . "'";
+            } elseif ($side === 'after') {
+                $wrapped = "'" . $escapedMatch . "%'";
+            } else {
+                $wrapped = "'" . $escapedMatch . "'";
+            }
+            return $this->invokeBuilderMethod('where', ["$field NOT LIKE $wrapped", null, false]);
+        }
+        return $this->invokeBuilderMethod('notLike', [$field, $match, $side, $escape, $insensitiveSearch]);
+    }
+
+    public function or_like($field, $match = '', $side = 'both', $escape = null, $insensitiveSearch = false)
+    {
+        $match = ($match === null) ? '' : (string)$match;
+        if ($escape === false) {
+            $escapedMatch = $this->connection ? $this->connection->escapeLikeString($match) : addslashes($match);
+            if ($side === 'both') {
+                $wrapped = "'%" . $escapedMatch . "%'";
+            } elseif ($side === 'before') {
+                $wrapped = "'%" . $escapedMatch . "'";
+            } elseif ($side === 'after') {
+                $wrapped = "'" . $escapedMatch . "%'";
+            } else {
+                $wrapped = "'" . $escapedMatch . "'";
+            }
+            return $this->invokeBuilderMethod('orWhere', ["$field LIKE $wrapped", null, false]);
+        }
+        return $this->invokeBuilderMethod('orLike', [$field, $match, $side, $escape, $insensitiveSearch]);
+    }
+
+    public function or_not_like($field, $match = '', $side = 'both', $escape = null, $insensitiveSearch = false)
+    {
+        $match = ($match === null) ? '' : (string)$match;
+        if ($escape === false) {
+            $escapedMatch = $this->connection ? $this->connection->escapeLikeString($match) : addslashes($match);
+            if ($side === 'both') {
+                $wrapped = "'%" . $escapedMatch . "%'";
+            } elseif ($side === 'before') {
+                $wrapped = "'%" . $escapedMatch . "'";
+            } elseif ($side === 'after') {
+                $wrapped = "'" . $escapedMatch . "%'";
+            } else {
+                $wrapped = "'" . $escapedMatch . "'";
+            }
+            return $this->invokeBuilderMethod('orWhere', ["$field NOT LIKE $wrapped", null, false]);
+        }
+        return $this->invokeBuilderMethod('orNotLike', [$field, $match, $side, $escape, $insensitiveSearch]);
+    }
+
+    public function where_not_in($key = null, $values = null, $escape = null)
+    {
+        if (!is_array($values) && !($values instanceof \Closure)) {
+            $values = ($values === null) ? [] : [$values];
+        }
+        return $this->invokeBuilderMethod('whereNotIn', [$key, $values, $escape]);
+    }
+
+    public function or_where_in($key = null, $values = null, $escape = null)
+    {
+        if (!is_array($values) && !($values instanceof \Closure)) {
+            $values = ($values === null) ? [] : [$values];
+        }
+        return $this->invokeBuilderMethod('orWhereIn', [$key, $values, $escape]);
+    }
+
+    public function or_where_not_in($key = null, $values = null, $escape = null)
+    {
+        if (!is_array($values) && !($values instanceof \Closure)) {
+            $values = ($values === null) ? [] : [$values];
+        }
+        return $this->invokeBuilderMethod('orWhereNotIn', [$key, $values, $escape]);
+    }
+
+    public function having($key, $value = null, $escape = null)
+    {
+        return $this->invokeBuilderMethod('having', func_get_args());
+    }
+
+    public function or_having($key, $value = null, $escape = null)
+    {
+        return $this->invokeBuilderMethod('orHaving', func_get_args());
+    }
+
+    public function distinct($val = true)
+    {
+        return $this->invokeBuilderMethod('distinct', func_get_args());
     }
 
     public function get_where($table = '', $where = null, ?int $limit = null, int $offset = 0)
@@ -257,6 +405,7 @@ class DatabaseBridge
             }
         }
 
+        if (empty($where) && empty($this->pendingCalls) && empty($builder->QBWhere)) { return false; }
         $res = $builder->delete($where, $limit, $reset_data);
         $this->builder = null;
         $this->currentTable = null;
@@ -321,6 +470,36 @@ class DatabaseBridge
         return $escaped;
     }
 
+    public function list_fields(string $tableName): array
+    {
+        return $this->connection->getFieldNames($tableName);
+    }
+
+    public function table_exists(string $tableName): bool
+    {
+        return $this->connection->tableExists($tableName);
+    }
+
+    public function field_exists(string $fieldName, string $tableName): bool
+    {
+        return $this->connection->fieldExists($fieldName, $tableName);
+    }
+
+    public function count_all_results($table = '', $reset = true)
+    {
+        if (!empty($table)) {
+            $this->from($table);
+        }
+        $builder = $this->getBuilder();
+        $count = $builder->countAllResults($reset);
+        if ($reset) {
+            $this->builder = null;
+            $this->currentTable = null;
+            $this->pendingCalls = [];
+        }
+        return $count;
+    }
+
     public function escape($str)
     {
         return $this->connection->escape($str);
@@ -335,6 +514,31 @@ class DatabaseBridge
             return call_user_func_array([$this->getBuilder(), $method], $args);
         }
         return null;
+    }
+
+    /**
+     * CI3's `$this->db->db_debug` maps to CI4's connection DBDebug flag
+     * (false = failed queries return false instead of throwing).
+     */
+    public function __get($key)
+    {
+        if ($key === 'db_debug') {
+            return $this->connection->DBDebug;
+        }
+        return $this->connection->$key ?? null;
+    }
+
+    public function __set($key, $value)
+    {
+        if ($key === 'db_debug') {
+            // DBDebug is protected on CI4 connections; set it from inside the connection's scope
+            $conn = $this->connection;
+            \Closure::bind(function () use ($value) {
+                $this->DBDebug = (bool) $value;
+            }, $conn, get_class($conn))();
+            return;
+        }
+        $this->$key = $value;
     }
 }
 
@@ -398,6 +602,11 @@ if (!class_exists('CI_Model')) {
 
         public function __get($key)
         {
+            if ($key === 'db') {
+                $this->db = new DatabaseBridge();
+                return $this->db;
+            }
+
             $ci = &get_instance();
             // Fallback to CI instance property
             if ($ci !== null) {
@@ -621,7 +830,8 @@ class AgentBridge
 
     public function __construct()
     {
-        $this->agent = service('request')->getUserAgent();
+        $req = service('request');
+        $this->agent = method_exists($req, 'getUserAgent') ? $req->getUserAgent() : new \CodeIgniter\HTTP\UserAgent();
     }
 
     public function is_browser(?string $key = null): bool
@@ -727,15 +937,21 @@ if (!class_exists('CI_Controller')) {
         public $form_validation;
         public $router;
         public $uri;
+        public $output;
+        public $data = [];
 
         public function __construct()
         {
             self::$instance = &$this;
             $bridge = new \App\Libraries\ViewBridge();
             $this->load       = $bridge->load;
+            if (method_exists($this->load, 'setControllerInstance')) {
+                $this->load->setControllerInstance($this);
+            }
             $this->customlib  = $bridge->customlib;
             $this->rbac       = $bridge->rbac;
             $this->lang       = $bridge->lang;
+            $this->module_lib = $bridge->module_lib;
             $this->session    = new SessionBridge();
             $this->config     = new ConfigBridge();
             $this->db         = new DatabaseBridge();
@@ -792,11 +1008,54 @@ if (!class_exists('CI_Controller')) {
                     return $_SERVER['CI4_LEGACY_METHOD'] ?? service('router')->methodName();
                 }
             };
-            $this->uri       = new class {
-                public function segment($n)
+            // CI3 Output class subset: headers go on the CI4 response, the body is
+            // echoed and picked up by CI4 as the controller's buffered output.
+            $this->output    = new class {
+                protected string $final_output = '';
+                public function set_content_type($mime, $charset = null)
                 {
-                    $uri = service('request')->getUri();
-                    return $uri->getSegment($n);
+                    $mime = strpos($mime, '/') === false ? (\Config\Mimes::guessTypeFromExtension($mime) ?? $mime) : $mime;
+                    service('response')->setContentType($mime, $charset ?? 'UTF-8');
+                    return $this;
+                }
+                public function set_status_header($code = 200, $text = '')
+                {
+                    service('response')->setStatusCode((int) $code, (string) $text);
+                    return $this;
+                }
+                public function set_header($header, $replace = true)
+                {
+                    [$name, $value] = array_map('trim', explode(':', $header, 2) + [1 => '']);
+                    $replace ? service('response')->setHeader($name, $value) : service('response')->appendHeader($name, $value);
+                    return $this;
+                }
+                public function set_output($output)
+                {
+                    $this->final_output = (string) $output;
+                    echo $output;
+                    return $this;
+                }
+                public function append_output($output)
+                {
+                    $this->final_output .= (string) $output;
+                    echo $output;
+                    return $this;
+                }
+                public function get_output()
+                {
+                    return $this->final_output;
+                }
+                public function enable_profiler($val = true)
+                {
+                    return $this;
+                }
+            };
+            $this->uri       = new class {
+                public function segment($n, $no_result = null)
+                {
+                    // CI3 returns $no_result for a missing segment; CI4 throws
+                    $segments = service('request')->getUri()->getSegments();
+                    return $segments[$n - 1] ?? $no_result;
                 }
                 public function total_segments()
                 {
@@ -835,6 +1094,18 @@ if (!class_exists('CI_Controller')) {
                     return isset($this->rules[$field]);
                 }
                 public function set_message($rule, $message = '')
+                {
+                    return $this;
+                }
+                public function set_error_delimiters($prefix = '<p>', $suffix = '</p>')
+                {
+                    return $this;
+                }
+                public function set_data(array $data)
+                {
+                    return $this;
+                }
+                public function __call($method, $args)
                 {
                     return $this;
                 }
@@ -912,6 +1183,9 @@ if (!class_exists('CI_Controller')) {
 
         public static function &get_instance()
         {
+            if (self::$instance === null) {
+                self::$instance = new self();
+            }
             return self::$instance;
         }
 
@@ -1163,3 +1437,84 @@ if (!function_exists('redirect')) {
     }
 }
 
+if (!function_exists('delete_cookie')) {
+    function delete_cookie($name, $domain = '', $path = '/', $prefix = '')
+    {
+        set_cookie($name, '', 0, $domain, $path, $prefix);
+    }
+}
+
+if (!function_exists('set_cookie')) {
+    function set_cookie($name, $value = '', $expire = 0, $domain = '', $path = '/', $prefix = '', $secure = null, $httponly = null)
+    {
+        if (is_array($name)) {
+            foreach (['value', 'expire', 'domain', 'path', 'prefix', 'secure', 'httponly', 'name'] as $item) {
+                if (isset($name[$item])) {
+                    $$item = $name[$item];
+                }
+            }
+        }
+
+        $prefix = $prefix !== '' ? $prefix : (config('Cookie')->prefix ?? '');
+        $domain = $domain !== '' ? $domain : (config('Cookie')->domain ?? '');
+        $path   = $path !== '' ? $path : (config('Cookie')->path ?? '/');
+        $secure = $secure !== null ? (bool) $secure : (config('Cookie')->secure ?? false);
+        $httponly = $httponly !== null ? (bool) $httponly : (config('Cookie')->httponly ?? true);
+        $samesite = config('Cookie')->samesite ?? 'Lax';
+
+        $cookieName = $prefix . $name;
+        $expireTime = empty($expire) ? 0 : (is_numeric($expire) && $expire > 0 ? time() + $expire : 0);
+
+        if ($expire === 0 || $expire === '0' || $value === '') {
+            $expireTime = time() - 3600;
+        }
+
+        if (PHP_SAPI !== 'cli') {
+            setcookie($cookieName, $value, [
+                'expires'  => $expireTime,
+                'path'     => $path,
+                'domain'   => $domain,
+                'secure'   => $secure,
+                'httponly' => $httponly,
+                'samesite' => $samesite,
+            ]);
+            if ($expireTime < time()) {
+                unset($_COOKIE[$cookieName]);
+            } else {
+                $_COOKIE[$cookieName] = $value;
+            }
+        }
+
+        try {
+            service('response')->setCookie(
+                $cookieName,
+                $value,
+                $expireTime > 0 ? $expireTime - time() : 0,
+                $domain,
+                $path,
+                '',
+                $secure,
+                $httponly,
+                $samesite
+            );
+        } catch (\Throwable $e) {
+            // Ignore if response service is not ready
+        }
+    }
+}
+
+if (!function_exists('get_cookie')) {
+    function get_cookie($index, $xss_clean = null)
+    {
+        $prefix = config('Cookie')->prefix ?? '';
+        $cookieName = isset($_COOKIE[$index]) ? $index : $prefix . $index;
+        return $_COOKIE[$cookieName] ?? null;
+    }
+}
+
+if (!function_exists('show_404')) {
+    function show_404($page = '', $log_error = true)
+    {
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound($page);
+    }
+}

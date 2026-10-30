@@ -96,7 +96,7 @@ class ChatuserModel extends BaseModel
         return $this->callLegacyModel('Chatuser_model', 'get_chat_msg_count', func_get_args());
     }
 
-    public function get_student_parent_chat_msg_count($student_id, $user_type)
+    public function get_student_parent_chat_msg_count($student_id = null, $user_type = null)
     {
         return $this->callLegacyModel('Chatuser_model', 'get_student_parent_chat_msg_count', func_get_args());
     }

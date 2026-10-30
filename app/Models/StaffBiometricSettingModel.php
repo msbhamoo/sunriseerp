@@ -23,7 +23,8 @@ class StaffBiometricSettingModel extends BaseModel
 
     public function save($data): bool
     {
-        return $this->callLegacyModel('StaffBiometricSetting_model', 'save', func_get_args());
+        $res = $this->callLegacyModel('StaffBiometricSetting_model', 'save', func_get_args());
+        return $res !== false;
     }
 
     public function logSync($log_data)

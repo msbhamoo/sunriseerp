@@ -134,7 +134,7 @@ class syllabus_model extends MY_Model
         return $query->row_array();
     }
 
-    public function get_subject_syllabusdata($subject_group_subject_id, $date, $role_id, $staff_id, $time_from, $time_to, $subject_group_class_sections_id)
+    public function get_subject_syllabusdata($subject_group_subject_id, $date, $role_id, $staff_id, $time_from = null, $time_to = null, $subject_group_class_sections_id = null)
     {
         $this->db->select('count(*) as total,subject_syllabus.id')
             ->from('subject_syllabus')->join('topic', 'topic.id=subject_syllabus.topic_id', 'inner')

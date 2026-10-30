@@ -317,7 +317,7 @@ if (!empty($birthDaysList)) {
 foreach ($birthDaysList['students'] as $student_key => $student_value) {
             ?>
                                                                     <div class="checkbox">
-                                                                        <label><input type="checkbox" name="user[]" app-key="<?php echo $student_value['app_key']; ?>" value="<?php echo $student_value['contact_no'] ?>" checked>&nbsp;&nbsp;<b><?php echo $student_value['name']; ?> (<?php echo $student_value['admission_no']; ?>)</b></label>
+                                                                        <label><input type="checkbox" name="user[]" app-key="<?php echo $student_value['app_key'] ?? ''; ?>" value="<?php echo $student_value['contact_no'] ?>" checked>&nbsp;&nbsp;<b><?php echo $student_value['name']; ?> (<?php echo $student_value['admission_no']; ?>)</b></label>
                                                                     </div>
                                                                     <?php
 }

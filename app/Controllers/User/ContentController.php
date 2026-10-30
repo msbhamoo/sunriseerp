@@ -11,6 +11,11 @@ use App\Controllers\BaseController;
  */
 class ContentController extends BaseController
 {
+    public function list()
+    {
+        return $this->dispatchLegacy('Content', 'list', func_get_args());
+    }
+
     public function getsharelist()
     {
         return $this->dispatchLegacy('Content', 'getsharelist', func_get_args());

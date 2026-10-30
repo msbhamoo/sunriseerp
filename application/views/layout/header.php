@@ -897,7 +897,7 @@ if ($this->module_lib->hasActive('chat')) {
 
         <a data-placement="bottom" data-toggle="tooltip" title="" href="<?php echo base_url() ?>admin/chat" data-original-title="<?php echo $this->lang->line('chat') ?>" class="todoicon">
             <i class="icon-message-circle" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;"></i>
-            <span class="total_chat_msg topbadges"><?php $msg_count=$this->customlib->get_chat_msg_count(); echo count($msg_count); ?></span>
+            <span class="total_chat_msg topbadges"><?php $msg_count=$this->customlib->get_chat_msg_count(); echo (is_countable($msg_count) ? count($msg_count) : (int)$msg_count); ?></span>
         </a>
 
    

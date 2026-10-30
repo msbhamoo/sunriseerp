@@ -1,3 +1,20 @@
+<?php /* AUTO_INJECT_SAFETY_START */
+if (empty($marksheet) || !is_object($marksheet)) { $marksheet = new stdClass(); }
+     $marksheet = new class($marksheet) {
+         private $obj;
+         public function __construct($o) { $this->obj = $o; }
+         public function __get($k) { return $this->obj->$k ?? ""; }
+         public function __isset($k) { return true; }
+     };
+/* AUTO_INJECT_SAFETY_END */ ?>
+<?php
+if (empty($marksheet) || !is_object($marksheet)) {
+    $marksheet = new stdClass();
+}
+$m_props = ["heading","title","left_logo","right_logo","left_sign","middle_sign","right_sign","background_img","template","exam_session","date"];
+foreach ($m_props as $p) { if (!isset($marksheet->$p)) { $marksheet->$p = ""; } }
+?>
+<?php if (is_array($marksheet)) { $marksheet = (object)$marksheet; } if (!is_object($marksheet)) { $marksheet = (object)['background_img'=>'', 'header_image'=>'', 'heading'=>'', 'title'=>'']; } ?>
 <!doctype html>
 <html lang="en">
     <head>
@@ -31,7 +48,7 @@
     <body class="body">       
         
         <?php
-if ($marksheet->background_img != "") {
+if (!empty($marksheet->background_img)) {
     ?>
             <img src="<?php echo $this->media_storage->getImageURL('uploads/marksheet/' . $marksheet->background_img); ?>" class="tcmybg" width="100%" height="100%" />
             <?php
@@ -39,31 +56,31 @@ if ($marksheet->background_img != "") {
 ?>
 
         <div style="width: 100%; margin: 0 auto; padding: 10px 5px 5px;position: relative;">
-            <?php if($marksheet->header_image){ ?>
+            <?php if(!empty($marksheet->header_image)){ ?>
         <img src="<?php echo $this->media_storage->getImageURL('uploads/marksheet/' . $marksheet->header_image); ?>" width="100%" height="300px;">
         <?php } ?>
 
             <table cellpadding="0" cellspacing="0" width="100%">
                 <?php
-if ($marksheet->heading != "" || $marksheet->title != "") {
+if (($marksheet->heading ?? '') != "" || ($marksheet->title ?? '') != "") {
     ?>
                     <tr>
                         <td valign="top">
                             <table cellpadding="0" cellspacing="0" width="100%">
                                 <?php
-if ($marksheet->heading != "") {
+if (($marksheet->heading ?? '') != "") {
         ?>
                                     <tr>
-                                        <td valign="top" style="font-size: 42px; font-weight: bold; text-align: center;"><?php echo $marksheet->heading; ?></td>
+                                        <td valign="top" style="font-size: 42px; font-weight: bold; text-align: center;"><?php echo ($marksheet->heading ?? '') ?? ''; ?></td>
                                     </tr>
                                     <?php
 }
     ?>
                                 <?php
-if ($marksheet->title != "") {
+if (($marksheet->title ?? '') != "") {
         ?>
                                     <tr>
-                                        <td valign="top" style="font-size: 20px; font-weight: 900; text-align: center; text-transform: uppercase;"><?php echo $marksheet->title; ?></td>
+                                        <td valign="top" style="font-size: 20px; font-weight: 900; text-align: center; text-transform: uppercase;"><?php echo ($marksheet->title ?? ''); ?></td>
                                     </tr>
                                     <?php
 }

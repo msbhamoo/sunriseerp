@@ -57,7 +57,7 @@ class Generatestaffidcard extends Admin_Controller
     public function generatemultiple()
     {
         $staffid             = $this->input->post('data');
-        $staff_array         = json_decode($staffid);
+        $staff_array         = $staffid ? (json_decode($staffid) ?: []) : [];
         $idcard              = $this->input->post('id_card');
         $staffid_arr         = array();
         $data['sch_setting'] = $this->setting_model->get();

@@ -6,7 +6,7 @@ if (!empty($chat_user)) {
       
         <li class="list-group-item" data-user-type="<?php echo ($user_value->student_id == "") ? 'Staff' : 'Student'; ?>" data-user-id="<?php echo ($user_value->student_id == "") ? $user_value->staff_id : $user_value->student_id; ?>">
 
- <!-- <li class="list-group-item" data-user-type="<?php echo $user_type; ?>" data-user-id="<?php echo $user_id; ?>"> -->
+ <!-- <li class="list-group-item" data-user-type="<?php echo isset($user_type) ? $user_type : ''; ?>" data-user-id="<?php echo isset($user_id) ? $user_id : ''; ?>"> -->
 
 
 

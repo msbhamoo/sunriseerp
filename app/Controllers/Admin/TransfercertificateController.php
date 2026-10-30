@@ -36,7 +36,7 @@ class TransfercertificateController extends BaseController
         return $this->dispatchLegacy('Transfercertificate', 'print_transfer_certificate', func_get_args());
     }
 
-    public function edit_custom_field($id)
+    public function edit_custom_field($id = null)
     {
         return $this->dispatchLegacy('Transfercertificate', 'edit_custom_field', func_get_args());
     }

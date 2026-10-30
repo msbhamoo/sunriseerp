@@ -305,14 +305,16 @@ class Mailsmsconf
 				
             } elseif ($send_for == "online_admission_fees_submission") {
 		            if(isset($recipient_data) && !empty($recipient_data)){
-                        $sender_details['parent_app_key']=$recipient_data['parent_app_key'];
-                        $sender_details['app_key']=$recipient_data['app_key'];
+                        $sender_details['parent_app_key']=$recipient_data['parent_app_key'] ?? '';
+                        $sender_details['app_key']=$recipient_data['app_key'] ?? '';
                     }
                     $this->sendOnlineadmissionFees($chk_mail_sms, $sender_details, $chk_mail_sms['template'], $chk_mail_sms['subject'], $chk_mail_sms['template_id']);
 
             } elseif ($send_for == "online_admission_fees_processing") {
-                    $sender_details['parent_app_key']=$recipient_data['parent_app_key'];
-                    $sender_details['app_key']=$recipient_data['app_key'];
+		            if(isset($recipient_data) && !empty($recipient_data)){
+                        $sender_details['parent_app_key']=$recipient_data['parent_app_key'] ?? '';
+                        $sender_details['app_key']=$recipient_data['app_key'] ?? '';
+                    }
                     $this->sendOnlineadmissionFees($chk_mail_sms, $sender_details, $chk_mail_sms['template'], $chk_mail_sms['subject'], $chk_mail_sms['template_id']);
 
             } elseif ($send_for == "student_login_credential") {

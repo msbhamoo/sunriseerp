@@ -559,6 +559,10 @@ class Onlineexam extends Admin_Controller
         $class_id           = $this->input->post('class_id');
         $section_id         = $this->input->post('section_id');
 
+        $show_from          = 0;
+        $show_to            = 0;
+        $total_display      = 0;
+
         if (isset($page)) {
             $max      = 100;
             $cur_page = $page;
@@ -1085,7 +1089,10 @@ class Onlineexam extends Admin_Controller
         $data['student_session_id'] = $this->input->post('student_session_id');
         $admission_no               = '';
 
-        $student_list = $this->onlineexam_model->getstudentbystudentsessionid($data['student_session_id']);
+        $student_list = $this->onlineexam_model->getstudentbystudentsessionid($data['student_session_id']) ?: [];
+        if (empty($student_list)) {
+            $student_list = ['admission_no' => '', 'firstname' => '', 'lastname' => '', 'class' => '', 'section' => '', 'father_name' => '', 'gender' => ''];
+        }
 
         if ($student_list['admission_no'] != '') {
             $admission_no = ' (' . $student_list['admission_no'] . ')';
@@ -1094,7 +1101,7 @@ class Onlineexam extends Admin_Controller
         $data['student_name'] = $student_list['firstname'] . ' ' . $student_list['lastname'] . $admission_no;
         $data['class']        = $student_list['class'];
         $data['section']      = $student_list['section'];
-        $data['father_name']  = $student_list['father_name'];
+        $data['father_name']  = $student_list['father_name'] ?? '';
 
         $exam         = $this->onlineexam_model->get($examid);
         $data['exam'] = $exam;

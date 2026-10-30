@@ -148,7 +148,7 @@ if (!empty($report[$homework['id']])) {
         $('#homework_date,#submit_date,#homeworkdate,#submitdate').datepicker({
             format: date_format,
             autoclose: true,
-            language: '<?php echo $language_name ?>'
+            language: '<?php echo $language_name ?? "en" ?>'
         });
     });
 </script>

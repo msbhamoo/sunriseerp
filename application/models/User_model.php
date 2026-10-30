@@ -504,7 +504,8 @@ class User_model extends MY_Model
 
     public function getUserLoginDetails($student_id)
     {
-        $sql   = "SELECT users.* FROM users WHERE user_id =" . $student_id . " and role = 'student'";
+        if (empty($student_id)) { return []; }
+        $sql   = "SELECT users.* FROM users WHERE user_id =" . (int)$student_id . " and role = 'student'";
         $query = $this->db->query($sql);
         return $query->row_array();
     }

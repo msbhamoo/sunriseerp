@@ -385,7 +385,8 @@ class Datatables
             $sqlRec .= $sql_query;
 
             $search           = $this->ci->input->post('search');
-            $search           = $this->ci->db->escape_like_str(trim($search['value']));
+            $searchValue      = is_array($search) ? ($search['value'] ?? '') : (is_string($search) ? $search : '');
+            $search           = $this->ci->db->escape_like_str(trim($searchValue));
             $column           = explode(',', $this->searchable);
             $this->searchable = array();
             if (isset($search) && $search != "") {
@@ -502,7 +503,8 @@ class Datatables
         $mColArray = $this->ci->input->post('columns');
         $sWhere    = '';
         $search    = $this->ci->input->post('search');
-        $sSearch   = $this->ci->db->escape_like_str(trim($search['value']));
+        $searchValue = is_array($search) ? ($search['value'] ?? '') : (is_string($search) ? $search : '');
+        $sSearch   = $this->ci->db->escape_like_str(trim($searchValue));
         $columns   = array_values(array_diff($this->columns, $this->unset_columns));
 
         if ($sSearch != '' && $this->searchable != '') {

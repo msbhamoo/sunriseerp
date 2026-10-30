@@ -247,7 +247,7 @@ function getGrade($grade_array, $Percentage)
     return "-";
 }
 
-function unique_array($my_array, $key)
+if (!function_exists('unique_array')) { function unique_array($my_array, $key)
 {
     $result = array();
     $i = 1;
@@ -261,9 +261,9 @@ function unique_array($my_array, $key)
         }
     }
     return $result;
-}
+} }
 
-function searcharray($value, $key, $array)
+if (!function_exists('searcharray')) { function searcharray($value, $key, $array)
 {
     foreach ($array as $k => $val) {
 
@@ -272,7 +272,7 @@ function searcharray($value, $key, $array)
         }
     }
     return null;
-}
+} }
 
 ?>
 

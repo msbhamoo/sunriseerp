@@ -312,7 +312,7 @@ $sch_name = !empty($sch_setting->name) ? $sch_setting->name : 'School Gate Pass 
                                                     <?php } ?>
                                                 </td>
                                                 <td class="mailbox-name white-space-nowrap">
-                                                    <?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($gatepass['date'])); ?>
+                                                    <?php echo !empty($gatepass['date']) ? (is_numeric($gatepass['date']) ? date($this->customlib->getSchoolDateFormat(), (int)$gatepass['date']) : (strtotime($gatepass['date']) ? date($this->customlib->getSchoolDateFormat(), strtotime($gatepass['date'])) : $gatepass['date'])) : ''; ?>
                                                     <?php if ($is_row_today) { ?>
                                                         <span class="badge" style="background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; font-size: 10px; margin-left: 2px;">Today</span>
                                                     <?php } ?>

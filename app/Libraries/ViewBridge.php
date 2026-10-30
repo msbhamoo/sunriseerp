@@ -18,6 +18,8 @@ class ViewBridge
     public RbacBridge $rbac;
     public LangBridge $lang;
     public SettingModel $setting_model;
+    public ModuleLibBridge $module_lib;
+    public $auth;
 
     public function __construct()
     {
@@ -26,15 +28,76 @@ class ViewBridge
         $this->rbac          = new RbacBridge();
         $this->lang          = new LangBridge();
         $this->setting_model = new SettingModel();
+        $this->module_lib    = new ModuleLibBridge();
+        $this->auth          = new AuthBridge();
+    }
+}
+
+class AuthBridge
+{
+    protected ?object $authInstance = null;
+
+    protected function getAuth()
+    {
+        if ($this->authInstance === null) {
+            $ci = &get_instance();
+            if ($ci !== null && isset($ci->auth) && is_object($ci->auth)) {
+                $this->authInstance = $ci->auth;
+            } elseif (class_exists('Auth')) {
+                $this->authInstance = new \Auth();
+            } elseif (class_exists('App\Libraries\Auth')) {
+                $this->authInstance = new \App\Libraries\Auth();
+            }
+        }
+        return $this->authInstance;
+    }
+
+    public function addonchk($prod = null, $return_url = false)
+    {
+        $inst = $this->getAuth();
+        if ($inst && method_exists($inst, 'addonchk')) {
+            return $inst->addonchk($prod, $return_url);
+        }
+        return true;
+    }
+
+    public function __call($method, $args)
+    {
+        $inst = $this->getAuth();
+        if ($inst && method_exists($inst, $method)) {
+            return call_user_func_array([$inst, $method], $args);
+        }
+        return false;
     }
 }
 
 class LoaderBridge
 {
+    protected ?object $controllerInstance = null;
+
+    public function setControllerInstance(object $ci): void
+    {
+        $this->controllerInstance = $ci;
+    }
     public function view(string $view, array $data = [], bool $return = false)
     {
         // Support CI3 relative view paths
         $view = str_replace('.php', '', $view);
+        if (!isset($data['count'])) {
+            $data['count'] = 0;
+        }
+        if (!isset($data['search_type'])) {
+            $data['search_type'] = '';
+        }
+        if (!isset($data['search_text'])) {
+            $data['search_text'] = '';
+        }
+        if (!isset($data['section_list'])) {
+            $data['section_list'] = [];
+        }
+        if (!isset($data['classlist'])) {
+            $data['classlist'] = [];
+        }
         $output = view($view, $data);
 
         if ($return) {
@@ -72,6 +135,10 @@ class LoaderBridge
             APPPATH . 'Libraries/' . $library . '.php',
             APPPATH . '../application/libraries/' . ucfirst($library) . '.php',
             APPPATH . '../application/libraries/' . $library . '.php',
+            APPPATH . '../application/libraries/' . ucfirst(strtolower($library)) . '.php',
+            APPPATH . '../application/libraries/' . strtolower($library) . '.php',
+            APPPATH . '../application/libraries/' . ucfirst($library) . '/' . ucfirst($library) . '.php',
+            APPPATH . '../application/libraries/' . $library . '/' . $library . '.php',
             BASEPATH . 'libraries/' . ucfirst($library) . '.php',
             BASEPATH . 'libraries/' . $library . '.php',
         ];
@@ -82,11 +149,18 @@ class LoaderBridge
             }
         }
 
-        if (class_exists($class)) {
-            $obj = new $class($params);
+        $matchedClass = class_exists($class) ? $class : (class_exists($library) ? $library : (class_exists(strtolower($library)) ? strtolower($library) : null));
+        if ($matchedClass !== null) {
+            $obj = ($params === null) ? new $matchedClass() : new $matchedClass($params);
+            if ($this->controllerInstance !== null) {
+                $this->controllerInstance->$name = $obj;
+                $this->controllerInstance->$lowerLib = $obj;
+                $this->controllerInstance->$library = $obj;
+            }
             if ($ci !== null) {
                 $ci->$name = $obj;
                 $ci->$lowerLib = $obj;
+                $ci->$library = $obj;
             }
             return $obj;
         }
@@ -297,7 +371,7 @@ class CustomlibBridge
 
     public function getLoggedInUserData(): array
     {
-        return $this->admin ?? [];
+        return $this->admin ?? session()->get('student') ?? [];
     }
 
     public function getUserData(): array
@@ -408,6 +482,57 @@ class CustomlibBridge
     }
 }
 
+
+class ModuleLibBridge
+{
+    protected static $legacyInstance = null;
+
+    protected function getInstance()
+    {
+        if (self::$legacyInstance === null) {
+            $file = APPPATH . 'Libraries/Module_lib.php';
+            if (file_exists($file)) {
+                require_once $file;
+            } else {
+                $file = APPPATH . '../application/libraries/Module_lib.php';
+                if (file_exists($file)) {
+                    require_once $file;
+                }
+            }
+            if (class_exists('Module_lib')) {
+                self::$legacyInstance = new \Module_lib();
+            }
+        }
+        return self::$legacyInstance;
+    }
+
+    public function hasModule($module_shortcode): bool
+    {
+        $inst = $this->getInstance();
+        if ($inst && method_exists($inst, 'hasModule')) {
+            return (bool)$inst->hasModule($module_shortcode);
+        }
+        return false;
+    }
+
+    public function hasActive($module = null): bool
+    {
+        $inst = $this->getInstance();
+        if ($inst && method_exists($inst, 'hasActive')) {
+            return (bool)$inst->hasActive($module);
+        }
+        return false;
+    }
+
+    public function __call($method, $args)
+    {
+        $inst = $this->getInstance();
+        if ($inst && method_exists($inst, $method)) {
+            return call_user_func_array([$inst, $method], $args);
+        }
+        return false;
+    }
+}
 
 class RbacBridge
 {

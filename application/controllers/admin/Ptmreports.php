@@ -100,7 +100,7 @@ class Ptmreports extends Admin_Controller
                 }
             }
         } else {
-            if ($ptm['target_type'] == 'whole_school') {
+            if (($ptm['target_type'] ?? '') == 'whole_school') {
                 $students = $this->student_model->get();
             } else {
                 foreach ($targets as $target) {
@@ -136,6 +136,10 @@ class Ptmreports extends Admin_Controller
     public function get_student_profile_data()
     {
         $student_id = $this->input->post('student_id');
+        if (empty($student_id)) {
+            echo json_encode(['status' => 'fail', 'message' => 'No student_id']);
+            return;
+        }
         $student_session_id = $this->input->post('student_session_id');
         $ptm_id = $this->input->post('ptm_id');
         

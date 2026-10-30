@@ -1,3 +1,4 @@
+<?php $delete_string = $delete_string ?? ""; if (empty($result)) { $result = ["id" => "", "name" => "", "maximum_percentage" => "", "minimum_percentage" => "", "description" => ""]; } ?>
 <div id="<?php echo $delete_string;?>">      
      <div class="row">
          <div class="col-md-2">

@@ -12,34 +12,17 @@ if ($partial_payment_note === "" || $partial_payment_note === false) {
 }
 ?>
 <div class="content-wrapper">
-    <div class="row">
-        <div class="col-md-12">
-            <section class="content-header">
-                <h1>
-                    <i class="fa fa-money"></i> <small></small>
-                </h1>
-            </section>
+    <section class="content fee-page">
+        <div class="sp-page-head">
+            <div>
+                <h1 class="sp-page-title"><?php echo $this->lang->line('student_fees'); ?></h1>
+                <p class="sp-page-sub"><?php echo $this->lang->line('date'); ?>: <?php echo date($this->customlib->getSchoolDateFormat()); ?></p>
+            </div>
         </div>
-    </div>
-    <!-- /.control-sidebar -->
-    <section class="content">
         <div class="row">
             <!-- left column -->
             <div class="col-md-12">
-                <div class="box box-primary">
-                    <div class="box-header">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <h3 class="box-title"><?php echo $this->lang->line('student_fees'); ?></h3>
-                            </div>
-                            <div class="col-md-8 ">
-                                <div class="btn-group pull-right">
-                                    <a href="<?php echo base_url() ?>user/user/dashboard" type="button" class="btn btn-primary btn-xs">
-                                        <i class="fa fa-arrow-left"></i> <?php echo $this->lang->line('back'); ?></a>
-                                </div>
-                            </div>
-                        </div>
-                    </div><!--./box-header-->
+                <div class="box box-primary fee-box">
 
                     <div class="box-body" style="padding-top:0;">
                         <div class="row">
@@ -52,99 +35,45 @@ if ($partial_payment_note === "" || $partial_payment_note === false) {
                             <?php } ?>
 
                             <div class="col-md-12">
-                                <div class="sfborder-top-border">
-                                    <div class="col-md-2">
-                                        <?php if ($sch_setting->student_photo) {
-                                        ?>
-                                            <img width="115" height="115" class="mt5 mb10 sfborder-img-shadow img-responsive img-rounded" src="<?php
-                                                                                                                                                if (!empty($student['image'])) {
-                                                                                                                                                    echo base_url() . $student['image'] . img_time();
-                                                                                                                                                } else {
-                                                                                                                                                    echo base_url() . "uploads/student_images/no_image.png" . img_time();
-                                                                                                                                                }
-                                                                                                                                                ?>" alt="User profile picture">
-                                        <?php
-                                        } ?>
-                                    </div>
-
-                                    <div class="col-md-10">
-                                        <div class="row">
-                                            <table class="table table-striped mb0 font13">
-                                                <tbody>
-                                                    <tr>
-                                                        <th class="bozero"><?php echo $this->lang->line('name'); ?></th>
-                                                        <td class="bozero"><?php echo $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?></td>
-                                                        <th class="bozero"><?php echo $this->lang->line('class_section'); ?></th>
-                                                        <td class="bozero"><?php echo $student['class'] . " (" . $student['section'] . ")" ?> </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <?php if ($sch_setting->father_name) { ?>
-                                                            <th><?php echo $this->lang->line('father_name'); ?></th>
-                                                            <td><?php echo $student['father_name']; ?></td>
-                                                        <?php }
-                                                        ?>
-                                                        <th><?php echo $this->lang->line('admission_no'); ?></th>
-                                                        <td><?php echo $student['admission_no']; ?></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <?php if ($sch_setting->mobile_no) { ?>
-                                                            <th><?php echo $this->lang->line('mobile_number'); ?></th>
-                                                            <td><?php echo $student['mobileno']; ?></td>
-                                                        <?php }
-                                                        if ($sch_setting->roll_no) { ?>
-                                                            <th><?php echo $this->lang->line('roll_number'); ?></th>
-                                                            <td> <?php echo $student['roll_no']; ?> </td>
-                                                        <?php } ?>
-                                                    </tr>
-                                                    <tr>
-                                                        <?php if ($sch_setting->category) {
-                                                        ?>
-                                                            <th><?php echo $this->lang->line('category'); ?></th>
-                                                            <td>
-                                                                <?php
-                                                                foreach ($categorylist as $value) {
-                                                                    if ($student['category_id'] == $value['id']) {
-                                                                        echo $value['category'];
-                                                                    }
-                                                                }
-                                                                ?>
-                                                            </td>
-                                                        <?php }
-                                                        if ($sch_setting->rte) { ?>
-                                                            <th><?php echo $this->lang->line('rte'); ?></th>
-                                                            <td><b class="text-danger"> <?php if(isset($student['rte'])){ echo $this->lang->line(strtolower($student['rte'])); } ?> </b>
-                                                            </td>
-                                                        <?php } ?>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                <?php
+                                $fee_photo = (!empty($student['image']) && is_file(FCPATH . $student['image'])) ? base_url() . $student['image'] . img_time() : base_url() . "uploads/student_images/no_image.png" . img_time();
+                                $fee_category = '';
+                                foreach ($categorylist as $value) {
+                                    if ($student['category_id'] == $value['id']) {
+                                        $fee_category = $value['category'];
+                                    }
+                                }
+                                ?>
+                                <div class="fee-profile">
+                                    <?php if ($sch_setting->student_photo) { ?>
+                                        <img class="fee-profile-photo" src="<?php echo $fee_photo; ?>" alt="">
+                                    <?php } ?>
+                                    <div class="fee-profile-main">
+                                        <div class="fee-profile-name"><?php echo $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?></div>
+                                        <div class="fee-profile-chips">
+                                            <span><i class="icon-graduation-cap"></i> <?php echo $student['class'] . " (" . $student['section'] . ")" ?></span>
+                                            <span><?php echo $this->lang->line('admission_no'); ?>: <b><?php echo $student['admission_no']; ?></b></span>
+                                            <?php if ($sch_setting->roll_no && $student['roll_no'] != '') { ?><span><?php echo $this->lang->line('roll_number'); ?>: <b><?php echo $student['roll_no']; ?></b></span><?php } ?>
+                                            <?php if ($sch_setting->father_name && $student['father_name'] != '') { ?><span><?php echo $this->lang->line('father_name'); ?>: <b><?php echo $student['father_name']; ?></b></span><?php } ?>
+                                            <?php if ($sch_setting->mobile_no && $student['mobileno'] != '') { ?><span><i class="icon-phone"></i> <?php echo $student['mobileno']; ?></span><?php } ?>
+                                            <?php if ($sch_setting->category && $fee_category != '') { ?><span><?php echo $this->lang->line('category'); ?>: <b><?php echo $fee_category; ?></b></span><?php } ?>
+                                            <?php if ($sch_setting->rte && !empty($student['rte'])) { ?><span class="text-danger"><?php echo $this->lang->line('rte'); ?>: <b><?php echo $this->lang->line(strtolower($student['rte'])); ?></b></span><?php } ?>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-12">
-                                <div class="divider mb10"></div>
-                            </div>
                         </div>
-                        <div class="row no-print mb10">
-                            <div class="col-md-12 mDMb10">
-                                <div class="float-rtl-right float-left">
-                                    <a href="javascript:void(0)" class="btn btn-primary printSelected" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="fa fa-print"></i> <?php echo $this->lang->line('print_selected'); ?> </a>
-                                    <?php if ($payment_method) { ?>
-                                        <button type="button" class="btn btn-warning collectSelected" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="fa fa-money"></i> <?php echo $this->lang->line('pay_selected') ?></button>
-                                    <?php } ?>
-                                    <?php
-                                    if ($student_processing_fee) { ?>
-                                        <a href="#" class="btn btn-primary getProcessingfees" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="fa fa-money"></i> <?php echo $this->lang->line('processing_fees') ?></a>
-                                    <?php
-                                    }
-                                    if ($sch_setting->is_offline_fee_payment) {
-                                    ?>
-                                        <button class="btn btn-primary getBankPayments" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="fa fa-money"></i> <?php echo $this->lang->line('offline_bank_payments') ?> </button>
-                                    <?php } ?>
-                                </div>
-                                <span class="pull-right pt5"><?php echo $this->lang->line('date'); ?>: <?php echo date($this->customlib->getSchoolDateFormat()); ?></span>
-                            </div>
+                        <div class="fee-actions no-print">
+                            <a href="javascript:void(0)" class="sp-btn printSelected" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait'); ?>"><i class="icon-printer"></i> <?php echo $this->lang->line('print_selected'); ?> </a>
+                            <?php if ($payment_method) { ?>
+                                <button type="button" class="sp-btn sp-btn-primary collectSelected" id="load" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="icon-wallet"></i> <?php echo $this->lang->line('pay_selected') ?></button>
+                            <?php } ?>
+                            <?php if ($student_processing_fee) { ?>
+                                <a href="#" class="sp-btn getProcessingfees" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="icon-history"></i> <?php echo $this->lang->line('processing_fees') ?></a>
+                            <?php }
+                            if ($sch_setting->is_offline_fee_payment) { ?>
+                                <button class="sp-btn getBankPayments" data-loading-text="<i class='fa fa-spinner fa-spin '></i> <?php echo $this->lang->line('please_wait') ?>"><i class="icon-building"></i> <?php echo $this->lang->line('offline_bank_payments') ?> </button>
+                            <?php } ?>
                         </div>
                         
                         <?php 
@@ -164,6 +93,7 @@ if ($partial_payment_note === "" || $partial_payment_note === false) {
                             <?php
                             } else {
                             ?>
+                                <?php ob_start(); ?>
                                 <table class="table table-striped table-bordered table-hover example table-fixed-header" data-export-title="<?php echo $this->lang->line('student_fees') . ": " . $student['firstname'] . " " . $student['lastname'] . " (" . $student['admission_no'].")"; ?>">
                                     <thead>
                                         <tr>
@@ -712,6 +642,33 @@ if ($partial_payment_note === "" || $partial_payment_note === false) {
                                                 </tr>
                                     </tbody>
                                 </table>
+                                <?php
+                                $fee_table_html = ob_get_clean();
+                                $fee_payable    = $total_amount + $total_fees_fine_amount;
+                                $fee_paid_pct   = $fee_payable > 0 ? min(100, round(($total_deposite_amount + $total_discount_amount) * 100 / $fee_payable)) : 0;
+                                ?>
+                                <div class="sp-tiles fee-tiles">
+                                    <div class="sp-tile sp-tile-blue">
+                                        <span class="sp-tile-label"><?php echo $this->lang->line('amount'); ?></span>
+                                        <span class="sp-tile-value"><?php echo $currency_symbol . amountFormat($total_amount); ?></span>
+                                    </div>
+                                    <div class="sp-tile sp-tile-green">
+                                        <span class="sp-tile-label"><?php echo $this->lang->line('paid'); ?></span>
+                                        <span class="sp-tile-value"><?php echo $currency_symbol . amountFormat($total_deposite_amount); ?></span>
+                                    </div>
+                                    <div class="sp-tile sp-tile-purple">
+                                        <span class="sp-tile-label"><?php echo $this->lang->line('discount'); ?> / <?php echo $this->lang->line('fine'); ?></span>
+                                        <span class="sp-tile-value"><?php echo $currency_symbol . amountFormat($total_discount_amount); ?> <small>/ <?php echo $currency_symbol . amountFormat($total_fine_amount); ?></small></span>
+                                    </div>
+                                    <div class="sp-tile <?php echo $total_balance_amount > 0 ? 'sp-tile-red' : 'sp-tile-green'; ?>">
+                                        <span class="sp-tile-label"><?php echo $this->lang->line('balance'); ?></span>
+                                        <span class="sp-tile-value"><?php echo $currency_symbol . amountFormat($total_balance_amount); ?></span>
+                                    </div>
+                                </div>
+                                <div class="fee-progress" title="<?php echo $fee_paid_pct; ?>%">
+                                    <span style="width: <?php echo $fee_paid_pct; ?>%"></span>
+                                </div>
+                                <?php echo $fee_table_html; ?>
                             <?php } ?>
                         </div>
                        <?php } ?>
@@ -724,6 +681,52 @@ if ($partial_payment_note === "" || $partial_payment_note === false) {
         </div>
     </section>
 </div>
+
+<style type="text/css">
+.fee-page { padding: 20px 22px; }
+.fee-page .box.fee-box { background: transparent !important; border: 0 !important; box-shadow: none !important; overflow: visible; }
+.fee-page .box.fee-box > .box-body { padding: 0 !important; }
+.fee-profile {
+    display: flex; align-items: center; gap: 16px;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
+    padding: 16px 18px; margin-bottom: 14px;
+}
+.fee-profile-photo { width: 64px; height: 64px; border-radius: 14px; object-fit: cover; background: #f1f5f9; flex-shrink: 0; }
+.fee-profile-main { min-width: 0; }
+.fee-profile-name { font-size: 17px; font-weight: 700; color: #0f172a; }
+.fee-profile-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.fee-profile-chips span { font-size: 12px; color: #475569; background: #f1f5f9; border-radius: 8px; padding: 3px 9px; }
+.fee-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.fee-page .table-sm-visible {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
+    padding: 16px 18px; margin-bottom: 18px;
+}
+.fee-page .table-sm-visible > h5 {
+    text-align: left !important; font-size: 13px !important; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; color: #475569; margin: 0 0 14px;
+}
+.fee-progress { height: 6px; border-radius: 6px; background: #eef2f7; overflow: hidden; margin: -6px 0 16px; }
+.fee-progress span { display: block; height: 100%; background: #10b981; border-radius: 6px; }
+.fee-page .table > thead > tr > th { white-space: nowrap; }
+.fee-page .total-bg td { font-weight: 700; background: #f8fafc !important; }
+
+@media (max-width: 767px) {
+    .fee-page { padding: 12px !important; }
+    .fee-profile { padding: 12px; }
+    .fee-profile-photo { width: 52px; height: 52px; }
+    .fee-actions { position: sticky; top: 50px; z-index: 5; background: #f8fafc; padding: 8px 0; margin: 0 0 10px; overflow-x: auto; flex-wrap: nowrap; }
+    .fee-actions .sp-btn { flex-shrink: 0; }
+    .fee-page .table-sm-visible { padding: 12px; background: transparent; border: 0; }
+    .fee-page .table-sm-visible > h5 { margin-bottom: 10px; }
+    /* fee rows as cards: checkbox + fee name lead the card */
+    .fee-page table.sp-cards tr { position: relative; }
+    /* payment entries under a fee: compact, indented, tinted */
+    .fee-page table.sp-cards tr.white-td { margin: -6px 0 10px 18px; background: #f8fafc; border-style: dashed; }
+    .fee-page table.sp-cards tr.white-td td:nth-child(-n+5) { display: none; }
+    .fee-page table.sp-cards tr.total-bg { background: #0f172a !important; }
+    .fee-page table.sp-cards tr.total-bg td, .fee-page table.sp-cards tr.total-bg td::before { color: #fff !important; background: transparent !important; border-color: rgba(255,255,255,.12) !important; }
+}
+</style>
 
 <?php if (!$allow_partial_single): ?>
 <style type="text/css">

@@ -75,7 +75,7 @@ class StudentcallModel extends BaseModel
     public function auto_resolve_zero_due_fee_followups(?int $student_session_id = null, ?int $call_id = null): void
     {
         $sessionModel = new SessionModel();
-        $currentSession = (int)$sessionModel->getCurrentSession();
+        $currentSession = $sessionModel->getCurrentSessionId();
 
         $builder = $this->db->table('student_call_followups f')
             ->select('f.id as followup_id, f.student_call_id, sc.student_session_id, sc.student_id, sc.call_purpose_id, p.purpose as purpose_name')
@@ -161,7 +161,7 @@ class StudentcallModel extends BaseModel
     public function search_student(string $query): array
     {
         $sessionModel = new SessionModel();
-        $currentSession = (int)$sessionModel->getCurrentSession();
+        $currentSession = $sessionModel->getCurrentSessionId();
 
         return $this->db->table('student_session')
             ->select('students.id as student_id, student_session.id as student_session_id, students.admission_no, students.roll_no, students.firstname, students.middlename, students.lastname, students.father_name, students.mother_name, students.image, students.mobileno, students.father_phone, students.mother_phone, students.guardian_phone, students.admission_type, students.shrestha, students.rte, students.is_staff_kid, students.staff_id, staff.name as staff_name, classes.class, sections.section')
@@ -188,7 +188,7 @@ class StudentcallModel extends BaseModel
         $follow_up_date_to = null, $assigned_to = null
     ): array {
         $sessionModel = new SessionModel();
-        $currentSession = (int)$sessionModel->getCurrentSession();
+        $currentSession = $sessionModel->getCurrentSessionId();
 
         $builder = $this->db->table('student_calls')
             ->select('student_calls.*, students.firstname, students.lastname, students.admission_no, students.father_name, students.father_phone, students.mother_phone, students.guardian_phone, students.mobileno, students.admission_type, students.shrestha, students.rte, students.is_staff_kid, students.staff_id, student_staff.name as student_staff_name, classes.class, sections.section, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname, pickup_point.name as pickup_point_name, (SELECT id FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id DESC LIMIT 1) as pending_followup_id, (SELECT due_date FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id DESC LIMIT 1) as next_follow_up_date, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending") as pending_count, (SELECT count(id) FROM student_call_followups WHERE student_call_id = student_calls.id) as total_followups, (SELECT assigned_to FROM student_call_followups WHERE student_call_id = student_calls.id AND status = "Pending" ORDER BY id DESC LIMIT 1) as pending_assigned_to_id, (SELECT CONCAT(staff.name, " ", staff.surname) FROM student_call_followups JOIN staff ON staff.id = student_call_followups.assigned_to WHERE student_call_id = student_calls.id AND student_call_followups.status = "Pending" ORDER BY student_call_followups.id DESC LIMIT 1) as assigned_to_name')
@@ -243,7 +243,7 @@ class StudentcallModel extends BaseModel
     public function get_pending_followup_calls(string $filter = 'due_today_and_overdue', $assigned_to = null): array
     {
         $sessionModel = new SessionModel();
-        $currentSession = (int)$sessionModel->getCurrentSession();
+        $currentSession = $sessionModel->getCurrentSessionId();
 
         $builder = $this->db->table('student_call_followups f')
             ->select('student_calls.*, students.firstname, students.lastname, students.admission_no, students.father_name, students.father_phone, students.mother_phone, students.guardian_phone, students.mobileno, classes.class, sections.section, student_call_purpose.purpose as purpose_name, staff.name as staff_name, staff.surname as staff_surname, pickup_point.name as pickup_point_name, f.id as followup_id, f.due_date as next_follow_up_date, f.priority, f.assigned_to, f.remarks as followup_remarks, (SELECT CONCAT(s2.name, " ", s2.surname) FROM staff s2 WHERE s2.id = f.assigned_to) as assigned_to_name')
@@ -336,7 +336,7 @@ class StudentcallModel extends BaseModel
     public function get_total_pending_followups_count(?int $staffId = null): int
     {
         $sessionModel = new SessionModel();
-        $currentSession = (int)$sessionModel->getCurrentSession();
+        $currentSession = $sessionModel->getCurrentSessionId();
 
         $builder = $this->db->table('student_call_followups')
             ->select('count(DISTINCT student_call_id) as total')
@@ -362,7 +362,7 @@ class StudentcallModel extends BaseModel
         string $order_by = 'students.firstname', string $order_dir = 'asc'
     ): array {
         $sessionModel = new SessionModel();
-        $currentSession = (int)$sessionModel->getCurrentSession();
+        $currentSession = $sessionModel->getCurrentSessionId();
 
         $builder = $this->db->table('student_session')
             ->select('students.id as student_id, student_session.id as student_session_id, students.firstname, students.lastname, students.admission_no, students.father_name, students.mobileno, students.father_phone, students.mother_phone, students.guardian_phone, students.admission_type, students.shrestha, students.rte, students.is_staff_kid, students.staff_id, student_staff.name as student_staff_name, classes.class, sections.section, sc.date as last_call_date, sc.call_status as last_call_status, pickup_point.name as pickup_point_name')
@@ -465,7 +465,7 @@ class StudentcallModel extends BaseModel
         $purpose_id = '', $call_status = ''
     ): int {
         $sessionModel = new SessionModel();
-        $currentSession = (int)$sessionModel->getCurrentSession();
+        $currentSession = $sessionModel->getCurrentSessionId();
 
         $builder = $this->db->table('student_session')
             ->select('students.id')

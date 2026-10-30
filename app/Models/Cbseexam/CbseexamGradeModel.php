@@ -66,6 +66,11 @@ class CbseexamGradeModel extends BaseModel
         return $this->callLegacyModel('Cbseexam_grade_model', 'remove', func_get_args());
     }
 
+    public function get_editdetails($id)
+    {
+        return $this->callLegacyModel('Cbseexam_grade_model', 'get_editdetails', func_get_args());
+    }
+
     /**
      * Compatibility Bridge: Delegates execution to the legacy model instance
      * maintaining full compatibility with query builder and CI3 environment.

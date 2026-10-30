@@ -540,22 +540,6 @@
     })();
 </script>
 <script>
-.ready(function() {
-    $.ajax({
-        url: '<?php echo site_url("admin/holiday/get_dashboard_widget"); ?>',
-        type: 'GET',
-        success: function(response) {
-            if(response.trim() != '') {
-                #calendar_dashboard_summary.html(response).hide().fadeIn('fast');
-            }
-        },
-        error: function(err) {
-            console.error('Failed to load dashboard calendar summary', err);
-        }
-    });
-});
-</script>
-<script>
 $(document).ready(function() {
     $.ajax({
         url: '<?php echo site_url("admin/holiday/get_dashboard_widget"); ?>',

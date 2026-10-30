@@ -29,6 +29,18 @@ abstract class BaseController extends Controller
 
     // protected $session;
 
+    /** Permission checks for native CI4 controllers (legacy `$this->rbac` API). */
+    protected \App\Libraries\NativeRbac $rbac;
+
+    /** Legacy `$this->customlib` API (delegates to application/libraries/Customlib). */
+    protected \App\Libraries\CustomlibBridge $customlib;
+
+    /** Legacy `$this->auth` API. */
+    protected $auth;
+
+    /** Legacy `$this->lang` API. */
+    protected $lang;
+
     /**
      * @param CLIRequest|IncomingRequest $request
      *
@@ -44,6 +56,16 @@ abstract class BaseController extends Controller
         parent::initController($request, $response, $logger);
 
         // Preload any models, libraries, etc, here.
+        $this->rbac      = new \App\Libraries\NativeRbac();
+        class_exists(\App\Libraries\ViewBridge::class); // CustomlibBridge is declared in ViewBridge.php
+        $this->customlib = new \App\Libraries\CustomlibBridge();
+        $this->auth      = new \App\Libraries\AuthBridge();
+        $this->lang      = new \App\Libraries\LangBridge();
         // $this->session = service('session');
+    }
+
+    protected function respondJson($data, int $statusCode = 200)
+    {
+        return $this->response->setStatusCode($statusCode)->setJSON($data);
     }
 }

@@ -221,6 +221,11 @@ class Customstudentimport extends Admin_Controller
         }
 
         $file_name = $this->input->post('file_name');
+        if (empty($file_name)) {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger text-center">Please upload a file.</div>');
+            redirect('admin/customstudentimport/index');
+            return;
+        }
         
         $mapping_raw = $this->input->post('mapping');
         $mapping = array();
@@ -233,9 +238,10 @@ class Customstudentimport extends Admin_Controller
 
         $destination = './uploads/temp/' . $file_name;
 
-        if (!file_exists($destination)) {
+        if (!file_exists($destination) || is_dir($destination)) {
             $this->session->set_flashdata('msg', '<div class="alert alert-danger text-center">Temporary file not found. Please upload again.</div>');
             redirect('admin/customstudentimport/index');
+            return;
         }
 
         $this->load->library('CSVReader');

@@ -221,10 +221,10 @@ if (isset($resultlist)) {
             <main>
                 <div id="details" class="clearfix">
                     <h2 style="text-align: center;margin: 4px;">
-                        <th><?php echo $this->lang->line('student_record'); ?></th></h2>
+                        <?php echo $this->lang->line('student_record'); ?></h2>
                     <div  style="text-align: left;">
                         <b>
-                            <?php echo $this->lang->line('class'); ?>: <?php echo $class['class']; ?></b><br/>
+                            <?php echo $this->lang->line('class'); ?>: <?php echo $class['class'] ?? ''; ?></b><br/>
                         <?php if (isset($section)) {
                             ?>
                             <b> <?php echo $this->lang->line('section'); ?>: <?php echo $section[0]['section']; ?></b><br/>
@@ -246,7 +246,7 @@ if (isset($resultlist)) {
                         <?php }
                         ?>
                     </div>
-                    <div  style="text-align: right;">  <th><?php echo $this->lang->line('date'); ?></th>: <?php echo date($this->customlib->getSchoolDateFormat()); ?></div>                  
+                    <div  style="text-align: right;">  <?php echo $this->lang->line('date'); ?>: <?php echo date($this->customlib->getSchoolDateFormat()); ?></div>                  
                 </div>
                 <div id="details" class="clearfix">                   
                     <table>

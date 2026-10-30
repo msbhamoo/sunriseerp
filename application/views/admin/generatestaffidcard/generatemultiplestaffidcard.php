@@ -8,6 +8,7 @@ $i = 0;
 
 ?>
 <?php 
+if(empty($id_card) || empty($id_card[0])) { echo "<div>No ID card selected</div>"; return; }
 if($id_card[0]->enable_vertical_card)
 {
 ?>

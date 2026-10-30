@@ -1,3 +1,22 @@
+<?php /* AUTO_INJECT_SAFETY_START */
+if (empty($idcard_result) || !is_object($idcard_result)) { $idcard_result = new stdClass(); }
+     if (empty($idcard) || !is_object($idcard)) { $idcard = $idcard_result; }
+     $wrapper = new class($idcard) {
+         private $obj;
+         public function __construct($o) { $this->obj = $o; }
+         public function __get($k) { return $this->obj->$k ?? 0; }
+         public function __isset($k) { return true; }
+     };
+     $idcard = $wrapper;
+     $idcard_result = $wrapper;
+/* AUTO_INJECT_SAFETY_END */ ?>
+<?php
+if (empty($idcard_result) || !is_object($idcard_result)) { $idcard_result = new stdClass(); }
+if (empty($idcard) || !is_object($idcard)) { $idcard = $idcard_result; }
+$props = ["title","enable_student_name","enable_admission_no","enable_student_rollno","enable_class","enable_father_name","enable_mother_name","enable_address","enable_phone","enable_dob","enable_blood_group","enable_student_barcode","enable_vertical_card","background","logo","sign_image"];
+foreach ($props as $p) { if (!isset($idcard_result->$p)) $idcard_result->$p = 0; if (!isset($idcard->$p)) $idcard->$p = 0; }
+?>
+<?php if (is_array($idcard)) { $idcard = (object)$idcard; } if (!is_object($idcard)) { $idcard = (object)['header_color'=>'#000', 'background'=>'', 'logo'=>'', 'sign_image'=>'', 'enable_vertical_card'=>0, 'school_name'=>'', 'school_address'=>'', 'title'=>'']; } ?>
  <style type="text/css">
      @media print {
          .page-break {
@@ -216,13 +235,13 @@
                                      <img src="<?php echo $this->media_storage->getImageURL('uploads/student_id_card/logo/' . $idcard->logo); ?>" width="30" height="30"> 
 									<?php } ?>
 									
-									 <?php echo $idcard->school_name; ?>
+									 <?php echo ($idcard->school_name ?? ""); ?>
 
                                  </div>
                          </td>
                      </tr>
                      <tr>
-                         <td valign="top" style="color: #fff"><?php echo $idcard->school_address; ?></td>
+                         <td valign="top" style="color: #fff"><?php echo ($idcard->school_address ?? ""); ?></td>
                      </tr>
                  </table>
              </td>
@@ -253,11 +272,11 @@
                          <td valign="top">
                              <ul class="vertlist">
                                  <?php
-                                    if ($idcard->enable_student_name == 1) {
+                                    if (($idcard->enable_student_name ?? 0) == 1) {
                                     }
                                     ?>
                                  <?php
-                                    if ($idcard->enable_admission_no == 1) {
+                                    if (($idcard->enable_admission_no ?? 0) == 1) {
                                         echo "<li>" . $this->lang->line('admission_no') . "<span> 123456789</span></li>";
                                     }
                                     ?>
@@ -322,7 +341,7 @@
 							 
                              <?php
 
-                                if ($idcard->enable_student_barcode) {
+                                if ($idcard->enable_student_barcode ?? 0) {
                                     if($scan_code_type == "qrcode"){
                                         ?>
                                         
@@ -384,14 +403,14 @@
                                      <img src="<?php echo $this->media_storage->getImageURL('uploads/student_id_card/logo/' . $idcard->logo); ?>" width="30" height="30" />
 									<?php } ?>
 									
-                                     <?php echo $idcard->school_name; ?>
+                                     <?php echo ($idcard->school_name ?? ""); ?>
                                  </div>
                              </div>
                          </td>
                      </tr>
                      <tr>
                          <td valign="top" align="center"  class="stred" style="padding: 1px 0;">
-                             <p><?php echo $idcard->school_address; ?></p>
+                             <p><?php echo ($idcard->school_address ?? ""); ?></p>
                          </td>
                      </tr>
                      <tr>
@@ -406,7 +425,7 @@
                                          <img src="<?php echo $this->media_storage->getImageURL("uploads/student_images/no_image.png"); ?>" class="img-responsive" />
                                      </div>
                                      <?php
-                                        if ($idcard->enable_student_barcode) {
+                                        if ($idcard->enable_student_barcode ?? 0) {
 
                                             if($scan_code_type == "qrcode"){
                                                 if (file_exists("./uploads/staff_id_card/qrcode/default.png")) { ?>
@@ -432,12 +451,12 @@
                                  <div class="cardright">
                                      <ul class="stlist">
                                          <?php
-                                            if ($idcard->enable_student_name == 1) {
+                                            if (($idcard->enable_student_name ?? 0) == 1) {
                                                 echo "<li>" . $this->lang->line('student_name') . "<span> S.Tudent Name</span></li>";
                                             }
                                             ?>
                                          <?php
-                                            if ($idcard->enable_admission_no == 1) {
+                                            if (($idcard->enable_admission_no ?? 0) == 1) {
                                                 echo "<li>" . $this->lang->line('admission_no') . "<span> 123456789</span></li>";
                                             }
                                             ?>

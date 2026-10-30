@@ -66,6 +66,15 @@ class ReportsController extends BaseController
         return $this->dispatchLegacy('Reports', 'false_reversals', func_get_args());
     }
 
+
+    public function _remap($method, ...$params)
+    {
+        if (method_exists($this, $method)) {
+            return $this->$method(...$params);
+        }
+        return $this->dispatchLegacy('Reports', $method, $params);
+    }
+
     protected function dispatchLegacy(string $controller, string $method, array $params)
     {
         // Set up compatibility environment

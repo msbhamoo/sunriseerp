@@ -199,6 +199,63 @@ class Database extends Config
         // we don't overwrite live data on accident.
         if (ENVIRONMENT === 'testing') {
             $this->defaultGroup = 'tests';
+            return;
+        }
+
+        // Support dynamic Multi-Branch connection groups if the multi_branch table exists
+        try {
+            $host = $this->default['hostname'] ?? 'localhost';
+            $port = $this->default['port'] ?? 3306;
+            if (strpos($host, ':') !== false) {
+                [$host, $port] = explode(':', $host, 2);
+            }
+
+            $mysqli = @new \mysqli(
+                $host,
+                $this->default['username'] ?? '',
+                $this->default['password'] ?? '',
+                $this->default['database'] ?? '',
+                (int)$port
+            );
+
+            if (!$mysqli->connect_errno) {
+                if ($results = $mysqli->query("SHOW TABLES LIKE 'multi_branch'")) {
+                    if ($results->num_rows == 1) {
+                        if ($branchResult = $mysqli->query("SELECT * FROM multi_branch WHERE is_verified = 1")) {
+                            while ($row = $branchResult->fetch_assoc()) {
+                                $short_name = "branch_" . $row['id'];
+                                $this->{$short_name} = [
+                                    'DSN'          => '',
+                                    'hostname'     => $row['hostname'],
+                                    'username'     => $row['username'],
+                                    'password'     => $row['password'],
+                                    'database'     => $row['database_name'],
+                                    'DBDriver'     => 'MySQLi',
+                                    'DBPrefix'     => '',
+                                    'pConnect'     => false,
+                                    'DBDebug'      => false,
+                                    'charset'      => 'utf8mb4',
+                                    'DBCollat'     => 'utf8mb4_unicode_ci',
+                                    'swapPre'      => '',
+                                    'encrypt'      => false,
+                                    'compress'     => false,
+                                    'strictOn'     => false,
+                                    'failover'     => [],
+                                    'port'         => 3306,
+                                    'dateFormat'   => [
+                                        'date'     => 'Y-m-d',
+                                        'datetime' => 'Y-m-d H:i:s',
+                                        'time'     => 'H:i:s',
+                                    ],
+                                ];
+                            }
+                        }
+                    }
+                }
+                $mysqli->close();
+            }
+        } catch (\Throwable $e) {
+            // Fail silently if DB is unreachable during bootstrapping
         }
     }
 }

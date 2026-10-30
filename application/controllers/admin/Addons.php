@@ -130,7 +130,9 @@ class Addons extends Admin_Controller
         $install_sql = false;
         $addon_folder = $this->input->post('addon');
         $product_id = $this->input->post('product_id');
+        if (empty($product_id)) { echo json_encode(array('status' => 0, 'msg' => 'Product ID is required.')); return; }
         $addon_details = $this->addons_model->getAddonWithVersion($product_id);
+        if (!$addon_details) { echo json_encode(array('status' => 0, 'msg' => 'Addon not found.')); return; }
 
         if (IsNullOrEmptyString($addon_details->current_version)) {
             $this->installNew($addon_folder, $product_id, $addon_details);
@@ -145,7 +147,9 @@ class Addons extends Admin_Controller
         $install_sql = false;
         $addon_folder = $this->input->post('addon');
         $product_id = $this->input->post('product_id');
+        if (empty($product_id)) { echo json_encode(array('status' => 0, 'msg' => 'Product ID is required.')); return; }
         $addon_details = $this->addons_model->getAddonWithVersion($product_id);
+        if (!$addon_details) { echo json_encode(array('status' => 0, 'msg' => 'Addon not found.')); return; }
 
         logMessage("*************************************************************************************************************");
         $uninstall_db =  FCPATH . "./addons/" . $addon_folder . "/uninstall/db.sql";

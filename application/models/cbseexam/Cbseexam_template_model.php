@@ -638,9 +638,11 @@ class Cbseexam_template_model extends MY_Model
     //==============================
     public function get_single_exam_template_by_sectionid($class_section_id)
     {
-            return $this->db->select('cbse_template.*')->from('cbse_template')
+        if (empty($class_section_id) || trim($class_section_id) === '') {
+            return [];
+        }
+        return $this->db->select('cbse_template.*')->from('cbse_template')
             ->join('cbse_template_class_sections', 'cbse_template.id=`cbse_template_class_sections`.`cbse_template_id`')
-            // ->where('marksheet_type is NOT NULL')->where('gradeexam_id is NOT NULL')->where('remarkexam_id is NOT NULL')
             ->where("`cbse_template_class_sections`.`class_section_id` in ( $class_section_id)")
             ->where('`cbse_template`.`session_id`', $this->current_session)
             ->where('`cbse_template`.`marksheet_type`', 'exam_wise')

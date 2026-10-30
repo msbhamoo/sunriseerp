@@ -57,8 +57,8 @@ foreach ($dates_to_check as $date_field => $info) {
             <div role="tabpanel" class="tab-pane active" id="view_basic">
                 <div class="row">
                     <div class="col-sm-3 col-md-2">
-                        <?php if(!empty($editvehicle->vehicle_photo)){ ?>
-                            <img class="img-responsive img-rounded" src="<?php echo $this->media_storage->getImageURL('/uploads/vehicle_photo/'.$editvehicle->vehicle_photo); ?>" style="width:100%; max-width:120px; border-radius:8px;">
+                        <?php if(!empty((is_array($editvehicle) ? ($editvehicle['vehicle_photo'] ?? "") : ($editvehicle->vehicle_photo ?? "")))){ ?>
+                            <img class="img-responsive img-rounded" src="<?php echo $this->media_storage->getImageURL('/uploads/vehicle_photo/'.(is_array($editvehicle) ? ($editvehicle['vehicle_photo'] ?? "") : ($editvehicle->vehicle_photo ?? ""))); ?>" style="width:100%; max-width:120px; border-radius:8px;">
                         <?php }else{ ?>
                             <div style="width:100%; height:100px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; border-radius:8px; color:#94a3b8;"><i class="fa fa-bus fa-3x"></i></div>
                         <?php } ?>
@@ -67,39 +67,39 @@ foreach ($dates_to_check as $date_field => $info) {
                         <div class="row">
                             <div class="col-sm-4">
                                 <span class="detail-label"><?php echo $this->lang->line('vehicle_number'); ?></span>
-                                <div class="detail-value"><?php echo $editvehicle->vehicle_no; ?></div>
+                                <div class="detail-value"><?php echo (is_array($editvehicle) ? ($editvehicle['vehicle_no'] ?? "") : ($editvehicle->vehicle_no ?? "")); ?></div>
                             </div>
                             <div class="col-sm-4">
                                 <span class="detail-label"><?php echo $this->lang->line('vehicle_model'); ?></span>
-                                <div class="detail-value"><?php echo $editvehicle->vehicle_model; ?></div>
+                                <div class="detail-value"><?php echo (is_array($editvehicle) ? ($editvehicle['vehicle_model'] ?? "") : ($editvehicle->vehicle_model ?? "")); ?></div>
                             </div>
                             <div class="col-sm-4">
                                 <span class="detail-label"><?php echo $this->lang->line('year_made'); ?></span>
-                                <div class="detail-value"><?php echo $editvehicle->manufacture_year; ?></div>
+                                <div class="detail-value"><?php echo (is_array($editvehicle) ? ($editvehicle['manufacture_year'] ?? "") : ($editvehicle->manufacture_year ?? "")); ?></div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-sm-4">
                                 <span class="detail-label"><?php echo $this->lang->line('registration_number'); ?></span>
-                                <div class="detail-value"><?php echo $editvehicle->registration_number; ?></div>
+                                <div class="detail-value"><?php echo (is_array($editvehicle) ? ($editvehicle['registration_number'] ?? "") : ($editvehicle->registration_number ?? "")); ?></div>
                             </div>
                             <div class="col-sm-4">
                                 <span class="detail-label"><?php echo $this->lang->line('chasis_number'); ?></span>
-                                <div class="detail-value"><?php echo $editvehicle->chasis_number; ?></div>
+                                <div class="detail-value"><?php echo (is_array($editvehicle) ? ($editvehicle['chasis_number'] ?? "") : ($editvehicle->chasis_number ?? "")); ?></div>
                             </div>
                             <div class="col-sm-4">
                                 <span class="detail-label"><?php echo $this->lang->line('max_seating_capacity'); ?></span>
-                                <div class="detail-value"><?php echo $editvehicle->max_seating_capacity; ?></div>
+                                <div class="detail-value"><?php echo (is_array($editvehicle) ? ($editvehicle['max_seating_capacity'] ?? "") : ($editvehicle->max_seating_capacity ?? "")); ?></div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-sm-4">
                                 <span class="detail-label">Vehicle Status</span>
-                                <div class="detail-value"><?php echo isset($editvehicle->vehicle_status) ? $editvehicle->vehicle_status : 'Active'; ?></div>
+                                <div class="detail-value"><?php echo !empty($editvehicle->vehicle_status) ? $editvehicle->vehicle_status : "Active"; ?></div>
                             </div>
                             <div class="col-sm-8">
                                 <span class="detail-label"><?php echo $this->lang->line('note'); ?></span>
-                                <div class="detail-value"><?php echo $editvehicle->note; ?></div>
+                                <div class="detail-value"><?php echo (is_array($editvehicle) ? ($editvehicle['note'] ?? "") : ($editvehicle->note ?? "")); ?></div>
                             </div>
                         </div>
                     </div>
@@ -111,29 +111,29 @@ foreach ($dates_to_check as $date_field => $info) {
                 <div class="row">
                     <div class="col-sm-4">
                         <span class="detail-label">Insurance Provider</span>
-                        <div class="detail-value"><?php echo !empty($editvehicle->insurance_provider) ? $editvehicle->insurance_provider : '-'; ?></div>
+                        <div class="detail-value"><?php echo !empty((is_array($editvehicle) ? ($editvehicle['insurance_provider'] ?? "") : ($editvehicle->insurance_provider ?? ""))) ? (is_array($editvehicle) ? ($editvehicle['insurance_provider'] ?? "") : ($editvehicle->insurance_provider ?? "")) : '-'; ?></div>
                     </div>
                     <div class="col-sm-4">
                         <span class="detail-label">Policy Number</span>
-                        <div class="detail-value"><?php echo !empty($editvehicle->policy_number) ? $editvehicle->policy_number : '-'; ?></div>
+                        <div class="detail-value"><?php echo !empty((is_array($editvehicle) ? ($editvehicle['policy_number'] ?? "") : ($editvehicle->policy_number ?? ""))) ? (is_array($editvehicle) ? ($editvehicle['policy_number'] ?? "") : ($editvehicle->policy_number ?? "")) : '-'; ?></div>
                     </div>
                     <div class="col-sm-4">
                         <span class="detail-label">Insurance Type</span>
-                        <div class="detail-value"><?php echo !empty($editvehicle->insurance_type) ? $editvehicle->insurance_type : '-'; ?></div>
+                        <div class="detail-value"><?php echo !empty((is_array($editvehicle) ? ($editvehicle['insurance_type'] ?? "") : ($editvehicle->insurance_type ?? ""))) ? (is_array($editvehicle) ? ($editvehicle['insurance_type'] ?? "") : ($editvehicle->insurance_type ?? "")) : '-'; ?></div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-sm-4">
                         <span class="detail-label">Insurance Start Date</span>
-                        <div class="detail-value"><?php echo (!empty($editvehicle->insurance_start) && $editvehicle->insurance_start != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime($editvehicle->insurance_start)) : '-'; ?></div>
+                        <div class="detail-value"><?php echo (!empty((is_array($editvehicle) ? ($editvehicle['insurance_start'] ?? "") : ($editvehicle->insurance_start ?? ""))) && (is_array($editvehicle) ? ($editvehicle['insurance_start'] ?? "") : ($editvehicle->insurance_start ?? "")) != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime((is_array($editvehicle) ? ($editvehicle['insurance_start'] ?? "") : ($editvehicle->insurance_start ?? "")))) : '-'; ?></div>
                     </div>
                     <div class="col-sm-4">
                         <span class="detail-label">Insurance Expiry Date</span>
-                        <div class="detail-value"><?php echo (!empty($editvehicle->insurance_expiry) && $editvehicle->insurance_expiry != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime($editvehicle->insurance_expiry)) : '-'; ?></div>
+                        <div class="detail-value"><?php echo (!empty((is_array($editvehicle) ? ($editvehicle['insurance_expiry'] ?? "") : ($editvehicle->insurance_expiry ?? ""))) && (is_array($editvehicle) ? ($editvehicle['insurance_expiry'] ?? "") : ($editvehicle->insurance_expiry ?? "")) != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime((is_array($editvehicle) ? ($editvehicle['insurance_expiry'] ?? "") : ($editvehicle->insurance_expiry ?? "")))) : '-'; ?></div>
                     </div>
                     <div class="col-sm-4">
                         <span class="detail-label">Road Tax Valid Until</span>
-                        <div class="detail-value"><?php echo (!empty($editvehicle->road_tax_valid) && $editvehicle->road_tax_valid != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime($editvehicle->road_tax_valid)) : '-'; ?></div>
+                        <div class="detail-value"><?php echo (!empty((is_array($editvehicle) ? ($editvehicle['road_tax_valid'] ?? "") : ($editvehicle->road_tax_valid ?? ""))) && (is_array($editvehicle) ? ($editvehicle['road_tax_valid'] ?? "") : ($editvehicle->road_tax_valid ?? "")) != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime((is_array($editvehicle) ? ($editvehicle['road_tax_valid'] ?? "") : ($editvehicle->road_tax_valid ?? "")))) : '-'; ?></div>
                     </div>
                 </div>
             </div>
@@ -143,56 +143,56 @@ foreach ($dates_to_check as $date_field => $info) {
                 <div class="row">
                     <div class="col-sm-3">
                         <span class="detail-label">Permit Number</span>
-                        <div class="detail-value"><?php echo !empty($editvehicle->permit_number) ? $editvehicle->permit_number : '-'; ?></div>
+                        <div class="detail-value"><?php echo !empty((is_array($editvehicle) ? ($editvehicle['permit_number'] ?? "") : ($editvehicle->permit_number ?? ""))) ? (is_array($editvehicle) ? ($editvehicle['permit_number'] ?? "") : ($editvehicle->permit_number ?? "")) : '-'; ?></div>
                     </div>
                     <div class="col-sm-3">
                         <span class="detail-label">Permit Expiry</span>
-                        <div class="detail-value"><?php echo (!empty($editvehicle->permit_expiry) && $editvehicle->permit_expiry != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime($editvehicle->permit_expiry)) : '-'; ?></div>
+                        <div class="detail-value"><?php echo (!empty((is_array($editvehicle) ? ($editvehicle['permit_expiry'] ?? "") : ($editvehicle->permit_expiry ?? ""))) && (is_array($editvehicle) ? ($editvehicle['permit_expiry'] ?? "") : ($editvehicle->permit_expiry ?? "")) != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime((is_array($editvehicle) ? ($editvehicle['permit_expiry'] ?? "") : ($editvehicle->permit_expiry ?? "")))) : '-'; ?></div>
                     </div>
                     <div class="col-sm-3">
                         <span class="detail-label">Fitness Number</span>
-                        <div class="detail-value"><?php echo !empty($editvehicle->fitness_number) ? $editvehicle->fitness_number : '-'; ?></div>
+                        <div class="detail-value"><?php echo !empty((is_array($editvehicle) ? ($editvehicle['fitness_number'] ?? "") : ($editvehicle->fitness_number ?? ""))) ? (is_array($editvehicle) ? ($editvehicle['fitness_number'] ?? "") : ($editvehicle->fitness_number ?? "")) : '-'; ?></div>
                     </div>
                     <div class="col-sm-3">
                         <span class="detail-label">Fitness Expiry</span>
-                        <div class="detail-value"><?php echo (!empty($editvehicle->fitness_expiry) && $editvehicle->fitness_expiry != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime($editvehicle->fitness_expiry)) : '-'; ?></div>
+                        <div class="detail-value"><?php echo (!empty((is_array($editvehicle) ? ($editvehicle['fitness_expiry'] ?? "") : ($editvehicle->fitness_expiry ?? ""))) && (is_array($editvehicle) ? ($editvehicle['fitness_expiry'] ?? "") : ($editvehicle->fitness_expiry ?? "")) != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime((is_array($editvehicle) ? ($editvehicle['fitness_expiry'] ?? "") : ($editvehicle->fitness_expiry ?? "")))) : '-'; ?></div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-sm-3">
                         <span class="detail-label">PUC Number</span>
-                        <div class="detail-value"><?php echo !empty($editvehicle->puc_number) ? $editvehicle->puc_number : '-'; ?></div>
+                        <div class="detail-value"><?php echo !empty((is_array($editvehicle) ? ($editvehicle['puc_number'] ?? "") : ($editvehicle->puc_number ?? ""))) ? (is_array($editvehicle) ? ($editvehicle['puc_number'] ?? "") : ($editvehicle->puc_number ?? "")) : '-'; ?></div>
                     </div>
                     <div class="col-sm-3">
                         <span class="detail-label">PUC Expiry</span>
-                        <div class="detail-value"><?php echo (!empty($editvehicle->puc_expiry) && $editvehicle->puc_expiry != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime($editvehicle->puc_expiry)) : '-'; ?></div>
+                        <div class="detail-value"><?php echo (!empty((is_array($editvehicle) ? ($editvehicle['puc_expiry'] ?? "") : ($editvehicle->puc_expiry ?? ""))) && (is_array($editvehicle) ? ($editvehicle['puc_expiry'] ?? "") : ($editvehicle->puc_expiry ?? "")) != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime((is_array($editvehicle) ? ($editvehicle['puc_expiry'] ?? "") : ($editvehicle->puc_expiry ?? "")))) : '-'; ?></div>
                     </div>
                     <div class="col-sm-3">
                         <span class="detail-label">Last Maintenance</span>
-                        <div class="detail-value"><?php echo (!empty($editvehicle->last_maintenance_date) && $editvehicle->last_maintenance_date != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime($editvehicle->last_maintenance_date)) : '-'; ?></div>
+                        <div class="detail-value"><?php echo (!empty((is_array($editvehicle) ? ($editvehicle['last_maintenance_date'] ?? "") : ($editvehicle->last_maintenance_date ?? ""))) && (is_array($editvehicle) ? ($editvehicle['last_maintenance_date'] ?? "") : ($editvehicle->last_maintenance_date ?? "")) != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime((is_array($editvehicle) ? ($editvehicle['last_maintenance_date'] ?? "") : ($editvehicle->last_maintenance_date ?? "")))) : '-'; ?></div>
                     </div>
                     <div class="col-sm-3">
                         <span class="detail-label">Next Maintenance Due</span>
-                        <div class="detail-value"><?php echo (!empty($editvehicle->next_maintenance_due) && $editvehicle->next_maintenance_due != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime($editvehicle->next_maintenance_due)) : '-'; ?></div>
+                        <div class="detail-value"><?php echo (!empty((is_array($editvehicle) ? ($editvehicle['next_maintenance_due'] ?? "") : ($editvehicle->next_maintenance_due ?? ""))) && (is_array($editvehicle) ? ($editvehicle['next_maintenance_due'] ?? "") : ($editvehicle->next_maintenance_due ?? "")) != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime((is_array($editvehicle) ? ($editvehicle['next_maintenance_due'] ?? "") : ($editvehicle->next_maintenance_due ?? "")))) : '-'; ?></div>
                     </div>
                 </div>
                 <hr style="margin-top:5px; margin-bottom:15px; border-color:#e2e8f0;" />
                 <div class="row">
                     <div class="col-sm-3">
                         <span class="detail-label">GPS Installed</span>
-                        <div class="detail-value"><?php echo isset($editvehicle->has_gps) ? $editvehicle->has_gps : 'No'; ?></div>
+                        <div class="detail-value"><?php echo !empty($editvehicle->vehicle_status) ? $editvehicle->vehicle_status : "Active"; ?></div>
                     </div>
                     <div class="col-sm-3">
                         <span class="detail-label">CCTV Installed</span>
-                        <div class="detail-value"><?php echo isset($editvehicle->has_cctv) ? $editvehicle->has_cctv : 'No'; ?></div>
+                        <div class="detail-value"><?php echo !empty($editvehicle->vehicle_status) ? $editvehicle->vehicle_status : "Active"; ?></div>
                     </div>
                     <div class="col-sm-3">
                         <span class="detail-label">Fire Extinguisher</span>
-                        <div class="detail-value"><?php echo isset($editvehicle->has_fire_extinguisher) ? $editvehicle->has_fire_extinguisher : 'No'; ?></div>
+                        <div class="detail-value"><?php echo !empty($editvehicle->vehicle_status) ? $editvehicle->vehicle_status : "Active"; ?></div>
                     </div>
                     <div class="col-sm-3">
                         <span class="detail-label">Speed Governor</span>
-                        <div class="detail-value"><?php echo isset($editvehicle->has_speed_governor) ? $editvehicle->has_speed_governor : 'No'; ?></div>
+                        <div class="detail-value"><?php echo !empty($editvehicle->vehicle_status) ? $editvehicle->vehicle_status : "Active"; ?></div>
                     </div>
                 </div>
             </div>
@@ -202,13 +202,13 @@ foreach ($dates_to_check as $date_field => $info) {
                 <div class="row">
                     <div class="col-sm-4">
                         <span class="detail-label"><?php echo $this->lang->line('driver_name'); ?></span>
-                        <div class="detail-value"><?php echo $editvehicle->driver_name; ?></div>
+                        <div class="detail-value"><?php echo (is_array($editvehicle) ? ($editvehicle['driver_name'] ?? "") : ($editvehicle->driver_name ?? "")); ?></div>
                     </div>
                     <div class="col-sm-4">
                         <span class="detail-label"><?php echo $this->lang->line('driver_contact'); ?></span>
                         <div class="detail-value">
-                            <?php if(!empty($editvehicle->driver_contact)) { ?>
-                                <a href="tel:<?php echo $editvehicle->driver_contact; ?>"><i class="fa fa-phone"></i> <?php echo $editvehicle->driver_contact; ?></a>
+                            <?php if(!empty((is_array($editvehicle) ? ($editvehicle['driver_contact'] ?? "") : ($editvehicle->driver_contact ?? "")))) { ?>
+                                <a href="tel:<?php echo (is_array($editvehicle) ? ($editvehicle['driver_contact'] ?? "") : ($editvehicle->driver_contact ?? "")); ?>"><i class="fa fa-phone"></i> <?php echo (is_array($editvehicle) ? ($editvehicle['driver_contact'] ?? "") : ($editvehicle->driver_contact ?? "")); ?></a>
                             <?php } else { echo '-'; } ?>
                         </div>
                     </div>
@@ -216,10 +216,10 @@ foreach ($dates_to_check as $date_field => $info) {
                         <span class="detail-label">Attendants / Helpers & Routes</span>
                         <div class="detail-value">
                             <?php 
-                            if (!empty($editvehicle->attendant_name)) {
-                                $att_names_v = array_filter(array_map('trim', explode(',', $editvehicle->attendant_name)));
-                                $att_contacts_v = array_map('trim', explode(',', $editvehicle->attendant_contact ?? ''));
-                                $att_routes_v = array_map('trim', explode(',', $editvehicle->attendant_route ?? ''));
+                            if (!empty((is_array($editvehicle) ? ($editvehicle['attendant_name'] ?? "") : ($editvehicle->attendant_name ?? "")))) {
+                                $att_names_v = array_filter(array_map('trim', explode(',', (is_array($editvehicle) ? ($editvehicle['attendant_name'] ?? "") : ($editvehicle->attendant_name ?? "")))));
+                                $att_contacts_v = array_map('trim', explode(',', (is_array($editvehicle) ? ($editvehicle['attendant_contact'] ?? "") : ($editvehicle->attendant_contact ?? "")) ?? ''));
+                                $att_routes_v = array_map('trim', explode(',', (is_array($editvehicle) ? ($editvehicle['attendant_route'] ?? "") : ($editvehicle->attendant_route ?? "")) ?? ''));
                                 foreach ($att_names_v as $v_idx => $single_v_name) {
                                     $single_v_contact = isset($att_contacts_v[$v_idx]) ? $att_contacts_v[$v_idx] : '';
                                     $single_v_route = isset($att_routes_v[$v_idx]) ? $att_routes_v[$v_idx] : '';
@@ -244,15 +244,15 @@ foreach ($dates_to_check as $date_field => $info) {
                 <div class="row">
                     <div class="col-sm-4">
                         <span class="detail-label"><?php echo $this->lang->line('driver_license'); ?></span>
-                        <div class="detail-value"><?php echo $editvehicle->driver_licence; ?></div>
+                        <div class="detail-value"><?php echo (is_array($editvehicle) ? ($editvehicle['driver_licence'] ?? "") : ($editvehicle->driver_licence ?? "")); ?></div>
                     </div>
                     <div class="col-sm-4">
                         <span class="detail-label">License Expiry</span>
-                        <div class="detail-value"><?php echo (!empty($editvehicle->license_expiry) && $editvehicle->license_expiry != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime($editvehicle->license_expiry)) : '-'; ?></div>
+                        <div class="detail-value"><?php echo (!empty((is_array($editvehicle) ? ($editvehicle['license_expiry'] ?? "") : ($editvehicle->license_expiry ?? ""))) && (is_array($editvehicle) ? ($editvehicle['license_expiry'] ?? "") : ($editvehicle->license_expiry ?? "")) != '0000-00-00') ? date($this->customlib->getSchoolDateFormat(), strtotime((is_array($editvehicle) ? ($editvehicle['license_expiry'] ?? "") : ($editvehicle->license_expiry ?? "")))) : '-'; ?></div>
                     </div>
                     <div class="col-sm-4">
                         <span class="detail-label">Background Verification</span>
-                        <div class="detail-value"><?php echo !empty($editvehicle->background_verification) ? $editvehicle->background_verification : '-'; ?></div>
+                        <div class="detail-value"><?php echo !empty((is_array($editvehicle) ? ($editvehicle['background_verification'] ?? "") : ($editvehicle->background_verification ?? ""))) ? (is_array($editvehicle) ? ($editvehicle['background_verification'] ?? "") : ($editvehicle->background_verification ?? "")) : '-'; ?></div>
                     </div>
                 </div>
             </div>
@@ -263,24 +263,24 @@ foreach ($dates_to_check as $date_field => $info) {
                     <div class="col-sm-4">
                         <span class="detail-label">RC Copy</span>
                         <div class="detail-value">
-                            <?php if(!empty($editvehicle->doc_rc)) { ?>
-                                <a href="<?php echo base_url('uploads/vehicle_documents/'.$editvehicle->doc_rc); ?>" target="_blank" class="doc-link"><i class="fa fa-download"></i> View RC</a>
+                            <?php if(!empty((is_array($editvehicle) ? ($editvehicle['doc_rc'] ?? "") : ($editvehicle->doc_rc ?? "")))) { ?>
+                                <a href="<?php echo base_url('uploads/vehicle_documents/'.(is_array($editvehicle) ? ($editvehicle['doc_rc'] ?? "") : ($editvehicle->doc_rc ?? ""))); ?>" target="_blank" class="doc-link"><i class="fa fa-download"></i> View RC</a>
                             <?php } else { echo '-'; } ?>
                         </div>
                     </div>
                     <div class="col-sm-4">
                         <span class="detail-label">Insurance Copy</span>
                         <div class="detail-value">
-                            <?php if(!empty($editvehicle->doc_insurance)) { ?>
-                                <a href="<?php echo base_url('uploads/vehicle_documents/'.$editvehicle->doc_insurance); ?>" target="_blank" class="doc-link"><i class="fa fa-download"></i> View Insurance</a>
+                            <?php if(!empty((is_array($editvehicle) ? ($editvehicle['doc_insurance'] ?? "") : ($editvehicle->doc_insurance ?? "")))) { ?>
+                                <a href="<?php echo base_url('uploads/vehicle_documents/'.(is_array($editvehicle) ? ($editvehicle['doc_insurance'] ?? "") : ($editvehicle->doc_insurance ?? ""))); ?>" target="_blank" class="doc-link"><i class="fa fa-download"></i> View Insurance</a>
                             <?php } else { echo '-'; } ?>
                         </div>
                     </div>
                     <div class="col-sm-4">
                         <span class="detail-label">Fitness Certificate</span>
                         <div class="detail-value">
-                            <?php if(!empty($editvehicle->doc_fitness)) { ?>
-                                <a href="<?php echo base_url('uploads/vehicle_documents/'.$editvehicle->doc_fitness); ?>" target="_blank" class="doc-link"><i class="fa fa-download"></i> View Fitness Cert</a>
+                            <?php if(!empty((is_array($editvehicle) ? ($editvehicle['doc_fitness'] ?? "") : ($editvehicle->doc_fitness ?? "")))) { ?>
+                                <a href="<?php echo base_url('uploads/vehicle_documents/'.(is_array($editvehicle) ? ($editvehicle['doc_fitness'] ?? "") : ($editvehicle->doc_fitness ?? ""))); ?>" target="_blank" class="doc-link"><i class="fa fa-download"></i> View Fitness Cert</a>
                             <?php } else { echo '-'; } ?>
                         </div>
                     </div>
@@ -289,24 +289,24 @@ foreach ($dates_to_check as $date_field => $info) {
                     <div class="col-sm-4">
                         <span class="detail-label">PUC Certificate</span>
                         <div class="detail-value">
-                            <?php if(!empty($editvehicle->doc_puc)) { ?>
-                                <a href="<?php echo base_url('uploads/vehicle_documents/'.$editvehicle->doc_puc); ?>" target="_blank" class="doc-link"><i class="fa fa-download"></i> View PUC</a>
+                            <?php if(!empty((is_array($editvehicle) ? ($editvehicle['doc_puc'] ?? "") : ($editvehicle->doc_puc ?? "")))) { ?>
+                                <a href="<?php echo base_url('uploads/vehicle_documents/'.(is_array($editvehicle) ? ($editvehicle['doc_puc'] ?? "") : ($editvehicle->doc_puc ?? ""))); ?>" target="_blank" class="doc-link"><i class="fa fa-download"></i> View PUC</a>
                             <?php } else { echo '-'; } ?>
                         </div>
                     </div>
                     <div class="col-sm-4">
                         <span class="detail-label">Permit Copy</span>
                         <div class="detail-value">
-                            <?php if(!empty($editvehicle->doc_permit)) { ?>
-                                <a href="<?php echo base_url('uploads/vehicle_documents/'.$editvehicle->doc_permit); ?>" target="_blank" class="doc-link"><i class="fa fa-download"></i> View Permit</a>
+                            <?php if(!empty((is_array($editvehicle) ? ($editvehicle['doc_permit'] ?? "") : ($editvehicle->doc_permit ?? "")))) { ?>
+                                <a href="<?php echo base_url('uploads/vehicle_documents/'.(is_array($editvehicle) ? ($editvehicle['doc_permit'] ?? "") : ($editvehicle->doc_permit ?? ""))); ?>" target="_blank" class="doc-link"><i class="fa fa-download"></i> View Permit</a>
                             <?php } else { echo '-'; } ?>
                         </div>
                     </div>
                     <div class="col-sm-4">
                         <span class="detail-label">License Copy</span>
                         <div class="detail-value">
-                            <?php if(!empty($editvehicle->doc_license)) { ?>
-                                <a href="<?php echo base_url('uploads/vehicle_documents/'.$editvehicle->doc_license); ?>" target="_blank" class="doc-link"><i class="fa fa-download"></i> View License</a>
+                            <?php if(!empty((is_array($editvehicle) ? ($editvehicle['doc_license'] ?? "") : ($editvehicle->doc_license ?? "")))) { ?>
+                                <a href="<?php echo base_url('uploads/vehicle_documents/'.(is_array($editvehicle) ? ($editvehicle['doc_license'] ?? "") : ($editvehicle->doc_license ?? ""))); ?>" target="_blank" class="doc-link"><i class="fa fa-download"></i> View License</a>
                             <?php } else { echo '-'; } ?>
                         </div>
                     </div>
@@ -348,7 +348,7 @@ foreach ($dates_to_check as $date_field => $info) {
                                     <div style="font-size: 12px; color: #881337; margin-top:4px;">Current Expiry: <?php echo $alert['current_date']; ?></div>
                                 </div>
                                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
-                                    <input type="hidden" name="vehicle_id" value="<?php echo $editvehicle->id; ?>">
+                                    <input type="hidden" name="vehicle_id" value="<?php echo (is_array($editvehicle) ? ($editvehicle['id'] ?? "") : ($editvehicle->id ?? "")); ?>">
                                     <input type="hidden" name="field_name" value="<?php echo $alert['field_name']; ?>">
                                     <input type="hidden" name="doc_field_name" value="<?php echo $alert['doc_field_name']; ?>">
                                     

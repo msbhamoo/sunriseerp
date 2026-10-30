@@ -406,6 +406,25 @@ class Onlinestudent_model extends MY_Model
             ->where("id", $admission_no)
             ->get("online_admissions")
             ->row();
+        if (!$result) {
+            $default = new \stdClass();
+            $default->id = 0;
+            $default->reference_no = '';
+            $default->firstname = 'Guest';
+            $default->middlename = '';
+            $default->lastname = 'User';
+            $default->guardian_name = '';
+            $default->mobileno = '';
+            $default->email = '';
+            $default->amount = 0;
+            $default->paid_status = 0;
+            $default->form_status = 0;
+            $default->current_address = '';
+            $default->permanent_address = '';
+            $default->guardian_email = '';
+            $default->guardian_phone = '';
+            return $default;
+        }
         return $result;
     }
 
@@ -415,7 +434,10 @@ class Onlinestudent_model extends MY_Model
         if(isset($payment['paid_status']) && !empty($payment['paid_status'])){
             $paid_status=$payment['paid_status'];
         }
-        unset($payment['paid_status']);        
+        unset($payment['paid_status']);
+        if (empty($payment['online_admission_id'])) {
+            return;
+        }
         $this->db->update("online_admissions", array("paid_status" => $paid_status, "form_status" => 1), array("id" => $payment['online_admission_id']));        
         $this->db->insert("online_admission_payment", $payment);
     }

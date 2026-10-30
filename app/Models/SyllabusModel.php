@@ -56,7 +56,7 @@ class SyllabusModel extends BaseModel
         return $this->callLegacyModel('Syllabus_model', 'get_subject_syllabusdatabyid', func_get_args());
     }
 
-    public function get_subject_syllabusdata($subject_group_subject_id, $date, $role_id, $staff_id, $time_from, $time_to, $subject_group_class_sections_id)
+    public function get_subject_syllabusdata($subject_group_subject_id, $date, $role_id, $staff_id, $time_from = null, $time_to = null, $subject_group_class_sections_id = null)
     {
         return $this->callLegacyModel('Syllabus_model', 'get_subject_syllabusdata', func_get_args());
     }

@@ -197,9 +197,9 @@ $complete_percent   = $value['complete'];
 </script>
 <script>
     $(document).ready(function (e) {
-        getSectionByClass("<?php echo $class_id ?>", "<?php echo $section_id ?>", 'secid');
-        getSubjectGroup("<?php echo $class_id ?>", "<?php echo $section_id ?>", "<?php echo $subject_group_id ?>", 'subject_group_id')
-        getsubjectBySubjectGroup("<?php echo $class_id ?>", "<?php echo $section_id ?>", "<?php echo $subject_group_id ?>", "<?php echo $subject_id ?>", 'subid');
+        getSectionByClass("<?php echo $class_id ?? "" ?>", "<?php echo $section_id ?? "" ?>", 'secid');
+        getSubjectGroup("<?php echo $class_id ?? "" ?>", "<?php echo $section_id ?? "" ?>", "<?php echo $subject_group_id ?? "" ?>", 'subject_group_id')
+        getsubjectBySubjectGroup("<?php echo $class_id ?? "" ?>", "<?php echo $section_id ?? "" ?>", "<?php echo $subject_group_id ?? "" ?>", "<?php echo $subject_id ?? "" ?>", 'subid');
     });
 
     function getSectionByClass(class_id, section_id, select_control) {

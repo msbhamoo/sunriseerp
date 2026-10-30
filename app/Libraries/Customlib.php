@@ -774,7 +774,7 @@ class Customlib
     {
         $student_session = $this->CI->session->all_userdata();
         $session_Array   = $this->CI->session->userdata('student');
-        $studentID       = $session_Array['student_id'];
+        $studentID       = isset($session_Array['student_id']) ? $session_Array['student_id'] : 0;
         return $studentID;
     }
 
@@ -922,7 +922,7 @@ class Customlib
     public function getAdminSessionUserName()
     {
         $student_session = $this->CI->session->userdata('admin');
-        $username        = $student_session['username'];
+        $username = $student_session['username'] ?? '';
         return $username;
     }
 
@@ -2242,7 +2242,7 @@ class Customlib
     {
         $userdata            = $this->getUserData();
         $class_section_array = array();
-        if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
+        if (is_array($userdata) && isset($userdata["role_id"]) && ($userdata["role_id"] == 2) && isset($userdata["class_teacher"]) && ($userdata["class_teacher"] == "yes")) {
             $my_class = $this->CI->class_model->get();
             foreach ($my_class as $class_key => $class_value) {
                 $section = $this->CI->section_model->getClassBySection($class_value['id']);
@@ -2260,7 +2260,7 @@ class Customlib
     {
         $userdata            = $this->getUserData();
         $class_section_array = array();
-        if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
+        if (is_array($userdata) && isset($userdata["role_id"]) && ($userdata["role_id"] == 2) && isset($userdata["class_teacher"]) && ($userdata["class_teacher"] == "yes")) {
             $my_class = $this->CI->class_model->get();
             foreach ($my_class as $class_key => $class_value) {
                 $section = $this->CI->section_model->getClassBySection($class_value['id']);
@@ -2495,7 +2495,7 @@ class Customlib
     {
         $this->CI->load->model('chatuser_model');
         $userdata  = $this->getUserData();
-        $userid   = $userdata['id'];
+        $userid = $userdata['id'] ?? null; if (empty($userid)) { return 0; }
         return  $total = $this->CI->chatuser_model->get_chat_msg_count($userid);
     }
 

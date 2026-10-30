@@ -88,7 +88,7 @@
 
 <script>
 <?php
-if ($search_type == 'period') {
+if (isset($search_type) && $search_type == 'period') {
     ?>
 
         $(document).ready(function () {

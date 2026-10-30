@@ -1,3 +1,4 @@
+<?php $total_amount_for_pay_numeric = $total_amount_for_pay_numeric ?? 0; ?>
 <?php
 
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
@@ -966,7 +967,7 @@ foreach ($feearray as $fee_key => $fee_value) {
 		if ($('.date_fee').length) {
 			$('.date_fee').datepicker({
 				autoclose: true,
-				format: '<?php echo $this->customlib->getSchoolDateFormat(); ?>'
+				format: '<?php echo strtr($this->customlib->getSchoolDateFormat(), ['d' => 'dd', 'm' => 'mm', 'Y' => 'yyyy']); ?>'
 			});
 		}
 	});

@@ -297,6 +297,10 @@ class Certificateregister extends Admin_Controller {
         if (empty($student_session_id)) {
             $student_session_id = $this->input->get('student_session_id');
         }
+        if (empty($student_session_id)) {
+            echo json_encode(array('status' => 'fail', 'message' => 'No student_session_id'));
+            return;
+        }
         
         $has_fee_privilege = $this->rbac->hasPrivilege('collect_fees', 'can_view');
         

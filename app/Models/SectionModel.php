@@ -75,8 +75,11 @@ class SectionModel extends BaseModel
     /**
      * Get sections for a class - compatible with getClassBySection
      */
-    public function getClassBySection(int $classId): array
+    public function getClassBySection(?int $classId = null): array
     {
+        if (empty($classId)) {
+            return [];
+        }
         return $this->db->table('class_sections')
             ->select('class_sections.id, class_sections.section_id, sections.section')
             ->join('sections', 'sections.id = class_sections.section_id')
@@ -89,7 +92,7 @@ class SectionModel extends BaseModel
     /**
      * Get sections assigned to a specific class ID.
      */
-    public function getByClassId(int $classId): array
+    public function getByClassId(?int $classId = null): array
     {
         return $this->getClassBySection($classId);
     }

@@ -46,7 +46,7 @@ class CbseexamObservationParameterModel extends BaseModel
         return $this->callLegacyModel('Cbseexam_observation_parameter_model', 'add', func_get_args());
     }
 
-    public function getStudentTermObservation($cbse_template_id,$students)
+    public function getStudentTermObservation($cbse_template_id, $students = [])
     {
         return $this->callLegacyModel('Cbseexam_observation_parameter_model', 'getStudentTermObservation', func_get_args());
     }

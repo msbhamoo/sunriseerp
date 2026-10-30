@@ -63,7 +63,7 @@
                                             $latest_date = '';
                                             $cert_abbrevs = [];
                                             foreach($cert['all_certs'] as $c) {
-                                                if (empty($latest_date) || strtotime($c['issue_date']) > strtotime($latest_date)) {
+                                                if (!empty($c['issue_date']) && (empty($latest_date) || strtotime($c['issue_date']) > strtotime($latest_date))) {
                                                     $latest_date = $c['issue_date'];
                                                 }
                                                 // Create abbreviation (e.g. Transfer Certificate -> TC)

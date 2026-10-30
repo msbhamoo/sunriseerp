@@ -21,6 +21,19 @@ class StaffcomplianceController extends BaseController
         return $this->dispatchLegacy('Staffcompliance', 'ajax_save_single', func_get_args());
     }
 
+    public function monthsheet()
+    {
+        return $this->dispatchLegacy('Staffcompliance', 'monthsheet', func_get_args());
+    }
+
+    public function _remap($method, ...$params)
+    {
+        if (method_exists($this, $method)) {
+            return $this->$method(...$params);
+        }
+        return $this->dispatchLegacy('Staffcompliance', $method, $params);
+    }
+
     protected function dispatchLegacy(string $controller, string $method, array $params)
     {
         // Set up compatibility environment

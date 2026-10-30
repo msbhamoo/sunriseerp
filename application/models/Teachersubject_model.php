@@ -124,6 +124,7 @@ class Teachersubject_model extends MY_Model
 
     public function getDetailByclassAndSection($class_section_id)
     {
+        if (!$this->db->table_exists('teacher_subjects')) { return []; }
         $this->db->select()->from('teacher_subjects');
         $this->db->where('class_section_id', $class_section_id);
         $this->db->where('teacher_subjects.session_id', $this->current_session);
@@ -133,6 +134,7 @@ class Teachersubject_model extends MY_Model
 
     public function getDetailbyClsandSection($class_id, $section_id, $exam_id)
     {
+        if (!$this->db->table_exists('teacher_subjects')) { return []; }
         $query = $this->db->query("SELECT teacher_subjects.*,exam_schedules.date_of_exam,exam_schedules.start_to,exam_schedules.end_from,exam_schedules.room_no,exam_schedules.full_marks,exam_schedules.passing_marks,subjects.name,
             subjects.type FROM `teacher_subjects` LEFT JOIN `exam_schedules` ON exam_schedules.teacher_subject_id=teacher_subjects.id AND exam_schedules.exam_id = " . $this->db->escape($exam_id) . "  INNER JOIN subjects
             ON teacher_subjects.subject_id = subjects.id INNER JOIN class_sections
@@ -142,6 +144,23 @@ class Teachersubject_model extends MY_Model
 
     public function getSubjectByClsandSection($class_id, $section_id, $classteacher = 'yes')
     {
+        if (!$this->db->table_exists('teacher_subjects')) {
+            $this->load->model('subjectgroup_model');
+            $subjects = $this->subjectgroup_model->getAllsubjectByClassSection($class_id, $section_id);
+            $res = [];
+            foreach ($subjects as $s) {
+                $res[] = [
+                    'id' => $s->subject_id ?? null,
+                    'subject_id' => $s->subject_id ?? null,
+                    'name' => $s->subject_name ?? ($s->name ?? ''),
+                    'code' => $s->subject_code ?? ($s->code ?? ''),
+                    'type' => $s->type ?? '',
+                    'teacher_name' => '',
+                    'surname' => '',
+                ];
+            }
+            return $res;
+        }
         $userdata = $this->customlib->getUserData();
         $role_id  = $userdata["role_id"];
         if (isset($role_id) && ($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {

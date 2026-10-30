@@ -28,7 +28,8 @@ class HostelattendanceModel extends BaseModel
 
     public function save($data): bool
     {
-        return $this->callLegacyModel('Hostelattendance_model', 'save', func_get_args());
+        $res = $this->callLegacyModel('Hostelattendance_model', 'save', func_get_args());
+        return $res !== false;
     }
 
     public function get_monthly_attendance($hostel_id, $month, $year, $roll_call_type = 'morning')

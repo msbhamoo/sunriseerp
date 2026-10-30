@@ -111,7 +111,7 @@ class Subject extends Student_Controller
         $class_id   = $this->input->post('class_id');
         $section_id = $this->input->post('section_id');
         $date       = $this->teachersubject_model->getSubjectByClsandSection($class_id, $section_id);
-        echo json_encode($data);
+        echo json_encode($date ?? []);
     }
 
 }

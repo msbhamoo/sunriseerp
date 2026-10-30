@@ -316,8 +316,10 @@ class Staffattendance extends Admin_Controller
             $att_date = sprintf("%02d", $i);
             $attendence_array[] = $att_date;
             foreach ($monthlist as $key => $value) {
-                $datemonth       = date("m", strtotime($value));
-                $att_dates       = date("Y") . "-" . $datemonth . "-" . sprintf("%02d", $i);
+                $datemonth = date("m", strtotime($value));
+                $curYear = date("Y");
+                if (!checkdate((int)$datemonth, $i, (int)$curYear)) { continue; }
+                $att_dates = $curYear . "-" . $datemonth . "-" . sprintf("%02d", $i);
                 $date_array[]    = $att_dates;
                 $res[$att_dates] = $this->staffattendancemodel->searchStaffattendance($att_dates, $staff_id = 8);
             }

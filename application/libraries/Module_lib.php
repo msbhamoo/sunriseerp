@@ -2,6 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
+if (!class_exists('Module_lib')) {
 class Module_lib
 {
 
@@ -55,4 +56,6 @@ class Module_lib
             return false;
         }
     }
+}
+
 }

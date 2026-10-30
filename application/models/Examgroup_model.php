@@ -41,6 +41,19 @@ class Examgroup_model extends MY_Model
         return $query->row();
     }
 
+    public function getStudentBatch($section_id = null)
+    {
+        if (empty($section_id)) {
+            return [];
+        }
+        $this->db->select('class_batches.*, batch.name as batch_name');
+        $this->db->from('class_batches');
+        $this->db->join('batch', 'batch.id = class_batches.batch_id', 'left');
+        $this->db->where('class_batches.class_section_id', $section_id);
+        $query = $this->db->get();
+        return $query ? $query->result() : [];
+    }
+
     /**
      * This function will delete the record based on the id
      * @param $id

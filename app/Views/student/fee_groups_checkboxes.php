@@ -1,3 +1,4 @@
+<?php $currency_symbol = $currency_symbol ?? '$'; ?>
 <?php
 if (!empty($feesessiongroup_model)) {
     ?>

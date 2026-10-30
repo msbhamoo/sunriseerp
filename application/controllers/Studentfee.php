@@ -124,13 +124,14 @@ class Studentfee extends Admin_Controller
         $section     = $this->input->post('section_id');
         $search_text = $this->input->post('search_text');
         $search_type = $this->input->post('search_type');
+        $students = '{"data":[]}';
         if ($search_type == "class_search") {
             $students = $this->student_model->getDatatableByClassSection($class, $section);
         } elseif ($search_type == "keyword_search") {
             $students = $this->student_model->getDatatableByFullTextSearch($search_text);
         }
         $sch_setting = $this->sch_setting_detail;
-        $students    = json_decode($students);
+        $students    = is_string($students) ? json_decode($students) : (object)['data' => []];
         $dt_data     = array();
         if (!empty($students->data)) {
             foreach ($students->data as $student_key => $student) {
@@ -151,9 +152,9 @@ class Studentfee extends Admin_Controller
             }
         }
         $json_data = array(
-            "draw"            => intval($students->draw),
-            "recordsTotal"    => intval($students->recordsTotal),
-            "recordsFiltered" => intval($students->recordsFiltered),
+            "draw"            => intval($students->draw ?? 0),
+            "recordsTotal"    => intval($students->recordsTotal ?? 0),
+            "recordsFiltered" => intval($students->recordsFiltered ?? 0),
             "data"            => $dt_data,
         );
         echo json_encode($json_data);
@@ -418,25 +419,27 @@ class Studentfee extends Admin_Controller
         $record_array        = json_decode($record);
 
         $fees_array = array();
-        foreach ($record_array as $key => $value) {
-            $fee_groups_feetype_id = $value->fee_groups_feetype_id;
-            $fee_master_id         = $value->fee_master_id;
-            $fee_session_group_id  = $value->fee_session_group_id;
-            $fee_category          = $value->fee_category;
-            $trans_fee_id          = $value->trans_fee_id;
+        if (is_array($record_array)) {
+            foreach ($record_array as $key => $value) {
+                $fee_groups_feetype_id = $value->fee_groups_feetype_id;
+                $fee_master_id         = $value->fee_master_id;
+                $fee_session_group_id  = $value->fee_session_group_id;
+                $fee_category          = $value->fee_category;
+                $trans_fee_id          = $value->trans_fee_id;
 
-            if ($fee_category == "transport") {
-                $feeList               = $this->studentfeemaster_model->getTransportFeeByID($trans_fee_id);
-                $feeList->fee_category = $fee_category;
-            } elseif ($fee_category == "transport_yearly") {
-                $feeList               = $this->studentfeemaster_model->getTransportYearlyFeeByID($trans_fee_id);
-                $feeList->fee_category = $fee_category;
-            } else {
-                $feeList               = $this->studentfeemaster_model->getDueFeeByFeeSessionGroupFeetype($fee_session_group_id, $fee_master_id, $fee_groups_feetype_id);
-                $feeList->fee_category = $fee_category;
+                if ($fee_category == "transport") {
+                    $feeList               = $this->studentfeemaster_model->getTransportFeeByID($trans_fee_id);
+                    $feeList->fee_category = $fee_category;
+                } elseif ($fee_category == "transport_yearly") {
+                    $feeList               = $this->studentfeemaster_model->getTransportYearlyFeeByID($trans_fee_id);
+                    $feeList->fee_category = $fee_category;
+                } else {
+                    $feeList               = $this->studentfeemaster_model->getDueFeeByFeeSessionGroupFeetype($fee_session_group_id, $fee_master_id, $fee_groups_feetype_id);
+                    if ($feeList) { $feeList->fee_category = $fee_category; }
+                }
+
+                $fees_array[] = $feeList;
             }
-
-            $fees_array[] = $feeList;
         }
 
         $data['feearray'] = $fees_array;
@@ -1080,6 +1083,7 @@ class Studentfee extends Admin_Controller
         $record              = $this->input->post('data');
         $record_array        = json_decode($record);
         $fees_array          = array();
+        if (is_array($record_array)) {
         foreach ($record_array as $key => $value) {
             $fee_groups_feetype_id = $value->fee_groups_feetype_id;
             $fee_master_id         = $value->fee_master_id;
@@ -1095,9 +1099,10 @@ class Studentfee extends Admin_Controller
                 $feeList->fee_category = $fee_category;
             } else {
                 $feeList               = $this->studentfeemaster_model->getDueFeeByFeeSessionGroupFeetype($fee_session_group_id, $fee_master_id, $fee_groups_feetype_id);
-                $feeList->fee_category = $fee_category;
+                if ($feeList) { $feeList->fee_category = $fee_category; }
             }
             $fees_array[] = $feeList;
+        }
         }
         $data['feearray'] = $fees_array;       
 
@@ -1763,7 +1768,8 @@ class Studentfee extends Admin_Controller
         }
         
         // Also add transport fees if they exist
-        $transport_fees = $this->studentfeemaster_model->getStudentTransportFees($student_session_id, $student['route_pickup_point_id']);
+        $route_pickup_point_id = isset($student['route_pickup_point_id']) ? $student['route_pickup_point_id'] : 0;
+        $transport_fees = $this->studentfeemaster_model->getStudentTransportFees($student_session_id, $route_pickup_point_id);
         if (!empty($transport_fees)) {
             foreach ($transport_fees as $transport_fee_value) {
                 if (!empty($transport_fee_value->amount_detail)) {

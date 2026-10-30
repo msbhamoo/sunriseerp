@@ -2070,7 +2070,7 @@ $(document).on('change','#vehroute_id',function(){
 
 <script type="text/template" id="teacher_drp">
     <?php
-    foreach ($teacher_staffs as $teacher_staff) {
+    foreach (($teacher_staffs ?? []) as $teacher_staff) {
     ?>
         <option value="<?php echo $teacher_staff['id'] ?>"
               <?php

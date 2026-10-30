@@ -69,11 +69,11 @@
                                 
                                 if (!empty($result)) {
                                     foreach ($result as $row) {
-                                        $amt = $row['total_amount'];
+                                        $amt = ($row['total_amount'] ?? 0);
                                         $grand_total += $amt;
                                         ?>
                                         <tr>
-                                            <td><?php echo $row['name']; ?></td>
+                                            <td><?php echo ($row['name'] ?? ''); ?></td>
                                             <td class="text-right"><?php echo $currency_symbol . amountFormat($amt); ?></td>
                                         </tr>
                                         <?php

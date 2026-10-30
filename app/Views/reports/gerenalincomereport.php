@@ -174,7 +174,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                         }
                                     }
                                     ?>
-                                    <tr><td></td><td></td><td></td><td></td><td>Total Admission in this duration :</td><td > <?php echo $filter_label; ?></td><td><?php echo $count; ?></td><td></td><td></td><td></td><td ></td></tr>
+                                    <tr><td></td><td></td><td></td><td></td><td>Total Admission in this duration :</td><td > <?php echo $filter_label ?? ""; ?></td><td><?php echo $count; ?></td><td></td><td></td><td></td><td ></td></tr>
                                 </tbody>
                             </table>
                         </div>

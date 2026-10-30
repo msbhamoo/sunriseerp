@@ -1940,7 +1940,8 @@
     $('#modal-sync-biometric').on('shown.bs.modal', function () {
         if ($.fn.datepicker) {
             $('#bio_sync_selected_date').datepicker({
-                format: "<?php echo $this->customlib->getSchoolDateFormat(); ?>",
+                // bootstrap-datepicker tokens differ from PHP's (d M Y -> dd M yyyy)
+                format: "<?php echo strtr($this->customlib->getSchoolDateFormat(), ['d' => 'dd', 'm' => 'mm', 'Y' => 'yyyy']); ?>",
                 autoclose: true,
                 todayHighlight: true,
                 container: '#modal-sync-biometric'

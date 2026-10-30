@@ -1,3 +1,5 @@
+<?php $classlist = $classlist ?? []; ?>
+<?php $sch_setting = $sch_setting ?? []; ?>
 <?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>
@@ -112,7 +114,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                             <th><?php echo $this->lang->line('admission_no'); ?></th>
 
                                             <th><?php echo $this->lang->line('student'); ?> <?php echo $this->lang->line('name'); ?></th>
-                                            <?php if ($sch_setting->father_name) {?>
+                                            <?php if ((is_object($sch_setting) ? ($sch_setting->father_name ?? 0) : ($sch_setting["father_name"] ?? 0))) {?>
                                                 <th><?php echo $this->lang->line('father_name'); ?></th>
                                             <?php }?>
                                             <th><?php echo $this->lang->line('date_of_birth'); ?></th>

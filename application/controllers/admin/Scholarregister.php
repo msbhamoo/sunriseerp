@@ -108,6 +108,10 @@ class Scholarregister extends Admin_Controller {
             access_denied();
         }
         $student_session_id = $this->input->post('student_session_id');
+        if (empty($student_session_id)) {
+            echo json_encode(array('status' => 0, 'msg' => 'student_session_id is required'));
+            return;
+        }
         $data = array(
             'student_session_id' => $student_session_id,
             'session_id' => $this->input->post('session_id'),

@@ -1,3 +1,4 @@
+<?php if (empty($student_due_fee)) { $student_due_fee = [0 => ["id" => 0, "amount" => 0, "amount_discount" => 0, "amount_fine" => 0, "date" => "", "firstname" => "", "lastname" => "", "class" => "", "section" => "", "guardian_phone" => "", "current_address" => "", "city" => "", "email" => "", "category" => "", "type" => ""]]; } ?>
 <?php
 if (isset($student_due_fee)) {
     ?>
@@ -236,7 +237,7 @@ if (isset($student_due_fee)) {
                             $target_amount = $target_amount + $fee['amount'];
                             $cls = "";
                             $total_row = "xxx";
-                            $payment_status = "<span class='label label-success'><?php echo $this->lang->line('paid'); ?></span>";
+                            $payment_status = "<span class='label label-success'>" . $this->lang->line('paid') . "</span>";
                             if ($fee['date'] == "xxx") {
                                 $cls = "text-red";
                                 $payment_status = '<span class="label label-danger">Pending</span>';
@@ -247,9 +248,9 @@ if (isset($student_due_fee)) {
                             ?>
                             <tr>
                                 <td class="desc"><h3><?php echo $fee['id']; ?></h3></td>
-                                <td class="qty"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee['date'])); ?></td>
-                                <td class="qty"><?php echo $fee['category']; ?></td>
-                                <td class="qty"><?php echo $fee['type']; ?></td>
+                                <td class="qty"><?php echo !empty($fee['date']) ? (is_numeric($fee['date']) ? date($this->customlib->getSchoolDateFormat(), (int)$fee['date']) : (strtotime($fee['date']) ? date($this->customlib->getSchoolDateFormat(), strtotime($fee['date'])) : $fee['date'])) : ''; ?></td>
+                                <td class="qty"><?php echo $fee['category'] ?? ''; ?></td>
+                                <td class="qty"><?php echo $fee['type'] ?? ''; ?></td>
                             </tr>
                             <?php
                             $row_count++;
@@ -375,7 +376,7 @@ if (isset($student_due_fee)) {
                             $target_amount = $target_amount + $fee['amount'];
                             $cls = "";
                             $total_row = "xxx";
-                            $payment_status = "<span class='label label-success'><?php echo $this->lang->line('paid'); ?></span>";
+                            $payment_status = "<span class='label label-success'>" . $this->lang->line('paid') . "</span>";
                             if ($fee['date'] == "xxx") {
                                 $cls = "text-red";
                                 $payment_status = '<span class="label label-danger">Pending</span>';
@@ -386,9 +387,9 @@ if (isset($student_due_fee)) {
                             ?>
                             <tr>
                                 <td class="desc"><h3><?php echo $fee['id']; ?></h3></td>
-                                <td class="qty"><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($fee['date'])); ?></td>
-                                <td class="qty"><?php echo $fee['category']; ?></td>
-                                <td class="qty"><?php echo $fee['type']; ?></td>
+                                <td class="qty"><?php echo !empty($fee['date']) ? (is_numeric($fee['date']) ? date($this->customlib->getSchoolDateFormat(), (int)$fee['date']) : (strtotime($fee['date']) ? date($this->customlib->getSchoolDateFormat(), strtotime($fee['date'])) : $fee['date'])) : ''; ?></td>
+                                <td class="qty"><?php echo $fee['category'] ?? ''; ?></td>
+                                <td class="qty"><?php echo $fee['type'] ?? ''; ?></td>
                             </tr>
                             <?php
                             $row_count++;
@@ -460,3 +461,4 @@ if (isset($student_due_fee)) {
         </main>
     </body>
 </html>
+<?php } ?>

@@ -30,7 +30,8 @@ class Gateway_ins_model extends CI_Model
 	
     public function get_gateway_ins($unique_id, $gateway_name)
     {
-        return $this->db->select('*')->from('gateway_ins')->where(array('gateway_ins.gateway_name' => $gateway_name, 'gateway_ins.unique_id' => $unique_id))->get()->row_array();
+        $res = $this->db->select('*')->from('gateway_ins')->where(array('gateway_ins.gateway_name' => $gateway_name, 'gateway_ins.unique_id' => $unique_id))->get()->row_array();
+        return $res ?: ['payment_status' => '0'];
     }
 	
     public function get_gateway_ins_by_name($gateway_name)

@@ -231,11 +231,13 @@ class Calendar extends Admin_Controller
     {
         $userdata = $this->customlib->getUserData();
         $result   = $this->calendar_model->getEvents();
+        $eventdata = array();
         if (!empty($result)) {
 
             foreach ($result as $key => $value) {
 
-                $event_type = $value["event_type"];
+                $event_type = $value["event_type"] ?? '';
+                $event_for = null;
 
                 if ($event_type == 'private') {
 

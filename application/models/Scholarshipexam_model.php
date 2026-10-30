@@ -345,8 +345,8 @@ class Scholarshipexam_model extends MY_Model
         }
 
         // Seed Default "SUNRISE SCHOLARSHIP CUM ADMISSION TEST" if no exam exists yet
-        $exam_count = $this->db->count_all('scholarship_exams');
-        if ($exam_count == 0) {
+        $existing_ssat = $this->db->get_where('scholarship_exams', array('exam_code' => 'SSAT-2026'))->row();
+        if (!$existing_ssat) {
             $default_exam = array(
                 'title' => 'SUNRISE SCHOLARSHIP CUM ADMISSION TEST',
                 'exam_code' => 'SSAT-2026',

@@ -35,6 +35,10 @@ class BridgedView extends View
                 return $bridge->rbac;
             case 'lang':
                 return $bridge->lang;
+            case 'module_lib':
+                return $bridge->module_lib;
+            case 'auth':
+                return $bridge->auth;
             case 'setting_model':
                 return $bridge->setting_model;
             case 'session_model':
@@ -88,5 +92,14 @@ class BridgedView extends View
                 }
                 return null;
         }
+    }
+
+    /**
+     * Legacy CI3 theme view helper `$this->view(...)` inside view files
+     */
+    public function view(string $view, array $data = [], bool $return = false)
+    {
+        $bridge = $this->getBridge();
+        return $bridge->load->view(ltrim($view, '/'), $data, $return);
     }
 }

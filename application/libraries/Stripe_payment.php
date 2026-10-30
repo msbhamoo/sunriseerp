@@ -17,6 +17,18 @@ class Stripe_payment {
         $this->api_config = $this->_CI->paymentsetting_model->getActiveMethod();
     }
  
+    public function AddCustomer($data) {
+        return ['status' => true];
+    }
+
+    public function PaymentIntent($data) {
+        return ['status' => true];
+    }
+
+    public function InsertTransaction($data) {
+        return ['status' => false, 'payment' => null];
+    }
+
     public function payment($data) {
 
         $gateway = Omnipay::create('Stripe');

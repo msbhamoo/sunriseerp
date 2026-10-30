@@ -38,10 +38,16 @@ class Expense_model extends MY_Model
                 ->select('expenses.id,expenses.date,expenses.invoice_no,expenses.name,expenses.amount,expenses.documents,expenses.note,expense_head.exp_category,expenses.exp_head_id')
                 ->searchable('expenses.name,expenses.invoice_no,exp_category,date,expenses.amount')
                 ->orderable('expenses.name,expenses.invoice_no,exp_category,date,expenses.amount')
-                ->join('expense_head', 'expenses.exp_head_id = expense_head.id')
-                ->where('expenses.date <=', $end_date)
-                ->where('expenses.date >=', $start_date)
-                ->from('expenses');
+                ->join('expense_head', 'expenses.exp_head_id = expense_head.id');
+
+            if (!empty($end_date)) {
+                $this->datatables->where('expenses.date <=', $end_date);
+            }
+            if (!empty($start_date)) {
+                $this->datatables->where('expenses.date >=', $start_date);
+            }
+
+            $this->datatables->from('expenses');
         }
         return $this->datatables->generate('json');
 
@@ -165,15 +171,17 @@ class Expense_model extends MY_Model
 
     public function getTypeByFeecategory($type, $class_id)
     {
-        $this->db->select('expenses.id,expenses.session_id,expenses.invoice_no,expenses.amount,expenses.documents,expenses.note,expense_head.class,feetype.type')->from('expenses');
-        $this->db->join('expense_head', 'expenses.class_id = expense_head.id');
-        $this->db->join('feetype', 'expenses.feetype_id = feetype.id');
-        $this->db->where('expenses.class_id', $class_id);
+        if (empty($type) || empty($class_id)) {
+            return [];
+        }
+        $this->db->select('expenses.id,expenses.invoice_no,expenses.amount,expenses.documents,expenses.note,expense_head.exp_category as class,feetype.type')->from('expenses');
+        $this->db->join('expense_head', 'expenses.exp_head_id = expense_head.id', 'left');
+        $this->db->join('feetype', 'expenses.feetype_id = feetype.id', 'left');
+        $this->db->where('expenses.exp_head_id', $class_id);
         $this->db->where('expenses.feetype_id', $type);
-        $this->db->where('expenses.session_id', $this->current_session);
         $this->db->order_by('expenses.id');
         $query = $this->db->get();
-        return $query->row_array();
+        return $query ? $query->row_array() : [];
     }
 
     public function getTotalExpenseBydate($date)

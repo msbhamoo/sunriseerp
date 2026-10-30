@@ -19,6 +19,7 @@ class StudentfeeController extends BaseController
     protected SectionModel $sectionModel;
     protected StudentModel $studentModel;
     protected StudentfeemasterModel $studentfeemasterModel;
+    protected \App\Models\SettingModel $settingModel;
 
     public function initController(
         \CodeIgniter\HTTP\RequestInterface $request,
@@ -31,6 +32,7 @@ class StudentfeeController extends BaseController
         $this->sectionModel = new SectionModel();
         $this->studentModel = new StudentModel();
         $this->studentfeemasterModel = new StudentfeemasterModel();
+        $this->settingModel = new \App\Models\SettingModel();
     }
 
     public function dashboard()
@@ -72,7 +74,7 @@ class StudentfeeController extends BaseController
         }
 
         $session = service('session');
-        $session->set('top_menu', $this->lang->line('fees_collection'));
+        $session->set('top_menu', lang('Admin.fees_collection') ?: 'Fees Collection');
         $session->set('sub_menu', 'studentfee/index');
 
         $data['sch_setting'] = (object)$this->settingModel->getSetting();

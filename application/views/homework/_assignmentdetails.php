@@ -1,3 +1,4 @@
+<?php if (empty($assignmentlist)) { $assignmentlist = ["title" => "", "description" => "", "date" => "", "evaluated_by" => 0, "evaluation_date" => "", "student_name" => "", "admission_no" => "", "class" => "", "section" => "", "attachment" => "", "remark" => "", "firstname" => "", "middlename" => "", "lastname" => "", "student_admission_no" => "", "name" => "", "surname" => "", "employee_id" => "", "subject_name" => "", "subject_code" => ""]; } ?>
 <div class="row row-eq">
     <div class="col-lg-8 col-md-8 col-sm-8 ptt10">     
        <div class="scroll-area">
@@ -20,12 +21,12 @@
                 <hr class="taskseparator" />
                 <div class="task-info task-single-inline-wrap task-info-start-date">
                     <h5><i class="fa task-info-icon fa-fw fa-lg fa-calendar-plus-o pull-left fa-margin"></i>
-                        <span><?php echo $this->lang->line('submission_date'); ?></span>:<?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($assignmentlist['date'])); ?>  
+                        <span><?php echo $this->lang->line('submission_date'); ?></span>:<?php if(!empty($assignmentlist['date'])){ $ts = is_numeric($assignmentlist['date']) ? (int)$assignmentlist['date'] : strtotime($assignmentlist['date']); echo $ts ? date($this->customlib->getSchoolDateFormat(), $ts) : $assignmentlist['date']; } ?>  
                     </h5>
                 </div>           
                 <div class="task-info task-single-inline-wrap task-info-start-date">
                     <h5><i class="fa task-info-icon fa-fw fa-lg fa-calendar-plus-o pull-left fa-margin"></i>
-                        <span><?php echo $this->lang->line('evaluation_date'); ?></span>:<?php if(!empty($assignmentlist['evaluation_date'])){ echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($assignmentlist['evaluation_date']));} ?>
+                        <span><?php echo $this->lang->line('evaluation_date'); ?></span>:<?php if(!empty($assignmentlist['evaluation_date'])){ $ets = is_numeric($assignmentlist['evaluation_date']) ? (int)$assignmentlist['evaluation_date'] : strtotime($assignmentlist['evaluation_date']); echo $ets ? date($this->customlib->getSchoolDateFormat(), $ets) : $assignmentlist['evaluation_date']; } ?>
                     </h5>
                 </div>
                 <div class="task-info task-single-inline-wrap ptt10">

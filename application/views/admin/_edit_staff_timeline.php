@@ -1,3 +1,4 @@
+<?php if (empty($singletimelinelist)) { $singletimelinelist = ["id" => "", "student_id" => "", "staff_id" => "", "title" => "", "timeline_date" => "", "description" => "", "status" => ""]; } ?>
 <input type="hidden" name="id" value="<?php echo $singletimelinelist["id"] ?>" id="student_timeline_id">
 <input type="hidden" name="edit_staff_id" value="<?php echo $singletimelinelist["staff_id"] ?>" id="staff_timeline_id">
 <div class="">

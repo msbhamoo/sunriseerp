@@ -218,12 +218,12 @@
                 <table cellpadding="0" cellspacing="0" style="width:100%; border:0; background:none; margin:0 0 2px 0; ">
                     <tr>
                         <td style="padding:20px;font-size: .65em; font-weight:bold;text-align:left; background:#fff;">
-                            <b><?php echo $this->lang->line('exam'); ?>: <?php echo $exam['name']; ?></b></td>
+                            <b><?php echo $this->lang->line('exam'); ?>: <?php echo $exam['name'] ?? ''; ?></b></td>
                         <td style="padding:20px;font-size: .65em; font-weight:bold;text-align:left;background:#fff;">
                             <b><?php echo $this->lang->line('class'); ?>:
                                 <?php
                                 ?>
-                                <?php echo $class['class'] . "(" . $section[0]['section'] . ")" ?>
+                                <?php echo ($class['class'] ?? '') . '(' . ($section[0]['section'] ?? '') . ')' ?>
                             </b></td>
                         <td style="padding:20px;font-size: .65em; font-weight:bold;text-align:left;background:#fff;">
                             <b style="text-align:center"><?php echo $this->lang->line('date'); ?>: <?php echo date($this->customlib->getSchoolDateFormat()); ?></b></td></tr></table>   

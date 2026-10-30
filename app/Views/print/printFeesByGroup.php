@@ -1,4 +1,4 @@
-<?php $feearray = array($feeList); ?>
+<?php if (empty($feeList) || !is_object($feeList)) { $feeList = (object)['id' => 0, 'name' => '', 'code' => '', 'fee_category' => '', 'amount' => 0, 'due_date' => '', 'date' => '']; } $feearray = array($feeList); ?>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
     <?php
@@ -478,13 +478,13 @@ $payment_mode_desc = '';
 $total_deposit = 0;
 
 foreach ($feearray as $feeList) {
-    if ($feeList->fee_category == "fees") {
+    if (((($feeList->fee_category ?? '') ?? '') ?? '') == "fees") {
         if ($feeList->is_system) {
             $amount = $feeList->student_fees_master_amount;
         } else {
             $amount = $feeList->amount;
         }
-    } elseif ($feeList->fee_category == "transport" || $feeList->fee_category == "transport_yearly") {
+    } elseif (((($feeList->fee_category ?? '') ?? '') ?? '') == "transport" || ((($feeList->fee_category ?? '') ?? '') ?? '') == "transport_yearly") {
         $amount = $feeList->fees;
     } else {
         $amount = isset($feeList->amount) ? $feeList->amount : 0;
@@ -497,7 +497,7 @@ foreach ($feearray as $feeList) {
         if (is_object($deposits) || is_array($deposits)) {
             foreach ($deposits as $dep) {
                 $dep_inv = is_object($dep) ? (isset($dep->inv_no) ? $dep->inv_no : '') : (isset($dep['inv_no']) ? $dep['inv_no'] : '');
-                $match = (!isset($sub_invoice_id) || empty($sub_invoice_id) || $dep_inv == $sub_invoice_id);
+                $match = (!(($sub_invoice_id ?? 0) !== null) || empty(($sub_invoice_id ?? 0)) || $dep_inv == ($sub_invoice_id ?? 0));
                 
                 if ($match || $payment_mode == 'N/A') {
                     if (is_object($dep) && !empty($dep->payment_mode)) {
@@ -579,17 +579,17 @@ foreach ($copies as $copy_title => $copy_class) {
                 <?php 
                 $i = 1;
                 foreach($feearray as $feeList) { 
-                    if($feeList->fee_category == "fees"){
+                    if(((($feeList->fee_category ?? '') ?? '') ?? '') == "fees"){
                         if ($feeList->is_system) {
                             $amount = $feeList->student_fees_master_amount;
                         } else {
                             $amount = $feeList->amount;
                         }
                         $particular = strtoupper(($feeList->is_system) ? $this->lang->line($feeList->type) : $feeList->type);
-                    } elseif($feeList->fee_category == "transport") {
+                    } elseif(((($feeList->fee_category ?? '') ?? '') ?? '') == "transport") {
                         $amount = $feeList->fees;
                         $particular = strtoupper("Bus Fee (" . $this->lang->line(strtolower($feeList->month)) . ")");
-                    } elseif($feeList->fee_category == "transport_yearly") {
+                    } elseif(((($feeList->fee_category ?? '') ?? '') ?? '') == "transport_yearly") {
                         $amount = $feeList->fees;
                         $particular = "BUS FEE";
                     } else {
@@ -620,7 +620,7 @@ foreach ($copies as $copy_title => $copy_class) {
                 $CI =& get_instance();
                 $CI->load->library('QR_Code');
                 $invoice_id = $feeList->id;
-                $qr_url = base_url('welcome/download_receipt/' . $invoice_id . '/' . $sub_invoice_id . '/' . md5($invoice_id . $sub_invoice_id . 'receipt'));
+                $qr_url = base_url('welcome/download_receipt/' . $invoice_id . '/' . ($sub_invoice_id ?? 0) . '/' . md5($invoice_id . ($sub_invoice_id ?? 0) . 'receipt'));
                 $qr_base64 = $CI->qr_code->generateBase64($qr_url);
                 ?>
                 <img src="<?php echo $qr_base64; ?>" alt="QR Code">

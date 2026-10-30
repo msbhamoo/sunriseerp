@@ -19,7 +19,7 @@ class Checkout extends OnlineAdmission_Controller
     {
  
         $post_data = $this->security->xss_clean($this->input->post());
-        $reference = $post_data['admission_id'];
+        $reference = $post_data['admission_id'] ?? null;
         $reference_no = isset($post_data['reference_no']) ? $post_data['reference_no'] : null;
         $this->session->set_userdata("reference",$reference);
         if (!empty($reference_no)) {

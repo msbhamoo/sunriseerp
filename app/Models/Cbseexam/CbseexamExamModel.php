@@ -91,7 +91,7 @@ class CbseexamExamModel extends BaseModel
         return $this->callLegacyModel('Cbseexam_exam_model', 'getStudentResultByTemplateId', func_get_args());
     }
 
-    public function getStudentExamResultByTemplateId($cbse_template_id, $students)
+    public function getStudentExamResultByTemplateId($cbse_template_id, $students = [])
     {
         return $this->callLegacyModel('Cbseexam_exam_model', 'getStudentExamResultByTemplateId', func_get_args());
     }
@@ -106,7 +106,7 @@ class CbseexamExamModel extends BaseModel
         return $this->callLegacyModel('Cbseexam_exam_model', 'getResultTermwiseByTemplateId', func_get_args());
     }
 
-    public function getStudentExamResultTermwiseByTemplateId($cbse_template_id, $students)
+    public function getStudentExamResultTermwiseByTemplateId($cbse_template_id, $students = [])
     {
         return $this->callLegacyModel('Cbseexam_exam_model', 'getStudentExamResultTermwiseByTemplateId', func_get_args());
     }
@@ -449,6 +449,12 @@ class CbseexamExamModel extends BaseModel
     public function getStudentExamMarksSummary($student_session_id)
     {
         return $this->callLegacyModel('Cbseexam_exam_model', 'getStudentExamMarksSummary', func_get_args());
+    }
+
+
+    public function get_observation_parameter($exam_id = null)
+    {
+        return $this->callLegacyModel('Cbseexam_exam_model', 'get_observation_parameter', func_get_args());
     }
 
     /**

@@ -77,7 +77,7 @@ class Generateidcard extends Admin_Controller
     public function generatemultiple()
     {
         $studentid           = $this->input->post('data');
-        $student_array       = json_decode($studentid);
+        $student_array       = $studentid ? (json_decode($studentid) ?: []) : [];
         $idcard              = $this->input->post('id_card');
         $class               = $this->input->post('class_id');
         $data                = array();

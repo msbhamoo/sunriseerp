@@ -68,7 +68,9 @@ class approve_leave extends Admin_Controller
 
             $data = array('status' => 'fail', 'error' => $this->lang->line('not_authoried'));
         } else {
-            $data                 = $this->apply_leave_model->get($_POST['id'], null, null);
+            $id = isset($_POST['id']) ? $_POST['id'] : null;
+            if (!$id) { echo json_encode([]); return; }
+            $data                 = $this->apply_leave_model->get($id, null, null);
             
             $data['leave_status'] = $data['status'];
             $data['from_date']    = date($this->customlib->getSchoolDateFormat(), strtotime($data['from_date']));
@@ -215,6 +217,7 @@ class approve_leave extends Admin_Controller
 
     public function status()
     {
+        if (!isset($_POST['status'])) { echo json_encode(['status' => 0]); return; }
         $userdata = $this->customlib->getUserData();
         $role_id  = $userdata["role_id"];
         $can_edit = 1;

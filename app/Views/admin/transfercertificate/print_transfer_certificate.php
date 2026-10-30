@@ -1,5 +1,7 @@
 <?php 
-$student=$student_data; 
+$student = is_array($student_data) ? $student_data : [];
+$defaults = ['admission_no'=>'','roll_no'=>'','admission_date'=>'','middlename'=>'','lastname'=>'','rte'=>'','image'=>'','mobileno'=>'','email'=>'','religion'=>'','cast'=>'','dob'=>'','gender'=>'','current_address'=>'','permanent_address'=>'','father_name'=>'','mother_name'=>'','guardian_name'=>'','guardian_relation'=>'','guardian_phone'=>'','guardian_address'=>'','class'=>'','section'=>'','session_year'=>''];
+$student = array_merge($defaults, $student); 
 ?>
 
 <div style="width: 100%; margin: 0 auto;">
@@ -55,7 +57,7 @@ $student=$student_data;
         <tr>
             <td width="30"><?php echo 1; ?></td> 
             <td><strong><?php echo $this->lang->line('name'); ?></strong></td>
-            <td><?php echo $student_name=$this->customlib->getFullName($student['firstname'],$student['middlename'],$student['lastname'],$sch_setting_detail->middlename,$sch_setting_detail->lastname);?>
+            <td><?php echo $student_name=$this->customlib->getFullName($student['firstname'] ?? '',$student['middlename'] ?? '',$student['lastname'] ?? '',$sch_setting_detail->middlename ?? '',$sch_setting_detail->lastname ?? '');?>
             </td>
         </tr>	
 <?php

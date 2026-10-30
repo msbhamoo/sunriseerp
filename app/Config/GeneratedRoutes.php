@@ -97,6 +97,12 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', ['filter' => 'a
     $routes->match(['GET', 'POST'], 'customstudentimport', 'CustomstudentimportController::index');
     $routes->match(['GET', 'POST'], 'customstudentimport/(:segment)', 'CustomstudentimportController::$1');
     $routes->match(['GET', 'POST'], 'customstudentimport/(:segment)/(:any)', 'CustomstudentimportController::$1/$2');
+    $routes->match(['GET', 'POST'], 'department', 'DepartmentController::index');
+    $routes->match(['GET', 'POST'], 'department/(:segment)', 'DepartmentController::$1');
+    $routes->match(['GET', 'POST'], 'department/(:segment)/(:any)', 'DepartmentController::$1/$2');
+    $routes->match(['GET', 'POST'], 'designation', 'DesignationController::index');
+    $routes->match(['GET', 'POST'], 'designation/(:segment)', 'DesignationController::$1');
+    $routes->match(['GET', 'POST'], 'designation/(:segment)/(:any)', 'DesignationController::$1/$2');
     $routes->match(['GET', 'POST'], 'debugsidebar', 'DebugsidebarController::index');
     $routes->match(['GET', 'POST'], 'debugsidebar/(:segment)', 'DebugsidebarController::$1');
     $routes->match(['GET', 'POST'], 'debugsidebar/(:segment)/(:any)', 'DebugsidebarController::$1/$2');
@@ -668,6 +674,7 @@ $routes->group('onlineadmission', ['namespace' => 'App\Controllers\Onlineadmissi
 
 // Auto-generated routes for User module
 $routes->group('user', ['namespace' => 'App\Controllers\User'], static function ($routes) {
+    $routes->match(['GET', 'POST'], 'cbse/exam/(:segment)', 'CbseExamController::$1');
     $routes->match(['GET', 'POST'], 'apply_leave', 'Apply_leaveController::index');
     $routes->match(['GET', 'POST'], 'apply_leave/(:segment)', 'Apply_leaveController::$1');
     $routes->match(['GET', 'POST'], 'apply_leave/(:segment)/(:any)', 'Apply_leaveController::$1/$2');

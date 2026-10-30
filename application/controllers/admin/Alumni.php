@@ -96,7 +96,7 @@ class Alumni extends Admin_Controller
 
     public function get_alumnidetails()
     {
-        $student_id = $_POST['student_id'];
+        $student_id = $_POST["student_id"] ?? ""; if (!$student_id) { echo json_encode([]); return; }
         $data       = $this->alumni_model->get_alumnidetail($student_id);
 
         if (empty($data)) {
@@ -172,6 +172,7 @@ class Alumni extends Admin_Controller
     public function get_story_details()
     {
         $student_id = $this->input->post('student_id');
+        if (empty($student_id)) { echo json_encode([]); return; }
         $story      = $this->alumni_model->get_story($student_id);
 
         if (empty($story)) {
@@ -515,6 +516,7 @@ class Alumni extends Admin_Controller
 				}
 
                 $student_id = $this->input->post('student_id');
+        if (empty($student_id)) { echo json_encode([]); return; }
 
                 // Save multiple education entries
                 $edu_levels      = $this->input->post('edu_level');
@@ -867,6 +869,7 @@ class Alumni extends Admin_Controller
         $start      = $this->input->get('start');
         $end        = $this->input->get('end');
         $event_data = $this->alumni_model->get_eventbydaterange($start, $end);
+        $eventdata = array();
         foreach ($event_data as $key => $value) {
 
             $eventdata[] = array('title' => $value['title'],

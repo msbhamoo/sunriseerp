@@ -2,14 +2,14 @@
 $my_role = $this->customlib->getStaffRole();
 $role    = json_decode($my_role);
 if ($role->id == 7) {
-    $staff_id = $_POST['staff_id'];
+    $staff_id = $_POST['staff_id'] ?? 0;
 } else {
-    $staff_id = $staff_id;
+    $staff_id = ($staff_id ?? 0);
 }
 
 ?>
 <div class="box-header text-center">
-    <i class="fa fa-angle-left datearrow" onclick="get_weekdates('pre_week', '<?php echo $prev_week_start; ?>', '<?php echo $staff_id; ?>')"></i><h3 class="box-title bmedium"> <?php echo $this_week_start . " " . $this->lang->line('to') . " " . $this_week_end; ?></h3> <i class="fa fa-angle-right datearrow" onclick="get_weekdates('next_week', '<?php echo $next_week_start; ?>', '<?php echo $staff_id; ?>')"></i>
+    <i class="fa fa-angle-left datearrow" onclick="get_weekdates('pre_week', '<?php echo $prev_week_start; ?>', '<?php echo ($staff_id ?? 0); ?>')"></i><h3 class="box-title bmedium"> <?php echo $this_week_start . " " . $this->lang->line('to') . " " . $this_week_end; ?></h3> <i class="fa fa-angle-right datearrow" onclick="get_weekdates('next_week', '<?php echo $next_week_start; ?>', '<?php echo ($staff_id ?? 0); ?>')"></i>
     <input type="hidden" id="this_week_start" value="<?php echo $this_week_start; ?>">
 </div>
 
@@ -55,7 +55,7 @@ $day_counter = 0;
 
                 $subject_group_subject_class_section = $this->lessonplan_model->getsubject_group_class_sectionsId($tm_kue->class_id, $tm_kue->section_id, $tm_kue->subject_group_id);
 
-                $subject_syllabus = $this->syllabus_model->get_subject_syllabusdata($tm_kue->subject_group_subject_id, date('Y-m-d', strtotime($new_date)), $role->id, $staff_id, $tm_kue->time_from, $tm_kue->time_to, $subject_group_subject_class_section['id']);
+                $subject_syllabus = $this->syllabus_model->get_subject_syllabusdata($tm_kue->subject_group_subject_id, date('Y-m-d', strtotime($new_date)), $role->id, ($staff_id ?? 0), $tm_kue->time_from, $tm_kue->time_to, $subject_group_subject_class_section['id']);
 
                 if ($subject_syllabus[0]['total'] > 0) {
                     $action = $subject_syllabus[0]['id'];
@@ -79,7 +79,7 @@ $day_counter = 0;
                     ?>
                                         <?php if ($this->rbac->hasPrivilege('manage_lesson_plan', 'can_add')) {?>
                                         <div class="d-flex gap-0-5 mright5 text-right float-right">
-                                            <a class="btn btn-primary btn-xs mt5 mb5 pull-left"  data-toggle="tooltip" title="" data-original-title="<?php echo $this->lang->line('add') ?>" onclick="add_syllabus('<?php echo $tm_kue->subject_group_subject_id; ?>', '<?php echo $tm_kue->time_from ?>', '<?php echo $tm_kue->time_to; ?>', '<?php echo date($this->customlib->getSchoolDateFormat(), strtotime($new_date)); ?>', '<?php echo $subject_group_subject_class_section['id']; ?>', '<?php echo $staff_id; ?>')"><i class="fa fa-plus"></i></a>
+                                            <a class="btn btn-primary btn-xs mt5 mb5 pull-left"  data-toggle="tooltip" title="" data-original-title="<?php echo $this->lang->line('add') ?>" onclick="add_syllabus('<?php echo $tm_kue->subject_group_subject_id; ?>', '<?php echo $tm_kue->time_from ?>', '<?php echo $tm_kue->time_to; ?>', '<?php echo date($this->customlib->getSchoolDateFormat(), strtotime($new_date)); ?>', '<?php echo $subject_group_subject_class_section['id']; ?>', '<?php echo ($staff_id ?? 0); ?>')"><i class="fa fa-plus"></i></a>
                                         </div>
                                             <?php
 }
@@ -121,7 +121,7 @@ echo $tm_kue->subject_name;
 ?>
 </div>
 <script>
-    $('#created_for').val('<?php echo $staff_id; ?>');
+    $('#created_for').val('<?php echo ($staff_id ?? 0); ?>');
     function subject_syllabusdelete(syllabus_id) {
         if (confirm('<?PHP echo $this->lang->line('delete_confirm') ?>')) {
             $.ajax({
@@ -131,7 +131,7 @@ echo $tm_kue->subject_name;
                 success: function (data) {
                     successMsg('<?php echo $this->lang->line("delete_message"); ?>');
                     $('#hide_' + syllabus_id).html('');
-                    get_weekdates('pre_week', '<?php echo $this_week_start; ?>', '<?php echo $staff_id; ?>');
+                    get_weekdates('pre_week', '<?php echo $this_week_start; ?>', '<?php echo ($staff_id ?? 0); ?>');
                 },
             });
         }

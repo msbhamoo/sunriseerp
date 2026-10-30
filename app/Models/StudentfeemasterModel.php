@@ -20,7 +20,7 @@ class StudentfeemasterModel extends BaseModel
     public function getFeesDashboardStats(): array
     {
         $sessionModel = new SessionModel();
-        $sessionId = (int)$sessionModel->getCurrentSession();
+        $sessionId = $sessionModel->getCurrentSessionId();
 
         // 1. Total Fees (Assigned)
         $sql_total = "SELECT SUM(fee_groups_feetype.amount) as total_fees 

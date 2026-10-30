@@ -189,7 +189,7 @@ $turnout_rate = $total_students > 0 ? round(($present_count / $total_students) *
             ?>
         </h3>
         <span class="text-muted" style="font-size: 13px; font-weight: 600;">
-            Meeting: <strong><?php echo htmlspecialchars($ptm['title']); ?></strong> (<?php echo date('d-M-Y', strtotime($ptm['ptm_date'])); ?>)
+            Meeting: <strong><?php echo htmlspecialchars($ptm['title'] ?? ''); ?></strong> (<?php echo !empty($ptm['ptm_date']) ? date('d-M-Y', strtotime($ptm['ptm_date'])) : ''; ?>)
         </span>
     </div>
     <div class="box-body" style="padding: 20px;">

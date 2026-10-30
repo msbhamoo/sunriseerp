@@ -107,6 +107,7 @@ class Studenttransportfee_model extends MY_Model
 
      public function getTransportFeeByMonthStudentSession($student_session_id, $route_pickup_point_id,$month)
     {
+        if (empty($student_session_id)) { return []; }
 
         if ($student_session_id != null && $route_pickup_point_id != null) {
 

@@ -5,7 +5,9 @@
 <div class="control-sidebar-bg"></div>
 </div>
 <script>
-    $.widget.bridge('uibutton', $.ui.button);
+    if (typeof $.widget !== 'undefined' && typeof $.ui !== 'undefined' && typeof $.ui.button !== 'undefined') {
+        $.widget.bridge('uibutton', $.ui.button);
+    }
 </script>
 <?php
 

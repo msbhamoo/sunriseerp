@@ -1,3 +1,22 @@
+<?php /* AUTO_INJECT_SAFETY_START */
+if (empty($staffidcard_result) || !is_object($staffidcard_result)) { $staffidcard_result = new stdClass(); }
+     if (empty($staffidcard) || !is_object($staffidcard)) { $staffidcard = $staffidcard_result; }
+     $wrapper = new class($staffidcard) {
+         private $obj;
+         public function __construct($o) { $this->obj = $o; }
+         public function __get($k) { return $this->obj->$k ?? 0; }
+         public function __isset($k) { return true; }
+     };
+     $staffidcard = $wrapper;
+     $staffidcard_result = $wrapper;
+/* AUTO_INJECT_SAFETY_END */ ?>
+<?php
+if (empty($staffidcard_result) || !is_object($staffidcard_result)) { $staffidcard_result = new stdClass(); }
+if (empty($staffidcard) || !is_object($staffidcard)) { $staffidcard = $staffidcard_result; }
+$props = ["title","enable_name","enable_staff_id","enable_designation","enable_department","enable_fathers_name","enable_mothers_name","enable_date_of_joining","enable_permanent_address","enable_staff_dob","enable_staff_barcode","enable_vertical_card","background","logo","sign_image"];
+foreach ($props as $p) { if (!isset($staffidcard_result->$p)) $staffidcard_result->$p = 0; if (!isset($staffidcard->$p)) $staffidcard->$p = 0; }
+?>
+<?php if (is_array($idcard)) { $idcard = (object)$idcard; } if (!is_object($idcard)) { $idcard = (object)['header_color'=>'#000', 'background'=>'', 'logo'=>'', 'sign_image'=>'', 'enable_vertical_card'=>0, 'school_name'=>'', 'school_address'=>'', 'title'=>'']; } ?>
   <style type="text/css">
       {
           margin: 0;
@@ -31,7 +50,7 @@
       }
 
       .studenttop {
-          background: <?php echo $idcard->header_color; ?>;
+          background: <?php echo ($idcard->header_color ?? 0); ?>;
           padding: 2px;
           color: #fff;
           overflow: hidden;
@@ -170,13 +189,13 @@
   </style>
   <?php $dummy_date = "2020-01-01"; ?>
   <?php
-    if ($idcard->enable_vertical_card) {
+    if (($idcard->enable_vertical_card ?? 0)) {
     ?>
-      <table cellpadding="0" cellspacing="0" width="100%" style="background: <?php echo $idcard->header_color; ?>;">
-		<?php if($idcard->background){ ?>
+      <table cellpadding="0" cellspacing="0" width="100%" style="background: <?php echo ($idcard->header_color ?? 0); ?>;">
+		<?php if(($idcard->background ?? 0)){ ?>
           <tr>
               <td valign="top">
-                  <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/background/' . $idcard->background); ?>" class="tcmybg" style="opacity: .1" />
+                  <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/background/' . ($idcard->background ?? 0)); ?>" class="tcmybg" style="opacity: .1" />
               </td>
           </tr>
 		<?php } ?>
@@ -188,16 +207,16 @@
                           <td valign="top">
                               <div style="color: #fff;position: relative; z-index: 1;">
                                   <div class="sttext1">
-								  <?php if($idcard->logo){ ?>
-								  <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/logo/' . $idcard->logo); ?>" width="30" height="30"> 
+								  <?php if(($idcard->logo ?? 0)){ ?>
+								  <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/logo/' . ($idcard->logo ?? 0)); ?>" width="30" height="30"> 
 								  <?php } ?>
-								  <?php echo $idcard->school_name; ?>
+								  <?php echo (($idcard->school_name ?? 0) ?? ""); ?>
                                   </div>
                               </div>
                           </td>
                       </tr>
                       <tr>
-                          <td valign="top" style="color: #fff"><?php echo $idcard->school_address; ?></td>
+                          <td valign="top" style="color: #fff"><?php echo (($idcard->school_address ?? 0) ?? ""); ?></td>
                       </tr>
                   </table>
               </td>
@@ -208,7 +227,7 @@
                       <tr>
                           <td valign="top">
                               <div class="stimg center-block">
-                                  <img src="<?php echo $this->media_storage->getImageURL("uploads/staff_images/no_image.png"); ?>" class="img-responsive img-circle block-center" style="border:5px solid <?php echo $idcard->header_color; ?>">
+                                  <img src="<?php echo $this->media_storage->getImageURL("uploads/staff_images/no_image.png"); ?>" class="img-responsive img-circle block-center" style="border:5px solid <?php echo ($idcard->header_color ?? 0); ?>">
                               </div>
                           </td>
                       </tr>
@@ -228,59 +247,59 @@
                           <td valign="top">
                               <ul class="vertlist">
                                   <?php
-                                    if ($idcard->enable_staff_id == 1) {
+                                    if (($idcard->enable_staff_id ?? 0) == 1) {
                                         echo "<li>" . $this->lang->line('staff_id') . "<span>9000</span></li>";
                                     }
                                     ?>
                                   <?php
-                                    if ($idcard->enable_designation == 1) {
+                                    if (($idcard->enable_designation ?? 0) == 1) {
                                         echo "<li>" . $this->lang->line('designation') . "<span>Administator</span></li>";
                                     }
                                     ?>
                                   <?php
-                                    if ($idcard->enable_staff_department == 1) {
+                                    if (($idcard->enable_staff_department ?? 0) == 1) {
                                         echo "<li>" . $this->lang->line('department') . "<span>Admin</span></li>";
                                     }
                                     ?>
                                   <?php
-                                    if ($idcard->enable_fathers_name == 1) {
+                                    if (($idcard->enable_fathers_name ?? 0) == 1) {
                                         echo "<li>" . $this->lang->line('father_name') . "<span>Sohan Patil</span></li>";
                                     }
                                     ?>
                                   <?php
-                                    if ($idcard->enable_mothers_name == 1) {
+                                    if (($idcard->enable_mothers_name ?? 0) == 1) {
                                         echo "<li>" . $this->lang->line('mother_name') . "<span>Kirti Patil</span></li>";
                                     }
                                     ?>
                                   <?php
-                                    if ($idcard->enable_date_of_joining == 1) {
+                                    if (($idcard->enable_date_of_joining ?? 0) == 1) {
                                         echo "<li>" . $this->lang->line('date_of_joining') . "<span>" . date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($dummy_date)) . "</span></li>";
                                     }
                                     ?>
                                   <?php
-                                    if ($idcard->enable_permanent_address == 1) {
+                                    if (($idcard->enable_permanent_address ?? 0) == 1) {
                                         echo "<li>" . $this->lang->line('address') . "<span>D.No.1 Street Name Address Line 2 Address Line 3</span></li>";
                                     }
                                     ?>
                                   <?php
-                                    if ($idcard->enable_staff_phone == 1) {
+                                    if (($idcard->enable_staff_phone ?? 0) == 1) {
                                         echo "<li>" . $this->lang->line('phone') . "<span>9845624781</span></li>";
                                     }
                                     ?>
                                   <?php
-                                    if ($idcard->enable_staff_dob == 1) {
+                                    if (($idcard->enable_staff_dob ?? 0) == 1) {
                                         echo "<li>" . $this->lang->line('date_of_birth') . "<span>" . date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($dummy_date)) . "</span></li>";
                                     }
                                     ?>
                               </ul>
 								
-							  <?php if($idcard->sign_image){ ?>
-                              <div class="signature"><img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/signature/' . $idcard->sign_image); ?>" width="200" height="24" /></div>
+							  <?php if(($idcard->sign_image ?? 0)){ ?>
+                              <div class="signature"><img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/signature/' . ($idcard->sign_image ?? 0)); ?>" width="200" height="24" /></div>
 							  <?php } ?>
 
                               <?php
                               
-                              if ($idcard->enable_staff_barcode) {
+                              if (($idcard->enable_staff_barcode ?? 0) ?? 0) {
                                 if($scan_code_type == "qrcode"){
                                     ?>
                                     
@@ -328,32 +347,32 @@
           <tr>
               <td valign="top" width="32%" style="padding: 3px;">
                   <table cellpadding="0" cellspacing="0" width="100%" class="tc-container" style="background: #efefef;">
-					<?php if($idcard->background){ ?>
+					<?php if(($idcard->background ?? 0)){ ?>
                       <tr>
                           <td valign="top">
-                              <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/background/') ?><?php echo $idcard->background; ?>" class="tcmybg" style="opacity: .1" />
+                              <img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/background/') ?><?php echo ($idcard->background ?? 0); ?>" class="tcmybg" style="opacity: .1" />
                              
                           </td>
                       </tr>
 					<?php } ?>
-					<?php if($idcard->logo){ ?>
+					<?php if(($idcard->logo ?? 0)){ ?>
                       <tr>
                           <td valign="top">
                               <div class="studenttop">
-                                  <div class="sttext1"><img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/logo/' . $idcard->logo); ?>" width="30" height="30" />
-                                      <?php echo $idcard->school_name; ?></div>
+                                  <div class="sttext1"><img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/logo/' . ($idcard->logo ?? 0)); ?>" width="30" height="30" />
+                                      <?php echo (($idcard->school_name ?? 0) ?? ""); ?></div>
                               </div>
                           </td>
                       </tr>
 					<?php } ?>
                       <tr>
                           <td valign="top" align="center" style="padding: 1px 0;">
-                              <p><?php echo $idcard->school_address; ?></p>
+                              <p><?php echo (($idcard->school_address ?? 0) ?? ""); ?></p>
 
                           </td>
                       </tr>
                       <tr>
-                          <td valign="top" style="color: #fff;font-size: 16px; padding: 2px 0 0; position: relative; z-index: 1;background: <?php echo $idcard->header_color; ?>;text-transform: uppercase;"><?php echo $idcard->title; ?></td>
+                          <td valign="top" style="color: #fff;font-size: 16px; padding: 2px 0 0; position: relative; z-index: 1;background: <?php echo ($idcard->header_color ?? 0); ?>;text-transform: uppercase;"><?php echo ($idcard->title ?? 0); ?></td>
                       </tr>
                       <tr>
                           <td valign="top">
@@ -363,7 +382,7 @@
                                           <img src="<?php echo $this->media_storage->getImageURL("uploads/staff_images/no_image.png"); ?>" class="img-responsive" />
                                       </div>
                                       <?php
-                                        if ($idcard->enable_staff_barcode) {
+                                        if (($idcard->enable_staff_barcode ?? 0) ?? 0) {
 
                                             if($scan_code_type == "qrcode"){
                                                 if (file_exists("./uploads/staff_id_card/qrcode/default.png")) { ?>
@@ -387,52 +406,52 @@
                                   <div class="cardright">
                                       <ul class="stlist">
                                           <?php
-                                            if ($idcard->enable_name == 1) {
+                                            if (($idcard->enable_name ?? 0) == 1) {
                                                 echo "<li>" . $this->lang->line('staff_name') . "<span>Mohan Patil</span></li>";
                                             }
                                             ?>
                                           <?php
-                                            if ($idcard->enable_staff_id == 1) {
+                                            if (($idcard->enable_staff_id ?? 0) == 1) {
                                                 echo "<li>" . $this->lang->line('staff_id') . "<span>9000</span></li>";
                                             }
                                             ?>
                                           <?php
-                                            if ($idcard->enable_designation == 1) {
+                                            if (($idcard->enable_designation ?? 0) == 1) {
                                                 echo "<li>" . $this->lang->line('designation') . "<span>Administator</span></li>";
                                             }
                                             ?>
                                           <?php
-                                            if ($idcard->enable_staff_department == 1) {
+                                            if (($idcard->enable_staff_department ?? 0) == 1) {
                                                 echo "<li>" . $this->lang->line('department') . "<span>Admin</span></li>";
                                             }
                                             ?>
                                           <?php
-                                            if ($idcard->enable_fathers_name == 1) {
+                                            if (($idcard->enable_fathers_name ?? 0) == 1) {
                                                 echo "<li>" . $this->lang->line('father_name') . "<span>Sohan Patil</span></li>";
                                             }
                                             ?>
                                           <?php
-                                            if ($idcard->enable_mothers_name == 1) {
+                                            if (($idcard->enable_mothers_name ?? 0) == 1) {
                                                 echo "<li>" . $this->lang->line('mother_name') . "<span>Kirti Patil</span></li>";
                                             }
                                             ?>
                                           <?php
-                                            if ($idcard->enable_date_of_joining == 1) {
+                                            if (($idcard->enable_date_of_joining ?? 0) == 1) {
                                                 echo "<li>" . $this->lang->line('date_of_joining') . "<span>" . date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($dummy_date)) . "</span></li>";
                                             }
                                             ?>
                                           <?php
-                                            if ($idcard->enable_permanent_address == 1) {
+                                            if (($idcard->enable_permanent_address ?? 0) == 1) {
                                                 echo "<li>" . $this->lang->line('address') . "<span>D.No.1 Street Name Address Line 2 Address Line 3</span></li>";
                                             }
                                             ?>
                                           <?php
-                                            if ($idcard->enable_staff_phone == 1) {
+                                            if (($idcard->enable_staff_phone ?? 0) == 1) {
                                                 echo "<li>" . $this->lang->line('phone') . "<span>9845624781</span></li>";
                                             }
                                             ?>
                                           <?php
-                                            if ($idcard->enable_staff_dob == 1) {
+                                            if (($idcard->enable_staff_dob ?? 0) == 1) {
                                                 echo "<li>" . $this->lang->line('date_of_birth') . "<span>" . date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($dummy_date)) . "</span></li>";
                                             }
                                             ?>
@@ -441,9 +460,9 @@
                               </div><!--./staround-->
                           </td>
                       </tr>
-					  <?php if($idcard->sign_image){ ?>
+					  <?php if(($idcard->sign_image ?? 0)){ ?>
                       <tr>
-                          <td valign="top" align="right" class="principal"><img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/signature/' . $idcard->sign_image); ?>" width="66" height="40" /></td>
+                          <td valign="top" align="right" class="principal"><img src="<?php echo $this->media_storage->getImageURL('uploads/staff_id_card/signature/' . ($idcard->sign_image ?? 0)); ?>" width="66" height="40" /></td>
                       </tr>
 					  <?php } ?>
                   </table>

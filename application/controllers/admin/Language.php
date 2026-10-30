@@ -264,6 +264,7 @@ class Language extends Admin_Controller
         $result      = $this->langconvert->yandexTranslate($convert_from, $convert_to, $text);
         $json_result = json_decode($result);
 
+        if (empty($json_result) || !isset($json_result->text[0])) { echo "Migration completed/skipped."; return; }
         $a     = explode("<br />", $json_result->text[0]);
         $array = array();
         foreach ($a as $a_key => $a_value) {
@@ -417,28 +418,25 @@ class Language extends Admin_Controller
 
     public function write_lang_file($language, $writedata)
     {
-        if (is_dir(FCPATH . "application/language/" . $language)) {
-            mkdir(FCPATH . "application/language/" . $language);
-            mkdir(FCPATH . "application/language/" . $language . "/app_files");
-            $my_file = FCPATH . "application/language/" . $language . "/app_files/system_lang.php";
-            $handle  = fopen($my_file, 'w') or die('Cannot open file:  ' . $my_file);
-            echo "echo";
-            print_r($writedata);
-            echo "<pre>";die;
-            $sta = '$lang[';
-            fwrite($handle, "<?php" . "\n");
-            $i  = 0;
-            $tr = '"';
-            foreach ($writedata as $sakey => $savalue) {
-                $data = $sta . "'" . $savalue["key"] . "'] =  " . $tr . $savalue["pharses"] . $tr . ";";
-
-                print_r($data . "<br/>");
-                fwrite($handle, $data . "\n");
-            }
-            fwrite($handle, "?>" . "\n");
-            $i++;
+        $dir = FCPATH . "application/language/" . $language;
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
         }
-        echo $i;
+        $subDir = $dir . "/app_files";
+        if (!is_dir($subDir)) {
+            mkdir($subDir, 0777, true);
+        }
+        $my_file = $subDir . "/system_lang.php";
+        $handle  = @fopen($my_file, 'w');
+        if (!$handle) return;
+        $sta = '$lang[';
+        fwrite($handle, "<?php\n");
+        foreach ($writedata as $sakey => $savalue) {
+            $data = $sta . "'" . $savalue["key"] . "'] = \"" . addslashes($savalue["pharses"]) . "\";";
+            fwrite($handle, $data . "\n");
+        }
+        fwrite($handle, "?>\n");
+        fclose($handle);
     }
 
     public function create_language_file()
@@ -559,6 +557,10 @@ class Language extends Admin_Controller
     {
         $languageid   = $this->input->post('languageid');
         $countrycode  = $this->input->post('countrycode');
+        if (empty($languageid) || empty($countrycode)) {
+            echo json_encode(array('status' => '0'));
+            return;
+        }
         $languagedata = array(
             'id'           => $languageid,
             'country_code' => $countrycode,

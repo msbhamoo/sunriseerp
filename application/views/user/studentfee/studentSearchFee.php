@@ -1,0 +1,1 @@
+<?php if (file_exists(APPPATH . "Views/studentfee/studentSearchFee.php")) { include APPPATH . "Views/studentfee/studentSearchFee.php"; } elseif (file_exists(FCPATH . "application/views/studentfee/studentSearchFee.php")) { include FCPATH . "application/views/studentfee/studentSearchFee.php"; } ?>

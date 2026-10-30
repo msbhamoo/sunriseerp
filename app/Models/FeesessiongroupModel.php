@@ -18,7 +18,7 @@ class FeesessiongroupModel extends BaseModel
     public function getFeesByGroup(?int $id = null, ?int $displaySystem = null, ?int $classId = null): array
     {
         $sessionModel = new SessionModel();
-        $currentSession = (int)$sessionModel->getCurrentSession();
+        $currentSession = $sessionModel->getCurrentSessionId();
 
         $builder = $this->db->table('fee_session_groups')
             ->select('fee_session_groups.*, fee_groups.name as group_name, fee_groups.is_system')
@@ -78,7 +78,7 @@ class FeesessiongroupModel extends BaseModel
     public function group_exists(int $feeGroupId): int
     {
         $sessionModel = new SessionModel();
-        $currentSession = (int)$sessionModel->getCurrentSession();
+        $currentSession = $sessionModel->getCurrentSessionId();
 
         $existing = $this->where('fee_groups_id', $feeGroupId)
             ->where('session_id', $currentSession)

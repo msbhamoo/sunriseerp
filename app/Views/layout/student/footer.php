@@ -5,7 +5,9 @@
 <div class="control-sidebar-bg"></div>
 </div>
 <script>
-    $.widget.bridge('uibutton', $.ui.button);
+    if (typeof $.widget !== 'undefined' && typeof $.ui !== 'undefined' && typeof $.ui.button !== 'undefined') {
+        $.widget.bridge('uibutton', $.ui.button);
+    }
 </script>
 
 <link href="<?php echo base_url(); ?>backend/toast-alert/toastr.css" rel="stylesheet"/>
@@ -80,6 +82,8 @@ pdfMake.fonts = jsonData;
 <script type="text/javascript" src="<?php echo base_url(); ?>backend/dist/datatables/2.2.2/buttons.colVis.min.js" ></script>
 <script type="text/javascript" src="<?php echo base_url(); ?>backend/dist/datatables/2.2.2/ss.custom.js" ></script>
 
+<?php $this->load->view('layout/partials/modern_sidebar_js'); ?>
+<?php $this->load->view('layout/partials/student_panel_js'); ?>
 </body>
 </html>
 

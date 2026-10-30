@@ -4,7 +4,7 @@ if (!defined('BASEPATH')) {
     exit('No direct script access allowed');
 }
 
-class Chat_model extends Admin_Model
+class Chat_model extends MY_Model
 {
 
 

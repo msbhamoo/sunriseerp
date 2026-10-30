@@ -37,9 +37,9 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                         <label><?php echo $this->lang->line('class'); ?></label>
                                         <select id="class_id" name="class_id" class="form-control">
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
-                                            <?php foreach ($classlist as $class) { ?>
+                                            <?php if (!empty($classlist)) { foreach ($classlist as $class) { ?>
                                                 <option value="<?php echo $class['id'] ?>"><?php echo $class['class'] ?></option>
-                                            <?php } ?>
+                                            <?php } } ?>
                                         </select>
                                     </div>
                                 </div>
@@ -56,9 +56,9 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                         <label><?php echo $this->lang->line('category'); ?></label>
                                         <select id="category_id" name="category_id" class="form-control">
                                             <option value=""><?php echo $this->lang->line('select'); ?></option>
-                                            <?php foreach ($categorylist as $category) { ?>
+                                            <?php if (!empty($categorylist)) { foreach ($categorylist as $category) { ?>
                                                 <option value="<?php echo $category['id'] ?>"><?php echo $category['category'] ?></option>
-                                            <?php } ?>
+                                            <?php } } ?>
                                         </select>
                                     </div>
                                 </div>

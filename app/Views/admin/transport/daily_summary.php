@@ -109,7 +109,7 @@
 <script type="text/javascript">
     $(document).ready(function () {
         $('.date').datepicker({
-            format: '<?php echo $this->customlib->getSchoolDateFormat(); ?>',
+            format: '<?php echo strtr($this->customlib->getSchoolDateFormat(), ['d' => 'dd', 'm' => 'mm', 'Y' => 'yyyy']); ?>',
             autoclose: true
         });
         

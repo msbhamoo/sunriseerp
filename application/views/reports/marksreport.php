@@ -199,7 +199,7 @@
             <table style="background: #ffffff !important;">
                 <tr>
                     <td style="background: #ffffff !important;text-align: left; margin-top: 8px;">
-                        <img style="height:70px; " src="<?php echo base_url(); ?>/images/<?php echo $settinglist[0]['image']; ?>">
+                        <img style="height:70px; " src="<?php echo base_url(); ?>/images/<?php echo rawurlencode($settinglist[0]['image']); ?>">
                     </td>
                     <td style="background: #ffffff !important;float: right;
                         text-align: right;">                      
@@ -217,10 +217,10 @@
                 <table cellpadding="0" cellspacing="0" style="width:100%; border:0; background:none; margin:0 0 2px 0; ">
                     <tr>
                         <td style="padding:20px;font-size: .65em; font-weight:bold;text-align:left; background:#fff;">
-                            <b><?php echo $this->lang->line('exam'); ?>: <?php echo $exam_arrylist['name']; ?></b></td>
+                            <b><?php echo $this->lang->line('exam'); ?>: <?php echo $exam_arrylist['name'] ?? ''; ?></b></td>
                         <td style="padding:20px;font-size: .65em; font-weight:bold;text-align:left;background:#fff;">
                             <b><?php echo $this->lang->line('class'); ?>:
-                                <?php echo $class[0]['class'] . "(" . $class[0]['section'] . ")" ?>
+                                <?php echo (!empty($class[0]['class']) ? $class[0]['class'] : '') . "(" . (!empty($class[0]['section']) ? $class[0]['section'] : '') . ")" ?>
                             </b></td>
                         <td style="padding:20px;font-size: .65em; font-weight:bold;text-align:left;background:#fff;">
                             <b style="text-align:center"><?php echo $this->lang->line('date'); ?>: <?php echo date($this->customlib->getSchoolDateFormat()); ?></b></td>

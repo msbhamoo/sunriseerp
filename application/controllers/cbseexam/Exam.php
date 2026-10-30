@@ -188,6 +188,7 @@ class Exam extends MY_Addon_CBSEController
     }
     public function examstudent()
     {
+        if (empty($_POST['examid'])) { echo ""; return; }
         if (!$this->rbac->hasPrivilege('cbse_exam_assign_view_student', 'can_view')) {
             access_denied();
         }
@@ -212,7 +213,7 @@ class Exam extends MY_Addon_CBSEController
         $exam_id = $this->input->post('exam_id');
         $class_ids = $this->input->post('class_ids');
 
-        $data['examDetail'] = $this->cbseexam_exam_model->getexamdetails($exam_id);
+        $data['examDetail'] = $this->cbseexam_exam_model->getexamdetails($exam_id) ?: ['id' => 0, 'name' => '', 'class_sections' => '', 'cbse_exam_assessment_id' => 0];
         $data['classes'] = $this->cbseexam_exam_model->getExamClasses($exam_id);
         $data['assessments'] = $this->cbseexam_assessment_model->getWithAssessmentTypeByAssessmentID($data['examDetail']['cbse_exam_assessment_id']);
         $data['exam_subjects'] = $this->cbseexam_exam_model->getexamSubjectswithAssessment($exam_id, $data['assessments'], $class_ids);       
@@ -1506,7 +1507,7 @@ class Exam extends MY_Addon_CBSEController
     public function getSubjectByExam()
     {
         $exam_id = $this->input->post('recordid');
-        $data['examDetail'] = $this->cbseexam_exam_model->getexamdetails($exam_id);
+        $data['examDetail'] = $this->cbseexam_exam_model->getexamdetails($exam_id) ?: ['id' => 0, 'name' => '', 'class_sections' => '', 'cbse_exam_assessment_id' => 0];
         $data['exam_subjects'] = $this->cbseexam_exam_model->getexamsubjects($exam_id);
         $data['batch_subjects'] = $this->subject_model->get();
         $data['exam_id'] = $exam_id;
@@ -1523,7 +1524,7 @@ class Exam extends MY_Addon_CBSEController
         $class_id = $this->input->post('class_id');
         $section_id = $this->input->post('section_id');
         
-        $examdetails = $this->cbseexam_exam_model->get_exambyId($data['exam_id']);
+        $examdetails = $this->cbseexam_exam_model->get_exambyId($data['exam_id']) ?: ['cbse_exam_assessment_id' => 0];
         $data['exam'] = $examdetails;
         $resultlist = $this->cbseexam_exam_model->get_markexamstudents($data['timetable_id'], $class_id, $section_id);
         $data['resultlist'] = $resultlist;
@@ -1766,14 +1767,16 @@ class Exam extends MY_Addon_CBSEController
         $exam_student_id = $this->input->post('exam_student_id');
         $teacher_remark = $this->input->post('teacher_remark');
 
-        foreach ($exam_student_id as $key => $value) {
+        if (!empty($exam_student_id) && is_array($exam_student_id)) {
+            foreach ($exam_student_id as $key => $value) {
 
-            $savedata = array(
-                'id' => $value,
-                'staff_id' => $this->customlib->getStaffID(),
-                'remark' => $teacher_remark[$value],
-            );
-            $this->cbseexam_exam_model->addexamstudent($savedata);
+                $savedata = array(
+                    'id' => $value,
+                    'staff_id' => $this->customlib->getStaffID(),
+                    'remark' => $teacher_remark[$value] ?? '',
+                );
+                $this->cbseexam_exam_model->addexamstudent($savedata);
+            }
         }
 
         $array = array('status' => '1', 'error' => '', 'message' => $this->lang->line('success_message'));
@@ -1782,22 +1785,27 @@ class Exam extends MY_Addon_CBSEController
 
     public function get_exam()
     {
+        if (empty($_POST['cbse_exam_assessment_id'])) { echo json_encode([]); return; }
         $data['term_list'] = $this->cbseexam_term_model->get();
         $data['classlist'] = $this->class_model->get();
         $data['assessment_result'] = $this->cbseexam_assessment_model->get();
         $data['grade_result'] = $this->cbseexam_grade_model->getgradelist();
         $exam_id = $this->input->post('exam_id');
-        $data['result'] = $this->cbseexam_exam_model->get_exambyId($exam_id);
-        $class_section_list = $this->cbseexam_exam_model->get_classsectionbyId($exam_id);
-        $data['class_id'] = $class_section_list[0]['class_id'];
+        $result = !empty($exam_id) ? $this->cbseexam_exam_model->get_exambyId($exam_id) : null;
+        if (empty($result) || !is_array($result)) {
+            $result = ['id' => '', 'name' => '', 'is_active' => 0, 'is_publish' => 0, 'cbse_term_id' => '', 'cbse_exam_assessment_type_id' => '', 'cbse_exam_grade_id' => '', 'description' => '', 'use_exam_roll_no' => 0];
+        }
+        $data['result'] = $result;
+        $class_section_list = !empty($exam_id) ? $this->cbseexam_exam_model->get_classsectionbyId($exam_id) : [];
+        $data['class_id'] = $class_section_list[0]['class_id'] ?? '';
         $data['class_section_list'] = json_encode($class_section_list);
         $data['delete_string'] = $this->input->post('delete_string');
         $data['sch_setting'] = $this->sch_setting_detail;
         $data['cbse_category'] = $this->cbse_category_model->get();
 
         //=========================added============================//
-        $class_section_name = $this->cbseexam_exam_model->get_cbse_exam_sections_name($exam_id);
-        $sections=$class_section_name[0]['sections'];
+        $class_section_name = !empty($exam_id) ? $this->cbseexam_exam_model->get_cbse_exam_sections_name($exam_id) : [];
+        $sections = $class_section_name[0]['sections'] ?? '';
         $data['template_list']  = $this->cbseexam_template_model->get_single_exam_template_by_sectionid($sections);
         //=========================added============================//
 

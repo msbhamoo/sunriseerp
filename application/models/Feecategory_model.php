@@ -20,6 +20,20 @@ class FeeCategory_model extends CI_Model
      */
     public function get($id = null, $order = "desc")
     {
+        if (!$this->db->table_exists('feecategory')) {
+            if ($this->db->table_exists('fee_groups')) {
+                $this->db->select('id, name as category')->from('fee_groups');
+                if ($id != null) {
+                    $this->db->where('id', $id);
+                    $row = $this->db->get()->row_array();
+                    return $row ?: [];
+                }
+                $res = $this->db->get()->result_array();
+                return $res ?: [];
+            }
+            return $id != null ? [] : [];
+        }
+
         $this->db->select()->from('feecategory');
         if ($id != null) {
             $this->db->where('id', $id);
@@ -36,6 +50,10 @@ class FeeCategory_model extends CI_Model
 
     public function getbyasc($id = null)
     {
+        if (!$this->db->table_exists('feecategory')) {
+            return $this->get($id, 'asc');
+        }
+
         $this->db->select()->from('feecategory');
         if ($id != null) {
             $this->db->where('id', $id);

@@ -62,6 +62,10 @@ class Systemnotificationsetting extends Admin_Controller
         }
         
         $type = $this->input->post('type');
+        if (empty($type)) {
+            echo json_encode(array('status' => 'fail', 'msg' => 'Missing type'));
+            return;
+        }
         $is_active = $this->input->post('is_active');
         
         $data = array(

@@ -77,7 +77,7 @@ class Marks extends MY_Addon_CBSEController
         if (!is_array($class_ids)) $class_ids = array();
         if (!is_array($section_ids)) $section_ids = array();
         
-        $examdetails = $this->cbseexam_exam_model->get_exambyId($data['exam_id']);
+        $examdetails = $this->cbseexam_exam_model->get_exambyId($data['exam_id']) ?: ['cbse_exam_assessment_id' => 0, 'cbse_exam_grade_id' => 0];
         $data['exam'] = $examdetails;
         
         $resultlist = $this->cbseexam_exam_model->get_markexamstudents_multi($data['timetable_id'], $class_ids, $section_ids);

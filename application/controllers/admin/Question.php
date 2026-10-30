@@ -310,9 +310,25 @@ class Question extends Admin_Controller
         $data                        = array();
         $data['recordid']            = $this->input->post('recordid');
         $question_result             = $this->question_model->get($data['recordid']);
+        if (is_array($question_result)) {
+            $question_result = (object) $question_result;
+        } elseif (empty($question_result)) {
+            $question_result = new \stdClass();
+            $question_result->class_id = 0;
+            $question_result->section_id = 0;
+            $question_result->subject_id = 0;
+            $question_result->question = '';
+            $question_result->opt_a = '';
+            $question_result->opt_b = '';
+            $question_result->opt_c = '';
+            $question_result->opt_d = '';
+            $question_result->opt_e = '';
+            $question_result->correct = '';
+        }
         $data['question_result']     = $question_result;
         $data['classList']           = $this->class_model->get();
-        $data['sectionList']         = $this->section_model->getClassBySection($question_result->class_id);
+        $class_id                    = isset($question_result->class_id) ? $question_result->class_id : 0;
+        $data['sectionList']         = $this->section_model->getClassBySection($class_id);
         $subject_result              = $this->subject_model->get();
         $data['subjectlist']         = $subject_result;
         $data['question_true_false'] = $this->config->item('question_true_false');

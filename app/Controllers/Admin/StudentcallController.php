@@ -97,7 +97,9 @@ class StudentcallController extends BaseController
 
         $data['saved_filters'] = $session->get('studentcall_status_filters');
 
-        return view('admin/studentcall/index', $data);
+        return view('layout/header', $data)
+            . view('admin/studentcall/index', $data)
+            . view('layout/footer', $data);
     }
 
     public function assigned_to_me()
@@ -145,7 +147,9 @@ class StudentcallController extends BaseController
 
         $data['saved_filters'] = $session->get('studentcall_status_filters');
 
-        return view('admin/studentcall/index', $data);
+        return view('layout/header', $data)
+            . view('admin/studentcall/index', $data)
+            . view('layout/footer', $data);
     }
 
     public function search_student()

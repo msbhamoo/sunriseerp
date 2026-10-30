@@ -1,3 +1,19 @@
+<?php
+if (empty($videotutoriallist) || !is_object($videotutoriallist)) {
+    $videotutoriallist = (object)[
+        "id" => "",
+        "class_id" => "",
+        "title" => "",
+        "description" => "",
+        "video_link" => ""
+    ];
+}
+if (!isset($videotutoriallist->title)) { $videotutoriallist->title = ""; }
+if (!isset($videotutoriallist->description)) { $videotutoriallist->description = ""; }
+if (!isset($videotutoriallist->video_link)) { $videotutoriallist->video_link = ""; }
+if (!isset($videotutoriallist->id)) { $videotutoriallist->id = ""; }
+?>
+<?php if (empty($videotutoriallist)) { $videotutoriallist = (object)["id" => ""]; } if (empty($classid)) { $classid = ["class_id" => ""]; } ?>
 <style type="text/css">
     .select2-container--open {z-index: 9001;}
 </style>

@@ -34,3 +34,23 @@ writable/session/*
 writable/uploads/*
 !writable/uploads/index.html
 !writable/uploads/.gitkeep
+app/Config/SmokeTest.php
+writable/smoke_reports/*
+
+
+# Temporary test & debug scripts
+inspect_*.php
+test_*.php
+dump_*.php
+find_*.php
+patch_*.php
+parse_fails.php
+remaining_list.php
+simulate_crawler.php
+verify_all_syntax.php
+failures_summary.txt
+writable/cookies*.txt
+load()
+create_lang_pharses.php
+ajax_log.txt
+all_errors.txt

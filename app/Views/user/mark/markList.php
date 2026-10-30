@@ -37,7 +37,7 @@ if (empty($examSchedule)) {
                                     <?php
 } else {
     $counter = 1;
-    foreach ($examSchedule as $key => $value) {
+    foreach ($examSchedule as $key => $value) { if (!is_array($value)) continue;
         ?>
                                         <div id="<?php echo 'print_view' . $counter ?>">
                                             <h4 class="pagetitleh"><?php echo $value['exam_name']; ?></h4>

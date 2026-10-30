@@ -774,7 +774,7 @@ class Customlib
     {
         $student_session = $this->CI->session->all_userdata();
         $session_Array   = $this->CI->session->userdata('student');
-        $studentID       = $session_Array['student_id'];
+        $studentID       = isset($session_Array['student_id']) ? $session_Array['student_id'] : 0;
         return $studentID;
     }
 
@@ -922,7 +922,7 @@ class Customlib
     public function getAdminSessionUserName()
     {
         $student_session = $this->CI->session->userdata('admin');
-        $username        = $student_session['username'];
+        $username = $student_session['username'] ?? '';
         return $username;
     }
 
@@ -2495,7 +2495,7 @@ class Customlib
     {
         $this->CI->load->model('chatuser_model');
         $userdata  = $this->getUserData();
-        $userid   = $userdata['id'];
+        $userid = $userdata['id'] ?? null; if (empty($userid)) { return 0; }
         return  $total = $this->CI->chatuser_model->get_chat_msg_count($userid);
     }
 

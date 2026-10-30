@@ -1,3 +1,4 @@
+<?php $feesessiongrouplist = $feesessiongrouplist ?? []; ?>
 <?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
 ?>

@@ -58,6 +58,7 @@ class Attendence extends Student_Controller
 
     public function getAttendence()
     {
+        $eventdata = array();
         $date['start']         = $this->input->get('start');
         $date['end']           = $this->input->get('end');
         $student_id            = $this->customlib->getStudentSessionUserID();
@@ -151,6 +152,8 @@ class Attendence extends Student_Controller
     public function getevents()
     {
         $userdata = $this->customlib->getUserData();
+        $eventdata = array();
+        $event_for = "0";
         $result   = $this->calendar_model->getEvents();
         if (!empty($result)) {
 
