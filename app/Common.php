@@ -66,13 +66,8 @@ if (!function_exists('html_escape')) {
 }
 
 // In CI4, APPPATH is app/, but CI3 code often maps APPPATH . "./language/..."
-// Ensure directory junction/link or fallback exists for language directories
-if (!is_dir(APPPATH . 'language')) {
-    @mkdir(APPPATH . 'language', 0755, true);
-}
-// Copy or map language folder to APPPATH . 'language' if empty
-if (is_dir(APPPATH . '../application/language') && count(glob(APPPATH . 'language/*')) === 0) {
-    exec('robocopy "application\\language" "app\\language" /E /NFL /NDL /NJH /NJS /nc /ns /np');
+if (!is_dir(APPPATH . 'Language') && !is_dir(APPPATH . 'language')) {
+    @mkdir(APPPATH . 'Language', 0755, true);
 }
 
 class DatabaseBridge
