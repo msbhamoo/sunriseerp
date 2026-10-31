@@ -63,6 +63,15 @@ class Accounts_integration
         }
 
         $next = $seq->last_number + 1;
+        // Skip numbers already used (sequence can lag behind existing vouchers)
+        $maxRow = $this->CI->db->query(
+            "SELECT MAX(CAST(SUBSTRING(voucher_no, " . (strlen($seq->prefix) + 1) . ") AS UNSIGNED)) AS mx
+             FROM acc_vouchers WHERE voucher_type = " . $this->CI->db->escape($type)
+            . " AND voucher_no LIKE " . $this->CI->db->escape($seq->prefix . '%')
+        )->row();
+        if ($maxRow && (int)$maxRow->mx >= $next) {
+            $next = (int)$maxRow->mx + 1;
+        }
         $this->CI->db->where('voucher_type', $type)
                      ->update('acc_voucher_sequences', ['last_number' => $next]);
 

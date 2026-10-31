@@ -209,6 +209,10 @@ class Contravoucher extends MY_Addon_AccountsController
         $data['id'] = $id;
         $data['voucher'] = $this->accvoucher_model->getVoucher($id);
         
+        if (empty($data['voucher'])) {
+            show_404();
+        }
+
         if ($data['voucher']['status'] === 'reversed') {
             $this->session->set_flashdata('msg_toast_error', 'Reversed vouchers cannot be edited manually.');
             redirect('accounts/contravoucher');
