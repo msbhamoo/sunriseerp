@@ -85,6 +85,6 @@ class MultibranchModel extends BaseModel
 
     protected function subPath(): string
     {
-        return 'Multibranch';
+        return 'multibranch';
     }
 }

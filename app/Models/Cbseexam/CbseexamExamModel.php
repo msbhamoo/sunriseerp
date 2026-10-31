@@ -481,6 +481,6 @@ class CbseexamExamModel extends BaseModel
 
     protected function subPath(): string
     {
-        return 'Cbseexam';
+        return 'cbseexam';
     }
 }

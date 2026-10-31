@@ -538,8 +538,13 @@ class Cbseexam_exam_model extends MY_Model
 				$this->db->where_in('cbse_exam_class_sections.class_section_id', $class_section_id);
 			}
 		}
-        $this->db->where('session_id', $this->current_session);
-        return $this->db->get()->result_array();
+        $this->db->where('cbse_exams.session_id', $this->current_session);
+        $query = $this->db->get();
+        if (!$query) {
+            log_message('error', 'getexamlist query failed: ' . json_encode($this->db->error()));
+        }
+        $list = $query ? $query->result_array() : array();
+        return is_array($list) ? $list : array();
     }
 
     /*
