@@ -185,6 +185,10 @@ class Biometric_lib
             }
         }
 
+        // e-TimeOffice only fills the IN/OUT summary once it has processed the day, so a day can show
+        // "--:--" although raw punches exist. Raw punches are the fallback for those rows.
+        $rawPunches = $this->fetchRawPunches($fromDate, $toDate, $setting);
+
         // Build Staff lookup map: by biometric_emp_id AND by employee_id
         $staffMap = $this->getStaffLookupMap();
 
@@ -248,6 +252,13 @@ class Biometric_lib
 
             $inTime  = $this->normalizePunchTime(isset($punch['INTime']) ? $punch['INTime'] : null, false);
             $outTime = $this->normalizePunchTime(isset($punch['OUTTime']) ? $punch['OUTTime'] : null, true, $inTime);
+
+            if (empty($inTime) && empty($outTime) && !empty($rawPunches[$empCode . '|' . $punchDate])) {
+                $times   = $rawPunches[$empCode . '|' . $punchDate];
+                $inTime  = reset($times);
+                $outTime = count($times) > 1 ? end($times) : null;
+                $punch['raw_fallback'] = $times;
+            }
 
             // Determine staff attendance type scoped to that punch's effective date
             $snapKey = $staff['id'] . '|' . $punchDate;
@@ -322,6 +333,39 @@ class Biometric_lib
             'unmapped'       => $unmappedCount,
             'unmapped_codes' => $unmappedCodes
         );
+    }
+
+    /**
+     * Raw device punches for a date range, as ["Empcode|Y-m-d" => sorted list of H:i:s].
+     * Best effort: any failure returns an empty map and the normal summary sync carries on.
+     */
+    protected function fetchRawPunches($fromDate, $toDate, $setting)
+    {
+        $res = $this->makeApiRequest('DownloadPunchData', array(
+            'Empcode'  => 'ALL',
+            'FromDate' => date('d/m/Y', strtotime($fromDate)) . '_00:00',
+            'ToDate'   => date('d/m/Y', strtotime($toDate)) . '_23:59',
+        ), $setting);
+
+        $map = array();
+        if (empty($res['status']) || empty($res['data']['PunchData']) || !is_array($res['data']['PunchData'])) {
+            return $map;
+        }
+        foreach ($res['data']['PunchData'] as $p) {
+            if (empty($p['Empcode']) || empty($p['PunchDate'])) {
+                continue;
+            }
+            $ts = DateTime::createFromFormat('d/m/Y H:i:s', trim($p['PunchDate']));
+            if (!$ts) {
+                continue;
+            }
+            $map[trim($p['Empcode']) . '|' . $ts->format('Y-m-d')][] = $ts->format('H:i:s');
+        }
+        foreach ($map as $k => $times) {
+            sort($times);
+            $map[$k] = $times;
+        }
+        return $map;
     }
 
     /**
