@@ -85,8 +85,13 @@ class Scholarshipexam extends Admin_Controller
                 'description' => $this->input->post('description'),
                 'exam_center' => $this->input->post('exam_center') ?: 'Main School Campus',
                 'instructions' => $this->input->post('instructions'),
-                'status' => $this->input->post('status') ? 1 : 0
+                'status' => 1
             );
+
+            // The form has no status field: keep an existing exam's active flag instead of resetting it to inactive
+            if ($id) {
+                unset($data['status']);
+            }
 
             $phase_names = $this->input->post('phase_name');
             $class_selection = $this->input->post('class_ids');
