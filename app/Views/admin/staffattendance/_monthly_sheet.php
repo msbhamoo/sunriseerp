@@ -176,6 +176,7 @@ $shift_sched_map = isset($shift_schedules_map) ? $shift_schedules_map : array();
                 <?php } ?>
                 <th class="ms-tot" title="Working days with no attendance marked (not a Sunday or calendar holiday, up to today)" style="color:#64748b;">Not marked</th>
                 <th class="ms-tot" title="Days counted as attended: Present / Late / On Duty = 1, Half Day = 0.5" style="color:#0f172a;">Attended</th>
+                <th class="ms-tot" title="Staff compliance points followed (Uniform, ID Card, Lesson Plan, Phone Handover) out of 4 per day x days in the month" style="color:#0f766e; background:#f0fdfa; min-width:80px;">Compliance</th>
                 <?php if (!empty($late_policy_on)) { ?>
                     <th class="ms-tot" title="<?php echo html_escape($late_policy_text); ?>" style="color:#b45309; background:#fffbeb;">Late Ded.</th>
                 <?php } ?>
@@ -339,6 +340,8 @@ $shift_sched_map = isset($shift_schedules_map) ? $shift_schedules_map : array();
                     <?php } ?>
                     <td class="ms-tot" style="color:#64748b;"><?php echo $not_marked; ?></td>
                     <td class="ms-tot" style="font-weight:700;"><?php echo rtrim(rtrim(number_format($attended_days_count, 1), '0'), '.'); ?></td>
+                    <?php $c_followed = isset($compliance_map[$sid]) ? $compliance_map[$sid] : 0; $c_total = isset($compliance_total) ? $compliance_total : (4 * $days_in_month); $c_pct = $c_total > 0 ? round($c_followed * 100 / $c_total) : 0; ?>
+                    <td class="ms-tot" style="background:#f0fdfa; font-weight:700; color:<?php echo $c_pct >= 75 ? '#15803d' : ($c_pct >= 40 ? '#b45309' : '#b91c1c'); ?>;" title="<?php echo $c_followed; ?> of <?php echo $c_total; ?> compliance points followed (<?php echo $c_pct; ?>%)"><?php echo $c_followed; ?> / <?php echo $c_total; ?><br><span style="font-size:10px; font-weight:600;"><?php echo $c_pct; ?>%</span></td>
                     <?php if (!empty($late_policy_on)) {
                         $lates = isset($status_count['late']) ? $status_count['late'] : 0;
                         $ded   = $late_deduct($lates); ?>

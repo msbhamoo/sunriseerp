@@ -396,6 +396,23 @@ class Staffattendance extends Admin_Controller
         foreach ($sheet['staff'] as $st) { $staff_roles[$st['staff_id']] = $st['role_id']; }
         $data['staff_off_map'] = $this->staffdayoverride_model->getOffDayMap($m_start, $m_end, $staff_roles);
 
+        // Compliance (uniform, ID card, lesson plan, phone handover): points followed out of 4 per day.
+        $this->load->model('staffcompliance_model');
+        $comp = $this->staffcompliance_model->getMonthlyComplianceSheet('', $year, $month);
+        $compliance_total = 4 * $days_in_month;
+        $compliance_map = array();
+        foreach ($comp['map'] as $cid => $days) {
+            $followed = 0;
+            foreach ($days as $c) {
+                foreach (array('uniform', 'id_card', 'lesson_plan', 'phone_handover') as $k) {
+                    if (isset($c[$k]) && $c[$k] === 'yes') { $followed++; }
+                }
+            }
+            $compliance_map[(int) $cid] = $followed;
+        }
+        $data['compliance_map']   = $compliance_map;
+        $data['compliance_total'] = $compliance_total;
+
         $data['sheet']         = $sheet;
         $data['year']          = $year;
         $data['month']         = $month;
