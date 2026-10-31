@@ -159,9 +159,12 @@ class Staffattendancemodel extends MY_Model {
                     // (punch times are still recorded).
                     $isManual = isset($existing->attendance_source) && in_array($existing->attendance_source, array('manual', 'leave', 'duty_pass'), true);
                     $update = array(
-                        'biometric_attendence'  => 1,
                         'updated_at'            => date('Y-m-d H:i:s'),
                     );
+                    // Only flag the row as biometric when the device actually returned a punch.
+                    if (!empty($row['in_time']) || !empty($row['out_time'])) {
+                        $update['biometric_attendence'] = 1;
+                    }
                     if (!$isManual) {
                         $update['attendance_source'] = 'biometric';
                     }
