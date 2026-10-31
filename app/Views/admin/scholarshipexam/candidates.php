@@ -151,6 +151,20 @@
                                         <?php } else { ?>
                                             <span class="label label-info" style="font-size: 10px; margin-left: 4px;">INTERNAL</span>
                                         <?php } ?>
+                                        <?php if (!empty($cand['is_external'])) {
+                                            $bits = array_filter(array(
+                                                !empty($cand['guardian_name']) && $cand['guardian_name'] !== 'Guardian' ? 'Father: ' . $cand['guardian_name'] : '',
+                                                !empty($cand['guardian_phone']) ? 'Mob: ' . $cand['guardian_phone'] : '',
+                                                !empty($cand['dob']) ? 'DOB: ' . date('d M Y', strtotime($cand['dob'])) : '',
+                                                !empty($cand['gender']) ? $cand['gender'] : '',
+                                                !empty($cand['external_category']) ? $cand['external_category'] : '',
+                                                trim(($cand['external_village'] ?? '') . ' ' . ($cand['external_city'] ?? '')),
+                                                $cand['external_address'] ?? '',
+                                            ));
+                                            if ($bits) { ?>
+                                                <br><small class="text-muted"><?php echo htmlspecialchars(implode(' | ', $bits)); ?></small>
+                                        <?php }
+                                        } ?>
                                     </td>
                                     <td><?php echo htmlspecialchars($cand['class'] . ' - ' . $cand['section']); ?></td>
                                     <td><?php echo date('d M Y', strtotime($cand['registration_date'])); ?></td>

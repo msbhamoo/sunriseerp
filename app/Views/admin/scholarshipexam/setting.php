@@ -8,6 +8,35 @@
 
         <div class="row">
             <div class="col-md-12">
+                <div class="box box-success" style="border-radius: 10px;">
+                    <div class="box-header with-border">
+                        <h3 class="box-title"><i class="fa fa-qrcode"></i> Public Registration Link &amp; QR Code</h3>
+                    </div>
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                <img src="<?php echo site_url('admin/scholarshipexam/qr_download/png'); ?>" alt="Registration QR" style="width: 190px; height: 190px; border: 1px solid #e2e8f0; padding: 6px; border-radius: 8px;">
+                                <div style="margin-top: 10px;">
+                                    <a href="<?php echo site_url('admin/scholarshipexam/qr_download/png'); ?>" class="btn btn-success btn-sm" download><i class="fa fa-download"></i> PNG</a>
+                                    <a href="<?php echo site_url('admin/scholarshipexam/qr_download/svg'); ?>" class="btn btn-default btn-sm" download><i class="fa fa-download"></i> SVG (print)</a>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <p><strong>Permanent QR link (never changes):</strong><br>
+                                    <code><?php echo htmlspecialchars($permanent_url); ?></code></p>
+                                <p class="text-muted">The QR code only contains the permanent link above, so printed posters and brochures keep working. Change the destination below whenever the public form link changes.</p>
+                                <form action="<?php echo site_url('admin/scholarshipexam/setting'); ?>" method="POST">
+                                    <input type="hidden" name="save_public_link" value="1">
+                                    <label>Where should the QR / permanent link open?</label>
+                                    <input type="text" name="public_link_target" class="form-control" value="<?php echo htmlspecialchars($public_link_target); ?>" placeholder="Leave empty to open the first exam's form">
+                                    <p class="help-block">Full URL (https://...) or a site path (e.g. <code>scholarshipregister/apply/SSAT2026</code>). Currently opens: <code><?php echo htmlspecialchars($public_link_target !== '' ? $public_link_target : $default_target); ?></code></p>
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-check"></i> Save Link</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <form action="<?php echo site_url('admin/scholarshipexam/setting'); ?>" method="POST">
                     <div class="box box-primary" style="border-radius: 10px;">
                         <div class="box-header with-border">

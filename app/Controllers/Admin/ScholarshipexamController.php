@@ -126,6 +126,11 @@ class ScholarshipexamController extends BaseController
         return $this->dispatchLegacy('Scholarshipexam', 'setting', func_get_args());
     }
 
+    public function qr_download($format = 'png')
+    {
+        return $this->dispatchLegacy('Scholarshipexam', 'qr_download', func_get_args());
+    }
+
     protected function dispatchLegacy(string $controller, string $method, array $params)
     {
         // Set up compatibility environment

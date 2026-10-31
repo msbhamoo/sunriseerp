@@ -119,6 +119,9 @@ $routes->group('studentfee', ['namespace' => 'App\Controllers\Admin', 'filter' =
     $routes->post('ajaxSearch', 'StudentfeeController::ajaxSearch');
 });
 
+// Permanent short link printed on the SSAT QR code; target is configurable in admin
+$routes->get('ssat', 'ScholarshipregisterController::go');
+
 // Load all explicit module routes generated from migrated controllers
 if (file_exists(APPPATH . 'Config/GeneratedRoutes.php')) {
     require APPPATH . 'Config/GeneratedRoutes.php';
