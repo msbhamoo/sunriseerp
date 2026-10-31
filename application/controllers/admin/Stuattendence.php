@@ -95,6 +95,9 @@ class Stuattendence extends Admin_Controller
                 foreach ($session_ary as $key => $value) {
                     $checkForUpdate = $this->input->post('attendendence_id' . $value);
                     $attendencetype = $this->input->post('attendencetype' . $value);
+                    if ($attendencetype === null || $attendencetype === '' || $attendencetype === false) {
+                        continue; // not marked: do not save a record (and never default to present)
+                    }
 					
 					if($attendencetype==4 || $attendencetype==5){ // absent or holiday
 						$in_time  = null;

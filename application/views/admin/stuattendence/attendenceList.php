@@ -280,7 +280,7 @@
                                                                         $is_checked = ($att_type == "absent");
                                                                         $onclick    = '';
                                                                     } else {
-                                                                        $is_checked = ($c == 1);
+                                                                        $is_checked = false; // unmarked until staff mark it or it is auto-synced
                                                                     }
                                                                 ?>
                                                                     <input <?php echo $onclick; ?> <?php echo $is_checked ? "checked" : ""; ?> type="radio" id="<?php echo $rid; ?>" value="<?php echo $type['id'] ?>" class="radio_<?php echo $type['id'] ?>" data-type="<?php echo $att_type; ?>" name="attendencetype<?php echo $ssid; ?>">
