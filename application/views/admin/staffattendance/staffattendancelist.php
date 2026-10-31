@@ -1916,7 +1916,9 @@
                         // Redirect to the synced date view
                         var redirectUrl = "<?php echo site_url('admin/staffattendance/index'); ?>";
                         var roleVal = $('#class_id').val() || 'select';
+                        var csrfField = <?php echo json_encode($this->customlib->getCSRF()); ?>;
                         var $form = $('<form action="' + redirectUrl + '" method="POST">' +
+                            csrfField +
                             '<input type="hidden" name="user_id" value="' + roleVal + '">' +
                             '<input type="hidden" name="date" value="' + selectedDate + '">' +
                             '<input type="hidden" name="search" value="search">' +

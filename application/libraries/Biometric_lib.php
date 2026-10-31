@@ -143,8 +143,9 @@ class Biometric_lib
             return array('status' => 'disabled', 'message' => 'Biometric integration is currently disabled in settings.');
         }
 
-        // Day lock: past days are never re-synced. Nothing to fetch if the whole range is locked.
-        if ($this->CI->staffAttendaceSetting_model->isDayLocked($toDate)) {
+        // Day lock: automatic cron syncs only update today. Manual / range / ajax syncs triggered by admin are permitted to sync past dates.
+        $isCron = ($syncMode === 'cron' || $syncMode === 'auto');
+        if ($isCron && $this->CI->staffAttendaceSetting_model->isDayLocked($toDate)) {
             return array('status' => 'locked', 'message' => 'Attendance for ' . ($fromDate === $toDate ? date('d M Y', strtotime($fromDate)) : 'these dates')
                 . ' is locked because the day is over. Biometric sync only updates today. To fix a past day, edit that staff member\'s attendance by hand; the change is recorded in the Change Log.');
         }
@@ -239,8 +240,8 @@ class Biometric_lib
                     continue; // Skip punches not belonging to the chosen date / date range
                 }
             }
-            // Day lock: a finished day is never changed by sync (only by a manual admin edit).
-            if ($this->CI->staffAttendaceSetting_model->isDayLocked($punchDate)) {
+            // Day lock: automatic cron sync skips past locked dates. Manual admin sync processes them.
+            if ($isCron && $this->CI->staffAttendaceSetting_model->isDayLocked($punchDate)) {
                 $lockedCount++;
                 continue;
             }
