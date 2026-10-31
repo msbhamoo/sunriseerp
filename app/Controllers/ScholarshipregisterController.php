@@ -26,6 +26,11 @@ class ScholarshipregisterController extends BaseController
         return $this->dispatchLegacy('Scholarshipregister', 'go', func_get_args());
     }
 
+    public function activity($code_or_id = null)
+    {
+        return $this->dispatchLegacy('Scholarshipregister', 'activity', func_get_args());
+    }
+
     public function submit()
     {
         return $this->dispatchLegacy('Scholarshipregister', 'submit', func_get_args());
