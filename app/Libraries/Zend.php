@@ -7,7 +7,7 @@ class Zend
 	{
 		ini_set(
 			'include_path',
-			ini_get('include_path') . PATH_SEPARATOR . APPPATH . 'libraries'
+			ini_get('include_path') . PATH_SEPARATOR . rtrim(APPPATH, '/\\') . DIRECTORY_SEPARATOR . 'Libraries'
 		);
 
 		if ($class) {

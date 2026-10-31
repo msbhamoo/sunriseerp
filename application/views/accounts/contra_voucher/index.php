@@ -118,7 +118,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Ref No.</label>
-                                            <input name="reference_no" id="reference_no" type="text" class="form-control" value="<?php echo set_value('reference_no', isset($voucher) ? $voucher['reference_no'] : ''); ?>" />
+                                            <input name="reference_no" id="reference_no" type="text" class="form-control" value="<?php echo set_value('reference_no', isset($voucher) ? ($voucher['reference_id'] ?? '') : ''); ?>" />
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -179,7 +179,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label><?php echo $this->lang->line('amount'); ?></label><small class="req"> *</small>
-                                            <input type="number" step="0.01" name="amount" id="amount" class="form-control" value="<?php echo isset($voucher) ? $voucher['total_amount'] : ''; ?>" required>
+                                            <input type="number" step="0.01" name="amount" id="amount" class="form-control" value="<?php echo isset($voucher) ? ($voucher['total_amount'] ?? array_sum(array_column($voucher['items'] ?? [], 'debit_amount'))) : ''; ?>" required>
                                         </div>
                                     </div>
                                 </div>

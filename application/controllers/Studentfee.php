@@ -747,6 +747,18 @@ class Studentfee extends Admin_Controller
             );
             $array = array('status' => 'fail', 'error' => $data);
             echo json_encode($array);
+        } elseif (!$this->check_deposit($this->input->post('amount'))) {
+            $data = array(
+                'amount'                 => $this->deposit_error_msg ?? $this->lang->line('deposit_amount_can_not_be_greater_than_remaining'),
+                'student_fees_master_id' => '',
+                'fee_groups_feetype_id'  => '',
+                'amount_discount'        => '',
+                'amount_fine'            => '',
+                'payment_mode'           => '',
+                'date'                   => '',
+            );
+            $array = array('status' => 'fail', 'error' => $data);
+            echo json_encode($array);
         } else {
 
             $staff_record = $this->staff_model->get($this->customlib->getStaffID());
@@ -1420,12 +1432,15 @@ class Studentfee extends Admin_Controller
         return json_encode($array);
     }
 
+    public $deposit_error_msg = '';
+
     public function check_deposit($amount)
     {
         if (is_numeric($this->input->post('amount')) && is_numeric($this->input->post('amount_discount'))) {
             if ($this->input->post('amount') != "" && $this->input->post('amount_discount') != "") {
                 if ($this->input->post('amount') < 0) {
-                    $this->form_validation->set_message('check_deposit', $this->lang->line('deposit_amount_can_not_be_less_than_zero'));
+                    $this->deposit_error_msg = $this->lang->line('deposit_amount_can_not_be_less_than_zero');
+                    $this->form_validation->set_message('check_deposit', $this->deposit_error_msg);
                     return false;
                 } else {
                     $transport_fees_id      = $this->input->post('transport_fees_id');
@@ -1444,7 +1459,8 @@ class Studentfee extends Admin_Controller
                     }
                     $remain_amount = json_decode($remain_amount)->balance;
                     if (convertBaseAmountCurrencyFormat($remain_amount) < $deposit_amount) {
-                        $this->form_validation->set_message('check_deposit', $this->lang->line('deposit_amount_can_not_be_greater_than_remaining'));
+                        $this->deposit_error_msg = $this->lang->line('deposit_amount_can_not_be_greater_than_remaining');
+                        $this->form_validation->set_message('check_deposit', $this->deposit_error_msg);
                         return false;
                     } else {
                         return true;
@@ -1453,7 +1469,8 @@ class Studentfee extends Admin_Controller
                 return true;
             }
         } elseif (!is_numeric($this->input->post('amount'))) {
-            $this->form_validation->set_message('check_deposit', $this->lang->line('amount_field_must_contain_only_numbers'));
+            $this->deposit_error_msg = $this->lang->line('amount_field_must_contain_only_numbers');
+            $this->form_validation->set_message('check_deposit', $this->deposit_error_msg);
             return false;
         } elseif (!is_numeric($this->input->post('amount_discount'))) {
             return true;
@@ -1475,7 +1492,7 @@ class Studentfee extends Admin_Controller
     {
         $staff_record = $this->staff_model->get($this->customlib->getStaffID());
         $this->form_validation->set_error_delimiters('', '');
-        $this->form_validation->set_rules('row_counter[]', $this->lang->line('fees_list'), 'required|trim|xss_clean');
+        $this->form_validation->set_rules('row_counter', $this->lang->line('fees_list'), 'required|trim|xss_clean');
         $this->form_validation->set_rules('collected_date', $this->lang->line('date'), 'required|trim|xss_clean');
         $this->form_validation->set_rules('total_paying', $this->lang->line('paying_amount'), 'required|trim|xss_clean');
 		

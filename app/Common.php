@@ -358,6 +358,14 @@ class DatabaseBridge
         return $this->connection->insertID();
     }
 
+    public function insert_batch($table = '', $set = null, $escape = null, $batch_size = 100)
+    {
+        if (empty($set)) {
+            return 0;
+        }
+        return $this->connection->table($table)->insertBatch(array_values($set), $escape, $batch_size);
+    }
+
     public function update($table = '', $set = null, $where = null, $limit = null)
     {
         if (!empty($table)) {
@@ -400,7 +408,7 @@ class DatabaseBridge
             }
         }
 
-        if (empty($where) && empty($this->pendingCalls) && empty($builder->QBWhere)) { return false; }
+        if (!empty($table) && empty($where) && empty($calls)) { return false; }
         $res = $builder->delete($where, $limit, $reset_data);
         $this->builder = null;
         $this->currentTable = null;
@@ -505,7 +513,13 @@ class DatabaseBridge
         if (method_exists($this->connection, $method)) {
             return call_user_func_array([$this->connection, $method], $args);
         }
-        if (method_exists($this->getBuilder(), $method)) {
+        // CI3 replace($table, $set) vs CI4 Builder::replace($set) on a table builder
+        if ($method === 'replace' && count($args) >= 2 && is_string($args[0])) {
+            return $this->connection->table($args[0])->replace($args[1]);
+        }
+        // Check the class, not an instance: getBuilder() would create a stale 'dual'
+        // builder that swallows later where() calls (e.g. after trans_strict()).
+        if (method_exists(\CodeIgniter\Database\BaseBuilder::class, $method)) {
             return call_user_func_array([$this->getBuilder(), $method], $args);
         }
         return null;
@@ -1115,24 +1129,59 @@ if (!class_exists('CI_Controller')) {
                     }
                     $ci4Rules = [];
                     foreach ($this->rules as $field => $data) {
-                        $ci4Rules[$field] = [
+                        // a[b][c] -> a.b.c (CI4 dot notation); trailing [] -> plain field
+                        $cleanField = str_replace(['][', '[', ']'], ['.', '.', ''], preg_replace('/\[\]$/', '', $field));
+                        $rulesStr = $data['rules'];
+                        // Strip CI3-specific rules that CI4 doesn't have by default
+                        // CI3 also accepts an array of rules (strings and callables)
+                        $rulesList = is_array($rulesStr)
+                            ? array_filter($rulesStr, 'is_string')
+                            : explode('|', (string) $rulesStr);
+                        $rulesArr = array_filter($rulesList, function ($r) {
+                            $r = trim($r);
+                            return $r !== '' && $r !== 'xss_clean' && $r !== 'trim' &&!str_starts_with($r, 'callback_');
+                        });
+                        if (empty($rulesArr)) {
+                            continue; // nothing CI4 can validate (e.g. only trim/xss_clean/callbacks)
+                        }
+                        // CI3 skips format rules (valid_email etc.) on empty optional fields; CI4 needs permit_empty
+                        $isRequired = false;
+                        foreach ($rulesArr as $r) {
+                            if (str_starts_with(trim($r), 'required')) {
+                                $isRequired = true;
+                                break;
+                            }
+                        }
+                        if (!$isRequired) {
+                            array_unshift($rulesArr, 'permit_empty');
+                        }
+                        $ci4Rules[$cleanField] = [
                             'label' => $data['label'],
-                            'rules' => str_replace('|xss_clean', '', str_replace('xss_clean|', '', $data['rules'])),
+                            'rules' => implode('|', $rulesArr),
                         ];
                     }
                     $validation = service('validation');
                     $validation->setRules($ci4Rules);
                     $req = service('request');
                     $data = $req->getPost();
+                    // CI3 treats absent fields as empty; CI4 passes null to PHP-callable rules
+                    foreach (array_keys($ci4Rules) as $f) {
+                        if (!str_contains($f, '*') && !str_contains($f, '.') && !array_key_exists($f, $data)) {
+                            $data[$f] = '';
+                        }
+                    }
                     $success = $validation->run($data);
                     if (!$success) {
                         $this->errors = $validation->getErrors();
+                        $GLOBALS['ci3_form_errors'] = $this->errors;
+                        log_message('error', 'form_validation failed [' . service('request')->getPath() . ']: ' . json_encode($this->errors));
                     }
                     return $success;
                 }
                 public function error($field = '', $prefix = '', $suffix = '')
                 {
-                    $err = $this->errors[$field] ?? '';
+                    $dotField = str_replace(['][', '[', ']'], ['.', '.', ''], preg_replace('/\[\]$/', '', $field));
+                    $err = $this->errors[$field] ?? $this->errors[$dotField] ?? '';
                     return !empty($err) ? $prefix . $err . $suffix : '';
                 }
                 public function error_string($prefix = '', $suffix = '')
@@ -1251,10 +1300,17 @@ if (!function_exists('form_error')) {
     function form_error(string $field = '', string $prefix = '', string $suffix = ''): string
     {
         $validation = \Config\Services::validation();
+        $cleanField = str_replace(['][', '[', ']'], ['.', '.', ''], preg_replace('/\[\]$/', '', $field));
+        if ($validation->hasError($cleanField)) {
+            return $prefix . $validation->getError($cleanField) . $suffix;
+        }
         if ($validation->hasError($field)) {
             return $prefix . $validation->getError($field) . $suffix;
         }
-        return '';
+        // errors recorded by the CI3 form_validation shim (survives a different validation instance)
+        $shimErrors = $GLOBALS['ci3_form_errors'] ?? [];
+        $shimErr = $shimErrors[$cleanField] ?? $shimErrors[$field] ?? '';
+        return $shimErr !== '' ? $prefix . $shimErr . $suffix : '';
     }
 }
 

@@ -56,6 +56,7 @@ class StuattendenceController extends AdminController
             'section_id'          => '',
             'date'                => '',
             'resultlist'          => [],
+            'is_first_time_attendance' => true,
         ];
 
         if ($this->request->getMethod() === 'POST' || $this->request->getMethod() === 'post') {
@@ -111,6 +112,12 @@ class StuattendenceController extends AdminController
             // Search branch
             if (!empty($classId) && !empty($sectionId)) {
                 $data['resultlist'] = $this->stuattendenceModel->searchAttendenceClassSection($classId, $sectionId, $formattedDate);
+                foreach ($data['resultlist'] as $row) {
+                    if (!empty($row['attendence_type_id'])) {
+                        $data['is_first_time_attendance'] = false;
+                        break;
+                    }
+                }
             }
         }
 

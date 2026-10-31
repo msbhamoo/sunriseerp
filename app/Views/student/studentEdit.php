@@ -10,6 +10,11 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
             <div class="col-md-12">
                 <div class="box box-primary">
                     <form action="<?php echo site_url("student/edit/" . $id) ?>"  id="employeeform" name="employeeform" method="post" accept-charset="utf-8" enctype="multipart/form-data">
+                    <?php if (!empty($GLOBALS['ci3_form_errors'])) { ?>
+                        <div class="alert alert-danger">
+                            <?php foreach ($GLOBALS['ci3_form_errors'] as $ci3Err) { echo '<div>' . esc($ci3Err) . '</div>'; } ?>
+                        </div>
+                    <?php } ?>
                         <div class="box-body">
                             <div class="tshadow mb25 bozero">
                                 <h3 class="pagetitleh2"><?php echo $this->lang->line('edit_student'); ?></h3>
