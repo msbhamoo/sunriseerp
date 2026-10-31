@@ -139,10 +139,20 @@ class Accounts_integration
      */
     private function voucherExists($module, $ref_id)
     {
-        return $this->CI->db->where('reference_module', $module)
-                            ->where('reference_id', (string)$ref_id)
-                            ->where('status', 'posted')
-                            ->get('acc_vouchers')->row();
+        $v = $this->CI->db->where('reference_module', $module)
+                          ->where('reference_id', (string)$ref_id)
+                          ->where('status', 'posted')
+                          ->get('acc_vouchers')->row();
+        if ($v) {
+            // Self-heal: a voucher header with no ledger lines (left by a failed insert) counts as
+            // missing; remove the empty shell so the sync recreates it properly.
+            $n = $this->CI->db->where('voucher_id', $v->id)->count_all_results('acc_voucher_items');
+            if ((int)$n === 0) {
+                $this->CI->db->where('id', $v->id)->delete('acc_vouchers');
+                return null;
+            }
+        }
+        return $v;
     }
 
     /**
@@ -972,10 +982,11 @@ class Accounts_integration
         $count = 0;
         $errors = [];
         foreach ($deposits as $dep) {
-            $exists = $this->CI->db->where('reference_module', 'fee_collection')
-                                   ->like('reference_id', $dep->id . '_', 'after')
-                                   ->where('status', 'posted')
-                                   ->get('acc_vouchers')->row();
+            $exists = $this->CI->db->query(
+                "SELECT v.id FROM acc_vouchers v WHERE v.reference_module = 'fee_collection' AND v.status = 'posted'
+                 AND v.reference_id LIKE " . $this->CI->db->escape($dep->id . '\_%') . "
+                 AND EXISTS (SELECT 1 FROM acc_voucher_items i WHERE i.voucher_id = v.id) LIMIT 1"
+            )->row();
             if (!$exists) {
                 try {
                     if ($this->sync_fee($dep->id)) {
