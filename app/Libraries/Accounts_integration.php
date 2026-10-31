@@ -983,7 +983,7 @@ class Accounts_integration
         $errors = [];
         foreach ($deposits as $dep) {
             $exists = $this->CI->db->query(
-                "SELECT v.id FROM acc_vouchers v WHERE v.reference_module = 'fee_collection' AND v.status = 'posted'
+                "SELECT v.id FROM acc_vouchers v WHERE v.reference_module IN ('fee_collection','fee_discount') AND v.status = 'posted'
                  AND v.reference_id LIKE " . $this->CI->db->escape($dep->id . '\_%') . "
                  AND EXISTS (SELECT 1 FROM acc_voucher_items i WHERE i.voucher_id = v.id) LIMIT 1"
             )->row();
