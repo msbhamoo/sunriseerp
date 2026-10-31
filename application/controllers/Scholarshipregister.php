@@ -49,6 +49,8 @@ class Scholarshipregister extends CI_Controller
             }
         }
 
+        $data['registered_count'] = !empty($data['selected_exam']['id']) ? $this->scholarshipexam_model->getOnlineRegistrationCount($data['selected_exam']['id']) : 0;
+
         $this->load->view('scholarshipregister/index', $data);
     }
 
@@ -71,6 +73,25 @@ class Scholarshipregister extends CI_Controller
             $target = site_url(ltrim($target, '/'));
         }
         redirect($target);
+    }
+
+    /** JSON for the public page: real registration count + recent (name-masked) sign-ups. */
+    public function activity($code_or_id = null)
+    {
+        $exam = $code_or_id ? $this->scholarshipexam_model->getExamByCodeOrId($code_or_id) : null;
+        if (!$exam) {
+            $exams = $this->scholarshipexam_model->getExams();
+            $exam = $exams ? $exams[0] : null;
+        }
+        $payload = array('count' => 0, 'recent' => array());
+        if ($exam) {
+            $payload['count'] = (int) $this->scholarshipexam_model->getOnlineRegistrationCount($exam['id']);
+            $payload['recent'] = $this->scholarshipexam_model->getRecentOnlineRegistrations($exam['id']);
+        }
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store');
+        echo json_encode($payload);
+        exit;
     }
 
     public function submit()

@@ -600,6 +600,43 @@ class Scholarshipexam_model extends MY_Model
         return $this->db->count_all_results('scholarship_exam_candidates');
     }
 
+    /** Candidates who registered through the public form (not added by admin). */
+    public function getOnlineRegistrationCount($exam_id)
+    {
+        $this->db->where('scholarship_exam_id', $exam_id);
+        $this->db->where('is_external', 1);
+        return $this->db->count_all_results('scholarship_exam_candidates');
+    }
+
+    /** Latest public sign-ups, with the name partly hidden, for the "just registered" popup. */
+    public function getRecentOnlineRegistrations($exam_id, $limit = 8)
+    {
+        $rows = $this->db->query(
+            "SELECT c.external_candidate_name AS name, c.external_city AS city, c.external_village AS village, c.registration_date, cl.class AS cls
+             FROM scholarship_exam_candidates c
+             LEFT JOIN classes cl ON cl.id = c.external_class_id
+             WHERE c.scholarship_exam_id = ? AND c.is_external = 1 AND c.registration_date >= (NOW() - INTERVAL 1 DAY)
+             ORDER BY c.id DESC LIMIT " . (int) $limit,
+            array($exam_id)
+        )->result_array();
+
+        $out = array();
+        foreach ($rows as $r) {
+            $parts = preg_split('/\s+/u', trim($r['name']));
+            $first = mb_substr($parts[0], 0, 2, 'UTF-8') . str_repeat('*', max(2, mb_strlen($parts[0], 'UTF-8') - 2));
+            $last = count($parts) > 1 ? ' ' . mb_strtoupper(mb_substr(end($parts), 0, 1, 'UTF-8'), 'UTF-8') . '.' : '';
+            $place = trim($r['city'] ?: $r['village']);
+            $mins = max(0, (int) floor((time() - strtotime($r['registration_date'])) / 60));
+            $out[] = array(
+                'name' => $first . $last,
+                'cls' => $r['cls'] ? 'Class ' . $r['cls'] : '',
+                'place' => $place,
+                'ago' => $mins < 1 ? 'just now' : ($mins < 60 ? $mins . ' min ago' : floor($mins / 60) . ' hr ago'),
+            );
+        }
+        return $out;
+    }
+
     public function getQuestionCount($exam_id)
     {
         $this->db->where('scholarship_exam_id', $exam_id);

@@ -49,7 +49,7 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SSAT – <?php echo htmlspecialchars($exam_title); ?> | Sunrise Career Academy</title>
+    <title>SSAT – Laakho ki Scholarship – <?php echo htmlspecialchars($exam_title); ?> | Sunrise Career Academy</title>
     <meta name="description" content="S-SAT: Where Talent Meets Opportunity. Free registration for the Sunrise Scholarship & Admission Test – lakhs in scholarships for admission to Class 6–12. Classes 5 to 11 can apply. Sunrise International Public School, Nechhwa, Sikar.">
     <meta name="theme-color" content="#14397a">
     <link rel="stylesheet" href="<?php echo base_url('backend/dist/font-awesome-4.5.0/css/font-awesome.min.css'); ?>">
@@ -122,6 +122,7 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
         .hero h1 small { display: block; font-size: 15px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
         .hl { font-size: clamp(34px, 6vw, 58px); font-weight: 800; line-height: 1.12; color: var(--blue); margin: 4px 0 6px; text-shadow: 0 2px 0 #fff, 0 6px 22px rgba(27,79,156,.18); }
         .hl em { font-style: normal; color: var(--red); }
+        .roman { display: block; margin-top: 2px; font-size: 14px; font-weight: 600; letter-spacing: .4px; color: var(--muted); font-family: 'Poppins', sans-serif; }
         .hero-sub { font-weight: 700; font-size: clamp(18px, 2.4vw, 24px); color: var(--ink); margin: 0 0 22px; }
         .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
         .btn { display: inline-flex; align-items: center; gap: 10px; border: 0; cursor: pointer; font: inherit; font-weight: 700; border-radius: 999px; padding: 15px 28px; font-size: 16px; transition: transform .15s, box-shadow .15s, background .15s; }
@@ -144,6 +145,15 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
         .badge-cbse small { font-size: 9.5px; opacity: .9; }
         .badge-cbse b { font-size: 28px; font-weight: 900; line-height: 1.05; color: var(--yellow); }
         .badge-cbse span { font-size: 11px; font-weight: 600; line-height: 1.25; }
+
+        .perk-wrap { width: 100%; padding: 26px 24px 96px; }
+        .perk-h { margin: 0 0 16px; font-family: 'Noto Sans Devanagari', sans-serif; font-weight: 700; font-size: 17px; color: var(--yellow); text-align: center; letter-spacing: .3px; }
+        .perks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .perks div { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 16px; padding: 16px 10px; text-align: center; color: #fff; }
+        .perks i { font-size: 28px; color: var(--yellow); display: block; margin-bottom: 6px; }
+        .perks b { display: block; font-size: 15px; line-height: 1.3; }
+        .perks span { font-size: 12px; opacity: .8; }
+        .hero-photo.fallback { aspect-ratio: auto; min-height: 300px; }
 
         /* swoosh like the pamphlet */
         .swoosh { position: absolute; left: 0; right: 0; bottom: -1px; height: 90px; line-height: 0; }
@@ -326,9 +336,96 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
             footer { padding-bottom: 70px; }
         }
         @media (prefers-reduced-motion: reduce) { * { transition: none !important; } html { scroll-behavior: auto; } }
+
+        /* ===== interactive layer ===== */
+        .scrollbar { position: fixed; left: 0; top: 0; height: 4px; width: 0; z-index: 100; background: linear-gradient(90deg, var(--yellow), var(--red)); transition: width .1s linear; }
+        .rv { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
+        .rv.in { opacity: 1; transform: none; }
+        .float-a { animation: floaty 5s ease-in-out infinite; }
+        @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+        .pulse { animation: pulse 2.2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 10px 26px rgba(229,38,44,.38), 0 0 0 0 rgba(229,38,44,.45); } 70% { box-shadow: 0 10px 26px rgba(229,38,44,.38), 0 0 0 16px rgba(229,38,44,0); } 100% { box-shadow: 0 10px 26px rgba(229,38,44,.38), 0 0 0 0 rgba(229,38,44,0); } }
+        .proof { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 7px 16px 7px 8px; font-size: 14px; font-weight: 600; color: var(--blue-d); box-shadow: 0 6px 18px rgba(18,53,111,.1); margin-top: 16px; }
+        .proof .dot { width: 30px; height: 30px; border-radius: 50%; background: #e2f7e9; color: #16a34a; display: grid; place-items: center; }
+        .proof b { color: var(--red); font-size: 17px; }
+        .share-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+        .btn-sm { padding: 10px 18px; font-size: 14px; }
+        .btn-ghost { background: transparent; color: var(--blue-d); border: 1.5px dashed var(--blue); }
+        .btn-ghost:hover { background: #fff; }
+
+        /* eligibility checker */
+        .elig { display: grid; grid-template-columns: 1.2fr 1fr; gap: 0; background: #fff; border-radius: 26px; box-shadow: var(--shadow); border: 1px solid var(--line); overflow: hidden; }
+        .elig-q { padding: 34px; }
+        .eyebrow-b { display: inline-block; background: #fff1c2; color: #7a5600; font-weight: 700; font-size: 12px; padding: 5px 12px; border-radius: 999px; margin-bottom: 10px; }
+        .elig-q h2 { margin: 0 0 6px; font-size: clamp(22px, 3vw, 28px); font-weight: 800; color: var(--blue-d); }
+        .elig-q p { color: var(--muted); margin: 0 0 18px; }
+        .cls-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .cls-grid button { font: inherit; font-weight: 700; font-size: 15px; padding: 14px 6px; border-radius: 14px; border: 2px solid var(--line); background: #f9fbfe; color: var(--blue-d); cursor: pointer; transition: all .15s; }
+        .cls-grid button:hover { border-color: var(--blue); transform: translateY(-2px); }
+        .cls-grid button.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 8px 18px rgba(27,79,156,.3); }
+        .cls-grid button:first-child, .cls-grid button:last-child { font-size: 12.5px; }
+        .elig-a { background: linear-gradient(160deg, var(--sky), #fff); padding: 30px; display: grid; place-items: center; text-align: center; min-height: 260px; border-left: 1px solid var(--line); }
+        .elig-ph { color: #9fb2cf; } .elig-ph i { font-size: 44px; } .elig-ph p { margin: 8px 0 0; font-weight: 600; }
+        .ans { animation: popin .35s ease; }
+        @keyframes popin { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+        .ans .big { width: 64px; height: 64px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 30px; color: #fff; margin-bottom: 8px; }
+        .ans .big.ok { background: #16a34a; box-shadow: 0 10px 22px rgba(22,163,74,.35); } .ans .big.no { background: var(--orange); }
+        .ans h3 { margin: 4px 0; font-size: 20px; font-weight: 800; color: var(--blue-d); }
+        .ans p { margin: 0 0 14px; color: var(--muted); font-size: 14.5px; }
+
+        /* wizard */
+        .wiz { margin-bottom: 22px; }
+        .wiz-bar { height: 8px; background: #e6eef8; border-radius: 99px; overflow: hidden; }
+        .wiz-bar i { display: block; height: 100%; width: 33%; background: linear-gradient(90deg, var(--yellow), var(--red)); border-radius: 99px; transition: width .4s ease; }
+        .wiz-steps { list-style: none; margin: 12px 0 0; padding: 0; display: flex; justify-content: space-between; }
+        .wiz-steps li { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #9fb2cf; }
+        .wiz-steps li b { width: 26px; height: 26px; border-radius: 50%; background: #e6eef8; display: grid; place-items: center; font-size: 12px; color: #6a7f9f; transition: all .25s; }
+        .wiz-steps li.on { color: var(--blue-d); } .wiz-steps li.on b { background: var(--blue); color: #fff; }
+        .wiz-steps li.done b { background: #16a34a; color: #fff; } .wiz-steps li.done { color: #16a34a; }
+        .pane { display: none; } .pane.on { display: block; animation: slidein .35s ease; }
+        @keyframes slidein { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+        .fs-title span i { font-size: 12px; }
+        .seg3 { grid-template-columns: repeat(3, 1fr); } .seg5 { grid-template-columns: repeat(5, 1fr); }
+        .seg5 span { padding: 11px 4px; font-size: 13px; }
+        .wiz-nav { display: flex; gap: 10px; margin-top: 26px; }
+        .btn-next { background: var(--blue); color: #fff; flex: 1; justify-content: center; box-shadow: 0 8px 20px rgba(27,79,156,.3); }
+        .btn-next:hover { background: var(--blue-d); }
+        .btn-back { background: #eef3fa; color: var(--blue-d); }
+        .wiz-nav .btn-free { flex: 1; justify-content: center; font-size: 16px; }
+        .review { margin-top: 24px; background: #f6f9fd; border: 1px dashed var(--blue); border-radius: 16px; padding: 16px 18px; }
+        .review .fs-title { margin-top: 0; }
+        .review dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
+        .review dt { color: var(--muted); } .review dd { margin: 0; font-weight: 600; word-break: break-word; }
+        .draft-note { background: #fff7e0; border: 1px solid #f6d77a; color: #7a5600; border-radius: 10px; padding: 8px 12px; font-size: 13px; margin-bottom: 14px; }
+        .draft-note a { color: var(--red); font-weight: 700; }
+        .in.bad { border-color: var(--red); animation: shake .35s; }
+        @keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .to-top { position: fixed; right: 16px; bottom: 90px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--blue); color: #fff; font-size: 18px; cursor: pointer; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 55; }
+        .to-top.show { opacity: 1; pointer-events: auto; }
+        @media (min-width: 601px) { .to-top { bottom: 24px; } }
+        @media (max-width: 960px) { .elig { grid-template-columns: 1fr; } .elig-a { border-left: 0; border-top: 1px solid var(--line); min-height: 200px; } }
+        @media (max-width: 600px) {
+            .elig-q { padding: 24px 18px; } .cls-grid { grid-template-columns: repeat(3, 1fr); }
+            .wiz-steps li span { display: none; } .wiz-steps li.on span { display: inline; }
+            .wiz-nav { position: sticky; bottom: 70px; background: #fff; padding: 10px 0; z-index: 5; }
+            .seg5 { grid-template-columns: repeat(3, 1fr); }
+            .proof { font-size: 13px; }
+        }
+        @media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; } .float-a, .pulse, .pane.on, .ans { animation: none; } }
+        /* "just registered" popup (real sign-ups only, names partly hidden) */
+        .live-toast { position: fixed; left: 16px; bottom: 24px; z-index: 70; max-width: 320px; display: flex; gap: 12px; align-items: center; background: #fff; border: 1px solid var(--line); border-left: 5px solid #16a34a; border-radius: 14px; padding: 12px 16px; box-shadow: var(--shadow); font-size: 13.5px; transform: translateY(140%); opacity: 0; transition: transform .45s ease, opacity .45s ease; pointer-events: none; }
+        .live-toast.show { transform: none; opacity: 1; }
+        .live-toast .lt-ic { width: 34px; height: 34px; border-radius: 50%; background: #e2f7e9; color: #16a34a; display: grid; place-items: center; flex: none; }
+        .live-toast b { color: var(--blue-d); } .live-toast small { display: block; color: var(--muted); font-size: 12px; }
+        .live-toast .lt-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #16a34a; margin-right: 5px; animation: pulseDot 1.6s infinite; }
+        @keyframes pulseDot { 50% { opacity: .3; } }
+        @media (max-width: 600px) { .live-toast { left: 10px; right: 10px; max-width: none; bottom: 78px; } }
     </style>
 </head>
 <body>
+<div class="scrollbar" id="scrollbar"></div>
+<button type="button" class="to-top" id="toTop" aria-label="Back to top"><i class="fa fa-chevron-up"></i></button>
 
 <div class="topbar">
     <div class="wrap">
@@ -344,13 +441,14 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
     <div class="wrap">
         <a href="#top" class="brand">
             <?php if ($school_logo) { ?>
-                <img src="<?php echo $school_logo; ?>" alt="" onerror="this.outerHTML='<span class=&quot;brand-ico&quot;><i class=&quot;fa fa-sun-o&quot;></i></span>'">
+                <img src="<?php echo $school_logo; ?>" alt="" onerror="this.outerHTML='<span class=&quot;brand-ico&quot;>&#9728;</span>'">
             <?php } else { ?>
-                <span class="brand-ico"><i class="fa fa-sun-o"></i></span>
+                <span class="brand-ico">&#9728;</span>
             <?php } ?>
             <span class="brand-t"><b>SUNRISE</b><span>Career Academy · S-SAT</span></span>
         </a>
         <nav class="menu" aria-label="Main">
+            <a href="#check">Am I eligible?</a>
             <a href="#why">Why SSAT</a>
             <a href="#exam">Exam Details</a>
             <a href="#how">How to Register</a>
@@ -375,7 +473,7 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
             <p class="hero-sub hi">जीतने का सुनहरा मौका</p>
 
             <div class="hero-actions">
-                <a href="#register" class="btn btn-free"><i class="fa fa-pencil-square-o"></i> रजिस्टर करें <span class="tag">FREE</span></a>
+                <a href="#register" class="btn btn-free pulse"><i class="fa fa-pencil-square-o"></i> रजिस्टर करें <span class="tag">FREE</span></a>
                 <a href="#status" class="btn btn-line"><i class="fa fa-id-card-o"></i> Admit Card / Status</a>
             </div>
             <div class="hero-note">
@@ -383,6 +481,7 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
                 <span><i class="fa fa-check-circle"></i> हिंदी एवं अंग्रेजी माध्यम</span>
                 <span><i class="fa fa-check-circle"></i> Online &amp; Offline</span>
             </div>
+            <div class="proof" id="proof" style="<?php echo (!empty($registered_count) && $registered_count >= 10) ? '' : 'display:none'; ?>"><span class="dot"><i class="fa fa-users"></i></span><span><b id="proofNum" data-count="<?php echo (int) $registered_count; ?>">0</b> students have already registered</span></div>
         </div>
 
         <div class="hero-card">
@@ -390,9 +489,14 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
                 <div class="hero-photo"><img src="<?php echo $hero_img; ?>" alt="Sunrise School campus"></div>
             <?php } else { ?>
                 <div class="hero-photo fallback">
-                    <div>
-                        <div class="cap"><i class="fa fa-graduation-cap"></i></div>
-                        <p>SUNRISE INTERNATIONAL PUBLIC SCHOOL</p>
+                    <div class="perk-wrap">
+                        <p class="perk-h">S-SAT में आपको मिलेगा</p>
+                        <div class="perks">
+                            <div><i class="fa fa-graduation-cap"></i><b class="hi">स्कॉलरशिप</b><span>प्रवेश पर</span></div>
+                            <div><i class="fa fa-gift"></i><b class="hi">नकद पुरस्कार</b><span>एवं उपहार</span></div>
+                            <div><i class="fa fa-certificate"></i><b class="hi">प्रमाण पत्र</b><span>भागीदारी का</span></div>
+                            <div><i class="fa fa-compass"></i><b class="hi">कैरियर गाइडेंस</b><span>काउंसलिंग</span></div>
+                        </div>
                     </div>
                 </div>
             <?php } ?>
@@ -424,6 +528,27 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
     </div>
 </div>
 
+<!-- ================= ELIGIBILITY CHECKER ================= -->
+<section class="sec" id="check" style="padding-top:64px">
+    <div class="wrap">
+        <div class="elig">
+            <div class="elig-q">
+                <span class="eyebrow-b">30-second check</span>
+                <h2 class="hi">आपका बच्चा किस कक्षा में पढ़ता है?</h2>
+                <p>Tap the class your child is in right now — we'll tell you if they can appear.</p>
+                <div class="cls-grid" id="clsGrid" role="group" aria-label="Choose present class">
+                    <button type="button" data-c="4">Class 4 &amp; below</button>
+                    <?php for ($n = 5; $n <= 11; $n++) { ?><button type="button" data-c="<?php echo $n; ?>">Class <?php echo $n; ?></button><?php } ?>
+                    <button type="button" data-c="12">Class 12</button>
+                </div>
+            </div>
+            <div class="elig-a" id="eligAns" aria-live="polite">
+                <div class="elig-ph"><i class="fa fa-hand-pointer-o"></i><p>Your result will appear here</p></div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- ================= WHY ================= -->
 <section class="sec" id="why">
     <div class="wrap">
@@ -433,7 +558,7 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
             <div class="why" style="--c: var(--red)">
                 <div class="ic"><i class="fa fa-certificate"></i></div>
                 <h3>Certificate of Participation</h3><p class="hi">भागीदारी प्रमाण पत्र</p>
-                <p>Every student who appears receives an official certificate.</p>
+                <p>A certificate of participation for every student who takes part.</p>
             </div>
             <div class="why" style="--c: var(--blue)">
                 <div class="ic"><i class="fa fa-graduation-cap"></i></div>
@@ -443,12 +568,12 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
             <div class="why" style="--c: var(--orange)">
                 <div class="ic"><i class="fa fa-compass"></i></div>
                 <h3>Career Counselling &amp; Guidance</h3><p class="hi">कैरियर काउंसलिंग एवं मार्गदर्शन</p>
-                <p>Expert guidance towards NEET, IIT-JEE, NDA and CLAT.</p>
+                <p>Career counselling and guidance from the Sunrise Career Academy team.</p>
             </div>
             <div class="why" style="--c: #16a34a">
                 <div class="ic"><i class="fa fa-gift"></i></div>
                 <h3>Cash Award &amp; Gift</h3><p class="hi">नकद पुरस्कार एवं उपहार</p>
-                <p>Cash awards and gifts for the top performers.</p>
+                <p>Cash awards and gifts for successful students.</p>
             </div>
         </div>
     </div>
@@ -557,102 +682,141 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
                         </div>
                     <?php } ?>
 
-                    <div class="fs-title"><span>1</span> Student Details</div>
-                    <div class="grid2">
-                        <div class="full">
-                            <label class="l" for="candidate_name">Student Full Name <i>*</i></label>
-                            <input type="text" id="candidate_name" name="candidate_name" class="in" placeholder="As per school records" autocomplete="name" required maxlength="120">
-                        </div>
-                        <div>
-                            <label class="l" for="class_id">Present Class <i>*</i></label>
-                            <select name="class_id" id="class_id" class="in" required>
-                                <option value="">Select class</option>
-                                <?php foreach ($classList as $c) { ?>
-                                    <option value="<?php echo (int) $c['id']; ?>">Class <?php echo htmlspecialchars($c['class']); ?></option>
-                                <?php } ?>
-                            </select>
-                        </div>
-                        <?php if (isFieldVisible('dob', $fields_map)) { ?>
-                            <div>
-                                <label class="l" for="dob">Date of Birth <?php echo isFieldRequired('dob', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                <input type="date" id="dob" name="dob" class="in" max="<?php echo date('Y-m-d'); ?>" <?php echo isFieldRequired('dob', $fields_map) ? 'required' : ''; ?>>
+                    <?php $has_family = isFieldVisible('father_name', $fields_map) || isFieldVisible('mother_name', $fields_map) || isFieldVisible('village', $fields_map) || isFieldVisible('city', $fields_map) || isFieldVisible('address', $fields_map); ?>
+                    <div class="wiz" id="wiz" data-total="<?php echo $has_family ? 3 : 2; ?>">
+                        <div class="wiz-bar"><i id="wizFill"></i></div>
+                        <ol class="wiz-steps">
+                            <li class="on" data-s="1"><b>1</b><span>Student</span></li>
+                            <li data-s="2"><b>2</b><span>School &amp; Contact</span></li>
+                            <?php if ($has_family) { ?><li data-s="3"><b>3</b><span>Family</span></li><?php } ?>
+                        </ol>
+                    </div>
+                    <div class="draft-note" id="draftNote" style="display:none"><i class="fa fa-history"></i> We restored your earlier answers. <a href="#" id="draftClear">Start fresh</a></div>
+
+                    <!-- STEP 1 -->
+                    <div class="pane on" data-step="1">
+                        <div class="fs-title hi-t"><span><i class="fa fa-user"></i></span> Student Details</div>
+                        <div class="grid2">
+                            <div class="full">
+                                <label class="l" for="candidate_name">Student Full Name <i>*</i></label>
+                                <input type="text" id="candidate_name" name="candidate_name" class="in" placeholder="As per school records" autocomplete="name" required maxlength="120">
                             </div>
-                        <?php } ?>
-                        <?php if (isFieldVisible('gender', $fields_map)) { ?>
                             <div>
-                                <label class="l" for="gender">Gender <?php echo isFieldRequired('gender', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                <select name="gender" id="gender" class="in" <?php echo isFieldRequired('gender', $fields_map) ? 'required' : ''; ?>>
-                                    <option value="">Select</option>
-                                    <option>Male</option><option>Female</option><option>Other</option>
+                                <label class="l" for="class_id">Present Class <i>*</i></label>
+                                <select name="class_id" id="class_id" class="in" required>
+                                    <option value="">Select class</option>
+                                    <?php foreach ($classList as $c) { ?>
+                                        <option value="<?php echo (int) $c['id']; ?>">Class <?php echo htmlspecialchars($c['class']); ?></option>
+                                    <?php } ?>
                                 </select>
                             </div>
-                        <?php } ?>
-                        <?php if (isFieldVisible('category', $fields_map)) { ?>
-                            <div>
-                                <label class="l" for="category">Category <?php echo isFieldRequired('category', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                <select name="category" id="category" class="in" <?php echo isFieldRequired('category', $fields_map) ? 'required' : ''; ?>>
-                                    <option>General</option><option>OBC</option><option>SC</option><option>ST</option><option>SBC</option>
-                                </select>
-                            </div>
-                        <?php } ?>
+                            <?php if (isFieldVisible('dob', $fields_map)) { ?>
+                                <div>
+                                    <label class="l" for="dob">Date of Birth <?php echo isFieldRequired('dob', $fields_map) ? '<i>*</i>' : ''; ?></label>
+                                    <input type="date" id="dob" name="dob" class="in" max="<?php echo date('Y-m-d'); ?>" <?php echo isFieldRequired('dob', $fields_map) ? 'required' : ''; ?>>
+                                </div>
+                            <?php } ?>
+                            <?php if (isFieldVisible('gender', $fields_map)) { ?>
+                                <div class="full">
+                                    <label class="l">Gender <?php echo isFieldRequired('gender', $fields_map) ? '<i>*</i>' : ''; ?></label>
+                                    <div class="seg seg3" role="radiogroup" aria-label="Gender">
+                                        <?php foreach (array('Male' => 'fa-male', 'Female' => 'fa-female', 'Other' => 'fa-user') as $g => $gi) { ?>
+                                            <label><input type="radio" name="gender" value="<?php echo $g; ?>" <?php echo isFieldRequired('gender', $fields_map) ? 'required' : ''; ?>><span><i class="fa <?php echo $gi; ?>"></i> <?php echo $g; ?></span></label>
+                                        <?php } ?>
+                                    </div>
+                                </div>
+                            <?php } ?>
+                            <?php if (isFieldVisible('category', $fields_map)) { ?>
+                                <div class="full">
+                                    <label class="l">Category <?php echo isFieldRequired('category', $fields_map) ? '<i>*</i>' : ''; ?></label>
+                                    <div class="seg seg5" role="radiogroup" aria-label="Category">
+                                        <?php foreach (array('General', 'OBC', 'SC', 'ST', 'SBC') as $k => $cat) { ?>
+                                            <label><input type="radio" name="category" value="<?php echo $cat; ?>" <?php echo $k === 0 ? 'checked' : ''; ?>><span><?php echo $cat; ?></span></label>
+                                        <?php } ?>
+                                    </div>
+                                </div>
+                            <?php } ?>
+                        </div>
                     </div>
 
-                    <?php if (isFieldVisible('school_name', $fields_map)) { ?>
-                        <div class="fs-title"><span>2</span> Present School</div>
-                        <div class="seg" role="radiogroup" aria-label="School type">
-                            <label><input type="radio" name="school_type" value="internal" checked onchange="toggleSchool(this.value)"><span><i class="fa fa-university"></i> <?php echo htmlspecialchars($school_name); ?></span></label>
-                            <label><input type="radio" name="school_type" value="external" onchange="toggleSchool(this.value)"><span><i class="fa fa-building-o"></i> Another School</span></label>
+                    <!-- STEP 2 -->
+                    <div class="pane" data-step="2">
+                        <?php if (isFieldVisible('school_name', $fields_map)) { ?>
+                            <div class="fs-title hi-t"><span><i class="fa fa-university"></i></span> Present School</div>
+                            <div class="seg" role="radiogroup" aria-label="School type">
+                                <label><input type="radio" name="school_type" value="internal" checked onchange="toggleSchool(this.value)"><span><i class="fa fa-university"></i> <?php echo htmlspecialchars($school_name); ?></span></label>
+                                <label><input type="radio" name="school_type" value="external" onchange="toggleSchool(this.value)"><span><i class="fa fa-building-o"></i> Another School</span></label>
+                            </div>
+                            <div id="other_school_box" style="display:none;margin-top:12px;">
+                                <label class="l" for="other_school_name">School Name <?php echo isFieldRequired('school_name', $fields_map) ? '<i>*</i>' : ''; ?></label>
+                                <input type="text" id="other_school_name" name="other_school_name" class="in" placeholder="Type the student's current school" maxlength="150">
+                            </div>
+                        <?php } ?>
+
+                        <div class="fs-title hi-t"><span><i class="fa fa-phone"></i></span> Contact</div>
+                        <div class="grid2">
+                            <div>
+                                <label class="l" for="mobile">Mobile (WhatsApp) <i>*</i></label>
+                                <input type="tel" id="mobile" name="mobile" class="in" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" placeholder="10-digit mobile number" autocomplete="tel-national" required title="Enter a 10-digit mobile number">
+                                <div class="hint">Admit card &amp; result updates will be sent here.</div>
+                            </div>
+                            <div>
+                                <label class="l" for="email">Email <small style="font-weight:500;color:var(--muted)">(optional)</small></label>
+                                <input type="email" id="email" name="email" class="in" placeholder="name@example.com" autocomplete="email">
+                            </div>
                         </div>
-                        <div id="other_school_box" style="display:none;margin-top:12px;">
-                            <label class="l" for="other_school_name">School Name <?php echo isFieldRequired('school_name', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                            <input type="text" id="other_school_name" name="other_school_name" class="in" placeholder="Type the student's current school" maxlength="150">
+                    </div>
+
+                    <!-- STEP 3 -->
+                    <?php if ($has_family) { ?>
+                    <div class="pane" data-step="3">
+                        <div class="fs-title hi-t"><span><i class="fa fa-home"></i></span> Family &amp; Address</div>
+                        <div class="grid2">
+                            <?php if (isFieldVisible('father_name', $fields_map)) { ?>
+                                <div>
+                                    <label class="l" for="father_name">Father's Name <?php echo isFieldRequired('father_name', $fields_map) ? '<i>*</i>' : ''; ?></label>
+                                    <input type="text" id="father_name" name="father_name" class="in" <?php echo isFieldRequired('father_name', $fields_map) ? 'required' : ''; ?> maxlength="120">
+                                </div>
+                            <?php } ?>
+                            <?php if (isFieldVisible('mother_name', $fields_map)) { ?>
+                                <div>
+                                    <label class="l" for="mother_name">Mother's Name <?php echo isFieldRequired('mother_name', $fields_map) ? '<i>*</i>' : ''; ?></label>
+                                    <input type="text" id="mother_name" name="mother_name" class="in" <?php echo isFieldRequired('mother_name', $fields_map) ? 'required' : ''; ?> maxlength="120">
+                                </div>
+                            <?php } ?>
+                            <?php if (isFieldVisible('village', $fields_map)) { ?>
+                                <div>
+                                    <label class="l" for="village">Village / Town <?php echo isFieldRequired('village', $fields_map) ? '<i>*</i>' : ''; ?></label>
+                                    <input type="text" id="village" name="village" class="in" <?php echo isFieldRequired('village', $fields_map) ? 'required' : ''; ?> maxlength="120">
+                                </div>
+                            <?php } ?>
+                            <?php if (isFieldVisible('city', $fields_map)) { ?>
+                                <div>
+                                    <label class="l" for="city">City / District <?php echo isFieldRequired('city', $fields_map) ? '<i>*</i>' : ''; ?></label>
+                                    <input type="text" id="city" name="city" class="in" <?php echo isFieldRequired('city', $fields_map) ? 'required' : ''; ?> maxlength="120">
+                                </div>
+                            <?php } ?>
+                            <?php if (isFieldVisible('address', $fields_map)) { ?>
+                                <div class="full">
+                                    <label class="l" for="address">Permanent Address <?php echo isFieldRequired('address', $fields_map) ? '<i>*</i>' : ''; ?></label>
+                                    <textarea id="address" name="address" rows="2" class="in" <?php echo isFieldRequired('address', $fields_map) ? 'required' : ''; ?> maxlength="300"></textarea>
+                                </div>
+                            <?php } ?>
                         </div>
+                    </div>
                     <?php } ?>
 
-                    <div class="fs-title"><span><?php echo isFieldVisible('school_name', $fields_map) ? '3' : '2'; ?></span> Contact &amp; Family</div>
-                    <div class="grid2">
-                        <div>
-                            <label class="l" for="mobile">Mobile (WhatsApp) <i>*</i></label>
-                            <input type="tel" id="mobile" name="mobile" class="in" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" placeholder="10-digit mobile number" autocomplete="tel-national" required title="Enter a 10-digit mobile number">
-                            <div class="hint">Admit card &amp; result updates will be sent here.</div>
-                        </div>
-                        <div>
-                            <label class="l" for="email">Email <small style="font-weight:500;color:var(--muted)">(optional)</small></label>
-                            <input type="email" id="email" name="email" class="in" placeholder="name@example.com" autocomplete="email">
-                        </div>
-                        <?php if (isFieldVisible('father_name', $fields_map)) { ?>
-                            <div>
-                                <label class="l" for="father_name">Father's Name <?php echo isFieldRequired('father_name', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                <input type="text" id="father_name" name="father_name" class="in" <?php echo isFieldRequired('father_name', $fields_map) ? 'required' : ''; ?> maxlength="120">
-                            </div>
-                        <?php } ?>
-                        <?php if (isFieldVisible('mother_name', $fields_map)) { ?>
-                            <div>
-                                <label class="l" for="mother_name">Mother's Name <?php echo isFieldRequired('mother_name', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                <input type="text" id="mother_name" name="mother_name" class="in" <?php echo isFieldRequired('mother_name', $fields_map) ? 'required' : ''; ?> maxlength="120">
-                            </div>
-                        <?php } ?>
-                        <?php if (isFieldVisible('village', $fields_map)) { ?>
-                            <div>
-                                <label class="l" for="village">Village / Town <?php echo isFieldRequired('village', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                <input type="text" id="village" name="village" class="in" <?php echo isFieldRequired('village', $fields_map) ? 'required' : ''; ?> maxlength="120">
-                            </div>
-                        <?php } ?>
-                        <?php if (isFieldVisible('city', $fields_map)) { ?>
-                            <div>
-                                <label class="l" for="city">City / District <?php echo isFieldRequired('city', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                <input type="text" id="city" name="city" class="in" <?php echo isFieldRequired('city', $fields_map) ? 'required' : ''; ?> maxlength="120">
-                            </div>
-                        <?php } ?>
-                        <?php if (isFieldVisible('address', $fields_map)) { ?>
-                            <div class="full">
-                                <label class="l" for="address">Permanent Address <?php echo isFieldRequired('address', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                <textarea id="address" name="address" rows="2" class="in" <?php echo isFieldRequired('address', $fields_map) ? 'required' : ''; ?> maxlength="300"></textarea>
-                            </div>
-                        <?php } ?>
+                    <!-- Review (filled by script on the last step) -->
+                    <div class="review" id="review" style="display:none">
+                        <div class="fs-title hi-t"><span><i class="fa fa-check"></i></span> Please check your details</div>
+                        <dl id="reviewList"></dl>
                     </div>
 
-                    <button type="submit" class="btn btn-free submit" id="submitBtn"><i class="fa fa-check-circle"></i> Submit &amp; Get Roll Number <span class="tag">FREE</span></button>
+                    <div class="wiz-nav">
+                        <button type="button" class="btn btn-back" id="btnBack" style="display:none"><i class="fa fa-arrow-left"></i> Back</button>
+                        <button type="button" class="btn btn-next" id="btnNext">Next <i class="fa fa-arrow-right"></i></button>
+                        <button type="submit" class="btn btn-free" id="submitBtn" style="display:none"><i class="fa fa-check-circle"></i> Submit &amp; Get Roll Number <span class="tag">FREE</span></button>
+                    </div>
                     <div class="secure"><i class="fa fa-lock"></i> Your details are used only for this examination.</div>
                 </form>
             <?php } ?>
@@ -669,6 +833,8 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
                 <div><b class="hi">मदद चाहिए? कॉल करें</b><span>99820 85111 · 98285 12821</span></div>
             </a>
         </div>
+
+        <div class="share-row" style="justify-content:center;margin-top:26px"><a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://wa.me/?text=<?php echo rawurlencode("लाखों में स्कॉलरशिप! S-SAT - Sunrise Scholarship & Admission Test. Free registration: " . $reg_url); ?>"><i class="fa fa-whatsapp" style="color:#16a34a"></i> Share with friends</a></div>
 
         <!-- Status lookup -->
         <div class="status" id="status">
@@ -716,7 +882,7 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
             <details><summary>In which language is the exam?</summary><div class="ans">The exam is available in Hindi and English.</div></details>
             <details><summary>Is the exam online or offline? Where are the centres?</summary><div class="ans">Both modes are available. Exam centres: Bhilwara, Jodhpur, Barmer and Nechhwa (Sikar).</div></details>
             <details><summary>I lost my Roll Number. What do I do?</summary><div class="ans">Use <a href="#status" style="color:var(--blue);font-weight:700">"Already registered?"</a> above and search with your registered mobile number.</div></details>
-            <details><summary>How do I get my admit card and result?</summary><div class="ans">Admit cards and results are published on this page by the school. Search with your Roll Number or mobile number once they are released.</div></details>
+            <details><summary>How do I get my admit card and result?</summary><div class="ans">The school will inform you when admit cards and results are released. You can then search with your Roll Number or mobile number in "Already registered?" on this page. For help call 98285 12821.</div></details>
         </div>
     </div>
 </section>
@@ -786,6 +952,197 @@ $reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_
         };
         if (tick()) { var t = setInterval(function () { if (!tick()) clearInterval(t); }, 1000); }
     }
+})();
+</script>
+<script>
+// ===== interactive layer =====
+(function () {
+    var $ = function (s, r) { return (r || document).querySelector(s); };
+    var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
+
+    // Scroll progress + back-to-top
+    var bar = $('#scrollbar'), top = $('#toTop');
+    var onScroll = function () {
+        var h = document.documentElement, max = h.scrollHeight - h.clientHeight;
+        if (bar) bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+        if (top) top.classList.toggle('show', h.scrollTop > 600);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+    if (top) top.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+
+    // Reveal on scroll
+    var targets = $$('.why, .step, .fact, .faq details, .alt-card, .elig, .status, .date-card, .school .aff');
+    if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (es) {
+            es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+        }, { threshold: .12 });
+        targets.forEach(function (t, i) { t.classList.add('rv'); t.style.transitionDelay = ((i % 4) * 80) + 'ms'; io.observe(t); });
+    }
+
+    // Animated counter
+    $$('[data-count]').forEach(function (el) {
+        var to = parseInt(el.getAttribute('data-count'), 10) || 0, done = false;
+        var run = function () {
+            if (done) return; done = true;
+            var t0 = performance.now();
+            (function step(t) {
+                var p = Math.min(1, (t - t0) / 1200);
+                el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3)));
+                if (p < 1) requestAnimationFrame(step);
+            })(t0);
+        };
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver(function (es, o) { if (es[0].isIntersecting) { run(); o.disconnect(); } }).observe(el);
+        } else { run(); }
+    });
+
+    // ----- Eligibility checker -----
+    var romans = { 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X', 11: 'XI' };
+    var ans = $('#eligAns');
+    $$('#clsGrid button').forEach(function (b) {
+        b.addEventListener('click', function () {
+            $$('#clsGrid button').forEach(function (x) { x.classList.remove('on'); });
+            b.classList.add('on');
+            var c = parseInt(b.getAttribute('data-c'), 10);
+            if (c >= 5 && c <= 11) {
+                ans.innerHTML = '<div class="ans"><div class="big ok"><i class="fa fa-check"></i></div><h3 class="hi">बधाई हो! Class ' + c + ' पात्र है</h3>' +
+                    '<p class="hi">आपका बच्चा S-SAT में बैठ सकता है। स्कॉलरशिप कक्षा 6 से 12 में प्रवेश के लिए है।</p>' +
+                    '<button type="button" class="btn btn-free btn-sm pulse" id="elReg"><i class="fa fa-pencil-square-o"></i> Class ' + c + ' के लिए रजिस्टर करें</button></div>';
+                $('#elReg').addEventListener('click', function () { preselectClass(c); });
+            } else {
+                ans.innerHTML = '<div class="ans"><div class="big no"><i class="fa fa-info"></i></div><h3 class="hi">यह परीक्षा कक्षा 5 से 11 के लिए है</h3>' +
+                    '<p class="hi">' + (c < 5 ? 'छोटी कक्षाओं के लिए' : 'कक्षा 12 के लिए') + ' हमारी टीम से बात करें — हम सही मार्गदर्शन देंगे।</p>' +
+                    '<a class="btn btn-line btn-sm" href="tel:+919828512821"><i class="fa fa-phone"></i> 98285 12821</a></div>';
+            }
+        });
+    });
+    function preselectClass(c) {
+        var sel = $('#class_id');
+        document.getElementById('register').scrollIntoView({ behavior: 'smooth' });
+        if (!sel) return;
+        var want = 'Class ' + romans[c], hit = null, multi = [];
+        $$('option', sel).forEach(function (o) {
+            var t = o.textContent.trim();
+            if (t === want) hit = o;
+            else if (t.indexOf(want + ' ') === 0 || t.indexOf(want + '-') === 0) multi.push(o);
+        });
+        if (hit) { sel.value = hit.value; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+        else if (multi.length) { sel.focus(); }
+        setTimeout(function () { var n = $('#candidate_name'); if (n) n.focus({ preventScroll: true }); }, 700);
+    }
+
+    // ----- Multi-step form -----
+    var form = $('#regForm');
+    if (!form) return;
+    var wiz = $('#wiz'), total = parseInt(wiz.getAttribute('data-total'), 10), step = 1;
+    var panes = $$('.pane', form), nextB = $('#btnNext'), backB = $('#btnBack'), subB = $('#submitBtn'), review = $('#review');
+
+    function show(n, scroll) {
+        step = n;
+        panes.forEach(function (p) { p.classList.toggle('on', parseInt(p.getAttribute('data-step'), 10) === n); });
+        $$('.wiz-steps li').forEach(function (li) {
+            var s = parseInt(li.getAttribute('data-s'), 10);
+            li.classList.toggle('on', s === n); li.classList.toggle('done', s < n);
+        });
+        $('#wizFill').style.width = (n / total * 100) + '%';
+        backB.style.display = n > 1 ? '' : 'none';
+        nextB.style.display = n < total ? '' : 'none';
+        subB.style.display = n === total ? '' : 'none';
+        review.style.display = n === total ? '' : 'none';
+        if (n === total) buildReview();
+        if (scroll) { var box = $('.reg-box'); window.scrollTo({ top: box.getBoundingClientRect().top + window.pageYOffset - 70, behavior: 'smooth' }); }
+    }
+    function valid(n) {
+        var pane = panes.filter(function (p) { return parseInt(p.getAttribute('data-step'), 10) === n; })[0];
+        var fields = $$('input, select, textarea', pane);
+        for (var i = 0; i < fields.length; i++) {
+            if (!fields[i].checkValidity()) {
+                fields[i].classList.add('bad'); fields[i].reportValidity && fields[i].reportValidity();
+                setTimeout(function (f) { return function () { f.classList.remove('bad'); }; }(fields[i]), 800);
+                return false;
+            }
+        }
+        return true;
+    }
+    nextB.addEventListener('click', function () { if (valid(step)) show(step + 1, true); });
+    backB.addEventListener('click', function () { show(step - 1, true); });
+    form.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && step < total && e.target.tagName !== 'TEXTAREA') { e.preventDefault(); nextB.click(); }
+    });
+
+    function val(name) {
+        var el = form.elements[name]; if (!el) return '';
+        if (el.length && el[0] && el[0].type === 'radio') { var c = $$('input[name="' + name + '"]:checked', form)[0]; return c ? c.value : ''; }
+        if (el.tagName === 'SELECT') return el.selectedIndex >= 0 ? el.options[el.selectedIndex].text.replace('Select class', '') : '';
+        return el.value;
+    }
+    function buildReview() {
+        var rows = [['Student', 'candidate_name'], ['Class', 'class_id'], ['Date of birth', 'dob'], ['Gender', 'gender'], ['School', null], ['Mobile', 'mobile'], ['Email', 'email'], ['Father', 'father_name'], ['Mother', 'mother_name'], ['Village', 'village'], ['District', 'city'], ['Address', 'address']];
+        var html = '';
+        rows.forEach(function (r) {
+            var v = r[1] ? val(r[1]) : (val('school_type') === 'external' ? val('other_school_name') : (document.querySelector('input[name="school_type"]:checked') ? document.querySelector('input[name="school_type"]:checked').parentNode.textContent.trim() : ''));
+            if (v) html += '<dt>' + r[0] + '</dt><dd>' + v.replace(/[<>&]/g, function (m) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[m]; }) + '</dd>';
+        });
+        $('#reviewList').innerHTML = html;
+    }
+
+    // Draft autosave (so a parent who gets interrupted does not lose answers)
+    var KEY = 'ssat_draft_v1', store = null;
+    try { store = window.localStorage; } catch (e) {}
+    function save() {
+        if (!store) return;
+        var d = {};
+        $$('input, select, textarea', form).forEach(function (f) {
+            if (!f.name || f.name === 'exam_id') return;
+            if (f.type === 'radio') { if (f.checked) d[f.name] = f.value; } else d[f.name] = f.value;
+        });
+        try { store.setItem(KEY, JSON.stringify(d)); } catch (e) {}
+    }
+    function restore() {
+        if (!store) return;
+        var d; try { d = JSON.parse(store.getItem(KEY) || 'null'); } catch (e) {}
+        if (!d || !d.candidate_name) return;
+        Object.keys(d).forEach(function (k) {
+            var els = form.elements[k]; if (!els) return;
+            if (els.length && els[0] && els[0].type === 'radio') { $$('input[name="' + k + '"]', form).forEach(function (r) { r.checked = (r.value === d[k]); }); }
+            else els.value = d[k];
+        });
+        if (d.school_type) window.toggleSchool(d.school_type);
+        $('#draftNote').style.display = '';
+    }
+    form.addEventListener('input', save); form.addEventListener('change', save);
+    $('#draftClear').addEventListener('click', function (e) { e.preventDefault(); try { store.removeItem(KEY); } catch (x) {} form.reset(); window.toggleSchool('internal'); $('#draftNote').style.display = 'none'; show(1, false); });
+    form.addEventListener('submit', function () { if (form.checkValidity()) { try { store.removeItem(KEY); } catch (x) {} } });
+    restore();
+    show(1, false);
+})();
+</script>
+<div class="live-toast" id="liveToast" role="status" aria-live="polite"><span class="lt-ic"><i class="fa fa-user-plus"></i></span><div><span id="ltText"></span><small id="ltAgo"></small></div></div>
+<script>
+// Real activity only: polls the server for the true count and the latest sign-ups (names partly hidden)
+(function () {
+    var url = '<?php echo site_url('scholarshipregister/activity/' . (!empty($selected_exam['exam_code']) ? urlencode($selected_exam['exam_code']) : '')); ?>';
+    var proof = document.getElementById('proof'), num = document.getElementById('proofNum');
+    var toast = document.getElementById('liveToast'), tText = document.getElementById('ltText'), tAgo = document.getElementById('ltAgo');
+    var recent = [], idx = 0, shown = 0;
+    function esc(t) { return String(t).replace(/[<>&"]/g, function (m) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[m]; }); }
+    function poll() {
+        fetch(url, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+            if (d.count >= 10 && proof) { proof.style.display = ''; if (num && String(d.count) !== num.textContent) num.textContent = d.count; }
+            recent = d.recent || [];
+        }).catch(function () {});
+    }
+    function next() {
+        if (!recent.length || shown >= 6) return;
+        var r = recent[idx++ % recent.length]; shown++;
+        tText.innerHTML = '<span class="lt-dot"></span><b>' + esc(r.name) + '</b> ' + (r.place ? 'from ' + esc(r.place) + ' ' : '') + 'registered' + (r.cls ? ' for ' + esc(r.cls) : '');
+        tAgo.textContent = r.ago;
+        toast.classList.add('show');
+        setTimeout(function () { toast.classList.remove('show'); }, 5000);
+    }
+    poll();
+    setTimeout(function () { next(); setInterval(next, 14000); }, 6000);
+    setInterval(poll, 30000);
 })();
 </script>
 </body>
