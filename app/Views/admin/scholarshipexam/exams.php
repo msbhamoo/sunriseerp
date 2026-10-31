@@ -318,40 +318,16 @@
 </div>
 
 <script>
-var scheduleRowCounter = 1;
+// Phase-row template captured before any plugin touches it; rows are built fresh from it.
+var scheduleRowCounter = 0;
+var scheduleRowTemplate = $('#scheduleContainer .schedule-row:first').prop('outerHTML');
+$('#scheduleContainer').empty();
 
-$(document).ready(function() {
-    $('.select2').select2({
-        placeholder: "Select Classes",
-        width: '100%',
-        dropdownParent: $('#examModal')
-    });
-});
-
-function openAddExamModal() {
-    $('#examForm')[0].reset();
-    $('#exam_id').val('');
-    $('#modalTitle').html('<i class="fa fa-trophy"></i> Create Scholarship / Olympiad Exam');
-    resetScheduleRows();
-    $('#examModal').modal('show');
-}
-
-// Keep only the first schedule row and blank it (defaults restored)
-function resetScheduleRows() {
-    $('#scheduleContainer .schedule-row:gt(0)').remove();
-    scheduleRowCounter = 1;
-    var row = $('#scheduleContainer .schedule-row:first');
-    row.find('input').val('');
-    row.find('.phase-name').val('Phase 1');
-    row.find('.duration-mins').val(60);
-    row.find('.total-marks').val(100);
-    row.find('.pass-marks').val(40);
-    row.find('select.class-select').val(null).trigger('change');
-}
-
-function fillScheduleRow(row, s) {
+function buildScheduleRow(s) {
+    s = s || {};
     var d = function (v) { return v ? String(v).substring(0, 10) : ''; };
-    row.find('.phase-name').val(s.phase_name || 'Phase 1');
+    var row = $(scheduleRowTemplate);
+    row.find('.phase-name').val(s.phase_name || ('Phase ' + (scheduleRowCounter + 1)));
     row.find('.reg-start').val(d(s.registration_start_date));
     row.find('.reg-close').val(d(s.registration_close_date));
     row.find('.admit-release').val(d(s.admit_card_release_date));
@@ -361,7 +337,45 @@ function fillScheduleRow(row, s) {
     row.find('.pass-marks').val(s.passing_marks || 40);
     row.find('.result-date').val(d(s.result_date));
     row.find('.award-date').val(d(s.award_ceremony_date));
-    row.find('select.class-select').val(s.class_id_array || []).trigger('change');
+
+    var sel = row.find('select.class-select');
+    sel.attr('name', 'class_ids[' + scheduleRowCounter + '][]');
+    var chosen = $.map(s.class_id_array || [], String);
+    // Mark the saved classes as selected in the markup itself, then let select2 render them
+    sel.find('option').each(function () {
+        $(this).prop('selected', $.inArray(String($(this).val()), chosen) !== -1);
+    });
+    $('#scheduleContainer').append(row);
+    sel.select2({ placeholder: 'Select Classes', width: '100%', dropdownParent: $('#examModal') });
+    scheduleRowCounter++;
+    return row;
+}
+
+function resetScheduleRows(list) {
+    $('#scheduleContainer').empty();
+    scheduleRowCounter = 0;
+    if (list && list.length) {
+        for (var i = 0; i < list.length; i++) { buildScheduleRow(list[i]); }
+    } else {
+        buildScheduleRow();
+    }
+}
+
+// Re-render the class tags once the modal is visible (select2 measures widths while hidden)
+$('#examModal').on('shown.bs.modal', function () {
+    $('#scheduleContainer select.class-select').trigger('change.select2');
+});
+
+function addScheduleRow() {
+    buildScheduleRow();
+}
+
+function openAddExamModal() {
+    $('#examForm')[0].reset();
+    $('#exam_id').val('');
+    $('#modalTitle').html('<i class="fa fa-trophy"></i> Create Scholarship / Olympiad Exam');
+    resetScheduleRows();
+    $('#examModal').modal('show');
 }
 
 function editExam(id) {
@@ -384,12 +398,7 @@ function editExam(id) {
                 $('#instructions').val(data.instructions);
                 $('#description').val(data.description);
 
-                resetScheduleRows();
-                var scheds = data.schedules || [];
-                for (var i = 0; i < scheds.length; i++) {
-                    if (i > 0) { addScheduleRow(); }
-                    fillScheduleRow($('#scheduleContainer .schedule-row').eq(i), scheds[i]);
-                }
+                resetScheduleRows(data.schedules || []);
 
                 $('#modalTitle').html('<i class="fa fa-pencil"></i> Edit Scholarship / Olympiad Exam');
                 $('#examModal').modal('show');
@@ -410,28 +419,6 @@ function toggleFeeInput(val) {
     } else {
         $('#fee_box').hide();
     }
-}
-
-function addScheduleRow() {
-    var newRow = $('#scheduleContainer .schedule-row:first').clone();
-    newRow.find('input').val('');
-    newRow.find('.phase-name').val('Phase ' + (scheduleRowCounter + 1));
-    newRow.find('.duration-mins').val(60);
-    newRow.find('.total-marks').val(100);
-    newRow.find('.pass-marks').val(40);
-    newRow.find('.select2-container').remove();
-    var selectElem = newRow.find('select.class-select');
-    // Drop select2 state copied from the first row, otherwise the clone renders an empty box
-    selectElem.removeClass('select2-hidden-accessible').removeAttr('data-select2-id').removeAttr('aria-hidden').removeAttr('tabindex').removeData();
-    selectElem.find('option').removeAttr('data-select2-id').prop('selected', false);
-    selectElem.attr('name', 'class_ids[' + scheduleRowCounter + '][]');
-    $('#scheduleContainer').append(newRow);
-    selectElem.select2({
-        placeholder: "Select Classes",
-        width: '100%',
-        dropdownParent: $('#examModal')
-    });
-    scheduleRowCounter++;
 }
 
 $('#examForm').on('submit', function(e) {
