@@ -1,123 +1,60 @@
 <style type="text/css">
-    .radio {
-        padding-left: 20px;
+    .att-seg { display: inline-flex; flex-wrap: nowrap; gap: 4px; vertical-align: middle; }
+    .att-seg input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+    .att-pill {
+        margin: 0; padding: 5px 11px; font-size: 12px; font-weight: 600; line-height: 1.2;
+        border: 1px solid #d5dbe3; border-radius: 999px; background: #fff; color: #5b6573;
+        cursor: pointer; user-select: none; white-space: nowrap; transition: all .12s ease;
     }
-
-    .radio label {
-        display: inline-block;
-        vertical-align: middle;
-        position: relative;
-        padding-left: 5px;
-    }
-
-    .radio label::before {
-        content: "";
-        display: inline-block;
-        position: absolute;
-        width: 17px;
-        height: 17px;
-        left: 0;
-        margin-left: -20px;
-        border: 1px solid var(--bs-primary);
-        border-radius: 50%;
-        background-color: var(--bs-input-bg);
-        -webkit-transition: border 0.15s ease-in-out;
-        -o-transition: border 0.15s ease-in-out;
-        transition: border 0.15s ease-in-out;
-    }
-
-    .radio label::after {
-        display: inline-block;
-        position: absolute;
-        content: " ";
-        width: 11px;
-        height: 11px;
-        left: 3px;
-        top: 3px;
-        margin-left: -20px;
-        border-radius: 50%;
-        background-color: #555555;
-        -webkit-transform: scale(0, 0);
-        -ms-transform: scale(0, 0);
-        -o-transform: scale(0, 0);
-        transform: scale(0, 0);
-        -webkit-transition: -webkit-transform 0.1s cubic-bezier(0.8, -0.33, 0.2, 1.33);
-        -moz-transition: -moz-transform 0.1s cubic-bezier(0.8, -0.33, 0.2, 1.33);
-        -o-transition: -o-transform 0.1s cubic-bezier(0.8, -0.33, 0.2, 1.33);
-        transition: transform 0.1s cubic-bezier(0.8, -0.33, 0.2, 1.33);
-    }
-
-    .radio input[type="radio"] {
-        opacity: 0;
-        z-index: 1;
-    }
-
-    .radio input[type="radio"]:focus+label::before {
-        outline: thin dotted;
-        outline: 5px auto -webkit-focus-ring-color;
-        outline-offset: -2px;
-    }
-
-    .radio input[type="radio"]:checked+label::after {
-        -webkit-transform: scale(1, 1);
-        -ms-transform: scale(1, 1);
-        -o-transform: scale(1, 1);
-        transform: scale(1, 1);
-    }
-
-    .radio input[type="radio"]:disabled+label {
-        opacity: 0.65;
-    }
-
-    .radio input[type="radio"]:disabled+label::before {
-        cursor: not-allowed;
-    }
-
-    .radio.radio-inline {
-        margin-top: 0;
-    }
-
-    .radio-primary input[type="radio"]+label::after {
-        background-color: #337ab7;
-    }
-
-    .radio-primary input[type="radio"]:checked+label::before {
-        border-color: color-mix(in srgb, var(--primary-white), transparent 40%);
-    }
-
-    .radio-primary input[type="radio"]:checked+label::after {
-        background-color: color-mix(in srgb, var(--primary-white), transparent 40%);
-    }
-
-    .radio-danger input[type="radio"]+label::after {
-        background-color: #d9534f;
-    }
-
-    .radio-danger input[type="radio"]:checked+label::before {
-        border-color: #d9534f;
-    }
-
-    .radio-danger input[type="radio"]:checked+label::after {
-        background-color: #d9534f;
-    }
-
-    .radio-info input[type="radio"]+label::after {
-        background-color:var(--bs-primary);
-    }
-
-    .radio-info input[type="radio"]:checked+label::before {
-        border-color:var(--bs-primary);
-    }
-
-    .radio-info input[type="radio"]:checked+label::after {
-        background-color:var(--bs-primary);
-    }
-
-    @media (max-width:767px) {
-        .radio.radio-inline {
-            display: inherit;
-        }
-    }    
+    .att-pill:hover { border-color: #9aa5b4; background: #f5f7fa; }
+    .att-seg input:focus-visible + .att-pill { outline: 2px solid #3b82f6; outline-offset: 1px; }
+    .att-seg input:disabled + .att-pill { opacity: .5; cursor: not-allowed; }
+    .att-seg input:checked + .att-pill.t-present  { background: #16a34a; border-color: #16a34a; color: #fff; }
+    .att-seg input:checked + .att-pill.t-late     { background: #f59e0b; border-color: #f59e0b; color: #fff; }
+    .att-seg input:checked + .att-pill.t-absent   { background: #dc2626; border-color: #dc2626; color: #fff; }
+    .att-seg input:checked + .att-pill.t-holiday  { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+    .att-seg input:checked + .att-pill.t-half_day { background: #0891b2; border-color: #0891b2; color: #fff; }
+    .att-bulk { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .att-bulk .att-bulk-label { font-weight: 600; color: #334155; margin: 0; }
+    .att-bulk .att-pill { padding: 6px 14px; }
+    .att-summary { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+    .att-chip { padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #eef2f7; color: #334155; }
+    .att-chip b { margin-left: 4px; }
+    .att-chip.c-present { background: #dcfce7; color: #166534; }
+    .att-chip.c-late { background: #fef3c7; color: #92400e; }
+    .att-chip.c-absent { background: #fee2e2; color: #991b1b; }
+    .att-chip.c-holiday { background: #ede9fe; color: #5b21b6; }
+    .att-chip.c-half_day { background: #cffafe; color: #155e75; }
+    .att-table > thead > tr > th { white-space: nowrap; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: #64748b; }
+    .att-table > tbody > tr > td { vertical-align: middle !important; }
+    .att-table td .form-control { min-width: 90px; }
+    .att-table td.att-name { font-weight: 600; min-width: 170px; }
+    .att-table td.att-cell { min-width: 380px; }
+    .att-table tr.row-present  { box-shadow: inset 3px 0 0 #16a34a; }
+    .att-table tr.row-late     { box-shadow: inset 3px 0 0 #f59e0b; }
+    .att-table tr.row-absent   { box-shadow: inset 3px 0 0 #dc2626; background: #fff7f7; }
+    .att-table tr.row-holiday  { box-shadow: inset 3px 0 0 #7c3aed; }
+    .att-table tr.row-half_day { box-shadow: inset 3px 0 0 #0891b2; }
+    .att-save-bar { position: sticky; bottom: 0; z-index: 5; background: #fff; border-top: 1px solid #e5e9ef; padding: 10px 0; margin-top: 8px; text-align: right; }
+    @media (max-width: 767px) { .att-table td.att-cell { min-width: 330px; } }
+    /* Compact status badge: only the selected status shows; click opens a menu */
+    .att-table .att-seg { gap: 0; cursor: pointer; }
+    .att-table .att-seg label.att-pill { display: none; }
+    .att-table .att-seg input:checked + label.att-pill { display: inline-block; padding-right: 26px; position: relative; }
+    .att-table .att-seg input:checked + label.att-pill::after { content: ""; position: absolute; right: 10px; top: 50%; margin-top: -2px; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid currentColor; }
+    .att-table .att-seg.att-none::before { content: "Select"; padding: 5px 12px; font-size: 12px; font-weight: 600; border: 1px dashed #9aa5b4; border-radius: 999px; color: #64748b; }
+    .att-table td.att-cell { min-width: 140px !important; }
+    .att-menu { position: fixed; z-index: 99999; background: #fff; border: 1px solid #dfe5ec; border-radius: 10px; box-shadow: 0 8px 24px rgba(15,23,42,.18); padding: 6px; display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+    .att-menu .att-pill { display: block; text-align: left; }
+    .att-menu .att-pill.is-current { box-shadow: 0 0 0 2px rgba(15,23,42,.25); }
+    .att-table tbody tr > td:first-child { border-left: 4px solid transparent; }
+    .att-table tr.row-present  > td:first-child { border-left-color: #16a34a; }
+    .att-table tr.row-late     > td:first-child { border-left-color: #f59e0b; }
+    .att-table tr.row-absent   > td:first-child { border-left-color: #dc2626; }
+    .att-table tr.row-holiday  > td:first-child { border-left-color: #7c3aed; }
+    .att-table tr.row-half_day > td:first-child { border-left-color: #0891b2; }
+    .att-note { min-width: 240px; resize: vertical; overflow: hidden; line-height: 1.35; white-space: pre-wrap; }
+    .att-table th.noteinput { min-width: 240px; }
 </style>
 
 <div class="content-wrapper">
@@ -229,25 +166,17 @@
                                                 <div class="col-md-8">                            
                                                 <?php
                                                 if ($this->rbac->hasPrivilege('student_attendance', 'can_add')) { ?>
-                                                    <div class="form-group">
-                                                        <label for="exampleInputEmail1"><?php echo $this->lang->line('set_attendance_for_all_students_as'); ?> &nbsp;</label>
+                                                    <div class="att-bulk">
+                                                        <label class="att-bulk-label"><?php echo $this->lang->line('set_attendance_for_all_students_as'); ?></label>
+                                                        <div class="att-seg">
                                                         <?php
                                                         foreach ($attendencetypeslist as $key => $type) {
                                                             $att_type = str_replace(" ", "_", strtolower($type['type']));
-
                                                         ?>
-                                                            <div class="radio radio-info radio-inline">
-                                                                <input type="radio"  data-record_id="<?php echo $type['id'] ?>"  name="attendencetype" class="default_radio" value="radio_<?php echo $type['id'] ?>" id="attendencetype<?php echo $type['id'] ?>">
-                                                                <label for="attendencetype<?php echo $type['id'] ?>">
-                                                                    <?php echo $this->lang->line($att_type); ?>
-                                                                </label>
-
-                                                            </div>
-                                                        <?php
-
-                                                        }
-                                                        ?>
-
+                                                            <input type="radio" data-record_id="<?php echo $type['id'] ?>" name="attendencetype" class="default_radio" value="radio_<?php echo $type['id'] ?>" id="attendencetype<?php echo $type['id'] ?>">
+                                                            <label class="att-pill t-<?php echo $att_type; ?>" for="attendencetype<?php echo $type['id'] ?>"><?php echo $this->lang->line($att_type); ?></label>
+                                                        <?php } ?>
+                                                        </div>
                                                     </div>
                                                 <?php
                                                 }
@@ -273,8 +202,14 @@
                                         <input type="hidden" name="class_id" value="<?php echo $class_id; ?>">
                                         <input type="hidden" name="section_id" value="<?php echo $section_id; ?>">
                                         <input type="hidden" name="date" value="<?php echo $date; ?>">
+                                        <div class="att-summary" id="att_summary">
+                                            <span class="att-chip">Total <b id="sum_total">0</b></span>
+                                            <?php foreach ($attendencetypeslist as $type) { $k = str_replace(" ", "_", strtolower($type['type'])); ?>
+                                                <span class="att-chip c-<?php echo $k; ?>"><?php echo $this->lang->line($k); ?> <b data-sum="<?php echo $type['id']; ?>">0</b></span>
+                                            <?php } ?>
+                                        </div>
                                         <div class="table-responsive ptt10">
-                                            <table class="table table-hover table-striped example">
+                                            <table class="table table-hover att-table example">
                                                 <thead>
                                                     <tr>
                                                         <th>#</th>
@@ -318,7 +253,7 @@
                                                             </td>
                                                             <?php } ?>
 
-                                                            <td>
+                                                            <td class="att-name">
                                                                 <?php
                                                                 echo $this->customlib->getFullName($value['firstname'], $value['middlename'], $value['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?>
                                                                 <?php if (isset($value['bus_status']) && !empty($value['bus_status'])) { 
@@ -329,60 +264,33 @@
                                                                     }
                                                                 } ?>
                                                             </td>
-                                                            <td>
+                                                            <td class="att-cell">
+                                                                <div class="att-seg">
                                                                 <?php
                                                                 $c     = 1;
                                                                 $count = 0;
                                                                 foreach ($attendencetypeslist as $key => $type) {
-
                                                                     $att_type = str_replace(" ", "_", strtolower($type['type']));
+                                                                    $ssid     = $value['student_session_id'];
+                                                                    $rid      = "attendencetype" . $ssid . "-" . $count;
+                                                                    $onclick  = 'onclick="disable_enable(this.value,' . $ssid . ')"';
                                                                     if ($value['date'] != "xxx") {
-                                                                ?>
-                                                                        <div class="radio radio-info radio-inline">
-                                                                            <input onclick="disable_enable(this.value,<?php echo $value["student_session_id"] ?>)" <?php if ($value['attendence_type_id'] == $type['id']) {
-                                                                                        echo "checked";
-                                                                                    }
-                                                                                    ?> type="radio" id="attendencetype<?php echo $value['student_session_id'] . "-" . $count; ?>" value="<?php echo $type['id'] ?>" class="radio_<?php echo $type['id'] ?>" name="attendencetype<?php echo $value['student_session_id']; ?>">
-
-                                                                            <label for="attendencetype<?php echo $value['student_session_id'] . "-" . $count; ?>">
-                                                                                <?php echo $this->lang->line($att_type); ?>
-                                                                            </label>
-                                                                        </div>
-                                                                    <?php
+                                                                        $is_checked = ($value['attendence_type_id'] == $type['id']);
+                                                                    } elseif ($sch_setting->biometric) {
+                                                                        $is_checked = ($att_type == "absent");
+                                                                        $onclick    = '';
                                                                     } else {
-                                                                    ?>
-                                                                        <div class="radio radio-info radio-inline">
-                                                                            <?php
-                                                                            if ($sch_setting->biometric) {
-                                                                            ?>
-                                                                                <input <?php if ($att_type == "absent") {
-                                                                                            echo "checked";
-                                                                                        }
-                                                                                        ?> type="radio" id="attendencetype<?php echo $value['student_session_id'] . "-" . $count; ?>" value="<?php echo $type['id'] ?>" class="radio_<?php echo $type['id'] ?>" name="attendencetype<?php echo $value['student_session_id']; ?>">
-                                                                            <?php
-                                                                            } else {
-                                                                            ?>
-                                                                                <input onclick="disable_enable(this.value,<?php echo $value["student_session_id"] ?>)"  <?php if ($c == 1) {
-                                                                                            echo "checked";
-                                                                                        }
-                                                                                        ?> type="radio" id="attendencetype<?php echo $value['student_session_id'] . "-" . $count; ?>" value="<?php echo $type['id'] ?>"  class="radio_<?php echo $type['id'] ?>"name="attendencetype<?php echo $value['student_session_id']; ?>">
-                                                                            <?php
-                                                                            }
-                                                                            ?>
-
-                                                                            <label for="attendencetype<?php echo $value['student_session_id'] . "-" . $count; ?>">
-                                                                                <?php echo $this->lang->line($att_type); ?>
-                                                                            </label>
-                                                                        </div>
-                                                                <?php
+                                                                        $is_checked = ($c == 1);
                                                                     }
-                                                                    $c++; 
-																	 
-                                                                    echo "<br>";
-																	 
+                                                                ?>
+                                                                    <input <?php echo $onclick; ?> <?php echo $is_checked ? "checked" : ""; ?> type="radio" id="<?php echo $rid; ?>" value="<?php echo $type['id'] ?>" class="radio_<?php echo $type['id'] ?>" data-type="<?php echo $att_type; ?>" name="attendencetype<?php echo $ssid; ?>">
+                                                                    <label class="att-pill t-<?php echo $att_type; ?>" for="<?php echo $rid; ?>"><?php echo $this->lang->line($att_type); ?></label>
+                                                                <?php
+                                                                    $c++;
                                                                     $count++;
                                                                 }
                                                                 ?>
+                                                                </div>
                                                             </td>
                                                             <?php
                                                             if ($sch_setting->biometric) {
@@ -421,9 +329,9 @@
                                                         <td class="relative"><input type="text" value="<?php echo $this->customlib->timeFormat($value["in_time"]); ?>" name="in_time_<?php echo $value["student_session_id"] ?>" id="in_time_<?php echo $value["student_session_id"] ?>" class="form-control in_time time" <?php echo $disable_input_attr;?>></td>
                                                         <td class="relative"><input type="text" value="<?php echo $this->customlib->timeFormat($value["out_time"]); ?>" name="out_time_<?php echo $value["student_session_id"] ?>"  id="out_time_<?php echo $value["student_session_id"] ?>" class="form-control out_time time" <?php echo $disable_input_attr;?>></td>
                                                             <?php if ($date == 'xxx') { ?>
-                                                                <td><input type="text" class="noteinput form-control" name="remark<?php echo $value["student_session_id"] ?>"   id="remark<?php echo $value["student_session_id"] ?>"  ></td>
+                                                                <td><textarea rows="1" class="noteinput form-control att-note" name="remark<?php echo $value["student_session_id"] ?>" id="remark<?php echo $value["student_session_id"] ?>"></textarea></td>
                                                             <?php } else { ?>
-                                                                <td><input type="text" class="noteinput form-control" name="remark<?php echo $value["student_session_id"] ?>"  id="remark<?php echo $value["student_session_id"] ?>" value="<?php echo $value["remark"]; ?>" ></td>
+                                                                <td><textarea rows="1" class="noteinput form-control att-note" name="remark<?php echo $value["student_session_id"] ?>" id="remark<?php echo $value["student_session_id"] ?>"><?php echo htmlspecialchars((string) $value["remark"]); ?></textarea></td>
                                                             <?php } ?>
                                                         </tr>
                                                     <?php
@@ -747,7 +655,46 @@ function checkSundayAndShowMessage(dateInputId, messageContainerId) {
     }
 }
 
+$(document).on('click', '.att-table .att-seg', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    $('.att-menu').remove();
+    var $seg = $(this), $menu = $('<div class="att-menu"></div>');
+    $seg.find('input[type=radio]').each(function() {
+        var $in = $(this), $lb = $seg.find('label[for="' + this.id + '"]');
+        if ($in.is(':disabled')) { return; }
+        var $it = $lb.clone().removeAttr('for').toggleClass('is-current', $in.is(':checked'));
+        $it.on('click', function(ev) { ev.stopPropagation(); $in.prop('checked', true).trigger('click').trigger('change'); $('.att-menu').remove(); attRefresh(); });
+        $menu.append($it);
+    });
+    var r = this.getBoundingClientRect();
+    $('body').append($menu);
+    var top = r.bottom + 4;
+    if (top + $menu.outerHeight() > window.innerHeight) { top = Math.max(4, r.top - $menu.outerHeight() - 4); }
+    $menu.css({ top: top, left: r.left });
+});
+$(document).on('click', function() { $('.att-menu').remove(); });
+$(window).on('scroll resize', function() { $('.att-menu').remove(); });
+function attGrow(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+$(document).on('input', '.att-note', function() { attGrow(this); });
+$(function() { $('.att-note').each(function() { attGrow(this); }); });
+function attRefresh() {
+    var counts = {}, total = 0;
+    $('.att-table tbody tr').each(function() {
+        var $r = $(this).find('.att-cell input:checked');
+        $(this).removeClass('row-present row-late row-absent row-holiday row-half_day');
+        if ($r.length) {
+            $(this).addClass('row-' + $r.data('type'));
+            counts[$r.val()] = (counts[$r.val()] || 0) + 1;
+        }
+        total++;
+    });
+    $('.att-table .att-seg').each(function() { $(this).toggleClass('att-none', !$(this).find('input:checked').length); });
+    $('#sum_total').text(total);
+    $('[data-sum]').each(function() { $(this).text(counts[$(this).data('sum')] || 0); });
+}
+$(document).on('change click', '.att-cell input, .default_radio', function() { setTimeout(attRefresh, 0); });
 $(document).ready(function() {
+    attRefresh();
     // Check initially
     checkSundayAndShowMessage('date', 'sunday_message');
 
