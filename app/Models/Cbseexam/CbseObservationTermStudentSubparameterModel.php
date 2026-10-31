@@ -45,6 +45,6 @@ class CbseObservationTermStudentSubparameterModel extends BaseModel
 
     protected function subPath(): string
     {
-        return 'Cbseexam';
+        return 'cbseexam';
     }
 }

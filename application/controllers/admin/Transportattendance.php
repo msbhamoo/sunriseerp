@@ -611,7 +611,17 @@ class Transportattendance extends Admin_Controller
                 $this->db->where('date', $date);
                 $query = $this->db->get('student_attendences');
 
-                if ($query->num_rows() == 0) {
+                if ($query->num_rows() > 0) {
+                    // The auto-absent cron marks Absent (4) with no remark; boarding the bus proves presence.
+                    $existing = $query->row();
+                    if ((int) $existing->attendence_type_id === 4 && trim((string) $existing->remark) === '') {
+                        $this->db->where('id', $existing->id);
+                        $this->db->update('student_attendences', array(
+                            'attendence_type_id' => 1,
+                            'remark'             => 'Auto-synced from Morning Bus',
+                        ));
+                    }
+                } else {
                     $sync_data = [
                         'student_session_id' => $session_id,
                         'attendence_type_id' => 1, // 1 = Present
