@@ -252,6 +252,14 @@ class Accounts_integration
                 continue;
             }
 
+            // A reversed voucher (fee deleted/edited) must not be silently recreated
+            if ($this->CI->db->query(
+                "SELECT 1 FROM acc_vouchers WHERE reference_module = 'fee_collection' AND status = 'reversed' AND reference_id = "
+                . $this->CI->db->escape($ref_id) . " LIMIT 1"
+            )->row()) {
+                continue;
+            }
+
             $amount = floatval($detail['amount'] ?? 0);
             $fine = floatval($detail['amount_fine'] ?? 0);
             $discount = floatval($detail['amount_discount'] ?? 0);
@@ -978,16 +986,41 @@ class Accounts_integration
             }
         }
 
-        $deposits = $this->CI->db->select('id')->get('student_fees_deposite')->result();
+        // Per-invoice check: a deposit can hold several invoices (installments); an older
+        // invoice having a voucher must not hide a newer invoice that has none.
+        $deposits = $this->CI->db->select('id, amount_detail')->get('student_fees_deposite')->result();
         $count = 0;
         $errors = [];
         foreach ($deposits as $dep) {
-            $exists = $this->CI->db->query(
-                "SELECT v.id FROM acc_vouchers v WHERE v.reference_module IN ('fee_collection','fee_discount') AND v.status = 'posted'
-                 AND v.reference_id LIKE " . $this->CI->db->escape($dep->id . '\_%') . "
-                 AND EXISTS (SELECT 1 FROM acc_voucher_items i WHERE i.voucher_id = v.id) LIMIT 1"
-            )->row();
-            if (!$exists) {
+            $detail = json_decode($dep->amount_detail, true);
+            if (empty($detail) || !is_array($detail)) {
+                continue;
+            }
+            $needs = false;
+            foreach ($detail as $inv_no => $d) {
+                $collected = floatval($d['amount'] ?? 0) + floatval($d['amount_fine'] ?? 0);
+                $discount = floatval($d['amount_discount'] ?? 0);
+                $ref = $dep->id . '_' . $inv_no;
+                if ($collected > 0) {
+                    // any status: reversed vouchers are intentionally not recreated
+                    $has = $this->CI->db->query(
+                        "SELECT 1 FROM acc_vouchers WHERE reference_module = 'fee_collection' AND reference_id IN ("
+                        . $this->CI->db->escape($ref) . ", " . $this->CI->db->escape($ref . '_rev') . ") LIMIT 1"
+                    )->row();
+                } elseif ($discount > 0) {
+                    $has = $this->CI->db->query(
+                        "SELECT 1 FROM acc_vouchers WHERE reference_module = 'fee_discount' AND reference_id = "
+                        . $this->CI->db->escape($ref . '_disc') . " LIMIT 1"
+                    )->row();
+                } else {
+                    continue;
+                }
+                if (!$has) {
+                    $needs = true;
+                    break;
+                }
+            }
+            if ($needs) {
                 try {
                     if ($this->sync_fee($dep->id)) {
                         $count++;
