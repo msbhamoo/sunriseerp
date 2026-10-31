@@ -134,6 +134,34 @@ class Scholarshipexam_model extends MY_Model
             if (!$this->db->field_exists('external_email', 'scholarship_exam_candidates')) {
                 $this->db->query("ALTER TABLE `scholarship_exam_candidates` ADD `external_email` VARCHAR(100) DEFAULT NULL;");
             }
+            $extra_cols = array(
+                'external_class_id' => 'INT DEFAULT NULL',
+                'external_father_name' => 'VARCHAR(255) DEFAULT NULL',
+                'external_mother_name' => 'VARCHAR(255) DEFAULT NULL',
+                'external_dob' => 'DATE DEFAULT NULL',
+                'external_gender' => 'VARCHAR(20) DEFAULT NULL',
+                'external_category' => 'VARCHAR(50) DEFAULT NULL',
+                'external_village' => 'VARCHAR(150) DEFAULT NULL',
+                'external_city' => 'VARCHAR(150) DEFAULT NULL',
+                'external_address' => 'TEXT',
+            );
+            foreach ($extra_cols as $col => $def) {
+                // Live check (not field_exists): the CI4 field-name cache is stale after an ALTER in the same request
+                $has_col = $this->db->query("SHOW COLUMNS FROM `scholarship_exam_candidates` LIKE '$col'")->row_array();
+                if (!$has_col) {
+                    $this->db->query("ALTER TABLE `scholarship_exam_candidates` ADD `$col` $def;");
+                }
+            }
+        }
+
+        if (!$this->db->table_exists('scholarship_settings')) {
+            $this->db->query("
+                CREATE TABLE IF NOT EXISTS `scholarship_settings` (
+                  `setting_key` VARCHAR(100) NOT NULL PRIMARY KEY,
+                  `setting_value` TEXT,
+                  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
         }
 
         if (!$this->db->table_exists('scholarship_exam_questions')) {
@@ -698,11 +726,12 @@ class Scholarshipexam_model extends MY_Model
         $this->db->select('scholarship_exam_candidates.*, 
             COALESCE(NULLIF(students.firstname, ""), scholarship_exam_candidates.external_candidate_name, "External Candidate") as firstname, 
             COALESCE(students.lastname, "") as lastname, 
-            students.image, students.gender, students.dob, 
-            COALESCE(students.guardian_name, "Guardian") as guardian_name, 
+            students.image, COALESCE(students.gender, scholarship_exam_candidates.external_gender) as gender, COALESCE(students.dob, scholarship_exam_candidates.external_dob) as dob, 
+            COALESCE(students.guardian_name, NULLIF(scholarship_exam_candidates.external_father_name, ""), "Guardian") as guardian_name, 
             COALESCE(students.guardian_phone, scholarship_exam_candidates.external_mobile) as guardian_phone, 
             COALESCE(students.admission_no, CONCAT("EXT-", scholarship_exam_candidates.id)) as admission_no, 
-            COALESCE(classes.class, CONCAT("External (", IFNULL(scholarship_exam_candidates.external_school_name, "Public"), ")")) as class, 
+            COALESCE(classes.class, CONCAT(IF(ext_classes.class IS NULL, "", CONCAT("Class ", ext_classes.class, " - ")), "External (", IFNULL(scholarship_exam_candidates.external_school_name, "Public"), ")")) as class, 
+            scholarship_exam_candidates.external_category, scholarship_exam_candidates.external_city, scholarship_exam_candidates.external_village, scholarship_exam_candidates.external_address, 
             COALESCE(sections.section, "A") as section, 
             scholarship_exam_schedules.total_marks, 
             scholarship_exam_schedules.passing_marks, 
@@ -713,6 +742,7 @@ class Scholarshipexam_model extends MY_Model
         $this->db->join('student_session', 'student_session.id = scholarship_exam_candidates.student_session_id', 'left');
         $this->db->join('classes', 'classes.id = student_session.class_id', 'left');
         $this->db->join('sections', 'sections.id = student_session.section_id', 'left');
+        $this->db->join('classes ext_classes', 'ext_classes.id = scholarship_exam_candidates.external_class_id', 'left');
         $this->db->join('scholarship_exam_schedules', 'scholarship_exam_schedules.id = scholarship_exam_candidates.schedule_id', 'left');
         $this->db->where('scholarship_exam_candidates.scholarship_exam_id', $exam_id);
 
@@ -1021,6 +1051,66 @@ class Scholarshipexam_model extends MY_Model
         $this->db->from('scholarship_exam_field_settings');
         $this->db->order_by('id', 'ASC');
         return $this->db->get()->result_array();
+    }
+
+    public function getSetting($key, $default = null)
+    {
+        $row = $this->db->get_where('scholarship_settings', array('setting_key' => $key))->row_array();
+        return $row ? $row['setting_value'] : $default;
+    }
+
+    public function saveSetting($key, $value)
+    {
+        $this->db->query(
+            'INSERT INTO scholarship_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)',
+            array($key, $value)
+        );
+    }
+
+    /**
+     * Where the permanent short link (/ssat, encoded in the printed QR) sends visitors.
+     * Empty = the first open exam's public form.
+     */
+    public function getPublicLinkTarget()
+    {
+        return trim((string) $this->getSetting('public_link_target', ''));
+    }
+
+    public function findExternalDuplicate($exam_id, $mobile)
+    {
+        return $this->db->get_where('scholarship_exam_candidates', array(
+            'scholarship_exam_id' => $exam_id,
+            'is_external' => 1,
+            'external_mobile' => $mobile,
+        ))->row_array();
+    }
+
+    /**
+     * Inserts an external candidate with a unique roll number. roll_no has a UNIQUE index,
+     * so a concurrent submission that grabs the same number is retried with the next one.
+     */
+    public function insertExternalCandidate($exam, array $data)
+    {
+        $prefix = $exam['roll_no_prefix'] ?: 'EXT-';
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $row = $this->db->query(
+                'SELECT MAX(CAST(SUBSTRING(roll_no, ?) AS UNSIGNED)) AS n FROM scholarship_exam_candidates WHERE roll_no LIKE ?',
+                array(strlen($prefix) + 1, $this->db->escape_like_str($prefix) . '%')
+            )->row();
+            $next = max(1000, (int) ($row->n ?? 0)) + 1 + $attempt;
+            $roll_no = $prefix . $next;
+
+            $data['roll_no'] = $roll_no;
+            $data['admit_card_no'] = 'ADM-EXT-' . sprintf('%05d', $next) . '-' . $exam['id'];
+
+            $this->db->db_debug = false;
+            $ok = $this->db->insert('scholarship_exam_candidates', $data);
+            $this->db->db_debug = true;
+            if ($ok) {
+                return array('id' => $this->db->insert_id(), 'roll_no' => $roll_no, 'admit_card_no' => $data['admit_card_no']);
+            }
+        }
+        return false;
     }
 
     public function saveFieldSettings($post_data)

@@ -57,6 +57,22 @@ class Scholarshipregister extends CI_Controller
         $this->index($code_or_id);
     }
 
+    /**
+     * Permanent short link (/ssat) that the printed QR points to. The QR never changes;
+     * admin repoints where it lands from Scholarship Settings.
+     */
+    public function go()
+    {
+        $target = $this->scholarshipexam_model->getPublicLinkTarget();
+        if ($target === '') {
+            $exams = $this->scholarshipexam_model->getExams();
+            $target = site_url('scholarshipregister/apply/' . ($exams ? urlencode($exams[0]['exam_code']) : ''));
+        } elseif (!preg_match('#^https?://#i', $target)) {
+            $target = site_url(ltrim($target, '/'));
+        }
+        redirect($target);
+    }
+
     public function submit()
     {
         $exam_id = $this->input->post('exam_id');
@@ -67,92 +83,106 @@ class Scholarshipregister extends CI_Controller
             return;
         }
 
-        $candidate_name = $this->input->post('candidate_name');
+        $candidate_name = trim((string) $this->input->post('candidate_name'));
         $school_type = $this->input->post('school_type');
         $sch_setting = $this->scholarshipexam_model->getSchoolSetting();
         $default_school_name = isset($sch_setting[0]['name']) ? $sch_setting[0]['name'] : 'Sunrise International Public School';
-        $school_name = ($school_type == 'external') ? ($this->input->post('other_school_name') ?: 'Other School') : $default_school_name;
+        $school_name = ($school_type == 'external') ? (trim((string) $this->input->post('other_school_name')) ?: 'Other School') : $default_school_name;
 
-        $mobile = $this->input->post('mobile');
-        $email = $this->input->post('email');
-        $class_id = $this->input->post('class_id');
+        $mobile = preg_replace('/\D/', '', (string) $this->input->post('mobile'));
+        if (strlen($mobile) > 10) {
+            $mobile = substr($mobile, -10);
+        }
+        $email = trim((string) $this->input->post('email'));
+        $class_id = (int) $this->input->post('class_id');
 
-        if ($exam_id && $candidate_name && $mobile) {
-            $exam = $this->scholarshipexam_model->getExams($exam_id);
-            $prefix = $exam['roll_no_prefix'] ?: 'EXT-';
+        $dob = trim((string) $this->input->post('dob'));
+        $dob = ($dob !== '' && strtotime($dob)) ? date('Y-m-d', strtotime($dob)) : null;
 
-            // Auto generate roll no for external candidate
-            $this->db->select('roll_no');
-            $this->db->from('scholarship_exam_candidates');
-            $this->db->where('scholarship_exam_id', $exam_id);
-            $this->db->like('roll_no', $prefix, 'after');
-            $this->db->order_by('id', 'DESC');
-            $this->db->limit(1);
-            $last_cand = $this->db->get()->row();
+        if (!$exam_id || $candidate_name === '' || strlen($mobile) != 10 || ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL))) {
+            redirect('scholarshipregister/apply/' . $exam['exam_code']);
+            return;
+        }
 
-            $start_counter = 1001;
-            if ($last_cand && !empty($last_cand->roll_no)) {
-                $num_str = preg_replace('/[^0-9]/', '', str_replace($prefix, '', $last_cand->roll_no));
-                if (is_numeric($num_str) && intval($num_str) >= 1000) {
-                    $start_counter = intval($num_str) + 1;
-                }
-            }
-
-            $roll_no = $prefix . $start_counter;
-            $admit_no = 'ADM-EXT-' . sprintf('%04d', rand(1000, 9999));
-            $payment_status = ($exam['is_paid'] == 1) ? 'unpaid' : 'free';
-
+        // One registration per mobile per exam: show the existing slip instead of creating a duplicate
+        $existing = $this->scholarshipexam_model->findExternalDuplicate($exam_id, $mobile);
+        if ($existing) {
+            $created = array('id' => $existing['id'], 'roll_no' => $existing['roll_no'], 'admit_card_no' => $existing['admit_card_no']);
+            $school_name = $existing['external_school_name'];
+            $candidate_name = $existing['external_candidate_name'];
+            $class_id = (int) $existing['external_class_id'];
+            $data['already_registered'] = true;
+        } else {
             $insert_data = array(
                 'scholarship_exam_id' => $exam_id,
                 'student_id' => 0,
                 'student_session_id' => 0,
-                'roll_no' => $roll_no,
-                'admit_card_no' => $admit_no,
-                'payment_status' => $payment_status,
+                'payment_status' => ($exam['is_paid'] == 1) ? 'unpaid' : 'free',
                 'attendance_status' => 'pending',
                 'result_status' => 'pending',
                 'is_external' => 1,
                 'external_candidate_name' => $candidate_name,
                 'external_school_name' => $school_name,
                 'external_mobile' => $mobile,
-                'external_email' => $email
+                'external_email' => $email,
+                'external_class_id' => $class_id ?: null,
+                'external_father_name' => trim((string) $this->input->post('father_name')),
+                'external_mother_name' => trim((string) $this->input->post('mother_name')),
+                'external_dob' => $dob,
+                'external_gender' => trim((string) $this->input->post('gender')),
+                'external_category' => trim((string) $this->input->post('category')),
+                'external_village' => trim((string) $this->input->post('village')),
+                'external_city' => trim((string) $this->input->post('city')),
+                'external_address' => trim((string) $this->input->post('address')),
             );
-
-            $this->db->insert('scholarship_exam_candidates', $insert_data);
-            $cand_id = $this->db->insert_id();
-
-            $data['candidate'] = array(
-                'id' => $cand_id,
-                'roll_no' => $roll_no,
-                'admit_card_no' => $admit_no,
-                'firstname' => $candidate_name,
-                'lastname' => '(External Candidate)',
-                'school_name' => $school_name,
-                'mobile' => $mobile,
-                'exam_title' => $exam['title'],
-                'exam_code' => $exam['exam_code'],
-                'exam_mode' => $exam['exam_mode'],
-                'exam_center' => $exam['exam_center'],
-                'instructions' => $exam['instructions'],
-                'class' => 'External (' . $school_name . ')',
-                'section' => 'A',
-                'admission_no' => 'EXT-' . $cand_id,
-                'father_name' => 'Guardian',
-                'image' => '',
-                'duration_minutes' => 60,
-                'exam_date' => date('Y-m-d H:i:s', strtotime('+7 days'))
-            );
-            $data['sch_setting'] = $sch_setting;
-
-            if (isset($exam['admit_card_status']) && $exam['admit_card_status'] == 1) {
-                // Admit Cards ARE released -> Render Admit Card!
-                $this->load->view('admin/scholarshipexam/admitcard', $data);
-            } else {
-                // Admit Cards NOT released yet -> Render Registration Success confirmation slip!
-                $this->load->view('scholarshipregister/success', $data);
+            $created = $this->scholarshipexam_model->insertExternalCandidate($exam, $insert_data);
+            if (!$created) {
+                redirect('scholarshipregister/apply/' . $exam['exam_code']);
+                return;
             }
+        }
+
+        $class_row = $class_id ? $this->db->get_where('classes', array('id' => $class_id))->row_array() : null;
+        $class_label = $class_row ? 'Class ' . $class_row['class'] : '';
+
+        $exam_date = null;
+        foreach ($this->scholarshipexam_model->getSchedulesByExam($exam['id']) as $sc) {
+            if (!empty($sc['exam_date']) && strtotime($sc['exam_date'])) {
+                $exam_date = $sc['exam_date'];
+                break;
+            }
+        }
+
+        $data['candidate'] = array(
+            'id' => $created['id'],
+            'roll_no' => $created['roll_no'],
+            'admit_card_no' => $created['admit_card_no'],
+            'firstname' => $candidate_name,
+            'lastname' => '(External Candidate)',
+            'school_name' => $school_name,
+            'mobile' => $mobile,
+            'exam_title' => $exam['title'],
+            'exam_code' => $exam['exam_code'],
+            'exam_mode' => $exam['exam_mode'],
+            'exam_center' => $exam['exam_center'],
+            'instructions' => $exam['instructions'],
+            'class' => trim($class_label . ' (' . $school_name . ')'),
+            'section' => 'A',
+            'admission_no' => 'EXT-' . $created['id'],
+            'father_name' => $this->input->post('father_name') ?: 'Guardian',
+            'image' => '',
+            'duration_minutes' => 60,
+            'exam_date' => $exam_date ?: date('Y-m-d H:i:s', strtotime('+7 days')),
+            'class_label' => $class_label,
+            'father_label' => trim((string) $this->input->post('father_name')),
+            'registered_on' => date('Y-m-d H:i:s'),
+        );
+        $data['sch_setting'] = $sch_setting;
+
+        if (isset($exam['admit_card_status']) && $exam['admit_card_status'] == 1) {
+            $this->load->view('admin/scholarshipexam/admitcard', $data);
         } else {
-            redirect('scholarshipregister');
+            $this->load->view('scholarshipregister/success', $data);
         }
     }
 

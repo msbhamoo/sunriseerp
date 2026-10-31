@@ -33,7 +33,7 @@ class Scholarshipexam extends Admin_Controller
 
         $data['stats'] = $this->scholarshipexam_model->getDashboardStats();
         $data['exams'] = $this->scholarshipexam_model->getExams();
-        $data['sch_setting'] = $this->sch_setting_detail;
+        $data['sch_setting'] = $this->schSetting();
 
         $this->load->view('layout/header', $data);
         $this->load->view('admin/scholarshipexam/index', $data);
@@ -47,7 +47,7 @@ class Scholarshipexam extends Admin_Controller
 
         $data['exams'] = $this->scholarshipexam_model->getExams();
         $data['classList'] = $this->class_model->get();
-        $data['sch_setting'] = $this->sch_setting_detail;
+        $data['sch_setting'] = $this->schSetting();
 
         $this->load->view('layout/header', $data);
         $this->load->view('admin/scholarshipexam/exams', $data);
@@ -251,14 +251,14 @@ class Scholarshipexam extends Admin_Controller
     {
         $data['exam'] = $this->scholarshipexam_model->getExams($exam_id);
         $data['questions'] = $this->scholarshipexam_model->getQuestionsForExam($exam_id);
-        $data['sch_setting'] = $this->sch_setting_detail;
+        $data['sch_setting'] = $this->schSetting();
         $this->load->view('admin/scholarshipexam/paper_print', $data);
     }
 
     public function brochure($exam_id)
     {
         $data['exam'] = $this->scholarshipexam_model->getExams($exam_id);
-        $data['sch_setting'] = $this->sch_setting_detail;
+        $data['sch_setting'] = $this->schSetting();
         $this->load->view('admin/scholarshipexam/brochure', $data);
     }
 
@@ -323,7 +323,7 @@ class Scholarshipexam extends Admin_Controller
             return;
         }
         $data['candidate'] = $this->scholarshipexam_model->getCandidateAdmitCardData($candidate_id);
-        $data['sch_setting'] = $this->sch_setting_detail;
+        $data['sch_setting'] = $this->schSetting();
         $this->load->view('admin/scholarshipexam/admitcard', $data);
     }
 
@@ -385,7 +385,7 @@ class Scholarshipexam extends Admin_Controller
             $data['selected_exam'] = $this->scholarshipexam_model->getExams($exam_id);
         }
 
-        $data['sch_setting'] = $this->sch_setting_detail;
+        $data['sch_setting'] = $this->schSetting();
 
         $this->load->view('layout/header', $data);
         $this->load->view('admin/scholarshipexam/certificates', $data);
@@ -418,7 +418,7 @@ class Scholarshipexam extends Admin_Controller
     public function print_certificate($candidate_id)
     {
         $data['candidate'] = $this->scholarshipexam_model->getCandidateAdmitCardData($candidate_id);
-        $data['sch_setting'] = $this->sch_setting_detail;
+        $data['sch_setting'] = $this->schSetting();
         $this->load->view('admin/scholarshipexam/print_certificate', $data);
     }
 
@@ -435,6 +435,15 @@ class Scholarshipexam extends Admin_Controller
             if (!$this->rbac->hasPrivilege('scholarship_exam', 'can_edit')) {
                 access_denied();
             }
+            if ($this->input->post('save_public_link')) {
+                $target = trim((string) $this->input->post('public_link_target'));
+                if ($target !== '' && !preg_match('#^(https?://|/)#i', $target)) {
+                    $target = '/' . $target;
+                }
+                $this->scholarshipexam_model->saveSetting('public_link_target', $target);
+                $this->session->set_flashdata('msg', '<div class="alert alert-success">Public link updated. The printed QR code is unchanged and now opens the new link.</div>');
+                redirect('admin/scholarshipexam/setting');
+            }
             $fields = $this->input->post('fields');
             $this->scholarshipexam_model->saveFieldSettings($fields);
             $this->session->set_flashdata('msg', '<div class="alert alert-success">Registration Form Field Settings updated successfully!</div>');
@@ -442,8 +451,49 @@ class Scholarshipexam extends Admin_Controller
         }
 
         $data['field_settings'] = $this->scholarshipexam_model->getFieldSettings();
+        $data['public_link_target'] = $this->scholarshipexam_model->getPublicLinkTarget();
+        $data['permanent_url'] = site_url('ssat');
+        $exams = $this->scholarshipexam_model->getExams();
+        $data['default_target'] = site_url('scholarshipregister/apply/' . ($exams ? urlencode($exams[0]['exam_code']) : ''));
         $this->load->view('layout/header', $data);
         $this->load->view('admin/scholarshipexam/setting', $data);
         $this->load->view('layout/footer', $data);
+    }
+
+    /**
+     * Downloads the permanent QR (encodes only /ssat, so it stays valid when the target link changes).
+     */
+    public function qr_download($format = 'png')
+    {
+        if (!$this->rbac->hasPrivilege('scholarship_exam', 'can_view')) {
+            access_denied();
+        }
+
+        require_once APPPATH . 'third_party/omnipay/vendor/autoload.php';
+
+        $svg = ($format === 'svg');
+        $options = new \chillerlan\QRCode\QROptions([
+            'eccLevel' => \chillerlan\QRCode\Common\EccLevel::H,
+            'outputType' => $svg ? \chillerlan\QRCode\Output\QROutputInterface::MARKUP_SVG : \chillerlan\QRCode\Output\QROutputInterface::GDIMAGE_PNG,
+            'outputBase64' => false,
+            'scale' => $svg ? 10 : 20,
+            'quietzoneSize' => 4,
+        ]);
+        $out = (new \chillerlan\QRCode\QRCode($options))->render(site_url('ssat'));
+
+        header('Content-Type: ' . ($svg ? 'image/svg+xml' : 'image/png'));
+        header('Content-Disposition: attachment; filename="ssat-registration-qr.' . ($svg ? 'svg' : 'png') . '"');
+        echo $out;
+        exit;
+    }
+
+    /** School settings as [0 => row]; the base controller's sch_setting_detail is null under the CI4 shim. */
+    private function schSetting()
+    {
+        $detail = $this->sch_setting_detail;
+        if (is_array($detail) && isset($detail[0]) && is_array($detail[0])) {
+            return $detail;
+        }
+        return $this->scholarshipexam_model->getSchoolSetting();
     }
 }
