@@ -72,6 +72,14 @@ class Scholarshipregister extends CI_Controller
         } elseif (!preg_match('#^https?://#i', $target)) {
             $target = site_url(ltrim($target, '/'));
         }
+
+        // Scan tracking: a long-lived visitor cookie tells repeat scans from new people,
+        // and the scan id lets submit() credit the registration to this scan.
+        $visitor_id = (isset($_COOKIE['ssat_vid']) && preg_match('/^[a-f0-9]{32}$/', $_COOKIE['ssat_vid'])) ? $_COOKIE['ssat_vid'] : bin2hex(random_bytes(16));
+        $scan_id = $this->scholarshipexam_model->logQrScan($visitor_id, $this->input->ip_address(), isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '', $target);
+        setcookie('ssat_vid', $visitor_id, time() + 365 * 86400, '/', '', false, true);
+        setcookie('ssat_sid', (string) $scan_id, time() + 30 * 86400, '/', '', false, true);
+
         redirect($target);
     }
 
@@ -160,6 +168,14 @@ class Scholarshipregister extends CI_Controller
             if (!$created) {
                 redirect('scholarshipregister/apply/' . $exam['exam_code']);
                 return;
+            }
+            if (!empty($_COOKIE['ssat_vid'])) {
+                $this->scholarshipexam_model->markQrScanRegistered(
+                    isset($_COOKIE['ssat_sid']) ? (int) $_COOKIE['ssat_sid'] : 0,
+                    $_COOKIE['ssat_vid'],
+                    $created['id'],
+                    $exam_id
+                );
             }
         }
 

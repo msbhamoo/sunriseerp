@@ -23,7 +23,8 @@
                             </div>
                             <div class="col-md-9">
                                 <p><strong>Permanent QR link (never changes):</strong><br>
-                                    <code><?php echo htmlspecialchars($permanent_url); ?></code></p>
+                                    <code><?php echo htmlspecialchars($permanent_url); ?></code>
+                                    <a href="<?php echo site_url('admin/scholarshipexam/qr_analytics'); ?>" class="btn btn-info btn-xs" style="margin-left: 8px;"><i class="fa fa-bar-chart"></i> Scan analytics</a></p>
                                 <p class="text-muted">The QR code only contains the permanent link above, so printed posters and brochures keep working. Change the destination below whenever the public form link changes.</p>
                                 <form action="<?php echo site_url('admin/scholarshipexam/setting'); ?>" method="POST">
                                     <input type="hidden" name="save_public_link" value="1">

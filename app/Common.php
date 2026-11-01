@@ -94,18 +94,29 @@ class DatabaseBridge
             $table = !empty($this->currentTable) ? $this->currentTable : 'dual';
             $this->builder = $this->connection->table($table);
         }
+        $this->flushPendingCalls();
         return $this->builder;
+    }
+
+    protected function flushPendingCalls()
+    {
+        if (!empty($this->pendingCalls)) {
+            $calls = $this->pendingCalls;
+            $this->pendingCalls = [];
+            foreach ($calls as $call) {
+                [$method, $args] = $call;
+                call_user_func_array([$this->builder, $method], $args);
+            }
+        }
     }
 
     protected $pendingCalls = [];
 
     protected function invokeBuilderMethod(string $method, array $args)
     {
-        if ($this->builder !== null) {
-            call_user_func_array([$this->builder, $method], $args);
-        } else {
-            $this->pendingCalls[] = [$method, $args];
-        }
+        // Always buffer until the terminal call (get/update/delete/...) so a stale builder
+        // left by an earlier query can't swallow clauses meant for the next table.
+        $this->pendingCalls[] = [$method, $args];
         return $this;
     }
 
@@ -351,6 +362,11 @@ class DatabaseBridge
     {
         $res = $this->connection->table($table)->insert($set, $escape);
         return $res;
+    }
+
+    public function replace($table = '', $set = null)
+    {
+        return $this->connection->table($table)->replace($set);
     }
 
     public function insert_id()

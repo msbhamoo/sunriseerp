@@ -121,6 +121,11 @@ class ScholarshipexamController extends BaseController
         return $this->dispatchLegacy('Scholarshipexam', 'print_certificate', func_get_args());
     }
 
+    public function qr_analytics()
+    {
+        return $this->dispatchLegacy('Scholarshipexam', 'qr_analytics', func_get_args());
+    }
+
     public function setting()
     {
         return $this->dispatchLegacy('Scholarshipexam', 'setting', func_get_args());

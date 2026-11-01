@@ -23,7 +23,7 @@ if (!isset($codes['on_duty'])) { $codes['on_duty'] = array('OD', 'On Duty'); }
 $attend_weight = array('present' => 1, 'late' => 1, 'on_duty' => 1, 'half_day' => 0.5, 'half_day_second_shift' => 0.5);
 $num = function ($n) { return rtrim(rtrim(number_format($n, 1), '0'), '.'); };
 $lp_cols = !empty($late_policy_on) ? 1 : 0;
-$tot_cols = 14 + $lp_cols; // count + hours columns in the Totals block
+$tot_cols = 16 + $lp_cols; // count + hours columns in the Totals block
 
 // Hours: worked = out - in on days with both punches. Required = the day's shift hours
 // (half day = half), 0 on a holiday. Short / Extra are summed day by day, so an extra hour
@@ -144,8 +144,8 @@ if (!$excel && !empty($school->image)) {
         <colgroup>
             <col style="width:2.2%"><col style="width:10.5%"><col style="width:5%"><col style="width:5.5%">
             <?php for ($d = 1; $d <= $days_in_month; $d++) { ?><col><?php } ?>
-            <?php for ($i = 0; $i < 10 + $lp_cols; $i++) { ?><col style="width:2.3%"><?php } ?>
-            <?php for ($i = 0; $i < 4; $i++) { ?><col style="width:2.9%"><?php } ?>
+            <?php for ($i = 0; $i < 11 + $lp_cols; $i++) { ?><col style="width:2.3%"><?php } ?>
+            <?php for ($i = 0; $i < 5; $i++) { ?><col style="width:2.9%"><?php } ?>
         </colgroup>
         <thead>
             <tr>
@@ -157,8 +157,8 @@ if (!$excel && !empty($school->image)) {
                     $ds = sprintf('%04d-%02d-%02d', $year, $month, $d); ?>
                     <th class="<?php echo isset($holiday_dates[$ds]) ? 'off' : ''; ?>" <?php echo $excel && isset($holiday_dates[$ds]) ? 'style="background:#ede9fe"' : ''; ?>><?php echo $d; ?></th>
                 <?php } ?>
-                <th colspan="<?php echo 10 + $lp_cols; ?>" class="tot">Days</th>
-                <th colspan="4" class="tot">Hours (h:mm)</th>
+                <th colspan="<?php echo 11 + $lp_cols; ?>" class="tot">Days</th>
+                <th colspan="5" class="tot">Hours (h:mm)</th>
             </tr>
             <tr>
                 <?php for ($d = 1; $d <= $days_in_month; $d++) {
@@ -175,11 +175,13 @@ if (!$excel && !empty($school->image)) {
                 <th class="tot wrap" title="Working days attended: Present / Late / On Duty = 1, Half Day = 0.5 (holidays not included)">Days Attnd.</th>
                 <th class="tot wrap" title="Days worked on a holiday (not included in Days Attnd.)">Hol. Worked</th>
                 <th class="tot wrap" title="Working days up to today with no attendance marked">Not Marked</th>
+                <th class="tot wrap" title="Compliance points followed (Uniform, ID Card, Lesson Plan, Phone Handover) out of 4 per day">Compliance</th>
                 <?php if ($lp_cols) { ?><th class="tot wrap" title="<?php echo html_escape($late_policy_text); ?>">Late Ded.</th><?php } ?>
                 <th class="tot wrap" title="Total of (Out time - In time) on days with both punches">Worked</th>
                 <th class="tot wrap" title="Shift hours for the days with both punches (half day = half, holiday = 0)">Required</th>
                 <th class="tot wrap" title="Total hours short of the required hours, day by day">Short</th>
                 <th class="tot wrap" title="Total hours beyond the required hours, day by day (all holiday work is extra)">Extra</th>
+                <th class="tot wrap" title="Net of Extra minus Short for the month">Shortfall / +/-</th>
             </tr>
         </thead>
         <tbody>
@@ -239,11 +241,15 @@ if (!$excel && !empty($school->image)) {
                 <td class="tot"><?php echo $num($attended); ?></td>
                 <td class="tot"><?php echo $num($hol_work); ?></td>
                 <td class="tot"><?php echo $not_marked; ?></td>
+                <?php $c_f = isset($compliance_map[$sid]) ? $compliance_map[$sid] : 0; $c_t = isset($compliance_total) ? $compliance_total : 4 * $days_in_month; ?>
+                <td class="tot"><?php echo $c_f . '/' . $c_t . ' (' . ($c_t > 0 ? round($c_f * 100 / $c_t) : 0) . '%)'; ?></td>
                 <?php if ($lp_cols) { $ded = $late_deduct($cnt['late']); ?><td class="tot"><?php echo $ded > 0 ? '-' . $num($ded) : '0'; ?></td><?php } ?>
-                <td class="tot"><?php echo $hm($worked_s); ?></td>
-                <td class="tot"><?php echo $hm($required_s); ?></td>
-                <td class="tot short"><?php echo $short_s > 0 ? '-' . $hm($short_s) : '0:00'; ?></td>
-                <td class="tot extra"><?php echo $extra_s > 0 ? '+' . $hm($extra_s) : '0:00'; ?></td>
+                <td class="tot"<?php echo $excel ? ' style="mso-number-format:\'\@\'"' : ''; ?>><?php echo $hm($worked_s); ?></td>
+                <td class="tot"<?php echo $excel ? ' style="mso-number-format:\'\@\'"' : ''; ?>><?php echo $hm($required_s); ?></td>
+                <td class="tot short"<?php echo $excel ? ' style="mso-number-format:\'\@\'"' : ''; ?>><?php echo $short_s > 0 ? '-' . $hm($short_s) : '0:00'; ?></td>
+                <td class="tot extra"<?php echo $excel ? ' style="mso-number-format:\'\@\'"' : ''; ?>><?php echo $extra_s > 0 ? '+' . $hm($extra_s) : '0:00'; ?></td>
+                <?php $net_s = $extra_s - $short_s; ?>
+                <td class="tot <?php echo $net_s < 0 ? 'short' : ($net_s > 0 ? 'extra' : ''); ?>"<?php echo $excel ? ' style="mso-number-format:\'\@\'"' : ''; ?>><?php echo $net_s < 0 ? '-' . $hm(-$net_s) : ($net_s > 0 ? '+' . $hm($net_s) : '0:00'); ?></td>
             </tr>
         <?php } ?>
         <?php if (empty($staff)) { ?>
@@ -253,7 +259,7 @@ if (!$excel && !empty($school->image)) {
     </table>
 
     <?php if ($excel) { ?>
-        <table><tr><td colspan="<?php echo $days_in_month + 4 + $tot_cols; ?>">Codes: <?php foreach ($codes as $c) { echo html_escape($c[0] . ' = ' . $c[1]) . '; '; } ?>H = Holiday / weekly off. Days Attnd. = working days attended (Present / Late / On Duty = 1, Half Day = 0.5), holidays not included. Hol. Worked = days worked on a holiday. Not Marked = working days up to today with nothing marked. Worked = total Out - In on days with both punches. Required = shift hours for those days (half day = half, holiday = 0). Short / Extra = hours below / above Required, added up day by day.<?php echo $lp_cols ? ' Late Ded. = ' . html_escape($late_policy_text) : ''; ?></td></tr>
+        <table><tr><td colspan="<?php echo $days_in_month + 4 + $tot_cols; ?>">Codes: <?php foreach ($codes as $c) { echo html_escape($c[0] . ' = ' . $c[1]) . '; '; } ?>H = Holiday / weekly off. Days Attnd. = working days attended (Present / Late / On Duty = 1, Half Day = 0.5), holidays not included. Hol. Worked = days worked on a holiday. Not Marked = working days up to today with nothing marked. Worked = total Out - In on days with both punches. Required = shift hours for those days (half day = half, holiday = 0). Short / Extra = hours below / above Required, added up day by day. Shortfall / +/- = Extra minus Short. Compliance = points followed out of 4 per day.<?php echo $lp_cols ? ' Late Ded. = ' . html_escape($late_policy_text) : ''; ?></td></tr>
         <tr><td colspan="<?php echo $days_in_month + 4 + $tot_cols; ?>">Generated on <?php echo date('d M Y h:i A'); ?><?php echo $generated_by ? ' by ' . html_escape($generated_by) : ''; ?></td></tr></table>
     <?php } else { ?>
         <div class="legend">
