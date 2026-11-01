@@ -647,7 +647,11 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
             }
         }
         
-        $data['searchlist']  = $this->customlib->get_searchtype();
+        // Current academic session is offered first and is the default range
+        $session_range      = $this->customlib->getCurrentSessionRange();
+        $session_label      = 'Current Session' . ($session_range['session'] !== '' ? ' (' . $session_range['session'] . ')' : '');
+        $searchlist         = $this->customlib->get_searchtype();
+        $data['searchlist'] = array('' => $searchlist['']) + array('this_session' => $session_label) + $searchlist;
         $this->session->set_userdata('top_menu', 'fees_collection');
         $this->session->set_userdata('sub_menu', 'financereports/collection_list');
         $this->session->set_userdata('subsub_menu', '');
@@ -656,9 +660,9 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
             $dates               = $this->customlib->get_betweendate($_POST['search_type']);
             $data['search_type'] = $_POST['search_type'];
         } else {
-            $_POST['search_type'] = 'this_year';
-            $dates               = $this->customlib->get_betweendate('this_year');
-            $data['search_type'] = 'this_year';
+            $_POST['search_type'] = 'this_session';
+            $dates               = $this->customlib->get_betweendate('this_session');
+            $data['search_type'] = 'this_session';
         }
 
         $start_date = date('Y-m-d', strtotime($dates['from_date']));

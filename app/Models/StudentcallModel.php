@@ -101,6 +101,7 @@ class StudentcallModel extends BaseModel
 
         $pending = $builder->get()->getResultArray();
         if (!empty($pending)) {
+            $this->prefetch_student_fee_info(array_column($pending, 'student_session_id'));
             foreach ($pending as $p_item) {
                 $fee_info = $this->get_student_fee_info((int)$p_item['student_session_id']);
                 if (!empty($fee_info) && $fee_info['total_amount'] > 0 && $fee_info['due_amount'] <= 0) {
@@ -558,15 +559,59 @@ class StudentcallModel extends BaseModel
         }
 
         // Calculate academic & transport fees directly via DB
-        $fees = $this->db->table('student_fees_master')
-            ->select('student_fees_master.id, fee_groups_feetype.amount, student_fees_deposite.amount_detail')
-            ->join('fee_session_groups', 'fee_session_groups.id = student_fees_master.fee_session_group_id')
-            ->join('fee_groups_feetype', 'fee_groups_feetype.fee_session_group_id = fee_session_groups.id')
-            ->join('student_fees_deposite', 'student_fees_deposite.student_fees_master_id = student_fees_master.id AND student_fees_deposite.fee_groups_feetype_id = fee_groups_feetype.id', 'left')
+        $fees = $this->feeInfoBuilder()
             ->where('student_fees_master.student_session_id', $student_session_id)
             ->get()
             ->getResultArray();
 
+        $res = $this->compute_fee_info($fees);
+        self::$fee_info_cache[$student_session_id] = $res;
+        return $res;
+    }
+
+    /**
+     * Loads fee info for many students with one query and fills the per-request cache,
+     * so later get_student_fee_info() calls for those students need no query.
+     */
+    public function prefetch_student_fee_info(array $student_session_ids): void
+    {
+        $ids = [];
+        foreach ($student_session_ids as $id) {
+            $id = (int) $id;
+            if ($id > 0 && !isset(self::$fee_info_cache[$id])) {
+                $ids[$id] = $id;
+            }
+        }
+        if (empty($ids)) {
+            return;
+        }
+
+        $rows = $this->feeInfoBuilder()
+            ->select('student_fees_master.student_session_id')
+            ->whereIn('student_fees_master.student_session_id', array_values($ids))
+            ->get()
+            ->getResultArray();
+
+        $grouped = array_fill_keys(array_values($ids), []);
+        foreach ($rows as $row) {
+            $grouped[(int) $row['student_session_id']][] = $row;
+        }
+        foreach ($grouped as $id => $fees) {
+            self::$fee_info_cache[$id] = $this->compute_fee_info($fees);
+        }
+    }
+
+    private function feeInfoBuilder()
+    {
+        return $this->db->table('student_fees_master')
+            ->select('student_fees_master.id, fee_groups_feetype.amount, student_fees_deposite.amount_detail')
+            ->join('fee_session_groups', 'fee_session_groups.id = student_fees_master.fee_session_group_id')
+            ->join('fee_groups_feetype', 'fee_groups_feetype.fee_session_group_id = fee_session_groups.id')
+            ->join('student_fees_deposite', 'student_fees_deposite.student_fees_master_id = student_fees_master.id AND student_fees_deposite.fee_groups_feetype_id = fee_groups_feetype.id', 'left');
+    }
+
+    private function compute_fee_info(array $fees): array
+    {
         $total_amount = 0;
         $collected_amount = 0;
         $latest_payment_date = null;
@@ -621,7 +666,6 @@ class StudentcallModel extends BaseModel
             'paid_last_7_days'    => $paid_last_7_days
         ];
 
-        self::$fee_info_cache[$student_session_id] = $res;
         return $res;
     }
 

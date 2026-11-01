@@ -180,9 +180,27 @@ class Sidebarmenu_model extends MY_Model
         $query = $this->db->get();
         if ($query->num_rows() > 0) {
             $result = $query->result();
-            foreach ($result as $result_key => $result_value) {
-                $result[$result_key]->{'submenus'} = $this->getSubmenusByMenuId($result_value->id,$sidebar_display);
 
+            // Fetch all submenus in one query instead of one query per menu
+            $menu_ids = array();
+            foreach ($result as $result_value) {
+                $menu_ids[] = $result_value->id;
+                $result_value->{'submenus'} = array();
+            }
+            $this->db->select('sidebar_sub_menus.*,permission_group.name as `permission_group_name`,permission_group.short_code as `short_code`')->from('sidebar_sub_menus');
+            $this->db->join('permission_group','permission_group.id=sidebar_sub_menus.permission_group_id','LEFT');
+            $this->db->where_in('sidebar_menu_id', $menu_ids);
+            $this->db->where('sidebar_sub_menus.is_active',1);
+            $this->db->order_by('level', 'asc');
+            $this->db->order_by('sidebar_sub_menus.id', 'asc');
+            $submenus_by_menu = array();
+            foreach ($this->db->get()->result() as $submenu) {
+                $submenus_by_menu[$submenu->sidebar_menu_id][] = $submenu;
+            }
+            foreach ($result as $result_value) {
+                if (isset($submenus_by_menu[$result_value->id])) {
+                    $result_value->{'submenus'} = $submenus_by_menu[$result_value->id];
+                }
             }
             return $result;
         }

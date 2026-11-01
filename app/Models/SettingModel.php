@@ -21,11 +21,28 @@ class SettingModel extends BaseModel
     ];
 
     /**
-     * Retrieve school settings joined with language, session, and currency.
-     * Returns an object supporting both object property access (->prop) and array access (['prop']).
+     * Per-request memo of raw settings rows, keyed by id ('all' for the full list).
+     * Any write query on any connection clears it, so reads never go stale.
      */
-    public function getSetting(?int $id = null)
+    protected static array $rowsMemo = [];
+    protected static bool $listening = false;
+
+    protected function fetchRows($id): array
     {
+        if (! self::$listening) {
+            self::$listening = true;
+            \CodeIgniter\Events\Events::on('DBQuery', static function ($query) {
+                if (self::$rowsMemo !== [] && ! preg_match('/^\s*(SELECT|SHOW|DESCRIBE|EXPLAIN)\s/i', $query->getQuery())) {
+                    self::$rowsMemo = [];
+                }
+            });
+        }
+
+        $key = $id === null ? 'all' : (string) $id;
+        if (array_key_exists($key, self::$rowsMemo)) {
+            return self::$rowsMemo[$key];
+        }
+
         $builder = $this->db->table('sch_settings')
             ->select('sch_settings.*, languages.language, languages.short_code, languages.short_code as language_code, sessions.session, languages.is_rtl, currencies.symbol as currency_symbol, currencies.base_price, currencies.short_name as currency, currencies.short_name as currency_name, currencies.id as currency_id')
             ->join('sessions', 'sessions.id = sch_settings.session_id', 'left')
@@ -34,12 +51,21 @@ class SettingModel extends BaseModel
 
         if ($id !== null) {
             $builder->where('sch_settings.id', $id);
-            $result = $builder->get()->getRowArray();
-            return $result ? new SettingResultBridge($result) : null;
+        } else {
+            $builder->orderBy('sch_settings.id', 'ASC');
         }
+        $rows = $builder->get()->getResultArray();
 
-        $builder->orderBy('sch_settings.id', 'ASC');
-        $results = $builder->get()->getResultArray();
+        return self::$rowsMemo[$key] = $rows;
+    }
+
+    /**
+     * Retrieve school settings joined with language, session, and currency.
+     * Returns an object supporting both object property access (->prop) and array access (['prop']).
+     */
+    public function getSetting(?int $id = null)
+    {
+        $results = $this->fetchRows($id);
 
         return !empty($results) ? new SettingResultBridge($results[0]) : null;
     }
@@ -49,19 +75,12 @@ class SettingModel extends BaseModel
      */
     public function get($id = null)
     {
-        $builder = $this->db->table('sch_settings')
-            ->select('sch_settings.*, languages.language, languages.short_code, languages.short_code as language_code, sessions.session, languages.is_rtl, currencies.symbol as currency_symbol, currencies.base_price, currencies.short_name as currency, currencies.short_name as currency_name, currencies.id as currency_id')
-            ->join('sessions', 'sessions.id = sch_settings.session_id', 'left')
-            ->join('languages', 'languages.id = sch_settings.lang_id', 'left')
-            ->join('currencies', 'currencies.id = sch_settings.currency', 'left');
-
         if ($id !== null) {
-            $builder->where('sch_settings.id', $id);
-            return $builder->get()->getRowArray();
+            $rows = $this->fetchRows($id);
+            return $rows[0] ?? null;
         }
 
-        $builder->orderBy('sch_settings.id', 'ASC');
-        $results = $builder->get()->getResultArray();
+        $results = $this->fetchRows(null);
 
         if (!empty($results)) {
             $results[0]['current_session'] = [

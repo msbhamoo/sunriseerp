@@ -1,21 +1,38 @@
 <?php $search_type = $search_type ?? ''; ?>
 <?php
 $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
+$period_label    = (isset($searchlist[$search_type]) && $search_type !== '') ? $searchlist[$search_type] : '';
+$quick_periods   = array('this_session', 'today', 'this_week', 'this_month', 'this_year');
+
+// Payment mode -> icon + tone, for the mode chips
+if (!function_exists('fc_mode_meta')) {
+    function fc_mode_meta($mode)
+    {
+        $m = strtolower(trim((string) $mode));
+        if ($m === 'cash') return array('fa-money', 'fc-tone-green');
+        if ($m === 'upi') return array('fa-mobile', 'fc-tone-violet');
+        if (strpos($m, 'cheque') !== false || $m === 'dd') return array('fa-file-text-o', 'fc-tone-amber');
+        if (strpos($m, 'card') !== false) return array('fa-credit-card', 'fc-tone-blue');
+        if (strpos($m, 'bank') !== false || strpos($m, 'transfer') !== false || strpos($m, 'neft') !== false) return array('fa-university', 'fc-tone-sky');
+        if (strpos($m, 'online') !== false) return array('fa-globe', 'fc-tone-sky');
+        return array('fa-exchange', 'fc-tone-slate');
+    }
+}
 ?>
 
-<div class="content-wrapper">
-    <section class="content-header">
-        <h1><i class="fa fa-money"></i> <?php echo $this->lang->line('fees_collection'); ?></h1>
+<div class="content-wrapper fc-page">
+    <section class="content-header fc-header">
+        <div class="fc-header-text">
+            <h1><span class="fc-header-icon"><i class="fa fa-money"></i></span> <?php echo $this->lang->line('fees_collection'); ?></h1>
+            <p class="fc-subtitle">Fee Collection Report<?php if ($period_label !== '') { ?> &middot; <strong><?php echo $period_label; ?></strong><?php } ?></p>
+        </div>
     </section>
-    
+
     <section class="content">
-        <!-- Unified Header & Criteria Box -->
-        <div class="box box-primary" style="overflow: visible; z-index: 50;">
-            <div class="box-header with-border">
-                <h3 class="box-title"><i class="fa fa-filter text-muted" style="margin-right: 6px;"></i> Fee Collection Report</h3>
-            </div>
+        <!-- Filters -->
+        <div class="box fc-card fc-filter-card" style="overflow: visible; z-index: 50;">
             <div class="box-body" style="overflow: visible;">
-                <form role="form" action="<?php echo site_url('financereports/collection_list') ?>" method="post" class="">
+                <form role="form" action="<?php echo site_url('financereports/collection_list') ?>" method="post" class="" id="fc_filter_form">
                     <?php echo $this->customlib->getCSRF(); ?>
                     <!-- Hidden Search Duration field -->
                     <select class="form-control" name="search_type" id="search_type_hidden" style="display:none;">
@@ -29,24 +46,26 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                     </select>
                     <div id='date_result' style="display:none;"></div>
 
-                    <div class="row">
-                        <div class="col-md-4 col-sm-6">
-                            <div class="form-group">
-                                <label><?php echo $this->lang->line('search_duration'); ?></label>
-                                <select class="form-control" id="search_type_select" onchange="$('#search_type_hidden').val(this.value); this.form.submit();">
+                    <div class="fc-filter-row">
+                        <div class="fc-filter-period">
+                            <label class="fc-label"><i class="fa fa-calendar"></i> <?php echo $this->lang->line('search_duration'); ?></label>
+                            <div class="fc-chips" role="group" aria-label="Quick periods">
+                                <?php foreach ($quick_periods as $qp) { if (!isset($searchlist[$qp])) continue; ?>
+                                    <button type="button" class="fc-chip<?php echo ($search_type == $qp) ? ' active' : ''; ?>" data-period="<?php echo $qp; ?>"><?php echo $searchlist[$qp]; ?></button>
+                                <?php } ?>
+                                <select class="form-control fc-select<?php echo (!in_array($search_type, $quick_periods) && $search_type !== '') ? ' active' : ''; ?>" id="search_type_select" onchange="fcSubmitPeriod(this.value);" aria-label="More periods">
                                     <?php foreach ($searchlist as $key => $search) { ?>
-                                        <option value="<?php echo $key ?>" <?php if ((isset($search_type)) && ($search_type == $key)) { echo "selected"; } ?>><?php echo $search ?></option>
+                                        <option value="<?php echo $key ?>" <?php if ((isset($search_type)) && ($search_type == $key)) { echo "selected"; } ?>><?php echo ($key === '') ? 'More periods…' : $search; ?></option>
                                     <?php } ?>
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-8 col-sm-6">
-                            <div class="form-group search-student-wrapper">
-                                <label>Quick Search Student</label>
-                                <div>
-                                    <input type="text" name="search_student" id="search_student_ajax" class="form-control" value="<?php echo set_value('search_student', isset($search_student) ? $search_student : ''); ?>" placeholder="Search student name, roll no, scholar no..." autocomplete="off">
-                                    <div id="ajax_student_search_results_container" class="custom-ajax-search-container"></div>
-                                </div>
+                        <div class="fc-filter-search search-student-wrapper">
+                            <label class="fc-label"><i class="fa fa-user"></i> Quick Search Student</label>
+                            <div class="fc-input-icon">
+                                <i class="fa fa-search"></i>
+                                <input type="text" name="search_student" id="search_student_ajax" class="form-control" value="<?php echo set_value('search_student', isset($search_student) ? $search_student : ''); ?>" placeholder="Name, roll no or scholar no — opens fee collection" autocomplete="off">
+                                <div id="ajax_student_search_results_container" class="custom-ajax-search-container"></div>
                             </div>
                         </div>
                     </div>
@@ -55,14 +74,14 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
         </div>
 
         <?php if (empty($results)) { ?>
-            <div class="box box-primary">
-                <div class="box-body">
-                    <div class="alert alert-info" style="margin-bottom:0; border-radius: 8px;">
-                       <?php echo $this->lang->line('no_record_found'); ?>
-                    </div>
+            <div class="box fc-card">
+                <div class="box-body fc-empty">
+                    <div class="fc-empty-icon"><i class="fa fa-inbox"></i></div>
+                    <h4><?php echo $this->lang->line('no_record_found'); ?></h4>
+                    <p>No fee collections in this period. Try a wider range such as <strong><?php echo isset($searchlist['this_year']) ? $searchlist['this_year'] : 'This Year'; ?></strong>.</p>
                 </div>
             </div>
-        <?php } else { 
+        <?php } else {
             $total_records = count($results);
             $total_collected_val = 0;
             $reverted_count = 0;
@@ -92,63 +111,67 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
             }
             $total_unique_students = count($unique_students);
         ?>
-            <!-- Modern KPI Summary Stat Grid -->
-            <div class="modern-stat-grid">
-                <div class="modern-stat-card">
-                    <div class="modern-stat-info">
-                        <div class="stat-label">Total Fee Receipts</div>
-                        <div class="stat-value"><?php echo $fee_receipts_count; ?></div>
-                    </div>
-                    <div class="modern-stat-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
-                        <i class="fa fa-file-text-o"></i>
-                    </div>
-                </div>
-                
-                <div class="modern-stat-card">
-                    <div class="modern-stat-info">
-                        <div class="stat-label">Transport Receipts</div>
-                        <div class="stat-value text-warning" style="color: #d97706;"><?php echo $transport_receipts_count; ?></div>
-                    </div>
-                    <div class="modern-stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
-                        <i class="fa fa-bus"></i>
+            <!-- KPI summary -->
+            <div class="fc-kpis">
+                <div class="fc-kpi fc-kpi-hero">
+                    <div class="fc-kpi-icon fc-tone-green"><span class="fc-currency"><?php echo $currency_symbol; ?></span></div>
+                    <div>
+                        <div class="fc-kpi-label">Total Amount Collected</div>
+                        <div class="fc-kpi-value"><?php echo $currency_symbol . " " . number_format($total_collected_val, 2); ?></div>
+                        <div class="fc-kpi-hint">Excludes reverted receipts</div>
                     </div>
                 </div>
-                
-                <div class="modern-stat-card">
-                    <div class="modern-stat-info">
-                        <div class="stat-label">Unique Students</div>
-                        <div class="stat-value" style="color: #0284c7;"><?php echo $total_unique_students; ?></div>
-                    </div>
-                    <div class="modern-stat-icon" style="background: rgba(14, 165, 233, 0.12); color: #0284c7;">
-                        <i class="fa fa-graduation-cap"></i>
+                <div class="fc-kpi">
+                    <div class="fc-kpi-icon fc-tone-indigo"><i class="fa fa-file-text-o"></i></div>
+                    <div>
+                        <div class="fc-kpi-label">Fee Receipts</div>
+                        <div class="fc-kpi-value"><?php echo $fee_receipts_count; ?></div>
                     </div>
                 </div>
-                
-                <div class="modern-stat-card">
-                    <div class="modern-stat-info">
-                        <div class="stat-label">Total Amount Collected</div>
-                        <div class="stat-value text-success" style="color: #059669; font-size: 20px;"><?php echo $currency_symbol . " " . number_format($total_collected_val, 2); ?></div>
+                <div class="fc-kpi">
+                    <div class="fc-kpi-icon fc-tone-amber"><i class="fa fa-bus"></i></div>
+                    <div>
+                        <div class="fc-kpi-label">Transport Receipts</div>
+                        <div class="fc-kpi-value"><?php echo $transport_receipts_count; ?></div>
                     </div>
-                    <div class="modern-stat-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
-                        <i class="fa fa-inr"></i>
+                </div>
+                <div class="fc-kpi">
+                    <div class="fc-kpi-icon fc-tone-sky"><i class="fa fa-graduation-cap"></i></div>
+                    <div>
+                        <div class="fc-kpi-label">Unique Students</div>
+                        <div class="fc-kpi-value"><?php echo $total_unique_students; ?></div>
+                    </div>
+                </div>
+                <div class="fc-kpi">
+                    <div class="fc-kpi-icon fc-tone-red"><i class="fa fa-undo"></i></div>
+                    <div>
+                        <div class="fc-kpi-label">Reverted</div>
+                        <div class="fc-kpi-value"><?php echo $reverted_count; ?></div>
                     </div>
                 </div>
             </div>
 
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title titlefix"><i class="fa fa-list text-muted" style="margin-right: 6px;"></i> Fee Collection List</h3>
-                    <div class="box-tools pull-right">
-                        <a class="btn btn-default btn-sm" id="btnExport" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('download_excel'); ?>" onclick="fnExcelReport();"><i class="fa fa-file-excel-o text-success"></i> CSV</a>
-                        <a class="btn btn-default btn-sm" id="print" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('print'); ?>" onclick="printDiv()"><i class="fa fa-print text-primary"></i> Print</a>
+            <div class="box fc-card">
+                <div class="fc-toolbar">
+                    <div class="fc-toolbar-title">
+                        <i class="fa fa-list-ul"></i> Fee Collection List
+                        <span class="fc-count" id="fc_row_count"><?php echo $total_records; ?> records</span>
+                    </div>
+                    <div class="fc-toolbar-actions">
+                        <div class="fc-input-icon fc-table-search">
+                            <i class="fa fa-filter"></i>
+                            <input type="text" id="table_filter" class="form-control" placeholder="Filter receipt, name, class, mode…" autocomplete="off">
+                        </div>
+                        <a class="btn fc-btn" id="btnExport" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('download_excel'); ?>" onclick="fnExcelReport();"><i class="fa fa-file-excel-o"></i> CSV</a>
+                        <a class="btn fc-btn" id="print" data-toggle="tooltip" data-original-title="<?php echo $this->lang->line('print'); ?>" onclick="printDiv()"><i class="fa fa-print"></i> Print</a>
                     </div>
                 </div>
-                            
-                            <div class="box-body table-responsive" id="transfee">
+
+                            <div class="box-body table-responsive fc-table-wrap" id="transfee">
                                 <div id="printhead"><center><b><h4>Fee Collection List<br><?php $this->customlib->get_postmessage(); ?></h4></b></center></div>
                                 <div class="download_label">Fee Collection List<br><?php $this->customlib->get_postmessage(); ?></div>
 
-                                <table class="table table-striped table-hover example" style="border: none;" id="headerTable">
+                                <table class="table table-hover example fc-table" style="border: none;" id="headerTable">
                                     <thead class="header">
                                         <tr>
                                             <th>Sr. No.</th>
@@ -163,44 +186,49 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                             <th><?php echo $this->lang->line('mode'); ?></th>
                                             <th>Transaction Details</th>
                                             <th>Status</th>
-                                            <th>Action</th>
+                                            <th class="text-right">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                        <?php
                                         $count = 1;
                                         $grdTotalLabel = array();
-                                     
-                                        foreach ($results as $collect) {           
+                                        $date_format = $this->customlib->getSchoolDateFormat();
+
+                                        foreach ($results as $collect) {
                                             $t1 = two_digit_float($collect['amount']) + two_digit_float($collect['amount_fine']);
                                             $grdTotalLabel[] = $t1;
-                                            $status_class = ($collect['custom_receipt_status'] == 'Reversed') ? 'text-danger' : 'text-success';
-                                            $strike_class = ($collect['custom_receipt_status'] == 'Reversed') ? 'style="text-decoration: line-through;"' : '';
+                                            $is_reversed = ($collect['custom_receipt_status'] == 'Reversed');
+                                            $type_lower  = strtolower($collect['type'] ?? '');
+                                            $is_transport = (strpos($type_lower, 'transport') !== false || strpos($type_lower, 'bus') !== false);
+                                            $mode_meta   = fc_mode_meta($collect['payment_mode']);
                                         ?>
-                                            <tr <?php echo $strike_class; ?>>
-                                                <td><?php echo $count++; ?></td>
-                                                <td><span style="font-weight: 700; color: #0f172a;"><?php echo $collect['custom_receipt_no']; ?></span></td>                
-                                                <td><?php echo $collect['admission_no']; ?></td>                
-                                                <td><?php echo date($this->customlib->getSchoolDateFormat(), $this->customlib->dateyyyymmddTodateformat($collect['date'])); ?></td>                
-                                                <td><span style="font-weight: 700; color: #1e293b;"><?php echo $this->customlib->getFullName($collect['firstname'], $collect['middlename'], $collect['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?></span></td>                
-                                                <td><?php echo isset($collect['father_name']) ? $collect['father_name'] : ''; ?></td>                
-                                                <td><span class="label label-info" style="border-radius: 4px; font-weight: 600;"><?php echo $collect['class'] . " (" . $collect['section'] . ")"; ?></span></td>                
+                                            <tr class="<?php echo $is_reversed ? 'fc-row-reversed' : ''; ?>">
+                                                <td class="fc-muted"><?php echo $count++; ?></td>
+                                                <td><span class="fc-receipt"><?php echo $collect['custom_receipt_no']; ?></span></td>
+                                                <td class="fc-mono"><?php echo $collect['admission_no']; ?></td>
+                                                <td class="fc-nowrap"><?php echo date($date_format, $this->customlib->dateyyyymmddTodateformat($collect['date'])); ?></td>
+                                                <td><span class="fc-name"><?php echo $this->customlib->getFullName($collect['firstname'], $collect['middlename'], $collect['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?></span></td>
+                                                <td class="fc-muted"><?php echo isset($collect['father_name']) ? $collect['father_name'] : ''; ?></td>
+                                                <td><span class="fc-class"><?php echo $collect['class'] . " (" . $collect['section'] . ")"; ?></span></td>
                                                 <td>
+                                                    <span class="fc-type"><i class="fa <?php echo $is_transport ? 'fa-bus fc-ic-amber' : 'fa-tag fc-ic-indigo'; ?>"></i>
                                                     <?php
                                                         if ( $collect['is_system']) {
                                                             echo $this->lang->line($collect['type']);
                                                         } else {
                                                             echo $collect['type'] ;
                                                             echo " (".$collect['code'].")";
-                                                        }    
+                                                        }
                                                     ?>
+                                                    </span>
                                                 </td>
-                                                <td class="text text-right" style="font-weight: 800; color: #0f172a;">
+                                                <td class="text text-right fc-amount">
                                                     <?php echo two_digit_float($t1); ?>
-                                                </td>                              
-                                                <td><span class="label label-default" style="border-radius: 4px; text-transform: uppercase; font-size: 10px;"><?php echo $this->lang->line(strtolower($collect['payment_mode'])); ?></span></td>
-                                                <td>
-                                                    <?php 
+                                                </td>
+                                                <td><span class="fc-pill <?php echo $mode_meta[1]; ?>"><i class="fa <?php echo $mode_meta[0]; ?>"></i> <?php echo $this->lang->line(strtolower($collect['payment_mode'])); ?></span></td>
+                                                <td class="fc-tx">
+                                                    <?php
                                                         $tx_details = [];
                                                         if (!empty($collect['reference_no'])) {
                                                             $tx_details[] = "<strong>Ref:</strong> " . $collect['reference_no'];
@@ -208,27 +236,27 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                                         if (!empty($collect['description'])) {
                                                             $tx_details[] = "<strong>Desc:</strong> " . $collect['description'];
                                                         }
-                                                        echo implode("<br>", $tx_details);
+                                                        echo empty($tx_details) ? '<span class="fc-muted">—</span>' : implode("<br>", $tx_details);
                                                     ?>
                                                 </td>
                                                 <td>
-                                                    <?php if($collect['custom_receipt_status'] == 'Reversed') { ?>
-                                                        <span class="label label-danger">Reverted</span>
+                                                    <?php if($is_reversed) { ?>
+                                                        <span class="fc-pill fc-tone-red"><i class="fa fa-undo"></i> Reverted</span>
                                                     <?php } else { ?>
-                                                        <span class="label label-success">Received</span>
+                                                        <span class="fc-pill fc-tone-green"><i class="fa fa-check-circle"></i> Received</span>
                                                     <?php } ?>
                                                 </td>
                                                 <td class="text-right white-space-nowrap">
                                                     <?php if($collect['custom_receipt_status'] == 'Collected' || empty($collect['custom_receipt_status']) || $collect['custom_receipt_status'] != 'Reversed') { ?>
-                                                        <a href="javascript:void(0);" class="btn btn-default btn-xs" onclick="printReceipt('<?php echo $collect['id']; ?>', '<?php echo $collect['inv_no']; ?>')" data-toggle="tooltip" title="<?php echo $this->lang->line('print'); ?>">
-                                                            <i class="fa fa-print text-primary"></i>
+                                                        <a href="javascript:void(0);" class="fc-icon-btn" onclick="printReceipt('<?php echo $collect['id']; ?>', '<?php echo $collect['inv_no']; ?>')" data-toggle="tooltip" title="<?php echo $this->lang->line('print'); ?>" aria-label="<?php echo $this->lang->line('print'); ?>">
+                                                            <i class="fa fa-print"></i>
                                                         </a>
                                                     <?php } ?>
                                                 </td>
-                                            </tr>                    
-                                        <?php } ?>                            
-                                        
-                                        <tr style="background: #f8fafc; font-weight: 800;">
+                                            </tr>
+                                        <?php } ?>
+
+                                        <tr class="fc-total-row">
                                             <td></td>
                                             <td></td>
                                             <td></td>
@@ -236,15 +264,16 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
                                             <td></td>
                                             <td></td>
                                             <td></td>
+                                            <td class="fc-total-label"><?php echo $this->lang->line('grand_total'); ?></td>
+                                            <td class="text text-right fc-total-value"><?php echo $currency_symbol.amountFormat(array_sum($grdTotalLabel)); ?></td>
                                             <td></td>
-                                            <td style="font-weight:800; color: #0f172a;"><?php echo $this->lang->line('grand_total'); ?></td>
-                                            <td class="text text-right" style="font-weight:800; color: #059669; font-size: 15px;"><?php echo $currency_symbol.amountFormat(array_sum($grdTotalLabel)); ?></td>
                                             <td></td>
                                             <td></td>
                                             <td></td>
                                         </tr>
                                     </tbody>
                                 </table>
+                                <div class="fc-no-match" id="fc_no_match" style="display:none;"><i class="fa fa-search"></i> No rows match your filter.</div>
                             </div>
                         </div>
                     <?php } ?>
@@ -253,6 +282,7 @@ $currency_symbol = $this->customlib->getSchoolCurrencyFormat();
         </div>
     </section>
 </div>
+
 
 <script>
 <?php
@@ -264,6 +294,38 @@ if ($search_type == 'period') {
     <?php
 }
 ?>
+
+function fcSubmitPeriod(value) {
+    if (value === '') return;
+    $('#search_type_hidden').val(value);
+    $('#search_type_select').val(value);
+    $('.fc-page').addClass('fc-loading');
+    $('#fc_filter_form').submit();
+}
+
+// CSV export of the visible rows (the page referenced fnExcelReport but it was never defined)
+if (typeof fnExcelReport !== 'function') {
+    window.fnExcelReport = function () {
+        var rows = [];
+        $('#headerTable tr:visible').each(function () {
+            var cells = [];
+            $(this).children('th,td').each(function (i, el) {
+                if ($(el).is(':last-child')) return; // skip Action column
+                var text = $(el).text().replace(/\s+/g, ' ').trim();
+                cells.push('"' + text.replace(/"/g, '""') + '"');
+            });
+            rows.push(cells.join(','));
+        });
+        var bom = String.fromCharCode(0xFEFF); // lets Excel detect UTF-8
+        var blob = new Blob([bom + rows.join(String.fromCharCode(13, 10))], {type: 'text/csv;charset=utf-8;'});
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'fee_collection_list.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+}
 
 function printReceipt(invoice_id, sub_invoice_id) {
     var base_url = '<?php echo base_url() ?>';
@@ -446,12 +508,25 @@ $(document).ready(function() {
         }
     });
 
-    // Client-side list filter
-    $("#table_filter").on("keyup", function() {
+    // Client-side list filter (grand total row always stays)
+    $("#table_filter").on("input keyup", function() {
         var value = $(this).val().toLowerCase();
-        $("#headerTable tbody tr").not(':last').filter(function() { // exclude grand total row if we want, or just filter all
-            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        var shown = 0;
+        $("#headerTable tbody tr").not(':last').each(function() {
+            var match = $(this).text().toLowerCase().indexOf(value) > -1;
+            $(this).toggle(match);
+            if (match) shown++;
         });
+        var total = $("#headerTable tbody tr").length - 1;
+        $("#fc_row_count").text(value ? (shown + " of " + total + " records") : (total + " records"));
+        $("#fc_no_match").toggle(shown === 0);
+    });
+
+    // Quick period chips
+    $(".fc-chip").on("click", function() {
+        $(".fc-chip").removeClass("active");
+        $(this).addClass("active");
+        fcSubmitPeriod($(this).data("period"));
     });
 });
 </script>
@@ -478,6 +553,110 @@ $(document).ready(function() {
 </div>
 
 <style>
+    /* ---- Fee collection page ---- */
+    .fc-page { --fc-ink: #0f172a; --fc-body: #334155; --fc-muted: #64748b; --fc-line: #e2e8f0; --fc-soft: #f8fafc; --fc-accent: var(--primary-theme-color, #4f46e5); }
+    .fc-page.fc-loading .content { opacity: .55; pointer-events: none; transition: opacity .15s; }
+    .fc-header { display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 4px; }
+    .fc-header h1 { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--fc-ink); margin: 0; font-size: 22px; }
+    .fc-header-icon { width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: rgba(16,185,129,.12); color: #059669; font-size: 17px; }
+    .fc-subtitle { margin: 6px 0 0 46px; color: var(--fc-muted); font-size: 13px; }
+    .fc-subtitle strong { color: var(--fc-body); }
+
+    .fc-card { border: 1px solid var(--fc-line); border-top: 1px solid var(--fc-line); border-radius: 12px; box-shadow: 0 1px 2px rgba(15,23,42,.04); background: #fff; }
+    .fc-filter-card .box-body { padding: 16px 18px; }
+    .fc-filter-row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; }
+    .fc-filter-period { flex: 1 1 420px; }
+    .fc-filter-search { flex: 1 1 320px; }
+    .fc-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--fc-muted); margin-bottom: 8px; }
+    .fc-label .fa { margin-right: 4px; }
+    .fc-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .fc-chip { border: 1px solid var(--fc-line); background: #fff; color: var(--fc-body); border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600; line-height: 1.3; cursor: pointer; transition: all .15s; }
+    .fc-chip:hover { border-color: var(--fc-accent); color: var(--fc-accent); }
+    .fc-chip.active { background: var(--fc-accent); border-color: var(--fc-accent); color: #fff; box-shadow: 0 2px 6px rgba(79,70,229,.25); }
+    .fc-chip:focus-visible, .fc-icon-btn:focus-visible, .fc-btn:focus-visible { outline: 2px solid var(--fc-accent); outline-offset: 2px; }
+    .fc-select { width: auto; min-width: 150px; height: 32px; border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 600; color: var(--fc-body); border-color: var(--fc-line); }
+    .fc-select.active { border-color: var(--fc-accent); color: var(--fc-accent); }
+    .fc-input-icon { position: relative; }
+    .fc-page .fc-input-icon > .fa { position: absolute; left: 13px; top: 19px; transform: translateY(-50%); color: #94a3b8; pointer-events: none; z-index: 2; }
+    .fc-page .fc-input-icon > input.form-control { padding-left: 36px !important; height: 38px; border-radius: 8px; border-color: var(--fc-line); box-shadow: none; }
+    .fc-input-icon > .form-control:focus { border-color: var(--fc-accent); box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
+    .fc-filter-search .custom-ajax-search-container { top: calc(100% + 6px); }
+
+    .fc-kpis { display: grid; grid-template-columns: minmax(0, 1.7fr) repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .fc-kpi { display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid var(--fc-line); border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 2px rgba(15,23,42,.04); min-width: 0; }
+    .fc-kpi-hero { background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 70%); border-color: #a7f3d0; }
+    .fc-kpi-icon { width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
+    .fc-currency { font-weight: 800; font-size: 18px; line-height: 1; }
+    .fc-kpi > div:last-child { min-width: 0; }
+    .fc-kpi-label { font-size: 12px; font-weight: 600; color: var(--fc-muted); margin-bottom: 2px; line-height: 1.3; }
+    .fc-kpi-value { font-size: 22px; font-weight: 800; color: var(--fc-ink); line-height: 1.2; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .fc-kpi-hero .fc-kpi-value { color: #047857; font-size: clamp(18px, 1.7vw, 24px); white-space: normal; overflow-wrap: anywhere; }
+    .fc-kpi-hint { font-size: 11px; color: var(--fc-muted); margin-top: 2px; }
+
+    .fc-tone-green { background: rgba(16,185,129,.12); color: #047857; }
+    .fc-tone-indigo { background: rgba(99,102,241,.12); color: #4338ca; }
+    .fc-tone-violet { background: rgba(139,92,246,.12); color: #6d28d9; }
+    .fc-tone-amber { background: rgba(245,158,11,.14); color: #b45309; }
+    .fc-tone-sky { background: rgba(14,165,233,.12); color: #0369a1; }
+    .fc-tone-blue { background: rgba(59,130,246,.12); color: #1d4ed8; }
+    .fc-tone-red { background: rgba(239,68,68,.12); color: #b91c1c; }
+    .fc-tone-slate { background: #f1f5f9; color: #475569; }
+    .fc-ic-amber { color: #d97706; }
+    .fc-ic-indigo { color: #6366f1; }
+
+    .fc-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--fc-line); }
+    .fc-toolbar-title { font-size: 15px; font-weight: 700; color: var(--fc-ink); display: flex; align-items: center; gap: 8px; }
+    .fc-toolbar-title .fa { color: var(--fc-muted); }
+    .fc-count { font-size: 12px; font-weight: 600; color: var(--fc-muted); background: var(--fc-soft); border: 1px solid var(--fc-line); padding: 2px 10px; border-radius: 999px; }
+    .fc-toolbar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .fc-table-search { width: 260px; }
+    .fc-page .fc-table-search > input.form-control { height: 34px; }
+    .fc-page .fc-table-search > .fa { top: 17px; }
+    .fc-btn { display: inline-flex !important; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border: 1px solid var(--fc-line); border-radius: 8px; background: #fff; color: var(--fc-body); font-weight: 600; font-size: 13px; }
+    .fc-btn:hover { background: var(--fc-soft); border-color: #cbd5e1; color: var(--fc-ink); }
+    .fc-btn .fa-file-excel-o { color: #16a34a; }
+    .fc-btn .fa-print { color: var(--fc-accent); }
+
+    .fc-table-wrap { padding: 0; max-height: 70vh; overflow: auto; }
+    .fc-table { margin: 0; font-size: 13px; }
+    .fc-table > thead > tr > th { position: sticky; top: 0; z-index: 3; background: var(--fc-soft); color: var(--fc-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--fc-line) !important; padding: 10px 12px; white-space: nowrap; }
+    .fc-table > tbody > tr > td { padding: 10px 12px; vertical-align: middle; border-top: 1px solid #f1f5f9; color: var(--fc-body); }
+    .fc-table > tbody > tr:hover > td { background: #f8fafc; }
+    .fc-muted { color: var(--fc-muted) !important; }
+    .fc-mono { font-variant-numeric: tabular-nums; }
+    .fc-nowrap { white-space: nowrap; }
+    .fc-receipt { font-weight: 700; color: var(--fc-ink); font-variant-numeric: tabular-nums; }
+    .fc-name { font-weight: 700; color: var(--fc-ink); }
+    .fc-class { display: inline-block; padding: 2px 8px; border-radius: 6px; background: #eef2ff; color: #4338ca; font-weight: 600; font-size: 12px; white-space: nowrap; }
+    .fc-type { display: inline-flex; align-items: center; gap: 6px; }
+    .fc-amount { font-weight: 800; color: var(--fc-ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .fc-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; text-transform: uppercase; letter-spacing: .02em; }
+    .fc-tx { font-size: 12px; color: var(--fc-muted); max-width: 220px; }
+    .fc-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--fc-line); color: var(--fc-accent); background: #fff; transition: all .15s; }
+    .fc-icon-btn:hover { background: var(--fc-accent); color: #fff; border-color: var(--fc-accent); }
+    .fc-row-reversed > td { background: #fef2f2 !important; color: #94a3b8 !important; }
+    .fc-row-reversed .fc-amount, .fc-row-reversed .fc-receipt, .fc-row-reversed .fc-name { text-decoration: line-through; color: #94a3b8; }
+    .fc-total-row > td { background: #f0fdf4 !important; border-top: 2px solid #bbf7d0 !important; font-weight: 800; }
+    .fc-total-label { text-align: right; color: var(--fc-ink); text-transform: uppercase; font-size: 12px; letter-spacing: .04em; }
+    .fc-total-value { color: #047857; font-size: 15px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .fc-no-match { padding: 28px; text-align: center; color: var(--fc-muted); }
+
+    .fc-empty { text-align: center; padding: 48px 20px; }
+    .fc-empty-icon { width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 50%; background: var(--fc-soft); color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+    .fc-empty h4 { font-weight: 700; color: var(--fc-ink); margin-bottom: 6px; }
+    .fc-empty p { color: var(--fc-muted); margin: 0; }
+
+    @media (max-width: 1199px) { .fc-kpis { grid-template-columns: repeat(3, 1fr); } .fc-kpi-hero { grid-column: 1 / -1; } }
+    @media (max-width: 767px) {
+        .fc-kpis { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .fc-kpi { padding: 12px; }
+        .fc-kpi-value { font-size: 18px; }
+        .fc-subtitle { margin-left: 0; }
+        .fc-table-search { width: 100%; }
+        .fc-toolbar-actions { width: 100%; }
+        .custom-ajax-search-container { min-width: 0 !important; }
+    }
+    @media print { .fc-table-wrap { max-height: none; overflow: visible; } .fc-table > thead > tr > th { position: static; } }
     .search-student-wrapper {
         position: relative;
         z-index: 1050;
