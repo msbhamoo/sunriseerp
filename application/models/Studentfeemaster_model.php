@@ -959,14 +959,21 @@ public function getFeeSessionGroupId($student_fees_master_id)
         }
 
         // Sort chronologically by date then by custom receipt id (true transaction order - latest on top)
+        // Timestamps are computed once per row instead of on every comparison
+        foreach ($return_array as $idx => $item) {
+            $return_array[$idx]['__sort_ts'] = strtotime($item['date']);
+        }
         usort($return_array, function($item1, $item2) {
-            $date1 = strtotime($item1['date']);
-            $date2 = strtotime($item2['date']);
+            $date1 = $item1['__sort_ts'];
+            $date2 = $item2['__sort_ts'];
             if ($date1 == $date2) {
                 return $item2['custom_receipt_id'] - $item1['custom_receipt_id'];
             }
             return $date2 - $date1;
         });
+        foreach ($return_array as $idx => $item) {
+            unset($return_array[$idx]['__sort_ts']);
+        }
 
         return $return_array;
     }

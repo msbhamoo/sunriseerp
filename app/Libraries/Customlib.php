@@ -1791,6 +1791,11 @@ class Customlib
 
             $first_date = '01-01-' . $search_year;
             $last_date  = '31-12-' . $search_year;
+        } else if ($search_type == 'this_session') {
+
+            $session_range = $this->getCurrentSessionRange();
+            $first_date    = $session_range['from_date'];
+            $last_date     = $session_range['to_date'];
         } else if ($search_type == 'all time') {
 
             $search_year = date('Y');
@@ -1812,6 +1817,27 @@ class Customlib
         }
 
         return $date = array('from_date' => $first_date, 'to_date' => $last_date);
+    }
+
+    /**
+     * Date range of the current academic session, e.g. "2026-27" with start month 4
+     * gives 2026-04-01 to 2027-03-31. Falls back to the calendar year if the session
+     * name has no year in it.
+     */
+    public function getCurrentSessionRange()
+    {
+        $setting_result = $this->CI->setting_model->get();
+        $session_name   = isset($setting_result[0]['session']) ? $setting_result[0]['session'] : '';
+        $start_month    = !empty($setting_result[0]['start_month']) ? (int) $setting_result[0]['start_month'] : 1;
+
+        if (preg_match('/(\d{4})/', (string) $session_name, $m)) {
+            $start = mktime(0, 0, 0, $start_month, 1, (int) $m[1]);
+        } else {
+            $start = mktime(0, 0, 0, 1, 1, (int) date('Y'));
+        }
+        $end = strtotime('+1 year -1 day', $start);
+
+        return array('from_date' => date('Y-m-d', $start), 'to_date' => date('Y-m-d', $end), 'session' => $session_name);
     }
 
     public function get_searchtype()
