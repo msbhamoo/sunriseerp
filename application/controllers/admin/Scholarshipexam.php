@@ -420,6 +420,26 @@ class Scholarshipexam extends Admin_Controller
         $this->load->view('layout/footer', $data);
     }
 
+    /** QR scan analytics: scans, unique visitors, devices and scan -> registration conversion. */
+    public function qr_analytics()
+    {
+        $this->session->set_userdata('top_menu', 'scholarship_exam');
+        $this->session->set_userdata('sub_menu', 'scholarshipexam_setting');
+
+        $from = (string) $this->input->get('from');
+        $to = (string) $this->input->get('to');
+        $data['to'] = preg_match('/^\d{4}-\d{2}-\d{2}$/', $to) ? $to : date('Y-m-d');
+        $data['from'] = preg_match('/^\d{4}-\d{2}-\d{2}$/', $from) ? $from : date('Y-m-d', strtotime('-29 days'));
+        if ($data['from'] > $data['to']) {
+            list($data['from'], $data['to']) = array($data['to'], $data['from']);
+        }
+        $data['stats'] = $this->scholarshipexam_model->getQrScanStats($data['from'], $data['to']);
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/scholarshipexam/qr_analytics', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
     public function print_certificate($candidate_id)
     {
         $data['candidate'] = $this->scholarshipexam_model->getCandidateAdmitCardData($candidate_id);

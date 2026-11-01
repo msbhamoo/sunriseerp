@@ -164,6 +164,29 @@ class Scholarshipexam_model extends MY_Model
             ");
         }
 
+        if (!$this->db->table_exists('scholarship_qr_scans')) {
+            $this->db->query("
+                CREATE TABLE IF NOT EXISTS `scholarship_qr_scans` (
+                  `id` INT AUTO_INCREMENT PRIMARY KEY,
+                  `visitor_id` VARCHAR(32) NOT NULL,
+                  `scanned_at` DATETIME NOT NULL,
+                  `ip` VARCHAR(45) DEFAULT NULL,
+                  `user_agent` VARCHAR(500) DEFAULT NULL,
+                  `device` VARCHAR(20) DEFAULT NULL,
+                  `os` VARCHAR(30) DEFAULT NULL,
+                  `browser` VARCHAR(30) DEFAULT NULL,
+                  `is_bot` TINYINT(1) DEFAULT 0,
+                  `landing_url` VARCHAR(500) DEFAULT NULL,
+                  `registered` TINYINT(1) DEFAULT 0,
+                  `candidate_id` INT DEFAULT NULL,
+                  `exam_id` INT DEFAULT NULL,
+                  `registered_at` DATETIME DEFAULT NULL,
+                  KEY `idx_scanned_at` (`scanned_at`),
+                  KEY `idx_visitor` (`visitor_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+        }
+
         if (!$this->db->table_exists('scholarship_exam_questions')) {
             $this->db->query("
                 CREATE TABLE IF NOT EXISTS `scholarship_exam_questions` (
@@ -1111,6 +1134,107 @@ class Scholarshipexam_model extends MY_Model
     public function getPublicLinkTarget()
     {
         return trim((string) $this->getSetting('public_link_target', ''));
+    }
+
+    /** Rough device / OS / browser from the user agent (exact phone model is not available). */
+    public function parseUserAgent($ua)
+    {
+        $is_bot = (int) (bool) preg_match('/bot|crawl|spider|preview|facebookexternalhit|whatsapp|telegram|slack|curl|wget|python/i', $ua);
+        if (preg_match('/ipad|tablet|android(?!.*mobile)/i', $ua)) {
+            $device = 'Tablet';
+        } elseif (preg_match('/mobi|iphone|ipod|android/i', $ua)) {
+            $device = 'Mobile';
+        } else {
+            $device = $ua === '' ? 'Unknown' : 'Desktop';
+        }
+        $os = 'Other';
+        foreach (array('Android' => '/android/i', 'iOS' => '/iphone|ipad|ipod/i', 'Windows' => '/windows/i', 'macOS' => '/mac os x/i', 'Linux' => '/linux/i') as $name => $re) {
+            if (preg_match($re, $ua)) {
+                $os = $name;
+                break;
+            }
+        }
+        $browser = 'Other';
+        foreach (array('Edge' => '/edg\//i', 'Samsung Internet' => '/samsungbrowser/i', 'Opera' => '/opr\/|opera/i', 'Chrome' => '/chrome|crios/i', 'Firefox' => '/firefox|fxios/i', 'Safari' => '/safari/i') as $name => $re) {
+            if (preg_match($re, $ua)) {
+                $browser = $name;
+                break;
+            }
+        }
+        return array('device' => $device, 'os' => $os, 'browser' => $browser, 'is_bot' => $is_bot);
+    }
+
+    public function logQrScan($visitor_id, $ip, $ua, $landing_url)
+    {
+        $ua = substr((string) $ua, 0, 500);
+        $row = array_merge(array(
+            'visitor_id' => $visitor_id,
+            'scanned_at' => date('Y-m-d H:i:s'),
+            'ip' => $ip,
+            'user_agent' => $ua,
+            'landing_url' => substr($landing_url, 0, 500),
+        ), $this->parseUserAgent($ua));
+        $this->db->insert('scholarship_qr_scans', $row);
+        return $this->db->insert_id();
+    }
+
+    /** Credits a new registration to the scan that brought this visitor in (latest unconverted scan). */
+    public function markQrScanRegistered($scan_id, $visitor_id, $candidate_id, $exam_id)
+    {
+        $scan = $this->db->query(
+            'SELECT id FROM scholarship_qr_scans WHERE registered = 0 AND (id = ? OR visitor_id = ?) ORDER BY id DESC LIMIT 1',
+            array((int) $scan_id, (string) $visitor_id)
+        )->row_array();
+        if (!$scan) {
+            return;
+        }
+        $this->db->where('id', $scan['id'])->update('scholarship_qr_scans', array(
+            'registered' => 1,
+            'candidate_id' => $candidate_id,
+            'exam_id' => $exam_id,
+            'registered_at' => date('Y-m-d H:i:s'),
+        ));
+    }
+
+    /** Scan analytics for the admin page; bots / link-preview fetches are excluded. */
+    public function getQrScanStats($from, $to)
+    {
+        $range = array($from . ' 00:00:00', $to . ' 23:59:59');
+        $where = 'is_bot = 0 AND scanned_at BETWEEN ? AND ?';
+
+        $totals = $this->db->query(
+            "SELECT COUNT(*) AS scans, COUNT(DISTINCT visitor_id) AS visitors, COALESCE(SUM(registered), 0) AS registrations FROM scholarship_qr_scans WHERE $where",
+            $range
+        )->row_array();
+
+        $daily = $this->db->query(
+            "SELECT DATE(scanned_at) AS day, COUNT(*) AS scans, COUNT(DISTINCT visitor_id) AS visitors, SUM(registered) AS registrations
+             FROM scholarship_qr_scans WHERE $where GROUP BY DATE(scanned_at) ORDER BY day",
+            $range
+        )->result_array();
+
+        $breakdown = array();
+        foreach (array('device', 'os', 'browser') as $col) {
+            $breakdown[$col] = $this->db->query(
+                "SELECT $col AS label, COUNT(*) AS scans, SUM(registered) AS registrations
+                 FROM scholarship_qr_scans WHERE $where GROUP BY $col ORDER BY scans DESC",
+                $range
+            )->result_array();
+        }
+
+        $recent = $this->db->query(
+            "SELECT s.*, c.external_candidate_name FROM scholarship_qr_scans s
+             LEFT JOIN scholarship_exam_candidates c ON c.id = s.candidate_id
+             WHERE s.is_bot = 0 AND s.scanned_at BETWEEN ? AND ? ORDER BY s.id DESC LIMIT 100",
+            $range
+        )->result_array();
+
+        $bots = $this->db->query(
+            'SELECT COUNT(*) AS n FROM scholarship_qr_scans WHERE is_bot = 1 AND scanned_at BETWEEN ? AND ?',
+            $range
+        )->row_array();
+
+        return array('totals' => $totals, 'daily' => $daily, 'breakdown' => $breakdown, 'recent' => $recent, 'bots' => (int) $bots['n']);
     }
 
     public function findExternalDuplicate($exam_id, $mobile)
