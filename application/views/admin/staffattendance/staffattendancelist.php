@@ -293,7 +293,7 @@
     .sa-kpi-group { display:flex; flex-wrap:wrap; align-items:center; gap:8px; width:100%; }
     .sa-kpi-group .sa-attn { margin-left:auto; }
     .sa-kpi-label { font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; color:#94a3b8; min-width:118px; }
-    .sa-kpi-group > .sa-kpi-chip.is-zero:not(.active) { display:none; }
+    .sa-kpi-group > .sa-kpi-chip.is-zero:not(.active):not(.kpi-unmarked) { display:none; }
     .sa-attn { display:inline-block; }
     .sa-attn-btn { display:inline-flex; align-items:center; gap:6px; border:1px solid #fed7aa; background:#fff7ed; color:#9a3412; font-weight:700; font-size:12.5px; border-radius:20px; padding:6px 12px; cursor:pointer; }
     .sa-attn-btn.active { background:#9a3412; color:#fff; border-color:#9a3412; }
@@ -480,6 +480,12 @@
 
     .dot-on_duty { background: var(--sa-onduty); }
     .kpi-onduty .sa-kpi-count { background: var(--sa-onduty); }
+
+    .btn-status-unmarked { background: #f8fafc; color: #475569; border-color: #cbd5e1; }
+    .btn-status-unmarked .sa-status-dot { background: #94a3b8; }
+    .dot-unmarked { background: #94a3b8; }
+    .kpi-unmarked .sa-kpi-count { background: #64748b; }
+    .sa-table tbody tr.rt-unmarked td:first-child { box-shadow: inset 4px 0 0 #cbd5e1; }
 
     /* Dropdown menu items */
     .sa-status-menu {
@@ -857,6 +863,9 @@
                                     <span class="sa-kpi-chip kpi-absent" data-filter="absent" title="Show Absent staff">
                                         <i class="fa fa-times-circle text-danger"></i> Absent <span class="sa-kpi-count" id="cnt-absent">0</span>
                                     </span>
+                                    <span class="sa-kpi-chip kpi-unmarked" data-filter="unmarked" title="Show Unmarked staff">
+                                        <i class="fa fa-circle-o" style="color:#64748b;"></i> Unmarked <span class="sa-kpi-count" id="cnt-unmarked">0</span>
+                                    </span>
                                     <span class="sa-kpi-chip kpi-onduty" data-filter="on_duty" title="Show On Duty staff">
                                         <i class="fa fa-id-badge" style="color:var(--sa-onduty);"></i> On Duty <span class="sa-kpi-count" id="cnt-on_duty">0</span>
                                     </span>
@@ -945,6 +954,12 @@
                                                                 Set All ▾
                                                             </button>
                                                             <ul class="dropdown-menu dropdown-menu-right sa-status-menu" style="min-width:180px;">
+                                                                <li>
+                                                                    <a href="javascript:void(0);" class="bulk-set-att" data-type-id="" data-type-key="unmarked" data-type-name="Unmarked">
+                                                                        <span class="sa-status-dot dot-unmarked"></span> Unmarked
+                                                                    </a>
+                                                                </li>
+                                                                <li role="separator" class="divider" style="margin:3px 0;"></li>
                                                                 <?php foreach ($attendencetypeslist as $type) { 
                                                                     $att_type = str_replace(" ", "_", strtolower($type['type']));
                                                                 ?>
@@ -989,17 +1004,19 @@
                                                         $selectedTypeKey = "on_duty";
                                                     } elseif (!empty($value['in_time']) && $value['in_time'] !== '00:00:00') {
                                                         $selectedTypeKey = "present";
-                                                    } elseif (!empty($sch_setting->biometric)) {
-                                                        $selectedTypeKey = "absent";
                                                     } else {
-                                                        $selectedTypeKey = "present";
+                                                        $selectedTypeKey = "unmarked";
+                                                        $selectedTypeName = "Unmarked";
+                                                        $selectedTypeId = "";
                                                     }
-                                                    foreach ($attendencetypeslist as $t) {
-                                                        $tk = str_replace(" ", "_", strtolower($t['type']));
-                                                        if ($tk === $selectedTypeKey) {
-                                                            $selectedTypeId = $t['id'];
-                                                            $selectedTypeName = $t['type'];
-                                                            break;
+                                                    if ($selectedTypeKey !== "unmarked") {
+                                                        foreach ($attendencetypeslist as $t) {
+                                                            $tk = str_replace(" ", "_", strtolower($t['type']));
+                                                            if ($tk === $selectedTypeKey) {
+                                                                $selectedTypeId = $t['id'];
+                                                                $selectedTypeName = $t['type'];
+                                                                break;
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -1057,6 +1074,16 @@
                                                                 <i class="fa fa-caret-down" style="font-size:10px; margin-left:4px; opacity:0.8;"></i>
                                                             </button>
                                                             <ul class="dropdown-menu sa-status-menu" aria-labelledby="status_btn_<?php echo $value['staff_id']; ?>">
+                                                                <li>
+                                                                    <a href="javascript:void(0);" class="sa-status-opt" 
+                                                                       data-staff-id="<?php echo $value['staff_id']; ?>" 
+                                                                       data-type-id="" 
+                                                                       data-type-key="unmarked" 
+                                                                       data-type-name="Unmarked">
+                                                                        <span class="sa-status-dot dot-unmarked"></span> Unmarked
+                                                                    </a>
+                                                                </li>
+                                                                <li role="separator" class="divider" style="margin:3px 0;"></li>
                                                                 <?php foreach ($attendencetypeslist as $type) { 
                                                                     $att_type = str_replace(" ", "_", strtolower($type['type']));
                                                                 ?>
@@ -1378,6 +1405,8 @@
 .att-share-tab-pill:hover { border-color: #94a3b8; color: #0f172a; background: #f1f5f9; }
 .att-share-tab-pill.active { background: #16a34a; border-color: #15803d; color: #ffffff; box-shadow: 0 2px 4px rgba(22, 163, 74, 0.25); }
 .att-share-tab-pill.tab-absent.active { background: #dc2626 !important; border-color: #b91c1c !important; }
+.att-share-tab-pill.tab-unmarked.active { background: #64748b !important; border-color: #475569 !important; }
+.att-share-tab-pill.tab-unmarked.active .att-tab-badge { color: #475569; }
 .att-share-tab-pill.tab-late.active { background: #d97706 !important; border-color: #b45309 !important; }
 .att-share-tab-pill.tab-half_day.active { background: #2563eb !important; border-color: #1d4ed8 !important; }
 .att-tab-badge { background: #e2e8f0; color: #334155; border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
@@ -1524,6 +1553,7 @@
             half_day: 0,
             holiday: 0,
             on_duty: 0,
+            unmarked: 0,
             missing: 0,
             shortfall: 0,
             early: 0,
@@ -1545,6 +1575,7 @@
             else if (key === 'half_day' || key === 'half_day_second_shift') counts.half_day++;
             else if (key === 'holiday') counts.holiday++;
             else if (key === 'on_duty') counts.on_duty = (counts.on_duty || 0) + 1;
+            else if (key === 'unmarked' || !key) counts.unmarked = (counts.unmarked || 0) + 1;
 
             var inV = $tr.find('.in_time').val();
             var outV = $tr.find('.out_time').val();
@@ -1617,6 +1648,7 @@
         $('#cnt-half_day').text(counts.half_day);
         $('#cnt-holiday').text(counts.holiday);
         $('#cnt-on_duty').text(counts.on_duty || 0);
+        $('#cnt-unmarked').text(counts.unmarked || 0);
         $('#cnt-missing').text(counts.missing);
         $('#cnt-shortfall').text(counts.shortfall);
         $('#cnt-early').text(counts.early);
@@ -1635,7 +1667,7 @@
         // Hide status chips with nothing to show.
         $('#live-att-stats .sa-kpi-chip').each(function() {
             var n = parseInt($(this).find('.sa-kpi-count').text(), 10) || 0;
-            $(this).toggleClass('is-zero', n === 0 && $(this).data('filter') !== 'all');
+            $(this).toggleClass('is-zero', n === 0 && $(this).data('filter') !== 'all' && $(this).data('filter') !== 'unmarked');
         });
     }
 
@@ -1665,6 +1697,8 @@
                 matchesFilter = (key === 'holiday');
             } else if (activeFilter === 'on_duty') {
                 matchesFilter = (key === 'on_duty');
+            } else if (activeFilter === 'unmarked') {
+                matchesFilter = (key === 'unmarked' || !key);
             } else if (activeFilter === 'missing-out') {
                 var inV = $tr.find('.in_time').val();
                 var outV = $tr.find('.out_time').val();
@@ -2034,6 +2068,7 @@ function renderStaffShareTabs(liveData) {
     var counts = {
         all: liveData.length,
         absent: 0,
+        unmarked: 0,
         late: 0,
         present: 0,
         half_day: 0,
@@ -2062,6 +2097,14 @@ function renderStaffShareTabs(liveData) {
         '<button type="button" class="att-share-tab-pill tab-absent ' + absentActive + '" onclick="switchStaffShareTab(\'absent\')">' +
             '<i class="fa fa-times-circle text-danger"></i> <span>Absent Staff</span>' +
             '<span class="att-tab-badge" style="background:#fee2e2; color:#dc2626;">' + counts.absent + '</span>' +
+        '</button>'
+    );
+
+    var unmarkedActive = (currentActiveStaffShareTab === 'unmarked') ? 'active' : '';
+    container.append(
+        '<button type="button" class="att-share-tab-pill tab-unmarked ' + unmarkedActive + '" onclick="switchStaffShareTab(\'unmarked\')">' +
+            '<i class="fa fa-circle-o" style="color:#64748b;"></i> <span>Unmarked Staff</span>' +
+            '<span class="att-tab-badge" style="background:#f1f5f9; color:#475569;">' + counts.unmarked + '</span>' +
         '</button>'
     );
 
@@ -2116,7 +2159,8 @@ function switchStaffShareTab(tabKey) {
 
 function filterStaffDataByTab(liveData, tabKey) {
     if (tabKey === 'all') return liveData;
-    if (tabKey === 'absent') return liveData.filter(function(i) { return i.status_key === 'absent' || i.status_key === 'unplanned_leave'; });
+    if (tabKey === 'absent') return liveData.filter(function(i) { return i.status_key === 'absent' || i.status_key === 'unplanned_leave' || i.status_key === 'unmarked' || !i.status_key; });
+    if (tabKey === 'unmarked') return liveData.filter(function(i) { return i.status_key === 'unmarked' || !i.status_key; });
     if (tabKey === 'late') return liveData.filter(function(i) { return i.status_key === 'late'; });
     if (tabKey === 'present') return liveData.filter(function(i) { return i.status_key === 'present'; });
     if (tabKey === 'half_day') return liveData.filter(function(i) { return i.status_key === 'half_day' || i.status_key === 'half_day_second_shift'; });
@@ -2140,10 +2184,15 @@ function renderStaffScreenshotCard(tabKey) {
     var titleBg = '#dcfce7';
 
     if (tabKey === 'absent') {
-        titleBadge = 'Absent Staff Alert';
+        titleBadge = 'Absent / Unmarked Staff Alert';
         titleColor = '#b91c1c';
         titleBg = '#fee2e2';
-        $('#staff-share-selected-desc').text('Absent Staff (' + filteredData.length + ' staff)');
+        $('#staff-share-selected-desc').text('Absent / Unmarked Staff (' + filteredData.length + ' staff)');
+    } else if (tabKey === 'unmarked') {
+        titleBadge = 'Unmarked Staff List';
+        titleColor = '#475569';
+        titleBg = '#f1f5f9';
+        $('#staff-share-selected-desc').text('Unmarked Staff (' + filteredData.length + ' staff)');
     } else if (tabKey === 'late') {
         titleBadge = 'Late Arrivals Report';
         titleColor = '#b45309';
@@ -2175,6 +2224,7 @@ function renderStaffScreenshotCard(tabKey) {
     var countPresent = allData.filter(function(x) { return x.status_key === 'present'; }).length;
     var countLate = allData.filter(function(x) { return x.status_key === 'late'; }).length;
     var countAbsent = allData.filter(function(x) { return x.status_key === 'absent' || x.status_key === 'unplanned_leave'; }).length;
+    var countUnmarked = allData.filter(function(x) { return x.status_key === 'unmarked' || !x.status_key; }).length;
     var countHalf = allData.filter(function(x) { return x.status_key === 'half_day' || x.status_key === 'half_day_second_shift'; }).length;
 
     var html = '';
@@ -2198,6 +2248,9 @@ function renderStaffScreenshotCard(tabKey) {
     html += '    <span style="font-size:12px; color:#15803d; font-weight:700;"><i class="fa fa-check-circle"></i> Present: ' + countPresent + '</span>';
     html += '    <span style="font-size:12px; color:#b45309; font-weight:700;"><i class="fa fa-clock-o"></i> Late: ' + countLate + '</span>';
     html += '    <span style="font-size:12px; color:#b91c1c; font-weight:700;"><i class="fa fa-times-circle"></i> Absent: ' + countAbsent + '</span>';
+    if (countUnmarked > 0) {
+        html += '    <span style="font-size:12px; color:#475569; font-weight:700;"><i class="fa fa-circle-o"></i> Unmarked: ' + countUnmarked + '</span>';
+    }
     if (countHalf > 0) {
         html += '    <span style="font-size:12px; color:#1d4ed8; font-weight:700;"><i class="fa fa-adjust"></i> Half Day: ' + countHalf + '</span>';
     }
@@ -2224,6 +2277,7 @@ function renderStaffScreenshotCard(tabKey) {
         if (item.status_key === 'present') badgeStyle = 'background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;';
         else if (item.status_key === 'late') badgeStyle = 'background:#fef3c7; color:#b45309; border:1px solid #fde68a;';
         else if (item.status_key === 'absent' || item.status_key === 'unplanned_leave') badgeStyle = 'background:#fee2e2; color:#dc2626; border:1px solid #fecaca;';
+        else if (item.status_key === 'unmarked' || !item.status_key) badgeStyle = 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;';
         else if (item.status_key === 'half_day' || item.status_key === 'half_day_second_shift') badgeStyle = 'background:#dbeafe; color:#1e40af; border:1px solid #bfdbfe;';
 
         var timeDisplay = '-';
@@ -2290,24 +2344,44 @@ function getStaffWhatsAppShareText(tabKey) {
 
     var text = "";
     if (tabKey === 'absent') {
-        text += "🚫 *ABSENT STAFF REPORT*\n";
+        text += "🚫 *ABSENT & UNMARKED STAFF REPORT*\n";
         text += "🏫 *" + schoolName + "*\n";
         text += "📅 *Date:* " + selectedDate + "\n";
         text += "👥 *Role:* " + selectedRole + "\n";
-        text += "⚠️ *Total Absent: " + filteredData.length + " staff member(s)*\n\n";
+        text += "⚠️ *Total Absent / Unmarked: " + filteredData.length + " staff member(s)*\n\n";
 
         if (filteredData.length === 0) {
             text += "✅ *Zero Absentees! All staff are present/on duty today.*\n";
         } else {
             $.each(filteredData, function(idx, item) {
                 var empStr = item.employee_id ? " (" + item.employee_id + ")" : "";
-                text += (idx + 1) + ". *" + item.name + "*" + empStr + "\n";
+                var stLabel = (item.status_key === 'unmarked' || !item.status_key) ? " [UNMARKED]" : " [ABSENT]";
+                text += (idx + 1) + ". *" + item.name + "*" + empStr + stLabel + "\n";
                 text += "   • Role: " + item.role + "\n";
                 if (item.contact_no) text += "   • Contact: " + item.contact_no + "\n";
                 if (item.remark) text += "   • Note: " + item.remark + "\n";
                 text += "\n";
             });
-            text += "_Please arrange substitute duties/periods accordingly._\n";
+            text += "_Please verify attendance and arrange substitutes accordingly._\n";
+        }
+    } else if (tabKey === 'unmarked') {
+        text += "❓ *UNMARKED STAFF ATTENDANCE REPORT*\n";
+        text += "🏫 *" + schoolName + "*\n";
+        text += "📅 *Date:* " + selectedDate + "\n";
+        text += "👥 *Role:* " + selectedRole + "\n";
+        text += "⚠️ *Total Unmarked: " + filteredData.length + " staff member(s)*\n\n";
+
+        if (filteredData.length === 0) {
+            text += "✅ *All staff members have their attendance marked for today.*\n";
+        } else {
+            $.each(filteredData, function(idx, item) {
+                var empStr = item.employee_id ? " (" + item.employee_id + ")" : "";
+                text += (idx + 1) + ". *" + item.name + "*" + empStr + "\n";
+                text += "   • Role: " + item.role + "\n";
+                if (item.contact_no) text += "   • Contact: " + item.contact_no + "\n";
+                text += "\n";
+            });
+            text += "_Please take action to record or confirm their attendance status._\n";
         }
     } else if (tabKey === 'late') {
         text += "⏰ *LATE ARRIVALS REPORT*\n";
@@ -2339,6 +2413,8 @@ function getStaffWhatsAppShareText(tabKey) {
         text += "• ✅ Present: *" + countPresent + "*\n";
         text += "• ⏰ Late: *" + countLate + "*\n";
         text += "• ❌ Absent: *" + countAbsent + "*\n";
+        var countUnmarkedWa = allData.filter(function(x) { return x.status_key === 'unmarked' || !x.status_key; }).length;
+        if (countUnmarkedWa > 0) text += "• ⚪ Unmarked: *" + countUnmarkedWa + "*\n";
         if (countHalf > 0) text += "• ⏳ Half Day: *" + countHalf + "*\n";
         text += "\n";
 
@@ -2346,6 +2422,16 @@ function getStaffWhatsAppShareText(tabKey) {
             var absentList = allData.filter(function(x) { return x.status_key === 'absent' || x.status_key === 'unplanned_leave'; });
             text += "🚫 *Absent Staff (" + countAbsent + "):*\n";
             $.each(absentList, function(idx, item) {
+                var empStr = item.employee_id ? " [" + item.employee_id + "]" : "";
+                text += (idx + 1) + ". " + item.name + empStr + " (" + item.role + ")" + (item.contact_no ? " 📞 " + item.contact_no : "") + "\n";
+            });
+            text += "\n";
+        }
+
+        var unmkList = allData.filter(function(x) { return x.status_key === 'unmarked' || !x.status_key; });
+        if (unmkList.length > 0) {
+            text += "⚪ *Unmarked Staff (" + unmkList.length + "):*\n";
+            $.each(unmkList, function(idx, item) {
                 var empStr = item.employee_id ? " [" + item.employee_id + "]" : "";
                 text += (idx + 1) + ". " + item.name + empStr + " (" + item.role + ")" + (item.contact_no ? " 📞 " + item.contact_no : "") + "\n";
             });

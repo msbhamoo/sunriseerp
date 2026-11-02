@@ -1142,65 +1142,108 @@ class Staffattendancemodel extends MY_Model {
      */
     public function getStaffRecentAttendance($staff_id, $period = 7)
     {
+        $today = date('Y-m-d');
+        if ($period === 'this_month') {
+            $start = date('Y-m-01');
+            $end   = date('Y-m-t');
+        } elseif ($period === 'prev_month') {
+            $start = date('Y-m-01', strtotime('first day of last month'));
+            $end   = date('Y-m-t', strtotime('last day of last month'));
+        } elseif (is_numeric($period)) {
+            $numDays = (int)$period;
+            $start = date('Y-m-d', strtotime('-' . ($numDays - 1) . ' days'));
+            $end   = $today;
+        } else {
+            $start = date('Y-m-d', strtotime('-6 days'));
+            $end   = $today;
+        }
+
+        // Fetch existing attendance rows for this date window
         $this->db->select('staff_attendance.*, staff_attendance_type.type as att_type, staff_attendance_type.long_lang_name');
         $this->db->from('staff_attendance');
         $this->db->join('staff_attendance_type', 'staff_attendance_type.id = staff_attendance.staff_attendance_type_id', 'left');
         $this->db->where('staff_attendance.staff_id', $staff_id);
-
-        if ($period === 'this_month') {
-            $start = date('Y-m-01');
-            $end   = date('Y-m-t');
-            $this->db->where('staff_attendance.date >=', $start);
-            $this->db->where('staff_attendance.date <=', $end);
-        } elseif ($period === 'prev_month') {
-            $start = date('Y-m-01', strtotime('first day of last month'));
-            $end   = date('Y-m-t', strtotime('last day of last month'));
-            $this->db->where('staff_attendance.date >=', $start);
-            $this->db->where('staff_attendance.date <=', $end);
-        } elseif (is_numeric($period)) {
-            $this->db->limit((int)$period);
-        }
-
+        $this->db->where('staff_attendance.date >=', $start);
+        $this->db->where('staff_attendance.date <=', $end);
         $this->db->order_by('staff_attendance.date', 'DESC');
         $rows = $this->db->get()->result_array();
 
-        $result = array();
-        foreach ($rows as $row) {
-            $in_formatted = (!empty($row['in_time']) && $row['in_time'] !== '00:00:00') ? date('h:i A', strtotime($row['in_time'])) : '--';
-            $out_formatted = (!empty($row['out_time']) && $row['out_time'] !== '00:00:00') ? date('h:i A', strtotime($row['out_time'])) : '--';
-            
-            $duration = '--';
-            if ($in_formatted !== '--' && $out_formatted !== '--') {
-                $secs = strtotime("1970-01-01 " . $row['out_time'] . " UTC") - strtotime("1970-01-01 " . $row['in_time'] . " UTC");
-                if ($secs > 0) {
-                    $h = intdiv($secs, 3600);
-                    $m = intdiv($secs % 3600, 60);
-                    $duration = ($h > 0 ? $h . 'h ' : '') . $m . 'm';
-                }
-            }
-
-            $source = 'Manual';
-            if (!empty($row['qrcode_attendance'])) {
-                $source = 'QR Code';
-            } elseif (!empty($row['biometric_attendence'])) {
-                $source = 'Biometric';
-            }
-
-            $result[] = array(
-                'date_ymd'     => $row['date'],
-                'in_raw'       => $in_formatted !== '--' ? substr($row['in_time'], 0, 5) : '',
-                'out_raw'      => $out_formatted !== '--' ? substr($row['out_time'], 0, 5) : '',
-                'date'         => date('d M Y', strtotime($row['date'])),
-                'day'          => date('D', strtotime($row['date'])),
-                'in_time'      => $in_formatted,
-                'out_time'     => $out_formatted,
-                'duration'     => $duration,
-                'status'       => !empty($row['att_type']) ? $row['att_type'] : 'Present',
-                'status_lang'  => !empty($row['long_lang_name']) ? $row['long_lang_name'] : 'present',
-                'source'       => $source,
-                'remark'       => $row['remark']
-            );
+        $rowsByDate = array();
+        foreach ($rows as $r) {
+            $rowsByDate[$r['date']] = $r;
         }
+
+        // Fetch off days (Sundays / Holidays from annual calendar)
+        $offDays = $this->getOffDays($start, $end);
+
+        // Build continuous date list from end date down to start date
+        $calendarEnd = ($period === 'this_month' && $end > $today) ? $today : $end;
+        $result = array();
+
+        for ($t = strtotime($calendarEnd); $t >= strtotime($start); $t -= 86400) {
+            $curDate = date('Y-m-d', $t);
+            if (isset($rowsByDate[$curDate])) {
+                $row = $rowsByDate[$curDate];
+                $in_formatted = (!empty($row['in_time']) && $row['in_time'] !== '00:00:00') ? date('h:i A', strtotime($row['in_time'])) : '--';
+                $out_formatted = (!empty($row['out_time']) && $row['out_time'] !== '00:00:00') ? date('h:i A', strtotime($row['out_time'])) : '--';
+                
+                $duration = '--';
+                if ($in_formatted !== '--' && $out_formatted !== '--') {
+                    $secs = strtotime("1970-01-01 " . $row['out_time'] . " UTC") - strtotime("1970-01-01 " . $row['in_time'] . " UTC");
+                    if ($secs > 0) {
+                        $h = intdiv($secs, 3600);
+                        $m = intdiv($secs % 3600, 60);
+                        $duration = ($h > 0 ? $h . 'h ' : '') . $m . 'm';
+                    }
+                }
+
+                $source = 'Manual';
+                if (!empty($row['qrcode_attendance'])) {
+                    $source = 'QR Code';
+                } elseif (!empty($row['biometric_attendence'])) {
+                    $source = 'Biometric';
+                }
+
+                $status = !empty($row['att_type']) ? $row['att_type'] : 'Present';
+                $status_lang = !empty($row['long_lang_name']) ? $row['long_lang_name'] : 'present';
+
+                $result[] = array(
+                    'date_ymd'     => $row['date'],
+                    'in_raw'       => $in_formatted !== '--' ? substr($row['in_time'], 0, 5) : '',
+                    'out_raw'      => $out_formatted !== '--' ? substr($row['out_time'], 0, 5) : '',
+                    'date'         => date('d M Y', strtotime($row['date'])),
+                    'day'          => date('D', strtotime($row['date'])),
+                    'in_time'      => $in_formatted,
+                    'out_time'     => $out_formatted,
+                    'duration'     => $duration,
+                    'status'       => $status,
+                    'status_lang'  => $status_lang,
+                    'source'       => $source,
+                    'remark'       => isset($row['remark']) ? $row['remark'] : ''
+                );
+            } else {
+                // Not recorded yet: Check if Holiday / Sunday or Unmarked
+                $isOff = isset($offDays[$curDate]);
+                $status = $isOff ? 'Holiday' : 'Unmarked';
+                $status_lang = $isOff ? 'holiday' : 'unmarked';
+
+                $result[] = array(
+                    'date_ymd'     => $curDate,
+                    'in_raw'       => '',
+                    'out_raw'      => '',
+                    'date'         => date('d M Y', $t),
+                    'day'          => date('D', $t),
+                    'in_time'      => '--',
+                    'out_time'     => '--',
+                    'duration'     => '--',
+                    'status'       => $status,
+                    'status_lang'  => $status_lang,
+                    'source'       => '--',
+                    'remark'       => ''
+                );
+            }
+        }
+
         return $result;
     }
 

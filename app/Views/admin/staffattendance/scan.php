@@ -124,6 +124,9 @@
     .sa-tag-late { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
     .sa-tag-half { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
     .sa-tag-absent { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .sa-tag-holiday { background: #faf5ff; color: #7e22ce; border: 1px solid #e9d5ff; font-weight: 700; }
+    .sa-tag-holiday span { background: #9333ea !important; }
+    .sa-tag-unmarked { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
     .sa-source-tag {
         display: inline-flex;
         align-items: center;
@@ -325,6 +328,8 @@
                                     if (strpos($st, 'late') !== false) $tagClass = 'sa-tag-late';
                                     elseif (strpos($st, 'half') !== false) $tagClass = 'sa-tag-half';
                                     elseif (strpos($st, 'absent') !== false) $tagClass = 'sa-tag-absent';
+                                    elseif (strpos($st, 'holiday') !== false) $tagClass = 'sa-tag-holiday';
+                                    elseif (strpos($st, 'unmarked') !== false) $tagClass = 'sa-tag-unmarked';
                                 ?>
                                     <tr>
                                         <td class="sa-td-head">
@@ -367,7 +372,7 @@
                                                 <?php echo html_escape($rec['source']); ?>
                                             </span>
                                         </td>
-                                        <?php $can_fix = isset($pending_dates[$rec['date_ymd']]) || $rec['date_ymd'] >= $corr_row_min; ?>
+                                        <?php $can_fix = (isset($pending_dates[$rec['date_ymd']]) || $rec['date_ymd'] >= $corr_row_min) && strtolower($rec['status']) !== 'holiday'; ?>
                                         <td class="text-right<?php echo $can_fix ? ' sa-td-action' : ' hidden-xs'; ?>">
                                             <?php if (isset($pending_dates[$rec['date_ymd']])) { ?>
                                                 <span class="sa-corr-pending" title="Correction request pending"><i class="fa fa-hourglass-half"></i> Pending</span>
