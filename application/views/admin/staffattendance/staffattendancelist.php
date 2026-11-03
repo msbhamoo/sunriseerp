@@ -1000,11 +1000,16 @@
                                                         }
                                                     }
                                                 } else {
+                                                    $isBioStaff = (!empty($value['biometric_emp_id']) || !empty($value['has_biometric_device']));
                                                     if (!empty($value['duty_pass'])) {
                                                         $selectedTypeKey = "on_duty";
                                                     } elseif (!empty($value['in_time']) && $value['in_time'] !== '00:00:00') {
                                                         $selectedTypeKey = "present";
+                                                    } elseif ($isBioStaff) {
+                                                        // Employees coming from biometric/e-TimeOffice default to Absent if no punch received
+                                                        $selectedTypeKey = "absent";
                                                     } else {
+                                                        // Non-biometric (manual only) employees remain Unmarked
                                                         $selectedTypeKey = "unmarked";
                                                         $selectedTypeName = "Unmarked";
                                                         $selectedTypeId = "";
