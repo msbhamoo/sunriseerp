@@ -236,6 +236,114 @@
         border: 1px dashed #cbd5e1;
         color: #64748b;
     }
+
+    /* Mobile UX Responsive Refinements */
+    .mobile-scroll-hint {
+        display: none;
+    }
+    @media (max-width: 768px) {
+        .mobile-scroll-hint {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #eff6ff;
+            color: #1e40af;
+            border-bottom: 1px solid #dbeafe;
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .premium-grid-container {
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid #e2e8f0;
+        }
+        /* Sticky Student Column on Mobile */
+        .premium-table thead th.col-sticky-student {
+            position: sticky;
+            left: 0;
+            z-index: 20;
+            background-color: #f1f5f9;
+            box-shadow: 2px 0 6px rgba(0,0,0,0.06);
+            min-width: 140px;
+            max-width: 160px;
+        }
+        .premium-table tbody td.col-sticky-student {
+            position: sticky;
+            left: 0;
+            z-index: 15;
+            background-color: #ffffff;
+            box-shadow: 2px 0 6px rgba(0,0,0,0.06);
+            min-width: 140px;
+            max-width: 160px;
+        }
+        .premium-table tbody tr:hover td.col-sticky-student {
+            background-color: #f8fafc;
+        }
+        /* Hide less essential columns on mobile to give room */
+        .col-hide-mobile {
+            display: none !important;
+        }
+        .premium-table thead th {
+            padding: 10px 12px;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+        .premium-table td {
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+        .excel-cell, .noteinput {
+            padding: 8px 10px;
+            font-size: 13px;
+            min-width: 90px;
+            height: 38px;
+        }
+        .mark-grade-badge {
+            min-width: 28px;
+            padding: 3px 6px;
+            font-size: 11px;
+        }
+        .student-name-col {
+            font-size: 12px;
+            white-space: normal;
+            line-height: 1.3;
+        }
+        .student-avatar-placeholder {
+            width: 26px;
+            height: 26px;
+            min-width: 26px;
+            font-size: 11px;
+            margin-right: 6px;
+        }
+        .badge-class {
+            padding: 2px 6px;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+        #header_action_template > div {
+            flex-direction: column;
+            width: 100%;
+        }
+        #fileUploadForm {
+            flex-direction: column;
+            width: 100%;
+        }
+        #fileUploadForm > div {
+            width: 100% !important;
+        }
+        #btnSubmit,
+        #header_action_template a.btn {
+            width: 100% !important;
+            justify-content: center;
+        }
+        .btn-premium {
+            width: 100%;
+            justify-content: center;
+            height: 44px;
+            font-size: 14px;
+        }
+    }
 </style>
 
 <div id="header_action_template" style="display:none;">
@@ -259,15 +367,19 @@
     
     <?php if (isset($resultlist) && !empty($resultlist)) { ?>
         <div class="premium-grid-container">
+            <div class="mobile-scroll-hint">
+                <span><i class="fa fa-arrows-h"></i> Swipe horizontally to view & enter marks</span>
+                <span class="badge" style="background:#2563eb; color:#fff; font-size:10px;"><?php echo count($resultlist); ?> Students</span>
+            </div>
             <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
                 <table class="table premium-table">
                     <thead>
                         <tr>
-                            <th class="sortable" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('admission_no'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
-                            <th class="sortable" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('roll_no'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
-                            <th class="sortable" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('student_name'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
-                            <th class="sortable" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('class'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
-                            <th class="sortable" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('gender'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
+                            <th class="sortable col-sticky-student" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('student_name'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
+                            <th class="sortable col-hide-mobile" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('admission_no'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
+                            <th class="sortable col-hide-mobile" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('roll_no'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
+                            <th class="sortable col-hide-mobile" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('class'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
+                            <th class="sortable col-hide-mobile" style="cursor:pointer; user-select:none;"><?php echo $this->lang->line('gender'); ?> <i class="fa fa-sort text-muted pull-right"></i></th>
                             
                             <?php foreach ($exam_assessment_types as $key => $value) {
                                 if (!is_null($value->cbse_exam_timetable_assessment_type_id)) {
@@ -291,22 +403,35 @@
                             <tr class="excel-row" data-adm_no="<?php echo htmlspecialchars($student['admission_no'], ENT_QUOTES); ?>">
                                 <input type="hidden" name="exam_student_id[]" value="<?php echo $student['exam_student_id']; ?>">
 
-                                <td><span style="color: #6c757d; font-family: monospace;"><?php echo $student['admission_no']; ?></span></td>
-                                <td>
-                                    <span style="color: #6c757d; font-family: monospace;">
-                                        <?php echo ($exam['use_exam_roll_no'] != 0) ? $student['exam_roll_no'] : (($student['roll_no'] != 0) ? $student['roll_no'] : '-'); ?>
-                                    </span>
-                                </td>
-                                <td>
+                                <td class="col-sticky-student">
                                     <div class="student-name-col">
                                         <div class="student-avatar-placeholder">
                                             <?php echo strtoupper(substr($student['firstname'], 0, 1)); ?>
                                         </div>
-                                        <?php echo $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?>
+                                        <div>
+                                            <div style="font-weight:700; color:#0f172a; line-height:1.2;">
+                                                <?php echo $this->customlib->getFullName($student['firstname'], $student['middlename'], $student['lastname'], $sch_setting->middlename, $sch_setting->lastname); ?>
+                                            </div>
+                                            <div style="font-size: 11px; color: #64748b; font-family: monospace; margin-top: 2px;">
+                                                Adm: <?php echo $student['admission_no']; ?>
+                                                <?php 
+                                                    $roll = ($exam['use_exam_roll_no'] != 0) ? $student['exam_roll_no'] : (($student['roll_no'] != 0) ? $student['roll_no'] : '');
+                                                    if (!empty($roll)) {
+                                                        echo " | Roll: " . $roll;
+                                                    }
+                                                ?>
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
-                                <td><span class="badge-class"><?php echo ($student['class_name'] . " (" . $student['section_name'] . ")"); ?></span></td>
-                                <td>
+                                <td class="col-hide-mobile"><span style="color: #6c757d; font-family: monospace;"><?php echo $student['admission_no']; ?></span></td>
+                                <td class="col-hide-mobile">
+                                    <span style="color: #6c757d; font-family: monospace;">
+                                        <?php echo ($exam['use_exam_roll_no'] != 0) ? $student['exam_roll_no'] : (($student['roll_no'] != 0) ? $student['roll_no'] : '-'); ?>
+                                    </span>
+                                </td>
+                                <td class="col-hide-mobile"><span class="badge-class"><?php echo ($student['class_name'] . " (" . $student['section_name'] . ")"); ?></span></td>
+                                <td class="col-hide-mobile">
                                     <?php if($student['gender']){ 
                                         $gender = strtolower($student['gender']);
                                         $icon = $gender == 'male' ? '<i class="fa fa-mars text-primary"></i>' : ($gender == 'female' ? '<i class="fa fa-venus text-danger"></i>' : '');

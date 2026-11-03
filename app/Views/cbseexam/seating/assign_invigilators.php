@@ -43,7 +43,7 @@
                                             <tr>
                                                 <td><?php echo $room['building_name']; ?></td>
                                                 <td><?php echo $room['room_number']; ?></td>
-                                                <td><?php echo $room['seats_used']; ?> / <?php echo $room['seating_capacity']; ?></td>
+                                                <td><?php echo $room['seats_used'] ?? 0; ?> / <?php echo $room['seating_capacity'] ?? 0; ?></td>
                                                 <td>
                                                     <select class="form-control select2" name="staff_id[<?php echo $room['id']; ?>][]" multiple="multiple" data-placeholder="Select Staff">
                                                         <?php foreach ($staffs as $staff) { ?>

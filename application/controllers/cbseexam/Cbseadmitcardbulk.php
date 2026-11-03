@@ -61,12 +61,13 @@ class Cbseadmitcardbulk extends Admin_Controller
     }
 
     private function get_exam_students_with_roll_no($exam_id, $class_id = '', $section_id = '') {
-        $this->db->select('students.*, classes.class, sections.section, cbse_exam_students.roll_no as admit_roll_no, cbse_exam_students.id as cbse_exam_student_id, student_session.class_id, student_session.section_id');
+        $this->db->select('students.*, classes.class, sections.section, categories.category, cbse_exam_students.roll_no as admit_roll_no, cbse_exam_students.id as cbse_exam_student_id, student_session.class_id, student_session.section_id');
         $this->db->from('cbse_exam_students');
         $this->db->join('student_session', 'student_session.id = cbse_exam_students.student_session_id', 'left');
         $this->db->join('students', 'students.id = student_session.student_id', 'left');
         $this->db->join('classes', 'classes.id = student_session.class_id', 'left');
         $this->db->join('sections', 'sections.id = student_session.section_id', 'left');
+        $this->db->join('categories', 'categories.id = students.category_id', 'left');
         $this->db->where('cbse_exam_students.cbse_exam_id', $exam_id);
         
         if (!empty($class_id)) {
