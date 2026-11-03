@@ -13,7 +13,7 @@ class Cbse_seating_invigilator_model extends MY_Model
 
     public function get_allocation_rooms($allocation_id)
     {
-        $this->db->select('cbse_seating_room_assignments.*, cbse_seating_rooms.room_number, cbse_seating_buildings.name as building_name')
+        $this->db->select('cbse_seating_room_assignments.*, cbse_seating_rooms.room_number, cbse_seating_rooms.seating_capacity, cbse_seating_buildings.name as building_name')
             ->from('cbse_seating_room_assignments')
             ->join('cbse_seating_rooms', 'cbse_seating_rooms.id = cbse_seating_room_assignments.room_id')
             ->join('cbse_seating_buildings', 'cbse_seating_buildings.id = cbse_seating_rooms.building_id')

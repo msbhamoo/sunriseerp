@@ -558,7 +558,7 @@ input:checked + .slider:before {
                                                             <span class="badge-soft badge-pink"><?php echo $student['gender']; ?></span>
                                                         <?php } ?>
                                                     </td>
-                                                    <td><?php echo $student['category']; ?></td>
+                                                    <td><?php echo $student['category'] ?? ''; ?></td>
                                                     <td style="text-align:right;">
                                                         <?php if($has_roll) { ?>
                                                             <button type="button" class="btn btn-default btn-xs" onclick="viewIndividual(<?php echo $student['cbse_exam_student_id']; ?>)" title="View Admit Card">

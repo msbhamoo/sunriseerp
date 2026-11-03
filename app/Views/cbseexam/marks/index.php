@@ -69,6 +69,35 @@
             border: 1px solid #e2e8f0 !important;
             background-color: #f8fafc !important;
             min-height: 38px !important;
+            padding: 3px 6px !important;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #0284c7 !important;
+            border: 1px solid #0284c7 !important;
+            color: #ffffff !important;
+            border-radius: 6px !important;
+            padding: 2px 8px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            margin: 2px 4px 2px 0 !important;
+            line-height: 1.4 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+            color: #ffffff !important;
+            opacity: 0.8 !important;
+            margin-right: 4px !important;
+            font-weight: bold !important;
+            float: none !important;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+            color: #ffffff !important;
+            opacity: 1 !important;
         }
 
         /* Buttons */
@@ -124,6 +153,89 @@
             color: #334155 !important;
             cursor: pointer;
         }
+
+        /* Mobile & Responsive UX Enhancements */
+        @media (max-width: 768px) {
+            .content-header {
+                padding: 12px 12px 4px 12px !important;
+            }
+            .content-header h1 {
+                font-size: 18px !important;
+            }
+            section.content {
+                padding: 10px !important;
+            }
+            .sc-card {
+                border-radius: 10px;
+                margin-bottom: 15px;
+            }
+            .sc-card-header {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 12px;
+                padding: 14px 15px !important;
+            }
+            .sc-card-header > div {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 8px !important;
+            }
+            .sc-card-header > div button {
+                width: 100% !important;
+                justify-content: center;
+                padding: 10px !important;
+            }
+            .sc-card .box-body {
+                padding: 14px 15px !important;
+            }
+            #filter_form > div[class*="col-"] {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+                margin-bottom: 8px;
+            }
+            #filter_form .col-md-12 {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 10px;
+                margin-top: 15px !important;
+            }
+            #filter_form .col-md-12 button {
+                width: 100%;
+                justify-content: center;
+                padding: 12px;
+                font-size: 14px;
+            }
+            #marks_header_actions {
+                width: 100%;
+                margin-left: 0 !important;
+            }
+            #marks_header_actions > div {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+            #marks_header_actions form {
+                flex-direction: column;
+                width: 100%;
+            }
+            #marks_header_actions form > div {
+                width: 100% !important;
+            }
+            #marks_header_actions form button,
+            #marks_header_actions a.btn {
+                width: 100% !important;
+                justify-content: center;
+            }
+            /* Modal dialog responsive adjustments */
+            .modal-dialog {
+                width: 95% !important;
+                margin: 15px auto !important;
+            }
+            .modal-body {
+                padding: 15px !important;
+            }
+        }
     </style>
 
     <!-- Main content -->
@@ -176,8 +288,8 @@
                             </div>
                             
                             <div class="col-md-12" style="margin-top: 10px; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px;">
-                                <button type="button" class="btn btn-warning" id="btn_report_card" style="border-radius:8px;font-weight:700;font-size:13px;padding:8px 18px;background:#6d28d9;border:none;color:#fff;"><i class="fa fa-id-card-o"></i> CBSE Report Card</button>
                                 <button type="button" class="btn btn-sc-primary" id="btn_search"><i class="fa fa-search"></i> <?php echo $this->lang->line('search'); ?></button>
+                                <button type="button" class="btn btn-warning" id="btn_report_card" style="border-radius:8px;font-weight:700;font-size:13px;padding:8px 18px;background:#6d28d9;border:none;color:#fff;"><i class="fa fa-id-card-o"></i> CBSE Report Card</button>
                             </div>
                         </form>
                     </div>

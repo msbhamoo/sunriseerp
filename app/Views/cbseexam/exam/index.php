@@ -1,17 +1,311 @@
 <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.js"></script>
 
-<div class="content-wrapper"> 
+<style>
+/* Modern CBSE Exam List UI & Responsive Polish */
+.cbse-exam-page {
+    font-family: inherit;
+}
+.cbse-exam-page .box.box-primary {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    background: #ffffff;
+    margin-bottom: 25px;
+    overflow: hidden;
+}
+.cbse-exam-page .box-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid #edf2f7;
+    background: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.cbse-exam-page .box-header .box-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.cbse-exam-page .box-header .box-title i {
+    color: #3b82f6;
+}
+.cbse-exam-page .box-header .box-tools {
+    position: static;
+    float: none !important;
+}
+.cbse-exam-page .btn-add-exam {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 600;
+    font-size: 13px;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none !important;
+}
+.cbse-exam-page .btn-add-exam:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+}
+.cbse-exam-page .box-body {
+    padding: 20px 24px;
+}
+
+/* Modern Table Styles */
+.cbse-exam-page .table-responsive {
+    border: none;
+    margin-bottom: 0;
+}
+.cbse-exam-page .exam-table {
+    margin-bottom: 0 !important;
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100% !important;
+}
+.cbse-exam-page .exam-table thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-top: none;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 12px 14px;
+    white-space: nowrap;
+}
+.cbse-exam-page .exam-table tbody tr {
+    transition: background 0.15s ease;
+}
+.cbse-exam-page .exam-table tbody tr:hover {
+    background-color: #f8fafc !important;
+}
+.cbse-exam-page .exam-table tbody td {
+    padding: 14px;
+    vertical-align: middle;
+    border-top: 1px solid #edf2f7;
+    color: #334155;
+    font-size: 13px;
+}
+
+/* Typography & Sub-elements */
+.cbse-exam-page .exam-name-cell {
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 14px;
+}
+.cbse-exam-page .exam-badge-term {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+}
+.cbse-exam-page .badge-class-pill {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #e0e7ff;
+    color: #3730a3;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 4px;
+}
+.cbse-exam-page .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+.cbse-exam-page .status-pill.active {
+    background: #dcfce7;
+    color: #15803d;
+}
+.cbse-exam-page .status-pill.inactive {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+/* Toggle Publish Button Pill */
+.cbse-exam-page .btn-publish-pill {
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+}
+.cbse-exam-page .btn-publish-pill.btn-published {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+.cbse-exam-page .btn-publish-pill.btn-published:hover {
+    background: #d1fae5;
+    color: #065f46;
+}
+.cbse-exam-page .btn-publish-pill.btn-draft {
+    background: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+}
+.cbse-exam-page .btn-publish-pill.btn-draft:hover {
+    background: #e5e7eb;
+    color: #1f2937;
+}
+
+/* 3-Dots Action Dropdown Menu */
+.cbse-exam-page .exam-action-dropdown {
+    position: relative;
+    display: inline-block;
+}
+.cbse-exam-page .btn-action-dots {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.cbse-exam-page .btn-action-dots:hover,
+.cbse-exam-page .btn-action-dots:focus,
+.cbse-exam-page .open > .btn-action-dots {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #cbd5e1;
+    outline: none;
+}
+.cbse-exam-page .exam-dropdown-menu {
+    border-radius: 10px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    padding: 6px;
+    min-width: 200px;
+    right: 0;
+    left: auto;
+    margin-top: 4px;
+    text-align: left;
+    background: #ffffff;
+    z-index: 1050;
+}
+.cbse-exam-page .exam-dropdown-menu > li > a,
+.cbse-exam-page .exam-dropdown-menu > li > button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #334155;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+.cbse-exam-page .exam-dropdown-menu > li > a:hover,
+.cbse-exam-page .exam-dropdown-menu > li > button:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+.cbse-exam-page .exam-dropdown-menu > li > a i,
+.cbse-exam-page .exam-dropdown-menu > li > button i {
+    width: 16px;
+    font-size: 13px;
+    text-align: center;
+    color: #64748b;
+}
+.cbse-exam-page .exam-dropdown-menu > li.divider {
+    margin: 4px 0;
+    background-color: #f1f5f9;
+    height: 1px;
+}
+.cbse-exam-page .exam-dropdown-menu > li.danger-action > button {
+    color: #dc2626;
+}
+.cbse-exam-page .exam-dropdown-menu > li.danger-action > button i {
+    color: #dc2626;
+}
+.cbse-exam-page .exam-dropdown-menu > li.danger-action > button:hover {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+/* Responsive / Mobile Optimization */
+@media (max-width: 768px) {
+    .cbse-exam-page .box-header {
+        padding: 14px 16px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .cbse-exam-page .box-header .box-tools {
+        width: 100%;
+    }
+    .cbse-exam-page .btn-add-exam {
+        width: 100%;
+        justify-content: center;
+        padding: 10px;
+    }
+    .cbse-exam-page .box-body {
+        padding: 12px 14px;
+    }
+    .cbse-exam-page .table-responsive {
+        border-radius: 8px;
+        border: 1px solid #edf2f7;
+    }
+    .cbse-exam-page .exam-action-group {
+        display: flex;
+        flex-wrap: wrap;
+        width: max-content;
+    }
+}
+</style>
+
+<div class="content-wrapper cbse-exam-page"> 
     <!-- Main content -->
     <section class="content">
         <div class="row">           
             <div class="col-md-12">             
                 <div class="box box-primary">
                     <div class="box-header ptbnull">
-                        <h3 class="box-title titlefix"><?php echo $this->lang->line('exam_list'); ?></h3>  
+                        <h3 class="box-title titlefix"><i class="fa fa-graduation-cap"></i> <?php echo $this->lang->line('exam_list'); ?></h3>  
                         <div class="box-tools pull-right">
                             <?php
                               if ($this->rbac->hasPrivilege('cbse_exam', 'can_add')) { ?>
-                            <a href="<?php echo site_url('cbseexam/exam/wizard'); ?>" class="btn btn-sm btn-primary"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add')?></a> 
+                            <a href="<?php echo site_url('cbseexam/exam/wizard'); ?>" class="btn-add-exam"><i class="fa fa-plus"></i> <?php echo $this->lang->line('add')?></a> 
                             <?php 
                              } 
                            ?>                                       
@@ -23,7 +317,7 @@
                             <?php if ($this->session->flashdata('msgdelete')) { ?>
                                 <?php echo $this->session->flashdata('msgdelete') ?>
                             <?php } ?>
-                            <table class="table table-striped table-bordered table-hover example" data-export-title="<?php echo $this->lang->line('exam_list'); ?>">
+                            <table class="table table-striped table-hover example exam-table" data-export-title="<?php echo $this->lang->line('exam_list'); ?>">
                                 <thead>
                                     <tr>  
                                         <th><?php echo $this->lang->line('exam_name'); ?></th>
@@ -32,8 +326,8 @@
                                         <th><?php echo $this->lang->line('subjects_included'); ?></th>
                                         <th><?php echo $this->lang->line('exam_published'); ?></th>
                                         <th><?php echo $this->lang->line('published_result'); ?></th>
-                                        <th width="30%"><?php echo $this->lang->line('category_name') ?></th>
-                                        <th width="30%"><?php echo $this->lang->line('description') ?></th>
+                                        <th><?php echo $this->lang->line('category_name') ?></th>
+                                        <th><?php echo $this->lang->line('description') ?></th>
                                         <th><?php echo $this->lang->line('created_at') ?></th>
                                         <th class="text-right noExport"><?php echo $this->lang->line('action'); ?></th>
                                     </tr>
@@ -87,93 +381,129 @@
                                                 }
                                                 ?>
                                             </td>
-                                            <td><?php echo $value['term_name']; ?></td>                                            
-                                            <td><?php echo $value['subjectsincluded']; ?></td>                               
-                                            <td><?php                                             
+                                            <td>
+                                                <span class="exam-badge-term"><?php echo !empty($value['term_name']) ? $value['term_name'] : '-'; ?></span>
+                                            </td>                                            
+                                            <td>
+                                                <span class="badge" style="background:#f1f5f9; color:#334155; font-size:11px; font-weight:600; padding:4px 8px;"><?php echo $value['subjectsincluded']; ?></span>
+                                            </td>                               
+                                            <td>
+                                                <?php if ($value['is_active'] == 1) { ?>
+                                                    <span class="status-pill active"><i class="fa fa-check-circle"></i> <?php echo $this->lang->line('yes'); ?></span>
+                                                <?php } else { ?>
+                                                    <span class="status-pill inactive"><i class="fa fa-times-circle"></i> <?php echo $this->lang->line('no'); ?></span>
+                                                <?php } ?>
+                                            </td>                                            
                                             
-                                            if ($value['is_active'] == 1) {
-                                                $is_active = "<i class='fa fa-check-square-o'></i><span style='display:none'>" . $this->lang->line('yes') . "</span>";
-                                            } else {
-                                                $is_active = "<i class='fa fa-exclamation-circle'></i><span style='display:none'>" . $this->lang->line('no') . "</span>";
-                                            }
-                                            
-                                            echo $is_active; 
-                                            
-                                            ?> </td>                                            
-                                            
-                                            <td><?php                                             
-                                                $is_pub = ($value['is_publish'] == 1);
-                                                ?>
+                                            <td>
+                                                <?php $is_pub = ($value['is_publish'] == 1); ?>
                                                 <button type="button" 
-                                                        class="btn btn-xs <?php echo $is_pub ? 'btn-success' : 'btn-default'; ?> toggle-publish-btn" 
+                                                        class="btn-publish-pill <?php echo $is_pub ? 'btn-published' : 'btn-draft'; ?> toggle-publish-btn" 
                                                         data-examid="<?php echo $value['id']; ?>" 
                                                         data-publish="<?php echo $is_pub ? '0' : '1'; ?>" 
                                                         data-toggle="tooltip" 
-                                                        title="<?php echo $is_pub ? 'Click to Unpublish Result' : 'Click to Publish Result'; ?>"
-                                                        style="font-size:11px; padding: 2px 7px; border-radius: 3px;">
-                                                    <i class="fa <?php echo $is_pub ? 'fa-check-circle' : 'fa-times-circle'; ?>"></i> 
+                                                        title="<?php echo $is_pub ? 'Click to Unpublish Result' : 'Click to Publish Result'; ?>">
+                                                    <i class="fa <?php echo $is_pub ? 'fa-check-circle' : 'fa-clock-o'; ?>"></i> 
                                                     <span class="pub-text"><?php echo $is_pub ? 'Published' : 'Draft'; ?></span>
                                                 </button>
                                             </td> 
                                             
                                             <td>                                                
-                                                <?php echo $value['category_name']; ?>
+                                                <span style="color:#64748b; font-size:12px;"><?php echo !empty($value['category_name']) ? $value['category_name'] : '-'; ?></span>
                                             </td>
                                             <td>                                                
-                                                <?php echo $value['description']; ?>
-                                            </td>
-                                            <td><?php echo $this->customlib->dateformat($value['created_at']); ?></td> 
-                                            <td class="text-right white-space-nowrap">                                           
-
-                                                <?php if ($this->rbac->hasPrivilege('cbse_exam', 'can_edit')) { ?>
-                                                <button type="button" 
-                                                        class="btn btn-xs <?php echo $is_pub ? 'btn-success' : 'btn-warning'; ?> toggle-publish-btn" 
-                                                        data-examid="<?php echo $value['id']; ?>" 
-                                                        data-publish="<?php echo $is_pub ? '0' : '1'; ?>" 
-                                                        data-toggle="tooltip" 
-                                                        title="<?php echo $is_pub ? 'Unpublish Exam Result' : 'Quick Publish Exam Result'; ?>">
-                                                    <i class="fa <?php echo $is_pub ? 'fa-eye' : 'fa-eye-slash'; ?>"></i>
-                                                </button>
-                                                <?php } ?>
-                                                
-                                                <?php  if ($this->rbac->hasPrivilege('cbse_exam_assign_view_student', 'can_view')) { ?>
-                                                
-                                                <button  data-toggle="tooltip" title="" class="btn btn-primary btn-xs assignStudent" id="load" data-examid="<?php echo $value['id']; ?>" data-original-title="<?php echo $this->lang->line('assign_view_student'); ?>"><i class="fa fa-tag"></i></button>
-                                                
-                                                <?php } if ($this->rbac->hasPrivilege('cbse_exam_subjects', 'can_view')) { ?>
-                                                
-                                                <button class="btn btn-primary btn-xs" id="subjectModalButton" data-toggle="tooltip" data-exam_id="<?php echo $value['id']; ?>" title="<?php echo $this->lang->line('exam_subjects'); ?>"><i class="fa fa-book" aria-hidden="true"></i></button>
-                                                
-                                                <?php } if ($this->rbac->hasPrivilege('cbse_exam_marks', 'can_view')) { ?>
-                                                
-                                                <a href="<?php echo site_url('cbseexam/exam/marks/'.$value['id']) ?>" class="btn btn-primary btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('exam_marks'); ?>" ><i class="fa fa-newspaper-o"></i></a>
-                                                
-                                                <?php } if ($this->rbac->hasPrivilege('cbse_exam_attendance', 'can_view')) { ?>
-                                                
-                                                <button class="btn btn-primary btn-xs examattendance" data-toggle="tooltip" data-recordid="<?php echo $value['id']; ?>" title="<?php echo $this->lang->line('exam_attendance'); ?>"><i class="fa fa-calendar-check-o ftlayer"></i></button>
-                                                
-                                                <?php } if ($this->rbac->hasPrivilege('cbse_exam_teacher_remark', 'can_view')) { ?>
-                                                
-                                                <button  class="btn btn-primary btn-xs examTeacherReamark" data-toggle="tooltip" data-recordid="<?php echo $value['id']; ?>" title="<?php echo $this->lang->line('teacher_remark'); ?>" ><i class="fa fa-comment"></i></button>
-                                                
-                                                <?php } if ($this->rbac->hasPrivilege('cbse_exam', 'can_edit')) { ?>
-                                                
-                                                <a href="<?php echo site_url('cbseexam/exam/wizard/'.$value['id']); ?>" class="btn btn-primary btn-xs" data-toggle="tooltip" title="<?php echo $this->lang->line('edit'); ?>"><i class="fa fa-pencil" aria-hidden="true"></i></a>
-                                                
-                                                <?php } ?>
-                                                
-                                                <?php if ($this->rbac->hasPrivilege('cbse_exam_generate_rank', 'can_view')) { ?>
-                                                <a href="<?php echo site_url('cbseexam/exam/examwiserank/'.$value['id']);?>" data-toggle="tooltip" title="" class="btn btn-primary btn-xs" id="load" data-examid="<?php echo $value['id']; ?>" data-original-title="<?php echo $this->lang->line('generate_rank'); ?>"><i class="fa fa-list-alt"></i></a>
-                                                <?php } ?>
-                                                
-                                                <?php if ($this->rbac->hasPrivilege('cbse_exam', 'can_delete')) { ?>
-                                                
-                                                <span data-toggle="tooltip" title="<?php echo $this->lang->line('delete'); ?>">
-                                                    <button class="btn btn-primary btn-xs deleteexam" data-id="<?php echo $value['id']; ?>" data-exam="yk" id="deleteItem" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-remove"></i></button>
+                                                <span style="color:#64748b; font-size:12px;" title="<?php echo htmlspecialchars($value['description'] ?? ''); ?>">
+                                                    <?php 
+                                                        $desc = $value['description'] ?? '';
+                                                        echo (strlen($desc) > 35) ? substr($desc, 0, 35) . '...' : ($desc ?: '-'); 
+                                                    ?>
                                                 </span>
-                                                
-                                                <?php } ?>
-                                                
+                                            </td>
+                                            <td style="white-space: nowrap; color: #64748b; font-size: 12px;">
+                                                <?php echo $this->customlib->dateformat($value['created_at']); ?>
+                                            </td> 
+                                            <td class="text-right white-space-nowrap">                                           
+                                                <div class="dropdown exam-action-dropdown">
+                                                    <button class="btn-action-dots dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="<?php echo $this->lang->line('action'); ?>">
+                                                        <i class="fa fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-right exam-dropdown-menu">
+                                                        <?php if ($this->rbac->hasPrivilege('cbse_exam', 'can_edit')) { ?>
+                                                        <li>
+                                                            <button type="button" class="toggle-publish-btn" data-examid="<?php echo $value['id']; ?>" data-publish="<?php echo $is_pub ? '0' : '1'; ?>">
+                                                                <i class="fa <?php echo $is_pub ? 'fa-eye-slash text-warning' : 'fa-eye text-success'; ?>"></i>
+                                                                <span class="pub-action-text"><?php echo $is_pub ? 'Unpublish Result' : 'Publish Result'; ?></span>
+                                                            </button>
+                                                        </li>
+                                                        <?php } ?>
+                                                        
+                                                        <?php if ($this->rbac->hasPrivilege('cbse_exam_assign_view_student', 'can_view')) { ?>
+                                                        <li>
+                                                            <button type="button" class="assignStudent" data-examid="<?php echo $value['id']; ?>">
+                                                                <i class="fa fa-users text-primary"></i> <?php echo $this->lang->line('assign_view_student'); ?>
+                                                            </button>
+                                                        </li>
+                                                        <?php } ?>
+                                                        
+                                                        <?php if ($this->rbac->hasPrivilege('cbse_exam_subjects', 'can_view')) { ?>
+                                                        <li>
+                                                            <button type="button" id="subjectModalButton" data-exam_id="<?php echo $value['id']; ?>">
+                                                                <i class="fa fa-book text-info"></i> <?php echo $this->lang->line('exam_subjects'); ?>
+                                                            </button>
+                                                        </li>
+                                                        <?php } ?>
+                                                        
+                                                        <?php if ($this->rbac->hasPrivilege('cbse_exam_marks', 'can_view')) { ?>
+                                                        <li>
+                                                            <a href="<?php echo site_url('cbseexam/exam/marks/'.$value['id']) ?>">
+                                                                <i class="fa fa-pencil-square-o text-primary"></i> <?php echo $this->lang->line('exam_marks'); ?>
+                                                            </a>
+                                                        </li>
+                                                        <?php } ?>
+                                                        
+                                                        <?php if ($this->rbac->hasPrivilege('cbse_exam_attendance', 'can_view')) { ?>
+                                                        <li>
+                                                            <button type="button" class="examattendance" data-recordid="<?php echo $value['id']; ?>">
+                                                                <i class="fa fa-calendar-check-o text-success"></i> <?php echo $this->lang->line('exam_attendance'); ?>
+                                                            </button>
+                                                        </li>
+                                                        <?php } ?>
+                                                        
+                                                        <?php if ($this->rbac->hasPrivilege('cbse_exam_teacher_remark', 'can_view')) { ?>
+                                                        <li>
+                                                            <button type="button" class="examTeacherReamark" data-recordid="<?php echo $value['id']; ?>">
+                                                                <i class="fa fa-commenting-o text-warning"></i> <?php echo $this->lang->line('teacher_remark'); ?>
+                                                            </button>
+                                                        </li>
+                                                        <?php } ?>
+                                                        
+                                                        <?php if ($this->rbac->hasPrivilege('cbse_exam_generate_rank', 'can_view')) { ?>
+                                                        <li>
+                                                            <a href="<?php echo site_url('cbseexam/exam/examwiserank/'.$value['id']);?>">
+                                                                <i class="fa fa-trophy text-warning"></i> <?php echo $this->lang->line('generate_rank'); ?>
+                                                            </a>
+                                                        </li>
+                                                        <?php } ?>
+                                                        
+                                                        <?php if ($this->rbac->hasPrivilege('cbse_exam', 'can_edit')) { ?>
+                                                        <li class="divider"></li>
+                                                        <li>
+                                                            <a href="<?php echo site_url('cbseexam/exam/wizard/'.$value['id']); ?>">
+                                                                <i class="fa fa-pencil text-muted"></i> <?php echo $this->lang->line('edit'); ?>
+                                                            </a>
+                                                        </li>
+                                                        <?php } ?>
+                                                        
+                                                        <?php if ($this->rbac->hasPrivilege('cbse_exam', 'can_delete')) { ?>
+                                                        <li class="divider"></li>
+                                                        <li class="danger-action">
+                                                            <button type="button" class="deleteexam" data-id="<?php echo $value['id']; ?>" data-exam="yk" data-toggle="modal" data-target="#confirm-delete">
+                                                                <i class="fa fa-trash-o"></i> <?php echo $this->lang->line('delete'); ?>
+                                                            </button>
+                                                        </li>
+                                                        <?php } ?>
+                                                    </ul>
+                                                </div>
                                             </td>
                                         </tr>
                                    <?php }
@@ -1605,24 +1935,20 @@ $(document).on('change','.check_absent',function(){
                         if ($el.find('.pub-text').length > 0) {
                             // Badge button in column
                             if (isPublished) {
-                                $el.removeClass('btn-default').addClass('btn-success');
+                                $el.removeClass('btn-draft').addClass('btn-published');
                                 $el.html('<i class="fa fa-check-circle"></i> <span class="pub-text">Published</span>');
                                 $el.attr('data-original-title', 'Click to Unpublish Result').tooltip('fixTitle');
                             } else {
-                                $el.removeClass('btn-success').addClass('btn-default');
-                                $el.html('<i class="fa fa-times-circle"></i> <span class="pub-text">Draft</span>');
+                                $el.removeClass('btn-published').addClass('btn-draft');
+                                $el.html('<i class="fa fa-clock-o"></i> <span class="pub-text">Draft</span>');
                                 $el.attr('data-original-title', 'Click to Publish Result').tooltip('fixTitle');
                             }
                         } else {
-                            // Action icon button
+                            // Action dropdown item
                             if (isPublished) {
-                                $el.removeClass('btn-warning').addClass('btn-success');
-                                $el.html('<i class="fa fa-eye"></i>');
-                                $el.attr('data-original-title', 'Unpublish Exam Result').tooltip('fixTitle');
+                                $el.html('<i class="fa fa-eye-slash text-warning"></i> <span class="pub-action-text">Unpublish Result</span>');
                             } else {
-                                $el.removeClass('btn-success').addClass('btn-warning');
-                                $el.html('<i class="fa fa-eye-slash"></i>');
-                                $el.attr('data-original-title', 'Quick Publish Exam Result').tooltip('fixTitle');
+                                $el.html('<i class="fa fa-eye text-success"></i> <span class="pub-action-text">Publish Result</span>');
                             }
                         }
                     });
