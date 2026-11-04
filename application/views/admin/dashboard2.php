@@ -216,7 +216,7 @@
         </div>
         
         <div class="row">
-            <?php if($this->rbac->hasPrivilege('fees_overview_widegts', 'can_view')): ?>
+            <?php if($this->module_lib->hasActive('fees_collection') && $this->rbac->hasPrivilege('fees_overview_widegts', 'can_view') && $this->rbac->hasPrivilege('collect_fees', 'can_view')): ?>
             <div class="col-md-12" style="margin-bottom: 24px;">
                 <div class="d2-card">
                     <div class="d2-title">Financial Overview <span class="d2-badge" style="background:#ecfdf5; color:#10b981; border:1px solid #a7f3d0;">Live</span></div>

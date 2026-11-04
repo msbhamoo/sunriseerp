@@ -47,6 +47,71 @@ if (!empty($side_list)) {
             }
             if ($has_module_active) {
 
+                $allowed_submenus_html = "";
+                $has_accessible_submenus = false;
+                if (!empty($side_list_value->submenus)) {
+                    foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
+                        if (isset($submenu_value->lang_key) && ($submenu_value->lang_key == "department" || $submenu_value->lang_key == "designation")) {
+                            continue;
+                        }
+                        if (isset($submenu_value->url) && (strpos($submenu_value->url, "admin/department") !== false || strpos($submenu_value->url, "admin/designation") !== false)) {
+                            continue;
+                        }
+                        $sidebar_permission = access_permission_sidebar_remove_pipe($submenu_value->access_permissions);
+                        $sidebar_access     = false;
+                        if (!empty($sidebar_permission)) {
+                            foreach ($sidebar_permission as $sidebar_permission_key => $sidebar_permission_value) {
+                                $sidebar_cat_permission = access_permission_remove_comma($sidebar_permission_value);
+                                if ($submenu_value->addon_permission != "") {
+                                    if ($this->rbac->hasPrivilege($sidebar_cat_permission[0], isset($sidebar_cat_permission[1]) ? $sidebar_cat_permission[1] : "") && $this->auth->addonchk($submenu_value->addon_permission, false)) {
+                                        $sidebar_access = true;
+                                        break;
+                                    }
+                                } else {
+                                    if ($this->rbac->hasPrivilege($sidebar_cat_permission[0], isset($sidebar_cat_permission[1]) ? $sidebar_cat_permission[1] : "")) {
+                                        $sidebar_access = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if ($sidebar_access) {
+                            if (!empty($submenu_value->permission_group_id)) {
+                                if (!$this->module_lib->hasActive($submenu_value->short_code)) {
+                                    continue;
+                                }
+                            }
+                            $has_accessible_submenus = true;
+                            $sub_label = !empty($this->lang->line($submenu_value->lang_key)) ? $this->lang->line($submenu_value->lang_key) : $submenu_value->menu;
+                            $allowed_submenus_html .= '<li class="' . activate_submenu($submenu_value->activate_controller, explode(',', (string)$submenu_value->activate_methods)) . '"><a href="' . site_url($submenu_value->url) . '"><i class="icon-circle-small"></i>' . $sub_label . '</a></li>';
+                        }
+                    }
+                    if ($side_list_value->lang_key == "student_information") {
+                        if ($this->rbac->hasPrivilege("student_dashboard", "can_view")) {
+                            $has_accessible_submenus = true;
+                            $allowed_submenus_html .= '<li class="' . set_Submenu('studentreport/custom_report') . '"><a href="' . site_url('studentreport/custom_report') . '"><i class="icon-circle-small"></i>Custom Report</a></li>';
+                        }
+                    }
+                    if ($side_list_value->lang_key == "human_resource") {
+                        if ($this->rbac->hasPrivilege("staff", "can_add")) {
+                            $has_accessible_submenus = true;
+                            $allowed_submenus_html .= '<li class="' . (activate_submenu('staff', array('create')) || set_Submenu('admin/staff/create') || set_Submenu('HR/staff/create')) . '"><a href="' . site_url('admin/staff/create') . '"><i class="icon-circle-small"></i>' . $this->lang->line('add_staff') . '</a></li>';
+                        }
+                    }
+                    if ($side_list_value->lang_key == "fees_collection") {
+                        if ($this->rbac->hasPrivilege("fee_discount_approval", "can_view")) {
+                            $has_accessible_submenus = true;
+                            $allowed_submenus_html .= '<li class="' . set_Submenu('admin/feediscount/approvalQueue') . '"><a href="' . site_url('admin/feediscount/approvalQueue') . '"><i class="icon-circle-small"></i>Discount Approval</a></li>';
+                        }
+                    }
+                } else {
+                    $has_accessible_submenus = true;
+                }
+
+                if (!empty($side_list_value->submenus) && !$has_accessible_submenus) {
+                    continue;
+                }
+
                 $modern_icons = [
                     'front_office' => ['icon' => 'icon-monitor', 'color' => '#3b82f6'], // Blue
                     'student_information' => ['icon' => 'icon-users', 'color' => '#6366f1'], // Indigo
@@ -116,80 +181,7 @@ if (!empty($side_list_value->submenus)) {
                                 <span class="submenu-title"><?php echo !empty($this->lang->line($side_list_value->lang_key)) ? $this->lang->line($side_list_value->lang_key) : $side_list_value->menu; ?></span>
                                 <button type="button" class="close-submenu"><i class="fa fa-times"></i></button>
                             </li>
-                            <?php
-foreach ($side_list_value->submenus as $submenu_key => $submenu_value) {
-
-                        if (isset($submenu_value->lang_key) && ($submenu_value->lang_key == 'department' || $submenu_value->lang_key == 'designation')) {
-                            continue;
-                        }
-                        if (isset($submenu_value->url) && (strpos($submenu_value->url, 'admin/department') !== false || strpos($submenu_value->url, 'admin/designation') !== false)) {
-                            continue;
-                        }
-
-                        $sidebar_permission = access_permission_sidebar_remove_pipe($submenu_value->access_permissions);
-
-                        $sidebar_access     = false;
-
-                        if (!empty($sidebar_permission)) {
-                            foreach ($sidebar_permission as $sidebar_permission_key => $sidebar_permission_value) {
-                                $sidebar_cat_permission = access_permission_remove_comma($sidebar_permission_value);
-
-                                if ($submenu_value->addon_permission != "") {
-                                    if ($this->rbac->hasPrivilege($sidebar_cat_permission[0], isset($sidebar_cat_permission[1]) ? $sidebar_cat_permission[1] : '')
-                                        && $this->auth->addonchk($submenu_value->addon_permission, false)) {
-                                        $sidebar_access = true;
-                                        break;
-                                    }
-                                } else {
-                                    if ($this->rbac->hasPrivilege($sidebar_cat_permission[0], isset($sidebar_cat_permission[1]) ? $sidebar_cat_permission[1] : '')) {
-                                        $sidebar_access = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        if ($sidebar_access) {
-                            if (!empty($submenu_value->permission_group_id)) {
-                                if (!$this->module_lib->hasActive($submenu_value->short_code)) {
-                                    continue;
-                                }
-                            }
-
-                            ?>
-
-                        <li class="<?php echo activate_submenu($submenu_value->activate_controller, explode(',', (string)$submenu_value->activate_methods)); ?>"><a href="<?php echo site_url($submenu_value->url); ?>"><i class="icon-circle-small"></i><?php echo !empty($this->lang->line($submenu_value->lang_key)) ? $this->lang->line($submenu_value->lang_key) : $submenu_value->menu; ?></a></li>
-
-                          <?php
-}
-
-                    }
-
-                    if ($side_list_value->lang_key == 'student_information') {
-                        if ($this->rbac->hasPrivilege('student_dashboard', 'can_view')) {
-                            ?>
-                            <li class="<?php echo set_Submenu('studentreport/custom_report'); ?>"><a href="<?php echo site_url('studentreport/custom_report'); ?>"><i class="icon-circle-small"></i>Custom Report</a></li>
-                            <?php
-                        }
-                    }
-
-                    if ($side_list_value->lang_key == 'human_resource') {
-                        if ($this->rbac->hasPrivilege('staff', 'can_add')) {
-                            ?>
-                            <li class="<?php echo (activate_submenu('staff', array('create')) || set_Submenu('admin/staff/create') || set_Submenu('HR/staff/create')); ?>"><a href="<?php echo site_url('admin/staff/create'); ?>"><i class="icon-circle-small"></i><?php echo $this->lang->line('add_staff'); ?></a></li>
-                            <?php
-                        }
-                    }
-
-                    if ($side_list_value->lang_key == 'fees_collection') {
-                        if ($this->rbac->hasPrivilege('fee_discount_approval', 'can_view')) {
-                            ?>
-                            <li class="<?php echo set_Submenu('admin/feediscount/approvalQueue'); ?>"><a href="<?php echo site_url('admin/feediscount/approvalQueue'); ?>"><i class="icon-circle-small"></i>Discount Approval</a></li>
-                            <?php
-                        }
-                    }
-
-                    ?>
+                            <?php echo $allowed_submenus_html; ?>
                         </ul>
                             <?php
 

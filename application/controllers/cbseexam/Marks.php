@@ -47,6 +47,17 @@ class Marks extends MY_Addon_CBSEController
         echo json_encode(array_values($sections));
     }
 
+    public function get_exam_subjects()
+    {
+        $exam_id = $this->input->post('exam_id');
+        $class_ids = $this->input->post('class_ids');
+
+        $data['examDetail'] = $this->cbseexam_exam_model->getexamdetails($exam_id) ?: ['id' => 0, 'name' => '', 'class_sections' => '', 'cbse_exam_assessment_id' => 0];
+        $data['assessments'] = $this->cbseexam_assessment_model->getWithAssessmentTypeByAssessmentID($data['examDetail']['cbse_exam_assessment_id']);
+        $data['exam_subjects'] = $this->cbseexam_exam_model->getexamSubjectswithAssessment($exam_id, $data['assessments'], $class_ids);
+        echo json_encode($data);
+    }
+
     public function get_exams_multi()
     {
         $class_ids = $this->input->post('class_ids');

@@ -206,7 +206,7 @@ class Exam extends MY_Addon_CBSEController
 
     public function getexamSubjects()
     {
-        if (!$this->rbac->hasPrivilege('cbse_exam_subjects', 'can_view')) {
+        if (!$this->rbac->hasPrivilege('cbse_exam_subjects', 'can_view') && !$this->rbac->hasPrivilege('cbse_exam_marks', 'can_view')) {
             access_denied();
         }
 

@@ -829,7 +829,7 @@
             if (exam_id !== "") {
                 $.ajax({
                     type: "POST",
-                    url: baseurl + "cbseexam/exam/getexamSubjects",
+                    url: baseurl + "cbseexam/marks/get_exam_subjects",
                     data: {'exam_id': exam_id, 'class_ids': class_ids},
                     dataType: "json",
                     success: function (data) {

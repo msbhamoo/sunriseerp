@@ -174,6 +174,7 @@ $shift_sched_map = isset($shift_schedules_map) ? $shift_schedules_map : array();
                 <?php foreach ($meta as $k => $mc) { ?>
                     <th class="ms-tot" title="<?php echo html_escape($mc[2]); ?> days<?php echo $k === 'holiday' ? ' (incl. unmarked Sundays / calendar holidays)' : ''; ?>" style="color:<?php echo $mc[1]; ?>;"><?php echo html_escape($mc[0]); ?></th>
                 <?php } ?>
+                <th class="ms-tot" title="Total of Absent + Leave + Unplanned Leave days" style="color:#b91c1c; background:#fef2f2; min-width:70px;">Absent + Leave</th>
                 <th class="ms-tot" title="Working days with no attendance marked (not a Sunday or calendar holiday, up to today)" style="color:#64748b;">Not marked</th>
                 <th class="ms-tot" title="Days counted as attended: Present / Late / On Duty = 1, Half Day = 0.5" style="color:#0f172a;">Attended</th>
                 <th class="ms-tot" title="Staff compliance points followed (Uniform, ID Card, Lesson Plan, Phone Handover) out of 4 per day x days in the month" style="color:#0f766e; background:#f0fdfa; min-width:80px;">Compliance</th>
@@ -338,6 +339,8 @@ $shift_sched_map = isset($shift_schedules_map) ? $shift_schedules_map : array();
                     <?php foreach ($meta as $k => $mc) { ?>
                         <td class="ms-tot" style="color:<?php echo $mc[1]; ?>; font-weight:700;"><?php echo $status_count[$k]; ?></td>
                     <?php } ?>
+                    <?php $abs_leave_total = (isset($status_count['absent']) ? $status_count['absent'] : 0) + (isset($status_count['leave']) ? $status_count['leave'] : 0) + (isset($status_count['unplanned_leave']) ? $status_count['unplanned_leave'] : 0); ?>
+                    <td class="ms-tot" style="background:#fef2f2; color:#b91c1c; font-weight:700;" title="Absent + Leave + Unplanned Leave"><?php echo $abs_leave_total; ?></td>
                     <td class="ms-tot" style="color:#64748b;"><?php echo $not_marked; ?></td>
                     <td class="ms-tot" style="font-weight:700;"><?php echo rtrim(rtrim(number_format($attended_days_count, 1), '0'), '.'); ?></td>
                     <?php $c_followed = isset($compliance_map[$sid]) ? $compliance_map[$sid] : 0; $c_total = isset($compliance_total) ? $compliance_total : (4 * $days_in_month); $c_pct = $c_total > 0 ? round($c_followed * 100 / $c_total) : 0; ?>

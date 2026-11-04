@@ -21,6 +21,11 @@ class MarksController extends BaseController
         return $this->dispatchLegacy('Marks', 'get_sections_multi', func_get_args());
     }
 
+    public function get_exam_subjects()
+    {
+        return $this->dispatchLegacy('Marks', 'get_exam_subjects', func_get_args());
+    }
+
     public function get_exams_multi()
     {
         return $this->dispatchLegacy('Marks', 'get_exams_multi', func_get_args());
