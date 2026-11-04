@@ -23,7 +23,7 @@ if (!isset($codes['on_duty'])) { $codes['on_duty'] = array('OD', 'On Duty'); }
 $attend_weight = array('present' => 1, 'late' => 1, 'on_duty' => 1, 'half_day' => 0.5, 'half_day_second_shift' => 0.5);
 $num = function ($n) { return rtrim(rtrim(number_format($n, 1), '0'), '.'); };
 $lp_cols = !empty($late_policy_on) ? 1 : 0;
-$tot_cols = 16 + $lp_cols; // count + hours columns in the Totals block
+$tot_cols = 18 + $lp_cols; // count + hours columns in the Totals block
 
 // Hours: worked = out - in on days with both punches. Required = the day's shift hours
 // (half day = half), 0 on a holiday. Short / Extra are summed day by day, so an extra hour
@@ -144,7 +144,7 @@ if (!$excel && !empty($school->image)) {
         <colgroup>
             <col style="width:2.2%"><col style="width:10.5%"><col style="width:5%"><col style="width:5.5%">
             <?php for ($d = 1; $d <= $days_in_month; $d++) { ?><col><?php } ?>
-            <?php for ($i = 0; $i < 11 + $lp_cols; $i++) { ?><col style="width:2.3%"><?php } ?>
+            <?php for ($i = 0; $i < 13 + $lp_cols; $i++) { ?><col style="width:2.3%"><?php } ?>
             <?php for ($i = 0; $i < 5; $i++) { ?><col style="width:2.9%"><?php } ?>
         </colgroup>
         <thead>
@@ -157,7 +157,7 @@ if (!$excel && !empty($school->image)) {
                     $ds = sprintf('%04d-%02d-%02d', $year, $month, $d); ?>
                     <th class="<?php echo isset($holiday_dates[$ds]) ? 'off' : ''; ?>" <?php echo $excel && isset($holiday_dates[$ds]) ? 'style="background:#ede9fe"' : ''; ?>><?php echo $d; ?></th>
                 <?php } ?>
-                <th colspan="<?php echo 11 + $lp_cols; ?>" class="tot">Days</th>
+                <th colspan="<?php echo 13 + $lp_cols; ?>" class="tot">Days</th>
                 <th colspan="5" class="tot">Hours (h:mm)</th>
             </tr>
             <tr>
@@ -170,6 +170,8 @@ if (!$excel && !empty($school->image)) {
                 <th class="tot wrap" title="Half days: first half (F) + second half (SH)">Half Day</th>
                 <th class="tot wrap" title="Days marked Absent (A)">Absent</th>
                 <th class="tot wrap" title="Days on Leave (LV)">Leave</th>
+                <th class="tot wrap" title="Days marked Unplanned Leave (UL)">Unpl. Leave</th>
+                <th class="tot wrap" title="Absent + Leave + Unplanned Leave">Abs + Leave</th>
                 <th class="tot wrap" title="Days On Duty (OD)">On Duty</th>
                 <th class="tot wrap" title="Holidays / weekly offs not worked">Holiday</th>
                 <th class="tot wrap" title="Working days attended: Present / Late / On Duty = 1, Half Day = 0.5 (holidays not included)">Days Attnd.</th>
@@ -187,7 +189,7 @@ if (!$excel && !empty($school->image)) {
         <tbody>
         <?php $sn = 0; foreach ($staff as $s) {
             $sid = $s['staff_id'];
-            $cnt = array('present' => 0, 'late' => 0, 'half' => 0, 'absent' => 0, 'leave' => 0, 'on_duty' => 0, 'holiday' => 0);
+            $cnt = array('present' => 0, 'late' => 0, 'half' => 0, 'absent' => 0, 'leave' => 0, 'unplanned_leave' => 0, 'on_duty' => 0, 'holiday' => 0);
             $attended = 0; $hol_work = 0; $not_marked = 0;
             $worked_s = 0; $required_s = 0; $short_s = 0; $extra_s = 0; ?>
             <tr>
@@ -236,6 +238,8 @@ if (!$excel && !empty($school->image)) {
                 <td class="tot"><?php echo $cnt['half']; ?></td>
                 <td class="tot"><?php echo $cnt['absent']; ?></td>
                 <td class="tot"><?php echo $cnt['leave']; ?></td>
+                <td class="tot"><?php echo $cnt["unplanned_leave"]; ?></td>
+                <td class="tot"><b><?php echo $cnt["absent"] + $cnt["leave"] + $cnt["unplanned_leave"]; ?></b></td>
                 <td class="tot"><?php echo $cnt['on_duty']; ?></td>
                 <td class="tot"><?php echo $cnt['holiday']; ?></td>
                 <td class="tot"><?php echo $num($attended); ?></td>

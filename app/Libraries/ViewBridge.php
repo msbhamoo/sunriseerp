@@ -536,16 +536,23 @@ class ModuleLibBridge
 
 class RbacBridge
 {
+    protected array $cache = [];
+
     public function hasPrivilege(string $category, string $permission): bool
     {
         $session = session();
         if (!$session->has('admin')) {
-            return true; // Fallback during local dev/testing
+            return false;
         }
 
         $admin = $session->get('admin');
+        if (empty($admin['roles']) || !is_array($admin['roles'])) {
+            return false;
+        }
+
         // Super Admin has all privileges
-        if (isset($admin['roles']['Super Admin']) || (isset($admin['role_id']) && (int)$admin['role_id'] === 7)) {
+        $role_name = key($admin['roles']);
+        if ($role_name === 'Super Admin' || (isset($admin['role_id']) && (int)$admin['role_id'] === 7)) {
             return true;
         }
 
@@ -554,7 +561,27 @@ class RbacBridge
             return (bool)$admin['privileges'][$category][$permission];
         }
 
-        return true;
+        // Query database table roles_permissions
+        $role_id = (int) $admin['roles'][$role_name];
+        $category = trim($category);
+        $key = $role_id . '|' . $category;
+
+        if (!array_key_exists($key, $this->cache)) {
+            $this->cache[$key] = db_connect()->table('roles_permissions')
+                ->select('roles_permissions.*')
+                ->join('permission_category', 'permission_category.id = roles_permissions.perm_cat_id')
+                ->where('roles_permissions.role_id', $role_id)
+                ->where('permission_category.short_code', $category)
+                ->get()
+                ->getRowArray();
+        }
+
+        $role_perm = $this->cache[$key];
+        if (!empty($role_perm) && array_key_exists($permission, $role_perm)) {
+            return (bool)$role_perm[$permission];
+        }
+
+        return false;
     }
 }
 
