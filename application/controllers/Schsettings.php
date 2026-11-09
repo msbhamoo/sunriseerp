@@ -1398,12 +1398,50 @@ class Schsettings extends Admin_Controller
             };
             $effective_from = $to_ymd($this->input->post('effective_from'));
             $effective_to   = $to_ymd($this->input->post('effective_to'));
+
+            // Multiple dates submitted for temporary shift
+            $submitted_dates = $this->input->post('shift_dates');
+            $parsed_dates = array();
+            if (is_array($submitted_dates)) {
+                foreach ($submitted_dates as $sd) {
+                    $sd_clean = trim((string) $sd);
+                    if ($sd_clean !== '') {
+                        $parsed_d = $to_ymd($sd_clean);
+                        if ($parsed_d) {
+                            $parsed_dates[] = $parsed_d;
+                        }
+                    }
+                }
+            }
+
+            // Also support a new date or range added via quick add fields
+            $add_from = $to_ymd($this->input->post('add_date_from'));
+            $add_to   = $to_ymd($this->input->post('add_date_to'));
+            if ($add_from) {
+                if (!$add_to) {
+                    $add_to = $add_from;
+                }
+                if ($add_to < $add_from) {
+                    $tmp = $add_from; $add_from = $add_to; $add_to = $tmp;
+                }
+                $cur = $add_from;
+                while ($cur <= $add_to) {
+                    $parsed_dates[] = $cur;
+                    $cur = date('Y-m-d', strtotime($cur . ' +1 day'));
+                }
+            }
+            $parsed_dates = array_values(array_unique(array_filter($parsed_dates)));
+            sort($parsed_dates);
+
             if ($shift_type === 'temporary') {
-                if (empty($effective_from)) {
-                    echo json_encode(array('status' => 0, 'error' => array('fields' => 'A temporary shift needs a Start date.'), 'message' => ''));
+                if (empty($parsed_dates)) {
+                    echo json_encode(array('status' => 0, 'error' => array('fields' => 'A temporary shift needs at least one date or date range.'), 'message' => ''));
                     return;
                 }
-                if (empty($effective_to)) {
+                if (!empty($parsed_dates)) {
+                    $effective_from = reset($parsed_dates);
+                    $effective_to   = end($parsed_dates);
+                } elseif (empty($effective_to)) {
                     $effective_to = $effective_from;
                 }
             }
@@ -1440,6 +1478,7 @@ class Schsettings extends Admin_Controller
                 'shift_type'     => $shift_type,
                 'effective_from' => $effective_from,
                 'effective_to'   => $effective_to,
+                'shift_dates'    => $parsed_dates,
                 'activate'       => $activate,
             ), $insert_array);
             if ($res['status']) {

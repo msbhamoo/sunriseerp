@@ -245,6 +245,18 @@ if (!function_exists('fc_mode_meta')) {
                                                     <?php } else { ?>
                                                         <span class="fc-pill fc-tone-green"><i class="fa fa-check-circle"></i> Received</span>
                                                     <?php } ?>
+                                                    <?php if (!empty($acc_sync_enabled) && isset($collect['acc_sync'])) {
+                                                        $as = $collect['acc_sync'];
+                                                        if ($as['state'] === 'synced' && $is_reversed) { ?>
+                                                            <div><span style="display:inline-block; margin-top:3px; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px; background:#fee2e2; color:#b91c1c;" title="This receipt is reverted but voucher <?php echo html_escape($as['voucher_no']); ?> is still posted in Accounts"><i class="fa fa-exclamation-triangle"></i> Voucher not reversed</span></div>
+                                                        <?php } elseif ($as['state'] === 'synced') { ?>
+                                                            <div><span style="display:inline-block; margin-top:3px; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px; background:#dcfce7; color:#15803d;" title="Posted in Accounts as <?php echo html_escape($as['voucher_no']); ?>"><i class="fa fa-link"></i> Synced</span></div>
+                                                        <?php } elseif ($as['state'] === 'pending' && !$is_reversed) { ?>
+                                                            <div><span style="display:inline-block; margin-top:3px; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px; background:#fef3c7; color:#b45309;" title="No posted voucher found in Accounts for this invoice"><i class="fa fa-chain-broken"></i> Not synced</span></div>
+                                                        <?php } elseif ($as['state'] === 'reversed') { ?>
+                                                            <div><span style="display:inline-block; margin-top:3px; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px; background:#f1f5f9; color:#475569;" title="Voucher <?php echo html_escape($as['voucher_no']); ?> was reversed in Accounts"><i class="fa fa-undo"></i> Reversed</span></div>
+                                                        <?php }
+                                                    } ?>
                                                 </td>
                                                 <td class="text-right white-space-nowrap">
                                                     <?php if($collect['custom_receipt_status'] == 'Collected' || empty($collect['custom_receipt_status']) || $collect['custom_receipt_status'] != 'Reversed') { ?>
