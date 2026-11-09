@@ -478,4 +478,205 @@ class Reports extends MY_Addon_AccountsController
         $this->session->set_flashdata('msg', $msg);
         redirect('accounts/reports/reconciliation?date_from=' . urlencode((string)$this->input->post('date_from')) . '&date_to=' . urlencode((string)$this->input->post('date_to')));
     }
+
+    /**
+     * Day-Close / Freeze Daily Entries and Cash Denomination Count
+     */
+    public function dayclose()
+    {
+        if (!$this->rbac->hasPrivilege('acc_daybook_report', 'can_view')) {
+            access_denied();
+        }
+
+        $this->load->model('accdayclose_model');
+        $this->session->set_userdata('top_menu', 'Accounts');
+        $this->session->set_userdata('sub_menu', 'accounts/reports/dayclose');
+
+        $selected_date = $this->input->get('date') ? $this->input->get('date') : date('Y-m-d');
+        $data['title'] = 'Day-Close & Cash Denomination';
+        $data['selected_date'] = $selected_date;
+
+        // Fetch balances for this date
+        $cashBook = $this->accreport_model->getCashBook($selected_date, $selected_date);
+        $bankBook = $this->accreport_model->getBankBook($selected_date, $selected_date);
+
+        $data['cash_closing'] = $cashBook['closing_balance'] ?? 0.00;
+        $data['bank_closing'] = $bankBook['closing_balance'] ?? 0.00;
+        $data['day_close_record'] = $this->accdayclose_model->getDayClose($selected_date);
+        $data['denomination'] = $this->accdayclose_model->getDenomination($selected_date);
+        $data['history'] = $this->accdayclose_model->getDayClose();
+
+        if ($this->input->server('REQUEST_METHOD') === 'POST') {
+            $action = $this->input->post('action');
+            $staff_id = $this->customlib->getStaffID();
+
+            if ($action === 'lock_day') {
+                $close_data = [
+                    'close_date' => $selected_date,
+                    'cash_balance' => (float)$data['cash_closing'],
+                    'bank_balance' => (float)$data['bank_closing'],
+                    'status' => 'LOCKED',
+                    'physical_cash' => (float)$this->input->post('total_physical'),
+                    'discrepancy_amount' => (float)$this->input->post('total_physical') - (float)$data['cash_closing'],
+                    'discrepancy_reason' => $this->input->post('discrepancy_reason'),
+                    'closed_by' => $staff_id,
+                    'closed_at' => date('Y-m-d H:i:s')
+                ];
+
+                $denom_data = [
+                    'n_2000' => (int)$this->input->post('n_2000'),
+                    'n_500' => (int)$this->input->post('n_500'),
+                    'n_200' => (int)$this->input->post('n_200'),
+                    'n_100' => (int)$this->input->post('n_100'),
+                    'n_50' => (int)$this->input->post('n_50'),
+                    'n_20' => (int)$this->input->post('n_20'),
+                    'n_10' => (int)$this->input->post('n_10'),
+                    'coins' => (float)$this->input->post('coins'),
+                    'total_physical' => (float)$this->input->post('total_physical'),
+                    'remarks' => $this->input->post('discrepancy_reason'),
+                    'created_by' => $staff_id
+                ];
+
+                $this->accdayclose_model->closeDay($close_data, $denom_data);
+                $this->session->set_flashdata('msg', '<div class="alert alert-success">Day successfully closed & frozen for ' . html_escape($selected_date) . '</div>');
+                redirect('accounts/reports/dayclose?date=' . urlencode($selected_date));
+            } elseif ($action === 'reopen_day') {
+                $reason = $this->input->post('reopen_reason');
+                $this->accdayclose_model->reopenDay($selected_date, $staff_id, $reason);
+                $this->session->set_flashdata('msg', '<div class="alert alert-warning">Day reopened for edits with audit log.</div>');
+                redirect('accounts/reports/dayclose?date=' . urlencode($selected_date));
+            }
+        }
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('accounts/reports/dayclose', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    /**
+     * Collector-wise Daily Fee Collection (Item #6)
+     */
+    public function collector_summary()
+    {
+        if (!$this->rbac->hasPrivilege('acc_cashbook_report', 'can_view')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'Accounts');
+        $this->session->set_userdata('sub_menu', 'accounts/reports/collector_summary');
+
+        $date_from = $this->input->get('date_from') ?: date('Y-m-d');
+        $date_to = $this->input->get('date_to') ?: date('Y-m-d');
+
+        $data['title'] = 'Collection by Collector Report';
+        $data['date_from'] = $date_from;
+        $data['date_to'] = $date_to;
+
+        $sql = "SELECT 
+                    sf.received_by as staff_id,
+                    CONCAT(st.name, ' ', IFNULL(st.surname, '')) as collector_name,
+                    st.employee_id,
+                    SUM(CASE WHEN LOWER(sf.payment_mode) = 'cash' THEN sf.amount ELSE 0 END) as cash_amount,
+                    SUM(CASE WHEN LOWER(sf.payment_mode) IN ('cheque', 'dd') THEN sf.amount ELSE 0 END) as cheque_amount,
+                    SUM(CASE WHEN LOWER(sf.payment_mode) IN ('upi', 'online', 'bank_transfer', 'card') THEN sf.amount ELSE 0 END) as digital_amount,
+                    SUM(sf.amount) as total_amount,
+                    COUNT(sf.id) as receipt_count
+                FROM student_fees_deposite sf
+                LEFT JOIN staff st ON st.id = sf.received_by
+                WHERE sf.date BETWEEN ? AND ?
+                GROUP BY sf.received_by
+                ORDER BY total_amount DESC";
+
+        $data['collectors'] = $this->db->query($sql, [$date_from, $date_to])->result_array();
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('accounts/reports/collector_summary', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    /**
+     * Bank Statement Import and Auto-Matching (Item #4 & #5)
+     */
+    public function bank_reconcile()
+    {
+        if (!$this->rbac->hasPrivilege('acc_bankbook_report', 'can_view')) {
+            access_denied();
+        }
+
+        $this->load->model('accbankstatement_model');
+        $this->session->set_userdata('top_menu', 'Accounts');
+        $this->session->set_userdata('sub_menu', 'accounts/reports/bank_reconcile');
+
+        $data['title'] = 'Bank Statement Import & Auto-Match';
+        $data['bank_ledgers'] = $this->accledger_model->getLedgersByGroupIds([2]); // Bank group
+
+        $selected_bank = $this->input->get('bank_ledger_id') ?: (!empty($data['bank_ledgers']) ? $data['bank_ledgers'][0]['id'] : 0);
+        $data['selected_bank'] = (int)$selected_bank;
+
+        if ($this->input->server('REQUEST_METHOD') === 'POST') {
+            $action = $this->input->post('action');
+            $staff_id = $this->customlib->getStaffID();
+
+            if ($action === 'import_csv') {
+                if (!empty($_FILES['statement_file']['name'])) {
+                    $file = $_FILES['statement_file']['tmp_name'];
+                    $handle = fopen($file, 'r');
+                    $batch_id = 'BATCH-' . time();
+                    $rows = [];
+
+                    $header = fgetcsv($handle); // read header line
+                    while (($line = fgetcsv($handle, 2000, ',')) !== FALSE) {
+                        if (empty($line[0])) continue;
+                        $tDate = date('Y-m-d', strtotime(str_replace('/', '-', trim($line[0]))));
+                        $desc = isset($line[1]) ? trim($line[1]) : '';
+                        $refNo = isset($line[2]) ? trim($line[2]) : null;
+                        $debit = isset($line[3]) ? (float)str_replace(',', '', trim($line[3])) : 0.00;
+                        $credit = isset($line[4]) ? (float)str_replace(',', '', trim($line[4])) : 0.00;
+                        $bal = isset($line[5]) ? (float)str_replace(',', '', trim($line[5])) : 0.00;
+
+                        if ($tDate && ($debit > 0 || $credit > 0)) {
+                            $rows[] = [
+                                'bank_ledger_id' => $selected_bank,
+                                'transaction_date' => $tDate,
+                                'description' => $desc,
+                                'reference_no' => $refNo,
+                                'cheque_no' => $refNo,
+                                'debit' => $debit,
+                                'credit' => $credit,
+                                'closing_balance' => $bal,
+                                'match_status' => 'UNMATCHED',
+                                'imported_batch' => $batch_id,
+                                'imported_by' => $staff_id
+                            ];
+                        }
+                    }
+                    fclose($handle);
+
+                    if (!empty($rows)) {
+                        $this->accbankstatement_model->insertBatch($rows);
+                        $matched = $this->accbankstatement_model->autoMatch($selected_bank);
+                        $this->session->set_flashdata('msg', '<div class="alert alert-success">Imported ' . count($rows) . ' bank statement lines. Automatically matched ' . $matched . ' entries!</div>');
+                    } else {
+                        $this->session->set_flashdata('msg', '<div class="alert alert-warning">No valid transaction rows found in the CSV.</div>');
+                    }
+                }
+                redirect('accounts/reports/bank_reconcile?bank_ledger_id=' . $selected_bank);
+            } elseif ($action === 'automatch_now') {
+                $matched = $this->accbankstatement_model->autoMatch($selected_bank);
+                $this->session->set_flashdata('msg', '<div class="alert alert-info">Auto-match complete: ' . $matched . ' additional entry(ies) matched.</div>');
+                redirect('accounts/reports/bank_reconcile?bank_ledger_id=' . $selected_bank);
+            } elseif ($action === 'unmatch') {
+                $st_id = (int)$this->input->post('statement_id');
+                $this->accbankstatement_model->unmatch($st_id);
+                $this->session->set_flashdata('msg', '<div class="alert alert-warning">Line unmatched.</div>');
+                redirect('accounts/reports/bank_reconcile?bank_ledger_id=' . $selected_bank);
+            }
+        }
+
+        $data['statements'] = $this->accbankstatement_model->getStatements($selected_bank);
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('accounts/reports/bank_reconcile', $data);
+        $this->load->view('layout/footer', $data);
+    }
 }

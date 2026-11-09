@@ -48,7 +48,7 @@
                         <i class="fa fa-check-circle"></i> Books match fee collection and vouchers for this period.
                     <?php } ?>
                     </span>
-                    <a class="btn <?php echo !empty($recon_issues) ? 'btn-danger' : 'btn-success'; ?> btn-sm" href="<?php echo site_url('accounts/reports/reconciliation'); ?>?date_from=<?php echo urlencode(isset($date_from) ? $date_from : ''); ?>&date_to=<?php echo urlencode(isset($date_to) ? $date_to : ''); ?>"><i class="fa fa-balance-scale"></i> <?php echo !empty($recon_issues) ? 'Review &amp; fix' : 'View reconciliation'; ?></a>
+                    <a class="btn <?php echo !empty($recon_issues) ? 'btn-danger' : 'btn-success'; ?> btn-sm" href="<?php echo site_url('accounts/reports/reconciliation'); ?>?date_from=<?php echo urlencode(isset($date_from) ? $date_from : ''); ?>&date_to=<?php echo urlencode(isset($date_to) ? $date_to : ''); ?>"><i class="fa fa-balance-scale"></i> <?php echo !empty($recon_issues) ? 'Review &amp; fix' : 'View reconciliation'; ?></a> <a class="btn btn-default btn-sm" href="<?php echo site_url('accounts/reports/dayclose'); ?>"><i class="fa fa-lock"></i> Day-Close</a>
                 </div>
             </div>
             <?php if (isset($result)) { ?>

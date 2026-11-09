@@ -890,6 +890,57 @@ $(document).ready(function() {
             }
         });
     }, 500);
+
+    // Real-time Advisory Warning on Entry (Item #12)
+    var warningDebounceTimer = null;
+    function checkVoucherWarnings() {
+        clearTimeout(warningDebounceTimer);
+        warningDebounceTimer = setTimeout(function() {
+            var voucherDate = $('input[name="voucher_date"]').val();
+            var crLedgerId = $('select[name="cr_ledger_id"]').val();
+            var firstDrLedger = $('select[name="ledger_id[]"]').first().val();
+            var firstAmount = $('input[name="amount[]"]').first().val();
+
+            if (!voucherDate || (!crLedgerId && !firstAmount)) {
+                $('#voucher_warning_box').hide();
+                return;
+            }
+
+            $.ajax({
+                url: base_url + 'accounts/paymentvoucher/check_warnings',
+                type: 'POST',
+                data: {
+                    voucher_date: voucherDate,
+                    cr_ledger_id: crLedgerId,
+                    dr_ledger_id: firstDrLedger,
+                    amount: firstAmount,
+                    '<?php echo $this->security->get_csrf_token_name(); ?>': '<?php echo $this->security->get_csrf_hash(); ?>'
+                },
+                dataType: 'json',
+                success: function(res) {
+                    if (res && res.has_warnings && res.warnings.length > 0) {
+                        var html = '<div class="alert alert-warning" style="margin-bottom:15px; border-left: 4px solid #f39c12;"><i class="fa fa-exclamation-triangle"></i> <strong>Advisory:</strong><ul style="margin-bottom:0; padding-left:20px;">';
+                        $.each(res.warnings, function(i, w) {
+                            html += '<li>' + w + '</li>';
+                        });
+                        html += '</ul></div>';
+                        
+                        if ($('#voucher_warning_box').length === 0) {
+                            $('#payment_form').prepend('<div id="voucher_warning_box"></div>');
+                        }
+                        $('#voucher_warning_box').html(html).slideDown(200);
+                    } else {
+                        $('#voucher_warning_box').slideUp(200);
+                    }
+                }
+            });
+        }, 400);
+    }
+
+    $(document).on('change input', 'input[name="voucher_date"], select[name="cr_ledger_id"], select[name="ledger_id[]"], input[name="amount[]"]', function() {
+        checkVoucherWarnings();
+    });
+
 });
 </script>
 <style>
