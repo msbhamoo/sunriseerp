@@ -779,6 +779,62 @@
                                                 <a href="#" data-toggle="modal" data-target="#sessionModal"><i class="icon-pencil" style="font-size: 18px; font-weight: bold; position: relative; top: 2px;" aria-hidden="true"></i></a>
                                             </li>
                                     <?php } ?>
+
+                                    <?php if ($this->rbac->hasPrivilege('acc_daybook_report', 'can_view') || $this->rbac->hasPrivilege('acc_ledger_master', 'can_view')) { ?>
+                                        <!-- Accounts Daily Routine & Audit Menu Dropdown -->
+                                        <li class="dropdown hidden-xs" data-placement="bottom" data-toggle="tooltip" title="Accounts Daily Routine & Controls">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false" style="position:relative;">
+                                                <i class="fa fa-book" style="font-size: 18px; font-weight: bold; position: relative; top: 2px; color: #2563eb;" aria-hidden="true"></i>
+                                            </a>
+                                            <ul class="dropdown-menu menuboxshadow" style="width: 270px; padding: 6px 0;">
+                                                <li class="dropdown-header" style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #64748b; padding: 6px 16px; border-bottom: 1px solid #f1f5f9;">
+                                                    <i class="fa fa-bolt text-yellow"></i> Accounts Daily Routine
+                                                </li>
+                                                <li>
+                                                    <a href="<?php echo site_url('accounts/reports/dayclose'); ?>" style="padding: 9px 16px; display: flex; align-items: center; gap: 10px; color: #334155;">
+                                                        <i class="fa fa-lock text-primary" style="width: 18px; font-size: 14px;"></i>
+                                                        <div>
+                                                            <div style="font-weight: 600; line-height: 1.2;">Day-Close & Cash Count</div>
+                                                            <small class="text-muted" style="font-size: 11px;">Freeze entries & tally denomination</small>
+                                                        </div>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="<?php echo site_url('accounts/reports/collector_summary'); ?>" style="padding: 9px 16px; display: flex; align-items: center; gap: 10px; color: #334155;">
+                                                        <i class="fa fa-users text-green" style="width: 18px; font-size: 14px;"></i>
+                                                        <div>
+                                                            <div style="font-weight: 600; line-height: 1.2;">Cashier Handover Summary</div>
+                                                            <small class="text-muted" style="font-size: 11px;">Staff-wise Cash/UPI collection</small>
+                                                        </div>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="<?php echo site_url('accounts/reports/bank_reconcile'); ?>" style="padding: 9px 16px; display: flex; align-items: center; gap: 10px; color: #334155;">
+                                                        <i class="fa fa-university text-aqua" style="width: 18px; font-size: 14px;"></i>
+                                                        <div>
+                                                            <div style="font-weight: 600; line-height: 1.2;">Bank Statement Matching</div>
+                                                            <small class="text-muted" style="font-size: 11px;">Upload CSV & auto-match vouchers</small>
+                                                        </div>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="<?php echo site_url('accounts/reports/reconciliation'); ?>" style="padding: 9px 16px; display: flex; align-items: center; gap: 10px; color: #334155;">
+                                                        <i class="fa fa-balance-scale text-maroon" style="width: 18px; font-size: 14px;"></i>
+                                                        <div>
+                                                            <div style="font-weight: 600; line-height: 1.2;">Full Reconciliation</div>
+                                                            <small class="text-muted" style="font-size: 11px;">Fee vs voucher mismatch audit</small>
+                                                        </div>
+                                                    </a>
+                                                </li>
+                                                <li class="divider" style="margin: 4px 0;"></li>
+                                                <li>
+                                                    <a href="<?php echo site_url('accounts/dashboard'); ?>" style="padding: 7px 16px; font-size: 12px; color: #2563eb; text-align: center; font-weight: 600;">
+                                                        Open Accounts Dashboard &rarr;
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    <?php } ?>
  
  
  <?php

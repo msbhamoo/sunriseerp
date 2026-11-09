@@ -408,4 +408,69 @@ class Paymentvoucher extends MY_Addon_AccountsController
         }
         redirect('accounts/paymentvoucher');
     }
+
+    /**
+     * Ajax pre-validation endpoint for Item #12 (Warn on Entry)
+     * Checks if:
+     * 1. Date is already locked (day-close)
+     * 2. Payment from Cash ledger exceeds current Cash-in-Hand balance
+     * 3. A similar voucher (same ledger, same amount) already exists today
+     */
+    public function check_warnings()
+    {
+        $this->output->set_content_type('application/json');
+        
+        $voucher_date = $this->input->post('voucher_date');
+        $cr_ledger_id = (int)$this->input->post('cr_ledger_id');
+        $amount = (float)$this->input->post('amount');
+        $dr_ledger_id = (int)$this->input->post('dr_ledger_id');
+
+        $warnings = [];
+
+        if (!empty($voucher_date)) {
+            $parsed_date = date('Y-m-d', $this->customlib->datetostrtotime($voucher_date));
+            
+            // 1. Check if date is locked
+            $this->load->model('accdayclose_model');
+            if ($this->accdayclose_model->isDateLocked($parsed_date)) {
+                $warnings[] = "Notice: The date " . date('d M Y', strtotime($parsed_date)) . " has already been day-closed/locked. Adding/modifying vouchers on this date requires reopening.";
+            }
+
+            // 2. Check duplicate voucher on same day
+            if ($amount > 0 && $dr_ledger_id > 0) {
+                $duplicate = $this->db->select('v.voucher_no, v.id')
+                    ->from('acc_vouchers v')
+                    ->join('acc_voucher_items vi', 'vi.voucher_id = v.id')
+                    ->where('v.voucher_date', $parsed_date)
+                    ->where('v.voucher_type', 'payment')
+                    ->where('v.status !=', 'reversed')
+                    ->where('vi.ledger_id', $dr_ledger_id)
+                    ->where('vi.debit', $amount)
+                    ->limit(1)
+                    ->get()
+                    ->row_array();
+
+                if ($duplicate) {
+                    $warnings[] = "Possible duplicate: Voucher #" . $duplicate['voucher_no'] . " with the same amount (₹" . number_format($amount, 2) . ") was already recorded today.";
+                }
+            }
+        }
+
+        // 3. Cash negative warning
+        if ($cr_ledger_id > 0 && $amount > 0) {
+            $ledger = $this->accledger_model->getLedger($cr_ledger_id);
+            if ($ledger && (int)$ledger['group_id'] === 1) { // Group 1 is Cash
+                $current_balance = (float)$ledger['current_balance'];
+                if ($amount > $current_balance) {
+                    $warnings[] = "Low Cash Warning: Cash in hand is ₹" . number_format($current_balance, 2) . ". This payment of ₹" . number_format($amount, 2) . " will turn the cash balance negative.";
+                }
+            }
+        }
+
+        $this->output->set_output(json_encode([
+            'status' => 'success',
+            'warnings' => $warnings,
+            'has_warnings' => !empty($warnings)
+        ]));
+    }
 }
