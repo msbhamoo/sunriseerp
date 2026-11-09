@@ -50,6 +50,18 @@
                 </div>
             </div>
             
+            <div class="col-md-12">
+                <div class="alert <?php echo !empty($recon_issues) ? 'alert-danger' : 'alert-success'; ?>" style="margin-bottom:15px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                    <span>
+                    <?php if (!empty($recon_issues)) { ?>
+                        <i class="fa fa-exclamation-triangle"></i> <strong><?php echo (int)$recon_issues; ?> mismatch(es)</strong> between fee collection, vouchers and the books for this period.
+                    <?php } else { ?>
+                        <i class="fa fa-check-circle"></i> Books match fee collection and vouchers for this period.
+                    <?php } ?>
+                    </span>
+                    <a class="btn <?php echo !empty($recon_issues) ? 'btn-danger' : 'btn-success'; ?> btn-sm" href="<?php echo site_url('accounts/reports/reconciliation'); ?>?date_from=<?php echo urlencode(isset($date_from) ? $date_from : ''); ?>&date_to=<?php echo urlencode(isset($date_to) ? $date_to : ''); ?>"><i class="fa fa-balance-scale"></i> <?php echo !empty($recon_issues) ? 'Review &amp; fix' : 'View reconciliation'; ?></a>
+                </div>
+            </div>
             <?php if (isset($result)) { ?>
             <div class="col-md-12">
                 <div class="box box-info">

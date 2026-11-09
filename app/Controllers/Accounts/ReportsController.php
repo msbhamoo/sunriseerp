@@ -67,6 +67,16 @@ class ReportsController extends BaseController
     }
 
 
+    public function reconciliation()
+    {
+        return $this->dispatchLegacy('Reports', 'reconciliation', func_get_args());
+    }
+
+    public function reconcile_fix()
+    {
+        return $this->dispatchLegacy('Reports', 'reconcile_fix', func_get_args());
+    }
+
     public function _remap($method, ...$params)
     {
         if (method_exists($this, $method)) {

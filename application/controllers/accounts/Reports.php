@@ -252,6 +252,14 @@ class Reports extends MY_Addon_AccountsController
             }
         }
         
+        // Reconciliation warning banner (count only; details on the Reconciliation page)
+        try {
+            $data['recon_issues'] = $this->accreport_model->getReconciliationIssueCount($db_date_from, $db_date_to);
+        } catch (\Throwable $e) {
+            log_message('error', 'Reconciliation banner failed: ' . $e->getMessage());
+            $data['recon_issues'] = 0;
+        }
+
         // Get Opening and Closing Balances for Cash and Bank
         if ($report_type == 'daybook' || $report_type == 'cashbook') {
             $prev_date = date('Y-m-d', strtotime('-1 day', strtotime($db_date_from)));
@@ -388,5 +396,86 @@ class Reports extends MY_Addon_AccountsController
         $this->load->view('layout/header', $data);
         $this->load->view('accounts/reports/false_reversals', $data);
         $this->load->view('layout/footer', $data);
+    }
+
+    /**
+     * Reconciliation: cross-checks fee collection, vouchers and cash/bank/day books.
+     * Read-only. Fixes are explicit, per-row POST actions (see reconcile_fix).
+     */
+    public function reconciliation()
+    {
+        if (!$this->rbac->hasPrivilege('acc_cashbook_report', 'can_view')) {
+            access_denied();
+        }
+
+        $this->session->set_userdata('top_menu', 'Accounts');
+        $this->session->set_userdata('sub_menu', 'accounts/reports/reconciliation');
+
+        $date_from = $this->input->post('date_from') ?: $this->input->get('date_from');
+        $date_to = $this->input->post('date_to') ?: $this->input->get('date_to');
+        $fmt = $this->customlib->getSchoolDateFormat();
+        if (empty($date_from)) {
+            $date_from = date($fmt, strtotime('first day of this month'));
+        }
+        if (empty($date_to)) {
+            $date_to = date($fmt);
+        }
+
+        $data['title'] = 'Accounts Reconciliation';
+        $data['date_from'] = $date_from;
+        $data['date_to'] = $date_to;
+        $db_from = date('Y-m-d', $this->customlib->datetostrtotime($date_from));
+        $db_to = date('Y-m-d', $this->customlib->datetostrtotime($date_to));
+        $data['recon'] = $this->accreport_model->getReconciliation($db_from, $db_to);
+        $data['can_fix'] = $this->rbac->hasPrivilege('acc_settings', 'can_edit');
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('accounts/reports/reconciliation', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    /**
+     * Apply ONE explicit fix from the reconciliation page (re-sync a missing voucher / retry queue).
+     * Never reverses or deletes anything.
+     */
+    public function reconcile_fix()
+    {
+        if (!$this->rbac->hasPrivilege('acc_settings', 'can_edit') || $this->input->method() !== 'post') {
+            access_denied();
+        }
+        $this->db->db_debug = FALSE;
+        $this->load->library('accounts_integration');
+
+        $fix = $this->input->post('fix');
+        $id = $this->input->post('fix_id');
+        $ok = false;
+        try {
+            switch ($fix) {
+                case 'sync_fee':
+                    $ok = $this->accounts_integration->sync_fee((int)$id);
+                    break;
+                case 'sync_expense':
+                    $ok = $this->accounts_integration->sync_expense((int)$id);
+                    break;
+                case 'sync_income':
+                    $ok = $this->accounts_integration->sync_income((int)$id);
+                    break;
+                case 'sync_payroll':
+                    $ok = $this->accounts_integration->sync_payroll((int)$id);
+                    break;
+                case 'retry_queue':
+                    $this->accounts_integration->retry_sync_queue(50);
+                    $ok = true;
+                    break;
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'reconcile_fix failed: ' . $e->getMessage());
+        }
+        $this->db->db_debug = (ENVIRONMENT !== 'production');
+
+        $msg = $ok ? '<div class="alert alert-success">Fix applied. Re-checked below.</div>'
+                   : '<div class="alert alert-danger">Could not apply the fix (check sync settings / ledgers in Accounts Settings).</div>';
+        $this->session->set_flashdata('msg', $msg);
+        redirect('accounts/reports/reconciliation?date_from=' . urlencode((string)$this->input->post('date_from')) . '&date_to=' . urlencode((string)$this->input->post('date_to')));
     }
 }
