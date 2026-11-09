@@ -55,10 +55,10 @@ class Staffattendancemodel extends MY_Model {
                     $isLeaveLike = in_array((int)$attendance_value['staff_attendance_type_id'], $leaveLikeIds, true);
 
                     // Preserve existing in_time/out_time from biometric or QR if manual form posted empty
-                    if ($attendance_value['in_time'] === null && !empty($existing->in_time) && $existing->in_time !== '00:00:00' && !$isLeaveLike) {
+                    if (isset($attendance_value['in_time']) && $attendance_value['in_time'] === null && !empty($existing->in_time) && $existing->in_time !== '00:00:00' && !$isLeaveLike) {
                         $attendance_value['in_time'] = $existing->in_time;
                     }
-                    if ($attendance_value['out_time'] === null && !empty($existing->out_time) && $existing->out_time !== '00:00:00' && !$isLeaveLike) {
+                    if (isset($attendance_value['out_time']) && $attendance_value['out_time'] === null && !empty($existing->out_time) && $existing->out_time !== '00:00:00' && !$isLeaveLike) {
                         $attendance_value['out_time'] = $existing->out_time;
                     }
                     if (empty($existing->shift_id)) {

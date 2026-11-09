@@ -395,7 +395,12 @@
                                         // Which shift applies today: an active temporary shift covering today wins over the regular one.
                                         $today_temp = null; $today_reg = null;
                                         foreach ((array) $staff_shifts as $sh) {
-                                            $covers = (empty($sh['effective_from']) || $sh['effective_from'] <= $today_ymd) && (empty($sh['effective_to']) || $sh['effective_to'] >= $today_ymd);
+                                            $covers = false;
+                                            if (!empty($sh['shift_dates'])) {
+                                                $covers = in_array($today_ymd, $sh['shift_dates'], true);
+                                            } else {
+                                                $covers = (empty($sh['effective_from']) || $sh['effective_from'] <= $today_ymd) && (empty($sh['effective_to']) || $sh['effective_to'] >= $today_ymd);
+                                            }
                                             if (empty($sh['is_active']) || !$covers) { continue; }
                                             if ($sh['shift_type'] === 'temporary') { $today_temp = $sh; } elseif (!$today_reg) { $today_reg = $sh; }
                                         }
@@ -465,17 +470,37 @@
                                             <div class="sh-grid">
                                                 <?php foreach ($staff_shifts as $sh) {
                                                     $sh_temp   = $sh['shift_type'] === 'temporary';
-                                                    $sh_covers = (empty($sh['effective_from']) || $sh['effective_from'] <= $today_ymd) && (empty($sh['effective_to']) || $sh['effective_to'] >= $today_ymd);
+                                                    $sh_dates  = !empty($sh['shift_dates']) ? $sh['shift_dates'] : array();
+                                                    if ($sh_temp && !empty($sh_dates)) {
+                                                        $sh_covers = in_array($today_ymd, $sh_dates, true);
+                                                        $last_d = end($sh_dates);
+                                                        $sh_ended = ($last_d < $today_ymd);
+                                                    } else {
+                                                        $sh_covers = (empty($sh['effective_from']) || $sh['effective_from'] <= $today_ymd) && (empty($sh['effective_to']) || $sh['effective_to'] >= $today_ymd);
+                                                        $sh_ended  = !empty($sh['effective_to']) && $sh['effective_to'] < $today_ymd;
+                                                    }
                                                     $sh_live   = !empty($sh['is_active']) && $sh_covers;
-                                                    $sh_ended  = !empty($sh['effective_to']) && $sh['effective_to'] < $today_ymd;
                                                     $is_editing = (string) $es['id'] === (string) $sh['id'];
                                                     if ($sh_live && !$sh_temp && $today_temp) { $st = array('base', 'Replaced today by ' . $today_temp['name']); }
                                                     elseif ($sh_live) { $st = array('on', 'Applies today'); }
                                                     elseif (!empty($sh['is_active']) && $sh_ended) { $st = array('off', 'Ended'); }
-                                                    elseif (!empty($sh['is_active'])) { $st = array('sched', 'Starts ' . $fmt_d($sh['effective_from'])); }
+                                                    elseif (!empty($sh['is_active'])) {
+                                                        $start_txt = !empty($sh_dates) ? reset($sh_dates) : $sh['effective_from'];
+                                                        $st = array('sched', $start_txt ? 'Starts ' . $fmt_d($start_txt) : 'Active');
+                                                    }
                                                     else { $st = array('off', 'Inactive'); }
-                                                    $range = (!empty($sh['effective_from']) ? $fmt_d($sh['effective_from']) : 'No start date') . ' → ' . (!empty($sh['effective_to']) ? $fmt_d($sh['effective_to']) : 'no end date');
-                                                    if ($sh_temp && $sh['effective_from'] === $sh['effective_to']) { $range = $fmt_d($sh['effective_from']) . ' (1 day)'; }
+
+                                                    if ($sh_temp && !empty($sh_dates)) {
+                                                        $date_count = count($sh_dates);
+                                                        $formatted_dates = array_map($fmt_d, array_slice($sh_dates, 0, 3));
+                                                        $range = $date_count . ' date' . ($date_count > 1 ? 's' : '') . ': ' . implode(', ', $formatted_dates);
+                                                        if ($date_count > 3) {
+                                                            $range .= ' +' . ($date_count - 3) . ' more';
+                                                        }
+                                                    } else {
+                                                        $range = (!empty($sh['effective_from']) ? $fmt_d($sh['effective_from']) : 'No start date') . ' → ' . (!empty($sh['effective_to']) ? $fmt_d($sh['effective_to']) : 'no end date');
+                                                        if ($sh_temp && $sh['effective_from'] === $sh['effective_to']) { $range = $fmt_d($sh['effective_from']) . ' (1 day)'; }
+                                                    }
                                                 ?>
                                                     <div class="sh-card <?php echo $sh_temp ? 'temp' : 'reg'; ?> <?php echo $is_editing ? 'editing' : ''; ?>">
                                                         <div class="nm">
@@ -543,17 +568,19 @@
                                                                 <input type="text" id="staff_shift_name" name="shift_name" class="form-control"
                                                                        value="<?php echo html_escape($es['name']); ?>" placeholder="e.g. Winter Timings" required>
                                                             </div>
-                                                            <div>
-                                                                <label class="lbl" for="staff_effective_from">Start date</label>
-                                                                <input type="text" id="staff_effective_from" name="effective_from" class="form-control date"
-                                                                       value="<?php echo !empty($es['effective_from']) ? date($this->customlib->getSchoolDateFormat(), strtotime($es['effective_from'])) : ''; ?>"
-                                                                       placeholder="No start date">
-                                                            </div>
-                                                            <div>
-                                                                <label class="lbl" for="staff_effective_to">End date <span class="sh-end-hint" style="font-weight:400; color:#94a3b8;">(optional)</span></label>
-                                                                <input type="text" id="staff_effective_to" name="effective_to" class="form-control date"
-                                                                       value="<?php echo !empty($es['effective_to']) ? date($this->customlib->getSchoolDateFormat(), strtotime($es['effective_to'])) : ''; ?>"
-                                                                       placeholder="<?php echo $es_temp ? 'Same as start date' : 'No end date'; ?>">
+                                                            <div id="sh_reg_dates" style="display:contents;">
+                                                                <div>
+                                                                    <label class="lbl" for="staff_effective_from">Start date</label>
+                                                                    <input type="text" id="staff_effective_from" name="effective_from" class="form-control date"
+                                                                           value="<?php echo !empty($es['effective_from']) ? date($this->customlib->getSchoolDateFormat(), strtotime($es['effective_from'])) : ''; ?>"
+                                                                           placeholder="No start date">
+                                                                </div>
+                                                                <div>
+                                                                    <label class="lbl" for="staff_effective_to">End date <span class="sh-end-hint" style="font-weight:400; color:#94a3b8;">(optional)</span></label>
+                                                                    <input type="text" id="staff_effective_to" name="effective_to" class="form-control date"
+                                                                           value="<?php echo !empty($es['effective_to']) ? date($this->customlib->getSchoolDateFormat(), strtotime($es['effective_to'])) : ''; ?>"
+                                                                           placeholder="No end date">
+                                                                </div>
                                                             </div>
                                                             <div style="display:flex; align-items:flex-end;">
                                                                 <?php if (empty($es['is_active'])) { ?>
@@ -563,6 +590,78 @@
                                                                 <?php } else { ?>
                                                                     <span class="sh-status on" style="margin-bottom:8px;"><i class="fa fa-check"></i> Active</span>
                                                                 <?php } ?>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Temporary Shift Multi-Date Box -->
+                                                        <?php
+                                                        $existing_shift_dates = !empty($es['shift_dates']) ? (array) $es['shift_dates'] : array();
+                                                        if (empty($existing_shift_dates) && $es_temp && !empty($es['effective_from'])) {
+                                                            $cur = $es['effective_from'];
+                                                            $to_dt = !empty($es['effective_to']) ? $es['effective_to'] : $es['effective_from'];
+                                                            while ($cur <= $to_dt) {
+                                                                $existing_shift_dates[] = $cur;
+                                                                $cur = date('Y-m-d', strtotime($cur . ' +1 day'));
+                                                            }
+                                                        }
+                                                        $existing_shift_dates = array_values(array_unique(array_filter($existing_shift_dates)));
+                                                        sort($existing_shift_dates);
+                                                        ?>
+                                                        <div id="sh_temp_dates_box" style="<?php echo $es_temp ? '' : 'display:none;'; ?> margin-top:14px; background:#faf5ff; border:1px solid #e9d5ff; border-radius:10px; padding:14px;">
+                                                            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                                                                <div style="font-weight:700; font-size:13px; color:#581c87;">
+                                                                    <i class="fa fa-calendar-check-o" style="color:#8b5cf6;"></i> Dates Assigned to this Shift
+                                                                    <span class="badge" id="temp_dates_count" style="background:#8b5cf6; margin-left:6px;"><?php echo count($existing_shift_dates); ?></span>
+                                                                </div>
+                                                                <div style="font-size:11.5px; color:#7e22ce;">
+                                                                    <i class="fa fa-shield"></i> Recorded attendance for past dates is locked and preserved.
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- List of existing dates badges -->
+                                                            <div id="temp_dates_container" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; min-height:30px;">
+                                                                <?php if (empty($existing_shift_dates)) { ?>
+                                                                    <span class="text-muted" id="temp_no_dates_msg" style="font-size:12px; font-style:italic;">No dates added yet. Add a single date or range below.</span>
+                                                                <?php } else { ?>
+                                                                    <?php foreach ($existing_shift_dates as $d_val) {
+                                                                        $d_display = date($this->customlib->getSchoolDateFormat(), strtotime($d_val));
+                                                                        $is_past = ($d_val < $today_ymd);
+                                                                        $is_td   = ($d_val === $today_ymd);
+                                                                    ?>
+                                                                        <span class="temp-date-badge" data-date="<?php echo $d_val; ?>" style="background:#fff; border:1px solid <?php echo $is_td ? '#8b5cf6' : ($is_past ? '#cbd5e1' : '#c084fc'); ?>; color:<?php echo $is_td ? '#581c87' : ($is_past ? '#475569' : '#6b21a8'); ?>; font-weight:<?php echo $is_td ? '700' : '600'; ?>; padding:3px 10px; border-radius:15px; font-size:11.5px; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+                                                                            <i class="fa <?php echo $is_td ? 'fa-clock-o' : ($is_past ? 'fa-history text-muted' : 'fa-calendar text-primary'); ?>"></i>
+                                                                            <?php echo html_escape($d_display); ?>
+                                                                            <?php if ($is_td) { ?><span style="font-size:9.5px; background:#ede9fe; color:#6d28d9; padding:1px 4px; border-radius:8px;">Today</span><?php } ?>
+                                                                            <?php if ($is_past) { ?><span style="font-size:9.5px; background:#f1f5f9; color:#64748b; padding:1px 4px; border-radius:8px;">History</span><?php } ?>
+                                                                            <input type="hidden" name="shift_dates[]" value="<?php echo html_escape($d_display); ?>">
+                                                                        </span>
+                                                                    <?php } ?>
+                                                                <?php } ?>
+                                                            </div>
+
+                                                            <!-- Controls to add new date or date range -->
+                                                            <div style="background:#fff; border:1px dashed #d8b4fe; border-radius:8px; padding:10px 12px;">
+                                                                <div style="font-size:12px; font-weight:700; color:#4c1d95; margin-bottom:8px;">
+                                                                    <i class="fa fa-plus-circle text-primary"></i> Add Date(s) to this Shift:
+                                                                </div>
+                                                                <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+                                                                    <div style="min-width:140px; flex:1;">
+                                                                        <label style="font-size:11px; font-weight:600; color:#64748b; margin-bottom:2px; display:block;">Date / From Date</label>
+                                                                        <input type="text" id="add_shift_date_from" name="add_date_from" class="form-control date" placeholder="Pick Date" style="height:32px; font-size:12px; border-radius:6px;">
+                                                                    </div>
+                                                                    <div style="min-width:140px; flex:1;">
+                                                                        <label style="font-size:11px; font-weight:600; color:#64748b; margin-bottom:2px; display:block;">To Date <span style="font-weight:400; color:#94a3b8;">(leave empty for 1 day)</span></label>
+                                                                        <input type="text" id="add_shift_date_to" name="add_date_to" class="form-control date" placeholder="Optional Range End" style="height:32px; font-size:12px; border-radius:6px;">
+                                                                    </div>
+                                                                    <div>
+                                                                        <button type="button" id="btn_add_temp_date" class="btn btn-sm" style="background:#8b5cf6; color:#fff; border-radius:6px; height:32px; font-weight:600;">
+                                                                            <i class="fa fa-plus"></i> Add to Shift
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                                <div style="font-size:11px; color:#6b7280; margin-top:6px;">
+                                                                    <i class="fa fa-info-circle"></i> Pick a single date (e.g. 2 Nov), or both From & To for a range (e.g. 2 Nov to 5 Nov). You can click <b>Add to Shift</b> multiple times for all different dates (e.g. multiple Sundays or PTMs).
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         <div class="sh-help" id="sa_info_text"></div>
@@ -1300,6 +1399,13 @@
             var isTemp = $('#staff_shift_type input:checked').val() === 'temporary';
             var $labels = $('#staff_shift_type label').removeClass('sel-reg sel-temp');
             $('#staff_shift_type input:checked').closest('label').addClass(isTemp ? 'sel-temp' : 'sel-reg');
+            if (isTemp) {
+                $('#sh_reg_dates').hide();
+                $('#sh_temp_dates_box').show();
+            } else {
+                $('#sh_reg_dates').show();
+                $('#sh_temp_dates_box').hide();
+            }
             $('#staff_effective_to').attr('placeholder', isTemp ? 'Same as start date' : 'No end date');
             $('#staff_effective_from').attr('placeholder', isTemp ? 'Required' : 'No start date');
             $('.sh-end-hint').text(isTemp ? '(leave empty for a 1-day shift)' : '(optional)');
@@ -1309,6 +1415,70 @@
         }
         $(document).on('change', '#staff_shift_type input', staffShiftTypeUi);
         $(staffShiftTypeUi);
+
+        // Add temporary shift date badge
+        $(document).on('click', '#btn_add_temp_date', function() {
+            var fromVal = $.trim($('#add_shift_date_from').val());
+            var toVal = $.trim($('#add_shift_date_to').val());
+            if (!fromVal) {
+                errorMsg('Please pick a date first.');
+                return;
+            }
+
+            // Client-side helper to parse date string according to site format
+            var d1 = moment ? moment(fromVal, date_format ? date_format.toUpperCase() : 'DD-MM-YYYY') : null;
+            var d2 = (toVal && moment) ? moment(toVal, date_format ? date_format.toUpperCase() : 'DD-MM-YYYY') : null;
+
+            var datesToAdd = [];
+            if (d1 && d1.isValid()) {
+                if (d2 && d2.isValid()) {
+                    if (d2.isBefore(d1)) {
+                        var tmp = d1; d1 = d2; d2 = tmp;
+                    }
+                    var curr = d1.clone();
+                    while (curr.isSameOrBefore(d2)) {
+                        datesToAdd.push(curr.format(date_format ? date_format.toUpperCase() : 'DD-MM-YYYY'));
+                        curr.add(1, 'days');
+                    }
+                } else {
+                    datesToAdd.push(fromVal);
+                }
+            } else {
+                datesToAdd.push(fromVal);
+            }
+
+            $('#temp_no_dates_msg').hide();
+            var addedCount = 0;
+            $.each(datesToAdd, function(idx, dtStr) {
+                var exists = false;
+                $('#temp_dates_container input[name="shift_dates[]"]').each(function() {
+                    if ($.trim($(this).val()) === dtStr) {
+                        exists = true;
+                        return false;
+                    }
+                });
+                if (!exists) {
+                    var $badge = $('<span class="temp-date-badge" style="background:#fff; border:1px solid #c084fc; color:#6b21a8; font-weight:600; padding:3px 10px; border-radius:15px; font-size:11.5px; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 2px rgba(0,0,0,0.04);">' +
+                        '<i class="fa fa-calendar text-primary"></i> ' +
+                        '<span class="badge-txt">' + dtStr + '</span> ' +
+                        '<input type="hidden" name="shift_dates[]" value="' + dtStr + '">' +
+                        '<span class="badge" style="font-size:9.5px; background:#dcfce7; color:#15803d; padding:1px 4px; border-radius:8px;">New</span>' +
+                        '</span>');
+                    $('#temp_dates_container').append($badge);
+                    addedCount++;
+                }
+            });
+
+            var total = $('#temp_dates_container input[name="shift_dates[]"]').length;
+            $('#temp_dates_count').text(total);
+            $('#add_shift_date_from').val('');
+            $('#add_shift_date_to').val('');
+            if (addedCount > 0) {
+                successMsg(addedCount + ' date(s) queued. Click "Save shift" below to apply.');
+            } else {
+                infoMsg('Date(s) already in the list.');
+            }
+        });
 
         // Late-coming policy: live example + save
         function latePolicyPreview() {

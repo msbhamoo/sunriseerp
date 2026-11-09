@@ -676,10 +676,68 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
             $data['results'] = $this->studentfeemaster_model->getFeeCollectionReport($start_date, $end_date, null, null, null, null, null);
         }
 
+        $data['acc_sync_enabled'] = false;
+        if (!empty($data['results'])) {
+            $data['results'] = $this->attachAccountSyncTags($data['results'], $data['acc_sync_enabled']);
+        }
+
         $data['sch_setting'] = $this->sch_setting_detail;
         $this->load->view('layout/header', $data);
         $this->load->view('financereports/collection_list', $data);
         $this->load->view('layout/footer', $data);
+    }
+
+    /**
+     * Tags each collection row with whether its invoice is synced to the Accounts module
+     * (acc_vouchers, reference "<deposit id>_<invoice no>"). Read-only; adds 'acc_sync' =>
+     * array('state' => synced|pending|reversed, 'voucher_no' => string) to every row.
+     */
+    private function attachAccountSyncTags($results, &$enabled)
+    {
+        $enabled = false;
+        if (!$this->db->table_exists('acc_vouchers') || !$this->db->table_exists('acc_settings')) {
+            return $results;
+        }
+        $settings = $this->db->get('acc_settings')->row_array();
+        if (empty($settings) || (int) $settings['enable_fee_sync'] !== 1) {
+            return $results;
+        }
+        $enabled = true;
+
+        $refs = array();
+        foreach ($results as $r) {
+            $refs[$r['id'] . '_' . $r['inv_no']] = true;
+        }
+        $found = array(); // ref => array(posted voucher_no, reversed voucher_no)
+        foreach (array_chunk(array_keys($refs), 500) as $chunk) {
+            $rows = $this->db->select('reference_id, voucher_no, status')
+                ->where('reference_module', 'fee_collection')
+                ->where_in('reference_id', $chunk)
+                ->order_by('id', 'desc')
+                ->get('acc_vouchers')->result_array();
+            foreach ($rows as $v) {
+                if (!isset($found[$v['reference_id']])) {
+                    $found[$v['reference_id']] = array('posted' => '', 'reversed' => '');
+                }
+                if ($v['status'] === 'posted' && $found[$v['reference_id']]['posted'] === '') {
+                    $found[$v['reference_id']]['posted'] = $v['voucher_no'];
+                } elseif ($v['status'] === 'reversed' && $found[$v['reference_id']]['reversed'] === '') {
+                    $found[$v['reference_id']]['reversed'] = $v['voucher_no'];
+                }
+            }
+        }
+        foreach ($results as $k => $r) {
+            $ref = $r['id'] . '_' . $r['inv_no'];
+            $f   = isset($found[$ref]) ? $found[$ref] : array('posted' => '', 'reversed' => '');
+            if ($f['posted'] !== '') {
+                $results[$k]['acc_sync'] = array('state' => 'synced', 'voucher_no' => $f['posted']);
+            } elseif ($f['reversed'] !== '') {
+                $results[$k]['acc_sync'] = array('state' => 'reversed', 'voucher_no' => $f['reversed']);
+            } else {
+                $results[$k]['acc_sync'] = array('state' => 'pending', 'voucher_no' => '');
+            }
+        }
+        return $results;
     }
 
     public function class_summary_report()

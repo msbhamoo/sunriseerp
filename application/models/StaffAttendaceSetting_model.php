@@ -36,6 +36,17 @@ class StaffAttendaceSetting_model extends CI_Model
             if ($this->db->table_exists('staff_attendence_schedules') && !$this->db->field_exists('day_start_time', 'staff_attendence_schedules')) {
                 $this->db->query("ALTER TABLE `staff_attendence_schedules` ADD COLUMN `day_start_time` TIME NULL AFTER `total_institute_hour`");
             }
+            if (!$this->db->table_exists('staff_shift_dates')) {
+                $this->db->query("CREATE TABLE IF NOT EXISTS `staff_shift_dates` (
+                    `id` INT(11) NOT NULL AUTO_INCREMENT,
+                    `shift_id` INT(11) NOT NULL,
+                    `date` DATE NOT NULL,
+                    `created_at` DATETIME NULL DEFAULT NULL,
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `idx_shift_date` (`shift_id`, `date`),
+                    KEY `idx_date` (`date`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            }
             $this->staffattendanceaudit_model->ensureSchema();
             $this->staffattendanceaudit_model->setContext();
         }
@@ -52,12 +63,40 @@ class StaffAttendaceSetting_model extends CI_Model
                        (SELECT COUNT(*) FROM staff_attendance a WHERE a.shift_id = s.id) AS usage_count
                 FROM staff_shifts s
                 ORDER BY s.is_active DESC, s.shift_type ASC, s.effective_from DESC, s.id DESC";
-        return $this->db->query($sql)->result_array();
+        $shifts = $this->db->query($sql)->result_array();
+        foreach ($shifts as &$sh) {
+            if ($sh['shift_type'] === 'temporary') {
+                $sh['shift_dates'] = $this->getShiftDates($sh['id']);
+            } else {
+                $sh['shift_dates'] = array();
+            }
+        }
+        unset($sh);
+        return $shifts;
     }
 
     public function getShift($shift_id)
     {
-        return $this->db->where('id', (int) $shift_id)->get('staff_shifts')->row_array();
+        $shift = $this->db->where('id', (int) $shift_id)->get('staff_shifts')->row_array();
+        if ($shift && $shift['shift_type'] === 'temporary') {
+            $shift['shift_dates'] = $this->getShiftDates($shift['id']);
+        } elseif ($shift) {
+            $shift['shift_dates'] = array();
+        }
+        return $shift;
+    }
+
+    public function getShiftDates($shift_id)
+    {
+        if (empty($shift_id)) {
+            return array();
+        }
+        $rows = $this->db->select('date')
+            ->from('staff_shift_dates')
+            ->where('shift_id', (int) $shift_id)
+            ->order_by('date', 'ASC')
+            ->get()->result_array();
+        return array_column($rows, 'date');
     }
 
     public function getShiftRoles($shift_id)
@@ -108,7 +147,7 @@ class StaffAttendaceSetting_model extends CI_Model
      *   'cap'     => [shift id => new effective_to]       (earlier regular shifts ended the day before $from)
      * )
      */
-    public function checkActivation($roles, $shift_type, $from = null, $to = null, $exclude_id = null)
+    public function checkActivation($roles, $shift_type, $from = null, $to = null, $exclude_id = null, $specific_dates = array())
     {
         $none  = array('error' => null, 'replace' => array(), 'cap' => array());
         $roles = array_values(array_unique(array_map('intval', (array) $roles)));
@@ -117,6 +156,79 @@ class StaffAttendaceSetting_model extends CI_Model
         }
         $roles_str = implode(',', $roles);
         $exclude   = $exclude_id ? " AND s.id <> " . (int) $exclude_id : "";
+
+        if ($shift_type === 'temporary') {
+            // Check active temporary shifts sharing any role
+            $sql = "SELECT s.id, s.name, s.effective_from, s.effective_to, GROUP_CONCAT(DISTINCT r.name ORDER BY r.name SEPARATOR ', ') AS role_names
+                    FROM staff_shifts s
+                    JOIN staff_attendence_schedules b ON b.shift_id = s.id
+                    JOIN roles r ON r.id = b.role_id
+                    WHERE s.is_active = 1 AND s.shift_type = 'temporary'
+                      AND b.role_id IN ($roles_str) $exclude
+                    GROUP BY s.id, s.name, s.effective_from, s.effective_to";
+            $other_temps = $this->db->query($sql)->result_array();
+            if (empty($other_temps)) {
+                return $none;
+            }
+
+            $my_dates = !empty($specific_dates) ? array_values(array_unique($specific_dates)) : array();
+            $labels = array();
+
+            foreach ($other_temps as $ot) {
+                $ot_dates = $this->getShiftDates($ot['id']);
+                $has_clash = false;
+                $clash_date = '';
+
+                if (!empty($my_dates)) {
+                    foreach ($my_dates as $md) {
+                        if (!empty($ot_dates)) {
+                            if (in_array($md, $ot_dates, true)) {
+                                $has_clash = true;
+                                $clash_date = $md;
+                                break;
+                            }
+                        } else {
+                            if ((empty($ot['effective_from']) || $ot['effective_from'] <= $md) && (empty($ot['effective_to']) || $ot['effective_to'] >= $md)) {
+                                $has_clash = true;
+                                $clash_date = $md;
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    // This shift is range-based ($from to $to)
+                    $from_chk = $from ?: '0000-01-01';
+                    $to_chk   = $to ?: '9999-12-31';
+                    if (!empty($ot_dates)) {
+                        foreach ($ot_dates as $od) {
+                            if ($od >= $from_chk && $od <= $to_chk) {
+                                $has_clash = true;
+                                $clash_date = $od;
+                                break;
+                            }
+                        }
+                    } else {
+                        $ot_from = $ot['effective_from'] ?: '0000-01-01';
+                        $ot_to   = $ot['effective_to'] ?: '9999-12-31';
+                        if ($ot_from <= $to_chk && $ot_to >= $from_chk) {
+                            $has_clash = true;
+                            $clash_date = $ot['effective_from'] . ' - ' . $ot['effective_to'];
+                        }
+                    }
+                }
+
+                if ($has_clash) {
+                    $labels[] = $ot['name'] . ' (' . (!empty($clash_date) ? date('d M Y', strtotime($clash_date)) : $this->_rangeLabel($ot['effective_from'], $ot['effective_to'])) . ', ' . $ot['role_names'] . ')';
+                }
+            }
+
+            if (!empty($labels)) {
+                return array('error' => 'Another active temporary shift already covers date(s): ' . implode('; ', $labels) . '. Deactivate it or change the dates.') + $none;
+            }
+            return $none;
+        }
+
+        // Regular shift activation check
         $from_sql  = $from ? $this->db->escape($from) : "'0000-01-01'";
         $to_sql    = $to ? $this->db->escape($to) : "'9999-12-31'";
 
@@ -132,14 +244,6 @@ class StaffAttendaceSetting_model extends CI_Model
         $conflicts = $this->db->query($sql)->result_array();
         if (empty($conflicts)) {
             return $none;
-        }
-
-        if ($shift_type === 'temporary') {
-            $labels = array();
-            foreach ($conflicts as $c) {
-                $labels[] = $c['name'] . ' (' . $this->_rangeLabel($c['effective_from'], $c['effective_to']) . ', ' . $c['role_names'] . ')';
-            }
-            return array('error' => 'Another active temporary shift already covers these dates: ' . implode('; ', $labels) . '. Deactivate it or change the dates.') + $none;
         }
 
         // Regular: an overlapping shift that started earlier is ended the day before this one starts.
@@ -184,14 +288,33 @@ class StaffAttendaceSetting_model extends CI_Model
         $type  = ($meta['shift_type'] === 'temporary') ? 'temporary' : 'regular';
         $from  = !empty($meta['effective_from']) ? $meta['effective_from'] : null;
         $to    = !empty($meta['effective_to']) ? $meta['effective_to'] : null;
+        $specific_dates = isset($meta['shift_dates']) ? array_values(array_unique(array_filter((array) $meta['shift_dates']))) : array();
+        $existing   = $shift_id ? $this->getShift($shift_id) : null;
+
+        // Past dates already saved on a temporary shift are history: they can never be removed.
+        // Dates today or later follow what was submitted, so upcoming dates can be removed.
+        if ($type === 'temporary' && !empty($existing) && $existing['shift_type'] === 'temporary') {
+            $today = date('Y-m-d');
+            foreach ($this->getShiftDates($shift_id) as $pd) {
+                if ($pd < $today) {
+                    $specific_dates[] = $pd;
+                }
+            }
+            $specific_dates = array_values(array_unique($specific_dates));
+        }
+        sort($specific_dates);
+        if ($type === 'temporary' && !empty($specific_dates)) {
+            $from = reset($specific_dates);
+            $to   = end($specific_dates);
+        }
+
         $roles = array_column($bands, 'role_id');
 
-        $existing   = $shift_id ? $this->getShift($shift_id) : null;
         $will_active = !empty($meta['activate']) || (!empty($existing) && !empty($existing['is_active']));
 
         $cap = array();
         if ($will_active) {
-            $check = $this->checkActivation($roles, $type, $from, $to, $shift_id);
+            $check = $this->checkActivation($roles, $type, $from, $to, $shift_id, $specific_dates);
             if (!empty($check['error'])) {
                 return array('status' => false, 'message' => $check['error']);
             }
@@ -218,6 +341,36 @@ class StaffAttendaceSetting_model extends CI_Model
         }
 
         $this->_applyCaps($cap);
+
+        // Update specific dates if temporary shift
+        if ($type === 'temporary') {
+            $existing_dates = !empty($existing) ? $this->getShiftDates($shift_id) : array();
+            // $specific_dates already contains preserved past dates plus the submitted ones
+            $all_dates = $specific_dates;
+            sort($all_dates);
+            foreach ($existing_dates as $ed) {
+                if (!in_array($ed, $all_dates, true)) {
+                    $this->db->where('shift_id', (int) $shift_id)->where('date', $ed)->delete('staff_shift_dates');
+                }
+            }
+            foreach ($all_dates as $d) {
+                if (!in_array($d, $existing_dates, true)) {
+                    $this->db->insert('staff_shift_dates', array(
+                        'shift_id'   => (int) $shift_id,
+                        'date'       => $d,
+                        'created_at' => $now,
+                    ));
+                }
+            }
+            if (!empty($all_dates)) {
+                $from = reset($all_dates);
+                $to   = end($all_dates);
+                $this->db->where('id', (int) $shift_id)->update('staff_shifts', array(
+                    'effective_from' => $from,
+                    'effective_to'   => $to,
+                ));
+            }
+        }
 
         $this->db->where('shift_id', (int) $shift_id)->delete('staff_attendence_schedules');
         foreach ($bands as &$band) {
@@ -248,10 +401,19 @@ class StaffAttendaceSetting_model extends CI_Model
         $recalc = null;
         $was_temp = !empty($existing) && $existing['shift_type'] === 'temporary';
         if ($type === 'temporary' || $was_temp) {
+            $all_eval_dates = array();
+            if ($type === 'temporary' && !empty($specific_dates)) {
+                $all_eval_dates = array_merge($all_eval_dates, $specific_dates);
+            }
+            if ($was_temp) {
+                // dates the shift had before this save (so removed dates are re-graded too)
+                $all_eval_dates = array_merge($all_eval_dates, !empty($existing['shift_dates']) ? $existing['shift_dates'] : array());
+            }
+            $all_eval_dates = array_values(array_unique(array_filter($all_eval_dates)));
             $r_from = array_filter(array($type === 'temporary' ? $from : null, $was_temp ? $existing['effective_from'] : null));
             $r_to   = array_filter(array($type === 'temporary' ? $to : null, $was_temp ? $existing['effective_to'] : null));
             if (!empty($r_from)) {
-                $recalc = $this->recalculateRange($roles, min($r_from), !empty($r_to) ? max($r_to) : null);
+                $recalc = $this->recalculateRange($roles, min($r_from), !empty($r_to) ? max($r_to) : null, $all_eval_dates);
             }
         }
 
@@ -284,6 +446,15 @@ class StaffAttendaceSetting_model extends CI_Model
     /** True when a shift's dates include $date (empty from = always, empty to = open-ended). */
     public function shiftCoversDate($shift, $date)
     {
+        if (empty($shift)) {
+            return false;
+        }
+        if ($shift['shift_type'] === 'temporary') {
+            $dates = isset($shift['shift_dates']) ? $shift['shift_dates'] : $this->getShiftDates($shift['id']);
+            if (!empty($dates)) {
+                return in_array($date, $dates, true);
+            }
+        }
         return (empty($shift['effective_from']) || $shift['effective_from'] <= $date)
             && (empty($shift['effective_to']) || $shift['effective_to'] >= $date);
     }
@@ -305,11 +476,11 @@ class StaffAttendaceSetting_model extends CI_Model
             $this->shift_map_cache = array();
             $this->staffattendanceaudit_model->logShift('SHIFT_DEACTIVATE', $shift_id, $shift, null);
             $recalc = $shift['shift_type'] === 'temporary'
-                ? $this->recalculateRange($this->getShiftRoles($shift_id), $shift['effective_from'], $shift['effective_to']) : null;
+                ? $this->recalculateRange($this->getShiftRoles($shift_id), $shift['effective_from'], $shift['effective_to'], $this->getShiftDates($shift_id)) : null;
             return array('status' => true, 'message' => 'Shift deactivated.' . $this->_recalcMessage($recalc));
         }
 
-        $check = $this->checkActivation($this->getShiftRoles($shift_id), $shift['shift_type'], $shift['effective_from'], $shift['effective_to'], $shift_id);
+        $check = $this->checkActivation($this->getShiftRoles($shift_id), $shift['shift_type'], $shift['effective_from'], $shift['effective_to'], $shift_id, $this->getShiftDates($shift_id));
         if (!empty($check['error'])) {
             return array('status' => false, 'message' => $check['error']);
         }
@@ -320,7 +491,7 @@ class StaffAttendaceSetting_model extends CI_Model
         $this->shift_map_cache = array();
         $this->staffattendanceaudit_model->logShift('SHIFT_ACTIVATE', $shift_id, $shift, array('ended' => $check['cap']));
         $recalc = $shift['shift_type'] === 'temporary'
-            ? $this->recalculateRange($this->getShiftRoles($shift_id), $shift['effective_from'], $shift['effective_to']) : null;
+            ? $this->recalculateRange($this->getShiftRoles($shift_id), $shift['effective_from'], $shift['effective_to'], $this->getShiftDates($shift_id)) : null;
         return array('status' => true, 'message' => 'Shift activated.' . $this->_capMessage($check['cap']) . $this->_recalcMessage($recalc));
     }
 
@@ -339,6 +510,7 @@ class StaffAttendaceSetting_model extends CI_Model
             return array('status' => false, 'message' => "This shift was used for {$used} attendance record(s) and is kept for history. It can stay inactive.");
         }
         $this->db->trans_start();
+        $this->db->where('shift_id', (int) $shift_id)->delete('staff_shift_dates');
         $this->db->where('shift_id', (int) $shift_id)->delete('staff_attendence_schedules');
         $this->db->where('id', (int) $shift_id)->delete('staff_shifts');
         $this->db->trans_complete();
@@ -360,12 +532,20 @@ class StaffAttendaceSetting_model extends CI_Model
         if (isset($this->shift_map_cache[$date])) {
             return $this->shift_map_cache[$date];
         }
+        $d_esc = $this->db->escape($date);
         $sql = "SELECT DISTINCT b.role_id, s.id AS shift_id, s.shift_type
                 FROM staff_shifts s
                 JOIN staff_attendence_schedules b ON b.shift_id = s.id
+                LEFT JOIN staff_shift_dates ssd ON ssd.shift_id = s.id
                 WHERE s.is_active = 1
-                  AND IFNULL(s.effective_from, '0000-01-01') <= " . $this->db->escape($date) . "
-                  AND IFNULL(s.effective_to, '9999-12-31') >= " . $this->db->escape($date) . "
+                  AND (
+                    (s.shift_type = 'regular' AND IFNULL(s.effective_from, '0000-01-01') <= $d_esc AND IFNULL(s.effective_to, '9999-12-31') >= $d_esc)
+                    OR
+                    (s.shift_type = 'temporary' AND (
+                        ssd.date = $d_esc
+                        OR (ssd.id IS NULL AND IFNULL(s.effective_from, '0000-01-01') <= $d_esc AND IFNULL(s.effective_to, '9999-12-31') >= $d_esc)
+                    ))
+                  )
                 ORDER BY (s.shift_type = 'temporary') ASC, IFNULL(s.effective_from, '0000-01-01') ASC, s.id ASC";
         $map = array();
         foreach ($this->db->query($sql)->result_array() as $r) {
@@ -594,7 +774,7 @@ class StaffAttendaceSetting_model extends CI_Model
      *
      * Returns array('updated' => n, 'unchanged' => n, 'locked' => n).
      */
-    public function recalculateRange($roles, $from, $to)
+    public function recalculateRange($roles, $from, $to, $only_dates = array())
     {
         $out   = array('updated' => 0, 'unchanged' => 0, 'locked' => 0, 'past_locked' => false);
         $roles = array_values(array_unique(array_filter(array_map('intval', (array) $roles))));
@@ -620,12 +800,26 @@ class StaffAttendaceSetting_model extends CI_Model
             return $out;
         }
 
+        $where_date = "sa.date BETWEEN " . $this->db->escape($from) . " AND " . $this->db->escape($to);
+        if (!empty($only_dates)) {
+            $escaped_dates = array();
+            foreach ($only_dates as $od) {
+                if ($od >= $from && $od <= $to) {
+                    $escaped_dates[] = $this->db->escape($od);
+                }
+            }
+            if (empty($escaped_dates)) {
+                return $out;
+            }
+            $where_date = "sa.date IN (" . implode(',', $escaped_dates) . ")";
+        }
+
         $rows = $this->db->query("SELECT sa.id, sa.date, sa.in_time, sa.out_time, sa.staff_attendance_type_id, sa.shift_id,
                                          sa.attendance_source, sr.role_id
                                   FROM staff_attendance sa
                                   JOIN staff_roles sr ON sr.staff_id = sa.staff_id
                                   WHERE sr.role_id IN (" . implode(',', $roles) . ")
-                                    AND sa.date BETWEEN " . $this->db->escape($from) . " AND " . $this->db->escape($to) . "
+                                    AND $where_date
                                     AND sa.staff_attendance_type_id IN (" . implode(',', $gradable) . ")
                                     AND ((sa.in_time IS NOT NULL AND sa.in_time <> '00:00:00')
                                          OR (sa.out_time IS NOT NULL AND sa.out_time <> '00:00:00'))")->result();
