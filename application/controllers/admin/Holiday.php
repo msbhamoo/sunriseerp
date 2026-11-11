@@ -114,7 +114,20 @@ class Holiday extends Admin_Controller
                 $data['created_at']      =   date('Y-m-d H:i:s') ;  
             }
 
-            $this->holiday_model->add($data);      
+            $this->holiday_model->add($data);
+
+            // Automatically sync holiday attendance to student_attendences if it is a holiday/vacation
+            if ($is_working_day == 0) {
+                $this->load->model('stuattendence_model');
+                $htypes = $this->holiday_model->get_holiday_type($data['holiday_type']);
+                $htype_name = !empty($htypes) ? strtolower($htypes[0]['type']) : '';
+                if ($data['holiday_type'] == 1 || $data['holiday_type'] == 2 || strpos($htype_name, 'holiday') !== false || strpos($htype_name, 'vacation') !== false) {
+                    $from_ymd = date('Y-m-d', $this->customlib->datetostrtotime($from_date));
+                    $to_ymd   = date('Y-m-d', $this->customlib->datetostrtotime($to_date));
+                    $this->stuattendence_model->syncHolidayAttendanceForRange($from_ymd, $to_ymd, $data['description'], $data['session_id']);
+                }
+            }
+
             $array = array('status' => 'success', 'error' => '', 'message' => $this->lang->line('success_message'));
     }     
         echo json_encode($array);
@@ -127,7 +140,16 @@ class Holiday extends Admin_Controller
             access_denied();
         }
 		
-        $this->holiday_model->delete_holiday($_POST['id']);
+        $id = $this->input->post('id');
+        $holiday = $this->holiday_model->get($id);
+        if (!empty($holiday) && isset($holiday['is_working_day']) && $holiday['is_working_day'] == 0) {
+            $this->load->model('stuattendence_model');
+            $from_ymd = date('Y-m-d', strtotime($holiday['from_date']));
+            $to_ymd   = date('Y-m-d', strtotime($holiday['to_date']));
+            $this->stuattendence_model->deleteHolidayAttendanceForRange($from_ymd, $to_ymd, $holiday['description'], $holiday['session_id']);
+        }
+
+        $this->holiday_model->delete_holiday($id);
         $array = array('status' => 1, 'success' => $this->lang->line('delete_message'));
         echo json_encode($array);
     }

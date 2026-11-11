@@ -102,6 +102,50 @@ class Scholarshipregister extends CI_Controller
         exit;
     }
 
+    public function check_mobile()
+    {
+        $mobile = preg_replace('/\D/', '', (string) $this->input->post('mobile'));
+        $exam_id = (int) $this->input->post('exam_id');
+
+        if (strlen($mobile) > 10 && substr($mobile, 0, 2) === '91') {
+            $mobile = substr($mobile, 2);
+        } elseif (strlen($mobile) > 10) {
+            $mobile = substr($mobile, -10);
+        }
+
+        if (strlen($mobile) != 10) {
+            echo json_encode(array('status' => 'error', 'message' => 'Please enter a valid 10-digit mobile number.'));
+            exit;
+        }
+
+        $candidates = $this->scholarshipexam_model->getCandidatesByMobile($exam_id ?: null, $mobile);
+
+        if (!empty($candidates)) {
+            $list = array();
+            foreach ($candidates as $c) {
+                $list[] = array(
+                    'id' => $c['id'],
+                    'roll_no' => $c['roll_no'],
+                    'name' => !empty($c['external_candidate_name']) ? $c['external_candidate_name'] : $c['roll_no'],
+                    'class_name' => !empty($c['class_name']) ? $c['class_name'] : 'Registered Class',
+                    'has_pin' => !empty($c['password_pin']) ? true : false,
+                );
+            }
+            echo json_encode(array(
+                'status' => 'registered',
+                'mobile' => $mobile,
+                'count' => count($candidates),
+                'candidates' => $list
+            ));
+        } else {
+            echo json_encode(array(
+                'status' => 'new',
+                'mobile' => $mobile
+            ));
+        }
+        exit;
+    }
+
     public function submit()
     {
         $exam_id = $this->input->post('exam_id');
@@ -128,24 +172,39 @@ class Scholarshipregister extends CI_Controller
         $dob = trim((string) $this->input->post('dob'));
         $dob = ($dob !== '' && strtotime($dob)) ? date('Y-m-d', strtotime($dob)) : null;
 
+        $password_pin = trim((string) $this->input->post('password_pin'));
+        if ($password_pin === '' || !preg_match('/^\d{4}$/', $password_pin)) {
+            // Auto generate 4-digit PIN if not provided or invalid
+            $password_pin = sprintf('%04d', rand(1000, 9999));
+        }
+
         if (!$exam_id || $candidate_name === '' || strlen($mobile) != 10 || ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL))) {
             redirect('scholarshipregister/apply/' . $exam['exam_code']);
             return;
         }
 
-        // One registration per mobile per exam: show the existing slip instead of creating a duplicate
-        $existing = $this->scholarshipexam_model->findExternalDuplicate($exam_id, $mobile);
+        // Allow registering multiple children under the same mobile number (e.g. for parents)
+        // Check duplicate by both mobile AND candidate name (same child)
+        $existing = $this->db->get_where('scholarship_exam_candidates', array(
+            'scholarship_exam_id' => $exam_id,
+            'is_external' => 1,
+            'external_mobile' => $mobile,
+            'external_candidate_name' => $candidate_name
+        ))->row_array();
+
         if ($existing) {
             $created = array('id' => $existing['id'], 'roll_no' => $existing['roll_no'], 'admit_card_no' => $existing['admit_card_no']);
             $school_name = $existing['external_school_name'];
             $candidate_name = $existing['external_candidate_name'];
             $class_id = (int) $existing['external_class_id'];
+            $password_pin = !empty($existing['password_pin']) ? $existing['password_pin'] : $password_pin;
             $data['already_registered'] = true;
         } else {
             $insert_data = array(
                 'scholarship_exam_id' => $exam_id,
                 'student_id' => 0,
                 'student_session_id' => 0,
+                'password_pin' => $password_pin,
                 'payment_status' => ($exam['is_paid'] == 1) ? 'unpaid' : 'free',
                 'attendance_status' => 'pending',
                 'result_status' => 'pending',
@@ -213,6 +272,7 @@ class Scholarshipregister extends CI_Controller
             'class_label' => $class_label,
             'father_label' => trim((string) $this->input->post('father_name')),
             'registered_on' => date('Y-m-d H:i:s'),
+            'password_pin' => $password_pin,
         );
         $data['sch_setting'] = $sch_setting;
 
@@ -254,5 +314,128 @@ class Scholarshipregister extends CI_Controller
         }
 
         $this->load->view('scholarshipregister/lookup', $data);
+    }
+
+    /* ================= Candidate Portal ================= */
+
+    public function portal()
+    {
+        $candidate_id = $this->session->userdata('scholarship_candidate_id');
+        if ($candidate_id) {
+            $this->dashboard();
+            return;
+        }
+
+        $data['sch_setting'] = $this->scholarshipexam_model->getSchoolSetting();
+        $data['exams'] = $this->scholarshipexam_model->getExams();
+        $this->load->view('scholarshipregister/portal_login', $data);
+    }
+
+    public function portal_login()
+    {
+        $login_identifier = trim((string) $this->input->post('login_identifier'));
+        $pin = trim((string) $this->input->post('password_pin'));
+        $candidate_id = $this->input->post('candidate_id');
+
+        if ((empty($login_identifier) && empty($candidate_id)) || empty($pin)) {
+            $this->session->set_flashdata('error_msg', 'Please enter your Roll Number / Mobile and 4-digit PIN.');
+            redirect('scholarshipregister/portal');
+            return;
+        }
+
+        $candidate = $this->scholarshipexam_model->authenticateCandidate($login_identifier, $pin, $candidate_id);
+
+        if ($candidate) {
+            $this->session->set_userdata('scholarship_candidate_id', $candidate['id']);
+            redirect('scholarshipregister/portal');
+        } else {
+            $this->session->set_flashdata('error_msg', 'Invalid Roll Number / Mobile or 4-digit Password PIN. Please try again.');
+            redirect('scholarshipregister/portal');
+        }
+    }
+
+    public function portal_login_ajax()
+    {
+        $login_identifier = trim((string) $this->input->post('login_identifier'));
+        $pin = trim((string) $this->input->post('password_pin'));
+        $candidate_id = $this->input->post('candidate_id');
+
+        if ((empty($login_identifier) && empty($candidate_id)) || empty($pin)) {
+            echo json_encode(array('status' => 'error', 'message' => 'Please enter the 4-digit PIN.'));
+            return;
+        }
+
+        $candidate = $this->scholarshipexam_model->authenticateCandidate($login_identifier, $pin, $candidate_id);
+
+        if ($candidate) {
+            $this->session->set_userdata('scholarship_candidate_id', $candidate['id']);
+            echo json_encode(array(
+                'status' => 'success',
+                'message' => 'Login successful! Redirecting...',
+                'redirect_url' => site_url('scholarshipregister/portal')
+            ));
+        } else {
+            echo json_encode(array(
+                'status' => 'error',
+                'message' => 'Incorrect 4-digit PIN. Please try again.'
+            ));
+        }
+    }
+
+    public function portal_logout()
+    {
+        $this->session->unset_userdata('scholarship_candidate_id');
+        redirect('scholarshipregister/portal');
+    }
+
+    public function dashboard()
+    {
+        $candidate_id = $this->session->userdata('scholarship_candidate_id');
+        if (!$candidate_id) {
+            redirect('scholarshipregister/portal');
+            return;
+        }
+
+        $candidate = $this->scholarshipexam_model->getCandidateAdmitCardData($candidate_id);
+        if (!$candidate) {
+            $this->session->unset_userdata('scholarship_candidate_id');
+            redirect('scholarshipregister/portal');
+            return;
+        }
+
+        // Get full candidate row for external_class_id and student_session class_id
+        $cand_raw = $this->db->get_where('scholarship_exam_candidates', array('id' => $candidate_id))->row_array();
+        $class_id = null;
+        if (!empty($cand_raw['external_class_id'])) {
+            $class_id = $cand_raw['external_class_id'];
+        } elseif (!empty($cand_raw['student_session_id'])) {
+            $sess = $this->db->get_where('student_session', array('id' => $cand_raw['student_session_id']))->row_array();
+            if ($sess) {
+                $class_id = $sess['class_id'];
+            }
+        }
+
+        $data['candidate'] = $candidate;
+        $data['cand_raw'] = $cand_raw;
+        $data['sch_setting'] = $this->scholarshipexam_model->getSchoolSetting();
+
+        // Exam schedules & days remaining calculation
+        $exam_date = !empty($candidate['exam_date']) ? $candidate['exam_date'] : null;
+        $days_remaining = null;
+        $hours_remaining = null;
+        if ($exam_date) {
+            $diff = strtotime($exam_date) - time();
+            $days_remaining = max(0, (int) floor($diff / 86400));
+            $hours_remaining = max(0, (int) floor(($diff % 86400) / 3600));
+        }
+        $data['exam_date'] = $exam_date;
+        $data['days_remaining'] = $days_remaining;
+        $data['hours_remaining'] = $hours_remaining;
+
+        // Fetch study materials & sample papers for candidate's class
+        $data['sample_papers'] = $this->scholarshipexam_model->getMaterials($candidate['scholarship_exam_id'], $class_id, 'sample_paper');
+        $data['other_materials'] = $this->scholarshipexam_model->getMaterials($candidate['scholarship_exam_id'], $class_id);
+
+        $this->load->view('scholarshipregister/portal_dashboard', $data);
     }
 }

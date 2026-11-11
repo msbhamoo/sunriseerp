@@ -473,6 +473,13 @@ class Reports extends MY_Addon_AccountsController
         }
         $this->db->db_debug = (ENVIRONMENT !== 'production');
 
+        if (!$ok) {
+            $db_err = $this->db->error();
+            if (!empty($db_err['code'])) {
+                log_message('error', 'reconcile_fix DB error: ' . json_encode($db_err));
+            }
+        }
+
         $msg = $ok ? '<div class="alert alert-success">Fix applied. Re-checked below.</div>'
                    : '<div class="alert alert-danger">Could not apply the fix (check sync settings / ledgers in Accounts Settings).</div>';
         $this->session->set_flashdata('msg', $msg);

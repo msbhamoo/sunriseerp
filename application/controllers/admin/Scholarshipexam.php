@@ -332,6 +332,80 @@ class Scholarshipexam extends Admin_Controller
         $this->load->view('admin/scholarshipexam/admitcard', $data);
     }
 
+    public function get_candidate_details($candidate_id)
+    {
+        $candidate = $this->scholarshipexam_model->getCandidateAdmitCardData($candidate_id);
+        echo json_encode($candidate);
+    }
+
+    public function reset_candidate_pin()
+    {
+        if (!$this->rbac->hasPrivilege('scholarship_exam', 'can_edit')) {
+            access_denied();
+        }
+
+        $candidate_id = $this->input->post('candidate_id');
+        $new_pin = trim((string) $this->input->post('new_pin'));
+
+        if ($candidate_id && preg_match('/^\d{4}$/', $new_pin)) {
+            $this->scholarshipexam_model->updateCandidateProfile($candidate_id, array('password_pin' => $new_pin));
+            $this->session->set_flashdata('msg', '<div class="alert alert-success">Password PIN for candidate successfully reset to: <strong>' . htmlspecialchars($new_pin) . '</strong></div>');
+        } else {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger">Invalid PIN. Please enter exactly 4 digits.</div>');
+        }
+
+        $redirect_exam_id = $this->input->post('exam_id');
+        redirect('admin/scholarshipexam/candidates' . ($redirect_exam_id ? '?exam_id=' . $redirect_exam_id : ''));
+    }
+
+    public function update_candidate_profile()
+    {
+        if (!$this->rbac->hasPrivilege('scholarship_exam', 'can_edit')) {
+            access_denied();
+        }
+
+        $candidate_id = $this->input->post('candidate_id');
+        $candidate = $this->scholarshipexam_model->getCandidateAdmitCardData($candidate_id);
+
+        if (!$candidate) {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger">Candidate not found.</div>');
+            redirect('admin/scholarshipexam/candidates');
+            return;
+        }
+
+        $pin = trim((string) $this->input->post('password_pin'));
+        $data = array(
+            'external_candidate_name' => trim((string) $this->input->post('candidate_name')),
+            'external_father_name'    => trim((string) $this->input->post('father_name')),
+            'external_mother_name'    => trim((string) $this->input->post('mother_name')),
+            'external_mobile'         => trim((string) $this->input->post('mobile')),
+            'external_email'          => trim((string) $this->input->post('email')),
+            'external_school_name'    => trim((string) $this->input->post('school_name')),
+            'external_class_id'       => (int) $this->input->post('class_id') ?: null,
+            'external_gender'         => trim((string) $this->input->post('gender')),
+            'external_category'       => trim((string) $this->input->post('category')),
+            'external_city'           => trim((string) $this->input->post('city')),
+            'external_village'        => trim((string) $this->input->post('village')),
+            'external_address'        => trim((string) $this->input->post('address')),
+            'payment_status'          => $this->input->post('payment_status') ?: 'free',
+        );
+
+        if (preg_match('/^\d{4}$/', $pin)) {
+            $data['password_pin'] = $pin;
+        }
+
+        $dob = trim((string) $this->input->post('dob'));
+        if ($dob && strtotime($dob)) {
+            $data['external_dob'] = date('Y-m-d', strtotime($dob));
+        }
+
+        $this->scholarshipexam_model->updateCandidateProfile($candidate_id, $data);
+        $this->session->set_flashdata('msg', '<div class="alert alert-success">Candidate profile updated successfully.</div>');
+
+        $redirect_exam_id = $this->input->post('exam_id');
+        redirect('admin/scholarshipexam/candidates' . ($redirect_exam_id ? '?exam_id=' . $redirect_exam_id : ''));
+    }
+
     public function marks()
     {
         $this->session->set_userdata('top_menu', 'scholarship_exam');
@@ -510,6 +584,116 @@ class Scholarshipexam extends Admin_Controller
         header('Content-Disposition: attachment; filename="ssat-registration-qr.' . ($svg ? 'svg' : 'png') . '"');
         echo $out;
         exit;
+    }
+
+    /* ================= Sample Papers & Study Materials ================= */
+
+    public function materials()
+    {
+        $this->session->set_userdata('top_menu', 'scholarship_exam');
+        $this->session->set_userdata('sub_menu', 'scholarshipexam_materials');
+
+        $exam_id = $this->input->get('exam_id');
+        $class_id = $this->input->get('class_id');
+        $material_type = $this->input->get('material_type');
+
+        $data['exams'] = $this->scholarshipexam_model->getExams();
+        $data['classList'] = $this->class_model->get();
+        $data['selected_exam_id'] = $exam_id ?: (!empty($data['exams']) ? $data['exams'][0]['id'] : null);
+        $data['selected_class_id'] = $class_id;
+        $data['selected_material_type'] = $material_type;
+
+        $data['materials'] = $this->scholarshipexam_model->getMaterials($data['selected_exam_id'], $class_id, $material_type);
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('admin/scholarshipexam/materials', $data);
+        $this->load->view('layout/footer', $data);
+    }
+
+    public function upload_material()
+    {
+        if (!$this->rbac->hasPrivilege('scholarship_exam', 'can_add') && !$this->rbac->hasPrivilege('scholarship_exam', 'can_edit')) {
+            access_denied();
+        }
+
+        $this->form_validation->set_rules('scholarship_exam_id', 'Exam', 'trim|required|xss_clean');
+        $this->form_validation->set_rules('class_id', 'Class', 'trim|required|xss_clean');
+        $this->form_validation->set_rules('title', 'Title', 'trim|required|xss_clean');
+        $this->form_validation->set_rules('material_type', 'Material Type', 'trim|required|xss_clean');
+
+        if ($this->form_validation->run() == false) {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger">Please fill in all required fields.</div>');
+            redirect('admin/scholarshipexam/materials');
+            return;
+        }
+
+        $file_path = '';
+        $file_size = '';
+        $file_name = '';
+
+        if (!empty($_FILES['material_file']['name'])) {
+            $upload_dir = FCPATH . 'uploads/scholarship_materials/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+
+            $config['upload_path']   = $upload_dir;
+            $config['allowed_types'] = 'pdf|doc|docx|zip|jpg|jpeg|png';
+            $config['max_size']      = 25600; // 25MB
+            $config['encrypt_name']  = true;
+
+            $this->load->library('upload', $config);
+
+            if ($this->upload->do_upload('material_file')) {
+                $upload_data = $this->upload->data();
+                $file_name = $_FILES['material_file']['name'];
+                $file_path = 'uploads/scholarship_materials/' . $upload_data['file_name'];
+                $file_size = round($upload_data['file_size'] / 1024, 2) . ' MB';
+            } else {
+                $this->session->set_flashdata('msg', '<div class="alert alert-danger">' . $this->upload->display_errors() . '</div>');
+                redirect('admin/scholarshipexam/materials');
+                return;
+            }
+        } else {
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger">Please select a file to upload.</div>');
+            redirect('admin/scholarshipexam/materials');
+            return;
+        }
+
+        $staff_id = $this->customlib->getStaffID();
+
+        $save_data = array(
+            'scholarship_exam_id' => $this->input->post('scholarship_exam_id'),
+            'class_id'            => $this->input->post('class_id'),
+            'material_type'       => $this->input->post('material_type'),
+            'title'               => $this->input->post('title'),
+            'description'         => $this->input->post('description'),
+            'file_name'           => $file_name,
+            'file_path'           => $file_path,
+            'file_size'           => $file_size,
+            'uploaded_by'         => $staff_id,
+            'status'              => 1
+        );
+
+        $this->scholarshipexam_model->addMaterial($save_data);
+        $this->session->set_flashdata('msg', '<div class="alert alert-success">Material/Sample Paper uploaded successfully!</div>');
+        redirect('admin/scholarshipexam/materials?exam_id=' . $save_data['scholarship_exam_id'] . '&class_id=' . $save_data['class_id']);
+    }
+
+    public function delete_material($id)
+    {
+        if (!$this->rbac->hasPrivilege('scholarship_exam', 'can_delete')) {
+            access_denied();
+        }
+
+        $material = $this->scholarshipexam_model->getMaterialById($id);
+        if ($material) {
+            $this->scholarshipexam_model->deleteMaterial($id);
+            $this->session->set_flashdata('msg', '<div class="alert alert-success">Material deleted successfully.</div>');
+            redirect('admin/scholarshipexam/materials?exam_id=' . $material['scholarship_exam_id']);
+        } else {
+            redirect('admin/scholarshipexam/materials');
+        }
     }
 
     /** School settings as [0 => row]; the base controller's sch_setting_detail is null under the CI4 shim. */

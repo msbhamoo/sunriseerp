@@ -96,6 +96,21 @@ class ScholarshipexamController extends BaseController
         return $this->dispatchLegacy('Scholarshipexam', 'admitcard', func_get_args());
     }
 
+    public function get_candidate_details($candidate_id)
+    {
+        return $this->dispatchLegacy('Scholarshipexam', 'get_candidate_details', func_get_args());
+    }
+
+    public function reset_candidate_pin()
+    {
+        return $this->dispatchLegacy('Scholarshipexam', 'reset_candidate_pin', func_get_args());
+    }
+
+    public function update_candidate_profile()
+    {
+        return $this->dispatchLegacy('Scholarshipexam', 'update_candidate_profile', func_get_args());
+    }
+
     public function marks()
     {
         return $this->dispatchLegacy('Scholarshipexam', 'marks', func_get_args());
@@ -134,6 +149,21 @@ class ScholarshipexamController extends BaseController
     public function qr_download($format = 'png')
     {
         return $this->dispatchLegacy('Scholarshipexam', 'qr_download', func_get_args());
+    }
+
+    public function materials()
+    {
+        return $this->dispatchLegacy('Scholarshipexam', 'materials', func_get_args());
+    }
+
+    public function upload_material()
+    {
+        return $this->dispatchLegacy('Scholarshipexam', 'upload_material', func_get_args());
+    }
+
+    public function delete_material($id)
+    {
+        return $this->dispatchLegacy('Scholarshipexam', 'delete_material', func_get_args());
     }
 
     protected function dispatchLegacy(string $controller, string $method, array $params)

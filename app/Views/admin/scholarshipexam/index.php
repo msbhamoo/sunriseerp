@@ -56,6 +56,7 @@
                     <div class="box-header with-border">
                         <h3 class="box-title"><i class="fa fa-list-alt"></i> Active Scholarship & Olympiad Exams Overview</h3>
                         <div class="box-tools pull-right">
+                            <a href="<?php echo site_url('admin/scholarshipexam/materials'); ?>" class="btn btn-sm btn-success" style="border-radius: 6px; margin-right: 5px;"><i class="fa fa-book"></i> Upload Sample Papers & Materials</a>
                             <a href="<?php echo site_url('admin/scholarshipexam/exams'); ?>" class="btn btn-sm btn-primary" style="border-radius: 6px;"><i class="fa fa-plus"></i> Create New Exam</a>
                         </div>
                     </div>

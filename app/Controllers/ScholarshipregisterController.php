@@ -31,6 +31,11 @@ class ScholarshipregisterController extends BaseController
         return $this->dispatchLegacy('Scholarshipregister', 'activity', func_get_args());
     }
 
+    public function check_mobile()
+    {
+        return $this->dispatchLegacy('Scholarshipregister', 'check_mobile', func_get_args());
+    }
+
     public function submit()
     {
         return $this->dispatchLegacy('Scholarshipregister', 'submit', func_get_args());
@@ -39,6 +44,31 @@ class ScholarshipregisterController extends BaseController
     public function check_status()
     {
         return $this->dispatchLegacy('Scholarshipregister', 'check_status', func_get_args());
+    }
+
+    public function portal()
+    {
+        return $this->dispatchLegacy('Scholarshipregister', 'portal', func_get_args());
+    }
+
+    public function portal_login()
+    {
+        return $this->dispatchLegacy('Scholarshipregister', 'portal_login', func_get_args());
+    }
+
+    public function portal_login_ajax()
+    {
+        return $this->dispatchLegacy('Scholarshipregister', 'portal_login_ajax', func_get_args());
+    }
+
+    public function portal_logout()
+    {
+        return $this->dispatchLegacy('Scholarshipregister', 'portal_logout', func_get_args());
+    }
+
+    public function dashboard()
+    {
+        return $this->dispatchLegacy('Scholarshipregister', 'dashboard', func_get_args());
     }
 
     protected function dispatchLegacy(string $controller, string $method, array $params)

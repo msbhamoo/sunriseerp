@@ -21,6 +21,33 @@ class Scholarshipexam_model extends MY_Model
      */
     public function checkAndSetupTables()
     {
+        if (!$this->db->table_exists('scholarship_study_materials')) {
+            $this->db->query("
+                CREATE TABLE IF NOT EXISTS `scholarship_study_materials` (
+                  `id` INT AUTO_INCREMENT PRIMARY KEY,
+                  `scholarship_exam_id` INT NOT NULL,
+                  `class_id` INT NOT NULL,
+                  `material_type` ENUM('sample_paper', 'syllabus', 'notes', 'other') DEFAULT 'sample_paper',
+                  `title` VARCHAR(255) NOT NULL,
+                  `description` TEXT,
+                  `file_name` VARCHAR(255) NOT NULL,
+                  `file_path` VARCHAR(500) NOT NULL,
+                  `file_size` VARCHAR(50) DEFAULT NULL,
+                  `uploaded_by` INT DEFAULT NULL,
+                  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                  `status` TINYINT(1) DEFAULT 1,
+                  INDEX (`scholarship_exam_id`),
+                  INDEX (`class_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+        }
+
+        if ($this->db->table_exists('scholarship_exam_candidates')) {
+            if (!$this->db->field_exists('password_pin', 'scholarship_exam_candidates')) {
+                $this->db->query("ALTER TABLE `scholarship_exam_candidates` ADD `password_pin` VARCHAR(10) DEFAULT NULL;");
+            }
+        }
+
         if (!$this->db->table_exists('scholarship_exams')) {
             $this->db->query("
                 CREATE TABLE IF NOT EXISTS `scholarship_exams` (
@@ -374,6 +401,14 @@ class Scholarshipexam_model extends MY_Model
                 'activate_methods' => 'setting',
                 'level' => 8,
                 'key' => 'scholarshipexam_setting'
+            ),
+            array(
+                'menu' => 'Sample Papers & Study Material',
+                'url' => 'admin/scholarshipexam/materials',
+                'activate_controller' => 'scholarshipexam',
+                'activate_methods' => 'materials',
+                'level' => 9,
+                'key' => 'scholarshipexam_materials'
             )
         );
 
@@ -976,11 +1011,12 @@ class Scholarshipexam_model extends MY_Model
         $this->db->select('scholarship_exam_candidates.*, scholarship_exams.title as exam_title, scholarship_exams.exam_code, scholarship_exams.exam_mode, scholarship_exams.exam_center, scholarship_exams.instructions, 
             COALESCE(NULLIF(students.firstname, ""), scholarship_exam_candidates.external_candidate_name, "External Candidate") as firstname, 
             COALESCE(students.lastname, "") as lastname, 
-            students.image, students.gender, students.dob, 
-            COALESCE(students.father_name, "Guardian") as father_name, 
-            COALESCE(students.mother_name, "") as mother_name, 
+            students.image, COALESCE(students.gender, scholarship_exam_candidates.external_gender) as gender, COALESCE(students.dob, scholarship_exam_candidates.external_dob) as dob, 
+            COALESCE(students.father_name, scholarship_exam_candidates.external_father_name, "Guardian") as father_name, 
+            COALESCE(students.mother_name, scholarship_exam_candidates.external_mother_name, "") as mother_name, 
             COALESCE(students.admission_no, CONCAT("EXT-", scholarship_exam_candidates.id)) as admission_no, 
-            COALESCE(classes.class, CONCAT("External (", IFNULL(scholarship_exam_candidates.external_school_name, "Public"), ")")) as class, 
+            COALESCE(classes.class, ext_classes.class, "N/A") as raw_class_name,
+            COALESCE(classes.class, CONCAT(IF(ext_classes.class IS NULL, "", CONCAT("Class ", ext_classes.class, " - ")), "External (", IFNULL(scholarship_exam_candidates.external_school_name, "Public"), ")")) as class, 
             COALESCE(sections.section, "A") as section, 
             scholarship_exam_schedules.phase_name, scholarship_exam_schedules.exam_date, scholarship_exam_schedules.duration_minutes, scholarship_exam_schedules.admit_card_release_date');
         $this->db->from('scholarship_exam_candidates');
@@ -988,6 +1024,7 @@ class Scholarshipexam_model extends MY_Model
         $this->db->join('students', 'students.id = scholarship_exam_candidates.student_id', 'left');
         $this->db->join('student_session', 'student_session.id = scholarship_exam_candidates.student_session_id', 'left');
         $this->db->join('classes', 'classes.id = student_session.class_id', 'left');
+        $this->db->join('classes ext_classes', 'ext_classes.id = scholarship_exam_candidates.external_class_id', 'left');
         $this->db->join('sections', 'sections.id = student_session.section_id', 'left');
         $this->db->join('scholarship_exam_schedules', 'scholarship_exam_schedules.id = scholarship_exam_candidates.schedule_id', 'left');
         $this->db->where('scholarship_exam_candidates.id', $candidate_id);
@@ -1246,6 +1283,25 @@ class Scholarshipexam_model extends MY_Model
         ))->row_array();
     }
 
+    public function getCandidatesByMobile($exam_id = null, $mobile = null)
+    {
+        if ($mobile === null && $exam_id !== null) {
+            $mobile = $exam_id;
+            $exam_id = null;
+        }
+        $mobile = trim((string)$mobile);
+        $this->db->select('scholarship_exam_candidates.*, classes.class as class_name, scholarship_exams.title as exam_title');
+        $this->db->from('scholarship_exam_candidates');
+        $this->db->join('classes', 'classes.id = scholarship_exam_candidates.external_class_id', 'left');
+        $this->db->join('scholarship_exams', 'scholarship_exams.id = scholarship_exam_candidates.scholarship_exam_id', 'left');
+        if (!empty($exam_id)) {
+            $this->db->where('scholarship_exam_candidates.scholarship_exam_id', $exam_id);
+        }
+        $this->db->where('scholarship_exam_candidates.external_mobile', $mobile);
+        $this->db->order_by('scholarship_exam_candidates.id', 'ASC');
+        return $this->db->get()->result_array();
+    }
+
     /**
      * Inserts an external candidate with a unique roll number. roll_no has a UNIQUE index,
      * so a concurrent submission that grabs the same number is retried with the next one.
@@ -1288,5 +1344,80 @@ class Scholarshipexam_model extends MY_Model
             ));
         }
         return true;
+    }
+
+    /* ================= Study Materials & Sample Papers ================= */
+
+    public function getMaterials($exam_id = null, $class_id = null, $material_type = null)
+    {
+        $this->db->select('scholarship_study_materials.*, scholarship_exams.title as exam_title, scholarship_exams.exam_code, classes.class as class_name');
+        $this->db->from('scholarship_study_materials');
+        $this->db->join('scholarship_exams', 'scholarship_exams.id = scholarship_study_materials.scholarship_exam_id', 'left');
+        $this->db->join('classes', 'classes.id = scholarship_study_materials.class_id', 'left');
+
+        if ($exam_id) {
+            $this->db->where('scholarship_study_materials.scholarship_exam_id', $exam_id);
+        }
+        if ($class_id) {
+            $this->db->where('scholarship_study_materials.class_id', $class_id);
+        }
+        if ($material_type) {
+            $this->db->where('scholarship_study_materials.material_type', $material_type);
+        }
+
+        $this->db->order_by('scholarship_study_materials.id', 'DESC');
+        return $this->db->get()->result_array();
+    }
+
+    public function getMaterialById($id)
+    {
+        return $this->db->get_where('scholarship_study_materials', array('id' => $id))->row_array();
+    }
+
+    public function addMaterial($data)
+    {
+        $this->db->insert('scholarship_study_materials', $data);
+        return $this->db->insert_id();
+    }
+
+    public function deleteMaterial($id)
+    {
+        $material = $this->getMaterialById($id);
+        if ($material) {
+            if (!empty($material['file_path']) && file_exists(FCPATH . $material['file_path'])) {
+                @unlink(FCPATH . $material['file_path']);
+            }
+            $this->db->where('id', $id)->delete('scholarship_study_materials');
+            return true;
+        }
+        return false;
+    }
+
+    public function authenticateCandidate($login_identifier, $pin, $candidate_id = null)
+    {
+        $login_identifier = trim((string)$login_identifier);
+        $pin = trim((string)$pin);
+
+        $this->db->select('scholarship_exam_candidates.*, scholarship_exams.title as exam_title, scholarship_exams.exam_code, scholarship_exams.exam_center, scholarship_exams.instructions, scholarship_exams.admit_card_status, scholarship_exams.result_status_published');
+        $this->db->from('scholarship_exam_candidates');
+        $this->db->join('scholarship_exams', 'scholarship_exams.id = scholarship_exam_candidates.scholarship_exam_id', 'inner');
+        if (!empty($candidate_id)) {
+            $this->db->where('scholarship_exam_candidates.id', $candidate_id);
+        } else {
+            $this->db->group_start();
+            $this->db->where('scholarship_exam_candidates.roll_no', $login_identifier);
+            $this->db->or_where('scholarship_exam_candidates.external_mobile', $login_identifier);
+            $this->db->group_end();
+        }
+        $this->db->where('scholarship_exam_candidates.password_pin', $pin);
+        $candidate = $this->db->get()->row_array();
+
+        return $candidate;
+    }
+
+    public function updateCandidateProfile($candidate_id, $data)
+    {
+        $this->db->where('id', $candidate_id);
+        return $this->db->update('scholarship_exam_candidates', $data);
     }
 }

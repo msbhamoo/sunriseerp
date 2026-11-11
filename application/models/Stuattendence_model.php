@@ -333,4 +333,174 @@ class Stuattendence_model extends MY_Model
 
         return $query->result();
     }
+
+    public function isHoliday($date, $session_id = null)
+    {
+        if (empty($session_id)) {
+            $session_id = $this->current_session;
+        }
+
+        $escaped_date = $this->db->escape($date);
+        $sql = "SELECT ac.*, ht.type as type_name
+                FROM annual_calendar ac
+                LEFT JOIN holiday_type ht ON ht.id = ac.holiday_type
+                WHERE ac.is_active = 1
+                  AND ac.session_id = " . (int) $session_id . "
+                  AND (ac.is_working_day = 0 OR ac.is_working_day IS NULL)
+                  AND (ac.holiday_type IN (1, 2) OR LOWER(ht.type) LIKE '%holiday%' OR LOWER(ht.type) LIKE '%vacation%')
+                  AND DATE(ac.from_date) <= " . $escaped_date . "
+                  AND DATE(ac.to_date) >= " . $escaped_date . "
+                LIMIT 1";
+        $query = $this->db->query($sql);
+        $res = $query->row_array();
+        if (!empty($res)) {
+            return array(
+                'id'             => $res['id'],
+                'description'    => !empty($res['description']) ? $res['description'] : 'Holiday',
+                'type'           => 'holiday',
+                'type_name'      => $res['type_name'],
+                'from_date'      => $res['from_date'],
+                'to_date'        => $res['to_date'],
+                'is_working_day' => 0,
+            );
+        }
+
+        // Check if Sunday (and not declared as working day)
+        if (date('w', strtotime($date)) == 0) {
+            $chk = $this->db->query("SELECT id FROM annual_calendar WHERE session_id = " . (int) $session_id . " AND is_active = 1 AND is_working_day = 1 AND DATE(from_date) <= " . $escaped_date . " AND DATE(to_date) >= " . $escaped_date . " LIMIT 1")->row_array();
+            if (empty($chk)) {
+                return array(
+                    'id'             => 0,
+                    'description'    => 'Sunday',
+                    'type'           => 'sunday',
+                    'type_name'      => 'Holiday',
+                    'from_date'      => $date,
+                    'to_date'        => $date,
+                    'is_working_day' => 0,
+                );
+            }
+        }
+
+        return false;
+    }
+
+    public function syncHolidayAttendanceForDate($date, $description = 'Holiday', $session_id = null)
+    {
+        if (empty($session_id)) {
+            $session_id = $this->current_session;
+        }
+
+        $escaped_date = $this->db->escape($date);
+        $escaped_desc = $this->db->escape($description);
+        $session_id   = (int) $session_id;
+
+        // 1. Insert holiday attendance for active students who do not have attendance recorded on this date
+        $sql_insert = "INSERT INTO student_attendences (student_session_id, date, attendence_type_id, remark, is_active)
+            SELECT ss.id, $escaped_date, 5, $escaped_desc, 'no'
+            FROM student_session ss
+            JOIN students s ON s.id = ss.student_id
+            WHERE ss.session_id = $session_id
+              AND s.is_active = 'yes'
+              AND NOT EXISTS (
+                  SELECT 1 FROM student_attendences sa
+                  WHERE sa.student_session_id = ss.id
+                    AND sa.date = $escaped_date
+              )";
+        $this->db->query($sql_insert);
+
+        // 2. Update existing records on this date where attendence_type_id is not 5 and no biometric/qrcode attendance exists
+        $sql_update = "UPDATE student_attendences sa
+            JOIN student_session ss ON ss.id = sa.student_session_id
+            JOIN students s ON s.id = ss.student_id
+            SET sa.attendence_type_id = 5,
+                sa.remark = IF(sa.remark IS NULL OR sa.remark = '', $escaped_desc, sa.remark)
+            WHERE ss.session_id = $session_id
+              AND s.is_active = 'yes'
+              AND sa.date = $escaped_date
+              AND sa.attendence_type_id != 5
+              AND sa.biometric_attendence = 0
+              AND sa.qrcode_attendance = 0";
+        $this->db->query($sql_update);
+
+        return true;
+    }
+
+    public function syncHolidayAttendanceForRange($from_date, $to_date, $description = 'Holiday', $session_id = null)
+    {
+        $start = strtotime($from_date);
+        $end   = strtotime($to_date);
+        for ($t = $start; $t <= $end; $t += 86400) {
+            $d = date('Y-m-d', $t);
+            $this->syncHolidayAttendanceForDate($d, $description, $session_id);
+        }
+        return true;
+    }
+
+    public function deleteHolidayAttendanceForRange($from_date, $to_date, $description = null, $session_id = null)
+    {
+        if (empty($session_id)) {
+            $session_id = $this->current_session;
+        }
+
+        $from_ymd = date('Y-m-d', strtotime($from_date));
+        $to_ymd   = date('Y-m-d', strtotime($to_date));
+
+        $sql = "DELETE sa FROM student_attendences sa
+                JOIN student_session ss ON ss.id = sa.student_session_id
+                WHERE ss.session_id = " . (int) $session_id . "
+                  AND sa.date >= " . $this->db->escape($from_ymd) . "
+                  AND sa.date <= " . $this->db->escape($to_ymd) . "
+                  AND sa.attendence_type_id = 5";
+
+        if (!empty($description)) {
+            $sql .= " AND (sa.remark = " . $this->db->escape($description) . " OR sa.remark = 'Holiday' OR sa.remark = '' OR sa.remark IS NULL)";
+        }
+
+        $this->db->query($sql);
+        return true;
+    }
+
+    public function syncHolidaysInRange($start_date, $end_date, $session_id = null)
+    {
+        if (empty($session_id)) {
+            $session_id = $this->current_session;
+        }
+
+        $start_ymd = date('Y-m-d', strtotime($start_date));
+        $end_ymd   = date('Y-m-d', strtotime($end_date));
+
+        $sql = "SELECT ac.*, ht.type as type_name
+                FROM annual_calendar ac
+                LEFT JOIN holiday_type ht ON ht.id = ac.holiday_type
+                WHERE ac.is_active = 1
+                  AND ac.session_id = " . (int) $session_id . "
+                  AND (ac.is_working_day = 0 OR ac.is_working_day IS NULL)
+                  AND (ac.holiday_type IN (1, 2) OR LOWER(ht.type) LIKE '%holiday%' OR LOWER(ht.type) LIKE '%vacation%')
+                  AND DATE(ac.from_date) <= " . $this->db->escape($end_ymd) . "
+                  AND DATE(ac.to_date) >= " . $this->db->escape($start_ymd);
+        $query = $this->db->query($sql);
+        $holidays = $query->result_array();
+
+        foreach ($holidays as $h) {
+            $h_start = max(strtotime($start_ymd), strtotime(date('Y-m-d', strtotime($h['from_date']))));
+            $h_end   = min(strtotime($end_ymd), strtotime(date('Y-m-d', strtotime($h['to_date']))));
+            for ($t = $h_start; $t <= $h_end; $t += 86400) {
+                $this->syncHolidayAttendanceForDate(date('Y-m-d', $t), $h['description'], $session_id);
+            }
+        }
+
+        // Also check Sundays in range
+        $start_t = strtotime($start_ymd);
+        $end_t   = strtotime($end_ymd);
+        for ($t = $start_t; $t <= $end_t; $t += 86400) {
+            if (date('w', $t) == 0) {
+                $d = date('Y-m-d', $t);
+                $chk = $this->db->query("SELECT id FROM annual_calendar WHERE session_id = " . (int) $session_id . " AND is_active = 1 AND is_working_day = 1 AND DATE(from_date) <= '$d' AND DATE(to_date) >= '$d' LIMIT 1")->row_array();
+                if (empty($chk)) {
+                    $this->syncHolidayAttendanceForDate($d, 'Sunday', $session_id);
+                }
+            }
+        }
+        return true;
+    }
 }

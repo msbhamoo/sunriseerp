@@ -24,6 +24,13 @@
     <div>
         <div style="font-size: 13px; color: #64748b; text-transform: uppercase; font-weight: bold;">Your Registration Roll Number</div>
         <div class="roll-badge"><?php echo htmlspecialchars($candidate['roll_no']); ?></div>
+        <?php if (!empty($candidate['password_pin'])) { ?>
+            <div style="margin-top: 5px;">
+                <span style="font-size: 13px; color: #475569; font-weight: 600;">Your 4-Digit Password PIN:</span>
+                <span class="label label-primary" style="font-size: 16px; padding: 4px 12px; letter-spacing: 2px; font-weight: bold; border-radius: 4px;"><?php echo htmlspecialchars($candidate['password_pin']); ?></span>
+            </div>
+            <p class="text-muted" style="font-size: 12px; margin-top: 5px;">Use this PIN to login to your Candidate Portal to access sample papers and model tests.</p>
+        <?php } ?>
     </div>
 
     <div class="info-box">
@@ -58,6 +65,7 @@
     </div>
 
     <div style="margin-top: 25px;">
+        <a href="<?php echo site_url('scholarshipregister/portal'); ?>" class="btn btn-success" style="border-radius: 6px; font-weight: bold; margin-right: 10px;"><i class="fa fa-dashboard"></i> Go to Candidate Portal</a>
         <button onclick="window.print()" class="btn btn-default"><i class="fa fa-print"></i> Print Slip</button>
         <a href="<?php echo site_url('scholarshipregister'); ?>" class="btn btn-primary" style="margin-left: 10px;">Back to Competitions</a>
     </div>
