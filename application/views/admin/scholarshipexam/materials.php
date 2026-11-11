@@ -65,8 +65,25 @@
 
                             <div class="form-group">
                                 <label>Attach Document / PDF File <span class="text-danger">*</span></label>
-                                <input type="file" name="material_file" class="form-control" accept=".pdf,.doc,.docx,.zip,.jpg,.jpeg,.png" required>
-                                <p class="help-block"><small>Allowed formats: PDF, DOC, DOCX, ZIP, PNG, JPG (Max 25MB).</small></p>
+                                <div id="file_drop_zone" style="border: 2px dashed #008479; border-radius: 8px; padding: 18px 15px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s;" onclick="document.getElementById('material_file_input').click();">
+                                    <i class="fa fa-cloud-upload" style="font-size: 34px; color: #008479; margin-bottom: 6px; display: block;"></i>
+                                    <div id="file_display_text" style="font-weight: 700; color: #1e293b; font-size: 14px;">
+                                        Click to browse &amp; attach file
+                                    </div>
+                                    <p class="help-block" style="margin: 6px 0 8px 0; color: #64748B; font-size: 12px;">
+                                        Allowed formats: PDF, DOC, DOCX, ZIP, PNG, JPG (Max 25MB)
+                                    </p>
+                                    <button type="button" class="btn btn-default btn-xs" style="font-weight: 700; border-radius: 4px; padding: 4px 12px; pointer-events: none;">
+                                        <i class="fa fa-folder-open"></i> Choose File
+                                    </button>
+                                </div>
+                                <input type="file" 
+                                       id="material_file_input" 
+                                       name="material_file" 
+                                       accept=".pdf,.doc,.docx,.zip,.jpg,.jpeg,.png,.PDF,.DOC,.DOCX,.ZIP,.JPG,.JPEG,.PNG" 
+                                       required 
+                                       style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;"
+                                       onchange="updateSelectedFileDisplay(this);">
                             </div>
                         </div>
 
@@ -193,3 +210,21 @@
         </div>
     </section>
 </div>
+
+<script>
+function updateSelectedFileDisplay(input) {
+    var zone = document.getElementById('file_drop_zone');
+    var txt = document.getElementById('file_display_text');
+    if (input.files && input.files[0]) {
+        var file = input.files[0];
+        var sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        zone.style.background = '#e8f8f2';
+        zone.style.borderColor = '#00a86b';
+        txt.innerHTML = '<span style="color: #008479; font-weight: 800;"><i class="fa fa-file-pdf-o"></i> ' + file.name + '</span> <span class="badge" style="background: #00a86b; font-size: 11px; margin-left: 6px;">' + sizeMB + ' MB</span>';
+    } else {
+        zone.style.background = '#f8fafc';
+        zone.style.borderColor = '#008479';
+        txt.innerHTML = 'Click to browse &amp; attach file';
+    }
+}
+</script>

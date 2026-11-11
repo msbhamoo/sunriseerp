@@ -622,7 +622,7 @@ class Scholarshipexam extends Admin_Controller
         $this->form_validation->set_rules('material_type', 'Material Type', 'trim|required|xss_clean');
 
         if ($this->form_validation->run() == false) {
-            $this->session->set_flashdata('msg', '<div class="alert alert-danger">Please fill in all required fields.</div>');
+            $this->session->set_flashdata('msg', '<div class="alert alert-danger">Please fill in all required fields. ' . validation_errors() . '</div>');
             redirect('admin/scholarshipexam/materials');
             return;
         }
@@ -634,23 +634,34 @@ class Scholarshipexam extends Admin_Controller
         if (!empty($_FILES['material_file']['name'])) {
             $upload_dir = FCPATH . 'uploads/scholarship_materials/';
             if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
+                @mkdir($upload_dir, 0777, true);
+            }
+
+            $orig_name = $_FILES['material_file']['name'];
+            $ext = strtolower(pathinfo($orig_name, PATHINFO_EXTENSION));
+            $allowed_exts = array('pdf', 'doc', 'docx', 'zip', 'jpg', 'jpeg', 'png');
+
+            if (!in_array($ext, $allowed_exts)) {
+                $this->session->set_flashdata('msg', '<div class="alert alert-danger">Invalid file type (.' . htmlspecialchars($ext) . '). Allowed formats: PDF, DOC, DOCX, ZIP, JPG, PNG.</div>');
+                redirect('admin/scholarshipexam/materials');
+                return;
             }
 
             $config['upload_path']   = $upload_dir;
-            $config['allowed_types'] = 'pdf|doc|docx|zip|jpg|jpeg|png';
+            $config['allowed_types'] = '*'; // Bypass CI mime-type false positives; extension strictly verified above
             $config['max_size']      = 25600; // 25MB
             $config['encrypt_name']  = true;
 
             $this->load->library('upload', $config);
+            $this->upload->initialize($config);
 
             if ($this->upload->do_upload('material_file')) {
                 $upload_data = $this->upload->data();
-                $file_name = $_FILES['material_file']['name'];
-                $file_path = 'uploads/scholarship_materials/' . $upload_data['file_name'];
-                $file_size = round($upload_data['file_size'] / 1024, 2) . ' MB';
+                $file_name   = $orig_name;
+                $file_path   = 'uploads/scholarship_materials/' . $upload_data['file_name'];
+                $file_size   = round($upload_data['file_size'] / 1024, 2) . ' MB';
             } else {
-                $this->session->set_flashdata('msg', '<div class="alert alert-danger">' . $this->upload->display_errors() . '</div>');
+                $this->session->set_flashdata('msg', '<div class="alert alert-danger">Upload error: ' . $this->upload->display_errors() . '</div>');
                 redirect('admin/scholarshipexam/materials');
                 return;
             }
@@ -676,7 +687,7 @@ class Scholarshipexam extends Admin_Controller
         );
 
         $this->scholarshipexam_model->addMaterial($save_data);
-        $this->session->set_flashdata('msg', '<div class="alert alert-success">Material/Sample Paper uploaded successfully!</div>');
+        $this->session->set_flashdata('msg', '<div class="alert alert-success"><i class="fa fa-check-circle"></i> Study Material/Sample Paper uploaded successfully!</div>');
         redirect('admin/scholarshipexam/materials?exam_id=' . $save_data['scholarship_exam_id'] . '&class_id=' . $save_data['class_id']);
     }
 
