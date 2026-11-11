@@ -125,6 +125,7 @@
                                             <?php echo $this->lang->line('attendance_date'); ?>
                                         </label><small class="req"> *</small>
                                         <input id="date" name="date" placeholder="" type="text" class="form-control date" value="<?php echo set_value('date', date($this->customlib->getSchoolDateFormat())); ?>" readonly="readonly" />
+                                        <div id="holiday_message" class="text-primary" style="display:none; font-weight:bold; margin-top: 5px;"><i class="fa fa-calendar-check-o"></i> <span id="holiday_message_text"></span></div>
                                         <div id="sunday_message" class="text-danger" style="display:none; font-weight:bold;">Today is Sunday, so mark it a holiday</div>
                                         <span class="text-danger"><?php echo form_error('date'); ?></span>
                                     </div>
@@ -157,6 +158,13 @@
                                     $checked  = "";
                                 
                                     ?>
+                                    <?php if (!empty($holiday_info)) { ?>
+                                    <div class="alert alert-info alert-dismissible" style="border-left: 4px solid #7c3aed; background-color: #f5f3ff; color: #5b21b6; margin-bottom: 15px; border-radius: 4px; padding: 12px 15px; font-size: 13px;">
+                                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                        <i class="fa fa-calendar-check-o" style="font-size: 16px; margin-right: 5px;"></i>
+                                        <strong><?php echo $this->lang->line('holiday'); ?>:</strong> <?php echo htmlspecialchars($holiday_info['description']); ?> &mdash; <?php echo $this->lang->line('attendance'); ?> is automatically marked and saved as Holiday.
+                                    </div>
+                                    <?php } ?>
                                     <form action="<?php echo site_url('admin/stuattendence/index') ?>" method="post" class="form_attendence">
                                         <?php echo $this->customlib->getCSRF(); ?>
                                         <input type="hidden" name="is_first_time_attendance" value="<?php echo $is_first_time_attendance;?>"/>
@@ -172,8 +180,9 @@
                                                         <?php
                                                         foreach ($attendencetypeslist as $key => $type) {
                                                             $att_type = str_replace(" ", "_", strtolower($type['type']));
+                                                            $bulk_checked = (!empty($holiday_info) && $type['id'] == 5) ? 'checked' : '';
                                                         ?>
-                                                            <input type="radio" data-record_id="<?php echo $type['id'] ?>" name="attendencetype" class="default_radio" value="radio_<?php echo $type['id'] ?>" id="attendencetype<?php echo $type['id'] ?>">
+                                                            <input type="radio" data-record_id="<?php echo $type['id'] ?>" name="attendencetype" class="default_radio" value="radio_<?php echo $type['id'] ?>" id="attendencetype<?php echo $type['id'] ?>" <?php echo $bulk_checked; ?>>
                                                             <label class="att-pill t-<?php echo $att_type; ?>" for="attendencetype<?php echo $type['id'] ?>"><?php echo $this->lang->line($att_type); ?></label>
                                                         <?php } ?>
                                                         </div>
@@ -636,22 +645,50 @@ function parseDateValAndCheckSunday(dateVal) {
     return false;
 }
 
-function checkSundayAndShowMessage(dateInputId, messageContainerId) {
+function checkHolidayAndShowMessage(dateInputId, messageContainerId) {
     var dateVal = $('#' + dateInputId).val();
     if (dateVal) {
-        var isSunday = parseDateValAndCheckSunday(dateVal);
-        
-        if (isSunday) {
-            $('#' + messageContainerId).show();
-            $('.default_radio').each(function() {
-                var label = $(this).next('label').text().toLowerCase();
-                if (label.indexOf('holiday') !== -1) {
-                    $(this).prop('checked', true);
+        $.ajax({
+            url: '<?php echo site_url("admin/stuattendence/checkHolidayDate"); ?>',
+            type: 'POST',
+            data: { date: dateVal },
+            dataType: 'json',
+            success: function(res) {
+                if (res && res.is_holiday) {
+                    $('#holiday_message_text').text(res.description);
+                    $('#holiday_message').show();
+                    $('#' + messageContainerId).hide();
+                    $('.default_radio').each(function() {
+                        var label = $(this).next('label').text().toLowerCase();
+                        if (label.indexOf('holiday') !== -1) {
+                            $(this).prop('checked', true);
+                        }
+                    });
+                } else {
+                    $('#holiday_message').hide();
+                    var isSunday = parseDateValAndCheckSunday(dateVal);
+                    if (isSunday) {
+                        $('#' + messageContainerId).show();
+                        $('.default_radio').each(function() {
+                            var label = $(this).next('label').text().toLowerCase();
+                            if (label.indexOf('holiday') !== -1) {
+                                $(this).prop('checked', true);
+                            }
+                        });
+                    } else {
+                        $('#' + messageContainerId).hide();
+                    }
                 }
-            });
-        } else {
-            $('#' + messageContainerId).hide();
-        }
+            },
+            error: function() {
+                var isSunday = parseDateValAndCheckSunday(dateVal);
+                if (isSunday) {
+                    $('#' + messageContainerId).show();
+                } else {
+                    $('#' + messageContainerId).hide();
+                }
+            }
+        });
     }
 }
 
@@ -696,12 +733,12 @@ $(document).on('change click', '.att-cell input, .default_radio', function() { s
 $(document).ready(function() {
     attRefresh();
     // Check initially
-    checkSundayAndShowMessage('date', 'sunday_message');
+    checkHolidayAndShowMessage('date', 'sunday_message');
 
     // Bootstrap datepicker dp.change or change
     $('.date').on('change dp.change', function(e) {
         if ($(this).attr('id') == 'date') {
-            checkSundayAndShowMessage('date', 'sunday_message');
+            checkHolidayAndShowMessage('date', 'sunday_message');
         }
     });
 });

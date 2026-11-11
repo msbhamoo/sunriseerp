@@ -59,10 +59,17 @@ class Stuattendence extends Admin_Controller
 
             $attendencetypes             = $this->attendencetype_model->get();
             $data['attendencetypeslist'] = $attendencetypes;
-            $resultlist                  = $this->stuattendence_model->searchAttendenceClassSection($class, $section, date('Y-m-d', $this->customlib->datetostrtotime($date)));
-            $data['resultlist']          = $resultlist;
-
             $formatted_date = date('Y-m-d', $this->customlib->datetostrtotime($date));
+
+            // Check if this date is a holiday
+            $holiday_info = $this->stuattendence_model->isHoliday($formatted_date);
+            $data['holiday_info'] = $holiday_info;
+            if (!empty($holiday_info)) {
+                $this->stuattendence_model->syncHolidayAttendanceForDate($formatted_date, $holiday_info['description']);
+            }
+
+            $resultlist                  = $this->stuattendence_model->searchAttendenceClassSection($class, $section, $formatted_date);
+            $data['resultlist']          = $resultlist;
             if (!empty($resultlist)) {
                 $session_ids = array_column($resultlist, 'student_session_id');
                 $bus_records = [];
@@ -278,7 +285,14 @@ class Stuattendence extends Admin_Controller
             }
             $attendencetypes             = $this->attendencetype_model->get();
             $data['attendencetypeslist'] = $attendencetypes;
-            $resultlist                  = $this->stuattendence_model->searchAttendenceClassSectionPrepare($class, $section, date('Y-m-d', $this->customlib->datetostrtotime($date)));
+            $formatted_date              = date('Y-m-d', $this->customlib->datetostrtotime($date));
+            $holiday_info                = $this->stuattendence_model->isHoliday($formatted_date);
+            $data['holiday_info']        = $holiday_info;
+            if (!empty($holiday_info)) {
+                $this->stuattendence_model->syncHolidayAttendanceForDate($formatted_date, $holiday_info['description']);
+            }
+
+            $resultlist                  = $this->stuattendence_model->searchAttendenceClassSectionPrepare($class, $section, $formatted_date);
 
             $data['resultlist']  = $resultlist;
             $data['sch_setting'] = $this->sch_setting_detail;
@@ -421,6 +435,24 @@ class Stuattendence extends Admin_Controller
         }
 
         echo json_encode($array);
+    }
+
+    public function checkHolidayDate()
+    {
+        $date = $this->input->get_post('date');
+        if (!empty($date)) {
+            $formatted_date = date('Y-m-d', $this->customlib->datetostrtotime($date));
+            $holiday = $this->stuattendence_model->isHoliday($formatted_date);
+            if (!empty($holiday)) {
+                echo json_encode(array(
+                    'is_holiday'  => true,
+                    'description' => $holiday['description'],
+                    'type'        => $holiday['type'],
+                ));
+                return;
+            }
+        }
+        echo json_encode(array('is_holiday' => false));
     }
 
 }

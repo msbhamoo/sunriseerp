@@ -1,1149 +1,2191 @@
-<?php
-/**
- * Public SSAT (Sunrise Scholarship & Admission Test) landing + registration page.
- * Visual language follows the printed pamphlet: royal blue, signal red, sunrise orange/yellow on a sky backdrop.
- */
-$fields_map = array();
-if (!empty($field_settings)) {
-    foreach ($field_settings as $fs) {
-        $fields_map[$fs['field_name']] = $fs;
-    }
-}
-if (!function_exists('isFieldVisible')) {
-    function isFieldVisible($key, $map)
-    {
-        return (isset($map[$key]) && $map[$key]['is_visible'] == 1);
-    }
-}
-if (!function_exists('isFieldRequired')) {
-    function isFieldRequired($key, $map)
-    {
-        return (isset($map[$key]) && $map[$key]['is_required'] == 1);
-    }
-}
-
-$school_name = !empty($sch_setting[0]['name']) ? $sch_setting[0]['name'] : 'Sunrise International Public School';
-$school_logo = !empty($sch_setting[0]['image']) ? base_url('uploads/school_content/logo/' . $sch_setting[0]['image']) : '';
-$exam_title  = !empty($selected_exam['title']) ? $selected_exam['title'] : 'Sunrise Scholarship & Admission Test';
-
-// Exam date: first scheduled date if configured, otherwise the date printed on the pamphlet
-$exam_ts = strtotime('2026-12-20 11:00:00');
-if (!empty($selected_exam['schedules'])) {
-    foreach ($selected_exam['schedules'] as $sc) {
-        if (!empty($sc['exam_date']) && strtotime($sc['exam_date'])) {
-            $exam_ts = strtotime($sc['exam_date']);
-            break;
-        }
-    }
-}
-$hindi_days = array('रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार');
-$hindi_months = array(1 => 'जनवरी', 'फ़रवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर');
-$exam_hi_date = date('j', $exam_ts) . ' ' . $hindi_months[(int) date('n', $exam_ts)] . ' ' . date('Y', $exam_ts) . ', ' . $hindi_days[(int) date('w', $exam_ts)];
-
-$hero_img = (defined('FCPATH') && file_exists(FCPATH . 'uploads/scholarship/hero.jpg')) ? base_url('uploads/scholarship/hero.jpg') : '';
-$wa_link = 'https://wa.me/919828512821?text=' . rawurlencode('Hello, I want to register for the Sunrise Scholarship & Admission Test (SSAT).');
-$reg_url = site_url('scholarshipregister/apply/' . (!empty($selected_exam['exam_code']) ? urlencode($selected_exam['exam_code']) : ''));
-?>
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SSAT – Laakho ki Scholarship – <?php echo htmlspecialchars($exam_title); ?> | Sunrise Career Academy</title>
-    <meta name="description" content="S-SAT: Where Talent Meets Opportunity. Free registration for the Sunrise Scholarship & Admission Test – lakhs in scholarships for admission to Class 6–12. Classes 5 to 11 can apply. Sunrise International Public School, Nechhwa, Sikar.">
-    <meta name="theme-color" content="#14397a">
-    <link rel="stylesheet" href="<?php echo base_url('backend/dist/font-awesome-4.5.0/css/font-awesome.min.css'); ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo isset($selected_exam['title']) ? htmlspecialchars($selected_exam['title']) . ' - SSAT 2026' : 'Sunrise Scholarship Cum Admission Test 2026'; ?></title>
+    <meta name="description" content="Win up to 100% Scholarship with Sunrise SSAT 2026. Cash Awards, Free Registration, NCERT based exam for Classes 5th to 11th.">
+    
+    <!-- Bootstrap & FontAwesome -->
+    <link rel="stylesheet" href="<?php echo base_url('backend/bootstrap/css/bootstrap.min.css'); ?>">
+    <link rel="stylesheet" href="<?php echo base_url('backend/font-awesome/css/font-awesome.min.css'); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@500;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --blue: #1b4f9c;
-            --blue-d: #12356f;
-            --blue-dd: #0b2150;
-            --red: #e5262c;
-            --red-d: #c11a20;
-            --pink: #ee3b5f;
-            --orange: #f7941d;
-            --yellow: #ffc61a;
-            --sky: #e8f3fd;
-            --sky-2: #cfe6fa;
-            --ink: #132038;
-            --muted: #5b6b86;
-            --line: #dbe5f1;
-            --white: #fff;
-            --radius: 18px;
-            --shadow: 0 14px 40px rgba(18, 53, 111, .14);
+            --pw-primary: #5A4BDA;
+            --pw-primary-dark: #4739C2;
+            --pw-primary-light: #F0EDFF;
+            --pw-accent: #FF5A5F;
+            --pw-dark: #1B2124;
+            --pw-dark-2: #2B3338;
+            --pw-gray-bg: #F8F9FC;
+            --pw-gray-border: #E6E9F0;
+            --pw-text: #1B2124;
+            --pw-text-muted: #5A6A72;
+            --pw-green: #00A86B;
+            --pw-green-light: #E8F8F2;
+            --pw-gold: #FFB800;
         }
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            margin: 0; font-family: 'Poppins', 'Noto Sans Devanagari', system-ui, sans-serif;
-            color: var(--ink); background: #fff; line-height: 1.55; -webkit-font-smoothing: antialiased;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #FFFFFF;
+            color: var(--pw-text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            padding-bottom: 70px;
+            -webkit-font-smoothing: antialiased;
         }
-        .hi { font-family: 'Noto Sans Devanagari', 'Poppins', sans-serif; }
-        a { color: inherit; text-decoration: none; }
-        img { max-width: 100%; }
-        .wrap { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 20px; }
-        .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-        /* ---------- top bar ---------- */
-        .topbar { background: var(--blue-dd); color: #cfe0ff; font-size: 13px; }
-        .topbar .wrap { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 8px; padding-bottom: 8px; flex-wrap: wrap; }
-        .topbar b { color: var(--yellow); }
-        .topbar a:hover { color: #fff; }
-        .topbar .tb-right { display: flex; gap: 18px; }
-
-        /* ---------- nav ---------- */
-        .nav { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,.96); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
-        .nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 66px; gap: 16px; }
-        .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
-        .brand img { height: 42px; width: auto; }
-        .brand-ico { width: 42px; height: 42px; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center; font-size: 20px; flex: none; }
-        .brand-t { line-height: 1.15; min-width: 0; }
-        .brand-t b { display: block; font-weight: 800; font-size: 17px; color: var(--red); letter-spacing: .3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .brand-t span { font-size: 11.5px; color: var(--blue); font-weight: 600; }
-        .menu { display: flex; align-items: center; gap: 4px; }
-        .menu a { padding: 8px 13px; border-radius: 999px; font-weight: 600; font-size: 14px; color: var(--blue-d); }
-        .menu a:hover { background: var(--sky); }
-        .menu a.cta { background: var(--red); color: #fff; margin-left: 6px; box-shadow: 0 6px 16px rgba(229,38,44,.3); }
-        .menu a.cta:hover { background: var(--red-d); }
-
-        /* ---------- hero ---------- */
-        .hero { position: relative; overflow: hidden; background: linear-gradient(180deg, #fff 0%, var(--sky) 55%, var(--sky-2) 100%); padding: 44px 0 120px; }
-        .hero::before { content: ""; position: absolute; width: 520px; height: 520px; right: -140px; top: -180px; border-radius: 50%; background: radial-gradient(circle, rgba(255,198,26,.35), rgba(255,198,26,0) 70%); }
-        .hero-grid { position: relative; display: grid; grid-template-columns: 1.1fr .9fr; gap: 36px; align-items: center; }
-        .logo-ssat { display: flex; align-items: flex-end; gap: 2px; font-weight: 900; font-size: 84px; line-height: .9; letter-spacing: -2px; color: var(--blue); }
-        .logo-ssat .dash { font-size: 40px; margin: 0 2px 10px; opacity: .7; }
-        .logo-ssat .a { color: var(--orange); position: relative; }
-        .logo-ssat .a i { position: absolute; left: 50%; top: -22px; transform: translateX(-50%); font-size: 22px; color: var(--yellow); }
-        .tagline { margin: 10px 0 0; font-weight: 600; color: var(--blue-d); font-size: 16.5px; }
-        .hero h1 { margin: 22px 0 6px; font-size: clamp(20px, 3vw, 26px); font-weight: 700; color: var(--ink); }
-        .hero h1 small { display: block; font-size: 15px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
-        .hl { font-size: clamp(34px, 6vw, 58px); font-weight: 800; line-height: 1.12; color: var(--blue); margin: 4px 0 6px; text-shadow: 0 2px 0 #fff, 0 6px 22px rgba(27,79,156,.18); }
-        .hl em { font-style: normal; color: var(--red); }
-        .roman { display: block; margin-top: 2px; font-size: 14px; font-weight: 600; letter-spacing: .4px; color: var(--muted); font-family: 'Poppins', sans-serif; }
-        .hero-sub { font-weight: 700; font-size: clamp(18px, 2.4vw, 24px); color: var(--ink); margin: 0 0 22px; }
-        .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-        .btn { display: inline-flex; align-items: center; gap: 10px; border: 0; cursor: pointer; font: inherit; font-weight: 700; border-radius: 999px; padding: 15px 28px; font-size: 16px; transition: transform .15s, box-shadow .15s, background .15s; }
-        .btn:active { transform: translateY(1px); }
-        .btn-free { background: linear-gradient(135deg, var(--pink), var(--red)); color: #fff; box-shadow: 0 10px 26px rgba(229,38,44,.38); }
-        .btn-free:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(229,38,44,.45); }
-        .btn-free .tag { background: #fff; color: var(--red); font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: .6px; }
-        .btn-line { background: #fff; color: var(--blue-d); border: 2px solid var(--blue); }
-        .btn-line:hover { background: var(--blue); color: #fff; }
-        .hero-note { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13.5px; color: var(--muted); font-weight: 500; }
-        .hero-note i { color: #16a34a; margin-right: 5px; }
-
-        .hero-card { position: relative; }
-        .hero-photo { border-radius: 26px; overflow: hidden; box-shadow: var(--shadow); border: 6px solid #fff; background: var(--blue); aspect-ratio: 4/3; position: relative; }
-        .hero-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .hero-photo.fallback { background: linear-gradient(145deg, var(--blue) 0%, var(--blue-dd) 100%); display: grid; place-items: center; color: #fff; text-align: center; }
-        .hero-photo.fallback .cap { font-size: 120px; line-height: 1; color: var(--yellow); filter: drop-shadow(0 10px 20px rgba(0,0,0,.3)); }
-        .hero-photo.fallback p { margin: 8px 0 0; font-weight: 600; letter-spacing: 1px; font-size: 14px; color: #cfe0ff; }
-        .badge-cbse { position: absolute; right: -14px; bottom: -34px; width: 150px; height: 150px; border-radius: 50%; background: var(--blue-d); color: #fff; border: 5px solid #fff; display: grid; place-content: center; text-align: center; box-shadow: var(--shadow); padding: 10px; }
-        .badge-cbse small { font-size: 9.5px; opacity: .9; }
-        .badge-cbse b { font-size: 28px; font-weight: 900; line-height: 1.05; color: var(--yellow); }
-        .badge-cbse span { font-size: 11px; font-weight: 600; line-height: 1.25; }
-
-        .perk-wrap { width: 100%; padding: 26px 24px 96px; }
-        .perk-h { margin: 0 0 16px; font-family: 'Noto Sans Devanagari', sans-serif; font-weight: 700; font-size: 17px; color: var(--yellow); text-align: center; letter-spacing: .3px; }
-        .perks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .perks div { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 16px; padding: 16px 10px; text-align: center; color: #fff; }
-        .perks i { font-size: 28px; color: var(--yellow); display: block; margin-bottom: 6px; }
-        .perks b { display: block; font-size: 15px; line-height: 1.3; }
-        .perks span { font-size: 12px; opacity: .8; }
-        .hero-photo.fallback { aspect-ratio: auto; min-height: 300px; }
-
-        /* swoosh like the pamphlet */
-        .swoosh { position: absolute; left: 0; right: 0; bottom: -1px; height: 90px; line-height: 0; }
-        .swoosh svg { width: 100%; height: 100%; display: block; }
-
-        /* ---------- key facts ribbon ---------- */
-        .facts { margin-top: -62px; position: relative; z-index: 5; }
-        .facts-card { background: #fff; border-radius: 22px; box-shadow: var(--shadow); display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); overflow: hidden; }
-        .fact { padding: 22px 20px; border-right: 1px solid var(--line); display: flex; gap: 14px; align-items: flex-start; }
-        .fact:last-child { border-right: 0; }
-        .fact .ic { flex: none; width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; font-size: 20px; color: #fff; }
-        .ic.b { background: var(--blue); } .ic.r { background: var(--red); } .ic.o { background: var(--orange); } .ic.g { background: #16a34a; }
-        .fact small { display: block; font-size: 11.5px; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-        .fact b { font-size: 15.5px; line-height: 1.3; display: block; }
-
-        /* ---------- sections ---------- */
-        section { scroll-margin-top: 78px; }
-        .sec { padding: 84px 0 20px; }
-        .pill-title { display: table; margin: 0 auto 10px; border: 2px solid var(--blue); border-radius: 999px; padding: 8px 34px; font-weight: 800; font-size: 20px; color: var(--blue); letter-spacing: 1px; text-transform: uppercase; background: #fff; }
-        .sec-sub { text-align: center; color: var(--muted); max-width: 640px; margin: 0 auto 34px; }
-        .why-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
-        .why { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px 22px; text-align: center; transition: transform .2s, box-shadow .2s; position: relative; overflow: hidden; }
-        .why::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: var(--c, var(--blue)); }
-        .why:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
-        .why .ic { width: 66px; height: 66px; margin: 0 auto 14px; border-radius: 50%; background: var(--c, var(--blue)); color: #fff; display: grid; place-items: center; font-size: 28px; }
-        .why h3 { margin: 0 0 2px; font-size: 16px; font-weight: 800; color: var(--ink); text-transform: uppercase; letter-spacing: .4px; }
-        .why .hi { color: var(--c, var(--blue)); font-weight: 700; margin: 0 0 8px; font-size: 15px; }
-        .why p { margin: 0; font-size: 13.5px; color: var(--muted); }
-
-        /* ---------- exam details ---------- */
-        .exam { margin-top: 70px; background: linear-gradient(135deg, var(--blue-d), var(--blue-dd)); color: #fff; position: relative; overflow: hidden; }
-        .exam::before { content: ""; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: rgba(255,198,26,.12); }
-        .exam .wrap { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 42px; padding-top: 58px; padding-bottom: 58px; align-items: center; }
-        .eyebrow { display: inline-block; background: var(--pink); color: #fff; font-weight: 700; font-size: 13px; padding: 6px 14px; border-radius: 8px; margin-bottom: 14px; }
-        .exam h2 { margin: 0 0 14px; font-size: clamp(24px, 3.4vw, 34px); font-weight: 800; line-height: 1.25; }
-        .exam ul { list-style: none; padding: 0; margin: 0 0 20px; display: grid; gap: 11px; }
-        .exam li { display: flex; gap: 12px; align-items: flex-start; font-size: 15.5px; }
-        .exam li i { color: var(--yellow); margin-top: 5px; }
-        .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-        .chip { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); padding: 7px 14px; border-radius: 999px; font-size: 14px; font-weight: 600; }
-        .date-card { background: #fff; color: var(--ink); border-radius: 24px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.35); }
-        .date-card .top { background: var(--blue); color: #cfe0ff; text-align: center; padding: 14px; font-weight: 600; }
-        .date-card .big { text-align: center; padding: 22px 16px 8px; }
-        .date-card .big b { display: block; font-size: clamp(26px, 4vw, 36px); font-weight: 800; color: var(--blue-d); }
-        .date-card .big span { display: inline-block; margin-top: 6px; background: var(--yellow); color: var(--blue-dd); font-weight: 800; padding: 6px 18px; border-radius: 999px; font-size: 15px; }
-        .count { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 18px 20px 24px; }
-        .count div { background: var(--sky); border-radius: 14px; text-align: center; padding: 12px 4px; }
-        .count b { display: block; font-size: 28px; font-weight: 800; color: var(--blue-d); line-height: 1.1; font-variant-numeric: tabular-nums; }
-        .count small { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); font-weight: 600; }
-
-        /* ---------- how to register ---------- */
-        .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-        .step { background: var(--sky); border-radius: var(--radius); padding: 24px; position: relative; }
-        .step .n { position: absolute; top: -14px; left: 22px; width: 34px; height: 34px; border-radius: 50%; background: var(--red); color: #fff; font-weight: 800; display: grid; place-items: center; box-shadow: 0 6px 14px rgba(229,38,44,.35); }
-        .step h4 { margin: 8px 0 4px; font-size: 16px; font-weight: 800; }
-        .step p { margin: 0; color: var(--muted); font-size: 14px; }
-        .step a.lnk { color: var(--red); font-weight: 700; }
-
-        /* ---------- registration form ---------- */
-        .reg { padding: 76px 0 30px; }
-        .reg-box { background: #fff; border-radius: 26px; box-shadow: var(--shadow); border: 1px solid var(--line); overflow: hidden; max-width: 860px; margin: 0 auto; }
-        .reg-head { background: linear-gradient(120deg, var(--red), var(--pink)); color: #fff; padding: 26px 30px; display: flex; gap: 16px; align-items: center; }
-        .reg-head .ic { width: 54px; height: 54px; border-radius: 16px; background: rgba(255,255,255,.2); display: grid; place-items: center; font-size: 24px; flex: none; }
-        .reg-head h2 { margin: 0; font-size: 22px; font-weight: 800; }
-        .reg-head p { margin: 2px 0 0; font-size: 14px; opacity: .95; }
-        .reg-body { padding: 28px 30px 34px; }
-        .fs-title { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--blue-d); font-size: 15px; margin: 26px 0 14px; text-transform: uppercase; letter-spacing: .5px; }
-        .fs-title:first-child { margin-top: 0; }
-        .fs-title span { width: 26px; height: 26px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 13px; display: grid; place-items: center; }
-        .fs-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
-        .full { grid-column: 1 / -1; }
-        label.l { display: block; font-size: 13px; font-weight: 600; color: var(--blue-d); margin-bottom: 6px; }
-        label.l i { color: var(--red); font-style: normal; }
-        .in, select.in, textarea.in { width: 100%; font: inherit; font-size: 15.5px; padding: 13px 15px; border-radius: 12px; border: 1.5px solid var(--line); background: #f9fbfe; color: var(--ink); outline: none; transition: border-color .15s, box-shadow .15s, background .15s; appearance: none; -webkit-appearance: none; }
-        select.in { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%231b4f9c' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 15px center; padding-right: 40px; }
-        .in:focus { border-color: var(--blue); background: #fff; box-shadow: 0 0 0 4px rgba(27,79,156,.14); }
-        .in:user-invalid { border-color: var(--red); }
-        .hint { font-size: 12px; color: var(--muted); margin-top: 5px; }
-        .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .seg label { cursor: pointer; }
-        .seg input { position: absolute; opacity: 0; pointer-events: none; }
-        .seg span { display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 12px 10px; border: 1.5px solid var(--line); border-radius: 12px; font-weight: 600; font-size: 14px; color: var(--muted); background: #f9fbfe; transition: all .15s; height: 100%; }
-        .seg input:checked + span { border-color: var(--blue); background: #eaf2ff; color: var(--blue-d); box-shadow: 0 0 0 3px rgba(27,79,156,.12); }
-        .seg input:focus-visible + span { outline: 2px solid var(--blue); outline-offset: 2px; }
-        .submit { margin-top: 26px; width: 100%; justify-content: center; font-size: 17px; padding: 17px 24px; }
-        .submit[disabled] { opacity: .75; cursor: progress; }
-        .secure { text-align: center; font-size: 12.5px; color: var(--muted); margin-top: 12px; }
-        .secure i { color: #16a34a; }
-        .closed { text-align: center; padding: 40px 24px; }
-        .closed i { font-size: 44px; color: var(--red); }
-        .closed h3 { margin: 10px 0 6px; color: #991b1b; }
-
-        .alt { max-width: 860px; margin: 22px auto 0; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .alt-card { border-radius: var(--radius); padding: 20px 22px; display: flex; gap: 14px; align-items: center; border: 1px solid var(--line); background: #fff; }
-        .alt-card .ic { font-size: 30px; flex: none; }
-        .alt-card b { display: block; font-size: 15px; }
-        .alt-card span { font-size: 13px; color: var(--muted); }
-        .alt-card.wa { background: #effcf3; border-color: #bbf0cb; } .alt-card.wa .ic { color: #16a34a; }
-        .alt-card.ph .ic { color: var(--blue); }
-
-        /* ---------- status ---------- */
-        .status { max-width: 860px; margin: 40px auto 0; background: var(--sky); border-radius: 22px; padding: 26px 30px; display: grid; grid-template-columns: 1fr 1.2fr; gap: 22px; align-items: center; border: 1px solid var(--sky-2); }
-        .status h3 { margin: 0 0 4px; font-size: 18px; font-weight: 800; color: var(--blue-d); }
-        .status p { margin: 0; font-size: 13.5px; color: var(--muted); }
-        .status form { display: flex; gap: 10px; }
-        .status .in { background: #fff; }
-        .status .btn { padding: 13px 22px; font-size: 15px; background: var(--blue); color: #fff; flex: none; }
-        .status .btn:hover { background: var(--blue-d); }
-
-        /* ---------- school band ---------- */
-        .school { margin-top: 70px; background: var(--sky); padding: 56px 0; }
-        .school .wrap { display: grid; grid-template-columns: 1.3fr 1fr; gap: 36px; align-items: center; }
-        .school h2 { margin: 0 0 6px; font-size: clamp(22px, 3vw, 30px); font-weight: 800; color: var(--blue-d); text-transform: uppercase; letter-spacing: .5px; }
-        .school p { margin: 0 0 14px; color: var(--muted); }
-        .school .academy { display: inline-flex; flex-direction: column; background: #fff; border-radius: 16px; padding: 16px 22px; box-shadow: var(--shadow); border-left: 6px solid var(--red); }
-        .school .academy b { font-size: 22px; font-weight: 900; color: var(--red); line-height: 1.1; }
-        .school .academy b span { color: var(--ink); display: block; letter-spacing: 1px; font-size: 17px; }
-        .school .academy small { margin-top: 6px; background: var(--blue); color: #fff; font-weight: 600; padding: 3px 10px; border-radius: 4px; display: inline-block; font-size: 12px; }
-        .aff { background: var(--blue-d); color: #fff; border-radius: 50%; width: 220px; height: 220px; margin: 0 auto; display: grid; place-content: center; text-align: center; box-shadow: var(--shadow); border: 6px solid #fff; padding: 20px; }
-        .aff small { font-size: 12px; opacity: .85; }
-        .aff b { font-size: 46px; font-weight: 900; line-height: 1; color: #fff; }
-        .aff span { font-weight: 600; font-size: 15px; margin-top: 4px; }
-        .aff em { font-style: normal; font-size: 13px; opacity: .85; }
-
-        /* ---------- faq ---------- */
-        .faq { max-width: 820px; margin: 0 auto; display: grid; gap: 12px; }
-        .faq details { border: 1px solid var(--line); border-radius: 14px; background: #fff; padding: 0 20px; }
-        .faq details[open] { border-color: var(--blue); box-shadow: 0 8px 24px rgba(27,79,156,.1); }
-        .faq summary { cursor: pointer; list-style: none; padding: 17px 0; font-weight: 700; display: flex; justify-content: space-between; gap: 14px; align-items: center; }
-        .faq summary::-webkit-details-marker { display: none; }
-        .faq summary::after { content: "\f107"; font-family: FontAwesome; font-size: 22px; color: var(--blue); transition: transform .2s; }
-        .faq details[open] summary::after { transform: rotate(180deg); }
-        .faq .ans { padding: 0 0 18px; color: var(--muted); font-size: 14.5px; }
-
-        /* ---------- footer ---------- */
-        footer { margin-top: 70px; background: var(--blue-dd); color: #b9c9ea; }
-        footer .main { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 26px; padding: 42px 0 30px; }
-        footer h4 { color: #fff; margin: 0 0 6px; font-size: 20px; font-weight: 800; letter-spacing: .5px; }
-        footer .c { display: grid; gap: 8px; font-size: 14.5px; }
-        footer .c i { color: var(--yellow); width: 20px; }
-        footer .c a:hover { color: #fff; }
-        footer .copy { border-top: 1px solid rgba(255,255,255,.1); padding: 16px 0; font-size: 12.5px; text-align: center; }
-        .bar { background: var(--blue); color: #fff; text-align: center; padding: 12px; font-weight: 600; font-size: 15px; }
-
-        .m-cta { display: none; }
-
-        @media (max-width: 960px) {
-            .hero-grid, .exam .wrap, .school .wrap { grid-template-columns: 1fr; }
-            .hero-card { max-width: 520px; margin: 0 auto; width: 100%; }
-            .facts-card { grid-template-columns: 1fr 1fr; }
-            .fact:nth-child(2) { border-right: 0; }
-            .fact:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
-            .why-grid { grid-template-columns: 1fr 1fr; }
-            .steps { grid-template-columns: 1fr; gap: 26px; }
-            .status { grid-template-columns: 1fr; }
-            .menu a:not(.cta) { display: none; }
+        @media (min-width: 769px) {
+            body { padding-bottom: 0; }
         }
-        @media (max-width: 600px) {
-            .wrap { padding: 0 16px; }
-            .topbar .tb-right { display: none; }
-            .topbar .wrap { justify-content: center; text-align: center; }
-            .hero { padding: 26px 0 100px; }
-            .logo-ssat { font-size: 64px; }
-            .badge-cbse { width: 112px; height: 112px; right: -4px; bottom: -26px; padding: 6px; }
-            .badge-cbse b { font-size: 21px; } .badge-cbse span { font-size: 9px; } .badge-cbse small { font-size: 8px; }
-            .btn { width: 100%; justify-content: center; }
-            .facts-card { grid-template-columns: 1fr; }
-            .fact { border-right: 0 !important; border-bottom: 1px solid var(--line); }
-            .fact:last-child { border-bottom: 0; }
-            .why-grid { grid-template-columns: 1fr; }
-            .pill-title { font-size: 16px; padding: 7px 22px; }
-            .grid2, .alt { grid-template-columns: 1fr; }
-            .reg-head { padding: 20px; } .reg-body { padding: 22px 18px 28px; }
-            .status form { flex-direction: column; }
-            .count b { font-size: 22px; }
-            .m-cta { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; gap: 10px; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.97); border-top: 1px solid var(--line); box-shadow: 0 -8px 24px rgba(18,53,111,.12); }
-            .m-cta .btn { padding: 13px 14px; font-size: 15px; }
-            .m-cta .btn-free { flex: 1; } .m-cta .wa { background: #16a34a; color: #fff; width: 54px; flex: none; padding: 0; justify-content: center; font-size: 24px; }
-            footer { padding-bottom: 70px; }
+
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--pw-dark);
         }
-        @media (prefers-reduced-motion: reduce) { * { transition: none !important; } html { scroll-behavior: auto; } }
 
-        /* ===== interactive layer ===== */
-        .scrollbar { position: fixed; left: 0; top: 0; height: 4px; width: 0; z-index: 100; background: linear-gradient(90deg, var(--yellow), var(--red)); transition: width .1s linear; }
-        .rv { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
-        .rv.in { opacity: 1; transform: none; }
-        .float-a { animation: floaty 5s ease-in-out infinite; }
-        @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
-        .pulse { animation: pulse 2.2s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 10px 26px rgba(229,38,44,.38), 0 0 0 0 rgba(229,38,44,.45); } 70% { box-shadow: 0 10px 26px rgba(229,38,44,.38), 0 0 0 16px rgba(229,38,44,0); } 100% { box-shadow: 0 10px 26px rgba(229,38,44,.38), 0 0 0 0 rgba(229,38,44,0); } }
-        .proof { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 7px 16px 7px 8px; font-size: 14px; font-weight: 600; color: var(--blue-d); box-shadow: 0 6px 18px rgba(18,53,111,.1); margin-top: 16px; }
-        .proof .dot { width: 30px; height: 30px; border-radius: 50%; background: #e2f7e9; color: #16a34a; display: grid; place-items: center; }
-        .proof b { color: var(--red); font-size: 17px; }
-        .share-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
-        .btn-sm { padding: 10px 18px; font-size: 14px; }
-        .btn-ghost { background: transparent; color: var(--blue-d); border: 1.5px dashed var(--blue); }
-        .btn-ghost:hover { background: #fff; }
-
-        /* eligibility checker */
-        .elig { display: grid; grid-template-columns: 1.2fr 1fr; gap: 0; background: #fff; border-radius: 26px; box-shadow: var(--shadow); border: 1px solid var(--line); overflow: hidden; }
-        .elig-q { padding: 34px; }
-        .eyebrow-b { display: inline-block; background: #fff1c2; color: #7a5600; font-weight: 700; font-size: 12px; padding: 5px 12px; border-radius: 999px; margin-bottom: 10px; }
-        .elig-q h2 { margin: 0 0 6px; font-size: clamp(22px, 3vw, 28px); font-weight: 800; color: var(--blue-d); }
-        .elig-q p { color: var(--muted); margin: 0 0 18px; }
-        .cls-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .cls-grid button { font: inherit; font-weight: 700; font-size: 15px; padding: 14px 6px; border-radius: 14px; border: 2px solid var(--line); background: #f9fbfe; color: var(--blue-d); cursor: pointer; transition: all .15s; }
-        .cls-grid button:hover { border-color: var(--blue); transform: translateY(-2px); }
-        .cls-grid button.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 8px 18px rgba(27,79,156,.3); }
-        .cls-grid button:first-child, .cls-grid button:last-child { font-size: 12.5px; }
-        .elig-a { background: linear-gradient(160deg, var(--sky), #fff); padding: 30px; display: grid; place-items: center; text-align: center; min-height: 260px; border-left: 1px solid var(--line); }
-        .elig-ph { color: #9fb2cf; } .elig-ph i { font-size: 44px; } .elig-ph p { margin: 8px 0 0; font-weight: 600; }
-        .ans { animation: popin .35s ease; }
-        @keyframes popin { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
-        .ans .big { width: 64px; height: 64px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 30px; color: #fff; margin-bottom: 8px; }
-        .ans .big.ok { background: #16a34a; box-shadow: 0 10px 22px rgba(22,163,74,.35); } .ans .big.no { background: var(--orange); }
-        .ans h3 { margin: 4px 0; font-size: 20px; font-weight: 800; color: var(--blue-d); }
-        .ans p { margin: 0 0 14px; color: var(--muted); font-size: 14.5px; }
-
-        /* wizard */
-        .wiz { margin-bottom: 22px; }
-        .wiz-bar { height: 8px; background: #e6eef8; border-radius: 99px; overflow: hidden; }
-        .wiz-bar i { display: block; height: 100%; width: 33%; background: linear-gradient(90deg, var(--yellow), var(--red)); border-radius: 99px; transition: width .4s ease; }
-        .wiz-steps { list-style: none; margin: 12px 0 0; padding: 0; display: flex; justify-content: space-between; }
-        .wiz-steps li { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #9fb2cf; }
-        .wiz-steps li b { width: 26px; height: 26px; border-radius: 50%; background: #e6eef8; display: grid; place-items: center; font-size: 12px; color: #6a7f9f; transition: all .25s; }
-        .wiz-steps li.on { color: var(--blue-d); } .wiz-steps li.on b { background: var(--blue); color: #fff; }
-        .wiz-steps li.done b { background: #16a34a; color: #fff; } .wiz-steps li.done { color: #16a34a; }
-        .pane { display: none; } .pane.on { display: block; animation: slidein .35s ease; }
-        @keyframes slidein { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
-        .fs-title span i { font-size: 12px; }
-        .seg3 { grid-template-columns: repeat(3, 1fr); } .seg5 { grid-template-columns: repeat(5, 1fr); }
-        .seg5 span { padding: 11px 4px; font-size: 13px; }
-        .wiz-nav { display: flex; gap: 10px; margin-top: 26px; }
-        .btn-next { background: var(--blue); color: #fff; flex: 1; justify-content: center; box-shadow: 0 8px 20px rgba(27,79,156,.3); }
-        .btn-next:hover { background: var(--blue-d); }
-        .btn-back { background: #eef3fa; color: var(--blue-d); }
-        .wiz-nav .btn-free { flex: 1; justify-content: center; font-size: 16px; }
-        .review { margin-top: 24px; background: #f6f9fd; border: 1px dashed var(--blue); border-radius: 16px; padding: 16px 18px; }
-        .review .fs-title { margin-top: 0; }
-        .review dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
-        .review dt { color: var(--muted); } .review dd { margin: 0; font-weight: 600; word-break: break-word; }
-        .draft-note { background: #fff7e0; border: 1px solid #f6d77a; color: #7a5600; border-radius: 10px; padding: 8px 12px; font-size: 13px; margin-bottom: 14px; }
-        .draft-note a { color: var(--red); font-weight: 700; }
-        .in.bad { border-color: var(--red); animation: shake .35s; }
-        @keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-
-        .to-top { position: fixed; right: 16px; bottom: 90px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--blue); color: #fff; font-size: 18px; cursor: pointer; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 55; }
-        .to-top.show { opacity: 1; pointer-events: auto; }
-        @media (min-width: 601px) { .to-top { bottom: 24px; } }
-        @media (max-width: 960px) { .elig { grid-template-columns: 1fr; } .elig-a { border-left: 0; border-top: 1px solid var(--line); min-height: 200px; } }
-        @media (max-width: 600px) {
-            .elig-q { padding: 24px 18px; } .cls-grid { grid-template-columns: repeat(3, 1fr); }
-            .wiz-steps li span { display: none; } .wiz-steps li.on span { display: inline; }
-            .wiz-nav { position: sticky; bottom: 70px; background: #fff; padding: 10px 0; z-index: 5; }
-            .seg5 { grid-template-columns: repeat(3, 1fr); }
-            .proof { font-size: 13px; }
+        /* Top Announcement Strip */
+        .top-banner-strip {
+            background: linear-gradient(90deg, #1B2124 0%, #2A215C 100%);
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 10px 16px;
+            text-align: center;
         }
-        @media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; } .float-a, .pulse, .pane.on, .ans { animation: none; } }
-        /* "just registered" popup (real sign-ups only, names partly hidden) */
-        .live-toast { position: fixed; left: 16px; bottom: 24px; z-index: 70; max-width: 320px; display: flex; gap: 12px; align-items: center; background: #fff; border: 1px solid var(--line); border-left: 5px solid #16a34a; border-radius: 14px; padding: 12px 16px; box-shadow: var(--shadow); font-size: 13.5px; transform: translateY(140%); opacity: 0; transition: transform .45s ease, opacity .45s ease; pointer-events: none; }
-        .live-toast.show { transform: none; opacity: 1; }
-        .live-toast .lt-ic { width: 34px; height: 34px; border-radius: 50%; background: #e2f7e9; color: #16a34a; display: grid; place-items: center; flex: none; }
-        .live-toast b { color: var(--blue-d); } .live-toast small { display: block; color: var(--muted); font-size: 12px; }
-        .live-toast .lt-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #16a34a; margin-right: 5px; animation: pulseDot 1.6s infinite; }
-        @keyframes pulseDot { 50% { opacity: .3; } }
-        @media (max-width: 600px) { .live-toast { left: 10px; right: 10px; max-width: none; bottom: 78px; } }
+        .top-banner-strip .tag-pill {
+            background: var(--pw-accent);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            padding: 3px 9px;
+            border-radius: 20px;
+            margin-right: 8px;
+            display: inline-block;
+        }
+
+        /* Modern EdTech Sticky Navigation */
+        .pw-navbar {
+            background: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--pw-gray-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+        .pw-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .pw-brand:hover, .pw-brand:focus { text-decoration: none; }
+        .pw-logo-badge {
+            width: 44px;
+            height: 44px;
+            background: var(--pw-primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: 800;
+            box-shadow: 0 4px 10px rgba(90, 75, 218, 0.3);
+        }
+        .pw-brand-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--pw-dark);
+            margin: 0;
+            line-height: 1.1;
+        }
+        .pw-brand-sub {
+            font-size: 11px;
+            color: var(--pw-primary);
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+        .pw-nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            justify-content: flex-end;
+        }
+        .pw-nav-menu a {
+            color: var(--pw-dark-2);
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .pw-nav-menu a:hover {
+            color: var(--pw-primary);
+        }
+        .btn-pw-nav {
+            background: var(--pw-primary);
+            color: #ffffff !important;
+            padding: 9px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(90, 75, 218, 0.25);
+            transition: all 0.2s;
+        }
+        .btn-pw-nav:hover {
+            background: var(--pw-primary-dark);
+            transform: translateY(-1px);
+        }
+
+        /* Language Toggle Pill */
+        .lang-switch {
+            display: inline-flex;
+            background: var(--pw-gray-bg);
+            border: 1px solid var(--pw-gray-border);
+            padding: 3px;
+            border-radius: 20px;
+        }
+        .lang-switch-btn {
+            border: none;
+            background: transparent;
+            padding: 3px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 16px;
+            cursor: pointer;
+            color: var(--pw-text-muted);
+            transition: all 0.2s;
+        }
+        .lang-switch-btn.active {
+            background: var(--pw-primary);
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(90, 75, 218, 0.3);
+        }
+
+        /* HERO SECTION (Physics Wallah NSAT Style) */
+        .pw-hero-section {
+            background: radial-gradient(100% 100% at 50% 0%, #F5F3FF 0%, #FFFFFF 100%);
+            padding: 50px 0 60px;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid var(--pw-gray-border);
+        }
+        .hero-pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            border: 1.5px solid var(--pw-primary-light);
+            box-shadow: 0 2px 8px rgba(90, 75, 218, 0.08);
+            border-radius: 30px;
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--pw-primary);
+            margin-bottom: 20px;
+        }
+        .hero-main-title {
+            font-size: 46px;
+            line-height: 1.15;
+            font-weight: 900;
+            color: var(--pw-dark);
+            margin: 0 0 16px 0;
+        }
+        .hero-highlight-text {
+            color: var(--pw-primary);
+            background: linear-gradient(135deg, #5A4BDA 0%, #8065FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-lead-text {
+            font-size: 17px;
+            color: var(--pw-text-muted);
+            margin-bottom: 28px;
+            max-width: 560px;
+            line-height: 1.6;
+        }
+        
+        /* Quick Value USPs (Grid of 4 micro-badges) */
+        .hero-usp-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        .usp-box {
+            background: #ffffff;
+            border: 1px solid var(--pw-gray-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .usp-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .usp-icon.purple { background: var(--pw-primary-light); color: var(--pw-primary); }
+        .usp-icon.green { background: var(--pw-green-light); color: var(--pw-green); }
+        .usp-icon.orange { background: #FFF4E5; color: #FF9800; }
+        .usp-icon.blue { background: #EBF5FF; color: #0088FF; }
+
+        .usp-text strong {
+            display: block;
+            font-size: 14px;
+            color: var(--pw-dark);
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .usp-text span {
+            font-size: 12px;
+            color: var(--pw-text-muted);
+        }
+
+        /* Hero Action Buttons */
+        .hero-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .btn-register-hero {
+            background: var(--pw-primary);
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 800;
+            padding: 14px 32px;
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 6px 20px rgba(90, 75, 218, 0.35);
+            transition: all 0.25s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .btn-register-hero:hover {
+            color: #ffffff;
+            background: var(--pw-primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(90, 75, 218, 0.45);
+            text-decoration: none;
+        }
+        .btn-brochure-hero {
+            background: #ffffff;
+            color: var(--pw-dark);
+            font-size: 15px;
+            font-weight: 700;
+            padding: 13px 24px;
+            border-radius: 10px;
+            border: 1.5px solid var(--pw-gray-border);
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-brochure-hero:hover {
+            border-color: var(--pw-primary);
+            color: var(--pw-primary);
+            text-decoration: none;
+        }
+
+        /* Hero Right: Live Test Info Card */
+        .hero-exam-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 16px 40px rgba(27, 33, 36, 0.08);
+            border: 1px solid var(--pw-gray-border);
+            padding: 30px;
+            position: relative;
+        }
+        .hero-exam-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--pw-primary) 0%, var(--pw-accent) 100%);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+        }
+        .card-header-flex {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--pw-gray-border);
+        }
+        .card-header-flex h3 {
+            font-size: 20px;
+            margin: 0;
+            font-weight: 800;
+        }
+        .verified-badge {
+            background: var(--pw-green-light);
+            color: var(--pw-green);
+            font-size: 12px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .exam-info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 14px 0;
+            border-bottom: 1px dashed var(--pw-gray-border);
+        }
+        .exam-info-row:last-child { border-bottom: none; }
+        .info-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--pw-gray-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--pw-primary);
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .info-content .label-text {
+            font-size: 12px;
+            color: var(--pw-text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .info-content .value-text {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--pw-dark);
+            margin-top: 2px;
+        }
+
+        /* Countdown Strip Inside Card */
+        .card-countdown {
+            background: var(--pw-gray-bg);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .card-countdown-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--pw-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 10px;
+        }
+        .card-countdown-boxes {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .c-box {
+            background: #ffffff;
+            border: 1px solid var(--pw-gray-border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            min-width: 58px;
+        }
+        .c-box strong {
+            display: block;
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--pw-primary);
+            font-family: 'Outfit', sans-serif;
+            line-height: 1;
+        }
+        .c-box span {
+            font-size: 10px;
+            color: var(--pw-text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        /* STATS / IMPACT COUNTER SECTION (PW Vidyapeeth Style) */
+        .pw-impact-section {
+            background: #ffffff;
+            padding: 40px 0;
+            border-bottom: 1px solid var(--pw-gray-border);
+        }
+        .impact-card {
+            text-align: center;
+            padding: 15px;
+        }
+        .impact-number {
+            font-family: 'Outfit', sans-serif;
+            font-size: 38px;
+            font-weight: 900;
+            color: var(--pw-primary);
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+        .impact-label {
+            font-size: 14px;
+            color: var(--pw-dark-2);
+            font-weight: 700;
+        }
+        .impact-sub {
+            font-size: 12px;
+            color: var(--pw-text-muted);
+        }
+
+        /* SECTION STYLING */
+        .pw-section {
+            padding: 70px 0;
+        }
+        .pw-section.gray-bg {
+            background-color: var(--pw-gray-bg);
+        }
+        .pw-section-header {
+            text-align: center;
+            max-width: 680px;
+            margin: 0 auto 50px;
+        }
+        .pw-badge-pill {
+            background: var(--pw-primary-light);
+            color: var(--pw-primary);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        .pw-section-title {
+            font-size: 36px;
+            font-weight: 800;
+            margin: 0 0 12px;
+        }
+        .pw-section-sub {
+            font-size: 16px;
+            color: var(--pw-text-muted);
+            margin: 0;
+        }
+
+        /* STEPS TO GET SCHOLARSHIP (PW 3-STEP FLOW) */
+        .step-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 30px 24px;
+            border: 1px solid var(--pw-gray-border);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.03);
+            text-align: center;
+            position: relative;
+            height: 100%;
+            transition: transform 0.2s ease;
+        }
+        .step-card:hover {
+            transform: translateY(-4px);
+        }
+        .step-number {
+            width: 48px;
+            height: 48px;
+            background: var(--pw-primary);
+            color: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 900;
+            margin: 0 auto 18px;
+            font-family: 'Outfit', sans-serif;
+            box-shadow: 0 4px 12px rgba(90, 75, 218, 0.3);
+        }
+        .step-card h4 {
+            font-size: 18px;
+            font-weight: 800;
+            margin: 0 0 10px;
+        }
+        .step-card p {
+            font-size: 14px;
+            color: var(--pw-text-muted);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* REWARDS & SCHOLARSHIPS CARDS */
+        .reward-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid var(--pw-gray-border);
+            padding: 32px 24px;
+            text-align: center;
+            height: 100%;
+            transition: all 0.25s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            position: relative;
+            overflow: hidden;
+        }
+        .reward-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.07);
+            border-color: var(--pw-primary);
+        }
+        .reward-top-tag {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--pw-gold);
+            color: #000;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-bottom-left-radius: 10px;
+        }
+        .reward-icon-circle {
+            width: 68px;
+            height: 68px;
+            border-radius: 20px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+        .reward-icon-circle.gold { background: #FFF9E6; color: var(--pw-gold); }
+        .reward-icon-circle.purple { background: var(--pw-primary-light); color: var(--pw-primary); }
+        .reward-icon-circle.green { background: var(--pw-green-light); color: var(--pw-green); }
+        
+        .reward-card h4 {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        .reward-card p {
+            color: var(--pw-text-muted);
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* SYLLABUS & BLUEPRINT TABLE */
+        .pw-table-container {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid var(--pw-gray-border);
+            overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+        }
+        .table-pw {
+            margin-bottom: 0;
+        }
+        .table-pw thead th {
+            background: var(--pw-dark);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 13.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            padding: 16px 20px;
+            border: none;
+        }
+        .table-pw tbody td {
+            padding: 16px 20px;
+            vertical-align: middle;
+            border-top: 1px solid var(--pw-gray-border);
+            font-size: 14px;
+        }
+        .class-pill {
+            background: var(--pw-primary-light);
+            color: var(--pw-primary);
+            font-weight: 800;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: inline-block;
+        }
+
+        /* REGISTRATION FORM CARD (PW Vidyapeeth Form Style) */
+        .pw-form-card {
+            background: #ffffff;
+            border-radius: 24px;
+            border: 1px solid var(--pw-gray-border);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06);
+            padding: 40px;
+            margin-top: -10px;
+        }
+        .form-control-pw {
+            height: 48px;
+            border-radius: 10px;
+            border: 1.5px solid var(--pw-gray-border);
+            font-size: 14.5px;
+            padding: 10px 16px;
+            box-shadow: none;
+            transition: all 0.2s;
+        }
+        .form-control-pw:focus {
+            border-color: var(--pw-primary);
+            box-shadow: 0 0 0 4px rgba(90, 75, 218, 0.12);
+        }
+        .form-label-pw {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--pw-dark-2);
+            margin-bottom: 8px;
+            display: block;
+        }
+        .btn-submit-pw {
+            background: var(--pw-primary);
+            color: #ffffff;
+            font-size: 17px;
+            font-weight: 800;
+            padding: 15px 30px;
+            border-radius: 12px;
+            border: none;
+            width: 100%;
+            box-shadow: 0 8px 24px rgba(90, 75, 218, 0.35);
+            transition: all 0.25s;
+            cursor: pointer;
+        }
+        .btn-submit-pw:hover {
+            background: var(--pw-primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(90, 75, 218, 0.45);
+        }
+
+        /* DATES TIMELINE CARDS */
+        .date-box {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid var(--pw-gray-border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .date-calendar-badge {
+            background: var(--pw-primary-light);
+            border-radius: 10px;
+            width: 52px;
+            height: 52px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--pw-primary);
+            font-weight: 800;
+        }
+        .date-calendar-badge strong { font-size: 18px; line-height: 1; }
+        .date-calendar-badge span { font-size: 10px; text-transform: uppercase; font-weight: 700; }
+
+        /* FAQs ACCORDION */
+        .faq-item-pw {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid var(--pw-gray-border);
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+        .faq-q {
+            padding: 18px 22px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--pw-dark);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+        .faq-a {
+            padding: 0 22px 18px;
+            font-size: 14.5px;
+            color: var(--pw-text-muted);
+            line-height: 1.6;
+            display: none;
+        }
+        .faq-item-pw.open .faq-a {
+            display: block;
+        }
+        .faq-item-pw.open .faq-q i {
+            transform: rotate(180deg);
+        }
+
+        /* MOBILE FLOATING CTA */
+        .pw-mobile-cta {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-top: 1px solid var(--pw-gray-border);
+            padding: 10px 15px;
+            z-index: 9999;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.08);
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .pw-mobile-cta { display: block; }
+            .hero-main-title { font-size: 32px; }
+            .hero-usp-grid { grid-template-columns: 1fr; }
+            .pw-form-card { padding: 24px 16px; }
+        }
+
+        /* PW NSAT REGISTRATION POPUP MODAL (Exact match to PW NSAT) */
+        .pw-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.72);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 999999;
+            display: none;
+            padding: 20px 16px;
+            overflow-y: auto;
+            opacity: 0;
+            transition: opacity 0.22s ease-in-out;
+        }
+        .pw-modal-overlay.active {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+        }
+        .pw-modal-card {
+            background: #FFFFFF;
+            border-radius: 16px;
+            max-width: 480px;
+            width: 100%;
+            margin: auto;
+            padding: 28px 26px;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35);
+            position: relative;
+            transform: translateY(15px) scale(0.98);
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 92vh;
+            overflow-y: auto;
+        }
+        .pw-modal-overlay.active .pw-modal-card {
+            transform: translateY(0) scale(1);
+        }
+        .pw-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .pw-modal-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #1B2124;
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: -0.01em;
+        }
+        .pw-modal-close {
+            background: transparent;
+            border: none;
+            font-size: 26px;
+            color: #64748B;
+            line-height: 1;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            padding: 0;
+        }
+        .pw-modal-close:hover {
+            background: #F1F5F9;
+            color: #0F172A;
+        }
+        .pw-modal-input {
+            width: 100%;
+            height: 52px;
+            border: 1.5px solid #CBD5E1;
+            border-radius: 8px;
+            padding: 12px 18px;
+            font-size: 16px;
+            font-family: inherit;
+            color: #0F172A;
+            outline: none;
+            transition: all 0.2s ease;
+            background: #FFFFFF;
+        }
+        .pw-modal-input:focus {
+            border-color: var(--pw-primary);
+            box-shadow: 0 0 0 3px rgba(90, 75, 218, 0.15);
+        }
+        .pw-modal-btn-disabled {
+            width: 100%;
+            height: 50px;
+            background: #94A3B8;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: not-allowed;
+            transition: all 0.2s ease;
+        }
+        .pw-modal-btn-active {
+            width: 100%;
+            height: 50px;
+            background: var(--pw-primary);
+            color: #FFFFFF;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(90, 75, 218, 0.3);
+            transition: all 0.2s ease;
+        }
+        .pw-modal-btn-active:hover {
+            background: var(--pw-primary-dark);
+            transform: translateY(-1px);
+        }
+        .pw-modal-pin-input {
+            width: 100%;
+            height: 48px;
+            border: 1.5px solid #CBD5E1;
+            border-radius: 8px;
+            font-size: 22px;
+            letter-spacing: 10px;
+            text-align: center;
+            font-weight: 800;
+            background: #FFFFFF;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .pw-modal-pin-input:focus {
+            border-color: var(--pw-primary);
+            box-shadow: 0 0 0 3px rgba(90, 75, 218, 0.15);
+        }
+        .candidate-select-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            background: #FFFFFF;
+            transition: all 0.2s;
+        }
+        .candidate-select-card:hover,
+        .candidate-select-card.active {
+            border-color: var(--pw-primary);
+            background: var(--pw-primary-light);
+        }
     </style>
 </head>
 <body>
-<div class="scrollbar" id="scrollbar"></div>
-<button type="button" class="to-top" id="toTop" aria-label="Back to top"><i class="fa fa-chevron-up"></i></button>
 
-<div class="topbar">
-    <div class="wrap">
-        <span><b>SUNRISE CAREER ACADEMY</b> &nbsp;·&nbsp; For NEET, IIT-JEE &amp; NDA, CLAT</span>
-        <div class="tb-right">
-            <a href="tel:+919828512821"><i class="fa fa-phone"></i> 98285 12821</a>
-            <a href="tel:+919783200821"><i class="fa fa-phone"></i> 97832 00821</a>
-        </div>
-    </div>
+<!-- 1. Top Announcement Strip -->
+<div class="top-banner-strip">
+    <span class="tag-pill">NATIONAL SCHOLARSHIP</span>
+    <strong>Sunrise Scholarship Cum Admission Test (SSAT-2026)</strong> &bull; Registrations Open &bull; 100% Free Entry
+    <a href="#register" style="color: #FFB800; font-weight: 700; margin-left: 10px; text-decoration: underline;">Register Online &rarr;</a>
 </div>
 
-<header class="nav">
-    <div class="wrap">
-        <a href="#top" class="brand">
-            <?php if ($school_logo) { ?>
-                <img src="<?php echo $school_logo; ?>" alt="" onerror="this.outerHTML='<span class=&quot;brand-ico&quot;>&#9728;</span>'">
-            <?php } else { ?>
-                <span class="brand-ico">&#9728;</span>
-            <?php } ?>
-            <span class="brand-t"><b>SUNRISE</b><span>Career Academy · S-SAT</span></span>
-        </a>
-        <nav class="menu" aria-label="Main">
-            <a href="#check">Am I eligible?</a>
-            <a href="#why">Why SSAT</a>
-            <a href="#exam">Exam Details</a>
-            <a href="#how">How to Register</a>
-            <a href="#faq">FAQ</a>
-            <a href="#register" class="cta"><i class="fa fa-pencil"></i> Free Register</a>
-        </nav>
+<!-- 2. Sticky Header Navbar -->
+<header class="pw-navbar">
+    <div class="container">
+        <div class="row" style="display: flex; align-items: center;">
+            <div class="col-xs-8 col-sm-4">
+                <a href="<?php echo base_url(); ?>" class="pw-brand">
+                    <div class="pw-logo-badge">
+                        <i class="fa fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h4 class="pw-brand-title"><?php echo htmlspecialchars($sch_setting[0]['name'] ?: 'Sunrise International'); ?></h4>
+                        <span class="pw-brand-sub">Scholarship & Admission Wing</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-xs-4 col-sm-8 text-right">
+                <div class="pw-nav-menu hidden-xs">
+                    <a href="#about">About</a>
+                    <a href="#benefits">Rewards</a>
+                    <a href="#steps">How It Works</a>
+                    <a href="#syllabus">Syllabus</a>
+                    <a href="#dates">Dates</a>
+                    <a href="<?php echo site_url('scholarshipregister/portal'); ?>" style="color: var(--pw-primary); font-weight: 700;">
+                        <i class="fa fa-user-circle"></i> Candidate Portal
+                    </a>
+                    
+                    <!-- Language Switcher -->
+                    <div class="lang-switch">
+                        <button type="button" class="lang-switch-btn active" id="btn_lang_en" onclick="setLanguage('en')">EN</button>
+                        <button type="button" class="lang-switch-btn" id="btn_lang_hi" onclick="setLanguage('hi')">हिन्दी</button>
+                    </div>
+
+                    <a href="#register" class="btn-pw-nav">Register (Free)</a>
+                </div>
+
+                <!-- Mobile Action -->
+                <div class="visible-xs" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <div class="lang-switch">
+                        <button type="button" class="lang-switch-btn active" id="m_btn_lang_en" onclick="setLanguage('en')" style="padding: 2px 7px;">EN</button>
+                        <button type="button" class="lang-switch-btn" id="m_btn_lang_hi" onclick="setLanguage('hi')" style="padding: 2px 7px;">हि</button>
+                    </div>
+                    <a href="#register" class="btn btn-xs btn-primary" style="background: var(--pw-primary); border-radius: 6px; font-weight: 700; padding: 6px 12px;">Apply</a>
+                </div>
+            </div>
+        </div>
     </div>
 </header>
 
-<main id="top">
-<!-- ================= HERO ================= -->
-<section class="hero">
-    <div class="wrap hero-grid">
-        <div>
-            <div class="logo-ssat" role="img" aria-label="S-SAT">
-                <span>S</span><span class="dash">-</span><span>S</span><span class="a"><i class="fa fa-star"></i>A</span><span>T</span>
-            </div>
-            <p class="tagline">Where Talent Meets Opportunity<br>&amp; Gets Platform to Excel</p>
+<!-- 3. HERO SECTION (PW NSAT Banner + Exam Summary Box) -->
+<section id="about" class="pw-hero-section">
+    <div class="container">
+        <div class="row" style="display: flex; align-items: center; flex-wrap: wrap;">
+            
+            <!-- Left: Headline & USPs -->
+            <div class="col-md-7 col-sm-12">
+                <div class="hero-pill-badge">
+                    <i class="fa fa-bolt" style="color: var(--pw-gold);"></i> 
+                    Classes 5th to 11th &bull; Academic Session 2026-27
+                </div>
 
-            <h1 class="hi"><small>कक्षा 6 से 12 में प्रवेश के लिए</small></h1>
-            <div class="hl hi">लाखों में <em>स्कॉलरशिप</em></div>
-            <p class="hero-sub hi">जीतने का सुनहरा मौका</p>
+                <h1 class="hero-main-title">
+                    Win up to <span class="hero-highlight-text">100% Scholarship</span> with SSAT 2026
+                </h1>
 
-            <div class="hero-actions">
-                <a href="#register" class="btn btn-free pulse"><i class="fa fa-pencil-square-o"></i> रजिस्टर करें <span class="tag">FREE</span></a>
-                <a href="#status" class="btn btn-line"><i class="fa fa-id-card-o"></i> Admit Card / Status</a>
-            </div>
-            <div class="hero-note">
-                <span><i class="fa fa-check-circle"></i> कक्षा 5 से 11 के सभी विद्यार्थी पात्र</span>
-                <span><i class="fa fa-check-circle"></i> हिंदी एवं अंग्रेजी माध्यम</span>
-                <span><i class="fa fa-check-circle"></i> Online &amp; Offline</span>
-            </div>
-            <div class="proof" id="proof" style="<?php echo (!empty($registered_count) && $registered_count >= 10) ? '' : 'display:none'; ?>"><span class="dot"><i class="fa fa-users"></i></span><span><b id="proofNum" data-count="<?php echo (int) $registered_count; ?>">0</b> students have already registered</span></div>
-        </div>
+                <p class="hero-lead-text">
+                    Unlock premier quality school & foundation education. Benchmark yourself with thousands of students and secure grand fee waivers, cash honors and direct admission.
+                </p>
 
-        <div class="hero-card">
-            <?php if ($hero_img) { ?>
-                <div class="hero-photo"><img src="<?php echo $hero_img; ?>" alt="Sunrise School campus"></div>
-            <?php } else { ?>
-                <div class="hero-photo fallback">
-                    <div class="perk-wrap">
-                        <p class="perk-h">S-SAT में आपको मिलेगा</p>
-                        <div class="perks">
-                            <div><i class="fa fa-graduation-cap"></i><b class="hi">स्कॉलरशिप</b><span>प्रवेश पर</span></div>
-                            <div><i class="fa fa-gift"></i><b class="hi">नकद पुरस्कार</b><span>एवं उपहार</span></div>
-                            <div><i class="fa fa-certificate"></i><b class="hi">प्रमाण पत्र</b><span>भागीदारी का</span></div>
-                            <div><i class="fa fa-compass"></i><b class="hi">कैरियर गाइडेंस</b><span>काउंसलिंग</span></div>
+                <!-- 4 Value USPs (PW Style) -->
+                <div class="hero-usp-grid">
+                    <div class="usp-box">
+                        <div class="usp-icon purple"><i class="fa fa-gift"></i></div>
+                        <div class="usp-text">
+                            <strong>100% Fee Waiver</strong>
+                            <span>Top rankers get complete tuition fee off</span>
+                        </div>
+                    </div>
+                    <div class="usp-box">
+                        <div class="usp-icon green"><i class="fa fa-inr"></i></div>
+                        <div class="usp-text">
+                            <strong>Merit Cash Honors</strong>
+                            <span>Cash prizes, mementos & medals</span>
+                        </div>
+                    </div>
+                    <div class="usp-box">
+                        <div class="usp-icon orange"><i class="fa fa-file-text-o"></i></div>
+                        <div class="usp-text">
+                            <strong>100% NCERT Pattern</strong>
+                            <span>Bilingual OMR MCQ question paper</span>
+                        </div>
+                    </div>
+                    <div class="usp-box">
+                        <div class="usp-icon blue"><i class="fa fa-check-circle"></i></div>
+                        <div class="usp-text">
+                            <strong>100% Free Registration</strong>
+                            <span>No application or exam fee required</span>
                         </div>
                     </div>
                 </div>
-            <?php } ?>
-            <div class="badge-cbse">
-                <small>Affiliation No. : 1730833</small>
-                <b>CBSE</b>
-                <span>Nursery to 12<sup>th</sup><br>Science · Arts · Commerce</span>
-            </div>
-        </div>
-    </div>
-    <div class="swoosh" aria-hidden="true">
-        <svg viewBox="0 0 1440 90" preserveAspectRatio="none">
-            <path d="M0,50 C300,110 900,-10 1440,45 L1440,90 L0,90 Z" fill="#ffc61a"/>
-            <path d="M0,62 C320,120 920,5 1440,58 L1440,90 L0,90 Z" fill="#1b4f9c"/>
-            <path d="M0,78 C340,118 940,28 1440,72 L1440,90 L0,90 Z" fill="#fff"/>
-        </svg>
-    </div>
-</section>
 
-<!-- ================= KEY FACTS ================= -->
-<div class="facts">
-    <div class="wrap">
-        <div class="facts-card">
-            <div class="fact"><span class="ic r"><i class="fa fa-calendar"></i></span><div><small>परीक्षा तिथि</small><b class="hi"><?php echo $exam_hi_date; ?></b></div></div>
-            <div class="fact"><span class="ic b"><i class="fa fa-clock-o"></i></span><div><small>समय</small><b class="hi"><?php echo date('g:i', $exam_ts) . ' बजे से ' . date('g:i', $exam_ts + 7200) . ' बजे तक'; ?></b></div></div>
-            <div class="fact"><span class="ic o"><i class="fa fa-laptop"></i></span><div><small>परीक्षा माध्यम</small><b class="hi">ऑनलाइन और ऑफलाइन</b></div></div>
-            <div class="fact"><span class="ic g"><i class="fa fa-language"></i></span><div><small>भाषा</small><b class="hi">हिंदी एवं अंग्रेजी</b></div></div>
-        </div>
-    </div>
-</div>
-
-<!-- ================= ELIGIBILITY CHECKER ================= -->
-<section class="sec" id="check" style="padding-top:64px">
-    <div class="wrap">
-        <div class="elig">
-            <div class="elig-q">
-                <span class="eyebrow-b">30-second check</span>
-                <h2 class="hi">आपका बच्चा किस कक्षा में पढ़ता है?</h2>
-                <p>Tap the class your child is in right now — we'll tell you if they can appear.</p>
-                <div class="cls-grid" id="clsGrid" role="group" aria-label="Choose present class">
-                    <button type="button" data-c="4">Class 4 &amp; below</button>
-                    <?php for ($n = 5; $n <= 11; $n++) { ?><button type="button" data-c="<?php echo $n; ?>">Class <?php echo $n; ?></button><?php } ?>
-                    <button type="button" data-c="12">Class 12</button>
-                </div>
-            </div>
-            <div class="elig-a" id="eligAns" aria-live="polite">
-                <div class="elig-ph"><i class="fa fa-hand-pointer-o"></i><p>Your result will appear here</p></div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ================= WHY ================= -->
-<section class="sec" id="why">
-    <div class="wrap">
-        <div class="pill-title">Why the Exam</div>
-        <p class="sec-sub">Every participant walks away with more than a score — recognition, guidance and a real chance at a scholarship.</p>
-        <div class="why-grid">
-            <div class="why" style="--c: var(--red)">
-                <div class="ic"><i class="fa fa-certificate"></i></div>
-                <h3>Certificate of Participation</h3><p class="hi">भागीदारी प्रमाण पत्र</p>
-                <p>A certificate of participation for every student who takes part.</p>
-            </div>
-            <div class="why" style="--c: var(--blue)">
-                <div class="ic"><i class="fa fa-graduation-cap"></i></div>
-                <h3>Scholarship for Admission</h3><p class="hi">प्रवेश पर स्कॉलरशिप</p>
-                <p>Lakhs in scholarships for admission to Class 6 to 12.</p>
-            </div>
-            <div class="why" style="--c: var(--orange)">
-                <div class="ic"><i class="fa fa-compass"></i></div>
-                <h3>Career Counselling &amp; Guidance</h3><p class="hi">कैरियर काउंसलिंग एवं मार्गदर्शन</p>
-                <p>Career counselling and guidance from the Sunrise Career Academy team.</p>
-            </div>
-            <div class="why" style="--c: #16a34a">
-                <div class="ic"><i class="fa fa-gift"></i></div>
-                <h3>Cash Award &amp; Gift</h3><p class="hi">नकद पुरस्कार एवं उपहार</p>
-                <p>Cash awards and gifts for successful students.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ================= EXAM DETAILS ================= -->
-<section class="exam" id="exam">
-    <div class="wrap">
-        <div>
-            <span class="eyebrow hi">सत्र 2026-27</span>
-            <h2 class="hi">कक्षा 5 से 11 में पढ़ने वाले सभी छात्र/छात्राएं शामिल हो सकते हैं।</h2>
-            <ul class="hi">
-                <li><i class="fa fa-check-circle"></i> परीक्षा का माध्यम: <b>हिंदी एवं अंग्रेजी</b></li>
-                <li><i class="fa fa-check-circle"></i> परीक्षा <b>ऑनलाइन और ऑफलाइन</b> दोनों तरीके से होगी</li>
-                <li><i class="fa fa-check-circle"></i> रजिस्ट्रेशन <b>बिल्कुल निःशुल्क</b></li>
-            </ul>
-            <div class="hi" style="font-weight:700;margin-bottom:10px;">परीक्षा केंद्र</div>
-            <div class="chips hi">
-                <span class="chip"><i class="fa fa-map-marker"></i> भीलवाड़ा</span>
-                <span class="chip"><i class="fa fa-map-marker"></i> जोधपुर</span>
-                <span class="chip"><i class="fa fa-map-marker"></i> बाड़मेर</span>
-                <span class="chip"><i class="fa fa-map-marker"></i> नेछवा (सीकर)</span>
-            </div>
-        </div>
-        <div class="date-card">
-            <div class="top hi">परीक्षा का दिन व दिनांक</div>
-            <div class="big hi">
-                <b><?php echo $exam_hi_date; ?></b>
-                <span>प्रातः: <?php echo date('H:i', $exam_ts); ?> बजे से दोपहर <?php echo date('g:i', $exam_ts + 7200); ?> तक</span>
-            </div>
-            <div class="count" id="countdown" data-ts="<?php echo $exam_ts * 1000; ?>">
-                <div><b id="cd_d">--</b><small>Days</small></div>
-                <div><b id="cd_h">--</b><small>Hours</small></div>
-                <div><b id="cd_m">--</b><small>Mins</small></div>
-                <div><b id="cd_s">--</b><small>Secs</small></div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ================= HOW ================= -->
-<section class="sec" id="how">
-    <div class="wrap">
-        <div class="pill-title hi">रजिस्ट्रेशन करने का आसान तरीका</div>
-        <p class="sec-sub">Three easy ways to register — pick whichever suits you.</p>
-        <div class="steps">
-            <div class="step">
-                <span class="n"><i class="fa fa-globe"></i></span>
-                <h4 class="hi">ऑनलाइन</h4>
-                <p class="hi">नीचे दिए गए फॉर्म को भरें एवं जानकारी दर्ज करें, या QR कोड स्कैन करें। <a class="lnk" href="#register">अभी रजिस्टर करें →</a></p>
-            </div>
-            <div class="step">
-                <span class="n"><i class="fa fa-whatsapp"></i></span>
-                <h4 class="hi">WhatsApp Message द्वारा</h4>
-                <p class="hi">98285 12821 / 97832 00821 पर विद्यार्थी का नाम, कक्षा, पिता का नाम, स्कूल का नाम एवं स्थायी पता भेजें। <a class="lnk" href="<?php echo $wa_link; ?>" target="_blank" rel="noopener">WhatsApp खोलें →</a></p>
-            </div>
-            <div class="step">
-                <span class="n"><i class="fa fa-qrcode"></i></span>
-                <h4>Scan to Register</h4>
-                <p>Scan the QR code on our pamphlet, poster or hoarding with your phone camera to open this page instantly.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ================= REGISTER ================= -->
-<section class="reg" id="register">
-    <div class="wrap">
-        <div class="pill-title">Free Register</div>
-        <p class="sec-sub">Takes about 2 minutes. You get your Roll Number instantly — keep it safe for your admit card and result.</p>
-
-        <div class="reg-box">
-            <div class="reg-head">
-                <div class="ic"><i class="fa fa-pencil-square-o"></i></div>
-                <div>
-                    <h2>Candidate Registration</h2>
-                    <p><?php echo htmlspecialchars($exam_title); ?> · Free of cost</p>
+                <div class="hero-actions">
+                    <a href="#register" class="btn-register-hero">
+                        <i class="fa fa-pencil-square-o"></i> Register Online (Free)
+                    </a>
+                    <a href="<?php echo site_url('admin/scholarshipexam/brochure/' . (isset($selected_exam['id']) ? $selected_exam['id'] : 1)); ?>" target="_blank" class="btn-brochure-hero">
+                        <i class="fa fa-download"></i> Download Brochure
+                    </a>
                 </div>
             </div>
 
-            <div class="reg-body">
-            <?php if (isset($registration_closed) && $registration_closed) { ?>
-                <div class="closed">
-                    <i class="fa fa-ban"></i>
-                    <h3>Registrations Closed</h3>
-                    <p>Online registration for <strong><?php echo htmlspecialchars($exam_title); ?></strong> has closed.
-                        <?php echo !empty($selected_exam['registration_stopped_at']) ? '<br>Closed on <strong>' . date('d M Y, h:i A', strtotime($selected_exam['registration_stopped_at'])) . '</strong>.' : ''; ?></p>
-                    <p>Questions? Call <a href="tel:+919828512821"><b>98285 12821</b></a>.</p>
+            <!-- Right: Examination Details Box (PW Vidyapeeth Style) -->
+            <div class="col-md-5 col-sm-12" style="margin-top: 25px;">
+                <div class="hero-exam-card">
+                    <div class="card-header-flex">
+                        <h3>Exam Details</h3>
+                        <span class="verified-badge"><i class="fa fa-check"></i> OFFICIAL</span>
+                    </div>
+
+                    <div class="exam-info-row">
+                        <div class="info-icon"><i class="fa fa-calendar"></i></div>
+                        <div class="info-content">
+                            <div class="label-text">Date of Examination</div>
+                            <div class="value-text">15 November 2026 (Sunday)</div>
+                        </div>
+                    </div>
+
+                    <div class="exam-info-row">
+                        <div class="info-icon"><i class="fa fa-clock-o"></i></div>
+                        <div class="info-content">
+                            <div class="label-text">Format & Duration</div>
+                            <div class="value-text">90 Minutes &bull; OMR Multiple Choice</div>
+                        </div>
+                    </div>
+
+                    <div class="exam-info-row">
+                        <div class="info-icon"><i class="fa fa-graduation-cap"></i></div>
+                        <div class="info-content">
+                            <div class="label-text">Eligibility Criteria</div>
+                            <div class="value-text">Classes 5th to 11th (Any recognized school)</div>
+                        </div>
+                    </div>
+
+                    <div class="exam-info-row">
+                        <div class="info-icon"><i class="fa fa-trophy"></i></div>
+                        <div class="info-content">
+                            <div class="label-text">Scholarship Concession</div>
+                            <div class="value-text">Up to 100% Fee Concession + Cash Honors</div>
+                        </div>
+                    </div>
+
+                    <!-- Countdown Inside Card -->
+                    <div class="card-countdown">
+                        <div class="card-countdown-title"><i class="fa fa-hourglass-half"></i> Registration Closing Soon</div>
+                        <div class="card-countdown-boxes">
+                            <div class="c-box"><strong id="cd_days">03</strong><span>Days</span></div>
+                            <div class="c-box"><strong id="cd_hours">19</strong><span>Hours</span></div>
+                            <div class="c-box"><strong id="cd_mins">50</strong><span>Mins</span></div>
+                            <div class="c-box"><strong id="cd_secs">20</strong><span>Secs</span></div>
+                        </div>
+                    </div>
                 </div>
-            <?php } else { ?>
-                <form action="<?php echo site_url('scholarshipregister/submit'); ?>" method="POST" id="regForm" autocomplete="on">
-                    <?php if (!empty($selected_exam) && !empty($is_direct_link)) { ?>
-                        <input type="hidden" name="exam_id" value="<?php echo (int) $selected_exam['id']; ?>">
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- 4. IMPACT COUNTER NUMBERS (PW NSAT Trust Markers) -->
+<section class="pw-impact-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3 col-xs-6 impact-card">
+                <div class="impact-number">100%</div>
+                <div class="impact-label">Tuition Fee Waiver</div>
+                <div class="impact-sub">For top meritorious students</div>
+            </div>
+            <div class="col-md-3 col-xs-6 impact-card">
+                <div class="impact-number">Classes 5–11</div>
+                <div class="impact-label">Eligible Grades</div>
+                <div class="impact-sub">From all state and national boards</div>
+            </div>
+            <div class="col-md-3 col-xs-6 impact-card">
+                <div class="impact-number">₹ Cash Honors</div>
+                <div class="impact-label">Cash Rewards & Trophies</div>
+                <div class="impact-sub">Direct cash awards for rankers</div>
+            </div>
+            <div class="col-md-3 col-xs-6 impact-card">
+                <div class="impact-number">FREE</div>
+                <div class="impact-label">Registration Cost</div>
+                <div class="impact-sub">Zero exam fees for all applicants</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 5. THREE EASY STEPS TO GET SCHOLARSHIP (PW NSAT Step Flow) -->
+<section id="steps" class="pw-section gray-bg">
+    <div class="container">
+        <div class="pw-section-header">
+            <span class="pw-badge-pill">Simple Process</span>
+            <h2 class="pw-section-title">Steps To Get Scholarship</h2>
+            <p class="pw-section-sub">Follow three quick steps to participate in SSAT 2026 and claim your scholarship.</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 col-sm-12" style="margin-bottom: 25px;">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h4>Register Online for Free</h4>
+                    <p>Fill out the simple application form below with your class & mobile number. Set your 4-digit security PIN.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-sm-12" style="margin-bottom: 25px;">
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h4>Download Model Paper & Prepare</h4>
+                    <p>Log in to your Candidate Portal using your Roll No and PIN to practice with authentic class-wise bilingual sample papers.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-sm-12" style="margin-bottom: 25px;">
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h4>Appear for Exam & Win</h4>
+                    <p>Attend the OMR test on 15 Nov 2026. Secure your All India Rank, cash reward, and up to 100% school fee concession.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 6. SCHOLARSHIPS & REWARDS SECTION (PW Vidyapeeth Style) -->
+<section id="benefits" class="pw-section">
+    <div class="container">
+        <div class="pw-section-header">
+            <span class="pw-badge-pill">Rewards &amp; Honors</span>
+            <h2 class="pw-section-title">What You Win with SSAT 2026</h2>
+            <p class="pw-section-sub">Empowering talented students with financial assistance and prestigious accolades.</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 col-sm-12" style="margin-bottom: 25px;">
+                <div class="reward-card">
+                    <span class="reward-top-tag">Top Privilege</span>
+                    <div class="reward-icon-circle purple"><i class="fa fa-graduation-cap"></i></div>
+                    <h4>Up to 100% Fee Waiver</h4>
+                    <p>Ranks 1 to 10 in each class get up to 100% complete waiver on tuition fees for the entire academic session 2026-27.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-sm-12" style="margin-bottom: 25px;">
+                <div class="reward-card">
+                    <span class="reward-top-tag">Cash Honors</span>
+                    <div class="reward-icon-circle gold"><i class="fa fa-trophy"></i></div>
+                    <h4>Cash Awards & Mementos</h4>
+                    <p>Substantial cash rewards, personalized trophies, certificates of excellence, and medals awarded in a grand ceremony.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-sm-12" style="margin-bottom: 25px;">
+                <div class="reward-card">
+                    <span class="reward-top-tag">Guaranteed</span>
+                    <div class="reward-icon-circle green"><i class="fa fa-id-badge"></i></div>
+                    <h4>Priority Direct Admission</h4>
+                    <p>Merit holders receive assured direct admission into Foundation, Sainik/Military, and Pre-Medical/Pre-Engineering wings.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 7. SYLLABUS & BLUEPRINT TABLE -->
+<section id="syllabus" class="pw-section gray-bg">
+    <div class="container">
+        <div class="pw-section-header">
+            <span class="pw-badge-pill">Examination Pattern</span>
+            <h2 class="pw-section-title">Syllabus &amp; Question Blueprint</h2>
+            <p class="pw-section-sub">Prepared strictly according to 100% NCERT textbook curriculum. All questions are bilingual (Hindi &amp; English).</p>
+        </div>
+
+        <div class="pw-table-container">
+            <div class="table-responsive">
+                <table class="table table-pw table-hover">
+                    <thead>
+                        <tr>
+                            <th>Class Group</th>
+                            <th>Subjects Covered</th>
+                            <th class="text-center">Total Questions</th>
+                            <th class="text-center">Maximum Marks</th>
+                            <th class="text-center">Exam Mode</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="class-pill">Class 5th</span></td>
+                            <td><strong>Hindi, English, Mathematics, EVS</strong></td>
+                            <td class="text-center"><strong>40</strong></td>
+                            <td class="text-center"><span class="label label-success" style="font-size: 13px; font-weight: 700; background: var(--pw-green);">50 Marks</span></td>
+                            <td class="text-center"><span class="label label-default">Offline OMR</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="class-pill">Class 6th to 10th</span></td>
+                            <td><strong>Hindi, English, Science, Mathematics, Social Studies, Logical Reasoning</strong></td>
+                            <td class="text-center"><strong>60</strong></td>
+                            <td class="text-center"><span class="label label-success" style="font-size: 13px; font-weight: 700; background: var(--pw-green);">90 Marks</span></td>
+                            <td class="text-center"><span class="label label-default">Offline OMR</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="class-pill">Class 11th Science</span></td>
+                            <td><strong>English, Mathematics / Biology, Physics, Chemistry</strong></td>
+                            <td class="text-center"><strong>60</strong></td>
+                            <td class="text-center"><span class="label label-success" style="font-size: 13px; font-weight: 700; background: var(--pw-green);">120 Marks</span></td>
+                            <td class="text-center"><span class="label label-default">Offline OMR</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="class-pill">Class 11th Arts</span></td>
+                            <td><strong>English, Political Science, History, Geography</strong></td>
+                            <td class="text-center"><strong>60</strong></td>
+                            <td class="text-center"><span class="label label-success" style="font-size: 13px; font-weight: 700; background: var(--pw-green);">120 Marks</span></td>
+                            <td class="text-center"><span class="label label-default">Offline OMR</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 8. IMPORTANT DATES SECTION -->
+<section id="dates" class="pw-section">
+    <div class="container">
+        <div class="pw-section-header">
+            <span class="pw-badge-pill">Key Milestones</span>
+            <h2 class="pw-section-title">Important Examination Dates</h2>
+            <p class="pw-section-sub">Mark these essential schedule dates on your calendar.</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="date-box">
+                    <div class="date-calendar-badge"><strong>15</strong><span>OCT</span></div>
+                    <div>
+                        <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800;">Registration Commencement</h4>
+                        <span style="font-size: 13px; color: var(--pw-text-muted);">Online &amp; offline application window opens for all students</span>
+                    </div>
+                </div>
+                <div class="date-box">
+                    <div class="date-calendar-badge"><strong>10</strong><span>NOV</span></div>
+                    <div>
+                        <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800;">Registration Closing Date</h4>
+                        <span style="font-size: 13px; color: var(--pw-text-muted);">Last date to submit application forms without late penalty</span>
+                    </div>
+                </div>
+                <div class="date-box">
+                    <div class="date-calendar-badge"><strong>12</strong><span>NOV</span></div>
+                    <div>
+                        <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800;">Admit Card Release Date</h4>
+                        <span style="font-size: 13px; color: var(--pw-text-muted);">Admit card available for download via Candidate Portal &amp; SMS</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="date-box" style="border-left: 4px solid var(--pw-primary);">
+                    <div class="date-calendar-badge" style="background: var(--pw-primary); color: #fff;"><strong>15</strong><span>NOV</span></div>
+                    <div>
+                        <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800; color: var(--pw-primary);">Examination Date & Reporting</h4>
+                        <span style="font-size: 13px; color: var(--pw-text-muted);">15 November 2026, 10:00 AM (Reporting 9:30 AM)</span>
+                    </div>
+                </div>
+                <div class="date-box">
+                    <div class="date-calendar-badge"><strong>21</strong><span>NOV</span></div>
+                    <div>
+                        <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800;">Result Announcement</h4>
+                        <span style="font-size: 13px; color: var(--pw-text-muted);">Merit rank list published on portal &amp; school notice boards</span>
+                    </div>
+                </div>
+                <div class="date-box">
+                    <div class="date-calendar-badge"><strong>05</strong><span>DEC</span></div>
+                    <div>
+                        <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800;">Award & Felicitation Ceremony</h4>
+                        <span style="font-size: 13px; color: var(--pw-text-muted);">Grand ceremony for cash prizes, mementos &amp; certificates</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 9. REGISTRATION FORM (PW Vidyapeeth Form Flow) -->
+<section id="register" class="pw-section gray-bg">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+                <div class="pw-form-card">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <span class="pw-badge-pill" style="background: var(--pw-green-light); color: var(--pw-green);">100% Free Entry</span>
+                        <h2 style="font-size: 32px; font-weight: 900; margin: 10px 0 6px;">Candidate Registration Form</h2>
+                        <p style="color: var(--pw-text-muted); font-size: 14.5px; margin: 0;">Fill in your details below to register. Roll Number & Admit Card will be generated instantaneously.</p>
+                    </div>
+
+                    <?php if (isset($registration_closed) && $registration_closed) { ?>
+                        <div class="alert alert-danger text-center" style="border-radius: 12px; padding: 25px;">
+                            <h3 style="margin: 0; font-weight: 800;"><i class="fa fa-ban"></i> Registrations Closed</h3>
+                            <p style="margin-top: 8px;">Online registration for <?php echo htmlspecialchars($selected_exam['title']); ?> has concluded.</p>
+                        </div>
                     <?php } else { ?>
-                        <div class="full" style="margin-bottom:18px;">
-                            <label class="l" for="exam_id">Examination <i>*</i></label>
-                            <select name="exam_id" id="exam_id" class="in" required onchange="location.href='<?php echo site_url('scholarshipregister/apply/'); ?>' + this.options[this.selectedIndex].getAttribute('data-code')">
-                                <?php if (!empty($exams)) {
-                                    foreach ($exams as $e) { ?>
-                                        <option value="<?php echo (int) $e['id']; ?>" data-code="<?php echo htmlspecialchars(urlencode($e['exam_code'])); ?>" <?php echo ($selected_exam_id == $e['id']) ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($e['title']); ?> (<?php echo htmlspecialchars($e['exam_code']); ?>) – <?php echo ($e['is_paid'] == 1) ? '₹' . number_format($e['registration_fee'], 2) : 'FREE'; ?>
-                                        </option>
-                                    <?php }
-                                } ?>
-                            </select>
-                        </div>
-                    <?php } ?>
 
-                    <?php $has_family = isFieldVisible('father_name', $fields_map) || isFieldVisible('mother_name', $fields_map) || isFieldVisible('village', $fields_map) || isFieldVisible('city', $fields_map) || isFieldVisible('address', $fields_map); ?>
-                    <div class="wiz" id="wiz" data-total="<?php echo $has_family ? 3 : 2; ?>">
-                        <div class="wiz-bar"><i id="wizFill"></i></div>
-                        <ol class="wiz-steps">
-                            <li class="on" data-s="1"><b>1</b><span>Student</span></li>
-                            <li data-s="2"><b>2</b><span>School &amp; Contact</span></li>
-                            <?php if ($has_family) { ?><li data-s="3"><b>3</b><span>Family</span></li><?php } ?>
-                        </ol>
-                    </div>
-                    <div class="draft-note" id="draftNote" style="display:none"><i class="fa fa-history"></i> We restored your earlier answers. <a href="#" id="draftClear">Start fresh</a></div>
+                        <div id="sibling_notice_box" style="display: none; margin-bottom: 22px;"></div>
 
-                    <!-- STEP 1 -->
-                    <div class="pane on" data-step="1">
-                        <div class="fs-title hi-t"><span><i class="fa fa-user"></i></span> Student Details</div>
-                        <div class="grid2">
-                            <div class="full">
-                                <label class="l" for="candidate_name">Student Full Name <i>*</i></label>
-                                <input type="text" id="candidate_name" name="candidate_name" class="in" placeholder="As per school records" autocomplete="name" required maxlength="120">
-                            </div>
-                            <div>
-                                <label class="l" for="class_id">Present Class <i>*</i></label>
-                                <select name="class_id" id="class_id" class="in" required>
-                                    <option value="">Select class</option>
-                                    <?php foreach ($classList as $c) { ?>
-                                        <option value="<?php echo (int) $c['id']; ?>">Class <?php echo htmlspecialchars($c['class']); ?></option>
-                                    <?php } ?>
-                                </select>
-                            </div>
-                            <?php if (isFieldVisible('dob', $fields_map)) { ?>
-                                <div>
-                                    <label class="l" for="dob">Date of Birth <?php echo isFieldRequired('dob', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                    <input type="date" id="dob" name="dob" class="in" max="<?php echo date('Y-m-d'); ?>" <?php echo isFieldRequired('dob', $fields_map) ? 'required' : ''; ?>>
+                        <form id="scholarship_register_form" action="<?php echo site_url('scholarshipregister/submit'); ?>" method="POST">
+                            <?php if (!empty($selected_exam) && isset($is_direct_link) && $is_direct_link) { ?>
+                                <input type="hidden" name="exam_id" value="<?php echo $selected_exam['id']; ?>">
+                            <?php } else { ?>
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label class="form-label-pw">Target Examination *</label>
+                                    <select name="exam_id" class="form-control form-control-pw" required>
+                                        <?php if (!empty($exams)) {
+                                            foreach ($exams as $e) { ?>
+                                                <option value="<?php echo $e['id']; ?>" <?php echo ($selected_exam_id == $e['id']) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($e['title']); ?> (<?php echo htmlspecialchars($e['exam_code']); ?>)
+                                                </option>
+                                            <?php }
+                                        } ?>
+                                    </select>
                                 </div>
                             <?php } ?>
-                            <?php if (isFieldVisible('gender', $fields_map)) { ?>
-                                <div class="full">
-                                    <label class="l">Gender <?php echo isFieldRequired('gender', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                    <div class="seg seg3" role="radiogroup" aria-label="Gender">
-                                        <?php foreach (array('Male' => 'fa-male', 'Female' => 'fa-female', 'Other' => 'fa-user') as $g => $gi) { ?>
-                                            <label><input type="radio" name="gender" value="<?php echo $g; ?>" <?php echo isFieldRequired('gender', $fields_map) ? 'required' : ''; ?>><span><i class="fa <?php echo $gi; ?>"></i> <?php echo $g; ?></span></label>
-                                        <?php } ?>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group" style="margin-bottom: 20px;">
+                                        <label class="form-label-pw">Candidate Full Name *</label>
+                                        <input type="text" id="form_candidate_name" name="candidate_name" class="form-control form-control-pw" placeholder="Enter student's full name" required>
                                     </div>
                                 </div>
-                            <?php } ?>
-                            <?php if (isFieldVisible('category', $fields_map)) { ?>
-                                <div class="full">
-                                    <label class="l">Category <?php echo isFieldRequired('category', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                    <div class="seg seg5" role="radiogroup" aria-label="Category">
-                                        <?php foreach (array('General', 'OBC', 'SC', 'ST', 'SBC') as $k => $cat) { ?>
-                                            <label><input type="radio" name="category" value="<?php echo $cat; ?>" <?php echo $k === 0 ? 'checked' : ''; ?>><span><?php echo $cat; ?></span></label>
-                                        <?php } ?>
+                                <div class="col-md-6">
+                                    <div class="form-group" style="margin-bottom: 20px;">
+                                        <label class="form-label-pw">Present School Type *</label>
+                                        <div style="display: flex; gap: 10px; margin-top: 4px;">
+                                            <label style="flex: 1; border: 1.5px solid var(--pw-gray-border); padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                                                <input type="radio" name="school_type" value="internal" checked onclick="$('#other_school_box').hide();">
+                                                <span>Sunrise Student</span>
+                                            </label>
+                                            <label style="flex: 1; border: 1.5px solid var(--pw-gray-border); padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                                                <input type="radio" name="school_type" value="external" onclick="$('#other_school_box').show();">
+                                                <span>Other School</span>
+                                            </label>
+                                        </div>
+                                        <div id="other_school_box" style="display: none; margin-top: 10px;">
+                                            <input type="text" name="other_school_name" class="form-control form-control-pw" placeholder="Enter school name">
+                                        </div>
                                     </div>
                                 </div>
-                            <?php } ?>
-                        </div>
-                    </div>
+                            </div>
 
-                    <!-- STEP 2 -->
-                    <div class="pane" data-step="2">
-                        <?php if (isFieldVisible('school_name', $fields_map)) { ?>
-                            <div class="fs-title hi-t"><span><i class="fa fa-university"></i></span> Present School</div>
-                            <div class="seg" role="radiogroup" aria-label="School type">
-                                <label><input type="radio" name="school_type" value="internal" checked onchange="toggleSchool(this.value)"><span><i class="fa fa-university"></i> <?php echo htmlspecialchars($school_name); ?></span></label>
-                                <label><input type="radio" name="school_type" value="external" onchange="toggleSchool(this.value)"><span><i class="fa fa-building-o"></i> Another School</span></label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group" style="margin-bottom: 20px;">
+                                        <label class="form-label-pw">Primary Mobile Number (WhatsApp) *</label>
+                                        <input type="tel" id="form_candidate_mobile" name="mobile" maxlength="10" pattern="\d{10}" class="form-control form-control-pw" placeholder="10-digit mobile number" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group" style="margin-bottom: 20px;">
+                                        <label class="form-label-pw">Present Class / Grade *</label>
+                                        <select id="form_class_id" name="class_id" class="form-control form-control-pw" required>
+                                            <option value="">-- Select Class --</option>
+                                            <?php foreach ($classList as $c) { ?>
+                                                <option value="<?php echo $c['id']; ?>">Class <?php echo htmlspecialchars($c['class']); ?></option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-                            <div id="other_school_box" style="display:none;margin-top:12px;">
-                                <label class="l" for="other_school_name">School Name <?php echo isFieldRequired('school_name', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                <input type="text" id="other_school_name" name="other_school_name" class="in" placeholder="Type the student's current school" maxlength="150">
-                            </div>
-                        <?php } ?>
 
-                        <div class="fs-title hi-t"><span><i class="fa fa-phone"></i></span> Contact</div>
-                        <div class="grid2">
-                            <div>
-                                <label class="l" for="mobile">Mobile (WhatsApp) <i>*</i></label>
-                                <input type="tel" id="mobile" name="mobile" class="in" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" placeholder="10-digit mobile number" autocomplete="tel-national" required title="Enter a 10-digit mobile number">
-                                <div class="hint">Admit card &amp; result updates will be sent here.</div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group" style="margin-bottom: 20px;">
+                                        <label class="form-label-pw">Father's Name</label>
+                                        <input type="text" name="father_name" class="form-control form-control-pw" placeholder="Father's full name">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group" style="margin-bottom: 20px;">
+                                        <label class="form-label-pw">Email Address</label>
+                                        <input type="email" name="email" class="form-control form-control-pw" placeholder="candidate@example.com">
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label class="l" for="email">Email <small style="font-weight:500;color:var(--muted)">(optional)</small></label>
-                                <input type="email" id="email" name="email" class="in" placeholder="name@example.com" autocomplete="email">
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- STEP 3 -->
-                    <?php if ($has_family) { ?>
-                    <div class="pane" data-step="3">
-                        <div class="fs-title hi-t"><span><i class="fa fa-home"></i></span> Family &amp; Address</div>
-                        <div class="grid2">
-                            <?php if (isFieldVisible('father_name', $fields_map)) { ?>
-                                <div>
-                                    <label class="l" for="father_name">Father's Name <?php echo isFieldRequired('father_name', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                    <input type="text" id="father_name" name="father_name" class="in" <?php echo isFieldRequired('father_name', $fields_map) ? 'required' : ''; ?> maxlength="120">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group" style="margin-bottom: 20px;">
+                                        <label class="form-label-pw">Gender</label>
+                                        <select name="gender" class="form-control form-control-pw">
+                                            <option value="">Select Gender</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            <?php } ?>
-                            <?php if (isFieldVisible('mother_name', $fields_map)) { ?>
-                                <div>
-                                    <label class="l" for="mother_name">Mother's Name <?php echo isFieldRequired('mother_name', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                    <input type="text" id="mother_name" name="mother_name" class="in" <?php echo isFieldRequired('mother_name', $fields_map) ? 'required' : ''; ?> maxlength="120">
+                                <div class="col-md-6">
+                                    <div class="form-group" style="margin-bottom: 20px;">
+                                        <label class="form-label-pw">City / District</label>
+                                        <input type="text" name="city" class="form-control form-control-pw" placeholder="City or District">
+                                    </div>
                                 </div>
-                            <?php } ?>
-                            <?php if (isFieldVisible('village', $fields_map)) { ?>
-                                <div>
-                                    <label class="l" for="village">Village / Town <?php echo isFieldRequired('village', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                    <input type="text" id="village" name="village" class="in" <?php echo isFieldRequired('village', $fields_map) ? 'required' : ''; ?> maxlength="120">
+                            </div>
+
+                            <!-- 4-Digit Password PIN for Candidate Portal -->
+                            <div style="background: var(--pw-primary-light); border: 1.5px solid #D5CFFE; border-radius: 14px; padding: 20px; margin: 15px 0 25px;">
+                                <div class="row" style="display: flex; align-items: center; flex-wrap: wrap;">
+                                    <div class="col-sm-6">
+                                        <label class="form-label-pw" style="color: var(--pw-primary); margin-bottom: 4px;">
+                                            <i class="fa fa-lock"></i> Set 4-Digit Password PIN *
+                                        </label>
+                                        <input type="password" id="form_password_pin" name="password_pin" maxlength="4" pattern="\d{4}" class="form-control form-control-pw" placeholder="••••" style="letter-spacing: 6px; font-size: 20px; font-weight: 800; text-align: center; background: #fff;" required>
+                                    </div>
+                                    <div class="col-sm-6" style="padding-top: 8px;">
+                                        <small style="color: var(--pw-dark-2); line-height: 1.5; display: block;">
+                                            <i class="fa fa-info-circle text-primary"></i> <strong>Candidate Portal Access:</strong><br>
+                                            Use your Roll Number and this 4-digit PIN to login to your dashboard to download class-wise sample papers and admit card.
+                                        </small>
+                                    </div>
                                 </div>
-                            <?php } ?>
-                            <?php if (isFieldVisible('city', $fields_map)) { ?>
-                                <div>
-                                    <label class="l" for="city">City / District <?php echo isFieldRequired('city', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                    <input type="text" id="city" name="city" class="in" <?php echo isFieldRequired('city', $fields_map) ? 'required' : ''; ?> maxlength="120">
-                                </div>
-                            <?php } ?>
-                            <?php if (isFieldVisible('address', $fields_map)) { ?>
-                                <div class="full">
-                                    <label class="l" for="address">Permanent Address <?php echo isFieldRequired('address', $fields_map) ? '<i>*</i>' : ''; ?></label>
-                                    <textarea id="address" name="address" rows="2" class="in" <?php echo isFieldRequired('address', $fields_map) ? 'required' : ''; ?> maxlength="300"></textarea>
-                                </div>
-                            <?php } ?>
-                        </div>
-                    </div>
+                            </div>
+
+                            <button type="submit" class="btn-submit-pw">
+                                <i class="fa fa-check-circle"></i> Submit Application &amp; Generate Roll Slip
+                            </button>
+                        </form>
                     <?php } ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-                    <!-- Review (filled by script on the last step) -->
-                    <div class="review" id="review" style="display:none">
-                        <div class="fs-title hi-t"><span><i class="fa fa-check"></i></span> Please check your details</div>
-                        <dl id="reviewList"></dl>
+<!-- 10. FAQs SECTION (Accordion Style) -->
+<section class="pw-section">
+    <div class="container">
+        <div class="pw-section-header">
+            <span class="pw-badge-pill">Help &amp; Support</span>
+            <h2 class="pw-section-title">Frequently Asked Questions</h2>
+            <p class="pw-section-sub">Have questions about the scholarship test? Find your answers here.</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+                <div class="faq-item-pw open">
+                    <div class="faq-q" onclick="$(this).parent().toggleClass('open');">
+                        <span>Who is eligible for the Sunrise Scholarship Test?</span>
+                        <i class="fa fa-chevron-down"></i>
                     </div>
-
-                    <div class="wiz-nav">
-                        <button type="button" class="btn btn-back" id="btnBack" style="display:none"><i class="fa fa-arrow-left"></i> Back</button>
-                        <button type="button" class="btn btn-next" id="btnNext">Next <i class="fa fa-arrow-right"></i></button>
-                        <button type="submit" class="btn btn-free" id="submitBtn" style="display:none"><i class="fa fa-check-circle"></i> Submit &amp; Get Roll Number <span class="tag">FREE</span></button>
+                    <div class="faq-a">
+                        Students presently studying in Classes 5th to 11th in any recognized school (CBSE, RBSE, ICSE or State Boards) are eligible to participate. Both English and Hindi medium students are welcomed.
                     </div>
-                    <div class="secure"><i class="fa fa-lock"></i> Your details are used only for this examination.</div>
-                </form>
-            <?php } ?>
+                </div>
+
+                <div class="faq-item-pw">
+                    <div class="faq-q" onclick="$(this).parent().toggleClass('open');">
+                        <span>What is the syllabus and medium of examination?</span>
+                        <i class="fa fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-a">
+                        The examination is conducted strictly as per NCERT textbook syllabus of the candidate's current class. The test paper is bilingual containing both Hindi and English for all questions.
+                    </div>
+                </div>
+
+                <div class="faq-item-pw">
+                    <div class="faq-q" onclick="$(this).parent().toggleClass('open');">
+                        <span>Is there any registration fee?</span>
+                        <i class="fa fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-a">
+                        Online registration for SSAT-2026 is completely <strong>FREE</strong> of cost! You can register online, via WhatsApp helpline (+91 9783200821), or in-person at the school reception.
+                    </div>
+                </div>
+
+                <div class="faq-item-pw">
+                    <div class="faq-q" onclick="$(this).parent().toggleClass('open');">
+                        <span>How will the scholarship awards be distributed?</span>
+                        <i class="fa fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-a">
+                        Top meritorious rankers will receive up to 100% concession on tuition fees for the 2026-27 session, along with cash awards, mementos, medals, and official certificates of excellence.
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <div class="alt">
-            <a class="alt-card wa" href="<?php echo $wa_link; ?>" target="_blank" rel="noopener">
-                <span class="ic"><i class="fa fa-whatsapp"></i></span>
-                <div><b class="hi">WhatsApp पर रजिस्टर करें</b><span>98285 12821 / 97832 00821</span></div>
-            </a>
-            <a class="alt-card ph" href="tel:+919982085111">
-                <span class="ic"><i class="fa fa-phone-square"></i></span>
-                <div><b class="hi">मदद चाहिए? कॉल करें</b><span>99820 85111 · 98285 12821</span></div>
-            </a>
-        </div>
-
-        <div class="share-row" style="justify-content:center;margin-top:26px"><a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://wa.me/?text=<?php echo rawurlencode("लाखों में स्कॉलरशिप! S-SAT - Sunrise Scholarship & Admission Test. Free registration: " . $reg_url); ?>"><i class="fa fa-whatsapp" style="color:#16a34a"></i> Share with friends</a></div>
-
-        <!-- Status lookup -->
-        <div class="status" id="status">
-            <div>
-                <h3><i class="fa fa-search"></i> Already registered?</h3>
-                <p>Enter your Roll Number or registered mobile number to get your admit card and result.</p>
-            </div>
-            <form action="<?php echo site_url('scholarshipregister/check_status'); ?>" method="POST">
-                <label class="sr-only" for="search_term">Roll number or mobile</label>
-                <input type="text" id="search_term" name="search_term" class="in" placeholder="Roll No. or Mobile Number" required>
-                <button type="submit" class="btn">Check</button>
-            </form>
         </div>
     </div>
 </section>
 
-<!-- ================= SCHOOL ================= -->
-<section class="school">
-    <div class="wrap">
-        <div>
-            <h2>Sunrise International Public School</h2>
-            <p>A Co-Ed English Medium CBSE School · Nechhwa, Sikar (Raj)</p>
-            <div class="academy">
-                <b>SUNRISE<span>CAREER ACADEMY</span></b>
-                <small>For NEET, IIT-JEE &amp; NDA, CLAT — A New Venture for Competitive Exams</small>
-            </div>
+<!-- 11. Footer -->
+<footer style="background: var(--pw-dark); color: #94A3B8; padding: 50px 0 30px;">
+    <div class="container text-center">
+        <h3 style="color: #fff; font-family: 'Outfit', sans-serif; font-size: 24px; margin-bottom: 8px;">
+            <?php echo htmlspecialchars($sch_setting[0]['name'] ?: 'Sunrise Education Group'); ?>
+        </h3>
+        <p style="margin-bottom: 25px; color: #94A3B8;">Affiliated with CBSE &bull; School &bull; Sainik-Military &bull; Pre-Foundation &bull; College</p>
+        
+        <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-bottom: 30px; font-size: 14px;">
+            <span><i class="fa fa-phone" style="color: var(--pw-primary);"></i> Helpline: +91 9828512821 / 9783200821</span>
+            <span><i class="fa fa-envelope" style="color: var(--pw-accent);"></i> info@sunriseschool.in</span>
+            <span><i class="fa fa-map-marker" style="color: var(--pw-green);"></i> Nechhwa, Sikar (Raj.)</span>
         </div>
-        <div class="aff">
-            <small>Affiliation No. : 1730833</small>
-            <b>CBSE</b>
-            <span>Nursery to 12<sup>th</sup></span>
-            <em>(Science, Arts, Commerce)</em>
-        </div>
-    </div>
-</section>
 
-<!-- ================= FAQ ================= -->
-<section class="sec" id="faq" style="padding-top:70px">
-    <div class="wrap">
-        <div class="pill-title">FAQ</div>
-        <p class="sec-sub">Quick answers to what parents ask us most.</p>
-        <div class="faq">
-            <details open><summary>Who can appear for SSAT?</summary><div class="ans">Any student studying in Class 5 to 11 during the 2026-27 session can take part. The scholarships are for admission to Class 6 to 12 at Sunrise International Public School.</div></details>
-            <details><summary>Is there any registration fee?</summary><div class="ans">No. Registration is completely free — online, on WhatsApp or by phone.</div></details>
-            <details><summary>In which language is the exam?</summary><div class="ans">The exam is available in Hindi and English.</div></details>
-            <details><summary>Is the exam online or offline? Where are the centres?</summary><div class="ans">Both modes are available. Exam centres: Bhilwara, Jodhpur, Barmer and Nechhwa (Sikar).</div></details>
-            <details><summary>I lost my Roll Number. What do I do?</summary><div class="ans">Use <a href="#status" style="color:var(--blue);font-weight:700">"Already registered?"</a> above and search with your registered mobile number.</div></details>
-            <details><summary>How do I get my admit card and result?</summary><div class="ans">The school will inform you when admit cards and results are released. You can then search with your Roll Number or mobile number in "Already registered?" on this page. For help call 98285 12821.</div></details>
+        <div style="border-top: 1px solid #2B3338; padding-top: 25px; font-size: 13px;">
+            &copy; 2026 <?php echo htmlspecialchars($sch_setting[0]['name'] ?: 'Sunrise International Public School'); ?>. All Rights Reserved.
         </div>
-    </div>
-</section>
-</main>
-
-<footer>
-    <div class="bar hi">Sunrise International Public School · नेछवा, सीकर (राज.)</div>
-    <div class="wrap">
-        <div class="main">
-            <div>
-                <h4>SUNRISE INTERNATIONAL PUBLIC SCHOOL</h4>
-                <div>(A Co. Ed English Medium CBSE School)</div>
-            </div>
-            <div class="c">
-                <span><i class="fa fa-map-marker"></i> Nechhwa, Sikar (Raj)</span>
-                <a href="tel:+919828512821"><i class="fa fa-phone"></i> 98285 12821, 99820 85111, 97832 00821</a>
-                <a href="https://www.sunriseeduhub.com" target="_blank" rel="noopener"><i class="fa fa-globe"></i> www.sunriseeduhub.com</a>
-            </div>
-        </div>
-        <div class="copy">&copy; <?php echo date('Y'); ?> Sunrise International Public School. All rights reserved.</div>
     </div>
 </footer>
 
-<div class="m-cta">
-    <a href="#register" class="btn btn-free"><i class="fa fa-pencil"></i> Free Register</a>
-    <a href="<?php echo $wa_link; ?>" target="_blank" rel="noopener" class="btn wa" aria-label="WhatsApp"><i class="fa fa-whatsapp"></i></a>
+<!-- Floating Mobile Bottom CTA -->
+<div class="pw-mobile-cta">
+    <div style="display: flex; gap: 10px;">
+        <a href="#register" class="btn btn-primary" style="flex: 2; background: var(--pw-primary); border-radius: 8px; font-weight: 800; padding: 10px;">
+            <i class="fa fa-pencil"></i> Apply Now (Free)
+        </a>
+        <a href="https://wa.me/919783200821" target="_blank" class="btn btn-success" style="flex: 1; background: #25D366; border-radius: 8px; font-weight: 800; padding: 10px;">
+            <i class="fa fa-whatsapp"></i> Chat
+        </a>
+    </div>
 </div>
 
+<!-- PW NSAT-Style Mobile Registration Popup Modal -->
+<div id="pwRegisterModal" class="pw-modal-overlay">
+    <div class="pw-modal-card">
+        <!-- Close Button -->
+        <button type="button" class="pw-modal-close" onclick="closeRegisterModal();" aria-label="Close">&times;</button>
+        
+        <!-- STEP 1: MOBILE ENTRY SCREEN (Exact layout from PW NSAT screenshot) -->
+        <div id="modalStepMobile">
+            <h3 class="pw-modal-title">Register for Scholarship</h3>
+            <div style="height: 18px;"></div>
+            
+            <div style="position: relative; margin-bottom: 20px;">
+                <input type="tel" 
+                       id="modal_mobile_input" 
+                       placeholder="Mobile Number" 
+                       maxlength="10" 
+                       autocomplete="tel"
+                       class="pw-modal-input">
+                <div id="modal_mobile_error" style="display: none; color: #EF4444; font-size: 13px; margin-top: 6px; font-weight: 600;"></div>
+            </div>
+
+            <button type="button" 
+                    id="modal_verify_btn" 
+                    class="pw-modal-btn-disabled" 
+                    disabled 
+                    onclick="handleVerifyMobile();">
+                Verify &amp; Proceed
+            </button>
+
+            <div style="text-align: center; margin-top: 18px; font-size: 13.5px; color: #64748B;">
+                Already registered? <a href="<?php echo site_url('scholarshipregister/portal'); ?>" style="color: var(--pw-primary); font-weight: 700; text-decoration: underline;">Go to Candidate Portal</a>
+            </div>
+        </div>
+
+        <!-- STEP 2: MOBILE ALREADY REGISTERED / MULTI-CHILD SCREEN -->
+        <div id="modalStepRegistered" style="display: none;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <h3 class="pw-modal-title" style="font-size: 20px;">Candidate Already Registered</h3>
+                <span class="badge" style="background: #E8F8F2; color: #00A86B; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 20px;">
+                    <i class="fa fa-check-circle"></i> +91 <span id="display_verified_mobile"></span>
+                </span>
+            </div>
+            
+            <p style="font-size: 13.5px; color: #475569; margin-bottom: 14px;">
+                We found candidate(s) already registered under this mobile number:
+            </p>
+
+            <!-- Dynamic List of Registered Candidates -->
+            <div id="modal_candidate_list" style="margin-bottom: 18px;"></div>
+
+            <!-- PIN Login Box for existing candidate -->
+            <div id="modal_pin_login_section" style="background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 16px; margin-bottom: 18px;">
+                <div style="font-weight: 700; font-size: 13.5px; color: #1E293B; margin-bottom: 8px;">
+                    <i class="fa fa-lock" style="color: var(--pw-primary);"></i> Enter 4-Digit Security PIN to access Candidate Portal:
+                </div>
+                <input type="password" 
+                       id="modal_pin_input" 
+                       maxlength="4" 
+                       pattern="\d{4}" 
+                       placeholder="••••" 
+                       class="pw-modal-pin-input">
+                <div id="modal_pin_error" style="display: none; color: #EF4444; font-size: 13px; font-weight: 600; margin-top: 6px; text-align: center;"></div>
+                
+                <button type="button" 
+                        id="btn_modal_portal_login" 
+                        class="btn-submit-pw" 
+                        style="width: 100%; margin-top: 10px; padding: 12px; font-size: 14.5px; border-radius: 8px;"
+                        onclick="handleModalPinLogin();">
+                    <i class="fa fa-sign-in"></i> Login to Candidate Portal
+                </button>
+            </div>
+
+            <!-- Register Sibling / Another Child Option -->
+            <div style="background: #F0EDFF; border: 1.5px dashed #A594F9; border-radius: 12px; padding: 16px; text-align: center;">
+                <div style="font-weight: 800; font-size: 14.5px; color: #2B1879; margin-bottom: 4px;">
+                    <i class="fa fa-users" style="color: var(--pw-primary);"></i> Have another child? Register sibling
+                </div>
+                <p style="font-size: 12px; color: #5B48B2; margin-bottom: 12px; line-height: 1.4;">
+                    Parents can register multiple children with the same mobile number.
+                </p>
+                <button type="button" 
+                        id="btn_modal_register_sibling" 
+                        class="btn" 
+                        style="width: 100%; background: #FFFFFF; color: var(--pw-primary); border: 2px solid var(--pw-primary); font-weight: 800; padding: 10px; border-radius: 8px;"
+                        onclick="handleRegisterSibling();">
+                    <i class="fa fa-user-plus"></i> Register Another Child
+                </button>
+            </div>
+
+            <div style="text-align: center; margin-top: 16px;">
+                <a href="javascript:void(0);" onclick="resetRegisterModal();" style="font-size: 13px; color: #64748B; text-decoration: underline;">
+                    &larr; Use a different mobile number
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery & Bootstrap Scripts -->
+<script src="<?php echo base_url('backend/custom/jquery.min.js'); ?>"></script>
+<script src="<?php echo base_url('backend/bootstrap/js/bootstrap.min.js'); ?>"></script>
+
+<!-- Bilingual Translation Engine -->
 <script>
-(function () {
-    // Current-school toggle
-    window.toggleSchool = function (val) {
-        var box = document.getElementById('other_school_box'), inp = document.getElementById('other_school_name');
-        if (!box || !inp) return;
-        var ext = val === 'external';
-        box.style.display = ext ? 'block' : 'none';
-        inp.required = ext;
-        if (ext) { inp.focus(); } else { inp.value = ''; }
-    };
+var dictionary = [
+    // Modal & Multi-child Translations
+    ["Register for Scholarship", "छात्रवृत्ति के लिए पंजीकरण"],
+    ["Mobile Number", "मोबाइल नंबर"],
+    ["Verify & Proceed", "सत्यापित करें और आगे बढ़ें"],
+    ["Verifying...", "सत्यापित किया जा रहा है..."],
+    ["Enter your 10-digit mobile number to verify & proceed", "सत्यापित करने और आगे बढ़ने के लिए 10-अंकों का मोबाइल नंबर दर्ज करें"],
+    ["Candidate Already Registered", "उम्मीदवार पहले से पंजीकृत है"],
+    ["Mobile Already Registered", "मोबाइल नंबर पहले से पंजीकृत है"],
+    ["We found candidate(s) already registered under this mobile number:", "इस मोबाइल नंबर पर पहले से पंजीकृत उम्मीदवार मिले:"],
+    ["Enter 4-Digit Security PIN to access Candidate Portal:", "कैंडिडेट पोर्टल खोलने हेतु 4-अंकीय पासवर्ड पिन दर्ज करें:"],
+    ["Login to Candidate Portal", "कैंडिडेट पोर्टल पर लॉग इन करें"],
+    ["Have another child? Register sibling", "क्या दूसरा बच्चा भी है? भाई/बहन का पंजीकरण करें"],
+    ["Register Another Child", "एक और बच्चे का पंजीकरण करें"],
+    ["Parents can register multiple children with the same mobile number.", "अभिभावक एक ही मोबाइल नंबर से एक से अधिक बच्चों का पंजीकरण कर सकते हैं।"],
+    ["Use a different mobile number", "अन्य मोबाइल नंबर का उपयोग करें"],
+    ["Registering Sibling / Additional Child:", "अतिरिक्त बच्चे / भाई-बहन का पंजीकरण:"],
+    ["You are registering another candidate under parent mobile", "आप अभिभावक मोबाइल के तहत एक नए छात्र का पंजीकरण कर रहे हैं"],
+    ["Already registered?", "पहले से पंजीकृत हैं?"],
+    ["Go to Candidate Portal", "कैंडिडेट पोर्टल पर जाएं"],
 
-    // Mobile: digits only
-    var mob = document.getElementById('mobile');
-    if (mob) mob.addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 10); });
+    // Top strip & Navbar
+    ["NATIONAL SCHOLARSHIP", "राष्ट्रीय छात्रवृत्ति"],
+    ["Sunrise Scholarship Cum Admission Test (SSAT-2026)", "सनराइज स्कॉलरशिप कम एडमिशन टेस्ट (SSAT-2026)"],
+    ["Registrations Open", "पंजीकरण प्रारंभ"],
+    ["100% Free Entry", "100% निःशुल्क आवेदन"],
+    ["Register Online", "ऑनलाइन पंजीकरण करें"],
+    ["Scholarship & Admission Wing", "छात्रवृत्ति एवं प्रवेश विंग"],
+    ["About", "विवरण"],
+    ["Rewards", "पुरस्कार"],
+    ["How It Works", "प्रक्रिया"],
+    ["Syllabus", "पाठ्यक्रम"],
+    ["Dates", "तिथियां"],
+    ["Candidate Portal", "कैंडिडेट पोर्टल"],
+    ["Register (Free)", "पंजीकरण (निःशुल्क)"],
+    ["Apply", "आवेदन"],
 
-    // Prevent double submit
-    var form = document.getElementById('regForm'), btn = document.getElementById('submitBtn');
-    if (form && btn) form.addEventListener('submit', function () {
-        if (!form.checkValidity()) return;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting…';
-    });
+    // Hero Section
+    ["Classes 5th to 11th • Academic Session 2026-27", "कक्षा 5वीं से 11वीं • शैक्षणिक सत्र 2026-27"],
+    ["Win up to 100% Scholarship with SSAT 2026", "SSAT 2026 के साथ पाएं 100% तक छात्रवृत्ति"],
+    ["Unlock premier quality school & foundation education. Benchmark yourself with thousands of students and secure grand fee waivers, cash honors and direct admission.", "शीर्ष गुणवत्तापूर्ण स्कूल व फाउंडेशन शिक्षा प्राप्त करें। हजारों विद्यार्थियों के साथ अपनी तैयारी का आकलन करें और पाएं विशेष फीस छूट, नकद पुरस्कार व सीधा प्रवेश।"],
+    ["100% Fee Waiver", "100% फीस माफी"],
+    ["Top rankers get complete tuition fee off", "शीर्ष रैंकर्स को मिलेगी पूर्ण ट्यूशन फीस छूट"],
+    ["Merit Cash Honors", "मेधावी नकद सम्मान"],
+    ["Cash prizes, mementos & medals", "नकद पुरस्कार, ट्रॉफी व मेडल"],
+    ["100% NCERT Pattern", "100% NCERT पैटर्न"],
+    ["Bilingual OMR MCQ question paper", "द्विभाषी OMR आधारित प्रश्न पत्र"],
+    ["100% Free Registration", "100% निःशुल्क पंजीकरण"],
+    ["No application or exam fee required", "कोई पंजीकरण शुल्क नहीं लगेगा"],
+    ["Register Online (Free)", "ऑनलाइन पंजीकरण करें (निःशुल्क)"],
+    ["Download Brochure", "विवरणिका डाउनलोड करें"],
 
-    // Countdown
-    var cd = document.getElementById('countdown');
-    if (cd) {
-        var target = parseInt(cd.getAttribute('data-ts'), 10);
-        var els = { d: document.getElementById('cd_d'), h: document.getElementById('cd_h'), m: document.getElementById('cd_m'), s: document.getElementById('cd_s') };
-        var pad = function (n) { return (n < 10 ? '0' : '') + n; };
-        var tick = function () {
-            var diff = target - Date.now();
-            if (diff <= 0) { cd.innerHTML = '<div style="grid-column:1/-1;padding:10px;font-weight:700;color:#12356f">परीक्षा आरंभ / सम्पन्न</div>'; return false; }
-            els.d.textContent = pad(Math.floor(diff / 864e5));
-            els.h.textContent = pad(Math.floor(diff % 864e5 / 36e5));
-            els.m.textContent = pad(Math.floor(diff % 36e5 / 6e4));
-            els.s.textContent = pad(Math.floor(diff % 6e4 / 1e3));
-            return true;
-        };
-        if (tick()) { var t = setInterval(function () { if (!tick()) clearInterval(t); }, 1000); }
-    }
-})();
-</script>
-<script>
-// ===== interactive layer =====
-(function () {
-    var $ = function (s, r) { return (r || document).querySelector(s); };
-    var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
+    // Exam Details Box
+    ["Exam Details", "परीक्षा विवरण"],
+    ["OFFICIAL", "आधिकारिक"],
+    ["Date of Examination", "परीक्षा की तिथि"],
+    ["15 November 2026 (Sunday)", "15 नवंबर 2026 (रविवार)"],
+    ["Format & Duration", "प्रारूप एवं समयावधि"],
+    ["90 Minutes • OMR Multiple Choice", "90 मिनट • OMR बहुविकल्पीय प्रश्न (MCQs)"],
+    ["Eligibility Criteria", "पात्रता मानदंड"],
+    ["Classes 5th to 11th (Any recognized school)", "कक्षा 5वीं से 11वीं (किसी भी विद्यालय के विद्यार्थी)"],
+    ["Scholarship Concession", "छात्रवृत्ति एवं पुरस्कार"],
+    ["Up to 100% Fee Concession + Cash Honors", "100% तक फीस माफी + नकद पुरस्कार"],
+    ["Registration Closing Soon", "पंजीकरण शीघ्र समाप्त हो रहा है"],
+    ["Days", "दिन"],
+    ["Hours", "घंटे"],
+    ["Mins", "मिनट"],
+    ["Secs", "सेकंड"],
 
-    // Scroll progress + back-to-top
-    var bar = $('#scrollbar'), top = $('#toTop');
-    var onScroll = function () {
-        var h = document.documentElement, max = h.scrollHeight - h.clientHeight;
-        if (bar) bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
-        if (top) top.classList.toggle('show', h.scrollTop > 600);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
-    if (top) top.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    // Impact Section
+    ["Tuition Fee Waiver", "ट्यूशन फीस छूट"],
+    ["For top meritorious students", "शीर्ष मेधावी विद्यार्थियों के लिए"],
+    ["Eligible Grades", "पात्र कक्षाएं"],
+    ["From all state and national boards", "सभी राज्य एवं केंद्रीय बोर्ड्स से"],
+    ["Cash Rewards & Trophies", "नकद पुरस्कार एवं ट्रॉफी"],
+    ["Direct cash awards for rankers", "रैंकर्स को सीधा नकद पुरस्कार"],
+    ["Registration Cost", "पंजीकरण शुल्क"],
+    ["Zero exam fees for all applicants", "सभी आवेदकों के लिए पूर्णतः निःशुल्क"],
 
-    // Reveal on scroll
-    var targets = $$('.why, .step, .fact, .faq details, .alt-card, .elig, .status, .date-card, .school .aff');
-    if ('IntersectionObserver' in window) {
-        var io = new IntersectionObserver(function (es) {
-            es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-        }, { threshold: .12 });
-        targets.forEach(function (t, i) { t.classList.add('rv'); t.style.transitionDelay = ((i % 4) * 80) + 'ms'; io.observe(t); });
-    }
+    // Steps Flow
+    ["Simple Process", "सरल प्रक्रिया"],
+    ["Steps To Get Scholarship", "छात्रवृत्ति प्राप्त करने के चरण"],
+    ["Follow three quick steps to participate in SSAT 2026 and claim your scholarship.", "SSAT 2026 में भाग लेने और छात्रवृत्ति प्राप्त करने हेतु इन 3 आसान चरणों का पालन करें।"],
+    ["Register Online for Free", "1. निःशुल्क ऑनलाइन पंजीकरण करें"],
+    ["Fill out the simple application form below with your class & mobile number. Set your 4-digit security PIN.", "नीचे दिए गए आसान फॉर्म में अपनी कक्षा, मोबाइल नंबर भरें और 4-अंकों का पासवर्ड पिन बनाएं।"],
+    ["Download Model Paper & Prepare", "2. मॉडल पेपर डाउनलोड कर तैयारी करें"],
+    ["Log in to your Candidate Portal using your Roll No and PIN to practice with authentic class-wise bilingual sample papers.", "कैंडिडेट पोर्टल में अपने रोल नंबर और पिन से लॉगिन करके कक्षा-अनुसार मॉडल पेपर डाउनलोड करें।"],
+    ["Appear for Exam & Win", "3. परीक्षा में शामिल हों और जीतें"],
+    ["Attend the OMR test on 15 Nov 2026. Secure your All India Rank, cash reward, and up to 100% school fee concession.", "15 नवंबर 2026 को परीक्षा दें। अपनी रैंक, नकद पुरस्कार और 100% तक फीस रियायत प्राप्त करें।"],
 
-    // Animated counter
-    $$('[data-count]').forEach(function (el) {
-        var to = parseInt(el.getAttribute('data-count'), 10) || 0, done = false;
-        var run = function () {
-            if (done) return; done = true;
-            var t0 = performance.now();
-            (function step(t) {
-                var p = Math.min(1, (t - t0) / 1200);
-                el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3)));
-                if (p < 1) requestAnimationFrame(step);
-            })(t0);
-        };
-        if ('IntersectionObserver' in window) {
-            new IntersectionObserver(function (es, o) { if (es[0].isIntersecting) { run(); o.disconnect(); } }).observe(el);
-        } else { run(); }
-    });
+    // Rewards Section
+    ["Rewards & Honors", "पुरस्कार एवं सम्मान"],
+    ["What You Win with SSAT 2026", "SSAT 2026 से आपको क्या मिलेगा"],
+    ["Empowering talented students with financial assistance and prestigious accolades.", "प्रतिभाशाली विद्यार्थियों को आर्थिक सहायता और प्रतिष्ठित सम्मान देकर सशक्त बनाना।"],
+    ["Top Privilege", "विशेष सुविधा"],
+    ["Up to 100% Fee Waiver", "100% तक स्कूल फीस छूट"],
+    ["Ranks 1 to 10 in each class get up to 100% complete waiver on tuition fees for the entire academic session 2026-27.", "प्रत्येक कक्षा के रैंक 1 से 10 तक के मेधावी विद्यार्थियों को सत्र 2026-27 के लिए ट्यूशन फीस में 100% तक छूट।"],
+    ["Cash Honors", "नकद पुरस्कार"],
+    ["Cash Awards & Mementos", "नकद पुरस्कार एवं स्मृति चिन्ह"],
+    ["Substantial cash rewards, personalized trophies, certificates of excellence, and medals awarded in a grand ceremony.", "भव्य सम्मान समारोह में आकर्षक नकद पुरस्कार, ट्रॉफी, मेडल और मेरिट प्रमाण पत्र।"],
+    ["Guaranteed", "निश्चित लाभ"],
+    ["Priority Direct Admission", "प्राथमिकता सीधा प्रवेश"],
+    ["Merit holders receive assured direct admission into Foundation, Sainik/Military, and Pre-Medical/Pre-Engineering wings.", "सफल छात्रों को फाउंडेशन, सैनिक/मिलिट्री स्कूल और प्री-मेडिकल/इंजीनियरिंग विंग में सीधा प्रवेश।"],
 
-    // ----- Eligibility checker -----
-    var romans = { 5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X', 11: 'XI' };
-    var ans = $('#eligAns');
-    $$('#clsGrid button').forEach(function (b) {
-        b.addEventListener('click', function () {
-            $$('#clsGrid button').forEach(function (x) { x.classList.remove('on'); });
-            b.classList.add('on');
-            var c = parseInt(b.getAttribute('data-c'), 10);
-            if (c >= 5 && c <= 11) {
-                ans.innerHTML = '<div class="ans"><div class="big ok"><i class="fa fa-check"></i></div><h3 class="hi">बधाई हो! Class ' + c + ' पात्र है</h3>' +
-                    '<p class="hi">आपका बच्चा S-SAT में बैठ सकता है। स्कॉलरशिप कक्षा 6 से 12 में प्रवेश के लिए है।</p>' +
-                    '<button type="button" class="btn btn-free btn-sm pulse" id="elReg"><i class="fa fa-pencil-square-o"></i> Class ' + c + ' के लिए रजिस्टर करें</button></div>';
-                $('#elReg').addEventListener('click', function () { preselectClass(c); });
-            } else {
-                ans.innerHTML = '<div class="ans"><div class="big no"><i class="fa fa-info"></i></div><h3 class="hi">यह परीक्षा कक्षा 5 से 11 के लिए है</h3>' +
-                    '<p class="hi">' + (c < 5 ? 'छोटी कक्षाओं के लिए' : 'कक्षा 12 के लिए') + ' हमारी टीम से बात करें — हम सही मार्गदर्शन देंगे।</p>' +
-                    '<a class="btn btn-line btn-sm" href="tel:+919828512821"><i class="fa fa-phone"></i> 98285 12821</a></div>';
+    // Syllabus
+    ["Examination Pattern", "परीक्षा प्रारूप"],
+    ["Syllabus & Question Blueprint", "पाठ्यक्रम एवं प्रश्न पत्र प्रारूप"],
+    ["Prepared strictly according to 100% NCERT textbook curriculum. All questions are bilingual (Hindi & English).", "100% NCERT पाठ्यपुस्तक पाठ्यक्रम पर आधारित। सभी प्रश्न हिंदी और अंग्रेजी दोनों भाषाओं में होंगे।"],
+    ["Class Group", "कक्षा समूह"],
+    ["Subjects Covered", "सम्मिलित विषय"],
+    ["Total Questions", "कुल प्रश्न"],
+    ["Maximum Marks", "पूर्णांक"],
+    ["Exam Mode", "परीक्षा माध्यम"],
+    ["Class 5th", "कक्षा 5वीं"],
+    ["Class 6th to 10th", "कक्षा 6वीं से 10वीं"],
+    ["Class 11th Science", "कक्षा 11वीं विज्ञान"],
+    ["Class 11th Arts", "कक्षा 11वीं कला"],
+    ["Hindi, English, Mathematics, EVS", "हिंदी, अंग्रेजी, गणित, पर्यावरण (EVS)"],
+    ["Hindi, English, Science, Mathematics, Social Studies, Logical Reasoning", "हिंदी, अंग्रेजी, विज्ञान, गणित, सामाजिक विज्ञान, रीजनिंग"],
+    ["English, Mathematics / Biology, Physics, Chemistry", "अंग्रेजी, गणित / जीव विज्ञान, भौतिकी, रसायन विज्ञान"],
+    ["English, Political Science, History, Geography", "अंग्रेजी, राजनीति विज्ञान, इतिहास, भूगोल"],
+
+    // Dates
+    ["Key Milestones", "मुख्य कार्यक्रम"],
+    ["Important Examination Dates", "परीक्षा की महत्वपूर्ण तिथियां"],
+    ["Mark these essential schedule dates on your calendar.", "पंजीकरण, प्रवेश पत्र और परीक्षा की तिथियां अवश्य नोट कर लें।"],
+    ["Registration Commencement", "पंजीकरण प्रारंभ तिथि"],
+    ["Online & offline application window opens for all students", "सभी छात्रों के लिए ऑनलाइन एवं ऑफलाइन आवेदन शुरू"],
+    ["Registration Closing Date", "पंजीकरण की अंतिम तिथि"],
+    ["Last date to submit application forms without late penalty", "बिना विलंब शुल्क आवेदन फॉर्म सबमिट करने की अंतिम तिथि"],
+    ["Admit Card Release Date", "प्रवेश पत्र जारी होने की तिथि"],
+    ["Admit card available for download via Candidate Portal & SMS", "कैंडिडेट पोर्टल और एसएमएस द्वारा प्रवेश पत्र डाउनलोड शुरू"],
+    ["Examination Date & Reporting", "परीक्षा तिथि एवं रिपोर्टिंग समय"],
+    ["15 November 2026, 10:00 AM (Reporting 9:30 AM)", "15 नवंबर 2026, प्रातः 10:00 बजे (रिपोर्टिंग 9:30 AM)"],
+    ["Result Announcement", "परीक्षा परिणाम की घोषणा"],
+    ["Merit rank list published on portal & school notice boards", "पोर्टल एवं विद्यालय सूचना पट्ट पर मेरिट सूची का प्रकाशन"],
+    ["Award & Felicitation Ceremony", "पुरस्कार एवं सम्मान समारोह"],
+    ["Grand ceremony for cash prizes, mementos & certificates", "नकद पुरस्कार, ट्रॉफी व प्रमाण पत्र वितरण हेतु भव्य समारोह"],
+
+    // Form
+    ["Candidate Registration Form", "विद्यार्थी ऑनलाइन पंजीकरण फॉर्म"],
+    ["Fill in your details below to register. Roll Number & Admit Card will be generated instantaneously.", "पंजीकरण के लिए नीचे विवरण भरें। रोल नंबर एवं प्रवेश पत्र तुरंत जनरेट होगा।"],
+    ["Candidate Full Name *", "विद्यार्थी का पूरा नाम *"],
+    ["Present School Type *", "वर्तमान स्कूल का प्रकार *"],
+    ["Sunrise Student", "सनराइज का विद्यार्थी"],
+    ["Other School", "अन्य स्कूल का विद्यार्थी"],
+    ["Primary Mobile Number (WhatsApp) *", "प्राथमिक मोबाइल नंबर (व्हाट्सएप) *"],
+    ["Present Class / Grade *", "वर्तमान कक्षा / क्लास *"],
+    ["Father's Name", "पिता का नाम"],
+    ["Email Address", "ईमेल पता"],
+    ["Gender", "लिंग"],
+    ["City / District", "शहर / जिला"],
+    ["Set 4-Digit Password PIN *", "4-अंकों का पासवर्ड पिन बनाएं *"],
+    ["Submit Application & Generate Roll Slip", "आवेदन सबमिट करें एवं रोल नंबर पर्ची प्राप्त करें"],
+    ["Candidate Portal Access:", "कैंडिडेट पोर्टल सुविधा:"],
+    ["Use your Roll Number and this 4-digit PIN to login to your dashboard to download class-wise sample papers and admit card.", "मॉडल पेपर और प्रवेश पत्र डाउनलोड करने के लिए अपने रोल नंबर व इस 4-अंकों के पिन से लॉगिन करें।"],
+
+    // FAQs
+    ["Help & Support", "सहायता एवं समर्थन"],
+    ["Frequently Asked Questions", "अक्सर पूछे जाने वाले प्रश्न (FAQs)"],
+    ["Have questions about the scholarship test? Find your answers here.", "छात्रवृत्ति परीक्षा से जुड़े सामान्य प्रश्नों के उत्तर यहां देखें।"],
+    ["Who is eligible for the Sunrise Scholarship Test?", "सनराइज छात्रवृत्ति परीक्षा के लिए कौन पात्र है?"],
+    ["Students presently studying in Classes 5th to 11th in any recognized school (CBSE, RBSE, ICSE or State Boards) are eligible to participate. Both English and Hindi medium students are welcomed.", "किसी भी मान्यता प्राप्त विद्यालय (CBSE, RBSE, ICSE या राज्य बोर्ड) में कक्षा 5वीं से 11वीं में अध्ययनरत सभी विद्यार्थी पात्र हैं। हिंदी एवं अंग्रेजी दोनों माध्यमों के विद्यार्थी भाग ले सकते हैं।"],
+    ["What is the syllabus and medium of examination?", "परीक्षा का पाठ्यक्रम एवं माध्यम क्या है?"],
+    ["The examination is conducted strictly as per NCERT textbook syllabus of the candidate's current class. The test paper is bilingual containing both Hindi and English for all questions.", "परीक्षा विद्यार्थी की वर्तमान कक्षा के NCERT पाठ्यक्रम पर आधारित है। सभी प्रश्न हिंदी और अंग्रेजी दोनों भाषाओं में द्विभाषी होंगे।"],
+    ["Is there any registration fee?", "क्या कोई पंजीकरण शुल्क है?"],
+    ["Online registration for SSAT-2026 is completely FREE of cost! You can register online, via WhatsApp helpline (+91 9783200821), or in-person at the school reception.", "SSAT-2026 के लिए ऑनलाइन पंजीकरण पूरी तरह से निःशुल्क (FREE) है! आप ऑनलाइन, व्हाट्सएप हेल्पलाइन (+91 9783200821) या स्कूल रिसेप्शन पर पंजीकरण करा सकते हैं।"],
+    ["How will the scholarship awards be distributed?", "छात्रवृत्ति एवं पुरस्कार कैसे दिए जाएंगे?"],
+    ["Top meritorious rankers will receive up to 100% concession on tuition fees for the 2026-27 session, along with cash awards, mementos, medals, and official certificates of excellence.", "शीर्ष मेधावी विद्यार्थियों को सत्र 2026-27 हेतु 100% तक ट्यूशन फीस में छूट, साथ ही नकद पुरस्कार, स्मृति चिन्ह, मेडल व मेरिट प्रमाण पत्र प्रदान किए जाएंगे।"],
+
+    // Mobile CTA
+    ["Apply Now (Free)", "अभी आवेदन करें (निःशुल्क)"],
+    ["Chat", "व्हाट्सएप"]
+];
+
+function translatePageTo(lang) {
+    var walker = document.createTreeWalker(
+        document.body,
+        NodeFilter.SHOW_TEXT,
+        {
+            acceptNode: function(node) {
+                var parent = node.parentElement;
+                if (!parent) return NodeFilter.FILTER_REJECT;
+                var tag = parent.tagName.toLowerCase();
+                if (tag === 'script' || tag === 'style' || tag === 'noscript' || tag === 'textarea' || tag === 'code' || parent.classList.contains('lang-switch-btn')) {
+                    return NodeFilter.FILTER_REJECT;
+                }
+                return NodeFilter.FILTER_ACCEPT;
             }
-        });
-    });
-    function preselectClass(c) {
-        var sel = $('#class_id');
-        document.getElementById('register').scrollIntoView({ behavior: 'smooth' });
-        if (!sel) return;
-        var want = 'Class ' + romans[c], hit = null, multi = [];
-        $$('option', sel).forEach(function (o) {
-            var t = o.textContent.trim();
-            if (t === want) hit = o;
-            else if (t.indexOf(want + ' ') === 0 || t.indexOf(want + '-') === 0) multi.push(o);
-        });
-        if (hit) { sel.value = hit.value; sel.dispatchEvent(new Event('change', { bubbles: true })); }
-        else if (multi.length) { sel.focus(); }
-        setTimeout(function () { var n = $('#candidate_name'); if (n) n.focus({ preventScroll: true }); }, 700);
+        },
+        false
+    );
+
+    var textNodes = [];
+    while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
     }
 
-    // ----- Multi-step form -----
-    var form = $('#regForm');
-    if (!form) return;
-    var wiz = $('#wiz'), total = parseInt(wiz.getAttribute('data-total'), 10), step = 1;
-    var panes = $$('.pane', form), nextB = $('#btnNext'), backB = $('#btnBack'), subB = $('#submitBtn'), review = $('#review');
-
-    function show(n, scroll) {
-        step = n;
-        panes.forEach(function (p) { p.classList.toggle('on', parseInt(p.getAttribute('data-step'), 10) === n); });
-        $$('.wiz-steps li').forEach(function (li) {
-            var s = parseInt(li.getAttribute('data-s'), 10);
-            li.classList.toggle('on', s === n); li.classList.toggle('done', s < n);
-        });
-        $('#wizFill').style.width = (n / total * 100) + '%';
-        backB.style.display = n > 1 ? '' : 'none';
-        nextB.style.display = n < total ? '' : 'none';
-        subB.style.display = n === total ? '' : 'none';
-        review.style.display = n === total ? '' : 'none';
-        if (n === total) buildReview();
-        if (scroll) { var box = $('.reg-box'); window.scrollTo({ top: box.getBoundingClientRect().top + window.pageYOffset - 70, behavior: 'smooth' }); }
-    }
-    function valid(n) {
-        var pane = panes.filter(function (p) { return parseInt(p.getAttribute('data-step'), 10) === n; })[0];
-        var fields = $$('input, select, textarea', pane);
-        for (var i = 0; i < fields.length; i++) {
-            if (!fields[i].checkValidity()) {
-                fields[i].classList.add('bad'); fields[i].reportValidity && fields[i].reportValidity();
-                setTimeout(function (f) { return function () { f.classList.remove('bad'); }; }(fields[i]), 800);
-                return false;
-            }
+    textNodes.forEach(function(node) {
+        if (!node.originalEnglish) {
+            node.originalEnglish = node.nodeValue;
         }
-        return true;
-    }
-    nextB.addEventListener('click', function () { if (valid(step)) show(step + 1, true); });
-    backB.addEventListener('click', function () { show(step - 1, true); });
-    form.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' && step < total && e.target.tagName !== 'TEXTAREA') { e.preventDefault(); nextB.click(); }
+
+        if (lang === 'hi') {
+            var currentVal = node.nodeValue;
+            for (var i = 0; i < dictionary.length; i++) {
+                var en = dictionary[i][0];
+                var hi = dictionary[i][1];
+                if (currentVal.indexOf(en) !== -1) {
+                    currentVal = currentVal.split(en).join(hi);
+                }
+            }
+            node.nodeValue = currentVal;
+        } else {
+            node.nodeValue = node.originalEnglish;
+        }
     });
 
-    function val(name) {
-        var el = form.elements[name]; if (!el) return '';
-        if (el.length && el[0] && el[0].type === 'radio') { var c = $$('input[name="' + name + '"]:checked', form)[0]; return c ? c.value : ''; }
-        if (el.tagName === 'SELECT') return el.selectedIndex >= 0 ? el.options[el.selectedIndex].text.replace('Select class', '') : '';
-        return el.value;
-    }
-    function buildReview() {
-        var rows = [['Student', 'candidate_name'], ['Class', 'class_id'], ['Date of birth', 'dob'], ['Gender', 'gender'], ['School', null], ['Mobile', 'mobile'], ['Email', 'email'], ['Father', 'father_name'], ['Mother', 'mother_name'], ['Village', 'village'], ['District', 'city'], ['Address', 'address']];
-        var html = '';
-        rows.forEach(function (r) {
-            var v = r[1] ? val(r[1]) : (val('school_type') === 'external' ? val('other_school_name') : (document.querySelector('input[name="school_type"]:checked') ? document.querySelector('input[name="school_type"]:checked').parentNode.textContent.trim() : ''));
-            if (v) html += '<dt>' + r[0] + '</dt><dd>' + v.replace(/[<>&]/g, function (m) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[m]; }) + '</dd>';
-        });
-        $('#reviewList').innerHTML = html;
+    // Placeholders
+    document.querySelectorAll('input[placeholder]').forEach(function(inp) {
+        if (!inp.getAttribute('data-orig-ph')) {
+            inp.setAttribute('data-orig-ph', inp.getAttribute('placeholder'));
+        }
+        var origPh = inp.getAttribute('data-orig-ph');
+        if (lang === 'hi') {
+            if (origPh.indexOf('full name') !== -1) inp.setAttribute('placeholder', 'विद्यार्थी का पूरा नाम लिखें');
+            else if (origPh.indexOf('mobile') !== -1) inp.setAttribute('placeholder', '10-अंकों का मोबाइल नंबर');
+            else if (origPh.indexOf('Father') !== -1) inp.setAttribute('placeholder', 'पिता का पूरा नाम');
+            else if (origPh.indexOf('school name') !== -1) inp.setAttribute('placeholder', 'स्कूल का नाम लिखें');
+            else if (origPh.indexOf('City') !== -1) inp.setAttribute('placeholder', 'शहर या जिला');
+        } else {
+            inp.setAttribute('placeholder', origPh);
+        }
+    });
+}
+
+function setLanguage(lang) {
+    localStorage.setItem('ssat_lang', lang);
+    document.querySelectorAll('.lang-switch-btn').forEach(function(b) {
+        b.classList.remove('active');
+    });
+
+    if (lang === 'hi') {
+        var btnHi = document.getElementById('btn_lang_hi');
+        var mBtnHi = document.getElementById('m_btn_lang_hi');
+        if (btnHi) btnHi.classList.add('active');
+        if (mBtnHi) mBtnHi.classList.add('active');
+    } else {
+        var btnEn = document.getElementById('btn_lang_en');
+        var mBtnEn = document.getElementById('m_btn_lang_en');
+        if (btnEn) btnEn.classList.add('active');
+        if (mBtnEn) mBtnEn.classList.add('active');
     }
 
-    // Draft autosave (so a parent who gets interrupted does not lose answers)
-    var KEY = 'ssat_draft_v1', store = null;
-    try { store = window.localStorage; } catch (e) {}
-    function save() {
-        if (!store) return;
-        var d = {};
-        $$('input, select, textarea', form).forEach(function (f) {
-            if (!f.name || f.name === 'exam_id') return;
-            if (f.type === 'radio') { if (f.checked) d[f.name] = f.value; } else d[f.name] = f.value;
-        });
-        try { store.setItem(KEY, JSON.stringify(d)); } catch (e) {}
+    translatePageTo(lang);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var savedLang = localStorage.getItem('ssat_lang') || 'en';
+    if (savedLang === 'hi') {
+        setLanguage('hi');
     }
-    function restore() {
-        if (!store) return;
-        var d; try { d = JSON.parse(store.getItem(KEY) || 'null'); } catch (e) {}
-        if (!d || !d.candidate_name) return;
-        Object.keys(d).forEach(function (k) {
-            var els = form.elements[k]; if (!els) return;
-            if (els.length && els[0] && els[0].type === 'radio') { $$('input[name="' + k + '"]', form).forEach(function (r) { r.checked = (r.value === d[k]); }); }
-            else els.value = d[k];
-        });
-        if (d.school_type) window.toggleSchool(d.school_type);
-        $('#draftNote').style.display = '';
-    }
-    form.addEventListener('input', save); form.addEventListener('change', save);
-    $('#draftClear').addEventListener('click', function (e) { e.preventDefault(); try { store.removeItem(KEY); } catch (x) {} form.reset(); window.toggleSchool('internal'); $('#draftNote').style.display = 'none'; show(1, false); });
-    form.addEventListener('submit', function () { if (form.checkValidity()) { try { store.removeItem(KEY); } catch (x) {} } });
-    restore();
-    show(1, false);
-})();
+});
 </script>
-<div class="live-toast" id="liveToast" role="status" aria-live="polite"><span class="lt-ic"><i class="fa fa-user-plus"></i></span><div><span id="ltText"></span><small id="ltAgo"></small></div></div>
+
+<!-- Live Countdown Logic -->
 <script>
-// Real activity only: polls the server for the true count and the latest sign-ups (names partly hidden)
-(function () {
-    var url = '<?php echo site_url('scholarshipregister/activity/' . (!empty($selected_exam['exam_code']) ? urlencode($selected_exam['exam_code']) : '')); ?>';
-    var proof = document.getElementById('proof'), num = document.getElementById('proofNum');
-    var toast = document.getElementById('liveToast'), tText = document.getElementById('ltText'), tAgo = document.getElementById('ltAgo');
-    var recent = [], idx = 0, shown = 0;
-    function esc(t) { return String(t).replace(/[<>&"]/g, function (m) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[m]; }); }
-    function poll() {
-        fetch(url, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
-            if (d.count >= 10 && proof) { proof.style.display = ''; if (num && String(d.count) !== num.textContent) num.textContent = d.count; }
-            recent = d.recent || [];
-        }).catch(function () {});
+(function() {
+    var examDate = new Date("2026-11-15T10:00:00").getTime();
+    function updateCountdown() {
+        var now = new Date().getTime();
+        var distance = examDate - now;
+        if (distance < 0) distance = 0;
+        var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        var dEl = document.getElementById("cd_days");
+        var hEl = document.getElementById("cd_hours");
+        var mEl = document.getElementById("cd_mins");
+        var sEl = document.getElementById("cd_secs");
+
+        if (dEl) dEl.innerText = (days < 10 ? "0" : "") + days;
+        if (hEl) hEl.innerText = (hours < 10 ? "0" : "") + hours;
+        if (mEl) mEl.innerText = (minutes < 10 ? "0" : "") + minutes;
+        if (sEl) sEl.innerText = (seconds < 10 ? "0" : "") + seconds;
     }
-    function next() {
-        if (!recent.length || shown >= 6) return;
-        var r = recent[idx++ % recent.length]; shown++;
-        tText.innerHTML = '<span class="lt-dot"></span><b>' + esc(r.name) + '</b> ' + (r.place ? 'from ' + esc(r.place) + ' ' : '') + 'registered' + (r.cls ? ' for ' + esc(r.cls) : '');
-        tAgo.textContent = r.ago;
-        toast.classList.add('show');
-        setTimeout(function () { toast.classList.remove('show'); }, 5000);
-    }
-    poll();
-    setTimeout(function () { next(); setInterval(next, 14000); }, 6000);
-    setInterval(poll, 30000);
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
 })();
 </script>
+
+<!-- Registration Modal Logic -->
+<script>
+var currentVerifiedMobile = '';
+var registeredCandidates = [];
+
+function openRegisterModal(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    $('#pwRegisterModal').css('display', 'flex').hide().fadeIn(150).addClass('active');
+    $('body').css('overflow', 'hidden');
+    resetRegisterModal();
+    setTimeout(function() {
+        $('#modal_mobile_input').focus();
+    }, 200);
+}
+
+function closeRegisterModal() {
+    $('#pwRegisterModal').removeClass('active').fadeOut(150);
+    $('body').css('overflow', '');
+}
+
+function resetRegisterModal() {
+    $('#modalStepRegistered').hide();
+    $('#modalStepMobile').show();
+    $('#modal_mobile_input').val('').trigger('input');
+    $('#modal_mobile_error').hide().text('');
+    $('#modal_pin_input').val('');
+    $('#modal_pin_error').hide().text('');
+}
+
+// Close on backdrop click (outside card)
+$(document).on('click', '#pwRegisterModal', function(e) {
+    if ($(e.target).is('#pwRegisterModal')) {
+        closeRegisterModal();
+    }
+});
+
+// Intercept all register & apply triggers
+$(document).on('click', 'a[href="#register"], .btn-register-hero, .btn-pw-nav', function(e) {
+    e.preventDefault();
+    openRegisterModal();
+});
+
+// Mobile Input formatting and button state
+$(document).on('input', '#modal_mobile_input', function() {
+    var raw = $(this).val().replace(/\D/g, '');
+    $(this).val(raw);
+    var btn = $('#modal_verify_btn');
+    if (raw.length === 10) {
+        btn.removeClass('pw-modal-btn-disabled').addClass('pw-modal-btn-active').prop('disabled', false);
+        $('#modal_mobile_error').hide();
+    } else {
+        btn.removeClass('pw-modal-btn-active').addClass('pw-modal-btn-disabled').prop('disabled', true);
+    }
+});
+
+$(document).on('keypress', '#modal_mobile_input', function(e) {
+    if (e.which === 13 && $(this).val().length === 10) {
+        handleVerifyMobile();
+    }
+});
+
+// Handle Verify & Proceed
+function handleVerifyMobile() {
+    var mobile = $('#modal_mobile_input').val().trim();
+    if (mobile.length !== 10) {
+        $('#modal_mobile_error').text('Please enter a valid 10-digit mobile number.').show();
+        return;
+    }
+
+    var btn = $('#modal_verify_btn');
+    var origHtml = btn.html();
+    btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Verifying...');
+    $('#modal_mobile_error').hide();
+
+    $.ajax({
+        url: '<?php echo site_url("scholarshipregister/check_mobile"); ?>',
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            mobile: mobile,
+            exam_id: '<?php echo isset($selected_exam["id"]) ? $selected_exam["id"] : 1; ?>'
+        },
+        success: function(res) {
+            btn.prop('disabled', false).html(origHtml);
+            currentVerifiedMobile = mobile;
+
+            if (res.status === 'registered') {
+                registeredCandidates = res.candidates || [];
+                renderRegisteredCandidates(registeredCandidates);
+                $('#display_verified_mobile').text(mobile);
+                $('#modalStepMobile').hide();
+                $('#modalStepRegistered').fadeIn(200);
+                if (localStorage.getItem('ssat_lang') === 'hi') {
+                    translatePageTo('hi');
+                }
+                setTimeout(function() {
+                    $('#modal_pin_input').focus();
+                }, 250);
+            } else if (res.status === 'new') {
+                btn.html('<i class="fa fa-check"></i> Verified!').css('background', 'var(--pw-green)');
+                setTimeout(function() {
+                    closeRegisterModal();
+                    scrollToRegisterForm(mobile, false);
+                }, 350);
+            } else {
+                $('#modal_mobile_error').text(res.message || 'Validation error. Please check number.').show();
+            }
+        },
+        error: function() {
+            btn.prop('disabled', false).html(origHtml);
+            closeRegisterModal();
+            scrollToRegisterForm(mobile, false);
+        }
+    });
+}
+
+function renderRegisteredCandidates(candidates) {
+    var container = $('#modal_candidate_list');
+    container.empty();
+
+    if (!candidates || candidates.length === 0) {
+        container.html('<div class="alert alert-warning" style="font-size: 13px;">No candidate details found.</div>');
+        return;
+    }
+
+    var html = '';
+    for (var i = 0; i < candidates.length; i++) {
+        var c = candidates[i];
+        var isChecked = (i === 0) ? 'checked' : '';
+        var activeClass = (i === 0) ? 'active' : '';
+        html += '<label class="candidate-select-card ' + activeClass + '">' +
+                '  <div style="display: flex; align-items: center; gap: 12px;">' +
+                (candidates.length > 1 ? '    <input type="radio" name="selected_candidate_id" value="' + c.id + '" ' + isChecked + ' onchange="updateSelectedCandidateCard(this);" style="accent-color: var(--pw-primary); width: 18px; height: 18px;">' : '<input type="hidden" name="selected_candidate_id" value="' + c.id + '">') +
+                '    <div>' +
+                '      <div style="font-weight: 800; font-size: 15px; color: #0F172A;">' + $('<div>').text(c.name).html() + '</div>' +
+                '      <div style="font-size: 12.5px; color: #64748B;">' + $('<div>').text(c.class_name).html() + ' &bull; Roll: <strong style="color: var(--pw-primary);">' + $('<div>').text(c.roll_no).html() + '</strong></div>' +
+                '    </div>' +
+                '  </div>' +
+                '  <span class="badge" style="background: #E8F8F2; color: #00A86B; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px;">Registered</span>' +
+                '</label>';
+    }
+    container.html(html);
+}
+
+function updateSelectedCandidateCard(radio) {
+    $('.candidate-select-card').removeClass('active');
+    $(radio).closest('.candidate-select-card').addClass('active');
+}
+
+// PIN Login from Modal
+function handleModalPinLogin() {
+    var pin = $('#modal_pin_input').val().trim();
+    if (pin.length !== 4) {
+        $('#modal_pin_error').text('Please enter your 4-digit security PIN.').show();
+        return;
+    }
+
+    var candidateId = $('input[name="selected_candidate_id"]:checked').val() || $('input[name="selected_candidate_id"]').val();
+    var btn = $('#btn_modal_portal_login');
+    var origHtml = btn.html();
+    btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Logging in...');
+    $('#modal_pin_error').hide();
+
+    $.ajax({
+        url: '<?php echo site_url("scholarshipregister/portal_login_ajax"); ?>',
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            candidate_id: candidateId,
+            login_identifier: currentVerifiedMobile,
+            password_pin: pin
+        },
+        success: function(res) {
+            if (res.status === 'success') {
+                btn.html('<i class="fa fa-check"></i> ' + res.message).css('background', 'var(--pw-green)');
+                window.location.href = res.redirect_url;
+            } else {
+                btn.prop('disabled', false).html(origHtml);
+                $('#modal_pin_error').text(res.message || 'Incorrect PIN. Please try again.').show();
+            }
+        },
+        error: function() {
+            btn.prop('disabled', false).html(origHtml);
+            $('#modal_pin_error').text('Server error. Please log in directly via the Candidate Portal.').show();
+        }
+    });
+}
+
+$(document).on('keypress', '#modal_pin_input', function(e) {
+    if (e.which === 13 && $(this).val().length === 4) {
+        handleModalPinLogin();
+    }
+});
+
+// Sibling / Another child registration
+function handleRegisterSibling() {
+    closeRegisterModal();
+    scrollToRegisterForm(currentVerifiedMobile, true);
+}
+
+function scrollToRegisterForm(mobile, isSibling) {
+    var target = $('#register');
+    if (target.length) {
+        $('html, body').animate({
+            scrollTop: target.offset().top - 80
+        }, 500);
+    }
+
+    $('#form_candidate_mobile').val(mobile);
+
+    if (isSibling) {
+        $('#sibling_notice_box').html(
+            '<div class="alert alert-info" style="border-radius: 12px; background: #EFF6FF; border: 1.5px solid #93C5FD; color: #1E40AF; padding: 14px 18px; margin-bottom: 25px;">' +
+            '  <i class="fa fa-users" style="font-size: 18px; margin-right: 8px; vertical-align: middle;"></i> ' +
+            '  <strong>Registering Sibling / Additional Child:</strong> You are registering another candidate under parent mobile <strong>+91 ' + $('<div>').text(mobile).html() + '</strong>.' +
+            '</div>'
+        ).show();
+        $('#form_candidate_name').val('').focus();
+        $('#form_password_pin').val('');
+        $('#form_class_id').val('');
+    } else {
+        $('#sibling_notice_box').html(
+            '<div class="alert alert-success" style="border-radius: 12px; background: #E8F8F2; border: 1.5px solid #A7F3D0; color: #065F46; padding: 12px 18px; margin-bottom: 25px;">' +
+            '  <i class="fa fa-check-circle" style="font-size: 16px; margin-right: 6px; vertical-align: middle;"></i> ' +
+            '  Mobile <strong>+91 ' + $('<div>').text(mobile).html() + '</strong> verified! Please complete candidate application details below.' +
+            '</div>'
+        ).show();
+        $('#form_candidate_name').focus();
+    }
+
+    if (localStorage.getItem('ssat_lang') === 'hi') {
+        translatePageTo('hi');
+    }
+}
+</script>
+
 </body>
 </html>

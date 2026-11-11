@@ -104,7 +104,14 @@ class Attendencereports extends Admin_Controller
             $data['date_selected'] = $date;
             $attendencetypes             = $this->attendencetype_model->get();
             $data['attendencetypeslist'] = $attendencetypes;
-            $resultlist                  = $this->stuattendence_model->searchAttendenceClassSectionWithMode($class, $section, date('Y-m-d', $this->customlib->datetostrtotime($date)),$attendance_mode);
+
+            $formatted_date = date('Y-m-d', $this->customlib->datetostrtotime($date));
+            $holiday_info   = $this->stuattendence_model->isHoliday($formatted_date);
+            if (!empty($holiday_info)) {
+                $this->stuattendence_model->syncHolidayAttendanceForDate($formatted_date, $holiday_info['description']);
+            }
+
+            $resultlist                  = $this->stuattendence_model->searchAttendenceClassSectionWithMode($class, $section, $formatted_date,$attendance_mode);
             $data['resultlist']          = $resultlist;
         }
 
@@ -190,6 +197,10 @@ class Attendencereports extends Admin_Controller
             }
 
             $num_of_days        = cal_days_in_month(CAL_GREGORIAN, $month_number, $year);
+            $start_of_month     = $year . "-" . $month_number . "-01";
+            $end_of_month       = $year . "-" . $month_number . "-" . sprintf("%02d", $num_of_days);
+            $this->stuattendence_model->syncHolidaysInRange($start_of_month, $end_of_month);
+
             $attr_result        = array();
             $attendence_array   = array();
             $student_result     = array();
@@ -369,11 +380,18 @@ if (($userdata["role_id"] == 2) && ($userdata["class_teacher"] == "yes")) {
         $this->form_validation->set_rules('date', $this->lang->line('date'), 'trim|required|xss_clean');
 
         if ($this->form_validation->run() == false) {
-            $date         = " and student_attendences.date='" . date('Y-m-d') . "'";
+            $check_date   = date('Y-m-d');
+            $date         = " and student_attendences.date='" . $check_date . "'";
             $data['date'] = date($this->customlib->getSchoolDateFormat());
         } else {
-            $date         = " and student_attendences.date='" . date('Y-m-d', $this->customlib->datetostrtotime($_POST['date'])) . "'";
+            $check_date   = date('Y-m-d', $this->customlib->datetostrtotime($_POST['date']));
+            $date         = " and student_attendences.date='" . $check_date . "'";
             $data['date'] = date($this->customlib->getSchoolDateFormat(), $this->customlib->datetostrtotime($_POST['date']));
+        }
+
+        $holiday_info = $this->stuattendence_model->isHoliday($check_date);
+        if (!empty($holiday_info)) {
+            $this->stuattendence_model->syncHolidayAttendanceForDate($check_date, $holiday_info['description']);
         }
 
         $resultlist     = array();

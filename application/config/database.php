@@ -7,7 +7,7 @@ $is_localhost = isset($_SERVER['HTTP_HOST']) && ($_SERVER['HTTP_HOST'] === 'loca
 if ($is_localhost) {
     $db['default'] = array(
         'dsn'          => '',
-        'hostname' => '127.0.0.1:3306',
+        'hostname' => '127.0.0.1:3307',
         'username' => 'root',
         'password' => '',
         'database' => 'sips_db',
