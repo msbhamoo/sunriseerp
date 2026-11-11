@@ -15,19 +15,21 @@
     
     <style>
         :root {
-            --pw-primary: #5A4BDA;
-            --pw-primary-dark: #4739C2;
-            --pw-primary-light: #F0EDFF;
-            --pw-accent: #FF5A5F;
-            --pw-dark: #1B2124;
-            --pw-dark-2: #2B3338;
-            --pw-gray-bg: #F8F9FC;
-            --pw-gray-border: #E6E9F0;
-            --pw-text: #1B2124;
-            --pw-text-muted: #5A6A72;
-            --pw-green: #00A86B;
-            --pw-green-light: #E8F8F2;
-            --pw-gold: #FFB800;
+            --pw-primary: #0A3B72;
+            --pw-primary-dark: #06264C;
+            --pw-primary-light: #EBF3FC;
+            --pw-accent: #E53935;
+            --pw-accent-dark: #C62828;
+            --pw-dark: #0A192F;
+            --pw-dark-2: #1E293B;
+            --pw-gray-bg: #F8FAFC;
+            --pw-gray-border: #E2E8F0;
+            --pw-text: #0F172A;
+            --pw-text-muted: #64748B;
+            --pw-green: #059669;
+            --pw-green-light: #ECFDF5;
+            --pw-gold: #F59E0B;
+            --pw-gold-light: #FEF3C7;
         }
 
         * {
@@ -58,7 +60,7 @@
 
         /* Top Announcement Strip */
         .top-banner-strip {
-            background: linear-gradient(90deg, #1B2124 0%, #2A215C 100%);
+            background: linear-gradient(90deg, #0A192F 0%, #0A3B72 100%);
             color: #ffffff;
             font-size: 13px;
             font-weight: 500;
@@ -177,9 +179,9 @@
             box-shadow: 0 2px 6px rgba(90, 75, 218, 0.3);
         }
 
-        /* HERO SECTION (Physics Wallah NSAT Style) */
+        /* HERO SECTION */
         .pw-hero-section {
-            background: radial-gradient(100% 100% at 50% 0%, #F5F3FF 0%, #FFFFFF 100%);
+            background: radial-gradient(100% 100% at 50% 0%, #EBF3FC 0%, #FFFFFF 100%);
             padding: 50px 0 60px;
             position: relative;
             overflow: hidden;
@@ -191,7 +193,7 @@
             gap: 8px;
             background: #ffffff;
             border: 1.5px solid var(--pw-primary-light);
-            box-shadow: 0 2px 8px rgba(90, 75, 218, 0.08);
+            box-shadow: 0 2px 8px rgba(10, 59, 114, 0.08);
             border-radius: 30px;
             padding: 6px 16px;
             font-size: 13px;
@@ -208,7 +210,7 @@
         }
         .hero-highlight-text {
             color: var(--pw-primary);
-            background: linear-gradient(135deg, #5A4BDA 0%, #8065FF 100%);
+            background: linear-gradient(135deg, #0A3B72 0%, #1D4ED8 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -921,34 +923,40 @@
 
 <!-- 1. Top Announcement Strip -->
 <div class="top-banner-strip">
-    <span class="tag-pill">NATIONAL SCHOLARSHIP</span>
-    <strong>Sunrise Scholarship Cum Admission Test (SSAT-2026)</strong> &bull; Registrations Open &bull; 100% Free Entry
-    <a href="#register" style="color: #FFB800; font-weight: 700; margin-left: 10px; text-decoration: underline;">Register Online &rarr;</a>
+    <span class="tag-pill" style="background: var(--pw-accent);">OFFICIAL SCHOLARSHIP</span>
+    <strong>Sunrise Scholarship Cum Admission Test (SSAT-2026)</strong> &bull; Sunrise Career Academy &bull; 100% Free Entry
+    <a href="#register" style="color: var(--pw-gold); font-weight: 700; margin-left: 10px; text-decoration: underline;">Register Online &rarr;</a>
 </div>
 
 <!-- 2. Sticky Header Navbar -->
 <header class="pw-navbar">
     <div class="container">
         <div class="row" style="display: flex; align-items: center;">
-            <div class="col-xs-8 col-sm-4">
-                <a href="<?php echo base_url(); ?>" class="pw-brand">
-                    <div class="pw-logo-badge">
-                        <i class="fa fa-graduation-cap"></i>
-                    </div>
-                    <div>
-                        <h4 class="pw-brand-title"><?php echo htmlspecialchars($sch_setting[0]['name'] ?: 'Sunrise International'); ?></h4>
-                        <span class="pw-brand-sub">Scholarship & Admission Wing</span>
+            <div class="col-xs-8 col-sm-5">
+                <a href="<?php echo base_url(); ?>" class="pw-brand" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+                    <img src="<?php echo base_url('uploads/scholarship_materials/ssat_logo.png'); ?>" alt="SSAT 2026 Logo" style="height: 46px; max-width: 135px; object-fit: contain;">
+                    <img src="<?php echo base_url('uploads/scholarship_materials/sunrise_crest.png'); ?>" alt="Sunrise Crest" style="height: 42px; width: 42px; object-fit: contain;" class="hidden-xs">
+                    <div style="border-left: 1.5px solid var(--pw-gray-border); padding-left: 10px;">
+                        <h4 class="pw-brand-title" style="font-size: 15px; font-weight: 800; color: var(--pw-primary); margin: 0; line-height: 1.15;">
+                            <?php echo htmlspecialchars($sch_setting[0]['name'] ?: 'SUNRISE INTERNATIONAL PUBLIC SCHOOL'); ?>
+                        </h4>
+                        <span class="pw-brand-sub" style="font-size: 10px; color: var(--pw-accent); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">
+                            SUNRISE CAREER ACADEMY &bull; CBSE Affil. 1730833
+                        </span>
                     </div>
                 </a>
             </div>
 
-            <div class="col-xs-4 col-sm-8 text-right">
+            <div class="col-xs-4 col-sm-7 text-right">
                 <div class="pw-nav-menu hidden-xs">
                     <a href="#about">About</a>
                     <a href="#benefits">Rewards</a>
                     <a href="#steps">How It Works</a>
                     <a href="#syllabus">Syllabus</a>
                     <a href="#dates">Dates</a>
+                    <a href="javascript:void(0)" onclick="openPosterModal();" style="color: var(--pw-accent); font-weight: 700;">
+                        <i class="fa fa-image"></i> Poster
+                    </a>
                     <a href="<?php echo site_url('scholarshipregister/portal'); ?>" style="color: var(--pw-primary); font-weight: 700;">
                         <i class="fa fa-user-circle"></i> Candidate Portal
                     </a>
@@ -975,7 +983,7 @@
     </div>
 </header>
 
-<!-- 3. HERO SECTION (PW NSAT Banner + Exam Summary Box) -->
+<!-- 3. HERO SECTION (Sunrise SSAT-2026 Official Branding) -->
 <section id="about" class="pw-hero-section">
     <div class="container">
         <div class="row" style="display: flex; align-items: center; flex-wrap: wrap;">
@@ -983,46 +991,50 @@
             <!-- Left: Headline & USPs -->
             <div class="col-md-7 col-sm-12">
                 <div class="hero-pill-badge">
-                    <i class="fa fa-bolt" style="color: var(--pw-gold);"></i> 
-                    Classes 5th to 11th &bull; Academic Session 2026-27
+                    <i class="fa fa-trophy" style="color: var(--pw-gold);"></i> 
+                    SUNRISE CAREER ACADEMY (For NEET, IIT-JEE, NDA, CLAT) &bull; Session 2026-27
+                </div>
+
+                <div style="background: #FEF3C7; border: 1.5px solid #F59E0B; border-radius: 8px; padding: 7px 14px; margin-bottom: 14px; display: inline-block; font-size: 14.5px; font-weight: 800; color: #92400E;">
+                    <i class="fa fa-star" style="color: #D97706;"></i> कक्षा 6 से 12 में प्रवेश के लिए लाखों में स्कॉलरशिप जीतने का सुनहरा मौका
                 </div>
 
                 <h1 class="hero-main-title">
-                    Win up to <span class="hero-highlight-text">100% Scholarship</span> with SSAT 2026
+                    Sunrise Scholarship &amp; Admission Test <span class="hero-highlight-text">(SSAT-2026)</span>
                 </h1>
 
                 <p class="hero-lead-text">
-                    Unlock premier quality school & foundation education. Benchmark yourself with thousands of students and secure grand fee waivers, cash honors and direct admission.
+                    सत्र 2026-27 के दौरान कक्षा 5 से 11 में पढ़ने वाले सभी छात्र/छात्राएं शामिल हो सकते हैं। परीक्षा का माध्यम हिंदी एवं अंग्रेजी। परीक्षा ऑनलाइन और ऑफलाइन दोनों तरीकों से होगी।
                 </p>
 
-                <!-- 4 Value USPs (PW Style) -->
+                <!-- 4 Value USPs (Official Poster Specifications) -->
                 <div class="hero-usp-grid">
                     <div class="usp-box">
-                        <div class="usp-icon purple"><i class="fa fa-gift"></i></div>
+                        <div class="usp-icon" style="background: var(--pw-primary-light); color: var(--pw-primary);"><i class="fa fa-graduation-cap"></i></div>
                         <div class="usp-text">
-                            <strong>100% Fee Waiver</strong>
-                            <span>Top rankers get complete tuition fee off</span>
+                            <strong>Admission Scholarship</strong>
+                            <span>Up to 100% scholarship for Classes 6th to 12th</span>
                         </div>
                     </div>
                     <div class="usp-box">
-                        <div class="usp-icon green"><i class="fa fa-inr"></i></div>
+                        <div class="usp-icon" style="background: #FEF3C7; color: #D97706;"><i class="fa fa-trophy"></i></div>
                         <div class="usp-text">
-                            <strong>Merit Cash Honors</strong>
-                            <span>Cash prizes, mementos & medals</span>
+                            <strong>Cash Awards &amp; Gifts</strong>
+                            <span>Attractive cash prizes, medals &amp; mementos</span>
                         </div>
                     </div>
                     <div class="usp-box">
-                        <div class="usp-icon orange"><i class="fa fa-file-text-o"></i></div>
+                        <div class="usp-icon" style="background: #FEE2E2; color: var(--pw-accent);"><i class="fa fa-certificate"></i></div>
                         <div class="usp-text">
-                            <strong>100% NCERT Pattern</strong>
-                            <span>Bilingual OMR MCQ question paper</span>
+                            <strong>Participation Certificate</strong>
+                            <span>Certificate of excellence for all candidates</span>
                         </div>
                     </div>
                     <div class="usp-box">
-                        <div class="usp-icon blue"><i class="fa fa-check-circle"></i></div>
+                        <div class="usp-icon" style="background: var(--pw-green-light); color: var(--pw-green);"><i class="fa fa-compass"></i></div>
                         <div class="usp-text">
-                            <strong>100% Free Registration</strong>
-                            <span>No application or exam fee required</span>
+                            <strong>Career Guidance</strong>
+                            <span>Mentorship for NEET, IIT-JEE, NDA &amp; CLAT</span>
                         </div>
                     </div>
                 </div>
@@ -1031,13 +1043,16 @@
                     <a href="#register" class="btn-register-hero">
                         <i class="fa fa-pencil-square-o"></i> Register Online (Free)
                     </a>
+                    <a href="javascript:void(0)" onclick="openPosterModal();" class="btn-brochure-hero" style="border-color: var(--pw-primary); color: var(--pw-primary);">
+                        <i class="fa fa-file-image-o"></i> View Official Poster
+                    </a>
                     <a href="<?php echo site_url('admin/scholarshipexam/brochure/' . (isset($selected_exam['id']) ? $selected_exam['id'] : 1)); ?>" target="_blank" class="btn-brochure-hero">
-                        <i class="fa fa-download"></i> Download Brochure
+                        <i class="fa fa-download"></i> Syllabus / Brochure
                     </a>
                 </div>
             </div>
 
-            <!-- Right: Examination Details Box (PW Vidyapeeth Style) -->
+            <!-- Right: Examination Details Box -->
             <div class="col-md-5 col-sm-12" style="margin-top: 25px;">
                 <div class="hero-exam-card">
                     <div class="card-header-flex">
@@ -1049,15 +1064,15 @@
                         <div class="info-icon"><i class="fa fa-calendar"></i></div>
                         <div class="info-content">
                             <div class="label-text">Date of Examination</div>
-                            <div class="value-text">15 November 2026 (Sunday)</div>
+                            <div class="value-text">20 December 2026 (Sunday)</div>
                         </div>
                     </div>
 
                     <div class="exam-info-row">
                         <div class="info-icon"><i class="fa fa-clock-o"></i></div>
                         <div class="info-content">
-                            <div class="label-text">Format & Duration</div>
-                            <div class="value-text">90 Minutes &bull; OMR Multiple Choice</div>
+                            <div class="label-text">Examination Timings</div>
+                            <div class="value-text">11:00 AM to 1:00 PM (2 Hours)</div>
                         </div>
                     </div>
 
@@ -1065,7 +1080,15 @@
                         <div class="info-icon"><i class="fa fa-graduation-cap"></i></div>
                         <div class="info-content">
                             <div class="label-text">Eligibility Criteria</div>
-                            <div class="value-text">Classes 5th to 11th (Any recognized school)</div>
+                            <div class="value-text">Classes 5th to 11th (Admission for 6th to 12th)</div>
+                        </div>
+                    </div>
+
+                    <div class="exam-info-row">
+                        <div class="info-icon"><i class="fa fa-map-marker"></i></div>
+                        <div class="info-content">
+                            <div class="label-text">Mode &amp; Centers</div>
+                            <div class="value-text">Online &amp; Offline &bull; Bhilwara, Jodhpur, Barmer, Nechhwa (Sikar)</div>
                         </div>
                     </div>
 
@@ -1081,16 +1104,36 @@
                     <div class="card-countdown">
                         <div class="card-countdown-title"><i class="fa fa-hourglass-half"></i> Registration Closing Soon</div>
                         <div class="card-countdown-boxes">
-                            <div class="c-box"><strong id="cd_days">03</strong><span>Days</span></div>
-                            <div class="c-box"><strong id="cd_hours">19</strong><span>Hours</span></div>
-                            <div class="c-box"><strong id="cd_mins">50</strong><span>Mins</span></div>
-                            <div class="c-box"><strong id="cd_secs">20</strong><span>Secs</span></div>
+                            <div class="c-box"><strong id="cd_days">00</strong><span>Days</span></div>
+                            <div class="c-box"><strong id="cd_hours">00</strong><span>Hours</span></div>
+                            <div class="c-box"><strong id="cd_mins">00</strong><span>Mins</span></div>
+                            <div class="c-box"><strong id="cd_secs">00</strong><span>Secs</span></div>
                         </div>
                     </div>
                 </div>
             </div>
 
         </div>
+    </div>
+</section>
+
+<!-- Official Helpline & Centers Bar -->
+<div style="background: var(--pw-primary-light); border-bottom: 1px solid var(--pw-gray-border); padding: 12px 0;">
+    <div class="container">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 13.5px;">
+            <div>
+                <strong style="color: var(--pw-primary);"><i class="fa fa-whatsapp" style="color: #25D366; font-size: 16px;"></i> WhatsApp Registration Helpline:</strong> 
+                Send details (Name, Class, Father's Name, School Name, Permanent Address) to 
+                <a href="https://wa.me/919828512821" target="_blank" style="font-weight: 700; color: var(--pw-primary); text-decoration: underline;">9828512821</a> / 
+                <a href="https://wa.me/919783200821" target="_blank" style="font-weight: 700; color: var(--pw-primary); text-decoration: underline;">9783200821</a>
+            </div>
+            <div>
+                <strong style="color: var(--pw-accent);"><i class="fa fa-phone"></i> Call Helpline:</strong> 
+                <span style="font-weight: 700; color: var(--pw-dark);">9828512821, 9982085111, 9783200821</span>
+            </div>
+        </div>
+    </div>
+</div>
     </div>
 </section>
 
@@ -1152,7 +1195,7 @@
                 <div class="step-card">
                     <div class="step-number">3</div>
                     <h4>Appear for Exam & Win</h4>
-                    <p>Attend the OMR test on 15 Nov 2026. Secure your All India Rank, cash reward, and up to 100% school fee concession.</p>
+                    <p>Attend the test on 20 Dec 2026. Secure your rank, cash reward, and up to 100% scholarship for Classes 6th to 12th admission.</p>
                 </div>
             </div>
         </div>
@@ -1268,21 +1311,21 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="date-box">
-                    <div class="date-calendar-badge"><strong>15</strong><span>OCT</span></div>
+                    <div class="date-calendar-badge"><strong>01</strong><span>NOV</span></div>
                     <div>
                         <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800;">Registration Commencement</h4>
                         <span style="font-size: 13px; color: var(--pw-text-muted);">Online &amp; offline application window opens for all students</span>
                     </div>
                 </div>
                 <div class="date-box">
-                    <div class="date-calendar-badge"><strong>10</strong><span>NOV</span></div>
+                    <div class="date-calendar-badge"><strong>18</strong><span>DEC</span></div>
                     <div>
                         <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800;">Registration Closing Date</h4>
                         <span style="font-size: 13px; color: var(--pw-text-muted);">Last date to submit application forms without late penalty</span>
                     </div>
                 </div>
                 <div class="date-box">
-                    <div class="date-calendar-badge"><strong>12</strong><span>NOV</span></div>
+                    <div class="date-calendar-badge"><strong>15</strong><span>DEC</span></div>
                     <div>
                         <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800;">Admit Card Release Date</h4>
                         <span style="font-size: 13px; color: var(--pw-text-muted);">Admit card available for download via Candidate Portal &amp; SMS</span>
@@ -1291,24 +1334,24 @@
             </div>
 
             <div class="col-md-6">
-                <div class="date-box" style="border-left: 4px solid var(--pw-primary);">
-                    <div class="date-calendar-badge" style="background: var(--pw-primary); color: #fff;"><strong>15</strong><span>NOV</span></div>
+                <div class="date-box" style="border-left: 4px solid var(--pw-accent);">
+                    <div class="date-calendar-badge" style="background: var(--pw-accent); color: #fff;"><strong>20</strong><span>DEC</span></div>
                     <div>
-                        <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800; color: var(--pw-primary);">Examination Date & Reporting</h4>
-                        <span style="font-size: 13px; color: var(--pw-text-muted);">15 November 2026, 10:00 AM (Reporting 9:30 AM)</span>
+                        <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800; color: var(--pw-accent);">Examination Date &amp; Reporting</h4>
+                        <span style="font-size: 13px; color: var(--pw-text-muted);">20 December 2026 (Sunday), 11:00 AM – 1:00 PM (Reporting 10:15 AM)</span>
                     </div>
                 </div>
                 <div class="date-box">
-                    <div class="date-calendar-badge"><strong>21</strong><span>NOV</span></div>
+                    <div class="date-calendar-badge"><strong>28</strong><span>DEC</span></div>
                     <div>
                         <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800;">Result Announcement</h4>
                         <span style="font-size: 13px; color: var(--pw-text-muted);">Merit rank list published on portal &amp; school notice boards</span>
                     </div>
                 </div>
                 <div class="date-box">
-                    <div class="date-calendar-badge"><strong>05</strong><span>DEC</span></div>
+                    <div class="date-calendar-badge"><strong>10</strong><span>JAN</span></div>
                     <div>
-                        <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800;">Award & Felicitation Ceremony</h4>
+                        <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800;">Award &amp; Felicitation Ceremony</h4>
                         <span style="font-size: 13px; color: var(--pw-text-muted);">Grand ceremony for cash prizes, mementos &amp; certificates</span>
                     </div>
                 </div>
@@ -1525,19 +1568,26 @@
 <!-- 11. Footer -->
 <footer style="background: var(--pw-dark); color: #94A3B8; padding: 50px 0 30px;">
     <div class="container text-center">
-        <h3 style="color: #fff; font-family: 'Outfit', sans-serif; font-size: 24px; margin-bottom: 8px;">
-            <?php echo htmlspecialchars($sch_setting[0]['name'] ?: 'Sunrise Education Group'); ?>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 14px;">
+            <img src="<?php echo base_url('uploads/scholarship_materials/ssat_logo.png'); ?>" alt="SSAT 2026" style="height: 48px; background: #fff; padding: 4px 8px; border-radius: 6px;">
+            <img src="<?php echo base_url('uploads/scholarship_materials/sunrise_crest.png'); ?>" alt="Sunrise Crest" style="height: 48px; background: #fff; padding: 4px; border-radius: 6px;">
+        </div>
+        <h3 style="color: #fff; font-family: 'Outfit', sans-serif; font-size: 22px; margin-bottom: 6px; font-weight: 800;">
+            SUNRISE INTERNATIONAL PUBLIC SCHOOL
         </h3>
-        <p style="margin-bottom: 25px; color: #94A3B8;">Affiliated with CBSE &bull; School &bull; Sainik-Military &bull; Pre-Foundation &bull; College</p>
+        <p style="margin-bottom: 8px; color: #E2E8F0; font-size: 13.5px;">(A Co. Ed English Medium CBSE School &bull; Affiliation No. 1730833)</p>
+        <p style="margin-bottom: 25px; color: var(--pw-gold); font-size: 13.5px; font-weight: 700;">
+            SUNRISE CAREER ACADEMY (For NEET, IIT-JEE, NDA &amp; CLAT) &bull; Nursery to 12th (Science, Arts, Commerce)
+        </p>
         
-        <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-bottom: 30px; font-size: 14px;">
-            <span><i class="fa fa-phone" style="color: var(--pw-primary);"></i> Helpline: +91 9828512821 / 9783200821</span>
-            <span><i class="fa fa-envelope" style="color: var(--pw-accent);"></i> info@sunriseschool.in</span>
+        <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 25px; font-size: 14px;">
+            <span><i class="fa fa-phone" style="color: var(--pw-accent);"></i> Helplines: 9828512821, 9982085111, 9783200821</span>
+            <span><i class="fa fa-globe" style="color: #60A5FA;"></i> <a href="https://www.sunriseeduhub.com" target="_blank" style="color: #60A5FA;">www.sunriseeduhub.com</a></span>
             <span><i class="fa fa-map-marker" style="color: var(--pw-green);"></i> Nechhwa, Sikar (Raj.)</span>
         </div>
 
-        <div style="border-top: 1px solid #2B3338; padding-top: 25px; font-size: 13px;">
-            &copy; 2026 <?php echo htmlspecialchars($sch_setting[0]['name'] ?: 'Sunrise International Public School'); ?>. All Rights Reserved.
+        <div style="border-top: 1px solid #1E293B; padding-top: 25px; font-size: 13px;">
+            &copy; 2026 Sunrise International Public School &bull; Sunrise Career Academy. All Rights Reserved.
         </div>
     </div>
 </footer>
@@ -1627,11 +1677,11 @@
             </div>
 
             <!-- Register Sibling / Another Child Option -->
-            <div style="background: #F0EDFF; border: 1.5px dashed #A594F9; border-radius: 12px; padding: 16px; text-align: center;">
-                <div style="font-weight: 800; font-size: 14.5px; color: #2B1879; margin-bottom: 4px;">
+            <div style="background: var(--pw-primary-light); border: 1.5px dashed #93C5FD; border-radius: 12px; padding: 16px; text-align: center;">
+                <div style="font-weight: 800; font-size: 14.5px; color: var(--pw-primary); margin-bottom: 4px;">
                     <i class="fa fa-users" style="color: var(--pw-primary);"></i> Have another child? Register sibling
                 </div>
-                <p style="font-size: 12px; color: #5B48B2; margin-bottom: 12px; line-height: 1.4;">
+                <p style="font-size: 12px; color: var(--pw-text-muted); margin-bottom: 12px; line-height: 1.4;">
                     Parents can register multiple children with the same mobile number.
                 </p>
                 <button type="button" 
@@ -1648,6 +1698,25 @@
                     &larr; Use a different mobile number
                 </a>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Official SSAT-2026 Poster Modal -->
+<div id="posterModal" class="pw-modal-overlay" style="display: none;">
+    <div class="pw-modal-card" style="max-width: 650px; padding: 22px; text-align: center;">
+        <button type="button" class="pw-modal-close" onclick="closePosterModal();" aria-label="Close">&times;</button>
+        <div style="font-weight: 800; font-size: 18px; color: var(--pw-primary); margin-bottom: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="fa fa-file-image-o" style="color: var(--pw-accent);"></i> Sunrise SSAT-2026 Official Brochure &amp; Poster
+        </div>
+        <div style="max-height: 70vh; overflow-y: auto; border: 1.5px solid var(--pw-gray-border); border-radius: 8px; margin-bottom: 16px; background: #000;">
+            <img src="<?php echo base_url('uploads/scholarship_materials/ssat_official_poster_2026.jpg'); ?>" alt="SSAT 2026 Official Poster" style="width: 100%; height: auto; display: block;">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <a href="<?php echo base_url('uploads/scholarship_materials/ssat_official_poster_2026.jpg'); ?>" download="SSAT-2026-Official-Poster.jpg" class="btn btn-primary" style="background: var(--pw-primary); font-weight: 700; padding: 10px 22px; border-radius: 8px;">
+                <i class="fa fa-download"></i> Download Full Resolution Poster
+            </a>
+            <button type="button" class="btn btn-default" onclick="closePosterModal();" style="font-weight: 700; padding: 10px 20px; border-radius: 8px;">Close</button>
         </div>
     </div>
 </div>
@@ -1681,6 +1750,7 @@ var dictionary = [
 
     // Top strip & Navbar
     ["NATIONAL SCHOLARSHIP", "राष्ट्रीय छात्रवृत्ति"],
+    ["OFFICIAL SCHOLARSHIP", "आधिकारिक छात्रवृत्ति"],
     ["Sunrise Scholarship Cum Admission Test (SSAT-2026)", "सनराइज स्कॉलरशिप कम एडमिशन टेस्ट (SSAT-2026)"],
     ["Registrations Open", "पंजीकरण प्रारंभ"],
     ["100% Free Entry", "100% निःशुल्क आवेदन"],
@@ -1691,6 +1761,7 @@ var dictionary = [
     ["How It Works", "प्रक्रिया"],
     ["Syllabus", "पाठ्यक्रम"],
     ["Dates", "तिथियां"],
+    ["Poster", "पोस्टर"],
     ["Candidate Portal", "कैंडिडेट पोर्टल"],
     ["Register (Free)", "पंजीकरण (निःशुल्क)"],
     ["Apply", "आवेदन"],
@@ -1709,16 +1780,28 @@ var dictionary = [
     ["No application or exam fee required", "कोई पंजीकरण शुल्क नहीं लगेगा"],
     ["Register Online (Free)", "ऑनलाइन पंजीकरण करें (निःशुल्क)"],
     ["Download Brochure", "विवरणिका डाउनलोड करें"],
+    ["View Official Poster", "आधिकारिक पोस्टर देखें"],
+    ["Syllabus / Brochure", "पाठ्यक्रम / विवरणिका"],
+    ["Admission Scholarship", "प्रवेश छात्रवृत्ति"],
+    ["Up to 100% scholarship for Classes 6th to 12th", "कक्षा 6 से 12 में प्रवेश हेतु 100% तक छात्रवृत्ति"],
+    ["Cash Awards & Gifts", "नकद पुरस्कार एवं उपहार"],
+    ["Attractive cash prizes, medals & mementos", "आकर्षक नकद पुरस्कार, मेडल एवं स्मृति चिन्ह"],
+    ["Participation Certificate", "पार्टिसिपेशन सर्टिफिकेट"],
+    ["Certificate of excellence for all candidates", "सभी परीक्षार्थियों के लिए सहभागिता प्रमाण पत्र"],
+    ["Career Guidance", "करियर मार्गदर्शन"],
+    ["Mentorship for NEET, IIT-JEE, NDA & CLAT", "नीट, आईआईटी-जेईई, एनडीए व क्लैट हेतु मार्गदर्शन"],
 
     // Exam Details Box
     ["Exam Details", "परीक्षा विवरण"],
     ["OFFICIAL", "आधिकारिक"],
     ["Date of Examination", "परीक्षा की तिथि"],
-    ["15 November 2026 (Sunday)", "15 नवंबर 2026 (रविवार)"],
-    ["Format & Duration", "प्रारूप एवं समयावधि"],
-    ["90 Minutes • OMR Multiple Choice", "90 मिनट • OMR बहुविकल्पीय प्रश्न (MCQs)"],
+    ["20 December 2026 (Sunday)", "20 दिसंबर 2026 (रविवार)"],
+    ["Examination Timings", "परीक्षा समयावधि"],
+    ["11:00 AM to 1:00 PM (2 Hours)", "प्रातः 11:00 बजे से दोपहर 1:00 बजे तक (2 घंटे)"],
     ["Eligibility Criteria", "पात्रता मानदंड"],
-    ["Classes 5th to 11th (Any recognized school)", "कक्षा 5वीं से 11वीं (किसी भी विद्यालय के विद्यार्थी)"],
+    ["Classes 5th to 11th (Admission for 6th to 12th)", "कक्षा 5 से 11 (कक्षा 6 से 12 में प्रवेश हेतु)"],
+    ["Mode & Centers", "माध्यम एवं परीक्षा केंद्र"],
+    ["Online & Offline • Bhilwara, Jodhpur, Barmer, Nechhwa (Sikar)", "ऑनलाइन और ऑफलाइन • भीलवाड़ा, जोधपुर, बाड़मेर, नेछवा (सीकर)"],
     ["Scholarship Concession", "छात्रवृत्ति एवं पुरस्कार"],
     ["Up to 100% Fee Concession + Cash Honors", "100% तक फीस माफी + नकद पुरस्कार"],
     ["Registration Closing Soon", "पंजीकरण शीघ्र समाप्त हो रहा है"],
@@ -1746,7 +1829,7 @@ var dictionary = [
     ["Download Model Paper & Prepare", "2. मॉडल पेपर डाउनलोड कर तैयारी करें"],
     ["Log in to your Candidate Portal using your Roll No and PIN to practice with authentic class-wise bilingual sample papers.", "कैंडिडेट पोर्टल में अपने रोल नंबर और पिन से लॉगिन करके कक्षा-अनुसार मॉडल पेपर डाउनलोड करें।"],
     ["Appear for Exam & Win", "3. परीक्षा में शामिल हों और जीतें"],
-    ["Attend the OMR test on 15 Nov 2026. Secure your All India Rank, cash reward, and up to 100% school fee concession.", "15 नवंबर 2026 को परीक्षा दें। अपनी रैंक, नकद पुरस्कार और 100% तक फीस रियायत प्राप्त करें।"],
+    ["Attend the test on 20 Dec 2026. Secure your rank, cash reward, and up to 100% scholarship for Classes 6th to 12th admission.", "20 दिसंबर 2026 को परीक्षा दें। अपनी रैंक, नकद पुरस्कार और कक्षा 6 से 12 में प्रवेश हेतु 100% तक छात्रवृत्ति प्राप्त करें।"],
 
     // Rewards Section
     ["Rewards & Honors", "पुरस्कार एवं सम्मान"],
@@ -1791,7 +1874,7 @@ var dictionary = [
     ["Admit Card Release Date", "प्रवेश पत्र जारी होने की तिथि"],
     ["Admit card available for download via Candidate Portal & SMS", "कैंडिडेट पोर्टल और एसएमएस द्वारा प्रवेश पत्र डाउनलोड शुरू"],
     ["Examination Date & Reporting", "परीक्षा तिथि एवं रिपोर्टिंग समय"],
-    ["15 November 2026, 10:00 AM (Reporting 9:30 AM)", "15 नवंबर 2026, प्रातः 10:00 बजे (रिपोर्टिंग 9:30 AM)"],
+    ["20 December 2026 (Sunday), 11:00 AM – 1:00 PM (Reporting 10:15 AM)", "20 दिसंबर 2026 (रविवार), प्रातः 11:00 बजे से 1:00 बजे तक (रिपोर्टिंग 10:15 AM)"],
     ["Result Announcement", "परीक्षा परिणाम की घोषणा"],
     ["Merit rank list published on portal & school notice boards", "पोर्टल एवं विद्यालय सूचना पट्ट पर मेरिट सूची का प्रकाशन"],
     ["Award & Felicitation Ceremony", "पुरस्कार एवं सम्मान समारोह"],
@@ -1926,7 +2009,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Live Countdown Logic -->
 <script>
 (function() {
-    var examDate = new Date("2026-11-15T10:00:00").getTime();
+    var examDate = new Date("2026-12-20T11:00:00").getTime();
     function updateCountdown() {
         var now = new Date().getTime();
         var distance = examDate - now;
@@ -1949,6 +2032,16 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCountdown();
     setInterval(updateCountdown, 1000);
 })();
+
+function openPosterModal() {
+    $('#posterModal').css('display', 'flex').hide().fadeIn(150).addClass('active');
+    $('body').css('overflow', 'hidden');
+}
+
+function closePosterModal() {
+    $('#posterModal').removeClass('active').fadeOut(150);
+    $('body').css('overflow', '');
+}
 </script>
 
 <!-- Registration Modal Logic -->
