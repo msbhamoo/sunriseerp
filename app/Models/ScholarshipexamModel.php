@@ -171,6 +171,26 @@ class ScholarshipexamModel extends BaseModel
         return $this->callLegacyModel('Scholarshipexam_model', 'getSocialProofCount', func_get_args());
     }
 
+    public function getMaterials($exam_id = null, $class_id = null, $material_type = null)
+    {
+        return $this->callLegacyModel('Scholarshipexam_model', 'getMaterials', func_get_args());
+    }
+
+    public function getMaterialById($id)
+    {
+        return $this->callLegacyModel('Scholarshipexam_model', 'getMaterialById', func_get_args());
+    }
+
+    public function addMaterial($data)
+    {
+        return $this->callLegacyModel('Scholarshipexam_model', 'addMaterial', func_get_args());
+    }
+
+    public function deleteMaterial($id)
+    {
+        return $this->callLegacyModel('Scholarshipexam_model', 'deleteMaterial', func_get_args());
+    }
+
     /**
      * Compatibility Bridge: Delegates execution to the legacy model instance
      * maintaining full compatibility with query builder and CI3 environment.

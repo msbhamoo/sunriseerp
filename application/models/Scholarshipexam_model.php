@@ -1371,6 +1371,7 @@ class Scholarshipexam_model extends MY_Model
 
     public function getMaterials($exam_id = null, $class_id = null, $material_type = null)
     {
+        $this->checkAndSetupTables();
         $this->db->select('scholarship_study_materials.*, scholarship_exams.title as exam_title, scholarship_exams.exam_code, classes.class as class_name');
         $this->db->from('scholarship_study_materials');
         $this->db->join('scholarship_exams', 'scholarship_exams.id = scholarship_study_materials.scholarship_exam_id', 'left');
@@ -1392,17 +1393,20 @@ class Scholarshipexam_model extends MY_Model
 
     public function getMaterialById($id)
     {
+        $this->checkAndSetupTables();
         return $this->db->get_where('scholarship_study_materials', array('id' => $id))->row_array();
     }
 
     public function addMaterial($data)
     {
+        $this->checkAndSetupTables();
         $this->db->insert('scholarship_study_materials', $data);
         return $this->db->insert_id();
     }
 
     public function deleteMaterial($id)
     {
+        $this->checkAndSetupTables();
         $material = $this->getMaterialById($id);
         if ($material) {
             if (!empty($material['file_path']) && file_exists(FCPATH . $material['file_path'])) {
