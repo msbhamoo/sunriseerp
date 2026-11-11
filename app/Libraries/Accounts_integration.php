@@ -244,19 +244,12 @@ class Accounts_integration
                       . ' (' . ($fee_deposit['admission_no'] ?? '') . ')';
 
         // Process each sub-invoice in the deposit
+        $any_failed = false;
         foreach ($amount_detail as $inv_no => $detail) {
             $ref_id = $fee_deposit_id . '_' . $inv_no;
 
             // Idempotency: skip if voucher already exists
             if ($this->voucherExists('fee_collection', $ref_id)) {
-                continue;
-            }
-
-            // A reversed voucher (fee deleted/edited) must not be silently recreated
-            if ($this->CI->db->query(
-                "SELECT 1 FROM acc_vouchers WHERE reference_module = 'fee_collection' AND status = 'reversed' AND reference_id = "
-                . $this->CI->db->escape($ref_id) . " LIMIT 1"
-            )->row()) {
                 continue;
             }
 
@@ -281,6 +274,7 @@ class Accounts_integration
                 if (!$voucher_no) {
                     $this->CI->db->trans_rollback();
                     $this->queueFailedSync('fee_collection', $ref_id, 'create', 'Voucher number generation failed');
+                    $any_failed = true;
                     continue;
                 }
 
@@ -364,6 +358,7 @@ class Accounts_integration
                 if (!$voucher_id) {
                     $this->CI->db->trans_rollback();
                     $this->queueFailedSync('fee_collection', $ref_id, 'create', 'Voucher insert returned no ID');
+                    $any_failed = true;
                     continue;
                 }
 
@@ -434,10 +429,11 @@ class Accounts_integration
             $this->CI->db->trans_complete();
             if ($this->CI->db->trans_status() === FALSE) {
                 $this->queueFailedSync('fee_collection', $ref_id, 'create', 'Transaction commit failed');
+                $any_failed = true;
             }
         }
 
-        return true;
+        return !$any_failed;
     }
 
     // =========================================================================

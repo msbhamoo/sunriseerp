@@ -339,17 +339,35 @@ class Stuattendence_model extends MY_Model
         if (empty($session_id)) {
             $session_id = $this->current_session;
         }
+        if (empty($session_id) && isset($this->setting_model)) {
+            $session_id = $this->setting_model->getCurrentSession();
+        }
 
         $escaped_date = $this->db->escape($date);
+        $session_clause = "";
+        if (!empty($session_id)) {
+            $session_clause = " AND (ac.session_id = " . (int)$session_id . " OR ac.session_id IS NULL OR ac.session_id = 0) ";
+        }
+
         $sql = "SELECT ac.*, ht.type as type_name
                 FROM annual_calendar ac
                 LEFT JOIN holiday_type ht ON ht.id = ac.holiday_type
-                WHERE ac.is_active = 1
-                  AND ac.session_id = " . (int) $session_id . "
+                WHERE (ac.is_active = 1 OR ac.is_active IS NULL)
+                  " . $session_clause . "
                   AND (ac.is_working_day = 0 OR ac.is_working_day IS NULL)
-                  AND (ac.holiday_type IN (1, 2) OR LOWER(ht.type) LIKE '%holiday%' OR LOWER(ht.type) LIKE '%vacation%')
+                  AND (
+                      ac.holiday_type IN (1, 2)
+                      OR LOWER(IFNULL(ht.type, '')) LIKE '%holiday%'
+                      OR LOWER(IFNULL(ht.type, '')) LIKE '%vacation%'
+                      OR LOWER(IFNULL(ac.description, '')) LIKE '%holiday%'
+                      OR LOWER(IFNULL(ac.description, '')) LIKE '%vacation%'
+                      OR LOWER(IFNULL(ac.description, '')) LIKE '%deepawali%'
+                      OR LOWER(IFNULL(ac.description, '')) LIKE '%diwali%'
+                      OR ac.holiday_type != 0
+                  )
                   AND DATE(ac.from_date) <= " . $escaped_date . "
-                  AND DATE(ac.to_date) >= " . $escaped_date . "
+                  AND (DATE(ac.to_date) >= " . $escaped_date . " OR ac.to_date IS NULL OR ac.to_date = '0000-00-00 00:00:00')
+                ORDER BY ac.id DESC
                 LIMIT 1";
         $query = $this->db->query($sql);
         $res = $query->row_array();
@@ -358,16 +376,16 @@ class Stuattendence_model extends MY_Model
                 'id'             => $res['id'],
                 'description'    => !empty($res['description']) ? $res['description'] : 'Holiday',
                 'type'           => 'holiday',
-                'type_name'      => $res['type_name'],
+                'type_name'      => !empty($res['type_name']) ? $res['type_name'] : 'Holiday',
                 'from_date'      => $res['from_date'],
                 'to_date'        => $res['to_date'],
                 'is_working_day' => 0,
             );
         }
 
-        // Check if Sunday (and not declared as working day)
+        // Check if Sunday (and not declared as working day in annual_calendar)
         if (date('w', strtotime($date)) == 0) {
-            $chk = $this->db->query("SELECT id FROM annual_calendar WHERE session_id = " . (int) $session_id . " AND is_active = 1 AND is_working_day = 1 AND DATE(from_date) <= " . $escaped_date . " AND DATE(to_date) >= " . $escaped_date . " LIMIT 1")->row_array();
+            $chk = $this->db->query("SELECT id FROM annual_calendar WHERE (is_active = 1 OR is_active IS NULL) AND is_working_day = 1 AND DATE(from_date) <= " . $escaped_date . " AND DATE(to_date) >= " . $escaped_date . " LIMIT 1")->row_array();
             if (empty($chk)) {
                 return array(
                     'id'             => 0,
@@ -389,17 +407,22 @@ class Stuattendence_model extends MY_Model
         if (empty($session_id)) {
             $session_id = $this->current_session;
         }
+        if (empty($session_id) && isset($this->setting_model)) {
+            $session_id = $this->setting_model->getCurrentSession();
+        }
 
         $escaped_date = $this->db->escape($date);
         $escaped_desc = $this->db->escape($description);
         $session_id   = (int) $session_id;
+
+        $sess_filter = ($session_id > 0) ? "ss.session_id = " . $session_id : "1=1";
 
         // 1. Insert holiday attendance for active students who do not have attendance recorded on this date
         $sql_insert = "INSERT INTO student_attendences (student_session_id, date, attendence_type_id, remark, is_active)
             SELECT ss.id, $escaped_date, 5, $escaped_desc, 'no'
             FROM student_session ss
             JOIN students s ON s.id = ss.student_id
-            WHERE ss.session_id = $session_id
+            WHERE " . $sess_filter . "
               AND s.is_active = 'yes'
               AND NOT EXISTS (
                   SELECT 1 FROM student_attendences sa
@@ -414,12 +437,12 @@ class Stuattendence_model extends MY_Model
             JOIN students s ON s.id = ss.student_id
             SET sa.attendence_type_id = 5,
                 sa.remark = IF(sa.remark IS NULL OR sa.remark = '', $escaped_desc, sa.remark)
-            WHERE ss.session_id = $session_id
+            WHERE " . $sess_filter . "
               AND s.is_active = 'yes'
               AND sa.date = $escaped_date
-              AND sa.attendence_type_id != 5
-              AND sa.biometric_attendence = 0
-              AND sa.qrcode_attendance = 0";
+              AND (sa.attendence_type_id != 5 OR sa.attendence_type_id IS NULL)
+              AND (sa.biometric_attendence = 0 OR sa.biometric_attendence IS NULL)
+              AND (sa.qrcode_attendance = 0 OR sa.qrcode_attendance IS NULL)";
         $this->db->query($sql_update);
 
         return true;
@@ -465,25 +488,43 @@ class Stuattendence_model extends MY_Model
         if (empty($session_id)) {
             $session_id = $this->current_session;
         }
+        if (empty($session_id) && isset($this->setting_model)) {
+            $session_id = $this->setting_model->getCurrentSession();
+        }
 
         $start_ymd = date('Y-m-d', strtotime($start_date));
         $end_ymd   = date('Y-m-d', strtotime($end_date));
 
+        $session_clause = "";
+        if (!empty($session_id)) {
+            $session_clause = " AND (ac.session_id = " . (int)$session_id . " OR ac.session_id IS NULL OR ac.session_id = 0) ";
+        }
+
         $sql = "SELECT ac.*, ht.type as type_name
                 FROM annual_calendar ac
                 LEFT JOIN holiday_type ht ON ht.id = ac.holiday_type
-                WHERE ac.is_active = 1
-                  AND ac.session_id = " . (int) $session_id . "
+                WHERE (ac.is_active = 1 OR ac.is_active IS NULL)
+                  " . $session_clause . "
                   AND (ac.is_working_day = 0 OR ac.is_working_day IS NULL)
-                  AND (ac.holiday_type IN (1, 2) OR LOWER(ht.type) LIKE '%holiday%' OR LOWER(ht.type) LIKE '%vacation%')
+                  AND (
+                      ac.holiday_type IN (1, 2)
+                      OR LOWER(IFNULL(ht.type, '')) LIKE '%holiday%'
+                      OR LOWER(IFNULL(ht.type, '')) LIKE '%vacation%'
+                      OR LOWER(IFNULL(ac.description, '')) LIKE '%holiday%'
+                      OR LOWER(IFNULL(ac.description, '')) LIKE '%vacation%'
+                      OR LOWER(IFNULL(ac.description, '')) LIKE '%deepawali%'
+                      OR LOWER(IFNULL(ac.description, '')) LIKE '%diwali%'
+                      OR ac.holiday_type != 0
+                  )
                   AND DATE(ac.from_date) <= " . $this->db->escape($end_ymd) . "
-                  AND DATE(ac.to_date) >= " . $this->db->escape($start_ymd);
+                  AND (DATE(ac.to_date) >= " . $this->db->escape($start_ymd) . " OR ac.to_date IS NULL OR ac.to_date = '0000-00-00 00:00:00')";
         $query = $this->db->query($sql);
         $holidays = $query->result_array();
 
         foreach ($holidays as $h) {
             $h_start = max(strtotime($start_ymd), strtotime(date('Y-m-d', strtotime($h['from_date']))));
-            $h_end   = min(strtotime($end_ymd), strtotime(date('Y-m-d', strtotime($h['to_date']))));
+            $h_end_raw = !empty($h['to_date']) && $h['to_date'] != '0000-00-00 00:00:00' ? $h['to_date'] : $h['from_date'];
+            $h_end   = min(strtotime($end_ymd), strtotime(date('Y-m-d', strtotime($h_end_raw))));
             for ($t = $h_start; $t <= $h_end; $t += 86400) {
                 $this->syncHolidayAttendanceForDate(date('Y-m-d', $t), $h['description'], $session_id);
             }
@@ -495,7 +536,7 @@ class Stuattendence_model extends MY_Model
         for ($t = $start_t; $t <= $end_t; $t += 86400) {
             if (date('w', $t) == 0) {
                 $d = date('Y-m-d', $t);
-                $chk = $this->db->query("SELECT id FROM annual_calendar WHERE session_id = " . (int) $session_id . " AND is_active = 1 AND is_working_day = 1 AND DATE(from_date) <= '$d' AND DATE(to_date) >= '$d' LIMIT 1")->row_array();
+                $chk = $this->db->query("SELECT id FROM annual_calendar WHERE (is_active = 1 OR is_active IS NULL) AND is_working_day = 1 AND DATE(from_date) <= '$d' AND DATE(to_date) >= '$d' LIMIT 1")->row_array();
                 if (empty($chk)) {
                     $this->syncHolidayAttendanceForDate($d, 'Sunday', $session_id);
                 }

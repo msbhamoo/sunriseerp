@@ -285,6 +285,8 @@
                                                                     $onclick  = 'onclick="disable_enable(this.value,' . $ssid . ')"';
                                                                     if ($value['date'] != "xxx") {
                                                                         $is_checked = ($value['attendence_type_id'] == $type['id']);
+                                                                    } elseif (!empty($holiday_info)) {
+                                                                        $is_checked = ($type['id'] == 5);
                                                                     } elseif ($sch_setting->biometric) {
                                                                         $is_checked = ($att_type == "absent");
                                                                         $onclick    = '';

@@ -59,7 +59,8 @@ class Stuattendence extends Admin_Controller
 
             $attendencetypes             = $this->attendencetype_model->get();
             $data['attendencetypeslist'] = $attendencetypes;
-            $formatted_date = date('Y-m-d', $this->customlib->datetostrtotime($date));
+            $time                        = $this->customlib->datetostrtotime($date);
+            $formatted_date              = (!empty($time) && $time > 0) ? date('Y-m-d', $time) : date('Y-m-d', strtotime($date));
 
             // Check if this date is a holiday
             $holiday_info = $this->stuattendence_model->isHoliday($formatted_date);
@@ -285,7 +286,8 @@ class Stuattendence extends Admin_Controller
             }
             $attendencetypes             = $this->attendencetype_model->get();
             $data['attendencetypeslist'] = $attendencetypes;
-            $formatted_date              = date('Y-m-d', $this->customlib->datetostrtotime($date));
+            $time                        = $this->customlib->datetostrtotime($date);
+            $formatted_date              = (!empty($time) && $time > 0) ? date('Y-m-d', $time) : date('Y-m-d', strtotime($date));
             $holiday_info                = $this->stuattendence_model->isHoliday($formatted_date);
             $data['holiday_info']        = $holiday_info;
             if (!empty($holiday_info)) {
@@ -441,8 +443,9 @@ class Stuattendence extends Admin_Controller
     {
         $date = $this->input->get_post('date');
         if (!empty($date)) {
-            $formatted_date = date('Y-m-d', $this->customlib->datetostrtotime($date));
-            $holiday = $this->stuattendence_model->isHoliday($formatted_date);
+            $time           = $this->customlib->datetostrtotime($date);
+            $formatted_date = (!empty($time) && $time > 0) ? date('Y-m-d', $time) : date('Y-m-d', strtotime($date));
+            $holiday        = $this->stuattendence_model->isHoliday($formatted_date);
             if (!empty($holiday)) {
                 echo json_encode(array(
                     'is_holiday'  => true,

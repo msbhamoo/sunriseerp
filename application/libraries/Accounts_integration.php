@@ -63,6 +63,15 @@ class Accounts_integration
         }
 
         $next = $seq->last_number + 1;
+        // Skip numbers already used (sequence can lag behind existing vouchers)
+        $maxRow = $this->CI->db->query(
+            "SELECT MAX(CAST(SUBSTRING(voucher_no, " . (strlen($seq->prefix) + 1) . ") AS UNSIGNED)) AS mx
+             FROM acc_vouchers WHERE voucher_type = " . $this->CI->db->escape($type)
+            . " AND voucher_no LIKE " . $this->CI->db->escape($seq->prefix . '%')
+        )->row();
+        if ($maxRow && (int)$maxRow->mx >= $next) {
+            $next = (int)$maxRow->mx + 1;
+        }
         $this->CI->db->where('voucher_type', $type)
                      ->update('acc_voucher_sequences', ['last_number' => $next]);
 
@@ -130,10 +139,20 @@ class Accounts_integration
      */
     private function voucherExists($module, $ref_id)
     {
-        return $this->CI->db->where('reference_module', $module)
-                            ->where('reference_id', (string)$ref_id)
-                            ->where('status', 'posted')
-                            ->get('acc_vouchers')->row();
+        $v = $this->CI->db->where('reference_module', $module)
+                          ->where('reference_id', (string)$ref_id)
+                          ->where('status', 'posted')
+                          ->get('acc_vouchers')->row();
+        if ($v) {
+            // Self-heal: a voucher header with no ledger lines (left by a failed insert) counts as
+            // missing; remove the empty shell so the sync recreates it properly.
+            $n = $this->CI->db->where('voucher_id', $v->id)->count_all_results('acc_voucher_items');
+            if ((int)$n === 0) {
+                $this->CI->db->where('id', $v->id)->delete('acc_vouchers');
+                return null;
+            }
+        }
+        return $v;
     }
 
     /**
@@ -963,15 +982,41 @@ class Accounts_integration
             }
         }
 
-        $deposits = $this->CI->db->select('id')->get('student_fees_deposite')->result();
+        // Per-invoice check: a deposit can hold several invoices (installments); an older
+        // invoice having a voucher must not hide a newer invoice that has none.
+        $deposits = $this->CI->db->select('id, amount_detail')->get('student_fees_deposite')->result();
         $count = 0;
         $errors = [];
         foreach ($deposits as $dep) {
-            $exists = $this->CI->db->where('reference_module', 'fee_collection')
-                                   ->like('reference_id', $dep->id . '_', 'after')
-                                   ->where('status', 'posted')
-                                   ->get('acc_vouchers')->row();
-            if (!$exists) {
+            $detail = json_decode($dep->amount_detail, true);
+            if (empty($detail) || !is_array($detail)) {
+                continue;
+            }
+            $needs = false;
+            foreach ($detail as $inv_no => $d) {
+                $collected = floatval($d['amount'] ?? 0) + floatval($d['amount_fine'] ?? 0);
+                $discount = floatval($d['amount_discount'] ?? 0);
+                $ref = $dep->id . '_' . $inv_no;
+                if ($collected > 0) {
+                    // any status: reversed vouchers are intentionally not recreated
+                    $has = $this->CI->db->query(
+                        "SELECT 1 FROM acc_vouchers WHERE reference_module = 'fee_collection' AND reference_id IN ("
+                        . $this->CI->db->escape($ref) . ", " . $this->CI->db->escape($ref . '_rev') . ") LIMIT 1"
+                    )->row();
+                } elseif ($discount > 0) {
+                    $has = $this->CI->db->query(
+                        "SELECT 1 FROM acc_vouchers WHERE reference_module = 'fee_discount' AND reference_id = "
+                        . $this->CI->db->escape($ref . '_disc') . " LIMIT 1"
+                    )->row();
+                } else {
+                    continue;
+                }
+                if (!$has) {
+                    $needs = true;
+                    break;
+                }
+            }
+            if ($needs) {
                 try {
                     if ($this->sync_fee($dep->id)) {
                         $count++;
