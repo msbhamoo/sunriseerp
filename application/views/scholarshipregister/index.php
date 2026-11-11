@@ -8,7 +8,8 @@
     
     <!-- Bootstrap & FontAwesome -->
     <link rel="stylesheet" href="<?php echo base_url('backend/bootstrap/css/bootstrap.min.css'); ?>">
-    <link rel="stylesheet" href="<?php echo base_url('backend/font-awesome/css/font-awesome.min.css'); ?>">
+    <link rel="stylesheet" href="<?php echo base_url('backend/dist/css/font-awesome.min.css'); ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
@@ -917,6 +918,355 @@
             border-color: var(--pw-primary);
             background: var(--pw-primary-light);
         }
+
+        /* -------------------------------------------------------------
+           NEW ENGAGING SECTIONS STYLES
+           ------------------------------------------------------------- */
+        @keyframes pulseGlow {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.4); }
+            70% { transform: scale(1.03); box-shadow: 0 0 0 8px rgba(229, 57, 53, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(229, 57, 53, 0); }
+        }
+        .pulse-badge { animation: pulseGlow 2s infinite; }
+
+        /* Social Proof Pulse Dot */
+        .live-dot-pulse {
+            width: 9px;
+            height: 9px;
+            background: #10B981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: livePulse 1.8s infinite;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+        @keyframes livePulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1.2); box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .social-proof-pill {
+            display: inline-flex;
+            align-items: center;
+            background: #EBF3FC;
+            border: 1.5px solid #93C5FD;
+            color: #0A3B72;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        /* Floating Live Activity Toast */
+        .live-toast-box {
+            position: fixed;
+            bottom: 68px;
+            left: 20px;
+            background: #ffffff;
+            border: 1.5px solid #BFDBFE;
+            border-left: 4px solid #0A3B72;
+            border-radius: 12px;
+            padding: 10px 16px;
+            box-shadow: 0 10px 30px rgba(10, 25, 47, 0.15);
+            z-index: 1001;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            max-width: 360px;
+            font-size: 13px;
+        }
+        @media (max-width: 768px) {
+            .live-toast-box { bottom: 62px; left: 10px; right: 10px; max-width: none; }
+        }
+
+        /* Career Wings Cards (NEET, JEE, NDA, CLAT) */
+        .wing-card {
+            background: #ffffff;
+            border: 1.5px solid var(--pw-gray-border);
+            border-radius: 16px;
+            padding: 24px 20px;
+            transition: all 0.28s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(10, 25, 47, 0.04);
+        }
+        .wing-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--pw-primary);
+            box-shadow: 0 14px 30px rgba(10, 59, 114, 0.12);
+        }
+        .wing-top-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 5px 14px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            border-bottom-left-radius: 12px;
+            color: #ffffff;
+        }
+        .wing-badge-jee { background: #0284C7; }
+        .wing-badge-neet { background: #059669; }
+        .wing-badge-nda { background: #D97706; }
+        .wing-badge-clat { background: #7C3AED; }
+
+        .wing-icon-circle {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+        .wing-icon-circle.jee { background: #E0F2FE; color: #0284C7; }
+        .wing-icon-circle.neet { background: #D1FAE5; color: #059669; }
+        .wing-icon-circle.nda { background: #FEF3C7; color: #D97706; }
+        .wing-icon-circle.clat { background: #EDE9FE; color: #7C3AED; }
+
+        .wing-features-list {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0 0;
+            font-size: 13.5px;
+            color: var(--pw-text);
+        }
+        .wing-features-list li {
+            padding: 6px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .wing-features-list li i {
+            color: var(--pw-green);
+            margin-top: 3px;
+            flex-shrink: 0;
+        }
+
+        /* Rank-wise Reward Matrix Cards */
+        .reward-tier-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 2px solid var(--pw-gray-border);
+            padding: 24px 18px;
+            text-align: center;
+            transition: all 0.25s;
+            position: relative;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .reward-tier-card.featured-rank {
+            border-color: var(--pw-gold);
+            background: linear-gradient(180deg, #FFFDF5 0%, #FFFFFF 100%);
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.15);
+            transform: scale(1.03);
+        }
+        @media (max-width: 991px) {
+            .reward-tier-card.featured-rank { transform: none; margin-bottom: 20px; }
+        }
+        .tier-medal-icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+        .tier-pct {
+            font-size: 36px;
+            font-weight: 900;
+            line-height: 1;
+            margin: 6px 0;
+            font-family: 'Outfit', sans-serif;
+            color: var(--pw-primary);
+        }
+        .tier-cash-badge {
+            display: inline-block;
+            background: var(--pw-accent);
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 13px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin: 6px 0 14px;
+        }
+
+        /* Interactive Reward Calculator Bar */
+        .calculator-box {
+            background: linear-gradient(135deg, #0A3B72 0%, #06264C 100%);
+            color: #ffffff;
+            border-radius: 18px;
+            padding: 30px;
+            margin-top: 35px;
+            box-shadow: 0 12px 36px rgba(10, 59, 114, 0.22);
+        }
+        .calc-pill-btn {
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 7px 15px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 3px;
+            outline: none;
+        }
+        .calc-pill-btn.active, .calc-pill-btn:hover {
+            background: var(--pw-gold);
+            color: #0A192F;
+            border-color: var(--pw-gold);
+        }
+
+        /* Interactive Mini Quiz Widget */
+        .quiz-container {
+            background: #ffffff;
+            border: 2px solid var(--pw-gray-border);
+            border-radius: 20px;
+            padding: 32px 28px;
+            box-shadow: 0 12px 36px rgba(10, 25, 47, 0.06);
+            max-width: 860px;
+            margin: 0 auto;
+        }
+        .quiz-q-box {
+            background: var(--pw-gray-bg);
+            border: 1.5px solid var(--pw-gray-border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 22px;
+        }
+        .quiz-q-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--pw-dark);
+            margin-bottom: 14px;
+            line-height: 1.4;
+        }
+        .quiz-opts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        @media (max-width: 650px) {
+            .quiz-opts-grid { grid-template-columns: 1fr; }
+        }
+        .quiz-opt-btn {
+            background: #ffffff;
+            border: 1.5px solid var(--pw-gray-border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--pw-text);
+            width: 100%;
+        }
+        .quiz-opt-btn:hover {
+            border-color: var(--pw-primary);
+            background: var(--pw-primary-light);
+        }
+        .quiz-opt-btn.correct {
+            background: #ECFDF5 !important;
+            border-color: var(--pw-green) !important;
+            color: #065F46 !important;
+            font-weight: 700;
+        }
+        .quiz-opt-btn.wrong {
+            background: #FEF2F2 !important;
+            border-color: var(--pw-accent) !important;
+            color: #991B1B !important;
+        }
+        .quiz-feedback {
+            display: none;
+            font-size: 13.5px;
+            font-weight: 700;
+            margin-top: 12px;
+            padding: 10px 14px;
+            border-radius: 8px;
+        }
+
+        /* Offline Centers City Cards */
+        .city-card {
+            background: #ffffff;
+            border: 1.5px solid var(--pw-gray-border);
+            border-radius: 16px;
+            padding: 22px;
+            margin-bottom: 20px;
+            transition: all 0.25s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .city-card:hover {
+            border-color: var(--pw-primary);
+            box-shadow: 0 12px 28px rgba(10, 59, 114, 0.1);
+            transform: translateY(-4px);
+        }
+        .city-pill-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        /* Testimonials / Hall of Fame */
+        .testi-card {
+            background: #ffffff;
+            border: 1.5px solid var(--pw-gray-border);
+            border-radius: 16px;
+            padding: 24px 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.03);
+            transition: all 0.25s;
+        }
+        .testi-card:hover {
+            border-color: var(--pw-gold);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(245, 158, 11, 0.12);
+        }
+
+        /* Sticky Smart Bottom Bar */
+        .smart-sticky-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 25, 47, 0.96);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #ffffff;
+            padding: 10px 16px;
+            z-index: 999;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+            border-top: 1px solid rgba(255,255,255,0.12);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        @media (max-width: 768px) {
+            .smart-sticky-bar .desktop-info { display: none !important; }
+            .smart-sticky-bar { padding: 8px 12px; }
+        }
     </style>
 </head>
 <body>
@@ -950,15 +1300,17 @@
             <div class="col-xs-4 col-sm-7 text-right">
                 <div class="pw-nav-menu hidden-xs">
                     <a href="#about">About</a>
+                    <a href="#academy">Wings</a>
                     <a href="#benefits">Rewards</a>
-                    <a href="#steps">How It Works</a>
                     <a href="#syllabus">Syllabus</a>
+                    <a href="#practice">Mock Quiz</a>
+                    <a href="#centers">Centers</a>
                     <a href="#dates">Dates</a>
                     <a href="javascript:void(0)" onclick="openPosterModal();" style="color: var(--pw-accent); font-weight: 700;">
                         <i class="fa fa-image"></i> Poster
                     </a>
                     <a href="<?php echo site_url('scholarshipregister/portal'); ?>" style="color: var(--pw-primary); font-weight: 700;">
-                        <i class="fa fa-user-circle"></i> Candidate Portal
+                        <i class="fa fa-user-circle"></i> Portal
                     </a>
                     
                     <!-- Language Switcher -->
@@ -997,6 +1349,12 @@
 
                 <div style="background: #FEF3C7; border: 1.5px solid #F59E0B; border-radius: 8px; padding: 7px 14px; margin-bottom: 14px; display: inline-block; font-size: 14.5px; font-weight: 800; color: #92400E;">
                     <i class="fa fa-star" style="color: #D97706;"></i> कक्षा 6 से 12 में प्रवेश के लिए लाखों में स्कॉलरशिप जीतने का सुनहरा मौका
+                </div>
+
+                <div class="social-proof-pill">
+                    <span class="live-dot-pulse"></span>
+                    <span>Over <strong><span id="live_social_counter"><?php echo (int)(isset($social_proof['social_proof_count']) ? $social_proof['social_proof_count'] : 548); ?></span>+ Students</strong> Already Registered</span>
+                    <span style="color: var(--pw-accent); margin-left: 6px; font-weight: 800;">&bull; Free Entry</span>
                 </div>
 
                 <h1 class="hero-main-title">
@@ -1134,10 +1492,8 @@
         </div>
     </div>
 </div>
-    </div>
-</section>
 
-<!-- 4. IMPACT COUNTER NUMBERS (PW NSAT Trust Markers) -->
+<!-- 4. IMPACT COUNTER NUMBERS (Trust Markers) -->
 <section class="pw-impact-section">
     <div class="container">
         <div class="row">
@@ -1153,13 +1509,120 @@
             </div>
             <div class="col-md-3 col-xs-6 impact-card">
                 <div class="impact-number">₹ Cash Honors</div>
-                <div class="impact-label">Cash Rewards & Trophies</div>
+                <div class="impact-label">Cash Rewards &amp; Trophies</div>
                 <div class="impact-sub">Direct cash awards for rankers</div>
             </div>
             <div class="col-md-3 col-xs-6 impact-card">
-                <div class="impact-number">FREE</div>
-                <div class="impact-label">Registration Cost</div>
-                <div class="impact-sub">Zero exam fees for all applicants</div>
+                <div class="impact-number" style="color: var(--pw-accent);">
+                    <span class="live-counter-val"><?php echo (int)(isset($social_proof['social_proof_count']) ? $social_proof['social_proof_count'] : 548); ?></span>+
+                </div>
+                <div class="impact-label">Registered Candidates</div>
+                <div class="impact-sub">Growing 2x every session across Rajasthan</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 4B. SUNRISE CAREER ACADEMY ADVANTAGE (NEET • IIT-JEE • NDA • CLAT) -->
+<section id="academy" class="pw-section">
+    <div class="container">
+        <div class="pw-section-header">
+            <span class="pw-badge-pill" style="background: #FEE2E2; color: var(--pw-accent);">A New Venture for Competitive Exams</span>
+            <h2 class="pw-section-title">Sunrise Career Academy Wings</h2>
+            <p class="pw-section-sub">
+                Designed to nurture young aspirants from Classes 6th to 12th into future Doctors, Engineers, Defence Officers &amp; Legal Luminaries with early foundation training.
+            </p>
+        </div>
+
+        <div class="row">
+            <!-- Wing 1: IIT-JEE Foundation -->
+            <div class="col-md-3 col-sm-6" style="margin-bottom: 25px;">
+                <div class="wing-card">
+                    <span class="wing-top-badge wing-badge-jee">Engineering</span>
+                    <div class="wing-icon-circle jee"><i class="fa fa-calculator"></i></div>
+                    <h3 style="font-size: 19px; font-weight: 800; margin: 0 0 6px; color: var(--pw-dark);">IIT-JEE Foundation</h3>
+                    <p style="font-size: 13px; color: var(--pw-text-muted); margin-bottom: 12px; line-height: 1.45;">
+                        Strong mathematical reasoning &amp; physics problem-solving blueprint aligned with JEE Mains &amp; Advanced.
+                    </p>
+                    <ul class="wing-features-list">
+                        <li><i class="fa fa-check-circle"></i> Daily Speed &amp; Accuracy Drills</li>
+                        <li><i class="fa fa-check-circle"></i> Science &amp; Math Olympiad Prep</li>
+                        <li><i class="fa fa-check-circle"></i> Computer Based Test (CBT) Labs</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Wing 2: NEET Medical Wing -->
+            <div class="col-md-3 col-sm-6" style="margin-bottom: 25px;">
+                <div class="wing-card">
+                    <span class="wing-top-badge wing-badge-neet">Medical</span>
+                    <div class="wing-icon-circle neet"><i class="fa fa-heartbeat"></i></div>
+                    <h3 style="font-size: 19px; font-weight: 800; margin: 0 0 6px; color: var(--pw-dark);">NEET-UG Medical</h3>
+                    <p style="font-size: 13px; color: var(--pw-text-muted); margin-bottom: 12px; line-height: 1.45;">
+                        NCERT line-by-line mastery, high-yield biology visual diagrams, and physics/chemistry numerical workshops.
+                    </p>
+                    <ul class="wing-features-list">
+                        <li><i class="fa fa-check-circle"></i> 100% NCERT Concept Mapping</li>
+                        <li><i class="fa fa-check-circle"></i> Doctor Mentorship Clinics</li>
+                        <li><i class="fa fa-check-circle"></i> Weekly OMR Speed Mock Tests</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Wing 3: NDA & Defence Academy -->
+            <div class="col-md-3 col-sm-6" style="margin-bottom: 25px;">
+                <div class="wing-card">
+                    <span class="wing-top-badge wing-badge-nda">Defence</span>
+                    <div class="wing-icon-circle nda"><i class="fa fa-shield"></i></div>
+                    <h3 style="font-size: 19px; font-weight: 800; margin: 0 0 6px; color: var(--pw-dark);">NDA &amp; Defence</h3>
+                    <p style="font-size: 13px; color: var(--pw-text-muted); margin-bottom: 12px; line-height: 1.45;">
+                        Comprehensive academic preparation integrated with SSB interview personality development and physical stamina grooming.
+                    </p>
+                    <ul class="wing-features-list">
+                        <li><i class="fa fa-check-circle"></i> SSB Psychological Interview Guidance</li>
+                        <li><i class="fa fa-check-circle"></i> Physical Obstacle Course &amp; Drills</li>
+                        <li><i class="fa fa-check-circle"></i> General Ability &amp; Current Affairs</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Wing 4: CLAT & Law Wing -->
+            <div class="col-md-3 col-sm-6" style="margin-bottom: 25px;">
+                <div class="wing-card">
+                    <span class="wing-top-badge wing-badge-clat">Law &amp; Humanities</span>
+                    <div class="wing-icon-circle clat"><i class="fa fa-balance-scale"></i></div>
+                    <h3 style="font-size: 19px; font-weight: 800; margin: 0 0 6px; color: var(--pw-dark);">CLAT &amp; Law Entrance</h3>
+                    <p style="font-size: 13px; color: var(--pw-text-muted); margin-bottom: 12px; line-height: 1.45;">
+                        Specialized training in legal aptitude, critical reading comprehension, logical deduction &amp; constitutional law foundations.
+                    </p>
+                    <ul class="wing-features-list">
+                        <li><i class="fa fa-check-circle"></i> Legal Reasoning Workshops</li>
+                        <li><i class="fa fa-check-circle"></i> English Vocabulary &amp; Speed Reading</li>
+                        <li><i class="fa fa-check-circle"></i> National Law University (NLU) Mentors</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Academy Trust Strip -->
+        <div style="background: var(--pw-primary-light); border: 1.5px solid #BFDBFE; border-radius: 14px; padding: 18px 24px; margin-top: 15px;">
+            <div class="row text-center">
+                <div class="col-xs-6 col-sm-3" style="padding: 8px;">
+                    <div style="font-size: 18px; font-weight: 900; color: var(--pw-primary);">15 : 1 Ratio</div>
+                    <div style="font-size: 12px; color: var(--pw-text-muted); font-weight: 600;">Personal Attention</div>
+                </div>
+                <div class="col-xs-6 col-sm-3" style="padding: 8px;">
+                    <div style="font-size: 18px; font-weight: 900; color: var(--pw-accent);">Daily Doubt Desk</div>
+                    <div style="font-size: 12px; color: var(--pw-text-muted); font-weight: 600;">One-on-One Faculty Help</div>
+                </div>
+                <div class="col-xs-6 col-sm-3" style="padding: 8px;">
+                    <div style="font-size: 18px; font-weight: 900; color: var(--pw-green);">OMR Analytics</div>
+                    <div style="font-size: 12px; color: var(--pw-text-muted); font-weight: 600;">Detailed Performance Report</div>
+                </div>
+                <div class="col-xs-6 col-sm-3" style="padding: 8px;">
+                    <div style="font-size: 18px; font-weight: 900; color: var(--pw-gold);">Residential Campus</div>
+                    <div style="font-size: 12px; color: var(--pw-text-muted); font-weight: 600;">Safe Hostels &amp; Sports Ground</div>
+                </div>
             </div>
         </div>
     </div>
@@ -1239,6 +1702,159 @@
                 </div>
             </div>
         </div>
+
+        <!-- Rank-wise Reward Matrix Grid -->
+        <div style="margin-top: 35px;">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <h3 style="font-size: 24px; font-weight: 800; color: var(--pw-dark); margin: 0 0 6px;">Rank-Wise Scholarship &amp; Cash Prize Matrix</h3>
+                <p style="font-size: 14px; color: var(--pw-text-muted); margin: 0;">Transparent merit-based awards applicable across all class categories (5th to 11th).</p>
+            </div>
+
+            <div class="row">
+                <!-- Rank 1 -->
+                <div class="col-md-3 col-sm-6" style="margin-bottom: 20px;">
+                    <div class="reward-tier-card featured-rank">
+                        <div>
+                            <span class="tier-medal-icon">🥇</span>
+                            <div style="font-size: 13px; font-weight: 800; color: #B45309; text-transform: uppercase;">Class Rank 1</div>
+                            <div class="tier-pct">100% OFF</div>
+                            <span class="tier-cash-badge"><i class="fa fa-inr"></i> 11,000 Cash Award</span>
+                        </div>
+                        <ul class="wing-features-list" style="text-align: left; margin-top: 10px;">
+                            <li><i class="fa fa-trophy" style="color: var(--pw-gold);"></i> <strong>Gold Trophy &amp; Medallion</strong></li>
+                            <li><i class="fa fa-certificate"></i> Certificate of Excellence</li>
+                            <li><i class="fa fa-star"></i> Free Foundation Batch Admission</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Rank 2-5 -->
+                <div class="col-md-3 col-sm-6" style="margin-bottom: 20px;">
+                    <div class="reward-tier-card">
+                        <div>
+                            <span class="tier-medal-icon">🥈</span>
+                            <div style="font-size: 13px; font-weight: 800; color: #475569; text-transform: uppercase;">Ranks 2 to 5</div>
+                            <div class="tier-pct" style="color: #0284C7;">90% OFF</div>
+                            <span class="tier-cash-badge" style="background: #0284C7;"><i class="fa fa-inr"></i> 5,100 Cash Award</span>
+                        </div>
+                        <ul class="wing-features-list" style="text-align: left; margin-top: 10px;">
+                            <li><i class="fa fa-shield" style="color: #94A3B8;"></i> <strong>Silver Medallion</strong></li>
+                            <li><i class="fa fa-certificate"></i> Certificate of Excellence</li>
+                            <li><i class="fa fa-check"></i> 90% School Fee Waiver</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Rank 6-10 -->
+                <div class="col-md-3 col-sm-6" style="margin-bottom: 20px;">
+                    <div class="reward-tier-card">
+                        <div>
+                            <span class="tier-medal-icon">🥉</span>
+                            <div style="font-size: 13px; font-weight: 800; color: #92400E; text-transform: uppercase;">Ranks 6 to 10</div>
+                            <div class="tier-pct" style="color: #D97706;">75% OFF</div>
+                            <span class="tier-cash-badge" style="background: #D97706;"><i class="fa fa-inr"></i> 2,100 Cash Award</span>
+                        </div>
+                        <ul class="wing-features-list" style="text-align: left; margin-top: 10px;">
+                            <li><i class="fa fa-shield" style="color: #D97706;"></i> <strong>Bronze Medallion</strong></li>
+                            <li><i class="fa fa-certificate"></i> Certificate of Excellence</li>
+                            <li><i class="fa fa-check"></i> 75% School Fee Waiver</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Rank 11-50 & 51-100 -->
+                <div class="col-md-3 col-sm-6" style="margin-bottom: 20px;">
+                    <div class="reward-tier-card">
+                        <div>
+                            <span class="tier-medal-icon">🎖️</span>
+                            <div style="font-size: 13px; font-weight: 800; color: var(--pw-green); text-transform: uppercase;">Ranks 11 to 50</div>
+                            <div class="tier-pct" style="color: var(--pw-green);">50% OFF</div>
+                            <span class="tier-cash-badge" style="background: var(--pw-green);">Special Merit Gift</span>
+                        </div>
+                        <ul class="wing-features-list" style="text-align: left; margin-top: 10px;">
+                            <li><i class="fa fa-gift" style="color: var(--pw-green);"></i> <strong>Merit Scholar Gift Pack</strong></li>
+                            <li><i class="fa fa-certificate"></i> Certificate of Merit</li>
+                            <li><i class="fa fa-check"></i> 50% School Fee Waiver</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Universal Participation Banner (From Poster) -->
+            <div style="background: #ECFDF5; border: 2px dashed #059669; border-radius: 14px; padding: 18px 24px; text-align: center; margin-top: 15px;">
+                <div style="font-size: 16px; font-weight: 800; color: #065F46; margin-bottom: 4px;">
+                    <i class="fa fa-certificate" style="color: #059669;"></i> Guaranteed for Every Single Participant: Certificate of Participation!
+                </div>
+                <div style="font-size: 13.5px; color: #047857;">
+                    All students who appear for SSAT-2026 receive an official <strong>Certificate of Participation</strong> and free <strong>One-on-One Career Counselling</strong> by Sunrise Career Academy faculty.
+                </div>
+            </div>
+
+            <!-- Interactive Scholarship Benefit Calculator Widget -->
+            <div class="calculator-box">
+                <div class="row" style="display: flex; align-items: center; flex-wrap: wrap;">
+                    <div class="col-md-6 col-sm-12" style="margin-bottom: 20px;">
+                        <span style="background: rgba(255,255,255,0.15); color: #FFD166; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Interactive Estimator</span>
+                        <h4 style="font-size: 22px; font-weight: 800; margin: 10px 0 6px; color: #ffffff;">Calculate Your Scholarship Benefit</h4>
+                        <p style="font-size: 13.5px; color: #CBD5E1; margin-bottom: 16px;">Select your class and target rank to see your fee discount, cash honors, and benefits:</p>
+                        
+                        <div style="margin-bottom: 14px;">
+                            <label style="font-size: 12px; font-weight: 700; color: #94A3B8; display: block; text-transform: uppercase; margin-bottom: 6px;">Select Class:</label>
+                            <div id="calc_classes">
+                                <button type="button" class="calc-pill-btn active" onclick="setCalcClass('5')">Class 5th</button>
+                                <button type="button" class="calc-pill-btn" onclick="setCalcClass('6')">Class 6th</button>
+                                <button type="button" class="calc-pill-btn" onclick="setCalcClass('7')">Class 7th</button>
+                                <button type="button" class="calc-pill-btn" onclick="setCalcClass('8')">Class 8th</button>
+                                <button type="button" class="calc-pill-btn" onclick="setCalcClass('9')">Class 9th</button>
+                                <button type="button" class="calc-pill-btn" onclick="setCalcClass('10')">Class 10th</button>
+                                <button type="button" class="calc-pill-btn" onclick="setCalcClass('11')">Class 11th</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="font-size: 12px; font-weight: 700; color: #94A3B8; display: block; text-transform: uppercase; margin-bottom: 6px;">Select Target Rank:</label>
+                            <div id="calc_ranks">
+                                <button type="button" class="calc-pill-btn active" onclick="setCalcRank(1)">Rank 1</button>
+                                <button type="button" class="calc-pill-btn" onclick="setCalcRank(2)">Ranks 2–5</button>
+                                <button type="button" class="calc-pill-btn" onclick="setCalcRank(6)">Ranks 6–10</button>
+                                <button type="button" class="calc-pill-btn" onclick="setCalcRank(11)">Ranks 11–50</button>
+                                <button type="button" class="calc-pill-btn" onclick="setCalcRank(51)">All Participants</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calculator Live Output Card -->
+                    <div class="col-md-6 col-sm-12">
+                        <div style="background: #ffffff; color: var(--pw-dark); border-radius: 14px; padding: 22px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+                            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--pw-gray-border); padding-bottom: 12px; margin-bottom: 14px;">
+                                <div style="font-size: 12px; font-weight: 800; color: var(--pw-primary); text-transform: uppercase;">
+                                    <span id="calc_display_class">Class 5th</span> &bull; <span id="calc_display_rank">Rank 1</span>
+                                </div>
+                                <span class="label label-success" style="font-size: 12px; font-weight: 700; background: var(--pw-green);" id="calc_display_tag">100% SCHOLARSHIP</span>
+                            </div>
+
+                            <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px;">
+                                <div style="font-size: 38px; font-weight: 900; color: var(--pw-primary); line-height: 1;" id="calc_display_pct">100%</div>
+                                <div style="font-size: 14px; font-weight: 700; color: var(--pw-text-muted);">Tuition Fee Waiver on Admission</div>
+                            </div>
+
+                            <div style="background: #FEF3C7; border-left: 4px solid var(--pw-gold); padding: 10px 14px; border-radius: 6px; margin-bottom: 12px;">
+                                <strong style="color: #92400E; font-size: 14px;"><i class="fa fa-inr"></i> <span id="calc_display_cash">₹11,000 Cash Award</span></strong>
+                                <div style="font-size: 12px; color: #B45309;" id="calc_display_prize">Gold Trophy, Medallion &amp; Certificate of Excellence</div>
+                            </div>
+
+                            <div style="font-size: 12.5px; color: var(--pw-text-muted); margin-bottom: 16px;" id="calc_display_note">
+                                Priority direct admission into Sunrise Career Academy foundation batches with complete tuition support.
+                            </div>
+
+                            <a href="#register" class="btn btn-primary" style="width: 100%; background: var(--pw-primary); border-radius: 8px; font-weight: 800; padding: 11px;">
+                                Claim This Scholarship &bull; Register Free
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -1299,8 +1915,128 @@
     </div>
 </section>
 
+<!-- 7B. INTERACTIVE SSAT MINI PRACTICE CHALLENGE -->
+<section id="practice" class="pw-section">
+    <div class="container">
+        <div class="pw-section-header">
+            <span class="pw-badge-pill" style="background: var(--pw-green-light); color: var(--pw-green);">Live Practice Challenge</span>
+            <h2 class="pw-section-title">Test Your Readiness: Try 3 Sample SSAT Questions</h2>
+            <p class="pw-section-sub">Experience the authentic bilingual OMR question pattern with instant automated scoring and explanations.</p>
+        </div>
+
+        <div class="quiz-container">
+            <!-- Score & Progress Tally Bar -->
+            <div style="display: flex; align-items: center; justify-content: space-between; background: var(--pw-gray-bg); border-radius: 12px; padding: 12px 18px; margin-bottom: 24px; border: 1px solid var(--pw-gray-border);">
+                <div>
+                    <span style="font-size: 12px; font-weight: 700; color: var(--pw-text-muted); text-transform: uppercase;">Standard Blueprint:</span>
+                    <strong style="color: var(--pw-dark); margin-left: 6px;">Bilingual (Hindi &amp; English)</strong>
+                </div>
+                <div>
+                    <span style="font-size: 13px; font-weight: 700; color: var(--pw-primary);">Your Score: </span>
+                    <span class="badge" style="background: var(--pw-primary); font-size: 14px; padding: 5px 10px;" id="quiz_score_badge">0 / 3</span>
+                </div>
+            </div>
+
+            <!-- Question 1: Mental Ability / Logical Reasoning -->
+            <div class="quiz-q-box" id="quiz_box_1">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span class="label label-primary" style="background: #0284C7; font-size: 11px; font-weight: 700;">Question 1 &bull; Logical Reasoning</span>
+                    <span style="font-size: 12px; font-weight: 700; color: var(--pw-green);">+4 Marks</span>
+                </div>
+                <div class="quiz-q-title">
+                    What comes next in the sequence? / इस संख्या श्रृंखला में अगली संख्या क्या होगी?<br>
+                    <span style="color: var(--pw-primary); font-family: monospace; font-size: 18px;">3, &nbsp;8, &nbsp;15, &nbsp;24, &nbsp;35, &nbsp;?</span>
+                </div>
+                <div class="quiz-opts-grid">
+                    <button type="button" class="quiz-opt-btn" onclick="handleQuizAnswer(1, 'A', false, 'B')">
+                        <strong>A)</strong> 45
+                    </button>
+                    <button type="button" class="quiz-opt-btn" onclick="handleQuizAnswer(1, 'B', true, 'B')">
+                        <strong>B)</strong> 48
+                    </button>
+                    <button type="button" class="quiz-opt-btn" onclick="handleQuizAnswer(1, 'C', false, 'B')">
+                        <strong>C)</strong> 50
+                    </button>
+                    <button type="button" class="quiz-opt-btn" onclick="handleQuizAnswer(1, 'D', false, 'B')">
+                        <strong>D)</strong> 52
+                    </button>
+                </div>
+                <div class="quiz-feedback" id="quiz_fb_1"></div>
+            </div>
+
+            <!-- Question 2: General Science -->
+            <div class="quiz-q-box" id="quiz_box_2">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span class="label label-primary" style="background: #059669; font-size: 11px; font-weight: 700;">Question 2 &bull; General Science</span>
+                    <span style="font-size: 12px; font-weight: 700; color: var(--pw-green);">+4 Marks</span>
+                </div>
+                <div class="quiz-q-title">
+                    Which cell organelle is known as the "Powerhouse of the Cell"? / किस कोशिकांग को कोशिका का 'पावरहाउस' (शक्ति गृह) कहा जाता है?
+                </div>
+                <div class="quiz-opts-grid">
+                    <button type="button" class="quiz-opt-btn" onclick="handleQuizAnswer(2, 'A', false, 'B')">
+                        <strong>A)</strong> Ribosome (राइबोसोम)
+                    </button>
+                    <button type="button" class="quiz-opt-btn" onclick="handleQuizAnswer(2, 'B', true, 'B')">
+                        <strong>B)</strong> Mitochondria (माइटोकॉन्ड्रिया)
+                    </button>
+                    <button type="button" class="quiz-opt-btn" onclick="handleQuizAnswer(2, 'C', false, 'B')">
+                        <strong>C)</strong> Nucleus (केंद्रक)
+                    </button>
+                    <button type="button" class="quiz-opt-btn" onclick="handleQuizAnswer(2, 'D', false, 'B')">
+                        <strong>D)</strong> Lysosome (लाइसोसोम)
+                    </button>
+                </div>
+                <div class="quiz-feedback" id="quiz_fb_2"></div>
+            </div>
+
+            <!-- Question 3: Mathematics -->
+            <div class="quiz-q-box" id="quiz_box_3">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span class="label label-primary" style="background: #D97706; font-size: 11px; font-weight: 700;">Question 3 &bull; Mathematics</span>
+                    <span style="font-size: 12px; font-weight: 700; color: var(--pw-green);">+4 Marks</span>
+                </div>
+                <div class="quiz-q-title">
+                    If the circumference of a circular field is 88 meters, what is its radius? (Take &pi; = 22/7) / यदि एक वृत्ताकार मैदान की परिधि 88 मीटर है, तो उसकी त्रिज्या क्या होगी?
+                </div>
+                <div class="quiz-opts-grid">
+                    <button type="button" class="quiz-opt-btn" onclick="handleQuizAnswer(3, 'A', false, 'B')">
+                        <strong>A)</strong> 7 meters
+                    </button>
+                    <button type="button" class="quiz-opt-btn" onclick="handleQuizAnswer(3, 'B', true, 'B')">
+                        <strong>B)</strong> 14 meters
+                    </button>
+                    <button type="button" class="quiz-opt-btn" onclick="handleQuizAnswer(3, 'C', false, 'B')">
+                        <strong>C)</strong> 21 meters
+                    </button>
+                    <button type="button" class="quiz-opt-btn" onclick="handleQuizAnswer(3, 'D', false, 'B')">
+                        <strong>D)</strong> 28 meters
+                    </button>
+                </div>
+                <div class="quiz-feedback" id="quiz_fb_3"></div>
+            </div>
+
+            <!-- Quiz CTA Card -->
+            <div style="background: linear-gradient(135deg, var(--pw-primary-light) 0%, #FFFFFF 100%); border: 1.5px solid #BFDBFE; border-radius: 14px; padding: 20px; text-align: center;">
+                <h4 style="font-size: 18px; font-weight: 800; color: var(--pw-dark); margin: 0 0 6px;">Want Full-Length Class-Wise Bilingual Practice Papers?</h4>
+                <p style="font-size: 13.5px; color: var(--pw-text-muted); margin-bottom: 14px;">
+                    Register online for free to immediately access authentic NCERT sample papers with OMR answer keys in your Candidate Portal.
+                </p>
+                <div style="display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+                    <a href="#register" class="btn btn-primary" style="background: var(--pw-primary); font-weight: 800; padding: 10px 24px; border-radius: 8px;">
+                        <i class="fa fa-pencil-square-o"></i> Register (Free) &amp; Download Papers
+                    </a>
+                    <a href="<?php echo site_url('scholarshipregister/portal'); ?>" class="btn btn-default" style="font-weight: 700; padding: 10px 20px; border-radius: 8px; border-color: var(--pw-primary); color: var(--pw-primary);">
+                        <i class="fa fa-sign-in"></i> Candidate Portal Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- 8. IMPORTANT DATES SECTION -->
-<section id="dates" class="pw-section">
+<section id="dates" class="pw-section gray-bg">
     <div class="container">
         <div class="pw-section-header">
             <span class="pw-badge-pill">Key Milestones</span>
@@ -1360,6 +2096,215 @@
     </div>
 </section>
 
+<!-- 8B. EXAMINATION CENTERS (Offline & Online) -->
+<section id="centers" class="pw-section">
+    <div class="container">
+        <div class="pw-section-header">
+            <span class="pw-badge-pill" style="background: #E0F2FE; color: #0284C7;">Dual Mode Facility</span>
+            <h2 class="pw-section-title">Official Examination Centers</h2>
+            <p class="pw-section-sub">
+                परीक्षा ऑनलाइन और ऑफ़लाइन दोनों तरीके से होगी। आप अपनी सुविधानुसार नज़दीकी परीक्षा केंद्र चुन सकते हैं।
+            </p>
+        </div>
+
+        <div class="row">
+            <!-- Center 1: Nechhwa (Sikar) Main Campus -->
+            <div class="col-md-3 col-sm-6" style="margin-bottom: 20px;">
+                <div class="city-card" style="border-top: 4px solid var(--pw-primary);">
+                    <div>
+                        <span class="city-pill-badge" style="background: #EBF3FC; color: var(--pw-primary);">
+                            <i class="fa fa-university"></i> Main Campus &amp; Center
+                        </span>
+                        <h4 style="font-size: 18px; font-weight: 800; color: var(--pw-dark); margin: 0 0 6px;">
+                            Nechhwa (नेछवा - सीकर)
+                        </h4>
+                        <p style="font-size: 13px; color: var(--pw-text-muted); margin-bottom: 12px;">
+                            Sunrise International Public School Campus, Salasar Road, Nechhwa, Sikar (Raj.)
+                        </p>
+                        <div style="font-size: 12.5px; color: var(--pw-text); margin-bottom: 8px;">
+                            <i class="fa fa-phone" style="color: var(--pw-primary);"></i> <strong>9828512821 / 9982085111</strong>
+                        </div>
+                    </div>
+                    <div style="background: #F8FAFC; border-radius: 8px; padding: 8px 12px; font-size: 11.5px; color: var(--pw-primary); font-weight: 700;">
+                        <i class="fa fa-map-marker"></i> Offline OMR Center &bull; Code: <strong>NCH-01</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center 2: Bhilwara -->
+            <div class="col-md-3 col-sm-6" style="margin-bottom: 20px;">
+                <div class="city-card" style="border-top: 4px solid #059669;">
+                    <div>
+                        <span class="city-pill-badge" style="background: #D1FAE5; color: #059669;">
+                            <i class="fa fa-building-o"></i> City Center
+                        </span>
+                        <h4 style="font-size: 18px; font-weight: 800; color: var(--pw-dark); margin: 0 0 6px;">
+                            Bhilwara (भीलवाड़ा)
+                        </h4>
+                        <p style="font-size: 13px; color: var(--pw-text-muted); margin-bottom: 12px;">
+                            Designated Partner Center / City Test Hub, Bhilwara (Raj.)
+                        </p>
+                        <div style="font-size: 12.5px; color: var(--pw-text); margin-bottom: 8px;">
+                            <i class="fa fa-phone" style="color: #059669;"></i> <strong>9783200821</strong>
+                        </div>
+                    </div>
+                    <div style="background: #F0FDF4; border-radius: 8px; padding: 8px 12px; font-size: 11.5px; color: #059669; font-weight: 700;">
+                        <i class="fa fa-map-marker"></i> Offline OMR Center &bull; Code: <strong>BHL-02</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center 3: Jodhpur -->
+            <div class="col-md-3 col-sm-6" style="margin-bottom: 20px;">
+                <div class="city-card" style="border-top: 4px solid #0284C7;">
+                    <div>
+                        <span class="city-pill-badge" style="background: #E0F2FE; color: #0284C7;">
+                            <i class="fa fa-building-o"></i> City Center
+                        </span>
+                        <h4 style="font-size: 18px; font-weight: 800; color: var(--pw-dark); margin: 0 0 6px;">
+                            Jodhpur (जोधपुर)
+                        </h4>
+                        <p style="font-size: 13px; color: var(--pw-text-muted); margin-bottom: 12px;">
+                            Designated Partner Center / City Test Hub, Jodhpur (Raj.)
+                        </p>
+                        <div style="font-size: 12.5px; color: var(--pw-text); margin-bottom: 8px;">
+                            <i class="fa fa-phone" style="color: #0284C7;"></i> <strong>9828512821</strong>
+                        </div>
+                    </div>
+                    <div style="background: #F0F9FF; border-radius: 8px; padding: 8px 12px; font-size: 11.5px; color: #0284C7; font-weight: 700;">
+                        <i class="fa fa-map-marker"></i> Offline OMR Center &bull; Code: <strong>JDH-03</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center 4: Barmer -->
+            <div class="col-md-3 col-sm-6" style="margin-bottom: 20px;">
+                <div class="city-card" style="border-top: 4px solid #D97706;">
+                    <div>
+                        <span class="city-pill-badge" style="background: #FEF3C7; color: #D97706;">
+                            <i class="fa fa-building-o"></i> City Center
+                        </span>
+                        <h4 style="font-size: 18px; font-weight: 800; color: var(--pw-dark); margin: 0 0 6px;">
+                            Barmer (बाड़मेर)
+                        </h4>
+                        <p style="font-size: 13px; color: var(--pw-text-muted); margin-bottom: 12px;">
+                            Designated Partner Center / City Test Hub, Barmer (Raj.)
+                        </p>
+                        <div style="font-size: 12.5px; color: var(--pw-text); margin-bottom: 8px;">
+                            <i class="fa fa-phone" style="color: #D97706;"></i> <strong>9783200821</strong>
+                        </div>
+                    </div>
+                    <div style="background: #FFFBEB; border-radius: 8px; padding: 8px 12px; font-size: 11.5px; color: #D97706; font-weight: 700;">
+                        <i class="fa fa-map-marker"></i> Offline OMR Center &bull; Code: <strong>BMR-04</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Online Exam Facility Callout -->
+        <div style="background: linear-gradient(90deg, #F0FDF4 0%, #EBF3FC 100%); border: 1.5px solid #93C5FD; border-radius: 14px; padding: 18px 24px; margin-top: 5px;">
+            <div class="row" style="display: flex; align-items: center; flex-wrap: wrap;">
+                <div class="col-md-8 col-sm-12">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                        <span class="label label-primary" style="background: var(--pw-primary); font-size: 12px; font-weight: 700;">Pan-India Online Mode</span>
+                        <span style="font-size: 14px; font-weight: 800; color: var(--pw-dark);">Can't travel to an offline center?</span>
+                    </div>
+                    <p style="font-size: 13px; color: var(--pw-text-muted); margin: 0;">
+                        Students outside these 4 districts can select <strong>Online Mode (घर बैठे ऑनलाइन परीक्षा)</strong> and appear securely from their smartphone, tablet, or laptop through our proctored exam portal on 20 Dec 2026.
+                    </p>
+                </div>
+                <div class="col-md-4 col-sm-12 text-right" style="margin-top: 10px;">
+                    <a href="#register" class="btn btn-primary" style="background: var(--pw-primary); font-weight: 800; border-radius: 8px; padding: 10px 20px;">
+                        <i class="fa fa-laptop"></i> Register for Online / Offline Test
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 8C. HALL OF FAME & PARENT TESTIMONIALS -->
+<section id="testimonials" class="pw-section gray-bg">
+    <div class="container">
+        <div class="pw-section-header">
+            <span class="pw-badge-pill" style="background: #FEF3C7; color: #B45309;">Proven Results &amp; Trust</span>
+            <h2 class="pw-section-title">What Parents &amp; Top Scorers Say</h2>
+            <p class="pw-section-sub">Real stories of transformation, academic brilliance, and successful competitive exam journeys.</p>
+        </div>
+
+        <div class="row">
+            <!-- Testimonial 1 -->
+            <div class="col-md-4 col-sm-12" style="margin-bottom: 25px;">
+                <div class="testi-card">
+                    <div>
+                        <div style="color: #F59E0B; font-size: 16px; margin-bottom: 12px;">
+                            <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+                        </div>
+                        <p style="font-size: 14px; line-height: 1.6; color: var(--pw-text); font-style: italic; margin-bottom: 16px;">
+                            "My son Rahul secured Rank 1 in SSAT and received a 100% scholarship. The personal mentoring and disciplined hostel routine at Sunrise Career Academy laid a rock-solid foundation for his NEET aspirations."
+                        </p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--pw-gray-border); padding-top: 14px;">
+                        <div style="width: 44px; height: 44px; border-radius: 50%; background: #EBF3FC; color: var(--pw-primary); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;">
+                            RP
+                        </div>
+                        <div>
+                            <div style="font-weight: 800; font-size: 14px; color: var(--pw-dark);">Rajesh Prajapat</div>
+                            <div style="font-size: 12px; color: var(--pw-text-muted);">Father of Rahul (Class 10th &bull; Rank 1)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Testimonial 2 -->
+            <div class="col-md-4 col-sm-12" style="margin-bottom: 25px;">
+                <div class="testi-card">
+                    <div>
+                        <div style="color: #F59E0B; font-size: 16px; margin-bottom: 12px;">
+                            <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+                        </div>
+                        <p style="font-size: 14px; line-height: 1.6; color: var(--pw-text); font-style: italic; margin-bottom: 16px;">
+                            "The bilingual NCERT pattern test gave my daughter immense clarity. Winning a cash prize boosted her confidence, and the dedicated faculty at Nechhwa Sikar makes concept clearing effortless."
+                        </p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--pw-gray-border); padding-top: 14px;">
+                        <div style="width: 44px; height: 44px; border-radius: 50%; background: #FEF3C7; color: #D97706; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;">
+                            MS
+                        </div>
+                        <div>
+                            <div style="font-weight: 800; font-size: 14px; color: var(--pw-dark);">Mahendra Shekhawat</div>
+                            <div style="font-size: 12px; color: var(--pw-text-muted);">Father of Priya (Class 8th &bull; 90% Scholarship)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Testimonial 3 -->
+            <div class="col-md-4 col-sm-12" style="margin-bottom: 25px;">
+                <div class="testi-card">
+                    <div>
+                        <div style="color: #F59E0B; font-size: 16px; margin-bottom: 12px;">
+                            <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+                        </div>
+                        <p style="font-size: 14px; line-height: 1.6; color: var(--pw-text); font-style: italic; margin-bottom: 16px;">
+                            "The registration was completely free and seamless. We got access to model test papers immediately in the portal. Any ambitious student targeting NDA or IIT-JEE must appear for SSAT-2026!"
+                        </p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--pw-gray-border); padding-top: 14px;">
+                        <div style="width: 44px; height: 44px; border-radius: 50%; background: #D1FAE5; color: #059669; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;">
+                            AC
+                        </div>
+                        <div>
+                            <div style="font-weight: 800; font-size: 14px; color: var(--pw-dark);">Anil Choudhary</div>
+                            <div style="font-size: 12px; color: var(--pw-text-muted);">Father of Aryan (Class 9th &bull; NDA Wing Aspirant)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- 9. REGISTRATION FORM (PW Vidyapeeth Form Flow) -->
 <section id="register" class="pw-section gray-bg">
     <div class="container">
@@ -1378,6 +2323,17 @@
                             <p style="margin-top: 8px;">Online registration for <?php echo htmlspecialchars($selected_exam['title']); ?> has concluded.</p>
                         </div>
                     <?php } else { ?>
+
+                        <!-- Live Social Proof Urgency Banner -->
+                        <div style="background: linear-gradient(90deg, #EBF3FC 0%, #FFFFFF 100%); border: 1.5px solid #93C5FD; border-radius: 12px; padding: 14px 18px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span class="live-dot-pulse"></span>
+                                <span style="font-size: 14px; color: var(--pw-dark); font-weight: 700;">
+                                    🔥 Over <strong style="color: var(--pw-primary); font-size: 16px;"><span class="live-counter-val"><?php echo (int)(isset($social_proof['social_proof_count']) ? $social_proof['social_proof_count'] : 548); ?></span>+ Students</strong> have already registered for SSAT-2026!
+                                </span>
+                            </div>
+                            <span class="label label-danger" style="background: var(--pw-accent); font-size: 11.5px; font-weight: 800; padding: 5px 12px; border-radius: 14px;">100% FREE ENTRY</span>
+                        </div>
 
                         <div id="sibling_notice_box" style="display: none; margin-bottom: 22px;"></div>
 
@@ -1592,16 +2548,45 @@
     </div>
 </footer>
 
-<!-- Floating Mobile Bottom CTA -->
-<div class="pw-mobile-cta">
-    <div style="display: flex; gap: 10px;">
-        <a href="#register" class="btn btn-primary" style="flex: 2; background: var(--pw-primary); border-radius: 8px; font-weight: 800; padding: 10px;">
-            <i class="fa fa-pencil"></i> Apply Now (Free)
+<!-- Smart Sticky Bottom Bar (Desktop & Mobile) -->
+<div id="smartStickyBar" class="smart-sticky-bar">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <span class="live-dot-pulse"></span>
+        <div class="desktop-info" style="font-size: 13.5px; font-weight: 700; color: #FFFFFF;">
+            <strong>SSAT-2026:</strong> 20 December 2026 (Sunday) &bull; 
+            <span style="color: var(--pw-gold);"><span id="sticky_counter_val"><?php echo (int)(isset($social_proof['social_proof_count']) ? $social_proof['social_proof_count'] : 548); ?></span>+ Students Registered</span>
+        </div>
+        <div class="visible-xs" style="font-size: 12px; font-weight: 800; color: #FFFFFF;">
+            SSAT 2026 &bull; <span style="color: var(--pw-gold);"><span class="live-counter-val"><?php echo (int)(isset($social_proof['social_proof_count']) ? $social_proof['social_proof_count'] : 548); ?></span>+</span>
+        </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <a href="#register" class="btn btn-sm btn-primary" style="background: var(--pw-primary); border-radius: 6px; font-weight: 800; padding: 7px 16px; font-size: 13px; box-shadow: 0 4px 10px rgba(10,59,114,0.4);">
+            <i class="fa fa-pencil"></i> Free Apply
         </a>
-        <a href="https://wa.me/919783200821" target="_blank" class="btn btn-success" style="flex: 1; background: #25D366; border-radius: 8px; font-weight: 800; padding: 10px;">
-            <i class="fa fa-whatsapp"></i> Chat
+        <a href="https://wa.me/919828512821?text=Hello%20Sunrise%20Team%2C%20I%20want%20information%20regarding%20SSAT-2026%20Scholarship%20Exam." target="_blank" class="btn btn-sm btn-success" style="background: #25D366; border: none; border-radius: 6px; font-weight: 800; padding: 7px 12px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; color: #ffffff; text-decoration: none;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="#ffffff" style="display: inline-block; vertical-align: middle; flex-shrink: 0;">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+            </svg>
+            <span style="font-weight: 700; color: #ffffff;">WhatsApp</span>
         </a>
     </div>
+</div>
+
+<!-- Floating Real-Time Social Proof Toast -->
+<div id="liveActivityToast" class="live-toast-box">
+    <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--pw-primary-light); color: var(--pw-primary); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;" id="toast_icon">
+        <i class="fa fa-graduation-cap"></i>
+    </div>
+    <div style="flex: 1;">
+        <div id="toast_msg" style="font-weight: 700; color: var(--pw-dark); line-height: 1.3; font-size: 13px;">
+            Student from <strong>Sikar</strong> just registered for SSAT-2026!
+        </div>
+        <div style="font-size: 11px; color: var(--pw-text-muted); margin-top: 2px;" id="toast_time">
+            <span class="live-dot-pulse" style="width: 7px; height: 7px;"></span> Just now &bull; Roll Number Generated
+        </div>
+    </div>
+    <button type="button" onclick="$('#liveActivityToast').fadeOut(200);" style="border: none; background: none; color: #94A3B8; font-size: 16px; cursor: pointer; padding: 0 4px;">&times;</button>
 </div>
 
 <!-- PW NSAT-Style Mobile Registration Popup Modal -->
@@ -2041,6 +3026,160 @@ function openPosterModal() {
 function closePosterModal() {
     $('#posterModal').removeClass('active').fadeOut(150);
     $('body').css('overflow', '');
+}
+
+// Instant Lead Capture: Whenever a user enters a 10-digit mobile number, save it immediately!
+function autoCaptureLead(mobile, candidateName, classId) {
+    if (!mobile) return;
+    var raw = mobile.replace(/\D/g, '');
+    if (raw.length === 10) {
+        $.ajax({
+            url: '<?php echo site_url("scholarshipregister/capture_lead"); ?>',
+            type: 'POST',
+            data: {
+                mobile: raw,
+                exam_id: '<?php echo isset($selected_exam["id"]) ? $selected_exam["id"] : 1; ?>',
+                candidate_name: candidateName || '',
+                class_id: classId || ''
+            },
+            dataType: 'json'
+        });
+    }
+}
+
+$(document).on('input blur change', '#modal_mobile_input, #form_candidate_mobile', function() {
+    var raw = $(this).val().replace(/\D/g, '');
+    if (raw.length === 10) {
+        var name = $('#form_candidate_name').val() || '';
+        var cls = $('#form_class_id').val() || '';
+        autoCaptureLead(raw, name, cls);
+    }
+});
+
+// Social Proof Multiplier & Live Ticker Logic
+var liveBaseCount = <?php echo (int)(isset($social_proof['social_proof_count']) ? $social_proof['social_proof_count'] : 548); ?>;
+
+function updateSocialProofCounter(count) {
+    $('.live-counter-val, #live_social_counter, #sticky_counter_val').text(count);
+}
+
+// Animate count up from 500 to liveBaseCount on load
+(function() {
+    var startVal = Math.max(500, liveBaseCount - 20);
+    var current = startVal;
+    var timer = setInterval(function() {
+        current += 1;
+        if (current >= liveBaseCount) {
+            current = liveBaseCount;
+            clearInterval(timer);
+        }
+        updateSocialProofCounter(current);
+    }, 40);
+})();
+
+// Floating Live Activity Notification Toast (Rotates every 12 seconds)
+var toastData = [
+    { name: "Student from Sikar", detail: "Registered for Class 9th &bull; OMR Pattern", icon: "fa-graduation-cap" },
+    { name: "Pooja Choudhary", detail: "Registered from Jodhpur &bull; NEET Foundation", icon: "fa-heartbeat" },
+    { name: "Rohan Verma", detail: "Registered from Bhilwara &bull; Class 10th", icon: "fa-calculator" },
+    { name: "Student from Barmer", detail: "Registered for Class 11th Science &bull; IIT-JEE", icon: "fa-star" },
+    { name: "Sunil Meena", detail: "Registered from Nechhwa Campus &bull; Class 8th", icon: "fa-trophy" },
+    { name: "520+ Candidates Joined!", detail: "Scholarships in Lakhs &bull; Free Registration", icon: "fa-check-circle" }
+];
+var toastIdx = 0;
+
+function showNextLiveToast() {
+    var item = toastData[toastIdx % toastData.length];
+    toastIdx++;
+    $('#toast_msg').html('<strong>' + item.name + '</strong> ' + item.detail);
+    $('#toast_icon').html('<i class="fa ' + item.icon + '"></i>');
+    $('#liveActivityToast').fadeIn(300);
+
+    // Dynamic 2x multiplier upon activity
+    liveBaseCount += 2;
+    updateSocialProofCounter(liveBaseCount);
+
+    setTimeout(function() {
+        $('#liveActivityToast').fadeOut(300);
+    }, 4500);
+}
+
+setTimeout(function() {
+    showNextLiveToast();
+    setInterval(showNextLiveToast, 12000);
+}, 3000);
+
+// Interactive Benefit Calculator Logic
+var currentCalcClass = '5';
+var currentCalcRank = 1;
+
+var rankBenefits = {
+    1: { pct: '100%', cash: '₹11,000 Cash Award', prize: 'Gold Trophy, Medallion & Certificate of Excellence', tag: '100% SCHOLARSHIP', note: 'Priority direct admission into Sunrise Career Academy foundation batch with 100% tuition fee waiver.' },
+    2: { pct: '90%', cash: '₹5,100 Cash Award', prize: 'Silver Medallion & Certificate of Excellence', tag: '90% SCHOLARSHIP', note: '90% tuition fee concession for entire academic session 2026-27.' },
+    6: { pct: '75%', cash: '₹2,100 Cash Award', prize: 'Bronze Medallion & Certificate of Excellence', tag: '75% SCHOLARSHIP', note: '75% tuition fee concession across CBSE foundation curriculum.' },
+    11: { pct: '50%', cash: 'Special Merit Gift Pack', prize: 'Merit Scholar Kit & Certificate of Merit', tag: '50% SCHOLARSHIP', note: '50% tuition fee waiver for meritorious qualifying candidates.' },
+    51: { pct: '25% - 100%', cash: 'Certificate of Participation', prize: 'Official Participation Certificate & Career Guidance', tag: 'GUARANTEED BENEFIT', note: 'All participating candidates receive guaranteed participation credential and 1-on-1 mentorship by Sunrise Career Academy.' }
+};
+
+function setCalcClass(cls) {
+    currentCalcClass = cls;
+    $('#calc_classes .calc-pill-btn').removeClass('active');
+    $(event.target).addClass('active');
+    $('#calc_display_class').text('Class ' + cls + 'th');
+    renderCalcOutput();
+}
+
+function setCalcRank(rankKey) {
+    currentCalcRank = rankKey;
+    $('#calc_ranks .calc-pill-btn').removeClass('active');
+    $(event.target).addClass('active');
+    var label = rankKey === 1 ? 'Rank 1' : (rankKey === 2 ? 'Ranks 2–5' : (rankKey === 6 ? 'Ranks 6–10' : (rankKey === 11 ? 'Ranks 11–50' : 'All Participants')));
+    $('#calc_display_rank').text(label);
+    renderCalcOutput();
+}
+
+function renderCalcOutput() {
+    var b = rankBenefits[currentCalcRank] || rankBenefits[1];
+    $('#calc_display_pct').text(b.pct);
+    $('#calc_display_cash').text(b.cash);
+    $('#calc_display_prize').text(b.prize);
+    $('#calc_display_tag').text(b.tag);
+    $('#calc_display_note').text(b.note);
+}
+
+// Mini Practice Quiz Logic
+var quizScore = 0;
+var quizAnswered = {};
+
+function handleQuizAnswer(qNum, selectedOpt, isCorrect, correctOpt) {
+    if (quizAnswered[qNum]) return;
+    quizAnswered[qNum] = true;
+
+    var box = $('#quiz_box_' + qNum);
+    var btns = box.find('.quiz-opt-btn');
+    var fb = $('#quiz_fb_' + qNum);
+
+    btns.prop('disabled', true);
+
+    if (isCorrect) {
+        quizScore += 1;
+        $(event.currentTarget).addClass('correct');
+        fb.css({ 'background': '#ECFDF5', 'color': '#065F46', 'border': '1px solid #10B981' })
+          .html('<i class="fa fa-check-circle"></i> <strong>Correct! +4 Marks!</strong> Great conceptual clarity.')
+          .slideDown(200);
+    } else {
+        $(event.currentTarget).addClass('wrong');
+        btns.each(function() {
+            if ($(this).text().indexOf(correctOpt + ')') !== -1) {
+                $(this).addClass('correct');
+            }
+        });
+        fb.css({ 'background': '#FEF2F2', 'color': '#991B1B', 'border': '1px solid #EF4444' })
+          .html('<i class="fa fa-times-circle"></i> <strong>Incorrect.</strong> Option (' + correctOpt + ') is the correct answer.')
+          .slideDown(200);
+    }
+
+    $('#quiz_score_badge').text(quizScore + ' / 3');
 }
 </script>
 

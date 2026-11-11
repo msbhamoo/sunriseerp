@@ -264,6 +264,27 @@ class Scholarshipexam_model extends MY_Model
             }
         }
 
+        if (!$this->db->table_exists('scholarship_leads')) {
+            $this->db->query("
+                CREATE TABLE IF NOT EXISTS `scholarship_leads` (
+                  `id` INT AUTO_INCREMENT PRIMARY KEY,
+                  `exam_id` INT DEFAULT NULL,
+                  `mobile` VARCHAR(20) NOT NULL,
+                  `candidate_name` VARCHAR(255) DEFAULT NULL,
+                  `class_id` INT DEFAULT NULL,
+                  `source` VARCHAR(50) DEFAULT 'web_form',
+                  `status` VARCHAR(20) DEFAULT 'draft',
+                  `ip_address` VARCHAR(50) DEFAULT NULL,
+                  `user_agent` TEXT DEFAULT NULL,
+                  `registered_at` DATETIME DEFAULT NULL,
+                  `created_at` DATETIME NOT NULL,
+                  `updated_at` DATETIME NOT NULL,
+                  KEY `idx_lead_mobile` (`mobile`),
+                  KEY `idx_lead_exam` (`exam_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+            ");
+        }
+
         // Setup Permission Group & Dynamic Sidebar Menu Items if missing
         $perm = $this->db->get_where('permission_group', array('short_code' => 'scholarship_exam'))->row();
         if (!$perm) {
@@ -1419,5 +1440,98 @@ class Scholarshipexam_model extends MY_Model
     {
         $this->db->where('id', $candidate_id);
         return $this->db->update('scholarship_exam_candidates', $data);
+    }
+
+    public function saveLead($mobile, $exam_id = null, $data = array())
+    {
+        $mobile = preg_replace('/\D/', '', (string)$mobile);
+        if (strlen($mobile) > 10 && substr($mobile, 0, 2) === '91') {
+            $mobile = substr($mobile, 2);
+        } elseif (strlen($mobile) > 10) {
+            $mobile = substr($mobile, -10);
+        }
+        if (strlen($mobile) != 10) {
+            return false;
+        }
+
+        $this->checkAndSetupTables();
+
+        $existing = $this->db->get_where('scholarship_leads', array('mobile' => $mobile))->row_array();
+        
+        $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : (isset($this->input) && method_exists($this->input, 'ip_address') ? $this->input->ip_address() : '127.0.0.1');
+        $ua = isset($_SERVER['HTTP_USER_AGENT']) ? substr($_SERVER['HTTP_USER_AGENT'], 0, 500) : '';
+        $now = date('Y-m-d H:i:s');
+
+        if ($existing) {
+            $update_data = array(
+                'updated_at' => $now,
+                'ip_address' => $ip,
+                'user_agent' => $ua
+            );
+            if (!empty($exam_id)) $update_data['exam_id'] = $exam_id;
+            if (!empty($data['candidate_name'])) $update_data['candidate_name'] = $data['candidate_name'];
+            if (!empty($data['class_id'])) $update_data['class_id'] = $data['class_id'];
+            if (!empty($data['status'])) $update_data['status'] = $data['status'];
+            if (!empty($data['registered_at'])) $update_data['registered_at'] = $data['registered_at'];
+
+            $this->db->where('id', $existing['id']);
+            $this->db->update('scholarship_leads', $update_data);
+            return $existing['id'];
+        } else {
+            $insert_data = array(
+                'exam_id' => $exam_id ?: null,
+                'mobile' => $mobile,
+                'candidate_name' => !empty($data['candidate_name']) ? $data['candidate_name'] : null,
+                'class_id' => !empty($data['class_id']) ? $data['class_id'] : null,
+                'source' => !empty($data['source']) ? $data['source'] : 'web_form',
+                'status' => !empty($data['status']) ? $data['status'] : 'draft',
+                'ip_address' => $ip,
+                'user_agent' => $ua,
+                'created_at' => $now,
+                'updated_at' => $now
+            );
+            $this->db->insert('scholarship_leads', $insert_data);
+            return $this->db->insert_id();
+        }
+    }
+
+    public function markLeadRegistered($mobile, $exam_id = null)
+    {
+        $mobile = preg_replace('/\D/', '', (string)$mobile);
+        if (strlen($mobile) > 10) {
+            $mobile = substr($mobile, -10);
+        }
+        if (empty($mobile)) return false;
+
+        $this->checkAndSetupTables();
+
+        $this->db->where('mobile', $mobile);
+        $this->db->update('scholarship_leads', array(
+            'status' => 'registered',
+            'registered_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ));
+    }
+
+    public function getSocialProofCount($exam_id = null)
+    {
+        $this->checkAndSetupTables();
+
+        $this->db->from('scholarship_exam_candidates');
+        if (!empty($exam_id)) {
+            $this->db->where('scholarship_exam_id', $exam_id);
+        }
+        $actual_count = $this->db->count_all_results();
+
+        // 500+ baseline social proof that increases by 2x for every registration!
+        $social_count = 500 + ($actual_count * 2);
+        if ($social_count < 524) {
+            $social_count = 524 + ($actual_count * 2);
+        }
+
+        return array(
+            'actual_count' => $actual_count,
+            'social_proof_count' => $social_count
+        );
     }
 }

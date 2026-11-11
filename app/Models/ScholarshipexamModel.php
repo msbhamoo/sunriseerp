@@ -156,6 +156,21 @@ class ScholarshipexamModel extends BaseModel
         return $this->callLegacyModel('Scholarshipexam_model', 'saveFieldSettings', func_get_args());
     }
 
+    public function saveLead($exam_id, $mobile, $candidate_name = null, $class_id = null, $source = 'web_lead')
+    {
+        return $this->callLegacyModel('Scholarshipexam_model', 'saveLead', func_get_args());
+    }
+
+    public function markLeadRegistered($exam_id, $mobile)
+    {
+        return $this->callLegacyModel('Scholarshipexam_model', 'markLeadRegistered', func_get_args());
+    }
+
+    public function getSocialProofCount($exam_id = null)
+    {
+        return $this->callLegacyModel('Scholarshipexam_model', 'getSocialProofCount', func_get_args());
+    }
+
     /**
      * Compatibility Bridge: Delegates execution to the legacy model instance
      * maintaining full compatibility with query builder and CI3 environment.

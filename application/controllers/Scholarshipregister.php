@@ -50,6 +50,7 @@ class Scholarshipregister extends CI_Controller
         }
 
         $data['registered_count'] = !empty($data['selected_exam']['id']) ? $this->scholarshipexam_model->getOnlineRegistrationCount($data['selected_exam']['id']) : 0;
+        $data['social_proof'] = $this->scholarshipexam_model->getSocialProofCount(!empty($data['selected_exam']['id']) ? $data['selected_exam']['id'] : null);
 
         $this->load->view('scholarshipregister/index', $data);
     }
@@ -118,6 +119,11 @@ class Scholarshipregister extends CI_Controller
             exit;
         }
 
+        // Instantly save mobile number as lead irrespective of whether they complete the form!
+        $this->scholarshipexam_model->saveLead($mobile, $exam_id ?: null, array(
+            'source' => 'modal_mobile_verification'
+        ));
+
         $candidates = $this->scholarshipexam_model->getCandidatesByMobile($exam_id ?: null, $mobile);
 
         if (!empty($candidates)) {
@@ -142,6 +148,37 @@ class Scholarshipregister extends CI_Controller
                 'status' => 'new',
                 'mobile' => $mobile
             ));
+        }
+        exit;
+    }
+
+    /**
+     * Auto-save lead as soon as a 10-digit mobile is typed anywhere on the page
+     */
+    public function capture_lead()
+    {
+        $mobile = preg_replace('/\D/', '', (string) $this->input->post('mobile'));
+        $exam_id = (int) $this->input->post('exam_id');
+        $candidate_name = $this->input->post('candidate_name');
+        $class_id = (int) $this->input->post('class_id');
+
+        if (strlen($mobile) > 10 && substr($mobile, 0, 2) === '91') {
+            $mobile = substr($mobile, 2);
+        } elseif (strlen($mobile) > 10) {
+            $mobile = substr($mobile, -10);
+        }
+
+        if (strlen($mobile) == 10) {
+            $lead_id = $this->scholarshipexam_model->saveLead($mobile, $exam_id ?: null, array(
+                'candidate_name' => $candidate_name,
+                'class_id' => $class_id,
+                'source' => 'web_mobile_input'
+            ));
+            header('Content-Type: application/json');
+            echo json_encode(array('status' => 'saved', 'lead_id' => $lead_id));
+        } else {
+            header('Content-Type: application/json');
+            echo json_encode(array('status' => 'ignored'));
         }
         exit;
     }
@@ -236,6 +273,7 @@ class Scholarshipregister extends CI_Controller
                     $exam_id
                 );
             }
+            $this->scholarshipexam_model->markLeadRegistered($mobile, $exam_id);
         }
 
         $class_row = $class_id ? $this->db->get_where('classes', array('id' => $class_id))->row_array() : null;

@@ -36,6 +36,11 @@ class ScholarshipregisterController extends BaseController
         return $this->dispatchLegacy('Scholarshipregister', 'check_mobile', func_get_args());
     }
 
+    public function capture_lead()
+    {
+        return $this->dispatchLegacy('Scholarshipregister', 'capture_lead', func_get_args());
+    }
+
     public function submit()
     {
         return $this->dispatchLegacy('Scholarshipregister', 'submit', func_get_args());
